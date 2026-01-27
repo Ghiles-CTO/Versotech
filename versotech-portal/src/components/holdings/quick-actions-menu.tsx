@@ -200,7 +200,7 @@ export function QuickActionsMenu({ holdingId, holdingName, holdingType, classNam
               <action.icon className="h-4 w-4" />
               <div>
                 <div className="font-medium">{action.label}</div>
-                <div className="text-xs text-gray-500">{action.description}</div>
+                <div className="text-xs text-muted-foreground">{action.description}</div>
               </div>
             </DropdownMenuItem>
           ))}
@@ -230,12 +230,12 @@ export function QuickActionsMenu({ holdingId, holdingName, holdingType, classNam
             {pendingRequests.length > 0 ? (
               <div className="space-y-3">
                 {pendingRequests.map(request => (
-                  <div key={request.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div key={request.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                     <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-gray-600" />
+                      <FileText className="h-4 w-4 text-muted-foreground" />
                       <div>
                         <div className="font-medium text-sm">{request.type.replace('_', ' ')}</div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-muted-foreground">
                           {new Date(request.created_at).toLocaleDateString()}
                         </div>
                       </div>
@@ -247,8 +247,8 @@ export function QuickActionsMenu({ holdingId, holdingName, holdingType, classNam
                 ))}
               </div>
             ) : (
-              <div className="text-center py-6 text-gray-500">
-                <FileText className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+              <div className="text-center py-6 text-muted-foreground">
+                <FileText className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                 <p>No pending report requests</p>
               </div>
             )}

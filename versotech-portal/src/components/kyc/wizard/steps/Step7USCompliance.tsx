@@ -109,7 +109,7 @@ export function Step7USCompliance() {
                     'p-4 rounded-lg border-2 transition-all',
                     field.value
                       ? 'border-emerald-500/50 bg-emerald-500/5'
-                      : 'border-slate-700 hover:border-slate-600'
+                      : 'border-border hover:border-muted-foreground/50'
                   )}
                 >
                   <div className="flex items-start gap-4">

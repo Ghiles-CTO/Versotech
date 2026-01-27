@@ -249,14 +249,14 @@ export function ShareDealDialog({
         {success ? (
           <div className="py-8 text-center">
             <CheckCircle2 className="h-16 w-16 text-emerald-500 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900">Deal Shared Successfully!</h3>
-            <p className="text-gray-500 mt-1">
+            <h3 className="text-lg font-medium text-foreground">Deal Shared Successfully!</h3>
+            <p className="text-muted-foreground mt-1">
               The investor will receive an invitation to view this opportunity.
             </p>
           </div>
         ) : loading ? (
           <div className="py-8 flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
           <div className="space-y-4 py-4">
@@ -278,7 +278,7 @@ export function ShareDealDialog({
                 </SelectTrigger>
                 <SelectContent className="max-h-60">
                   {availableInvestors.length === 0 ? (
-                    <div className="py-4 text-center text-sm text-gray-500">
+                    <div className="py-4 text-center text-sm text-muted-foreground">
                       {alreadySharedWith.size > 0
                         ? 'All matching investors already have access'
                         : 'No investors found'}
@@ -298,13 +298,13 @@ export function ShareDealDialog({
                 </SelectContent>
               </Select>
               {selectedInvestor?.email && (
-                <p className="text-xs text-gray-500 pl-1">{selectedInvestor.email}</p>
+                <p className="text-xs text-muted-foreground pl-1">{selectedInvestor.email}</p>
               )}
             </div>
 
             {/* Co-referral with Introducer (PRD Row 96) */}
             {introducers.length > 0 && (
-              <div className="border rounded-lg p-4 bg-gray-50 space-y-3">
+              <div className="border border-border rounded-lg p-4 bg-muted space-y-3">
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="include-introducer"

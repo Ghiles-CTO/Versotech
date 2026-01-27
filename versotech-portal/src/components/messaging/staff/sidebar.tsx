@@ -188,7 +188,7 @@ export function ConversationsSidebar({
         />
 
         {errorMessage ? (
-          <div className="text-xs text-red-300 border border-red-500/40 bg-red-500/10 p-2 rounded">
+          <div className="text-xs text-red-600 dark:text-red-300 border border-red-300 dark:border-red-500/40 bg-red-100 dark:bg-red-500/10 p-2 rounded">
             {errorMessage}
           </div>
         ) : null}
@@ -244,7 +244,7 @@ export function ConversationsSidebar({
                         <div className="flex items-baseline justify-between gap-2 mb-1">
                           <span className={cn(
                             "font-semibold truncate text-sm",
-                            conversation.unreadCount > 0 ? "text-white" : "text-foreground"
+                            conversation.unreadCount > 0 ? "text-gray-900 dark:text-white" : "text-foreground"
                           )}>
                             {conversation.subject || 'Untitled Conversation'}
                           </span>

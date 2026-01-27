@@ -80,12 +80,12 @@ export function VehicleDocumentsList({ documents }: VehicleDocumentsListProps) {
         {documents && documents.length > 0 ? (
           <div className="space-y-3">
             {documents.map((doc) => (
-              <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+              <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted transition-colors">
                 <div className="flex items-center gap-3">
-                  <FileText className="h-5 w-5 text-gray-400" />
+                  <FileText className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <div className="font-medium">{doc.name || doc.file_key?.split('/').pop() || doc.type}</div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-muted-foreground">
                       {doc.type} • {new Date(doc.created_at).toLocaleDateString()}
                     </div>
                   </div>
@@ -128,8 +128,8 @@ export function VehicleDocumentsList({ documents }: VehicleDocumentsListProps) {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 text-gray-500">
-            <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+          <div className="text-center py-12 text-muted-foreground">
+            <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
             <p>No documents available</p>
           </div>
         )}

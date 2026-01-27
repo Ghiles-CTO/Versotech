@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "functions": {
+    "/api/deals/logo-upload": {},
+    "/api/entities/logo-upload": {},
+    "/api/investors/[investorId]/subscriptions": {}
+  }
+}

@@ -1,0 +1,782 @@
+{
+  "app": {
+    "[project]/versotech-portal/src/app/(admin)/versotech_admin/agents/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(admin)/versotech_admin/dashboard/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(admin)/versotech_admin/growth/cohorts/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(admin)/versotech_admin/growth/engagement/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(admin)/versotech_admin/growth/funnel/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(admin)/versotech_admin/growth/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(admin)/versotech_admin/growth/retention/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(admin)/versotech_admin/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(admin)/versotech_admin/processes/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(admin)/versotech_admin/settings/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(admin)/versotech_admin/users/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(admin)/versotech_admin/users/entities/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(admin)/versotech_admin/users/investors/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(admin)/versotech_admin/users/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(admin)/versotech_admin/users/staff/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(investor)/versoholdings/calendar/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(investor)/versoholdings/dashboard/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(investor)/versoholdings/data-rooms/[dealId]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(investor)/versoholdings/data-rooms/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(investor)/versoholdings/deal/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(investor)/versoholdings/deals/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(investor)/versoholdings/documents/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(investor)/versoholdings/holdings/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(investor)/versoholdings/messages/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(investor)/versoholdings/notifications/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(investor)/versoholdings/profile/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(investor)/versoholdings/reports/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(investor)/versoholdings/tasks/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(investor)/versoholdings/vehicle/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/accounts/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/admin/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/approvals/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/arranger-profile/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/arranger-reconciliation/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/arrangers/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/arrangers/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/assigned-deals/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/audit/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/calendar/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/ceo-profile/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/client-transactions/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/commercial-partner-profile/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/commercial-partners/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/dashboard/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/deals/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/deals/new/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/deals/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/documents/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/entities/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/entities/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/escrow/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/fee-plans/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/fees/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/inbox/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/introducer-agreements/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/introducer-agreements/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/introducer-profile/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/introducer-reconciliation/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/introducers/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/introducers/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/introductions/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/investors/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/investors/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/kyc-compliance/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/kyc-review/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/lawyer-deal/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/lawyer-profile/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/lawyer-reconciliation/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/lawyers/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/messages/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/my-commercial-partners/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/my-commissions/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/my-introducers/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/my-lawyers/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/my-mandates/[mandateId]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/my-mandates/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/my-partners/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/notifications/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/opportunities/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/opportunities/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/partner-profile/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/partner-transactions/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/partners/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/payment-requests/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/placement-agreements/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/placement-agreements/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/portfolio/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/portfolio/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/processes/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/profile/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/reconciliation/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/reconciliation/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/requests/analytics/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/requests/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/shared-transactions/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/subscription-packs/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/subscriptions/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/subscriptions/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/subscriptions/vehicle-summary/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/tasks/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/users/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/users/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(main)/versotech_main/versosign/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(public)/versoholdings/login/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(public)/versoholdings/set-password/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(public)/versotech/login/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(public)/versotech/set-password/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(public)/versotech_main/login/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(public)/versotech_main/reset-password/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(public)/versotech_main/set-password/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/admin/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/approvals/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/arrangers/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/arrangers/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/audit/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/calendar/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/commercial-partners/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/commercial-partners/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/deals/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/deals/new/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/deals/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/documents/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/entities/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/entities/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/fees/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/introducers/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/introducers/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/investors/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/investors/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/kyc-review/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/lawyers/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/lawyers/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/messages/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/partners/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/partners/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/processes/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/profile/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/reconciliation/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/reconciliation/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/requests/analytics/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/requests/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/subscriptions/[id]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/subscriptions/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/subscriptions/vehicle-summary/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/(staff)/versotech/staff/versosign/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/_not-found/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/auth/callback/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/invitation/accept/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/logout/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/sign/[token]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/sign/[token]/success/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ],
+    "[project]/versotech-portal/src/app/sign/[token]/verify/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/7a514bda021b6b92-s.p.b628dbda.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pages": {},
+  "pagesUsingSizeAdjust": false
+}

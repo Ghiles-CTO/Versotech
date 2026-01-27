@@ -120,7 +120,7 @@ interface SubscriptionSubmission {
 }
 
 const statusBadgeClasses: Record<string, string> = {
-  draft: 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
+  draft: 'bg-muted text-muted-foreground',
   open: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300',
   allocation_pending: 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300',
   closed: 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300',
@@ -131,7 +131,7 @@ const interestStatusCopy: Record<DealInterest['status'], { label: string; tone: 
   pending_review: { label: 'Pending team review', tone: 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300' },
   approved: { label: 'NDA active', tone: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300' },
   rejected: { label: 'Declined', tone: 'bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300' },
-  withdrawn: { label: 'Withdrawn', tone: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' }
+  withdrawn: { label: 'Withdrawn', tone: 'bg-muted text-muted-foreground' }
 }
 
 function normalizeCurrency(currency?: string | null) {
@@ -527,14 +527,14 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
               <CardTitle className="text-base">Next steps</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+              <div className="text-sm text-muted-foreground space-y-1">
                 <p>Have a question for the team or want to confirm details?</p>
                 <p>Use the shortcuts below to continue the workflow.</p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <Link
                   href={`/versotech_main/messages?deal=${deal.id}`}
-                  className="inline-flex items-center gap-2 rounded-md border border-gray-200 dark:border-zinc-700 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                  className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-muted"
                 >
                   <MessageSquare className="h-4 w-4" />
                   Ask a question
@@ -559,8 +559,8 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
             </CardContent>
           </Card>
 
-          <div className="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 text-xs text-gray-500 dark:text-gray-400 space-y-2">
-            <p className="font-medium text-gray-600 dark:text-gray-300">Notes</p>
+          <div className="border border-border rounded-lg p-4 text-xs text-muted-foreground space-y-2">
+            <p className="font-medium text-foreground">Notes</p>
             <ul className="list-disc pl-4 space-y-1">
               <li>Indicative terms remain subject to final approvals and due diligence.</li>
               <li>
@@ -575,9 +575,9 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
 
         <Separator className="my-4" />
 
-        <div className="text-xs text-gray-400 dark:text-gray-500">
+        <div className="text-xs text-muted-foreground">
           Need help? Email{' '}
-          <a href="mailto:investors@versotech.com" className="underline hover:text-gray-600 dark:hover:text-gray-300">
+          <a href="mailto:investors@versotech.com" className="underline hover:text-foreground">
             investors@versotech.com
           </a>{' '}
           and reference deal ID {deal.id}.

@@ -73,7 +73,6 @@ interface DropdownOption {
 interface DropdownOptions {
   arrangers: DropdownOption[]
   lawyers: DropdownOption[]
-  managingPartners: DropdownOption[]
 }
 
 interface EditEntityModalProps {
@@ -99,7 +98,6 @@ interface EditEntityModalProps {
     address?: string | null
     arranger_entity_id?: string | null
     lawyer_id?: string | null
-    managing_partner_id?: string | null
   }
   open: boolean
   onClose: () => void
@@ -120,15 +118,13 @@ export function EditEntityModalRefactored({
   // Dropdown options state
   const [dropdownOptions, setDropdownOptions] = useState<DropdownOptions>({
     arrangers: [],
-    lawyers: [],
-    managingPartners: []
+    lawyers: []
   })
   const [dropdownsLoading, setDropdownsLoading] = useState(false)
 
   // Service provider state (managed separately from form)
   const [arrangerEntityId, setArrangerEntityId] = useState(entity.arranger_entity_id || '')
   const [lawyerId, setLawyerId] = useState(entity.lawyer_id || '')
-  const [managingPartnerId, setManagingPartnerId] = useState(entity.managing_partner_id || '')
   const [address, setAddress] = useState(entity.address || '')
 
   const fetchDropdownOptions = useCallback(async () => {
@@ -188,7 +184,6 @@ export function EditEntityModalRefactored({
       setLogoError(null)
       setArrangerEntityId(entity.arranger_entity_id || '')
       setLawyerId(entity.lawyer_id || '')
-      setManagingPartnerId(entity.managing_partner_id || '')
       setAddress(entity.address || '')
       form.reset({
         name: entity.name || '',
@@ -275,8 +270,7 @@ export function EditEntityModalRefactored({
           logo_url: logoUrl || null,
           address: address || null,
           arranger_entity_id: arrangerEntityId || null,
-          lawyer_id: lawyerId || null,
-          managing_partner_id: managingPartnerId || null
+          lawyer_id: lawyerId || null
         })
       })
 
@@ -311,13 +305,13 @@ export function EditEntityModalRefactored({
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="bg-zinc-950 border-white/10 text-white max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-background border-border max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-white">
+            <DialogTitle className="flex items-center gap-2 text-foreground">
               <Edit className="h-5 w-5 text-emerald-400" />
               Edit Vehicle
             </DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogDescription className="text-muted-foreground">
               Update vehicle information and metadata
             </DialogDescription>
           </DialogHeader>
@@ -336,11 +330,11 @@ export function EditEntityModalRefactored({
                     name="name"
                     render={({ field }) => (
                       <FormItem className="col-span-2">
-                        <FormLabel className="text-white">Vehicle Name *</FormLabel>
+                        <FormLabel className="text-foreground">Vehicle Name *</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
-                            className="bg-white/5 border-white/10 text-white"
+                            className="bg-background border-input text-foreground"
                             placeholder="Enter vehicle name"
                           />
                         </FormControl>
@@ -354,16 +348,16 @@ export function EditEntityModalRefactored({
                     name="entity_code"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Vehicle Code</FormLabel>
+                        <FormLabel className="text-foreground">Vehicle Code</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             value={field.value || ''}
-                            className="bg-white/5 border-white/10 text-white font-mono"
+                            className="bg-background border-input text-foreground font-mono"
                             placeholder="e.g., VEH001"
                           />
                         </FormControl>
-                        <FormDescription className="text-xs text-gray-400">
+                        <FormDescription className="text-xs text-muted-foreground">
                           Unique identifier for this vehicle
                         </FormDescription>
                         <FormMessage />
@@ -376,12 +370,12 @@ export function EditEntityModalRefactored({
                     name="platform"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Platform</FormLabel>
+                        <FormLabel className="text-foreground">Platform</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             value={field.value || ''}
-                            className="bg-white/5 border-white/10 text-white"
+                            className="bg-background border-input text-foreground"
                             placeholder="e.g., Fund Admin Platform"
                           />
                         </FormControl>
@@ -395,16 +389,16 @@ export function EditEntityModalRefactored({
                     name="type"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Vehicle Type *</FormLabel>
+                        <FormLabel className="text-foreground">Vehicle Type *</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                            <SelectTrigger className="bg-background border-input text-foreground">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="bg-zinc-950 border-white/10">
+                          <SelectContent className="bg-popover border-border">
                             {VEHICLE_TYPES.map((type) => (
-                              <SelectItem key={type.value} value={type.value} className="text-white">
+                              <SelectItem key={type.value} value={type.value} className="text-foreground">
                                 {type.label}
                               </SelectItem>
                             ))}
@@ -420,19 +414,19 @@ export function EditEntityModalRefactored({
                     name="status"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Status *</FormLabel>
+                        <FormLabel className="text-foreground">Status *</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                            <SelectTrigger className="bg-background border-input text-foreground">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="bg-zinc-950 border-white/10">
+                          <SelectContent className="bg-popover border-border">
                             {STATUS_OPTIONS.map((status) => (
                               <SelectItem
                                 key={status.value}
                                 value={status.value}
-                                className="text-white"
+                                className="text-foreground"
                               >
                                 {status.label}
                               </SelectItem>
@@ -451,12 +445,12 @@ export function EditEntityModalRefactored({
                     name="investment_name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Investment Name</FormLabel>
+                        <FormLabel className="text-foreground">Investment Name</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             value={field.value || ''}
-                            className="bg-white/5 border-white/10 text-white"
+                            className="bg-background border-input text-foreground"
                             placeholder="Investment vehicle name"
                           />
                         </FormControl>
@@ -470,12 +464,12 @@ export function EditEntityModalRefactored({
                     name="former_entity"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Former Vehicle Name</FormLabel>
+                        <FormLabel className="text-foreground">Former Vehicle Name</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             value={field.value || ''}
-                            className="bg-white/5 border-white/10 text-white"
+                            className="bg-background border-input text-foreground"
                             placeholder="Previous name if renamed"
                           />
                         </FormControl>
@@ -492,21 +486,21 @@ export function EditEntityModalRefactored({
                   Service Providers
                 </h3>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-white">Arranger</Label>
+                    <Label className="text-foreground">Arranger</Label>
                     <Select
                       value={arrangerEntityId}
                       onValueChange={(value) => setArrangerEntityId(value === 'none' ? '' : value)}
                       disabled={dropdownsLoading}
                     >
-                      <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                      <SelectTrigger className="bg-background border-input text-foreground">
                         <SelectValue placeholder={dropdownsLoading ? 'Loading...' : 'Select arranger'} />
                       </SelectTrigger>
-                      <SelectContent className="bg-zinc-950 border-white/10">
-                        <SelectItem value="none" className="text-white">None</SelectItem>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
                         {dropdownOptions.arrangers.map((arranger) => (
-                          <SelectItem key={arranger.id} value={arranger.id} className="text-white">
+                          <SelectItem key={arranger.id} value={arranger.id}>
                             {arranger.name}
                           </SelectItem>
                         ))}
@@ -515,41 +509,20 @@ export function EditEntityModalRefactored({
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-white">Lawyer</Label>
+                    <Label className="text-foreground">Legal Counsel</Label>
                     <Select
                       value={lawyerId}
                       onValueChange={(value) => setLawyerId(value === 'none' ? '' : value)}
                       disabled={dropdownsLoading}
                     >
-                      <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                        <SelectValue placeholder={dropdownsLoading ? 'Loading...' : 'Select lawyer'} />
+                      <SelectTrigger className="bg-background border-input text-foreground">
+                        <SelectValue placeholder={dropdownsLoading ? 'Loading...' : 'Select legal counsel'} />
                       </SelectTrigger>
-                      <SelectContent className="bg-zinc-950 border-white/10">
-                        <SelectItem value="none" className="text-white">None</SelectItem>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
                         {dropdownOptions.lawyers.map((lawyer) => (
-                          <SelectItem key={lawyer.id} value={lawyer.id} className="text-white">
+                          <SelectItem key={lawyer.id} value={lawyer.id}>
                             {lawyer.name} {lawyer.firm_name && lawyer.name !== lawyer.firm_name ? `(${lawyer.firm_name})` : ''}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-white">Managing Partner</Label>
-                    <Select
-                      value={managingPartnerId}
-                      onValueChange={(value) => setManagingPartnerId(value === 'none' ? '' : value)}
-                      disabled={dropdownsLoading}
-                    >
-                      <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                        <SelectValue placeholder={dropdownsLoading ? 'Loading...' : 'Select managing partner'} />
-                      </SelectTrigger>
-                      <SelectContent className="bg-zinc-950 border-white/10">
-                        <SelectItem value="none" className="text-white">None</SelectItem>
-                        {dropdownOptions.managingPartners.map((partner) => (
-                          <SelectItem key={partner.id} value={partner.id} className="text-white">
-                            {partner.display_name || partner.email}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -558,11 +531,11 @@ export function EditEntityModalRefactored({
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-white">Address</Label>
+                  <Label className="text-foreground">Address</Label>
                   <Textarea
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    className="bg-white/5 border-white/10 text-white"
+                    className="bg-background border-input text-foreground"
                     placeholder="Registered address of the vehicle"
                     rows={2}
                   />
@@ -581,12 +554,12 @@ export function EditEntityModalRefactored({
                     name="domicile"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Domicile</FormLabel>
+                        <FormLabel className="text-foreground">Domicile</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             value={field.value || ''}
-                            className="bg-white/5 border-white/10 text-white"
+                            className="bg-background border-input text-foreground"
                             placeholder="e.g., Cayman Islands"
                           />
                         </FormControl>
@@ -600,12 +573,12 @@ export function EditEntityModalRefactored({
                     name="legal_jurisdiction"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Legal Jurisdiction</FormLabel>
+                        <FormLabel className="text-foreground">Legal Jurisdiction</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             value={field.value || ''}
-                            className="bg-white/5 border-white/10 text-white"
+                            className="bg-background border-input text-foreground"
                             placeholder="e.g., Delaware"
                           />
                         </FormControl>
@@ -619,12 +592,12 @@ export function EditEntityModalRefactored({
                     name="registration_number"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Registration Number</FormLabel>
+                        <FormLabel className="text-foreground">Registration Number</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             value={field.value || ''}
-                            className="bg-white/5 border-white/10 text-white font-mono"
+                            className="bg-background border-input text-foreground font-mono"
                             placeholder="Registration ID"
                           />
                         </FormControl>
@@ -640,16 +613,16 @@ export function EditEntityModalRefactored({
                     name="currency"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Currency *</FormLabel>
+                        <FormLabel className="text-foreground">Currency *</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                            <SelectTrigger className="bg-background border-input text-foreground">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="bg-zinc-950 border-white/10">
+                          <SelectContent className="bg-popover border-border">
                             {CURRENCIES.map((curr) => (
-                              <SelectItem key={curr} value={curr} className="text-white">
+                              <SelectItem key={curr} value={curr} className="text-foreground">
                                 {curr}
                               </SelectItem>
                             ))}
@@ -665,13 +638,13 @@ export function EditEntityModalRefactored({
                     name="formation_date"
                     render={({ field }) => (
                       <FormItem className="col-span-2">
-                        <FormLabel className="text-white">Formation Date</FormLabel>
+                        <FormLabel className="text-foreground">Formation Date</FormLabel>
                         <FormControl>
                           <Input
                             type="date"
                             {...field}
                             value={field.value || ''}
-                            className="bg-white/5 border-white/10 text-white"
+                            className="bg-background border-input text-foreground"
                           />
                         </FormControl>
                         <FormMessage />
@@ -691,10 +664,10 @@ export function EditEntityModalRefactored({
                   control={form.control}
                   name="requires_reporting"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border border-white/10 bg-white/5 p-4">
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
                       <div className="space-y-0.5">
-                        <FormLabel className="text-white">Requires Reporting</FormLabel>
-                        <FormDescription className="text-xs text-gray-400">
+                        <FormLabel className="text-foreground">Requires Reporting</FormLabel>
+                        <FormDescription className="text-xs text-muted-foreground">
                           Enable if this vehicle has reporting obligations
                         </FormDescription>
                       </div>
@@ -711,22 +684,22 @@ export function EditEntityModalRefactored({
                     name="reporting_type"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Reporting Type</FormLabel>
+                        <FormLabel className="text-foreground">Reporting Type</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value || 'Not Required'}
                         >
                           <FormControl>
-                            <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                            <SelectTrigger className="bg-background border-input text-foreground">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="bg-zinc-950 border-white/10">
+                          <SelectContent className="bg-popover border-border">
                             {REPORTING_OPTIONS.map((option) => (
                               <SelectItem
                                 key={option.value}
                                 value={option.value}
-                                className="text-white"
+                                className="text-foreground"
                               >
                                 {option.label}
                               </SelectItem>
@@ -748,7 +721,7 @@ export function EditEntityModalRefactored({
 
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-white mb-2 block">Vehicle Logo</Label>
+                    <Label className="text-foreground mb-2 block">Vehicle Logo</Label>
                     {logoUrl ? (
                       <div className="flex items-start gap-4">
                         <Image
@@ -756,7 +729,7 @@ export function EditEntityModalRefactored({
                           alt="Vehicle logo"
                           width={96}
                           height={96}
-                          className="w-24 h-24 object-contain bg-white/5 rounded border border-white/10"
+                          className="w-24 h-24 object-contain bg-muted rounded border border-border"
                         />
                         <div className="flex flex-col gap-2">
                           <Button
@@ -770,7 +743,7 @@ export function EditEntityModalRefactored({
                             <Trash2 className="h-4 w-4 mr-2" />
                             Remove Logo
                           </Button>
-                          <p className="text-xs text-gray-400">Click to remove current logo</p>
+                          <p className="text-xs text-muted-foreground">Click to remove current logo</p>
                         </div>
                       </div>
                     ) : (
@@ -792,7 +765,7 @@ export function EditEntityModalRefactored({
                             variant="outline"
                             size="sm"
                             disabled={logoUploading}
-                            className="cursor-pointer border-white/10 text-white hover:bg-white/10 bg-white/5"
+                            className="cursor-pointer border-border text-foreground hover:bg-muted bg-background"
                             onClick={(e) => {
                               e.preventDefault()
                               document.getElementById('logo-upload')?.click()
@@ -826,13 +799,13 @@ export function EditEntityModalRefactored({
                     name="website_url"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Website URL</FormLabel>
+                        <FormLabel className="text-foreground">Website URL</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             value={field.value || ''}
                             type="url"
-                            className="bg-white/5 border-white/10 text-white"
+                            className="bg-background border-input text-foreground"
                             placeholder="https://example.com"
                           />
                         </FormControl>
@@ -849,17 +822,17 @@ export function EditEntityModalRefactored({
                 name="notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Internal Notes</FormLabel>
+                    <FormLabel className="text-foreground">Internal Notes</FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
                         value={field.value || ''}
-                        className="bg-white/5 border-white/10 text-white"
+                        className="bg-background border-input text-foreground"
                         placeholder="Add any internal notes or comments about this vehicle..."
                         rows={4}
                       />
                     </FormControl>
-                    <FormDescription className="text-xs text-gray-400">
+                    <FormDescription className="text-xs text-muted-foreground">
                       These notes are for internal use only and not visible to investors
                     </FormDescription>
                     <FormMessage />
@@ -872,14 +845,14 @@ export function EditEntityModalRefactored({
                   type="button"
                   variant="outline"
                   onClick={onClose}
-                  className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600"
+                  className="bg-muted text-foreground border-border hover:bg-muted/80"
                   disabled={isSubmitting}
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
                   disabled={isSubmitting || logoUploading}
                 >
                   {isSubmitting ? (

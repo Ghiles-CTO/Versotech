@@ -1,0 +1,3 @@
+{
+  "/api/introducers/me/commissions/[id]/submit-invoice/route": "app/api/introducers/me/commissions/[id]/submit-invoice/route.js"
+}

@@ -1,0 +1,13 @@
+var R=require("../../../../../../chunks/[turbopack]_runtime.js")("server/app/api/staff/health-alerts/[id]/dismiss/route.js")
+R.c("server/chunks/[root-of-the-server]__4c0d4301._.js")
+R.c("server/chunks/versotech-portal_8633f979._.js")
+R.c("server/chunks/6d6b6_next_672f6640._.js")
+R.c("server/chunks/6d6b6_next_dist_7d1347b1._.js")
+R.c("server/chunks/6d6b6_131e6e29._.js")
+R.c("server/chunks/[root-of-the-server]__04eaf9e0._.js")
+R.c("server/chunks/[root-of-the-server]__7a18eae2._.js")
+R.c("server/chunks/6d6b6_4a9fcd3d._.js")
+R.c("server/chunks/6d6b6_next_b8b5a401._.js")
+R.c("server/chunks/02020_server_app_api_staff_health-alerts_[id]_dismiss_route_actions_d97ae158.js")
+R.m(500946)
+module.exports=R.m(500946).exports

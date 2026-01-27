@@ -1,0 +1,35 @@
+module.exports=[193695,(a,b,c)=>{b.exports=a.x("next/dist/shared/lib/no-fallback-error.external.js",()=>require("next/dist/shared/lib/no-fallback-error.external.js"))},9349,a=>{a.n(a.i(142710))},199585,a=>{a.n(a.i(701395))},929852,a=>{a.n(a.i(816404))},516153,a=>{a.n(a.i(422096))},911164,a=>{a.n(a.i(273021))},450926,a=>{a.n(a.i(933743))},718829,a=>{"use strict";var b=a.i(999684);let c=a=>{let b=a.replace(/^([A-Z])|[\s-_]+(\w)/g,(a,b,c)=>c?c.toUpperCase():b.toLowerCase());return b.charAt(0).toUpperCase()+b.slice(1)},d=(...a)=>a.filter((a,b,c)=>!!a&&""!==a.trim()&&c.indexOf(a)===b).join(" ").trim();var e={xmlns:"http://www.w3.org/2000/svg",width:24,height:24,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round"};let f=(0,b.forwardRef)(({color:a="currentColor",size:c=24,strokeWidth:f=2,absoluteStrokeWidth:g,className:h="",children:i,iconNode:j,...k},l)=>(0,b.createElement)("svg",{ref:l,...e,width:c,height:c,stroke:a,strokeWidth:g?24*Number(f)/Number(c):f,className:d("lucide",h),...!i&&!(a=>{for(let b in a)if(b.startsWith("aria-")||"role"===b||"title"===b)return!0})(k)&&{"aria-hidden":"true"},...k},[...j.map(([a,c])=>(0,b.createElement)(a,c)),...Array.isArray(i)?i:[i]])),g=(a,e)=>{let g=(0,b.forwardRef)(({className:g,...h},i)=>(0,b.createElement)(f,{ref:i,iconNode:e,className:d(`lucide-${c(a).replace(/([a-z0-9])([A-Z])/g,"$1-$2").toLowerCase()}`,`lucide-${a}`,g),...h}));return g.displayName=c(a),g};a.s(["default",()=>g],718829)},441196,a=>{"use strict";let b=(0,a.i(718829).default)("circle-alert",[["circle",{cx:"12",cy:"12",r:"10",key:"1mglay"}],["line",{x1:"12",x2:"12",y1:"8",y2:"12",key:"1pkeuh"}],["line",{x1:"12",x2:"12.01",y1:"16",y2:"16",key:"4dfq90"}]]);a.s(["AlertCircle",()=>b],441196)},442633,a=>{"use strict";a.s(["IntroducerDetailClient",()=>b]);let b=(0,a.i(578644).registerClientReference)(function(){throw Error("Attempted to call IntroducerDetailClient() from the server but IntroducerDetailClient is on the client. It's not possible to invoke a client function from the server, it can only be rendered as a Component or passed to props of a Client Component.")},"[project]/versotech-portal/src/components/staff/introducers/introducer-detail-client.tsx <module evaluation>","IntroducerDetailClient")},480630,a=>{"use strict";a.s(["IntroducerDetailClient",()=>b]);let b=(0,a.i(578644).registerClientReference)(function(){throw Error("Attempted to call IntroducerDetailClient() from the server but IntroducerDetailClient is on the client. It's not possible to invoke a client function from the server, it can only be rendered as a Component or passed to props of a Client Component.")},"[project]/versotech-portal/src/components/staff/introducers/introducer-detail-client.tsx","IntroducerDetailClient")},833569,a=>{"use strict";a.i(442633);var b=a.i(480630);a.n(b)},267285,a=>{"use strict";var b=a.i(714898),c=a.i(198307);a.i(937413);var d=a.i(131360),e=a.i(833569),f=a.i(441196),g=a.i(243085);async function h({params:a}){let{id:h}=await a,i=await (0,c.createClient)(),{data:{user:j},error:k}=await i.auth.getUser();(!j||k)&&(0,d.redirect)("/versotech_main/login");let l=await (0,g.checkStaffAccess)(j.id),m=(0,c.createServiceClient)();if(!l)return(0,b.jsx)("div",{className:"p-6",children:(0,b.jsxs)("div",{className:"text-center py-16",children:[(0,b.jsx)(f.AlertCircle,{className:"h-12 w-12 text-gray-400 mx-auto mb-4"}),(0,b.jsx)("h3",{className:"text-lg font-medium text-foreground mb-2",children:"Access Restricted"}),(0,b.jsx)("p",{className:"text-muted-foreground",children:"Introducer details are only available to staff members."})]})});let{data:n,error:o}=await m.from("introducers").select("*").eq("id",h).single();(o||!n)&&(console.error("[Introducer Detail] Error:",o),(0,d.notFound)());let{data:p}=await m.from("introductions").select(`
+      id,
+      prospect_email,
+      prospect_investor_id,
+      status,
+      introduced_at,
+      deal_id
+    `).eq("introducer_id",h).order("introduced_at",{ascending:!1}),q=(p||[]).map(a=>a.deal_id).filter(a=>null!=a),r={};if(q.length>0){let{data:a}=await m.from("deals").select("id, name").in("id",q);r=(a||[]).reduce((a,b)=>(a[b.id]={id:b.id,name:b.name},a),{})}let s=(p||[]).map(a=>a.prospect_investor_id).filter(a=>null!=a),t={};if(s.length>0){let{data:a}=await m.from("investors").select("id, legal_name").in("id",s);t=(a||[]).reduce((a,b)=>(a[b.id]={id:b.id,legal_name:b.legal_name},a),{})}let u=(p||[]).map(a=>({id:a.id,prospect_email:a.prospect_email,status:a.status||"pending",introduced_at:a.introduced_at,deal:a.deal_id&&r[a.deal_id]||null,investor:a.prospect_investor_id&&t[a.prospect_investor_id]||null})),{data:v}=await m.from("introducer_commissions").select(`
+      id,
+      accrual_amount,
+      status,
+      paid_at,
+      created_at,
+      deal_id,
+      investor_id
+    `).eq("introducer_id",h).order("created_at",{ascending:!1}),w=(v||[]).map(a=>a.investor_id).filter(a=>null!=a),x={};if(w.length>0){let{data:a}=await m.from("investors").select("id, legal_name").in("id",w);x=(a||[]).reduce((a,b)=>(a[b.id]={legal_name:b.legal_name},a),{})}let y=(v||[]).map(a=>a.deal_id).filter(a=>null!=a),z={};if(y.length>0){let{data:a}=await m.from("deals").select("id, name").in("id",y);z=(a||[]).reduce((a,b)=>(a[b.id]={name:b.name},a),{})}let A=(v||[]).map(a=>{let b=a.investor_id?x[a.investor_id]:null,c=a.deal_id?z[a.deal_id]:null;return{id:a.id,accrual_amount:Number(a.accrual_amount)||0,status:a.status||"accrued",paid_at:a.paid_at,created_at:a.created_at,deal_id:a.deal_id,investor_id:a.investor_id,investor:b,deal:c}}),{data:B}=await m.from("introducer_agreements").select(`
+      id,
+      status,
+      reference_number,
+      default_commission_bps,
+      effective_date,
+      expiry_date,
+      signed_date,
+      pdf_url,
+      deal_id,
+      fee_plan_id,
+      created_at,
+      updated_at,
+      deal:deal_id (
+        id,
+        name
+      )
+    `).eq("introducer_id",h).order("created_at",{ascending:!1}),C=(B||[]).map(a=>({id:a.id,status:a.status||"draft",reference_number:a.reference_number,default_commission_bps:a.default_commission_bps,effective_date:a.effective_date,expiry_date:a.expiry_date,signed_date:a.signed_date,pdf_url:a.pdf_url,deal_id:a.deal_id,fee_plan_id:a.fee_plan_id,created_at:a.created_at,updated_at:a.updated_at,deal:a.deal})),D=u.length,E=u.filter(a=>["allocated","converted"].includes(a.status)).length,F=A.filter(a=>"paid"===a.status).reduce((a,b)=>a+b.accrual_amount,0),G=A.filter(a=>"accrued"===a.status||"invoiced"===a.status).reduce((a,b)=>a+b.accrual_amount,0);return(0,b.jsx)(e.IntroducerDetailClient,{introducer:n,metrics:{totalIntroductions:D,successfulAllocations:E,conversionRate:D>0?E/D*100:0,totalCommissionPaid:F,pendingCommission:G},introductions:u,commissions:A,agreements:C})}a.s(["default",()=>h,"dynamic",0,"force-dynamic","revalidate",0,0])}];
+
+//# sourceMappingURL=%5Broot-of-the-server%5D__46c69b32._.js.map

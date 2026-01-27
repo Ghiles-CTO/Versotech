@@ -43,7 +43,7 @@ import { DealSubscriptionsTab } from './deal-subscriptions-tab'
 import { DealFaqTab } from './deal-faq-tab'
 
 const statusColors = {
-  draft: 'bg-white/10 text-foreground border border-white/20',
+  draft: 'bg-muted text-foreground border border-border',
   open: 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/30',
   allocation_pending: 'bg-amber-500/15 text-amber-200 border border-amber-400/30',
   closed: 'bg-blue-500/20 text-blue-200 border border-blue-400/30',
@@ -74,12 +74,6 @@ interface DealDetailClientProps {
   subscriptionsForJourney?: any[] // Subscriptions with journey tracking fields
   activitySummary: Record<string, number>
   userProfile: { role: string }
-  /** Arranger entities available for assignment */
-  arrangerEntities?: Array<{
-    id: string
-    legal_name: string
-    company_name?: string | null
-  }>
 }
 
 export function DealDetailClient({
@@ -93,8 +87,7 @@ export function DealDetailClient({
   subscriptions,
   subscriptionsForJourney = [],
   activitySummary,
-  userProfile,
-  arrangerEntities = []
+  userProfile
 }: DealDetailClientProps) {
   const [activeTab, setActiveTab] = useState('overview')
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -222,7 +215,7 @@ export function DealDetailClient({
             <Button 
               variant="ghost" 
               size="sm" 
-              className="gap-2 text-foreground hover:text-sky-200 hover:bg-white/10"
+              className="gap-2 text-foreground hover:text-sky-400 hover:bg-muted"
               onClick={() => router.push('/versotech_main/deals')}
             >
               <ArrowLeft className="h-4 w-4" />
@@ -235,7 +228,7 @@ export function DealDetailClient({
             <Badge className={statusColors[deal.status as keyof typeof statusColors]}>
               {deal.status.replace('_', ' ')}
             </Badge>
-            <Badge variant="outline" className="border-white/20 text-foreground">
+            <Badge variant="outline" className="border-border text-foreground">
               {dealTypeLabels[deal.deal_type as keyof typeof dealTypeLabels]}
             </Badge>
           </div>
@@ -252,7 +245,7 @@ export function DealDetailClient({
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            className="gap-2 border-white/20 text-foreground hover:bg-white/10"
+            className="gap-2 border-border text-foreground hover:bg-muted"
             onClick={() => setEditDialogOpen(true)}
           >
             <Edit className="h-4 w-4" />
@@ -263,7 +256,7 @@ export function DealDetailClient({
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border border-white/10 bg-white/5">
+        <Card className="border border-border bg-muted/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Interest Signals
@@ -278,7 +271,7 @@ export function DealDetailClient({
           </CardContent>
         </Card>
 
-        <Card className="border border-white/10 bg-white/5">
+        <Card className="border border-border bg-muted/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Active NDAs
@@ -295,7 +288,7 @@ export function DealDetailClient({
           </CardContent>
         </Card>
 
-        <Card className="border border-white/10 bg-white/5">
+        <Card className="border border-border bg-muted/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Published Term Sheet
@@ -314,7 +307,7 @@ export function DealDetailClient({
           </CardContent>
         </Card>
 
-        <Card className="border border-white/10 bg-white/5">
+        <Card className="border border-border bg-muted/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Subscriptions
@@ -330,7 +323,7 @@ export function DealDetailClient({
             </p>
           </CardContent>
         </Card>
-        <Card className="border border-white/10 bg-white/5">
+        <Card className="border border-border bg-muted/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Conversions (90d)
@@ -574,28 +567,7 @@ export function DealDetailClient({
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="edit-arranger">Arranger (Mandate)</Label>
-                <Select
-                  value={editFormData.arranger_entity_id || 'none'}
-                  onValueChange={(value) => setEditFormData({ ...editFormData, arranger_entity_id: value === 'none' ? '' : value })}
-                >
-                  <SelectTrigger id="edit-arranger">
-                    <SelectValue placeholder="Select arranger" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No Arranger</SelectItem>
-                    {arrangerEntities.map((arranger) => (
-                      <SelectItem key={arranger.id} value={arranger.id}>
-                        {arranger.company_name || arranger.legal_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Assign an arranger to manage this deal as their mandate
-                </p>
-              </div>
+{/* Arranger is inherited from vehicle - not editable at deal level */}
 
               <div className="space-y-2">
                 <Label htmlFor="edit-open-at">Open Date</Label>

@@ -65,16 +65,16 @@ const ActionItem = React.memo(({ item }: { item: ActionItem }) => {
     const content = (
       <div className={cn(
         "flex items-center gap-3 px-3 py-2.5 rounded-md group/item",
-        "text-zinc-400 hover:text-zinc-100 hover:bg-white/5",
+        "text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-white/5",
         "transition-all duration-200 cursor-pointer",
-        item.variant === 'success' && "hover:text-emerald-400 hover:bg-emerald-950/30",
-        item.variant === 'warning' && "hover:text-amber-400 hover:bg-amber-950/30",
-        item.variant === 'info' && "hover:text-sky-400 hover:bg-sky-950/30"
+        item.variant === 'success' && "hover:text-emerald-600 hover:bg-emerald-50 dark:hover:text-emerald-400 dark:hover:bg-emerald-950/30",
+        item.variant === 'warning' && "hover:text-amber-600 hover:bg-amber-50 dark:hover:text-amber-400 dark:hover:bg-amber-950/30",
+        item.variant === 'info' && "hover:text-sky-600 hover:bg-sky-50 dark:hover:text-sky-400 dark:hover:bg-sky-950/30"
       )}>
         <ItemIcon className="h-4 w-4 opacity-70 group-hover/item:opacity-100" />
         <span className="text-sm">{item.label}</span>
         {item.badge && (
-           <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 text-zinc-300">
+           <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-gray-200 text-gray-700 dark:bg-white/10 dark:text-zinc-300">
               {item.badge}
            </span>
         )}
@@ -91,10 +91,10 @@ ActionItem.displayName = 'ActionItem'
 const ActionSection = React.memo(({ section }: { section: ActionSection }) => {
     const Icon = section.icon
     return (
-      <div className="bg-zinc-950 p-6 space-y-4 group/section hover:bg-zinc-900/20 transition-colors">
+      <div className="bg-gray-50 dark:bg-zinc-950 p-6 space-y-4 group/section hover:bg-gray-100 dark:hover:bg-zinc-900/20 transition-colors">
         <div className="flex items-center gap-2 mb-4">
-           <Icon className="h-4 w-4 text-zinc-500 group-hover/section:text-zinc-300 transition-colors" />
-           <h3 className="text-sm font-medium text-zinc-300 uppercase tracking-wider">{section.title}</h3>
+           <Icon className="h-4 w-4 text-gray-500 group-hover/section:text-gray-700 dark:text-zinc-500 dark:group-hover/section:text-zinc-300 transition-colors" />
+           <h3 className="text-sm font-medium text-gray-700 dark:text-zinc-300 uppercase tracking-wider">{section.title}</h3>
         </div>
         <div className="space-y-1">
           {section.items.map((item) => (
@@ -342,36 +342,36 @@ export const StaffActionCenter = React.memo(function StaffActionCenter({
 
   return (
     <Card className={cn(
-      'bg-zinc-900/30 backdrop-blur-md border-white/5 shadow-2xl',
+      'bg-white dark:bg-zinc-900/30 backdrop-blur-md border-gray-200 dark:border-white/5 shadow-lg dark:shadow-2xl',
       'transition-all duration-300',
       className
     )}>
-      <CardHeader className="pb-6 border-b border-white/5">
+      <CardHeader className="pb-6 border-b border-gray-200 dark:border-white/5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-white/10 shadow-inner">
-              <Zap className="h-5 w-5 text-amber-400/90" />
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-zinc-800 dark:to-zinc-900 border border-gray-300 dark:border-white/10 shadow-inner">
+              <Zap className="h-5 w-5 text-amber-500 dark:text-amber-400/90" />
             </div>
             <div>
-              <CardTitle className="text-zinc-100 text-xl font-medium tracking-tight">
+              <CardTitle className="text-gray-900 dark:text-zinc-100 text-xl font-medium tracking-tight">
                 Operations Center
               </CardTitle>
-              <CardDescription className="text-zinc-500 text-xs font-medium uppercase tracking-wider mt-1">
+              <CardDescription className="text-gray-500 dark:text-zinc-500 text-xs font-medium uppercase tracking-wider mt-1">
                 Control Panel & Quick Actions
               </CardDescription>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-300 dark:border-emerald-500/20">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-medium text-emerald-400 uppercase tracking-wide">System Online</span>
+              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">System Online</span>
             </div>
           </div>
         </div>
       </CardHeader>
 
       <CardContent className="p-0">
-        <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-white/5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-gray-200 dark:bg-white/5">
           {actionSections.map((section) => (
             <ActionSection key={section.title} section={section} />
           ))}

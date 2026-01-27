@@ -1,0 +1,571 @@
+{
+  "project": "Staff Document Management System",
+  "branchName": "ralph/staff-documents-redesign",
+  "description": "Redesign Staff Documents into Google Drive for Versotech - always-visible tree sidebar with business hierarchy, server-side search, drag-and-drop, bulk operations, tagging, versioning.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Fix hardcoded dark theme",
+      "description": "As a staff member, I want the documents page to respect system theme.",
+      "acceptanceCriteria": [
+        "Audit staff-documents-client.tsx for hardcoded dark classes",
+        "Replace bg-gray-900, text-white etc with theme-aware variants",
+        "Use bg-background, text-foreground, border-border from shadcn",
+        "Audit folder-tree.tsx, document-card.tsx for same issues",
+        "Page renders correctly in both light and dark modes",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Quick win - fixes broken UI before adding features"
+    },
+    {
+      "id": "US-002",
+      "title": "Create permanent tree sidebar layout",
+      "description": "As a staff member, I want the folder tree always visible on the left.",
+      "acceptanceCriteria": [
+        "Update staff-documents-client.tsx layout to CSS grid: [280px sidebar] [1fr content]",
+        "Sidebar is always visible on desktop (min-width: 1024px)",
+        "Sidebar has overflow-y-auto for independent scrolling",
+        "Remove FolderTreeDrawer toggle button from header",
+        "Keep drawer for mobile (below 1024px) with hamburger toggle",
+        "Main content fills remaining width",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Core layout change - FR1 foundation"
+    },
+    {
+      "id": "US-003",
+      "title": "Create vehicle hierarchy parser",
+      "description": "As a developer, I need to group vehicles by parent for the tree.",
+      "acceptanceCriteria": [
+        "Create src/lib/documents/vehicle-hierarchy.ts",
+        "Export parseVehicleHierarchy(vehicles: Vehicle[]): VehicleNode[]",
+        "Rule: type='fund' or 'securitization' → isParent=true",
+        "Rule: name contains 'Compartment X' → child of matching parent",
+        "Rule: name contains 'Series XXX' → child of SCSP parent",
+        "Return nested structure: { ...vehicle, children: Vehicle[] }",
+        "Standalone vehicles (no parent match) grouped under 'Other'",
+        "Add unit tests in src/__tests__/lib/documents/vehicle-hierarchy.test.ts",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Pure function - no DB changes. Enables FR1 hierarchy."
+    },
+    {
+      "id": "US-004",
+      "title": "Add document counts to folders API",
+      "description": "As a developer, I need folder document counts for the tree badges.",
+      "acceptanceCriteria": [
+        "Update GET /api/staff/documents/folders to include document_count",
+        "Count documents where folder_id matches",
+        "Use subquery or join, not N+1 queries",
+        "Response shape: { ...folder, document_count: number }",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "Backend change before tree UI needs it"
+    },
+    {
+      "id": "US-005",
+      "title": "Render hierarchical tree with icons and counts",
+      "description": "As a staff member, I want to see business hierarchy with icons in the tree.",
+      "acceptanceCriteria": [
+        "Update FolderTree to use parseVehicleHierarchy for top level",
+        "Icon: Building2 for parent vehicles",
+        "Icon: Package for compartments/series",
+        "Icon: Folder for regular folders",
+        "Show count badge: 'Agreements (12)' using document_count",
+        "Indent children under parents",
+        "Expand/collapse works for all levels",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": "Depends on US-003, US-004"
+    },
+    {
+      "id": "US-006",
+      "title": "Add breadcrumb with vehicle context",
+      "description": "As a staff member, I want breadcrumbs showing my full path including vehicle.",
+      "acceptanceCriteria": [
+        "Update FolderBreadcrumbs to include vehicle name as first segment",
+        "Format: Vehicle > Folder > Subfolder",
+        "Each segment clickable except current",
+        "Home icon at start returns to root view",
+        "Use ChevronRight between segments",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": "FR2 - breadcrumb navigation"
+    },
+    {
+      "id": "US-007",
+      "title": "Add grid/list view toggle",
+      "description": "As a staff member, I want to switch between grid and list view.",
+      "acceptanceCriteria": [
+        "Add toggle button group in content header: LayoutGrid | List icons",
+        "Grid view: existing card layout",
+        "List view: table with columns - name, size, date, actions",
+        "Store preference in localStorage key 'staff-docs-view'",
+        "Load preference on mount",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "FR3 - folder contents view"
+    },
+    {
+      "id": "US-008",
+      "title": "Add document sorting",
+      "description": "As a staff member, I want to sort documents by name, date, or size.",
+      "acceptanceCriteria": [
+        "Add sort dropdown: Name, Date, Size (asc/desc)",
+        "In list view, clicking column header sorts by that column",
+        "Sort indicator arrow shows current sort direction",
+        "Default sort: date descending (newest first)",
+        "Sort preference stored in URL param: ?sort=name&dir=asc",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": "FR3 continuation"
+    },
+    {
+      "id": "US-009",
+      "title": "Create server-side search API",
+      "description": "As a developer, I need search endpoint that scales to 100k+ docs.",
+      "acceptanceCriteria": [
+        "Create GET /api/staff/documents/search",
+        "Query param: q (search term, required)",
+        "Query param: vehicle_id (optional filter)",
+        "Search documents.name with ILIKE '%q%'",
+        "Join to get vehicle.name, folder.name for context",
+        "Return: { results: Document[], total: number }",
+        "Limit 50 results per page",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": "FR4 backend - search before UI"
+    },
+    {
+      "id": "US-010",
+      "title": "Implement search UI",
+      "description": "As a staff member, I want to search documents from a search bar.",
+      "acceptanceCriteria": [
+        "Search input in page header with Search icon",
+        "Debounce input 300ms before calling /search API",
+        "Show Loader2 spinner while loading",
+        "Results replace folder contents in main area",
+        "Each result shows: name, path (Vehicle > Folder), size",
+        "Click result opens document preview",
+        "X button clears search and returns to folder view",
+        "Empty state: 'No results for [query]'",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": "FR4 - depends on US-009"
+    },
+    {
+      "id": "US-011",
+      "title": "Add tree search filter",
+      "description": "As a staff member, I want to filter the tree sidebar by typing.",
+      "acceptanceCriteria": [
+        "Search input at top of tree sidebar",
+        "Client-side filter as user types (debounce 150ms)",
+        "Filter matches vehicle name, folder name",
+        "Auto-expand parents when child matches",
+        "Highlight matching text with mark element",
+        "Show 'No matches' when nothing found",
+        "X button clears filter",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": "FR1 tree search - different from document search"
+    },
+    {
+      "id": "US-012",
+      "title": "Add checkbox selection to documents",
+      "description": "As a staff member, I want to select multiple documents.",
+      "acceptanceCriteria": [
+        "Checkbox on each document card/row",
+        "Header checkbox for 'Select All' visible documents",
+        "Track selection in state: Set<string> of document IDs",
+        "Show '[N] selected' badge in header when N > 0",
+        "Clear selection when navigating to different folder",
+        "Checkbox click doesn't open document preview",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": "FR7 foundation - bulk ops need selection first"
+    },
+    {
+      "id": "US-013",
+      "title": "Add bulk actions dropdown",
+      "description": "As a staff member, I want a dropdown menu for bulk actions.",
+      "acceptanceCriteria": [
+        "Dropdown button appears when documents selected",
+        "Button text: 'Actions' with ChevronDown",
+        "Menu items: Move to..., Delete, Download ZIP",
+        "Dropdown disabled when nothing selected",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": "FR7 - depends on US-012"
+    },
+    {
+      "id": "US-014",
+      "title": "Implement bulk move",
+      "description": "As a staff member, I want to move multiple documents at once.",
+      "acceptanceCriteria": [
+        "Click 'Move to...' opens folder picker dialog",
+        "Dialog shows folder tree (reuse FolderTree component)",
+        "Select destination folder, click 'Move [N] documents'",
+        "Call PATCH /api/staff/documents/[id] for each with new folder_id",
+        "Show progress toast during move",
+        "On success: 'Moved [N] documents to [folder]'",
+        "Clear selection after move",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": "FR7 bulk move"
+    },
+    {
+      "id": "US-015",
+      "title": "Implement bulk delete",
+      "description": "As a staff member, I want to delete multiple documents at once.",
+      "acceptanceCriteria": [
+        "Click 'Delete' shows confirmation dialog",
+        "Dialog: 'Delete [N] documents? This cannot be undone.'",
+        "List first 5 document names, then '...and N more'",
+        "Red 'Delete' button, gray 'Cancel' button",
+        "Call DELETE /api/staff/documents/[id] for each",
+        "On success: 'Deleted [N] documents'",
+        "Clear selection after delete",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": "FR7 bulk delete"
+    },
+    {
+      "id": "US-016",
+      "title": "Create bulk download ZIP endpoint",
+      "description": "As a developer, I need endpoint to download multiple docs as ZIP.",
+      "acceptanceCriteria": [
+        "Create POST /api/staff/documents/bulk-download",
+        "Body: { document_ids: string[] }",
+        "Fetch files from Supabase storage",
+        "Create ZIP using archiver npm package",
+        "Stream ZIP response (Content-Type: application/zip)",
+        "Filename header: documents-YYYY-MM-DD.zip",
+        "Typecheck passes"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": "FR7 backend for ZIP download"
+    },
+    {
+      "id": "US-017",
+      "title": "Implement bulk download ZIP UI",
+      "description": "As a staff member, I want to download selected documents as ZIP.",
+      "acceptanceCriteria": [
+        "Click 'Download ZIP' calls bulk-download endpoint",
+        "Show loading toast: 'Preparing download...'",
+        "Trigger browser download when response arrives",
+        "Clear selection after download starts",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": "FR7 - depends on US-016"
+    },
+    {
+      "id": "US-018",
+      "title": "Add drag-and-drop upload zone",
+      "description": "As a staff member, I want to drag files onto the page to upload.",
+      "acceptanceCriteria": [
+        "Main content area is a drop zone",
+        "On drag over: show blue dashed border and 'Drop files to upload' overlay",
+        "On drop: open DocumentUploadDialog with dropped files",
+        "Reject files > 50MB with toast error",
+        "Accept: PDF, DOCX, XLSX, TXT, JPG, PNG",
+        "Reject other types with toast listing allowed",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": "FR5 drag-drop upload"
+    },
+    {
+      "id": "US-019",
+      "title": "Add drag-drop to tree folders",
+      "description": "As a staff member, I want to drag files onto tree folders to upload there.",
+      "acceptanceCriteria": [
+        "Tree folder nodes accept onDragOver, onDrop",
+        "On drag over folder: highlight with ring-2 ring-primary",
+        "On drop: open upload dialog with that folder pre-selected",
+        "Toast: 'Uploading to [folder name]'",
+        "Works even when folder is collapsed",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": "FR5 extension"
+    },
+    {
+      "id": "US-020",
+      "title": "Add document drag to move",
+      "description": "As a staff member, I want to drag documents to folders to move them.",
+      "acceptanceCriteria": [
+        "Add draggable attribute to document cards/rows",
+        "On drag start: set dataTransfer with document ID",
+        "Tree folders highlight as drop targets",
+        "On drop: call move API for that document",
+        "Toast: 'Moved [name] to [folder]'",
+        "Update UI optimistically, revert on error",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": "FR8 drag-drop organization"
+    },
+    {
+      "id": "US-021",
+      "title": "Display tags on documents",
+      "description": "As a staff member, I want to see document tags as badges.",
+      "acceptanceCriteria": [
+        "Fetch tags[] field from documents API (already exists)",
+        "Grid view: show tag badges below document name",
+        "List view: tags column with badges",
+        "Max 2 visible tags, '+N' for overflow",
+        "Tooltip on '+N' shows full tag list",
+        "Empty tags = show nothing",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 21,
+      "passes": false,
+      "notes": "FR10 tag display"
+    },
+    {
+      "id": "US-022",
+      "title": "Create tags list API",
+      "description": "As a developer, I need endpoint to list all unique tags.",
+      "acceptanceCriteria": [
+        "Create GET /api/staff/documents/tags",
+        "Query: SELECT DISTINCT unnest(tags) FROM documents",
+        "Return: { tags: string[] } sorted alphabetically",
+        "Typecheck passes"
+      ],
+      "priority": 22,
+      "passes": false,
+      "notes": "FR10 backend for autocomplete"
+    },
+    {
+      "id": "US-023",
+      "title": "Add tag management popover",
+      "description": "As a staff member, I want to add/remove tags from a document.",
+      "acceptanceCriteria": [
+        "Document actions menu: 'Manage Tags'",
+        "Opens Popover showing current tags as removable badges",
+        "Input field to add new tag (Enter to add)",
+        "Autocomplete dropdown from /tags API",
+        "X on badge removes tag",
+        "Save via PATCH /api/staff/documents/[id] with updated tags[]",
+        "Toast: 'Tags updated'",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 23,
+      "passes": false,
+      "notes": "FR10 - depends on US-022"
+    },
+    {
+      "id": "US-024",
+      "title": "Add filter by tag",
+      "description": "As a staff member, I want to filter documents by tag.",
+      "acceptanceCriteria": [
+        "Add tag filter dropdown next to search",
+        "Fetch tags from /tags API for options",
+        "Multi-select with checkboxes",
+        "Filter: documents where tags[] contains ANY selected tag",
+        "Clear button to reset filter",
+        "Persist in URL: ?tags=urgent,review",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 24,
+      "passes": false,
+      "notes": "FR10 tag filtering"
+    },
+    {
+      "id": "US-025",
+      "title": "Add version history panel",
+      "description": "As a staff member, I want to view a document's version history.",
+      "acceptanceCriteria": [
+        "Document actions menu: 'Version History'",
+        "Opens Sheet (slide-out panel) from right",
+        "Fetch GET /api/staff/documents/[id]/versions",
+        "List: version number, date, uploader, size",
+        "Current version has 'Current' badge",
+        "Download button on each version",
+        "Empty state if only 1 version",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 25,
+      "passes": false,
+      "notes": "FR11 version history"
+    },
+    {
+      "id": "US-026",
+      "title": "Add upload new version",
+      "description": "As a staff member, I want to upload a new version of a document.",
+      "acceptanceCriteria": [
+        "Document actions menu: 'Upload New Version'",
+        "Opens file picker (single file)",
+        "POST /api/staff/documents/[id]/versions with file",
+        "Toast: 'Uploaded version [N]'",
+        "Refresh version history if panel open",
+        "Document card shows updated version number",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 26,
+      "passes": false,
+      "notes": "FR11 - depends on US-025"
+    },
+    {
+      "id": "US-027",
+      "title": "Show version badge on documents",
+      "description": "As a staff member, I want to see version number on multi-version docs.",
+      "acceptanceCriteria": [
+        "Documents with current_version > 1 show 'v[N]' badge",
+        "Badge is small and gray (not prominent)",
+        "Click badge opens version history panel",
+        "Documents with version 1 show no badge",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 27,
+      "passes": false,
+      "notes": "FR11 version indicator"
+    },
+    {
+      "id": "US-028",
+      "title": "Show expired document warning",
+      "description": "As a staff member, I want warnings on expired documents.",
+      "acceptanceCriteria": [
+        "Check document_expiry_date against new Date()",
+        "If expired: show AlertTriangle icon (amber) on card/row",
+        "Tooltip: 'Expired on [formatted date]'",
+        "In DocumentViewerFullscreen: show amber banner at top",
+        "Banner: 'This document expired on [date]'",
+        "Document still fully accessible",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 28,
+      "passes": false,
+      "notes": "FR13 expired warning"
+    },
+    {
+      "id": "US-029",
+      "title": "Show watermark on confidential docs",
+      "description": "As a staff member, I want watermarks displayed on confidential documents.",
+      "acceptanceCriteria": [
+        "Check documents.watermark JSONB field (truthy = has watermark)",
+        "If watermark: show 'CONFIDENTIAL' badge on card/row",
+        "In PDF preview: overlay diagonal text 'CONFIDENTIAL - VERSO Holdings'",
+        "Watermark at 30% opacity",
+        "Position: center of viewport, rotated -45deg",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 29,
+      "passes": false,
+      "notes": "FR12 watermark display"
+    },
+    {
+      "id": "US-030",
+      "title": "Add folder context menu",
+      "description": "As a staff member, I want to right-click folders for actions.",
+      "acceptanceCriteria": [
+        "Right-click folder in tree opens ContextMenu",
+        "Menu items: New Subfolder, Rename, Delete",
+        "New Subfolder: opens CreateFolderDialog with parent set",
+        "Rename: opens RenameFolderDialog",
+        "Delete: confirmation, disabled if folder has documents",
+        "Only custom folders can be deleted (not category folders)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 30,
+      "passes": false,
+      "notes": "FR9 folder management"
+    },
+    {
+      "id": "US-031",
+      "title": "Add deals to tree under vehicles",
+      "description": "As a staff member, I want to see deals in the folder tree.",
+      "acceptanceCriteria": [
+        "Under each vehicle, show 'Deals' virtual node with Briefcase icon",
+        "Expand fetches deals from GET /api/deals?vehicle_id=X",
+        "Each deal shown as child node",
+        "Clicking deal filters documents by deal_id",
+        "Lazy load: only fetch when expanded",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 31,
+      "passes": false,
+      "notes": "FR1 hierarchy extension"
+    },
+    {
+      "id": "US-032",
+      "title": "Add data room virtual folder",
+      "description": "As a staff member, I want to see deal data rooms in the tree.",
+      "acceptanceCriteria": [
+        "Under each deal node, show 'Data Room' virtual folder",
+        "Icon: Database or HardDrive",
+        "Clicking queries deal_data_room_documents table instead of documents",
+        "Same grid/list view for data room contents",
+        "Upload to data room inserts into deal_data_room_documents",
+        "Breadcrumb: Vehicle > Deal > Data Room",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 32,
+      "passes": false,
+      "notes": "FR14 data room integration"
+    }
+  ]
+}

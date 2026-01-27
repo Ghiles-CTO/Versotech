@@ -84,7 +84,7 @@ export function Step3WellInformed() {
                             'flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all',
                             isSelected
                               ? `border-${option.color}-500 bg-${option.color}-500/10`
-                              : 'border-slate-700 hover:border-slate-600',
+                              : 'border-border hover:border-muted-foreground/50',
                             isSelected && option.value === 'yes' && 'border-emerald-500 bg-emerald-500/10',
                             isSelected && option.value === 'no' && 'border-red-500 bg-red-500/10',
                             isSelected && option.value === 'unsure' && 'border-amber-500 bg-amber-500/10'
@@ -126,7 +126,7 @@ export function Step3WellInformed() {
                           'flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all',
                           field.value?.includes(option.value)
                             ? 'border-emerald-500 bg-emerald-500/10'
-                            : 'border-slate-700 hover:border-slate-600'
+                            : 'border-border hover:border-muted-foreground/50'
                         )}
                       >
                         <Checkbox

@@ -1,0 +1,13 @@
+action,amount,amount_comment,amount_db,candidate_count,candidate_ids,commission_id,currency,currency_comment,currency_db,entity_code,excel_row,fee_type,fee_type_comment,fee_type_db,fishy_reason,introducer,introducer_comment,introducer_db,investor,investor_comment,investor_db,match_reason,rate_bps,rate_bps_comment,rate_bps_db,rate_pct,rate_pct_comment
+update,,0.0,0.0,,,b057ecc2-8ad8-464d-9b43-f0030604357c,,USD,USD,VC126,529,,performance_fee,performance_fee,INTRODUCER_NAME_MISMATCH,,Daniel Baumslag,Setcap+Daniel Baumslag,,CLOUDSAFE HOLDINGS LIMITED,CLOUDSAFE HOLDINGS LIMITED,MATCH_RELAXED_INVESTOR_ONLY,,0.0,350.0,,0.0
+update,,0.0,0.0,,,b057ecc2-8ad8-464d-9b43-f0030604357c,,USD,USD,VC126,537,,performance_fee,performance_fee,INTRODUCER_NAME_MISMATCH,,Moore & Moore Investments Ltd,Setcap+Daniel Baumslag,,CLOUDSAFE HOLDINGS LIMITED,CLOUDSAFE HOLDINGS LIMITED,MATCH_RELAXED_INVESTOR_ONLY,,300.0,350.0,,3.0
+update,1500.0,,,0.0,,,USD,,,VC122,487,invested_amount,,,NO_CANDIDATES,Pierre Paumier,,,LF GROUP SARL,,,NO_CANDIDATES,200.0,,,2.0,
+update,0.0,,,0.0,,,USD,,,VC122,488,performance_fee,,,NO_CANDIDATES,Pierre Paumier,,,LF GROUP SARL,,,NO_CANDIDATES,500.0,,,5.0,
+delete,0.0,,,0.0,,,,,,VC125,501,performance_fee,,,NO_CANDIDATES,Terra Financial & Management Services SA,,,MA GROUP AG,,,NO_CANDIDATES,200.0,,,2.0,
+delete,5000.0,,,0.0,,,,,,VC125,502,invested_amount,,,NO_CANDIDATES,Terra Financial & Management Services SA,,,Eric SARASIN,,,NO_CANDIDATES,500.0,,,2.0,
+delete,0.0,,,0.0,,,,,,VC125,503,performance_fee,,,NO_CANDIDATES,Terra Financial & Management Services SA,,,Eric SARASIN,,,NO_CANDIDATES,200.0,,,2.0,
+delete,2000.0,,,0.0,,,,,,VC125,504,invested_amount,,,NO_CANDIDATES,Pierre Paumier,,,LF GROUP SARL,,,NO_CANDIDATES,200.0,,,2.0,
+update,0.0,,,0.0,,,USD,,,VC126,526,performance_fee,,,NO_CANDIDATES,Setcap,,,BSV SPV III LLC,,,NO_CANDIDATES,0.0,,,0.0,
+update,31030.0,,,0.0,,,USD,,,VC126,527,spread,,,NO_CANDIDATES,Setcap,,,BSV SPV III LLC,,,NO_CANDIDATES,290.0,,,2.9,
+update,12210.0,,,2.0,"6f6c330a-c5fe-419a-8178-37069b41a853,8299c507-674d-4b2d-b5fa-8eaa1e65426a",,USD,,,VC126,531,spread,,,AMBIGUOUS_RELAXED_INVESTOR,Daniel Baumslag,,,CLOUDSAFE HOLDINGS LIMITED,,,AMBIGUOUS_RELAXED_INVESTOR,113.75,,,13.75,
+update,2805.0,,,0.0,,,USD,,,VC133,554,spread,,,NO_CANDIDATES,Setcap,,,778 WALNUT LLC,,,NO_CANDIDATES,8500.0,,,85.0,

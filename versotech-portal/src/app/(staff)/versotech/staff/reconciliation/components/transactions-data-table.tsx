@@ -78,11 +78,11 @@ export function TransactionsDataTable<TData, TValue>({
   return (
     <div className="space-y-4">
       {/* Pagination Controls TOP */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gray-900/30 border-b border-gray-800">
-        <div className="text-sm text-gray-400">
-          Showing <span className="font-medium text-gray-200">{pagination.pageIndex * pagination.pageSize + 1}</span> to{' '}
-          <span className="font-medium text-gray-200">{Math.min((pagination.pageIndex + 1) * pagination.pageSize, totalRows)}</span> of{' '}
-          <span className="font-medium text-gray-200">{totalRows}</span> transactions
+      <div className="flex items-center justify-between px-4 py-3 bg-muted/50 border-b border-border">
+        <div className="text-sm text-muted-foreground">
+          Showing <span className="font-medium text-foreground">{pagination.pageIndex * pagination.pageSize + 1}</span> to{' '}
+          <span className="font-medium text-foreground">{Math.min((pagination.pageIndex + 1) * pagination.pageSize, totalRows)}</span> of{' '}
+          <span className="font-medium text-foreground">{totalRows}</span> transactions
         </div>
 
         <div className="flex items-center gap-3">
@@ -92,14 +92,14 @@ export function TransactionsDataTable<TData, TValue>({
               setPagination(prev => ({ ...prev, pageSize: Number(value), pageIndex: 0 }))
             }}
           >
-            <SelectTrigger className="h-8 w-[100px] bg-gray-800/50 border-gray-700 text-gray-200">
+            <SelectTrigger className="h-8 w-[100px]">
               <SelectValue placeholder={`${pagination.pageSize}`} />
             </SelectTrigger>
-            <SelectContent className="bg-gray-900 border-gray-700">
-              <SelectItem value="10" className="text-gray-200">10 rows</SelectItem>
-              <SelectItem value="25" className="text-gray-200">25 rows</SelectItem>
-              <SelectItem value="50" className="text-gray-200">50 rows</SelectItem>
-              <SelectItem value="100" className="text-gray-200">100 rows</SelectItem>
+            <SelectContent>
+              <SelectItem value="10">10 rows</SelectItem>
+              <SelectItem value="25">25 rows</SelectItem>
+              <SelectItem value="50">50 rows</SelectItem>
+              <SelectItem value="100">100 rows</SelectItem>
             </SelectContent>
           </Select>
 
@@ -107,57 +107,57 @@ export function TransactionsDataTable<TData, TValue>({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 hover:bg-gray-800 disabled:opacity-30"
+              className="h-8 w-8 disabled:opacity-30"
               onClick={() => table.setPageIndex(0)}
               disabled={!table.getCanPreviousPage()}
             >
-              <ChevronsLeft className="h-4 w-4 text-gray-400" />
+              <ChevronsLeft className="h-4 w-4 text-muted-foreground" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 hover:bg-gray-800 disabled:opacity-30"
+              className="h-8 w-8 disabled:opacity-30"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
-              <ChevronLeft className="h-4 w-4 text-gray-400" />
+              <ChevronLeft className="h-4 w-4 text-muted-foreground" />
             </Button>
             <div className="flex items-center gap-1 px-3">
-              <span className="text-sm text-gray-400">
-                Page <span className="font-medium text-gray-200">{currentPage}</span> of <span className="font-medium text-gray-200">{pageCount}</span>
+              <span className="text-sm text-muted-foreground">
+                Page <span className="font-medium text-foreground">{currentPage}</span> of <span className="font-medium text-foreground">{pageCount}</span>
               </span>
             </div>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 hover:bg-gray-800 disabled:opacity-30"
+              className="h-8 w-8 disabled:opacity-30"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
-              <ChevronRight className="h-4 w-4 text-gray-400" />
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 hover:bg-gray-800 disabled:opacity-30"
+              className="h-8 w-8 disabled:opacity-30"
               onClick={() => table.setPageIndex(pageCount - 1)}
               disabled={!table.getCanNextPage()}
             >
-              <ChevronsRight className="h-4 w-4 text-gray-400" />
+              <ChevronsRight className="h-4 w-4 text-muted-foreground" />
             </Button>
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="border border-gray-800 rounded-lg overflow-hidden bg-gray-950/50">
+      <div className="border border-border rounded-lg overflow-hidden bg-card">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="border-b border-gray-800 bg-gray-900/50 hover:bg-gray-900/50">
+              <TableRow key={headerGroup.id} className="border-b border-border bg-muted/50 hover:bg-muted/50">
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} className="text-gray-300 font-semibold">
+                    <TableHead key={header.id} className="text-foreground font-semibold">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -176,7 +176,7 @@ export function TransactionsDataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
-                  className="border-b border-gray-800/50 hover:bg-gray-900/30 transition-colors"
+                  className="border-b border-border/50 hover:bg-muted/30 transition-colors"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="py-4">
@@ -203,8 +203,8 @@ export function TransactionsDataTable<TData, TValue>({
       </div>
 
       {/* Pagination Controls BOTTOM */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gray-900/30 border-t border-gray-800">
-        <div className="text-sm text-gray-400">
+      <div className="flex items-center justify-between px-4 py-3 bg-muted/50 border-t border-border">
+        <div className="text-sm text-muted-foreground">
           Page {currentPage} of {pageCount}
         </div>
 
@@ -214,7 +214,6 @@ export function TransactionsDataTable<TData, TValue>({
             size="sm"
             onClick={() => table.setPageIndex(0)}
             disabled={!table.getCanPreviousPage()}
-            className="bg-gray-800/50 border-gray-700 hover:bg-gray-800"
           >
             First
           </Button>
@@ -223,7 +222,6 @@ export function TransactionsDataTable<TData, TValue>({
             size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
-            className="bg-gray-800/50 border-gray-700 hover:bg-gray-800"
           >
             Previous
           </Button>
@@ -232,7 +230,6 @@ export function TransactionsDataTable<TData, TValue>({
             size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
-            className="bg-gray-800/50 border-gray-700 hover:bg-gray-800"
           >
             Next
           </Button>
@@ -241,7 +238,6 @@ export function TransactionsDataTable<TData, TValue>({
             size="sm"
             onClick={() => table.setPageIndex(pageCount - 1)}
             disabled={!table.getCanNextPage()}
-            className="bg-gray-800/50 border-gray-700 hover:bg-gray-800"
           >
             Last
           </Button>

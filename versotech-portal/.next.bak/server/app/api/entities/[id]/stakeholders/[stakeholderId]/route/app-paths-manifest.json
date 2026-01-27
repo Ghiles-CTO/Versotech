@@ -1,0 +1,3 @@
+{
+  "/api/entities/[id]/stakeholders/[stakeholderId]/route": "app/api/entities/[id]/stakeholders/[stakeholderId]/route.js"
+}

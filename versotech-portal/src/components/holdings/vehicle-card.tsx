@@ -95,7 +95,7 @@ const getStatusStyles = (status: string) => {
     case 'cancelled':
       return 'bg-red-600 border-red-500 text-white font-medium'
     default:
-      return 'bg-gray-600 border-gray-500 text-white font-medium'
+      return 'bg-muted border-border text-foreground font-medium'
   }
 }
 
@@ -304,11 +304,11 @@ export function VehicleCard({
                 </p>
               </div>
               <div className="space-y-1">
-                <Badge variant="outline" className="bg-white/5 border-white/10 text-xs capitalize">
+                <Badge variant="outline" className="bg-muted/50 border-border text-xs capitalize">
                   Allocation Status: {(holding.allocation_status || holding.subscription?.status || 'pending').replace(/_/g, ' ')}
                 </Badge>
                 {holding.subscription?.commitment !== null && holding.subscription?.commitment !== undefined && (
-                  <Badge variant="outline" className="bg-white/5 border-white/10 text-xs">
+                  <Badge variant="outline" className="bg-muted/50 border-border text-xs">
                     Commitment:{' '}
                     {new Intl.NumberFormat('en-US', {
                       style: 'currency',

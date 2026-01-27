@@ -1,0 +1,3 @@
+{
+  "/api/entities/[id]/flags/[flagId]/route": "app/api/entities/[id]/flags/[flagId]/route.js"
+}

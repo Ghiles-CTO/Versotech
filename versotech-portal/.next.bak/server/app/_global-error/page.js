@@ -1,0 +1,13 @@
+var R=require("../../chunks/ssr/[turbopack]_runtime.js")("server/app/_global-error/page.js")
+R.c("server/chunks/ssr/[root-of-the-server]__8574d8b7._.js")
+R.c("server/chunks/ssr/versotech-portal_b55dcd2d._.js")
+R.c("server/chunks/ssr/6d6b6_next_dist_0fc18fa8._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__8aae65ed._.js")
+R.c("server/chunks/ssr/6d6b6_next_dist_compiled_@opentelemetry_api_index_43be286c.js")
+R.c("server/chunks/ssr/6d6b6_next_dist_0861cf16._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__c515b3c3._.js")
+R.c("server/chunks/ssr/6d6b6_next_dist_49938f89._.js")
+R.c("server/chunks/ssr/versotech-portal_src_app_54a486a2._.js")
+R.c("server/chunks/ssr/versotech-portal__next-internal_server_app__global-error_page_actions_1cd2bbf6.js")
+R.m(316501)
+module.exports=R.m(316501).exports

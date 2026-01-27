@@ -1,0 +1,10 @@
+var R=require("../../../../../../../chunks/[turbopack]_runtime.js")("server/app/api/deals/[id]/fee-structures/[structureId]/attachment/route.js")
+R.c("server/chunks/6d6b6_@supabase_node-fetch_lib_index_fb859d75.js")
+R.c("server/chunks/6d6b6_next_bbbc9076._.js")
+R.c("server/chunks/6d6b6_tr46_f7ca97fb._.js")
+R.c("server/chunks/6d6b6_@supabase_auth-js_dist_module_4ebeb219._.js")
+R.c("server/chunks/6d6b6_e5e892f7._.js")
+R.c("server/chunks/[root-of-the-server]__f3cb7397._.js")
+R.c("server/chunks/a87bc_api_deals_[id]_fee-structures_[structureId]_attachment_route_actions_793042d8.js")
+R.m("[project]/versotech-portal/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/versotech-portal/src/app/api/deals/[id]/fee-structures/[structureId]/attachment/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)")
+module.exports=R.m("[project]/versotech-portal/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/versotech-portal/src/app/api/deals/[id]/fee-structures/[structureId]/attachment/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)").exports

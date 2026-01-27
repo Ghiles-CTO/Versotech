@@ -1,0 +1,3 @@
+{
+  "/api/lawyers/me/upload-signature/route": "app/api/lawyers/me/upload-signature/route.js"
+}

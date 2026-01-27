@@ -1,0 +1,3 @@
+module.exports=[920457,a=>{"use strict";var b=a.i(714898);a.i(937413);var c=a.i(131360),d=a.i(243085),e=a.i(198307);async function f({children:a}){let f=await (0,d.getCurrentUser)();f||(0,c.redirect)("/versotech/login");let g=await (0,e.createClient)(),{data:h}=await g.from("staff_permissions").select("permission").eq("user_id",f.id).eq("permission","super_admin").single();return h||(0,c.redirect)("/versotech/staff"),(0,b.jsx)(b.Fragment,{children:a})}a.s(["default",()=>f,"dynamic",0,"force-dynamic"])}];
+
+//# sourceMappingURL=versotech-portal_src_app_%28staff%29_versotech_staff_admin_layout_tsx_66ad48f5._.js.map

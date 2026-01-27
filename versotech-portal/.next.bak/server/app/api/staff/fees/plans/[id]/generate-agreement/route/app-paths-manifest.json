@@ -1,0 +1,3 @@
+{
+  "/api/staff/fees/plans/[id]/generate-agreement/route": "app/api/staff/fees/plans/[id]/generate-agreement/route.js"
+}

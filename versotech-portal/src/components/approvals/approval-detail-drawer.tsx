@@ -43,19 +43,19 @@ interface ApprovalDetailDrawerProps {
 }
 
 const priorityColors = {
-  low: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-  medium: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
-  high: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
-  critical: 'bg-red-500/20 text-red-300 border-red-500/30'
+  low: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-500/30',
+  medium: 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-300 dark:border-yellow-500/30',
+  high: 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-500/30',
+  critical: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 border-red-300 dark:border-red-500/30'
 }
 
 const statusColors = {
-  pending: 'bg-amber-500/20 text-amber-300',
-  approved: 'bg-emerald-500/20 text-emerald-300',
-  rejected: 'bg-rose-500/20 text-rose-300',
-  awaiting_info: 'bg-blue-500/20 text-blue-300',
-  escalated: 'bg-purple-500/20 text-purple-300',
-  cancelled: 'bg-slate-500/20 text-slate-300'
+  pending: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300',
+  approved: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300',
+  rejected: 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300',
+  awaiting_info: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300',
+  escalated: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300',
+  cancelled: 'bg-slate-100 dark:bg-slate-500/20 text-slate-700 dark:text-slate-300'
 }
 
 const entityTypeLabels: Record<string, string> = {
@@ -195,7 +195,7 @@ export function ApprovalDetailDrawer({
           <div className="flex items-start justify-between">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-sm text-white border-white/20">
+                <Badge variant="outline" className="text-sm text-foreground border-border">
                   {entityTypeLabels[approval.entity_type] || approval.entity_type}
                 </Badge>
                 <Badge className={priorityColors[approval.priority]}>
@@ -205,10 +205,10 @@ export function ApprovalDetailDrawer({
                   {approval.status.replace('_', ' ').toUpperCase()}
                 </Badge>
               </div>
-              <SheetTitle className="text-2xl text-white">
+              <SheetTitle className="text-2xl text-foreground">
                 {approval.related_deal?.name || approval.related_investor?.legal_name || 'Approval Details'}
               </SheetTitle>
-              <SheetDescription className="text-slate-300">
+              <SheetDescription className="text-muted-foreground">
                 Requested {formatDistanceToNow(new Date(approval.created_at), { addSuffix: true })} by{' '}
                 {approval.requested_by_profile?.display_name || 'Unknown'}
               </SheetDescription>
@@ -217,15 +217,15 @@ export function ApprovalDetailDrawer({
 
           {/* SLA Countdown */}
           {slaBreachDate && (
-            <Card className="border-white/10 bg-white/5">
+            <Card className="border-border bg-muted/50">
               <CardContent className="pt-6">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2 text-white">
+                    <span className="flex items-center gap-2 text-foreground">
                       <Clock className="h-4 w-4" />
                       SLA Deadline
                     </span>
-                    <span className={isOverdue ? 'text-red-400 font-semibold' : 'text-white'}>
+                    <span className={isOverdue ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-foreground'}>
                       {isOverdue ? (
                         <span className="flex items-center gap-1">
                           <AlertTriangle className="h-4 w-4" />
@@ -276,7 +276,7 @@ export function ApprovalDetailDrawer({
                 onClick={handleMessageInvestor}
                 disabled={isCreatingConversation}
                 variant="outline"
-                className="w-full border-blue-500/30 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20 hover:text-blue-200"
+                className="w-full border-blue-300 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-500/20 hover:text-blue-800 dark:hover:text-blue-200"
               >
                 <MessageCircle className="h-4 w-4 mr-2" />
                 {isCreatingConversation
@@ -299,9 +299,9 @@ export function ApprovalDetailDrawer({
           <TabsContent value="overview" className="space-y-4 mt-6">
             {/* Deal Information */}
             {approval.related_deal && (
-              <Card className="border-white/10 bg-white/5">
+              <Card className="border-border bg-muted/50">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2 text-white">
+                  <CardTitle className="text-lg flex items-center gap-2 text-foreground">
                     <Building2 className="h-5 w-5" />
                     Deal Information
                   </CardTitle>
@@ -309,26 +309,26 @@ export function ApprovalDetailDrawer({
                 <CardContent className="space-y-3">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-slate-400">Deal Name</p>
+                      <p className="text-sm text-muted-foreground">Deal Name</p>
                       <Link
                         href={`/versotech_main/deals/${approval.related_deal.id}`}
-                        className="font-medium text-white hover:underline flex items-center gap-1"
+                        className="font-medium text-foreground hover:underline flex items-center gap-1"
                       >
                         {approval.related_deal.name}
                         <ExternalLink className="h-3 w-3" />
                       </Link>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-400">Status</p>
-                      <p className="font-medium text-white capitalize">{approval.related_deal.status || 'N/A'}</p>
+                      <p className="text-sm text-muted-foreground">Status</p>
+                      <p className="font-medium text-foreground capitalize">{approval.related_deal.status || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-400">Deal Type</p>
-                      <p className="font-medium text-white capitalize">{approval.related_deal.deal_type || 'N/A'}</p>
+                      <p className="text-sm text-muted-foreground">Deal Type</p>
+                      <p className="font-medium text-foreground capitalize">{approval.related_deal.deal_type || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-400">Currency</p>
-                      <p className="font-medium text-white">{(approval.related_deal as any).currency || 'USD'}</p>
+                      <p className="text-sm text-muted-foreground">Currency</p>
+                      <p className="font-medium text-foreground">{(approval.related_deal as any).currency || 'USD'}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -337,9 +337,9 @@ export function ApprovalDetailDrawer({
 
             {/* Investor Information */}
             {approval.related_investor && (
-              <Card className="border-white/10 bg-white/5">
+              <Card className="border-border bg-muted/50">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2 text-white">
+                  <CardTitle className="text-lg flex items-center gap-2 text-foreground">
                     <User className="h-5 w-5" />
                     Investor Information
                   </CardTitle>
@@ -347,18 +347,18 @@ export function ApprovalDetailDrawer({
                 <CardContent className="space-y-3">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-slate-400">Legal Name</p>
-                      <p className="font-medium text-white">{approval.related_investor.legal_name}</p>
+                      <p className="text-sm text-muted-foreground">Legal Name</p>
+                      <p className="font-medium text-foreground">{approval.related_investor.legal_name}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-400">KYC Status</p>
-                      <Badge variant="outline" className="text-white border-white/30">
+                      <p className="text-sm text-muted-foreground">KYC Status</p>
+                      <Badge variant="outline" className="text-foreground border-border">
                         {approval.related_investor.kyc_status || 'Unknown'}
                       </Badge>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-400">Type</p>
-                      <p className="font-medium text-white capitalize">{(approval.related_investor as any).type || 'N/A'}</p>
+                      <p className="text-sm text-muted-foreground">Type</p>
+                      <p className="font-medium text-foreground capitalize">{(approval.related_investor as any).type || 'N/A'}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -369,53 +369,53 @@ export function ApprovalDetailDrawer({
             {approval.entity_type === 'deal_subscription' &&
               approval.entity_metadata?.subscription_type === 'entity' &&
               approval.entity_metadata?.counterparty_entity && (
-              <Card className="border-blue-500/30 bg-blue-500/10">
+              <Card className="border-blue-300 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2 text-white">
+                  <CardTitle className="text-lg flex items-center gap-2 text-foreground">
                     <Building2 className="h-5 w-5 text-blue-400" />
                     Subscribing Entity
                   </CardTitle>
-                  <CardDescription className="text-blue-300">
+                  <CardDescription className="text-blue-600 dark:text-blue-300">
                     This subscription is being made through a counterparty entity
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-slate-400">Entity Legal Name</p>
-                      <p className="font-medium text-white">{approval.entity_metadata.counterparty_entity.legal_name}</p>
+                      <p className="text-sm text-muted-foreground">Entity Legal Name</p>
+                      <p className="font-medium text-foreground">{approval.entity_metadata.counterparty_entity.legal_name}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-400">Entity Type</p>
-                      <Badge variant="outline" className="text-blue-300 border-blue-400/30">
+                      <p className="text-sm text-muted-foreground">Entity Type</p>
+                      <Badge variant="outline" className="text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-400/30">
                         {approval.entity_metadata.counterparty_entity.entity_type.replace('_', ' ').toUpperCase()}
                       </Badge>
                     </div>
                     {approval.entity_metadata.counterparty_entity.jurisdiction && (
                       <div>
-                        <p className="text-sm text-slate-400">Jurisdiction</p>
-                        <p className="font-medium text-white">{approval.entity_metadata.counterparty_entity.jurisdiction}</p>
+                        <p className="text-sm text-muted-foreground">Jurisdiction</p>
+                        <p className="font-medium text-foreground">{approval.entity_metadata.counterparty_entity.jurisdiction}</p>
                       </div>
                     )}
                     {approval.entity_metadata.counterparty_entity.registration_number && (
                       <div>
-                        <p className="text-sm text-slate-400">Registration Number</p>
-                        <p className="font-medium text-white">{approval.entity_metadata.counterparty_entity.registration_number}</p>
+                        <p className="text-sm text-muted-foreground">Registration Number</p>
+                        <p className="font-medium text-foreground">{approval.entity_metadata.counterparty_entity.registration_number}</p>
                       </div>
                     )}
                     {approval.entity_metadata.counterparty_entity.tax_id && (
                       <div>
-                        <p className="text-sm text-slate-400">Tax ID</p>
-                        <p className="font-mono text-sm text-white">{approval.entity_metadata.counterparty_entity.tax_id}</p>
+                        <p className="text-sm text-muted-foreground">Tax ID</p>
+                        <p className="font-mono text-sm text-foreground">{approval.entity_metadata.counterparty_entity.tax_id}</p>
                       </div>
                     )}
                     {approval.entity_metadata.counterparty_entity.representative_name && (
                       <div>
-                        <p className="text-sm text-slate-400">Authorized Representative</p>
-                        <p className="font-medium text-white">
+                        <p className="text-sm text-muted-foreground">Authorized Representative</p>
+                        <p className="font-medium text-foreground">
                           {approval.entity_metadata.counterparty_entity.representative_name}
                           {approval.entity_metadata.counterparty_entity.representative_title && (
-                            <span className="text-slate-400 text-sm ml-1">
+                            <span className="text-muted-foreground text-sm ml-1">
                               ({approval.entity_metadata.counterparty_entity.representative_title})
                             </span>
                           )}
@@ -426,10 +426,10 @@ export function ApprovalDetailDrawer({
 
                   {/* Entity KYC Status */}
                   {approval.entity_metadata.counterparty_entity.kyc_status && (
-                    <div className="col-span-2 mt-2 p-3 rounded-lg bg-slate-500/10 border border-slate-400/30">
+                    <div className="col-span-2 mt-2 p-3 rounded-lg bg-muted border border-border">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm text-slate-400 mb-1">Entity KYC Status</p>
+                          <p className="text-sm text-muted-foreground mb-1">Entity KYC Status</p>
                           <Badge
                             variant={
                               approval.entity_metadata.counterparty_entity.kyc_status === 'approved'
@@ -440,10 +440,10 @@ export function ApprovalDetailDrawer({
                             }
                             className={
                               approval.entity_metadata.counterparty_entity.kyc_status === 'approved'
-                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                                ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
                                 : approval.entity_metadata.counterparty_entity.kyc_status === 'pending'
-                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                                : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                                ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
+                                : 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-500/30'
                             }
                           >
                             {approval.entity_metadata.counterparty_entity.kyc_status.toUpperCase()}
@@ -451,23 +451,23 @@ export function ApprovalDetailDrawer({
                         </div>
                         {approval.entity_metadata.counterparty_entity.kyc_completed_at && (
                           <div className="text-right">
-                            <p className="text-xs text-slate-400">Completed</p>
-                            <p className="text-sm text-white">
+                            <p className="text-xs text-muted-foreground">Completed</p>
+                            <p className="text-sm text-foreground">
                               {new Date(approval.entity_metadata.counterparty_entity.kyc_completed_at).toLocaleDateString()}
                             </p>
                           </div>
                         )}
                       </div>
                       {approval.entity_metadata.counterparty_entity.kyc_expiry_date && (
-                        <div className="mt-2 pt-2 border-t border-slate-400/20">
-                          <p className="text-xs text-slate-400">
+                        <div className="mt-2 pt-2 border-t border-border">
+                          <p className="text-xs text-muted-foreground">
                             Expires: {new Date(approval.entity_metadata.counterparty_entity.kyc_expiry_date).toLocaleDateString()}
                           </p>
                         </div>
                       )}
                       {approval.entity_metadata.counterparty_entity.kyc_notes && (
-                        <div className="mt-2 pt-2 border-t border-slate-400/20">
-                          <p className="text-xs text-slate-300">{approval.entity_metadata.counterparty_entity.kyc_notes}</p>
+                        <div className="mt-2 pt-2 border-t border-border">
+                          <p className="text-xs text-muted-foreground">{approval.entity_metadata.counterparty_entity.kyc_notes}</p>
                         </div>
                       )}
                     </div>
@@ -475,8 +475,8 @@ export function ApprovalDetailDrawer({
 
                   {approval.entity_metadata.counterparty_entity.registered_address && (
                     <div>
-                      <p className="text-sm text-slate-400 mb-1">Registered Address</p>
-                      <div className="text-sm text-white">
+                      <p className="text-sm text-muted-foreground mb-1">Registered Address</p>
+                      <div className="text-sm text-foreground">
                         {approval.entity_metadata.counterparty_entity.registered_address.street && (
                           <p>{approval.entity_metadata.counterparty_entity.registered_address.street}</p>
                         )}
@@ -493,8 +493,8 @@ export function ApprovalDetailDrawer({
                       </div>
                     </div>
                   )}
-                  <div className="mt-3 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
-                    <p className="text-xs text-blue-300">
+                  <div className="mt-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30">
+                    <p className="text-xs text-blue-700 dark:text-blue-300">
                       <strong>Note:</strong> The investor ({approval.related_investor?.legal_name}) is investing on behalf of this entity. Subscription documents will be prepared in the entity's name.
                     </p>
                   </div>
@@ -503,9 +503,9 @@ export function ApprovalDetailDrawer({
             )}
 
             {/* Request Details */}
-            <Card className="border-white/10 bg-white/5">
+            <Card className="border-border bg-muted/50">
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2 text-white">
+                <CardTitle className="text-lg flex items-center gap-2 text-foreground">
                   <FileText className="h-5 w-5" />
                   Request Details
                 </CardTitle>
@@ -513,21 +513,21 @@ export function ApprovalDetailDrawer({
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-slate-400">Assigned To</p>
-                    <p className="font-medium text-white">
+                    <p className="text-sm text-muted-foreground">Assigned To</p>
+                    <p className="font-medium text-foreground">
                       {approval.assigned_to_profile?.display_name || 'Unassigned'}
                     </p>
                     {approval.assigned_to_profile?.email && (
-                      <p className="text-xs text-slate-400">{approval.assigned_to_profile.email}</p>
+                      <p className="text-xs text-muted-foreground">{approval.assigned_to_profile.email}</p>
                     )}
                   </div>
                   <div>
-                    <p className="text-sm text-slate-400">Requested By</p>
-                    <p className="font-medium text-white">
+                    <p className="text-sm text-muted-foreground">Requested By</p>
+                    <p className="font-medium text-foreground">
                       {approval.requested_by_profile?.display_name || 'Unknown'}
                     </p>
                     {approval.requested_by_profile?.email && (
-                      <p className="text-xs text-slate-400">{approval.requested_by_profile.email}</p>
+                      <p className="text-xs text-muted-foreground">{approval.requested_by_profile.email}</p>
                     )}
                   </div>
                 </div>
@@ -535,7 +535,7 @@ export function ApprovalDetailDrawer({
                 {/* Subscription Amount (only for deal_subscription approvals) */}
                 {approval.entity_type === 'deal_subscription' && approval.entity_metadata?.derived_amount && (
                   <div>
-                    <p className="text-sm text-slate-400">Subscription Amount</p>
+                    <p className="text-sm text-muted-foreground">Subscription Amount</p>
                     <p className="text-2xl font-bold text-emerald-400">
                       {approval.entity_metadata.payload?.currency || 'USD'}{' '}
                       {approval.entity_metadata.derived_amount.toLocaleString()}
@@ -546,7 +546,7 @@ export function ApprovalDetailDrawer({
                 {/* Fallback for other approval types with indicative_amount */}
                 {approval.entity_type !== 'deal_subscription' && approval.entity_metadata?.indicative_amount && (
                   <div>
-                    <p className="text-sm text-slate-400">Indicative Amount</p>
+                    <p className="text-sm text-muted-foreground">Indicative Amount</p>
                     <p className="text-2xl font-bold text-emerald-400">
                       {approval.entity_metadata.indicative_currency || 'USD'}{' '}
                       {approval.entity_metadata.indicative_amount.toLocaleString()}
@@ -556,36 +556,36 @@ export function ApprovalDetailDrawer({
 
                 {approval.entity_metadata?.notes && (
                   <div>
-                    <p className="text-sm text-slate-400 mb-2">Notes</p>
-                    <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-                      <p className="text-sm text-white whitespace-pre-wrap">{approval.entity_metadata.notes}</p>
+                    <p className="text-sm text-muted-foreground mb-2">Notes</p>
+                    <div className="p-3 rounded-lg bg-muted border border-border">
+                      <p className="text-sm text-foreground whitespace-pre-wrap">{approval.entity_metadata.notes}</p>
                     </div>
                   </div>
                 )}
 
                 {approval.request_reason && (
                   <div>
-                    <p className="text-sm text-slate-400 mb-2">Request Reason</p>
-                    <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-                      <p className="text-sm text-white whitespace-pre-wrap">{approval.request_reason}</p>
+                    <p className="text-sm text-muted-foreground mb-2">Request Reason</p>
+                    <div className="p-3 rounded-lg bg-muted border border-border">
+                      <p className="text-sm text-foreground whitespace-pre-wrap">{approval.request_reason}</p>
                     </div>
                   </div>
                 )}
 
                 {approval.notes && (
                   <div>
-                    <p className="text-sm text-slate-400 mb-2">Staff Notes</p>
-                    <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-                      <p className="text-sm text-white whitespace-pre-wrap">{approval.notes}</p>
+                    <p className="text-sm text-muted-foreground mb-2">Staff Notes</p>
+                    <div className="p-3 rounded-lg bg-muted border border-border">
+                      <p className="text-sm text-foreground whitespace-pre-wrap">{approval.notes}</p>
                     </div>
                   </div>
                 )}
 
                 {approval.rejection_reason && (
                   <div>
-                    <p className="text-sm text-slate-400 mb-2">Rejection Reason</p>
-                    <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30">
-                      <p className="text-sm whitespace-pre-wrap text-rose-300">{approval.rejection_reason}</p>
+                    <p className="text-sm text-muted-foreground mb-2">Rejection Reason</p>
+                    <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30">
+                      <p className="text-sm whitespace-pre-wrap text-rose-700 dark:text-rose-300">{approval.rejection_reason}</p>
                     </div>
                   </div>
                 )}
@@ -594,9 +594,9 @@ export function ApprovalDetailDrawer({
 
             {/* Approval Decision */}
             {approval.approved_by_profile && (
-              <Card className="border-white/10 bg-white/5">
+              <Card className="border-border bg-muted/50">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2 text-white">
+                  <CardTitle className="text-lg flex items-center gap-2 text-foreground">
                     <CheckCircle2 className="h-5 w-5" />
                     Decision
                   </CardTitle>
@@ -604,13 +604,13 @@ export function ApprovalDetailDrawer({
                 <CardContent className="space-y-3">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-slate-400">Decided By</p>
-                      <p className="font-medium text-white">{approval.approved_by_profile.display_name}</p>
-                      <p className="text-xs text-slate-400">{approval.approved_by_profile.email}</p>
+                      <p className="text-sm text-muted-foreground">Decided By</p>
+                      <p className="font-medium text-foreground">{approval.approved_by_profile.display_name}</p>
+                      <p className="text-xs text-muted-foreground">{approval.approved_by_profile.email}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-400">Decided At</p>
-                      <p className="font-medium text-white">
+                      <p className="text-sm text-muted-foreground">Decided At</p>
+                      <p className="font-medium text-foreground">
                         {approval.approved_at && format(new Date(approval.approved_at), 'MMM dd, yyyy HH:mm')}
                       </p>
                     </div>
@@ -620,9 +620,9 @@ export function ApprovalDetailDrawer({
             )}
 
             {/* Entity ID Reference */}
-            <Card className="border-white/10 bg-white/5">
+            <Card className="border-border bg-muted/50">
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2 text-white">
+                <CardTitle className="text-lg flex items-center gap-2 text-foreground">
                   <Info className="h-5 w-5" />
                   Reference Information
                 </CardTitle>
@@ -630,12 +630,12 @@ export function ApprovalDetailDrawer({
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-slate-400">Approval ID</p>
-                    <p className="font-mono text-xs text-white">{approval.id}</p>
+                    <p className="text-sm text-muted-foreground">Approval ID</p>
+                    <p className="font-mono text-xs text-foreground">{approval.id}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-400">Entity ID</p>
-                    <p className="font-mono text-xs text-white">{approval.entity_id}</p>
+                    <p className="text-sm text-muted-foreground">Entity ID</p>
+                    <p className="font-mono text-xs text-foreground">{approval.entity_id}</p>
                   </div>
                 </div>
               </CardContent>
@@ -643,13 +643,13 @@ export function ApprovalDetailDrawer({
           </TabsContent>
 
           <TabsContent value="timeline" className="space-y-4 mt-6">
-            <Card className="border-white/10 bg-white/5">
+            <Card className="border-border bg-muted/50">
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2 text-white">
+                <CardTitle className="text-lg flex items-center gap-2 text-foreground">
                   <TrendingUp className="h-5 w-5" />
                   Approval Timeline
                 </CardTitle>
-                <CardDescription className="text-slate-300">
+                <CardDescription className="text-muted-foreground">
                   Complete event history for this approval
                 </CardDescription>
               </CardHeader>
@@ -662,15 +662,15 @@ export function ApprovalDetailDrawer({
           <TabsContent value="metadata" className="space-y-4 mt-6">
             {/* Entity Metadata */}
             {approval.entity_metadata && Object.keys(approval.entity_metadata).length > 0 && (
-              <Card className="border-white/10 bg-white/5">
+              <Card className="border-border bg-muted/50">
                 <CardHeader>
-                  <CardTitle className="text-lg text-white">Entity Metadata</CardTitle>
-                  <CardDescription className="text-slate-300">
+                  <CardTitle className="text-lg text-foreground">Entity Metadata</CardTitle>
+                  <CardDescription className="text-muted-foreground">
                     Complete data payload for this approval
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <pre className="p-4 rounded-lg bg-black/30 border border-white/10 overflow-x-auto text-xs text-white">
+                  <pre className="p-4 rounded-lg bg-muted dark:bg-black/30 border border-border overflow-x-auto text-xs text-foreground">
                     {JSON.stringify(approval.entity_metadata, null, 2)}
                   </pre>
                 </CardContent>
@@ -678,9 +678,9 @@ export function ApprovalDetailDrawer({
             )}
 
             {/* Timestamps */}
-            <Card className="border-white/10 bg-white/5">
+            <Card className="border-border bg-muted/50">
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2 text-white">
+                <CardTitle className="text-lg flex items-center gap-2 text-foreground">
                   <Calendar className="h-5 w-5" />
                   Timestamps
                 </CardTitle>
@@ -688,39 +688,39 @@ export function ApprovalDetailDrawer({
               <CardContent>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-slate-400">Created At</p>
-                    <p className="font-medium text-white">
+                    <p className="text-muted-foreground">Created At</p>
+                    <p className="font-medium text-foreground">
                       {format(new Date(approval.created_at), 'MMM dd, yyyy HH:mm:ss')}
                     </p>
                   </div>
                   {approval.updated_at && (
                     <div>
-                      <p className="text-slate-400">Updated At</p>
-                      <p className="font-medium text-white">
+                      <p className="text-muted-foreground">Updated At</p>
+                      <p className="font-medium text-foreground">
                         {format(new Date(approval.updated_at), 'MMM dd, yyyy HH:mm:ss')}
                       </p>
                     </div>
                   )}
                   {approval.approved_at && (
                     <div>
-                      <p className="text-slate-400">Approved/Rejected At</p>
-                      <p className="font-medium text-white">
+                      <p className="text-muted-foreground">Approved/Rejected At</p>
+                      <p className="font-medium text-foreground">
                         {format(new Date(approval.approved_at), 'MMM dd, yyyy HH:mm:ss')}
                       </p>
                     </div>
                   )}
                   {approval.resolved_at && (
                     <div>
-                      <p className="text-slate-400">Resolved At</p>
-                      <p className="font-medium text-white">
+                      <p className="text-muted-foreground">Resolved At</p>
+                      <p className="font-medium text-foreground">
                         {format(new Date(approval.resolved_at), 'MMM dd, yyyy HH:mm:ss')}
                       </p>
                     </div>
                   )}
                   {approval.sla_breach_at && (
                     <div>
-                      <p className="text-slate-400">SLA Deadline</p>
-                      <p className="font-medium text-white">
+                      <p className="text-muted-foreground">SLA Deadline</p>
+                      <p className="font-medium text-foreground">
                         {format(new Date(approval.sla_breach_at), 'MMM dd, yyyy HH:mm:ss')}
                       </p>
                     </div>
@@ -730,15 +730,15 @@ export function ApprovalDetailDrawer({
             </Card>
 
             {/* Full Approval Object (for debugging/admin) */}
-            <Card className="border-white/10 bg-white/5">
+            <Card className="border-border bg-muted/50">
               <CardHeader>
-                <CardTitle className="text-lg text-white">Complete Approval Record</CardTitle>
-                <CardDescription className="text-slate-300">
+                <CardTitle className="text-lg text-foreground">Complete Approval Record</CardTitle>
+                <CardDescription className="text-muted-foreground">
                   Full approval object (all fields)
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <pre className="p-4 rounded-lg bg-black/30 border border-white/10 overflow-x-auto text-xs text-white max-h-96 overflow-y-auto">
+                <pre className="p-4 rounded-lg bg-muted dark:bg-black/30 border border-border overflow-x-auto text-xs text-foreground max-h-96 overflow-y-auto">
                   {JSON.stringify(approval, null, 2)}
                 </pre>
               </CardContent>
@@ -884,25 +884,25 @@ function ApprovalTimeline({ approval }: { approval: Approval }) {
                     ? 'bg-emerald-500/20 text-emerald-400'
                     : event.current
                     ? 'bg-amber-500/20 text-amber-400'
-                    : 'bg-white/10 text-slate-500'
+                    : 'bg-muted text-muted-foreground'
                 }`}
               >
                 <Icon className="h-4 w-4" />
               </div>
               {index < events.length - 1 && (
                 <div
-                  className={`w-0.5 h-12 ${event.completed ? 'bg-emerald-500/30' : 'bg-white/10'}`}
+                  className={`w-0.5 h-12 ${event.completed ? 'bg-emerald-500/30' : 'bg-border'}`}
                 />
               )}
             </div>
             <div className="flex-1 pb-8">
-              <p className={`font-medium ${event.current ? 'text-amber-400' : 'text-white'}`}>
+              <p className={`font-medium ${event.current ? 'text-amber-600 dark:text-amber-400' : 'text-foreground'}`}>
                 {event.label}
               </p>
               {event.date && (
-                <p className="text-sm text-slate-400">{format(event.date, 'MMM dd, yyyy HH:mm')}</p>
+                <p className="text-sm text-muted-foreground">{format(event.date, 'MMM dd, yyyy HH:mm')}</p>
               )}
-              <p className="text-sm text-slate-400">{event.description}</p>
+              <p className="text-sm text-muted-foreground">{event.description}</p>
             </div>
           </div>
         )

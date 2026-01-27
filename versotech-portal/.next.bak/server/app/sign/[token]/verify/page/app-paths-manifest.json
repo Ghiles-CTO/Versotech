@@ -1,0 +1,3 @@
+{
+  "/sign/[token]/verify/page": "app/sign/[token]/verify/page.js"
+}

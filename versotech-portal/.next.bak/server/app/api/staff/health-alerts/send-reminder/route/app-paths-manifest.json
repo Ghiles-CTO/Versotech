@@ -1,0 +1,3 @@
+{
+  "/api/staff/health-alerts/send-reminder/route": "app/api/staff/health-alerts/send-reminder/route.js"
+}

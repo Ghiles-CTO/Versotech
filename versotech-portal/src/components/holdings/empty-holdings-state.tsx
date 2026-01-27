@@ -33,8 +33,8 @@ export function EmptyHoldingsState({
       <CardContent className="text-center py-16">
         <div className="flex justify-center mb-6">
           {hasAnyHoldings ? (
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-              <Building className="h-8 w-8 text-gray-400" />
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
+              <Building className="h-8 w-8 text-muted-foreground" />
             </div>
           ) : (
             <div className="flex gap-2">
@@ -48,7 +48,7 @@ export function EmptyHoldingsState({
           )}
         </div>
         
-        <h3 className="text-xl font-semibold mb-3 text-gray-900">
+        <h3 className="text-xl font-semibold mb-3 text-foreground">
           {message || defaultMessage}
         </h3>
         

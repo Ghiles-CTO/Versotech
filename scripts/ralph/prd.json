@@ -319,7 +319,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 18,
-      "passes": false,
+      "passes": true,
       "notes": "FR5 drag-drop upload"
     },
     {
@@ -336,7 +336,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 19,
-      "passes": false,
+      "passes": true,
       "notes": "FR5 extension"
     },
     {
@@ -354,7 +354,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 20,
-      "passes": false,
+      "passes": true,
       "notes": "FR8 drag-drop organization"
     },
     {
@@ -372,7 +372,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 21,
-      "passes": false,
+      "passes": true,
       "notes": "FR10 tag display"
     },
     {
@@ -386,7 +386,7 @@
         "Typecheck passes"
       ],
       "priority": 22,
-      "passes": false,
+      "passes": true,
       "notes": "FR10 backend for autocomplete"
     },
     {
@@ -405,7 +405,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 23,
-      "passes": false,
+      "passes": true,
       "notes": "FR10 - depends on US-022"
     },
     {
@@ -423,7 +423,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 24,
-      "passes": false,
+      "passes": true,
       "notes": "FR10 tag filtering"
     },
     {
@@ -442,7 +442,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 25,
-      "passes": false,
+      "passes": true,
       "notes": "FR11 version history"
     },
     {
@@ -460,7 +460,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 26,
-      "passes": false,
+      "passes": true,
       "notes": "FR11 - depends on US-025"
     },
     {
@@ -476,7 +476,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 27,
-      "passes": false,
+      "passes": true,
       "notes": "FR11 version indicator"
     },
     {
@@ -494,7 +494,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 28,
-      "passes": false,
+      "passes": true,
       "notes": "FR13 expired warning"
     },
     {
@@ -511,7 +511,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 29,
-      "passes": false,
+      "passes": true,
       "notes": "FR12 watermark display"
     },
     {
@@ -529,7 +529,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 30,
-      "passes": false,
+      "passes": true,
       "notes": "FR9 folder management"
     },
     {
@@ -546,7 +546,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 31,
-      "passes": false,
+      "passes": true,
       "notes": "FR1 hierarchy extension"
     },
     {
@@ -564,7 +564,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 32,
-      "passes": false,
+      "passes": true,
       "notes": "FR14 data room integration"
     }
   ]

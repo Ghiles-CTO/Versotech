@@ -1,0 +1,12 @@
+var R=require("../../../../../../../chunks/[turbopack]_runtime.js")("server/app/api/subscriptions/[id]/documents/[documentId]/mark-final/route.js")
+R.c("server/chunks/[root-of-the-server]__1a684a32._.js")
+R.c("server/chunks/6d6b6_next_672f6640._.js")
+R.c("server/chunks/6d6b6_next_b8b5a401._.js")
+R.c("server/chunks/6d6b6_next_dist_7d1347b1._.js")
+R.c("server/chunks/[root-of-the-server]__04eaf9e0._.js")
+R.c("server/chunks/6d6b6_4a9fcd3d._.js")
+R.c("server/chunks/6d6b6_131e6e29._.js")
+R.c("server/chunks/[root-of-the-server]__7a18eae2._.js")
+R.c("server/chunks/a87bc_api_subscriptions_[id]_documents_[documentId]_mark-final_route_actions_b85b63ea.js")
+R.m(648817)
+module.exports=R.m(648817).exports

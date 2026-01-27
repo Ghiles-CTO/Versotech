@@ -78,7 +78,8 @@ function getRetentionColor(value: number, isChurn: boolean = false): string {
 // Get trend icon based on value
 function getTrendIcon(value: number, isChurn: boolean = false) {
   if (isChurn) {
-    return value <= 15 ? TrendingDown : TrendingUp
+    // For churn: low is GOOD (up arrow), high is BAD (down arrow)
+    return value <= 15 ? TrendingUp : TrendingDown
   }
   return value >= 50 ? TrendingUp : TrendingDown
 }

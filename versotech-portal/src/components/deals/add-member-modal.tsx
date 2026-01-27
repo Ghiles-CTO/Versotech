@@ -126,7 +126,7 @@ export function AddMemberModal({ dealId, onMemberAdded }: AddMemberModalProps) {
               />
             </div>
             {searchQuery && filteredInvestors.length > 0 && (
-              <div className="max-h-40 overflow-y-auto border border-white/10 rounded-lg">
+              <div className="max-h-40 overflow-y-auto border border-border rounded-lg">
                 {filteredInvestors.map((inv) => (
                   <div
                     key={inv.id}
@@ -135,17 +135,17 @@ export function AddMemberModal({ dealId, onMemberAdded }: AddMemberModalProps) {
                       setFormData(prev => ({ ...prev, email: '' }))
                       setSearchQuery('')
                     }}
-                    className="p-3 hover:bg-white/5 cursor-pointer border-b border-white/5 last:border-0"
+                    className="p-3 hover:bg-muted cursor-pointer border-b border-border last:border-0"
                   >
-                    <p className="font-medium text-white">{inv.legal_name}</p>
-                    <p className="text-sm text-gray-400">{inv.type}</p>
+                    <p className="font-medium text-foreground">{inv.legal_name}</p>
+                    <p className="text-sm text-muted-foreground">{inv.type}</p>
                   </div>
                 ))}
               </div>
             )}
             {selectedInvestor && (
               <div className="p-3 bg-emerald-500/10 rounded-lg border border-emerald-400/30">
-                <p className="text-sm text-emerald-200">
+                <p className="text-sm text-emerald-600 dark:text-emerald-200">
                   Selected: {investors.find(i => i.id === selectedInvestor)?.legal_name}
                 </p>
               </div>
@@ -153,9 +153,9 @@ export function AddMemberModal({ dealId, onMemberAdded }: AddMemberModalProps) {
           </div>
 
           <div className="relative flex items-center">
-            <div className="flex-grow border-t border-white/10"></div>
+            <div className="flex-grow border-t border-border"></div>
             <span className="px-3 text-sm text-muted-foreground">OR</span>
-            <div className="flex-grow border-t border-white/10"></div>
+            <div className="flex-grow border-t border-border"></div>
           </div>
 
           {/* Email Input for New Users */}
@@ -197,7 +197,7 @@ export function AddMemberModal({ dealId, onMemberAdded }: AddMemberModalProps) {
           </div>
 
           {error && (
-            <div className="p-3 rounded-lg bg-red-500/20 border border-red-400/30 text-red-200 text-sm">
+            <div className="p-3 rounded-lg bg-red-500/20 border border-red-400/30 text-red-700 dark:text-red-200 text-sm">
               {error}
             </div>
           )}

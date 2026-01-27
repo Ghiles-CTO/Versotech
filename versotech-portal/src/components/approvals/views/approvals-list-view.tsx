@@ -25,19 +25,19 @@ interface ApprovalsListViewProps {
 }
 
 const priorityColors = {
-  low: 'bg-blue-500/20 text-blue-300',
-  medium: 'bg-yellow-500/20 text-yellow-300',
-  high: 'bg-orange-500/20 text-orange-300',
-  critical: 'bg-red-500/20 text-red-300'
+  low: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300',
+  medium: 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300',
+  high: 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300',
+  critical: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300'
 }
 
 const statusColors = {
-  pending: 'bg-amber-500/20 text-amber-300',
-  approved: 'bg-emerald-500/20 text-emerald-300',
-  rejected: 'bg-rose-500/20 text-rose-300',
-  awaiting_info: 'bg-blue-500/20 text-blue-300',
-  escalated: 'bg-purple-500/20 text-purple-300',
-  cancelled: 'bg-slate-500/20 text-slate-300'
+  pending: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300',
+  approved: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300',
+  rejected: 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300',
+  awaiting_info: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300',
+  escalated: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300',
+  cancelled: 'bg-slate-100 dark:bg-slate-500/20 text-slate-700 dark:text-slate-300'
 }
 
 export function ApprovalsListView({
@@ -51,7 +51,7 @@ export function ApprovalsListView({
       {approvals.map((approval) => (
         <Card
           key={approval.id}
-          className="cursor-pointer hover:bg-white/5 transition-all border-white/10 hover:border-white/20"
+          className="cursor-pointer hover:bg-muted transition-all border-border hover:border-primary/30"
           onClick={() => onApprovalClick(approval)}
         >
           <CardContent className="p-6">

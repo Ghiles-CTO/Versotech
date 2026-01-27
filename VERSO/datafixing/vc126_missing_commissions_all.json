@@ -1,0 +1,68 @@
+[
+  {
+    "introducer_id": "b661243f-e6b4-41f1-b239-de4b197a689a",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "investor_id": "69075b7c-5dfd-4bd5-b8f7-e0757fe28d64",
+    "basis_type": "spread",
+    "rate_bps": 1174,
+    "accrual_amount": 146768.89,
+    "currency": "USD",
+    "status": "accrued",
+    "introduction_id": "a7a47938-9243-4b31-a519-3b50ffa12167"
+  },
+  {
+    "introducer_id": "b661243f-e6b4-41f1-b239-de4b197a689a",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "investor_id": "69075b7c-5dfd-4bd5-b8f7-e0757fe28d64",
+    "basis_type": "spread",
+    "rate_bps": 312,
+    "accrual_amount": 7804.03,
+    "currency": "USD",
+    "status": "accrued",
+    "introduction_id": "a7a47938-9243-4b31-a519-3b50ffa12167"
+  },
+  {
+    "introducer_id": "b661243f-e6b4-41f1-b239-de4b197a689a",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "investor_id": "f3dabc56-d079-4536-9ad5-9e6b543aea21",
+    "basis_type": "spread",
+    "rate_bps": 178,
+    "accrual_amount": 890.0,
+    "currency": "USD",
+    "status": "accrued",
+    "introduction_id": "da05fc12-da5f-4ca5-81fe-824034c8ddaf"
+  },
+  {
+    "introducer_id": "b661243f-e6b4-41f1-b239-de4b197a689a",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "investor_id": "5ee17648-dd9d-4351-a450-f57119440739",
+    "basis_type": "spread",
+    "rate_bps": 154,
+    "accrual_amount": 770.0,
+    "currency": "USD",
+    "status": "accrued",
+    "introduction_id": "f7ec4dac-212d-4102-a40a-3d88d773fc5d"
+  },
+  {
+    "introducer_id": "b661243f-e6b4-41f1-b239-de4b197a689a",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "investor_id": "c433f598-149f-4748-9cc9-60b756a6f159",
+    "basis_type": "spread",
+    "rate_bps": 1226,
+    "accrual_amount": 46586.4,
+    "currency": "USD",
+    "status": "accrued",
+    "introduction_id": "132a765c-baeb-4b53-8bc0-47d6cd24ec18"
+  },
+  {
+    "introducer_id": "b661243f-e6b4-41f1-b239-de4b197a689a",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "investor_id": "c433f598-149f-4748-9cc9-60b756a6f159",
+    "basis_type": "spread",
+    "rate_bps": 326,
+    "accrual_amount": 8520.0,
+    "currency": "USD",
+    "status": "accrued",
+    "introduction_id": "132a765c-baeb-4b53-8bc0-47d6cd24ec18"
+  }
+]

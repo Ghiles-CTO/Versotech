@@ -24,12 +24,12 @@ export function DealDocumentsTab({ dealId, documents, onRefresh }: DealDocuments
   const [downloading, setDownloading] = useState<string | null>(null)
   
   const docTypeColors: Record<string, string> = {
-    nda: 'bg-purple-500/20 text-purple-200',
-    term_sheet: 'bg-blue-500/20 text-blue-200',
-    subscription: 'bg-emerald-500/20 text-emerald-200',
-    contract: 'bg-amber-500/20 text-amber-200',
-    report: 'bg-cyan-500/20 text-cyan-200',
-    other: 'bg-gray-500/20 text-gray-200'
+    nda: 'bg-purple-500/20 text-purple-700 dark:text-purple-200',
+    term_sheet: 'bg-blue-500/20 text-blue-700 dark:text-blue-200',
+    subscription: 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-200',
+    contract: 'bg-amber-500/20 text-amber-700 dark:text-amber-200',
+    report: 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-200',
+    other: 'bg-muted text-muted-foreground'
   }
 
   const handleUploadComplete = () => {
@@ -94,7 +94,7 @@ export function DealDocumentsTab({ dealId, documents, onRefresh }: DealDocuments
 
   return (
     <div className="space-y-6">
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border-border bg-muted/50">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -126,7 +126,7 @@ export function DealDocumentsTab({ dealId, documents, onRefresh }: DealDocuments
               {documents.map((doc) => (
                 <div
                   key={doc.id}
-                  className="flex items-center justify-between py-3 px-4 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
+                  className="flex items-center justify-between py-3 px-4 rounded-lg border border-border bg-muted/50 hover:bg-muted transition-colors"
                 >
                   <div className="flex items-center gap-3 flex-1">
                     <FileText className="h-5 w-5 text-muted-foreground" />
@@ -174,7 +174,7 @@ export function DealDocumentsTab({ dealId, documents, onRefresh }: DealDocuments
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-red-200"
+                      className="text-red-700 dark:text-red-200"
                       onClick={() => handleDelete(doc.id)}
                       disabled={deleting === doc.id}
                     >

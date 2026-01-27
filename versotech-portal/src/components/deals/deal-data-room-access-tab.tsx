@@ -287,7 +287,7 @@ export function DealDataRoomAccessTab({
 
   return (
     <div className="space-y-6">
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border-border bg-muted/50">
         <CardHeader className="flex flex-row items-start justify-between">
           <div>
             <CardTitle className="text-foreground">Data Room Access</CardTitle>
@@ -377,7 +377,7 @@ export function DealDataRoomAccessTab({
         </CardContent>
       </Card>
 
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border-border bg-muted/50">
         <CardHeader className="flex flex-row items-start justify-between">
           <div>
             <CardTitle className="text-foreground">Data Room Documents</CardTitle>
@@ -420,7 +420,7 @@ export function DealDataRoomAccessTab({
                         )}
                         {doc.file_name || doc.file_key?.split('/').pop() || 'Untitled'}
                         {doc.external_link && (
-                          <Badge variant="outline" className="ml-2 text-xs bg-blue-50 text-blue-700 border-blue-200">
+                          <Badge variant="outline" className="ml-2 text-xs bg-blue-500/10 text-blue-400 border-blue-500/30">
                             Link
                           </Badge>
                         )}
@@ -430,7 +430,7 @@ export function DealDataRoomAccessTab({
                       <Badge variant="outline">{doc.folder || 'Uncategorized'}</Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge className={doc.visible_to_investors ? 'bg-emerald-500/20 text-emerald-100' : 'bg-gray-500/20 text-gray-200'}>
+                      <Badge className={doc.visible_to_investors ? 'bg-emerald-500/20 text-emerald-100' : 'bg-muted text-muted-foreground'}>
                         {doc.visible_to_investors ? 'YES' : 'NO'}
                       </Badge>
                     </TableCell>

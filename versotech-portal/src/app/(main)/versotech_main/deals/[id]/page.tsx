@@ -43,14 +43,6 @@ export default async function DealDetailPage({ params }: PageParams) {
 
   const userRole = userProfile?.role || 'staff_ops'
 
-  // Fetch arranger entities for edit dropdown
-  // Note: arranger_entities has no 'company_name' - use legal_name only
-  const { data: arrangerEntities } = await serviceSupabase
-    .from('arranger_entities')
-    .select('id, legal_name')
-    .eq('status', 'active')
-    .order('legal_name')
-
   // Fetch deal with all related data
   const { data: deal, error: dealError } = await serviceSupabase
     .from('deals')
@@ -327,7 +319,6 @@ export default async function DealDetailPage({ params }: PageParams) {
       subscriptionsForJourney={subscriptionsForJourney || []}
       activitySummary={activitySummary}
       userProfile={{ role: userRole }}
-      arrangerEntities={arrangerEntities || []}
     />
   )
 }

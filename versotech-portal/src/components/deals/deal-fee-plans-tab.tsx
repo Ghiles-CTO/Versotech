@@ -126,7 +126,7 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
     switch (status) {
       case 'accepted':
         return (
-          <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+          <Badge className="bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 border-green-300 dark:border-green-500/30">
             <CheckCircle className="h-3 w-3 mr-1" />
             Accepted
           </Badge>
@@ -134,21 +134,21 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
       case 'sent':
       case 'pending_signature':
         return (
-          <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+          <Badge className="bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-500/30">
             <Clock className="h-3 w-3 mr-1" />
             Pending
           </Badge>
         )
       case 'rejected':
         return (
-          <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
+          <Badge className="bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 border-red-300 dark:border-red-500/30">
             <XCircle className="h-3 w-3 mr-1" />
             Rejected
           </Badge>
         )
       default:
         return (
-          <Badge variant="outline" className="border-gray-500/30 text-gray-400">
+          <Badge variant="outline" className="border-border text-muted-foreground">
             Draft
           </Badge>
         )
@@ -268,7 +268,7 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
   return (
     <div className="space-y-6">
       {/* Fee Plans Section (for investors) */}
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border border-border bg-muted/50">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -294,7 +294,7 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
               {feePlans.map((plan) => {
                 const entityInfo = getEntityInfo(plan)
                 return (
-                  <Card key={plan.id} className="border border-white/10 bg-white/5">
+                  <Card key={plan.id} className="border border-border bg-muted/50">
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -345,12 +345,12 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
                       {/* Term Sheet & Entity Info */}
                       <div className="mt-3 space-y-2">
                         {plan.term_sheet_id && plan.term_sheet && (
-                          <div className="flex items-center gap-2 text-sm text-gray-400">
-                            <FileText className="h-4 w-4 text-gray-500" />
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <FileText className="h-4 w-4 text-muted-foreground" />
                             <span>
                               Term Sheet v{plan.term_sheet.version}
                               {plan.term_sheet.term_sheet_date && (
-                                <span className="text-gray-500 ml-1">
+                                <span className="text-muted-foreground ml-1">
                                   ({new Date(plan.term_sheet.term_sheet_date).toLocaleDateString()})
                                 </span>
                               )}
@@ -365,7 +365,7 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
                         )}
 
                         {entityInfo && (
-                          <div className="flex items-center gap-2 text-sm text-gray-400">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             {entityInfo.icon}
                             <span>{entityInfo.type}: {entityInfo.name}</span>
                           </div>
@@ -391,12 +391,12 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
                           {plan.fee_components.map((component: any) => (
                             <div
                               key={component.id}
-                              className="flex items-center justify-between py-2 px-3 rounded bg-white/5"
+                              className="flex items-center justify-between py-2 px-3 rounded bg-muted/50"
                             >
                               <span className="text-sm text-foreground">
                                 {feeKindLabels[component.kind]}
                               </span>
-                              <Badge variant="outline" className="border-white/20 text-muted-foreground">
+                              <Badge variant="outline" className="border-border text-muted-foreground">
                                 {component.rate_bps ? `${component.rate_bps / 100}%` :
                                  component.flat_amount ? `$${component.flat_amount}` : '—'}
                               </Badge>
@@ -423,7 +423,7 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
                         if (!pdfUrl) return null
 
                         return (
-                          <div className="mt-4 pt-4 border-t border-white/10">
+                          <div className="mt-4 pt-4 border-t border-border">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
                                 <div className="p-2 rounded-lg bg-green-500/10">

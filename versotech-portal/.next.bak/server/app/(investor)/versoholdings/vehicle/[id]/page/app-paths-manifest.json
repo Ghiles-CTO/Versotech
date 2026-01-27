@@ -1,0 +1,3 @@
+{
+  "/(investor)/versoholdings/vehicle/[id]/page": "app/(investor)/versoholdings/vehicle/[id]/page.js"
+}

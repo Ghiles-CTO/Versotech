@@ -29,14 +29,15 @@ const COLORS = [
   '#0891b2', // Cyan
 ]
 
-const formatCurrency = (value: number) => {
-  if (value >= 1000000) {
-    return `$${(value / 1000000).toFixed(2)}M`
-  }
-  if (value >= 1000) {
-    return `$${(value / 1000).toFixed(0)}K`
-  }
-  return `$${value.toFixed(0)}`
+const formatCurrency = (value: number, currency: string = 'USD') => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+    notation: Math.abs(value) >= 1000000 ? 'compact' : 'standard',
+    compactDisplay: 'short'
+  }).format(value)
 }
 
 export function PortfolioAllocationChart({
@@ -128,7 +129,7 @@ export function PortfolioAllocationChart({
             Portfolio Allocation
           </CardTitle>
           <div className="text-right">
-            <p className="text-lg font-bold">{formatCurrency(totalValue)}</p>
+            <p className="text-lg font-bold">{formatCurrency(totalValue, currency)}</p>
             <p className="text-xs text-muted-foreground">{data.filter(d => d.value > 0).length} positions</p>
           </div>
         </div>
@@ -216,7 +217,7 @@ export function PortfolioAllocationChart({
                   </span>
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0 ml-2">
-                  <span className="text-sm font-medium">{formatCurrency(item.value)}</span>
+                  <span className="text-sm font-medium">{formatCurrency(item.value, currency)}</span>
                   <span
                     className="text-xs px-1.5 py-0.5 rounded font-medium min-w-[45px] text-center"
                     style={{

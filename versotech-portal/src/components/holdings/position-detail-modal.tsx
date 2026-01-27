@@ -67,7 +67,7 @@ interface PositionDetailModalProps {
 
 // Simple Skeleton component
 const Skeleton = ({ className }: { className?: string }) => (
-  <div className={cn("animate-pulse bg-gray-200 rounded", className)} />
+  <div className={cn("animate-pulse bg-muted rounded", className)} />
 )
 
 export function PositionDetailModal({
@@ -226,13 +226,13 @@ export function PositionDetailModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl w-[90vw] h-[80vh] p-0 flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95 duration-300">
-        <DialogHeader className="flex-shrink-0 p-6 pb-4 border-b bg-gradient-to-r from-gray-50 to-blue-50">
+        <DialogHeader className="flex-shrink-0 p-6 pb-4 border-b bg-gradient-to-r from-muted to-blue-50 dark:from-gray-800 dark:to-blue-900/20">
           <div className="flex items-center gap-3">
             <div className={cn(
               "w-12 h-12 rounded-xl flex items-center justify-center transition-all",
               holdingType === 'deal'
-                ? "bg-gradient-to-br from-purple-100 to-purple-200"
-                : "bg-gradient-to-br from-blue-100 to-blue-200"
+                ? "bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900 dark:to-purple-800"
+                : "bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800"
             )}>
               {holdingType === 'deal' ? (
                 <Target className="h-6 w-6 text-purple-700" />
@@ -314,13 +314,13 @@ export function PositionDetailModal({
                   {cashflows.length > 0 ? (
                     <div className="space-y-3">
                       {cashflows.map((cf) => (
-                        <Card key={cf.id} className="border hover:border-gray-300 transition-colors">
+                        <Card key={cf.id} className="border hover:border-border transition-colors">
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3 flex-1">
                                 <div className={cn(
                                   "w-10 h-10 rounded-full flex items-center justify-center",
-                                  cf.type === 'call' ? 'bg-red-50' : 'bg-green-50'
+                                  cf.type === 'call' ? 'bg-red-50 dark:bg-red-950' : 'bg-green-50 dark:bg-green-950'
                                 )}>
                                   <div className={`w-4 h-4 rounded-full ${
                                     cf.type === 'call' ? 'bg-red-500' : 'bg-green-500'
@@ -357,7 +357,7 @@ export function PositionDetailModal({
                     </div>
                   ) : (
                     <div className="text-center py-12 text-muted-foreground">
-                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
                         <DollarSign className="h-8 w-8 text-muted-foreground/70" />
                       </div>
                       <p className="font-medium">No cash flows yet</p>
@@ -374,11 +374,11 @@ export function PositionDetailModal({
                   {fees.length > 0 ? (
                     <div className="space-y-3">
                       {fees.map((fee) => (
-                        <Card key={fee.id} className="border hover:border-gray-300 transition-colors">
+                        <Card key={fee.id} className="border hover:border-border transition-colors">
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3 flex-1">
-                                <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center">
+                                <div className="w-10 h-10 rounded-full bg-purple-50 dark:bg-purple-950 flex items-center justify-center">
                                   <Receipt className="h-5 w-5 text-purple-600" />
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -414,7 +414,7 @@ export function PositionDetailModal({
                     </div>
                   ) : (
                     <div className="text-center py-12 text-muted-foreground">
-                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
                         <Receipt className="h-8 w-8 text-muted-foreground/70" />
                       </div>
                       <p className="font-medium">No fees recorded</p>
@@ -427,7 +427,7 @@ export function PositionDetailModal({
                 <TabsContent value="position" className="space-y-4 mt-0 animate-in fade-in-50 duration-300">
                   <div className="mb-4">
                     <h3 className="text-lg font-semibold text-foreground mb-3">Position Details</h3>
-                    <div className="grid grid-cols-3 gap-4 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+                    <div className="grid grid-cols-3 gap-4 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 rounded-xl border border-blue-100 dark:border-blue-900">
                       <div>
                         <div className="text-2xl font-bold text-foreground tabular-nums">{totalUnits.toLocaleString()}</div>
                         <div className="text-sm text-muted-foreground mt-1">Total Units</div>
@@ -452,11 +452,11 @@ export function PositionDetailModal({
                   {lots.length > 0 ? (
                     <div className="space-y-3">
                       {lots.map((lot, index) => (
-                        <Card key={lot.id} className="border hover:border-gray-300 transition-colors">
+                        <Card key={lot.id} className="border hover:border-border transition-colors">
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3 flex-1">
-                                <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
+                                <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 rounded-xl flex items-center justify-center">
                                   <span className="text-sm font-bold text-blue-700">{index + 1}</span>
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -488,7 +488,7 @@ export function PositionDetailModal({
                               </div>
                               <div>
                                 <div className="text-xs text-muted-foreground mb-0.5">Cost/Unit</div>
-                                <div className="font-medium tabular-nums">${lot.unitCost.toFixed(3)}</div>
+                                <div className="font-medium tabular-nums">{formatCurrency(lot.unitCost)}</div>
                               </div>
                               <div>
                                 <div className="text-xs text-muted-foreground mb-0.5">Total Cost</div>
@@ -501,7 +501,7 @@ export function PositionDetailModal({
                     </div>
                   ) : (
                     <div className="text-center py-12 text-muted-foreground">
-                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
                         <Layers className="h-8 w-8 text-muted-foreground/70" />
                       </div>
                       <p className="font-medium">No position data available</p>
@@ -523,11 +523,11 @@ export function PositionDetailModal({
                   {documents.length > 0 ? (
                     <div className="space-y-3">
                       {documents.map((doc) => (
-                        <Card key={doc.id} className="border hover:border-gray-300 transition-colors group">
+                        <Card key={doc.id} className="border hover:border-border transition-colors group">
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                                <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-950 flex items-center justify-center flex-shrink-0">
                                   <FileText className="h-5 w-5 text-blue-600" />
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -559,7 +559,7 @@ export function PositionDetailModal({
                     </div>
                   ) : (
                     <div className="text-center py-12 text-muted-foreground">
-                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
                         <FileText className="h-8 w-8 text-muted-foreground/70" />
                       </div>
                       <p className="font-medium">No documents yet</p>

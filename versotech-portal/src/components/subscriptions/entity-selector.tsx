@@ -101,27 +101,27 @@ export function EntitySelector({ value, onChange }: EntitySelectorProps) {
           onValueChange={(val) => handleTypeChange(val as 'personal' | 'entity')}
           className="space-y-3"
         >
-          <div className="flex items-center space-x-3 rounded-lg border p-4 hover:bg-gray-100 transition-colors">
+          <div className="flex items-center space-x-3 rounded-lg border p-4 hover:bg-muted transition-colors">
             <RadioGroupItem value="personal" id="personal" />
             <Label htmlFor="personal" className="flex-1 cursor-pointer">
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4" />
                 <span className="font-medium">Invest Personally</span>
               </div>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Subscribe using your personal investor profile
               </p>
             </Label>
           </div>
 
-          <div className="flex items-center space-x-3 rounded-lg border p-4 hover:bg-gray-100 transition-colors">
+          <div className="flex items-center space-x-3 rounded-lg border p-4 hover:bg-muted transition-colors">
             <RadioGroupItem value="entity" id="entity" />
             <Label htmlFor="entity" className="flex-1 cursor-pointer">
               <div className="flex items-center gap-2">
                 <Building2 className="w-4 h-4" />
                 <span className="font-medium">Invest Through Entity</span>
               </div>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Subscribe through a legal entity (trust, LLC, partnership, etc.)
               </p>
             </Label>
@@ -133,10 +133,10 @@ export function EntitySelector({ value, onChange }: EntitySelectorProps) {
         <div className="space-y-3 pl-8 border-l-2 border-primary/20">
           <Label htmlFor="entity-select">Select Entity</Label>
           {loading ? (
-            <div className="text-sm text-gray-600">Loading entities...</div>
+            <div className="text-sm text-muted-foreground">Loading entities...</div>
           ) : entities.length === 0 ? (
             <div className="space-y-3">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 You haven't added any entities yet. Create one to invest through a legal entity.
               </p>
               <Button
@@ -154,15 +154,15 @@ export function EntitySelector({ value, onChange }: EntitySelectorProps) {
                 value={value.counterparty_entity_id || ''}
                 onValueChange={handleEntityChange}
               >
-                <SelectTrigger id="entity-select" className="bg-white text-gray-900 border-gray-300">
+                <SelectTrigger id="entity-select" className="bg-background text-foreground border-border">
                   <SelectValue placeholder="Select an entity" />
                 </SelectTrigger>
-                <SelectContent className="bg-white text-gray-900 border-gray-200">
+                <SelectContent className="bg-background text-foreground border-border">
                   {entities.map((entity) => (
-                    <SelectItem key={entity.id} value={entity.id} className="text-gray-900 focus:bg-gray-100 focus:text-gray-900">
+                    <SelectItem key={entity.id} value={entity.id} className="text-foreground focus:bg-muted focus:text-foreground">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{entity.legal_name}</span>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-muted-foreground/70">
                           ({getEntityTypeBadge(entity.entity_type)})
                         </span>
                       </div>
@@ -182,7 +182,7 @@ export function EntitySelector({ value, onChange }: EntitySelectorProps) {
               </Button>
 
               {value.counterparty_entity_id && (
-                <div className="rounded-lg bg-gray-50 border border-gray-200 p-3">
+                <div className="rounded-lg bg-muted border border-border p-3">
                   {(() => {
                     const selectedEntity = entities.find(
                       (e) => e.id === value.counterparty_entity_id
@@ -191,17 +191,17 @@ export function EntitySelector({ value, onChange }: EntitySelectorProps) {
 
                     return (
                       <div className="space-y-1 text-sm">
-                        <div className="font-medium text-gray-900">{selectedEntity.legal_name}</div>
-                        <div className="text-gray-600">
+                        <div className="font-medium text-foreground">{selectedEntity.legal_name}</div>
+                        <div className="text-muted-foreground">
                           Type: {getEntityTypeBadge(selectedEntity.entity_type)}
                         </div>
                         {selectedEntity.jurisdiction && (
-                          <div className="text-gray-600">
+                          <div className="text-muted-foreground">
                             Jurisdiction: {selectedEntity.jurisdiction}
                           </div>
                         )}
                         {selectedEntity.representative_name && (
-                          <div className="text-gray-600">
+                          <div className="text-muted-foreground">
                             Representative: {selectedEntity.representative_name}
                           </div>
                         )}

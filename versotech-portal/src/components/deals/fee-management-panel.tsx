@@ -168,23 +168,23 @@ export default function FeeManagementPanel({ dealId, dealName }: FeeManagementPa
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'accrued': return 'bg-blue-100 text-blue-800'
-      case 'invoiced': return 'bg-yellow-100 text-yellow-800'
-      case 'voided': return 'bg-red-100 text-red-800'
-      case 'draft': return 'bg-gray-100 text-gray-800'
-      case 'sent': return 'bg-blue-100 text-blue-800'
-      case 'paid': return 'bg-green-100 text-green-800'
-      case 'partial': return 'bg-yellow-100 text-yellow-800'
-      case 'cancelled': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'accrued': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200'
+      case 'invoiced': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200'
+      case 'voided': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
+      case 'draft': return 'bg-muted text-muted-foreground'
+      case 'sent': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200'
+      case 'paid': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
+      case 'partial': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200'
+      case 'cancelled': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
+      default: return 'bg-muted text-muted-foreground'
     }
   }
 
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="h-32 bg-gray-100 rounded-lg animate-pulse" />
-        <div className="h-64 bg-gray-100 rounded-lg animate-pulse" />
+        <div className="h-32 bg-muted rounded-lg animate-pulse" />
+        <div className="h-64 bg-muted rounded-lg animate-pulse" />
       </div>
     )
   }
@@ -230,7 +230,7 @@ export default function FeeManagementPanel({ dealId, dealName }: FeeManagementPa
                     {event.fee_components?.kind} - {event.computed_amount} {event.currency}
                   </span>
                 </div>
-                <div className="text-sm text-gray-600 mt-1">
+                <div className="text-sm text-muted-foreground mt-1">
                   Investor: {event.investors?.legal_name} • 
                   Date: {new Date(event.event_date).toLocaleDateString()} •
                   Method: {event.fee_components?.calc_method} ({event.fee_components?.rate_bps} bps)
@@ -240,7 +240,7 @@ export default function FeeManagementPanel({ dealId, dealName }: FeeManagementPa
           ))}
           
           {feeEvents.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               No fee events computed yet
             </div>
           )}
@@ -263,14 +263,14 @@ export default function FeeManagementPanel({ dealId, dealName }: FeeManagementPa
                     {invoice.total} {invoice.currency}
                   </span>
                 </div>
-                <div className="text-sm text-gray-600 mt-1">
+                <div className="text-sm text-muted-foreground mt-1">
                   Investor: {invoice.investors?.legal_name} • 
                   Due: {new Date(invoice.due_date).toLocaleDateString()} •
                   Lines: {invoice.invoice_lines?.length || 0}
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-muted-foreground">
                   Created: {new Date(invoice.created_at).toLocaleDateString()}
                 </div>
               </div>
@@ -278,7 +278,7 @@ export default function FeeManagementPanel({ dealId, dealName }: FeeManagementPa
           ))}
           
           {invoices.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               No invoices generated yet
             </div>
           )}

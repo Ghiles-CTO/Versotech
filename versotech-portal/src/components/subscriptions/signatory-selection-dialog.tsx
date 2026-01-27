@@ -148,7 +148,7 @@ export function SignatorySelectionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-black border border-white/10">
+      <DialogContent className="sm:max-w-[500px] bg-background border-border">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-foreground">
             <UserCheck className="h-5 w-5 text-emerald-500" />
@@ -173,7 +173,7 @@ export function SignatorySelectionDialog({
           ) : signatories.length === 0 ? (
             <Alert className="bg-amber-500/10 border-amber-500/30">
               <AlertCircle className="h-4 w-4 text-amber-500" />
-              <AlertDescription className="text-amber-200">
+              <AlertDescription className="text-amber-700 dark:text-amber-200">
                 No designated signatories found for this investor. Please add signatories to the investor entity first.
               </AlertDescription>
             </Alert>
@@ -228,7 +228,7 @@ export function SignatorySelectionDialog({
               </div>
 
               {/* VERSO Signatories Section - Issuer + Arranger */}
-              <div className="space-y-3 pt-4 border-t border-white/10">
+              <div className="space-y-3 pt-4 border-t border-border">
                 <Label className="text-sm font-medium text-foreground">
                   VERSO Signatories (Added Automatically)
                 </Label>
@@ -275,7 +275,7 @@ export function SignatorySelectionDialog({
               {/* Info Note */}
               <Alert className="bg-blue-500/10 border-blue-500/30">
                 <Users className="h-4 w-4 text-blue-500" />
-                <AlertDescription className="text-blue-200 text-sm">
+                <AlertDescription className="text-blue-700 dark:text-blue-200 text-sm">
                   {signatories.length + 1 + (arranger ? 1 : 0)} signature requests will be created. The document will be marked complete after all parties have signed.
                 </AlertDescription>
               </Alert>

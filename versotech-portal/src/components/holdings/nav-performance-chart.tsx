@@ -13,12 +13,13 @@ interface PerformanceDataPoint {
 
 interface NAVPerformanceChartProps {
   data: PerformanceDataPoint[]
+  currency?: string
 }
 
-const formatCurrency = (value: number) => {
+const formatCurrency = (value: number, currency: string = 'USD') => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
     notation: value >= 1000000 ? 'compact' : 'standard',
@@ -26,7 +27,7 @@ const formatCurrency = (value: number) => {
   }).format(value)
 }
 
-export function NAVPerformanceChart({ data }: NAVPerformanceChartProps) {
+export function NAVPerformanceChart({ data, currency = 'USD' }: NAVPerformanceChartProps) {
   const chartColors = useChartColors()
   const isEmpty = !data || data.length === 0
 
@@ -75,7 +76,7 @@ export function NAVPerformanceChart({ data }: NAVPerformanceChartProps) {
               tick={{ fontSize: 12, fill: chartColors.axis }}
               tickLine={false}
               axisLine={{ stroke: chartColors.axisLine }}
-              tickFormatter={formatCurrency}
+              tickFormatter={(value) => formatCurrency(value as number, currency)}
             />
             <Tooltip
               content={({ active, payload }) => {
@@ -85,7 +86,7 @@ export function NAVPerformanceChart({ data }: NAVPerformanceChartProps) {
                     <div className="bg-background p-4 border border-border rounded-lg shadow-lg">
                       <p className="font-semibold text-foreground mb-2">{data.displayDate}</p>
                       <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
-                        NAV: {formatCurrency(data.value)}
+                        NAV: {formatCurrency(data.value, currency)}
                       </p>
                     </div>
                   )

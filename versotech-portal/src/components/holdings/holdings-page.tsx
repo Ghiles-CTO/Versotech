@@ -116,6 +116,7 @@ export function HoldingsPage({
   const [error, setError] = useState<string | null>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [investorIds, setInvestorIds] = useState<string[]>([])
+  const [selectedCurrency, setSelectedCurrency] = useState<string | null>(null)
   // Removed view toggle - only grid view per user request
 
   // Chart data states
@@ -270,6 +271,17 @@ export function HoldingsPage({
     loadData()
   }, [initialData, fetchPortfolioData, fetchHoldings])
 
+  useEffect(() => {
+    if (!portfolioData?.currencyBreakdown || portfolioData.currencyBreakdown.length === 0) return
+
+    setSelectedCurrency((current) => {
+      if (current && portfolioData.currencyBreakdown.some(entry => entry.currency === current)) {
+        return current
+      }
+      return portfolioData.currencyBreakdown[0].currency
+    })
+  }, [portfolioData])
+
   // Handle refresh
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -296,50 +308,68 @@ export function HoldingsPage({
       if (!portfolioData || !investorIds.length) return
 
       const supabase = createClient()
+      const activeCurrency = selectedCurrency || portfolioData.currencyBreakdown?.[0]?.currency || null
+      const holdingCurrencyMap = new Map(holdings.map(holding => [holding.id, holding.currency]))
+      const vehicleBreakdown = portfolioData.vehicleBreakdown || []
+      const filteredVehicleBreakdown = activeCurrency
+        ? vehicleBreakdown.filter((vehicle: any) => (vehicle.currency || holdingCurrencyMap.get(vehicle.vehicleId)) === activeCurrency)
+        : vehicleBreakdown
 
       try {
         // 1. Allocation Chart - from vehicleBreakdown
-        if (portfolioData.vehicleBreakdown && portfolioData.vehicleBreakdown.length > 0) {
-          const totalValue = portfolioData.vehicleBreakdown.reduce((sum: number, v: any) => sum + (v.currentValue || 0), 0)
-          const allocation = portfolioData.vehicleBreakdown.map((v: any) => ({
+        if (filteredVehicleBreakdown.length > 0) {
+          const totalValue = filteredVehicleBreakdown.reduce((sum: number, v: any) => sum + (v.currentValue || 0), 0)
+          const allocation = filteredVehicleBreakdown.map((v: any) => ({
             name: v.vehicleName || 'Unknown',
             value: v.currentValue || 0,
             percentage: totalValue > 0 ? ((v.currentValue || 0) / totalValue) * 100 : 0
           }))
           setAllocationData(allocation)
+        } else {
+          setAllocationData([])
         }
 
         // 2. Performance Chart - fetch valuations
-        const { data: valuations } = await supabase
-          .from('valuations')
-          .select('vehicle_id, nav_total, as_of_date')
-          .in('vehicle_id', holdings.map(h => h.id))
-          .order('as_of_date', { ascending: true })
-          .limit(50)
+        const performanceVehicleIds = activeCurrency
+          ? holdings.filter(holding => holding.currency === activeCurrency).map(holding => holding.id)
+          : holdings.map(holding => holding.id)
 
-        if (valuations && valuations.length > 0) {
-          // Group by date and sum NAV
-          const navByDate = valuations.reduce((acc: any, v: any) => {
-            const date = v.as_of_date.split('T')[0]
-            if (!acc[date]) {
-              acc[date] = 0
-            }
-            acc[date] += v.nav_total || 0
-            return acc
-          }, {})
+        if (performanceVehicleIds.length > 0) {
+          const { data: valuations } = await supabase
+            .from('valuations')
+            .select('vehicle_id, nav_total, as_of_date')
+            .in('vehicle_id', performanceVehicleIds)
+            .order('as_of_date', { ascending: true })
+            .limit(50)
 
-          const performance = Object.entries(navByDate).map(([date, value]: [string, any]) => ({
-            date,
-            value,
-            displayDate: new Date(date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-          }))
-          setPerformanceData(performance)
+          if (valuations && valuations.length > 0) {
+            // Group by date and sum NAV
+            const navByDate = valuations.reduce((acc: any, v: any) => {
+              const date = v.as_of_date.split('T')[0]
+              if (!acc[date]) {
+                acc[date] = 0
+              }
+              acc[date] += v.nav_total || 0
+              return acc
+            }, {})
+
+            const performance = Object.entries(navByDate).map(([date, value]: [string, any]) => ({
+              date,
+              value,
+              displayDate: new Date(date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+            }))
+            setPerformanceData(performance)
+          } else {
+            setPerformanceData([])
+          }
+        } else {
+          setPerformanceData([])
         }
 
         // 3. Cash Flow Chart - fetch from cashflows table (has investor_id)
         const { data: cashflowsData } = await supabase
           .from('cashflows')
-          .select('type, amount, date')
+          .select('vehicle_id, type, amount, date')
           .in('investor_id', investorIds)
           .order('date', { ascending: true })
           .limit(100)
@@ -348,6 +378,12 @@ export function HoldingsPage({
         const cashFlowMap: any = {}
 
         cashflowsData?.forEach((cf: any) => {
+          if (activeCurrency) {
+            const cashflowCurrency = holdingCurrencyMap.get(cf.vehicle_id)
+            if (cashflowCurrency && cashflowCurrency !== activeCurrency) {
+              return
+            }
+          }
           const period = new Date(cf.date).toISOString().substring(0, 7) // YYYY-MM
           if (!cashFlowMap[period]) {
             cashFlowMap[period] = { period, contributions: 0, distributions: 0 }
@@ -371,7 +407,7 @@ export function HoldingsPage({
     }
 
     prepareChartData()
-  }, [portfolioData, investorIds, holdings])
+  }, [portfolioData, investorIds, holdings, selectedCurrency])
 
   // Filter holdings
   const filteredHoldings = useMemo(() => {
@@ -661,6 +697,9 @@ export function HoldingsPage({
               allocationData={allocationData}
               performanceData={performanceData}
               cashFlowData={cashFlowData}
+              currencyBreakdown={portfolioData.currencyBreakdown}
+              selectedCurrency={selectedCurrency}
+              onCurrencyChange={setSelectedCurrency}
             />
           )}
 

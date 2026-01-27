@@ -86,8 +86,8 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       <AppLayout brand="versoholdings">
         <div className="p-6">
           <div className="text-center py-12">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Deal not found</h2>
-            <p className="text-gray-600">The requested deal could not be found or you don&apos;t have access to it.</p>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Deal not found</h2>
+            <p className="text-gray-600 dark:text-gray-400">The requested deal could not be found or you don&apos;t have access to it.</p>
             <Link href="/versotech_main/opportunities">
               <Button className="mt-4">Back to Deals</Button>
             </Link>
@@ -213,21 +213,21 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                 alt={`${deal.company_name ?? deal.name} logo`}
                 width={80}
                 height={80}
-                className="rounded-lg object-contain bg-white border border-gray-200 p-3"
+                className="rounded-lg object-contain bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 p-3"
               />
             ) : (
-              <div className="h-20 w-20 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-2xl font-semibold">
+              <div className="h-20 w-20 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-400 dark:text-gray-500 text-2xl font-semibold">
                 {deal.name.charAt(0)}
               </div>
             )}
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{deal.name}</h1>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{deal.name}</h1>
               <div className="flex items-center gap-3 mt-2">
                 <Badge className={statusBadges[effectiveStatus] ?? statusBadges.draft}>
                   {effectiveStatus.replace(/_/g, ' ').toUpperCase()}
                 </Badge>
                 {deal.company_name && (
-                  <p className="text-gray-600 flex items-center gap-2">
+                  <p className="text-gray-600 dark:text-gray-400 flex items-center gap-2">
                     <Building2 className="h-4 w-4" />
                     {deal.company_name}
                   </p>
@@ -250,10 +250,10 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
           <div className="text-right space-y-2">
             {deal.close_at && (
               <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide">
+                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                   {isClosed ? 'Closed' : 'Closes'}
                 </p>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   {formatDate(deal.close_at)}
                 </p>
               </div>
@@ -294,33 +294,33 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
               <CardContent className="space-y-4">
                 {deal.description && (
                   <div>
-                    <h3 className="font-semibold text-sm text-gray-700 mb-2">Description</h3>
-                    <p className="text-gray-600">{deal.description}</p>
+                    <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300 mb-2">Description</h3>
+                    <p className="text-gray-600 dark:text-gray-400">{deal.description}</p>
                   </div>
                 )}
                 {deal.investment_thesis && (
                   <div>
-                    <h3 className="font-semibold text-sm text-gray-700 mb-2">Investment Thesis</h3>
-                    <p className="text-gray-600">{deal.investment_thesis}</p>
+                    <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300 mb-2">Investment Thesis</h3>
+                    <p className="text-gray-600 dark:text-gray-400">{deal.investment_thesis}</p>
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-4 pt-4">
                   {deal.sector && (
                     <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wide">Sector</p>
-                      <p className="font-medium text-gray-900">{deal.sector}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Sector</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{deal.sector}</p>
                     </div>
                   )}
                   {deal.stage && (
                     <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wide">Stage</p>
-                      <p className="font-medium text-gray-900">{deal.stage}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Stage</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{deal.stage}</p>
                     </div>
                   )}
                   {deal.location && (
                     <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wide">Location</p>
-                      <p className="font-medium text-gray-900 flex items-center gap-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Location</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
                         {deal.location}
                       </p>
@@ -328,8 +328,8 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                   )}
                   {deal.vehicles && (
                     <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wide">Vehicle</p>
-                      <p className="font-medium text-gray-900">{deal.vehicles.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Vehicle</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{deal.vehicles.name}</p>
                     </div>
                   )}
                 </div>
@@ -349,24 +349,24 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {deal.minimum_investment && (
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Minimum Ticket</p>
-                        <p className="font-medium text-gray-900">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Minimum Ticket</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
                           {formatCurrency(deal.minimum_investment, deal.currency)}
                         </p>
                       </div>
                     )}
                     {deal.maximum_investment && (
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Maximum Ticket</p>
-                        <p className="font-medium text-gray-900">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Maximum Ticket</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
                           {formatCurrency(deal.maximum_investment, deal.currency)}
                         </p>
                       </div>
                     )}
                     {deal.target_amount && (
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Target Amount</p>
-                        <p className="font-medium text-gray-900">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Target Amount</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
                           {formatCurrency(deal.target_amount, deal.currency)}
                         </p>
                       </div>
@@ -393,7 +393,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                   {feeStructure.opportunity_summary && (
                     <div className="pb-4">
                       <h4 className="font-semibold text-sm mb-2">Opportunity</h4>
-                      <p className="text-gray-600 text-sm leading-relaxed">{feeStructure.opportunity_summary}</p>
+                      <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{feeStructure.opportunity_summary}</p>
                     </div>
                   )}
 
@@ -404,33 +404,33 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                     <h4 className="font-semibold text-sm mb-3">Transaction Details</h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Transaction Type</p>
-                        <p className="font-medium text-gray-900">{feeStructure.transaction_type ?? '—'}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Transaction Type</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{feeStructure.transaction_type ?? '—'}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Issuer</p>
-                        <p className="font-medium text-gray-900">{feeStructure.issuer ?? deal.company_name ?? '—'}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Issuer</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{feeStructure.issuer ?? deal.company_name ?? '—'}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Vehicle</p>
-                        <p className="font-medium text-gray-900">{feeStructure.vehicle ?? deal.vehicles?.name ?? '—'}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Vehicle</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{feeStructure.vehicle ?? deal.vehicles?.name ?? '—'}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Exclusive Arranger</p>
-                        <p className="font-medium text-gray-900">{feeStructure.exclusive_arranger ?? '—'}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Exclusive Arranger</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{feeStructure.exclusive_arranger ?? '—'}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Purchaser</p>
-                        <p className="font-medium text-gray-900">{feeStructure.purchaser ?? '—'}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Purchaser</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{feeStructure.purchaser ?? '—'}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Seller</p>
-                        <p className="font-medium text-gray-900">{feeStructure.seller ?? '—'}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Seller</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{feeStructure.seller ?? '—'}</p>
                       </div>
                       {feeStructure.structure && (
                         <div className="col-span-2">
-                          <p className="text-xs text-gray-500 uppercase tracking-wide">Structure</p>
-                          <p className="font-medium text-gray-900">{feeStructure.structure}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Structure</p>
+                          <p className="font-medium text-gray-900 dark:text-gray-100">{feeStructure.structure}</p>
                         </div>
                       )}
                     </div>
@@ -443,27 +443,27 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                     <h4 className="font-semibold text-sm mb-3">Investment Terms</h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Allocation Up To</p>
-                        <p className="font-medium text-gray-900">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Allocation Up To</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
                           {formatCurrency(feeStructure.allocation_up_to, deal.currency)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Price Per Share</p>
-                        <p className="font-medium text-gray-900">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Price Per Share</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
                           {feeStructure.price_per_share_text ??
                             (deal.offer_unit_price ? formatCurrency(deal.offer_unit_price, deal.currency) : '—')}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Minimum Ticket</p>
-                        <p className="font-medium text-gray-900">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Minimum Ticket</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
                           {formatCurrency(feeStructure.minimum_ticket, deal.currency)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Maximum Ticket</p>
-                        <p className="font-medium text-gray-900">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Maximum Ticket</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
                           {formatCurrency(feeStructure.maximum_ticket, deal.currency)}
                         </p>
                       </div>
@@ -477,24 +477,24 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                     <h4 className="font-semibold text-sm mb-3">Fee Structure</h4>
                     <div className="grid grid-cols-3 gap-4">
                       <div>
-                        <p className="text-xs text-gray-500">Subscription Fee</p>
-                        <p className="font-medium text-gray-900">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Subscription Fee</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
                           {feeStructure.subscription_fee_percent !== null
                             ? `${feeStructure.subscription_fee_percent.toFixed(2)}%`
                             : '—'}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500">Management Fee</p>
-                        <p className="font-medium text-gray-900">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Management Fee</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
                           {feeStructure.management_fee_percent !== null
                             ? `${feeStructure.management_fee_percent.toFixed(2)}% p.a.`
                             : '—'}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500">Carried Interest</p>
-                        <p className="font-medium text-gray-900">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Carried Interest</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
                           {feeStructure.carried_interest_percent !== null
                             ? `${feeStructure.carried_interest_percent.toFixed(2)}%`
                             : '—'}
@@ -508,8 +508,8 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                       <Separator />
                       <div className="grid grid-cols-1 gap-2">
                         <div>
-                          <p className="text-xs text-gray-500 uppercase tracking-wide">Legal Counsel</p>
-                          <p className="font-medium text-gray-900">{feeStructure.legal_counsel}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Legal Counsel</p>
+                          <p className="font-medium text-gray-900 dark:text-gray-100">{feeStructure.legal_counsel}</p>
                         </div>
                       </div>
                     </>
@@ -523,8 +523,8 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                     <div className="space-y-3">
                       {feeStructure.interest_confirmation_deadline && (
                         <div>
-                          <p className="text-xs text-gray-500 uppercase tracking-wide">Interest Confirmation Deadline</p>
-                          <p className="font-medium text-gray-900">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Interest Confirmation Deadline</p>
+                          <p className="font-medium text-gray-900 dark:text-gray-100">
                             {new Date(feeStructure.interest_confirmation_deadline).toLocaleString('en-US', {
                               year: 'numeric',
                               month: 'long',
@@ -538,14 +538,14 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                       )}
                       {feeStructure.capital_call_timeline && (
                         <div>
-                          <p className="text-xs text-gray-500 uppercase tracking-wide">Capital Call Timeline</p>
-                          <p className="font-medium text-gray-900 text-sm">{feeStructure.capital_call_timeline}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Capital Call Timeline</p>
+                          <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{feeStructure.capital_call_timeline}</p>
                         </div>
                       )}
                       {feeStructure.completion_date_text && (
                         <div>
-                          <p className="text-xs text-gray-500 uppercase tracking-wide">Completion Date</p>
-                          <p className="font-medium text-gray-900">{feeStructure.completion_date_text}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Completion Date</p>
+                          <p className="font-medium text-gray-900 dark:text-gray-100">{feeStructure.completion_date_text}</p>
                         </div>
                       )}
                     </div>
@@ -559,32 +559,32 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                     <div className="space-y-3 text-sm">
                       {feeStructure.in_principle_approval_text && (
                         <div>
-                          <p className="font-medium text-gray-700">In Principle Approval</p>
-                          <p className="text-gray-600">{feeStructure.in_principle_approval_text}</p>
+                          <p className="font-medium text-gray-700 dark:text-gray-300">In Principle Approval</p>
+                          <p className="text-gray-600 dark:text-gray-400">{feeStructure.in_principle_approval_text}</p>
                         </div>
                       )}
                       {feeStructure.subscription_pack_note && (
                         <div>
-                          <p className="font-medium text-gray-700">Subscription Pack</p>
-                          <p className="text-gray-600">{feeStructure.subscription_pack_note}</p>
+                          <p className="font-medium text-gray-700 dark:text-gray-300">Subscription Pack</p>
+                          <p className="text-gray-600 dark:text-gray-400">{feeStructure.subscription_pack_note}</p>
                         </div>
                       )}
                       {feeStructure.share_certificates_note && (
                         <div>
-                          <p className="font-medium text-gray-700">Share Certificates</p>
-                          <p className="text-gray-600">{feeStructure.share_certificates_note}</p>
+                          <p className="font-medium text-gray-700 dark:text-gray-300">Share Certificates</p>
+                          <p className="text-gray-600 dark:text-gray-400">{feeStructure.share_certificates_note}</p>
                         </div>
                       )}
                       {feeStructure.subject_to_change_note && (
                         <div>
-                          <p className="font-medium text-gray-700">Subject to Change</p>
-                          <p className="text-gray-600">{feeStructure.subject_to_change_note}</p>
+                          <p className="font-medium text-gray-700 dark:text-gray-300">Subject to Change</p>
+                          <p className="text-gray-600 dark:text-gray-400">{feeStructure.subject_to_change_note}</p>
                         </div>
                       )}
                       {feeStructure.validity_date && (
                         <div>
-                          <p className="font-medium text-gray-700">Validity</p>
-                          <p className="text-gray-600">
+                          <p className="font-medium text-gray-700 dark:text-gray-300">Validity</p>
+                          <p className="text-gray-600 dark:text-gray-400">
                             This term sheet expires on {new Date(feeStructure.validity_date).toLocaleString('en-US', {
                               year: 'numeric',
                               month: 'long',
@@ -700,8 +700,8 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                         <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                       </div>
                       <div>
-                        <p className="font-medium text-sm">Deal Opened</p>
-                        <p className="text-xs text-gray-500">{formatDate(deal.open_at)}</p>
+                        <p className="font-medium text-sm text-gray-900 dark:text-gray-100">Deal Opened</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(deal.open_at)}</p>
                       </div>
                     </div>
                   )}
@@ -711,8 +711,8 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                         <Clock className="h-4 w-4 text-amber-500" />
                       </div>
                       <div>
-                        <p className="font-medium text-sm">Interest Deadline</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="font-medium text-sm text-gray-900 dark:text-gray-100">Interest Deadline</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {formatDate(feeStructure.interest_confirmation_deadline)}
                         </p>
                       </div>
@@ -728,8 +728,8 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                         )}
                       </div>
                       <div>
-                        <p className="font-medium text-sm">Deal Closes</p>
-                        <p className="text-xs text-gray-500">{formatDate(deal.close_at)}</p>
+                        <p className="font-medium text-sm text-gray-900 dark:text-gray-100">Deal Closes</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(deal.close_at)}</p>
                       </div>
                     </div>
                   )}
@@ -744,23 +744,23 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Deal Type</span>
-                  <span className="font-medium">{deal.deal_type.replace(/_/g, ' ')}</span>
+                  <span className="text-gray-600 dark:text-gray-400">Deal Type</span>
+                  <span className="font-medium text-gray-900 dark:text-gray-100">{deal.deal_type.replace(/_/g, ' ')}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Currency</span>
-                  <span className="font-medium">{deal.currency}</span>
+                  <span className="text-gray-600 dark:text-gray-400">Currency</span>
+                  <span className="font-medium text-gray-900 dark:text-gray-100">{deal.currency}</span>
                 </div>
                 {feeStructure?.structure && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Structure</span>
-                    <span className="font-medium">{feeStructure.structure}</span>
+                    <span className="text-gray-600 dark:text-gray-400">Structure</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{feeStructure.structure}</span>
                   </div>
                 )}
                 {feeStructure?.legal_counsel && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Legal Counsel</span>
-                    <span className="font-medium">{feeStructure.legal_counsel}</span>
+                    <span className="text-gray-600 dark:text-gray-400">Legal Counsel</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{feeStructure.legal_counsel}</span>
                   </div>
                 )}
               </CardContent>

@@ -4,21 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "32e0532acc5300c4",
+        "id": "2f0258ac39f539c4",
         "type": "tabs",
         "children": [
           {
-            "id": "66b6c116f39cf401",
+            "id": "f682a23a77e40854",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "VERSO/VERSOsign/versosign-workflows.md",
+                "file": "VERSO/User Guides/ceo-staff/04-subscription-approval.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "versosign-workflows"
+              "title": "04-subscription-approval"
             }
           }
         ]
@@ -183,8 +183,53 @@
       "bases:Create new base": false
     }
   },
-  "active": "66b6c116f39cf401",
+  "active": "f682a23a77e40854",
   "lastOpenFiles": [
-    "Untitled.base"
+    "VERSO/User Guides/ceo-staff/06-data-room-extensions.md",
+    "VERSO/User Guides/ceo-staff/02-kyc-review.md",
+    "VERSO/User Guides/arranger/08-data-room-management.md",
+    "VERSO/User Guides/arranger/05-fee-plan-setup.md",
+    "VERSO/User Guides/arranger/02-creating-vehicles.md",
+    "VERSO/User Guides/arranger/01-getting-started.md",
+    "VERSO/User Guides/arranger/06-network-management.md",
+    "VERSO/User Guides/arranger/04-term-sheet-management.md",
+    "VERSO/User Guides/ceo-staff-guide.md",
+    "VERSO/User Guides/screenshots/cp-client-transactions-real.png",
+    "VERSO/User Guides/screenshots/cp-dashboard-real.png",
+    "VERSO/User Guides/screenshots/introducer-introductions-real.png",
+    "VERSO/User Guides/screenshots/introducer-commissions-real.png",
+    "VERSO/User Guides/screenshots/introducer-dashboard-real.png",
+    "VERSO/User Guides/screenshots/arranger-my-introducers-real.png",
+    "VERSO/User Guides/screenshots/arranger-fee-plans-real.png",
+    "VERSO/User Guides/screenshots/arranger-mandates-real.png",
+    "VERSO/User Guides/screenshots/arranger-dashboard-real.png",
+    "VERSO/User Guides/screenshots/ceo-deals-real.png",
+    "VERSO/User Guides/arranger-guide.md",
+    "VERSO/User Guides/00-getting-started.md",
+    "VERSO/User Guides/partner-guide.md",
+    "VERSO/User Guides/UI-REFERENCE.md",
+    "VERSO/datafixing/05_commission_client_override.md",
+    "VERSO/datafixing/05_commission_client_overrides.sql",
+    "VERSO/datafixing/05_commission_deep_investigation_v2.md",
+    "VERSO/datafixing/05_commission_deep_investigation.md",
+    "VERSO/datafixing/05_commission_remaining_issues.md",
+    "VERSO/datafixing/05_commission_remaining_fishy.csv",
+    "VERSO/datafixing/05_commission_apply_vc133_setcap.sql",
+    "VERSO/datafixing/05_commission_actions_log.md",
+    "VERSO/datafixing/05_commission_apply_summary.md",
+    "VERSO/datafixing/05_commission_fishy_rows.csv",
+    "VERSO/datafixing/05_commission_apply_deletes.sql",
+    "VERSO/datafixing/05_commission_apply_updates.sql",
+    "VERSO/datafixing/prepare_commission_comment_sql.py",
+    "VERSO/datafixing/05_commission_updates_strict_matches.csv",
+    "VERSO/datafixing/05_commission_updates_relaxed_matches.csv",
+    "VERSO/datafixing/05_commission_delete_duplicates_suggested.csv",
+    "VERSO/datafixing/05_commission_match_summary.md",
+    "VERSO/User Guides/ceo-staff/11-reconciliation-reporting.md",
+    "VERSO/User Guides/ceo-staff/10-delegation.md",
+    "VERSO/User Guides/ceo-staff/09-entity-management.md",
+    "VERSO/User Guides/ceo-staff/08-user-management.md",
+    "VERSO/User Guides/ceo-staff/07-document-signing.md",
+    "VERSO/User Guides/ceo-staff/05-deal-close-approval.md"
   ]
 }

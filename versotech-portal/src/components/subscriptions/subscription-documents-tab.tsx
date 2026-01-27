@@ -62,11 +62,11 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
   } = useDocumentViewer()
 
   const statusColors: Record<string, string> = {
-    draft: 'bg-purple-500/20 text-purple-200',
-    final: 'bg-cyan-500/20 text-cyan-200',
-    published: 'bg-cyan-500/20 text-cyan-200',
-    pending_signature: 'bg-amber-500/20 text-amber-200',
-    signed: 'bg-emerald-500/20 text-emerald-200'
+    draft: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-200',
+    final: 'bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-200',
+    published: 'bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-200',
+    pending_signature: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-200',
+    signed: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-200'
   }
 
   const statusIcons: Record<string, React.ReactNode> = {
@@ -312,7 +312,7 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
 
   return (
     <div className="space-y-6">
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border border-border bg-muted/50">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -332,10 +332,10 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
                   onValueChange={(value: 'docx' | 'pdf') => setRegenerateFormat(value)}
                   disabled={regenerating}
                 >
-                  <SelectTrigger className="w-[100px] h-9 bg-white/5 border-white/10">
+                  <SelectTrigger className="w-[100px] h-9 bg-muted/50 border-border">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-black border-white/10">
+                  <SelectContent className="bg-background border-border">
                     <SelectItem value="docx">
                       <div className="flex items-center gap-2">
                         <FileType className="h-3 w-3" />
@@ -376,7 +376,7 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
                     Upload Final Pack
                   </Button>
                 </DialogTrigger>
-              <DialogContent className="bg-black border border-white/10">
+              <DialogContent className="bg-background border border-border">
                 <DialogHeader>
                   <DialogTitle className="text-foreground">Upload Final Subscription Pack</DialogTitle>
                   <DialogDescription>
@@ -391,7 +391,7 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
                       type="file"
                       accept=".pdf"
                       onChange={handleFileSelect}
-                      className="bg-white/5 border-white/10 text-foreground"
+                      className="bg-muted/50 border-border text-foreground"
                     />
                     {selectedFile && (
                       <p className="text-sm text-muted-foreground">
@@ -445,7 +445,7 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
               {documents.map((document) => (
                 <div
                   key={document.id}
-                  className="flex items-start justify-between py-4 px-4 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
+                  className="flex items-start justify-between py-4 px-4 rounded-lg border border-border bg-muted/50 hover:bg-muted transition-colors"
                 >
                   <div className="flex items-start gap-3 flex-1">
                     <FileText className="h-5 w-5 text-muted-foreground mt-1" />
@@ -570,7 +570,7 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
       </Card>
 
       {/* Workflow Guide */}
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border border-border bg-muted/50">
         <CardHeader>
           <CardTitle className="text-sm text-foreground">Subscription Pack Workflow</CardTitle>
         </CardHeader>

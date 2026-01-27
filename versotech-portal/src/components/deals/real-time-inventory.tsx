@@ -66,7 +66,7 @@ export function RealTimeInventory({ dealId, initialData, className }: RealTimeIn
           <button
             onClick={fetchInventoryUpdate}
             disabled={isLoading}
-            className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 disabled:opacity-50"
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
           >
             <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
             {isLoading ? 'Updating...' : 'Refresh'}
@@ -82,19 +82,19 @@ export function RealTimeInventory({ dealId, initialData, className }: RealTimeIn
             <p className="text-2xl font-bold text-blue-600">
               {inventory.units_available.toLocaleString()}
             </p>
-            <p className="text-sm text-gray-500">Units Available</p>
+            <p className="text-sm text-muted-foreground">Units Available</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-amber-600">
               {inventory.allocated_units}
             </p>
-            <p className="text-sm text-gray-500">Allocated Units</p>
+            <p className="text-sm text-muted-foreground">Allocated Units</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-green-600">
               {utilizationPercent.toFixed(1)}%
             </p>
-            <p className="text-sm text-gray-500">Utilization</p>
+            <p className="text-sm text-muted-foreground">Utilization</p>
           </div>
         </div>
 
@@ -107,15 +107,15 @@ export function RealTimeInventory({ dealId, initialData, className }: RealTimeIn
         </div>
 
         {isLowInventory && (
-          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
+          <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-500/30 rounded-lg flex items-center gap-2">
             <AlertCircle className="h-4 w-4 text-amber-600" />
-            <p className="text-sm text-amber-800">
+            <p className="text-sm text-amber-700 dark:text-amber-200">
               Limited availability - only {inventory.units_available.toLocaleString()} units remaining
             </p>
           </div>
         )}
 
-        <div className="mt-3 text-xs text-gray-500 text-center">
+        <div className="mt-3 text-xs text-muted-foreground text-center">
           Last updated: {lastUpdate.toLocaleTimeString()}
         </div>
       </CardContent>

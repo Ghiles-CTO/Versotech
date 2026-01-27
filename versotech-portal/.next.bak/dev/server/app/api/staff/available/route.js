@@ -1,0 +1,10 @@
+var R=require("../../../../chunks/[turbopack]_runtime.js")("server/app/api/staff/available/route.js")
+R.c("server/chunks/6d6b6_@supabase_node-fetch_lib_index_565c40cf.js")
+R.c("server/chunks/6d6b6_next_a4b7b06c._.js")
+R.c("server/chunks/6d6b6_tr46_f7ca97fb._.js")
+R.c("server/chunks/6d6b6_@supabase_auth-js_dist_module_4ebeb219._.js")
+R.c("server/chunks/6d6b6_e5e892f7._.js")
+R.c("server/chunks/[root-of-the-server]__43cb66f0._.js")
+R.c("server/chunks/c6ad4__next-internal_server_app_api_staff_available_route_actions_8c09b1a1.js")
+R.m("[project]/versotech-portal/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/versotech-portal/src/app/api/staff/available/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)")
+module.exports=R.m("[project]/versotech-portal/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/versotech-portal/src/app/api/staff/available/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)").exports

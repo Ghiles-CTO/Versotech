@@ -1,0 +1,3 @@
+{
+  "/api/arrangers/me/commercial-partners/[cpId]/route": "app/api/arrangers/me/commercial-partners/[cpId]/route.js"
+}

@@ -1,0 +1,145 @@
+[
+  {
+    "introducer_id": "ade750b8-011a-4fd2-a32c-30ba609b5643",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "investor_id": "76518678-13f1-4a8e-a050-1e0ef6a39d4c",
+    "basis_type": "spread",
+    "rate_bps": 351.5,
+    "accrual_amount": 21090.0,
+    "currency": "USD",
+    "status": "accrued",
+    "introduction_id": null
+  },
+  {
+    "introducer_id": "b661243f-e6b4-41f1-b239-de4b197a689a",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "investor_id": "41b8b9df-623b-4b68-9a33-f8abddccf526",
+    "basis_type": "spread",
+    "rate_bps": 152.0,
+    "accrual_amount": 760.0,
+    "currency": "USD",
+    "status": "accrued",
+    "introduction_id": null
+  },
+  {
+    "introducer_id": "b661243f-e6b4-41f1-b239-de4b197a689a",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "investor_id": "97f2847e-abf6-4e8b-881a-81aa1dda8022",
+    "basis_type": "spread",
+    "rate_bps": 312.161,
+    "accrual_amount": 7804.031,
+    "currency": "USD",
+    "status": "accrued",
+    "introduction_id": null
+  },
+  {
+    "introducer_id": "b661243f-e6b4-41f1-b239-de4b197a689a",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "investor_id": "97f2847e-abf6-4e8b-881a-81aa1dda8022",
+    "basis_type": "spread",
+    "rate_bps": 161.2,
+    "accrual_amount": 4030.0,
+    "currency": "USD",
+    "status": "accrued",
+    "introduction_id": null
+  },
+  {
+    "introducer_id": "b661243f-e6b4-41f1-b239-de4b197a689a",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "investor_id": "ea6fe379-59c1-4f21-b2aa-a64162bc65fe",
+    "basis_type": "spread",
+    "rate_bps": 634.561,
+    "accrual_amount": 63456.127,
+    "currency": "USD",
+    "status": "accrued",
+    "introduction_id": null
+  },
+  {
+    "introducer_id": "b661243f-e6b4-41f1-b239-de4b197a689a",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "investor_id": "f3dabc56-d079-4536-9ad5-9e6b543aea21",
+    "basis_type": "spread",
+    "rate_bps": 154.0,
+    "accrual_amount": 770.0,
+    "currency": "USD",
+    "status": "accrued",
+    "introduction_id": null
+  },
+  {
+    "introducer_id": "b661243f-e6b4-41f1-b239-de4b197a689a",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "investor_id": "aaceaeea-26d7-4116-a99e-8857809a4041",
+    "basis_type": "spread",
+    "rate_bps": 3367.109,
+    "accrual_amount": 200343.0,
+    "currency": "USD",
+    "status": "accrued",
+    "introduction_id": null
+  },
+  {
+    "introducer_id": "b661243f-e6b4-41f1-b239-de4b197a689a",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "investor_id": "7346d7bb-7dc0-45d0-bb5f-2b4922505e7d",
+    "basis_type": "spread",
+    "rate_bps": 720.0,
+    "accrual_amount": 25199.999,
+    "currency": "USD",
+    "status": "accrued",
+    "introduction_id": null
+  },
+  {
+    "introducer_id": "bcaaab40-eef5-4a3c-92d7-101f498489ac",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "investor_id": "97f2847e-abf6-4e8b-881a-81aa1dda8022",
+    "basis_type": "spread",
+    "rate_bps": 150.961,
+    "accrual_amount": 3774.032,
+    "currency": "USD",
+    "status": "accrued",
+    "introduction_id": null
+  },
+  {
+    "introducer_id": "bcaaab40-eef5-4a3c-92d7-101f498489ac",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "investor_id": "ea6fe379-59c1-4f21-b2aa-a64162bc65fe",
+    "basis_type": "spread",
+    "rate_bps": 150.961,
+    "accrual_amount": 15096.127,
+    "currency": "USD",
+    "status": "accrued",
+    "introduction_id": null
+  },
+  {
+    "introducer_id": "a2a0b0a1-817a-4039-bcbf-160b84f51567",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "investor_id": "aaceaeea-26d7-4116-a99e-8857809a4041",
+    "basis_type": "spread",
+    "rate_bps": 204.067,
+    "accrual_amount": 12142.0,
+    "currency": "USD",
+    "status": "accrued",
+    "introduction_id": null
+  },
+  {
+    "introducer_id": "a2a0b0a1-817a-4039-bcbf-160b84f51567",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "investor_id": "97f2847e-abf6-4e8b-881a-81aa1dda8022",
+    "basis_type": "spread",
+    "rate_bps": 294.08,
+    "accrual_amount": 7352.0,
+    "currency": "USD",
+    "status": "accrued",
+    "introduction_id": null
+  },
+  {
+    "introducer_id": "a2a0b0a1-817a-4039-bcbf-160b84f51567",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "investor_id": "6054e1cb-c35a-4abe-bd23-041182d2b8c8",
+    "basis_type": "spread",
+    "rate_bps": 294.08,
+    "accrual_amount": 3676.0,
+    "currency": "USD",
+    "status": "accrued",
+    "introduction_id": null
+  }
+]

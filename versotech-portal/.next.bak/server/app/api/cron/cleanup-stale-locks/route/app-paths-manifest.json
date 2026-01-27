@@ -1,0 +1,3 @@
+{
+  "/api/cron/cleanup-stale-locks/route": "app/api/cron/cleanup-stale-locks/route.js"
+}

@@ -43,7 +43,7 @@ export function DataRoomPreviewCard({ deal, access, documentCount, status }: Dat
   const daysRemaining = daysUntil(access.expires_at)
   return (
     <Link href={`/versotech_main/opportunities/${deal.id}?tab=data-room`}>
-      <Card className="cursor-pointer hover:border-blue-600 hover:shadow-lg transition-all border-2 border-gray-200 bg-white h-full">
+      <Card className="cursor-pointer hover:border-blue-600 hover:shadow-lg transition-all border-2 border-border bg-card h-full">
         <CardContent className="p-4 space-y-3">
           {/* Header with logo and name */}
           <div className="flex items-start gap-3">
@@ -53,7 +53,7 @@ export function DataRoomPreviewCard({ deal, access, documentCount, status }: Dat
                 alt={`${deal.company_name ?? deal.name} logo`}
                 width={48}
                 height={48}
-                className="rounded-lg object-contain bg-white border-2 border-gray-200 p-1.5 flex-shrink-0"
+                className="rounded-lg object-contain bg-card border-2 border-border p-1.5 flex-shrink-0"
               />
             ) : (
               <div className="h-12 w-12 rounded-lg bg-blue-50 border-2 border-blue-600 flex items-center justify-center text-blue-600 text-lg font-semibold flex-shrink-0">
@@ -61,11 +61,11 @@ export function DataRoomPreviewCard({ deal, access, documentCount, status }: Dat
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <h3 className="text-base font-bold text-black truncate">
+              <h3 className="text-base font-bold text-foreground truncate">
                 {deal.name}
               </h3>
-              <div className="flex items-center gap-1.5 text-xs text-black mt-0.5">
-                <Users className="h-3 w-3 text-gray-500 flex-shrink-0" />
+              <div className="flex items-center gap-1.5 text-xs text-foreground mt-0.5">
+                <Users className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                 <span className="truncate">{deal.company_name ?? 'Issuer pending'}</span>
               </div>
             </div>
@@ -80,18 +80,18 @@ export function DataRoomPreviewCard({ deal, access, documentCount, status }: Dat
           {(deal.stage || deal.sector || deal.location) && (
             <div className="flex flex-wrap gap-1.5">
               {deal.stage && (
-                <div className="flex items-center gap-1 text-xs text-gray-600">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <TrendingUp className="h-3 w-3" />
                   <span>{deal.stage}</span>
                 </div>
               )}
               {deal.sector && (
-                <Badge variant="outline" className="text-xs border-gray-300 text-black bg-white">
+                <Badge variant="outline" className="text-xs border-border text-foreground bg-card">
                   {deal.sector}
                 </Badge>
               )}
               {deal.location && (
-                <div className="flex items-center gap-1 text-xs text-gray-600">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <MapPin className="h-3 w-3" />
                   <span>{deal.location}</span>
                 </div>
@@ -100,19 +100,19 @@ export function DataRoomPreviewCard({ deal, access, documentCount, status }: Dat
           )}
 
           {/* Timeline and documents */}
-          <div className="space-y-1.5 pt-2 border-t border-gray-100">
+          <div className="space-y-1.5 pt-2 border-t border-border">
             <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-1.5 text-gray-600">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
                 <Calendar className="h-3 w-3" />
                 <span>Granted {formatDate(access.granted_at)}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-black font-medium">
+              <div className="flex items-center gap-1.5 text-foreground font-medium">
                 <FileText className="h-3 w-3 text-blue-600" />
                 <span>{documentCount}</span>
               </div>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-1.5 text-gray-600">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
                 <Clock className="h-3 w-3" />
                 <span>{access.expires_at ? `Expires ${formatDate(access.expires_at)}` : 'No expiry'}</span>
               </div>

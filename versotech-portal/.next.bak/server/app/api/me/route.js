@@ -1,0 +1,12 @@
+var R=require("../../../chunks/[turbopack]_runtime.js")("server/app/api/me/route.js")
+R.c("server/chunks/[root-of-the-server]__89f1c9b1._.js")
+R.c("server/chunks/6d6b6_next_672f6640._.js")
+R.c("server/chunks/6d6b6_next_b8b5a401._.js")
+R.c("server/chunks/6d6b6_next_dist_7d1347b1._.js")
+R.c("server/chunks/[root-of-the-server]__04eaf9e0._.js")
+R.c("server/chunks/6d6b6_4a9fcd3d._.js")
+R.c("server/chunks/6d6b6_131e6e29._.js")
+R.c("server/chunks/[root-of-the-server]__7a18eae2._.js")
+R.c("server/chunks/versotech-portal__next-internal_server_app_api_me_route_actions_d8530a14.js")
+R.m(82968)
+module.exports=R.m(82968).exports

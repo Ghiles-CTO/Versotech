@@ -1,0 +1,3 @@
+{
+  "/api/investors/me/documents/upload/route": "app/api/investors/me/documents/upload/route.js"
+}

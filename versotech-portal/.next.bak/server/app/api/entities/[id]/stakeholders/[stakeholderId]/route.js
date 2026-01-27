@@ -1,0 +1,13 @@
+var R=require("../../../../../../chunks/[turbopack]_runtime.js")("server/app/api/entities/[id]/stakeholders/[stakeholderId]/route.js")
+R.c("server/chunks/[root-of-the-server]__f5dea5f3._.js")
+R.c("server/chunks/6d6b6_next_672f6640._.js")
+R.c("server/chunks/6d6b6_4a9fcd3d._.js")
+R.c("server/chunks/6d6b6_next_dist_7d1347b1._.js")
+R.c("server/chunks/6d6b6_zod_v4_classic_external_a9be62e6.js")
+R.c("server/chunks/[root-of-the-server]__04eaf9e0._.js")
+R.c("server/chunks/6d6b6_131e6e29._.js")
+R.c("server/chunks/[root-of-the-server]__7a18eae2._.js")
+R.c("server/chunks/6d6b6_next_b8b5a401._.js")
+R.c("server/chunks/03a74_app_api_entities_[id]_stakeholders_[stakeholderId]_route_actions_cdee2b9a.js")
+R.m(465192)
+module.exports=R.m(465192).exports

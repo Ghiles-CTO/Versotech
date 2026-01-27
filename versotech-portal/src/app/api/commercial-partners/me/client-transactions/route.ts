@@ -196,7 +196,8 @@ export async function GET() {
       .filter((client: any) => client.client_investor_id)
       .map((client: any) => client.client_investor_id)
 
-    const dealIds = (clientsData || [])
+    // Get dealIds from client records (will combine with subscription dealIds after fetch)
+    const dealIdsFromClients = (clientsData || [])
       .filter((client: any) => client.created_for_deal_id)
       .map((client: any) => client.created_for_deal_id)
 
@@ -231,13 +232,21 @@ export async function GET() {
       }
     }
 
+    // Combine dealIds from BOTH client links AND subscriptions
+    const dealIdsFromSubscriptions = Object.values(subscriptionsMap)
+      .flat()
+      .map((sub: any) => sub.deal_id)
+      .filter(Boolean)
+
+    const allDealIds = [...new Set([...dealIdsFromClients, ...dealIdsFromSubscriptions])]
+
     let membershipMap: Record<string, MembershipProgression> = {}
-    if (investorIds.length > 0 && dealIds.length > 0) {
+    if (investorIds.length > 0 && allDealIds.length > 0) {
       const { data: memberships } = await serviceSupabase
         .from('deal_memberships')
         .select('investor_id, deal_id, interest_confirmed_at, nda_signed_at, data_room_granted_at')
         .in('investor_id', investorIds)
-        .in('deal_id', dealIds)
+        .in('deal_id', allDealIds)
 
       if (memberships) {
         memberships.forEach((m: any) => {
@@ -252,11 +261,11 @@ export async function GET() {
     }
 
     let dataroomAccessMap: Record<string, boolean> = {}
-    if (dealIds.length > 0 && investorIds.length > 0) {
+    if (allDealIds.length > 0 && investorIds.length > 0) {
       const { data: accessRecords } = await serviceSupabase
         .from('deal_data_room_access')
         .select('deal_id, investor_id')
-        .in('deal_id', dealIds)
+        .in('deal_id', allDealIds)
         .in('investor_id', investorIds)
         .is('revoked_at', null)
         .or(`expires_at.is.null,expires_at.gte.${new Date().toISOString()}`)
@@ -278,10 +287,24 @@ export async function GET() {
         : []
 
       if (subscriptions.length === 0) {
-        const membershipKey = client.client_investor_id && client.created_for_deal_id
-          ? `${client.client_investor_id}:${client.created_for_deal_id}`
-          : ''
-        const membership = membershipKey ? membershipMap[membershipKey] : undefined
+        // Try to find membership from explicit deal link first
+        let membership: MembershipProgression | undefined = undefined
+
+        if (client.client_investor_id && client.created_for_deal_id) {
+          const explicitKey = `${client.client_investor_id}:${client.created_for_deal_id}`
+          membership = membershipMap[explicitKey]
+        }
+
+        // If no explicit link membership, check if there are any memberships for this investor
+        // (This handles cases where the client is associated via other paths)
+        if (!membership && client.client_investor_id) {
+          // Find any membership for this investor in our membershipMap
+          const investorPrefix = `${client.client_investor_id}:`
+          const matchingKey = Object.keys(membershipMap).find(key => key.startsWith(investorPrefix))
+          if (matchingKey) {
+            membership = membershipMap[matchingKey]
+          }
+        }
 
         const deal = normalizeJoin(client.deal as any)
 

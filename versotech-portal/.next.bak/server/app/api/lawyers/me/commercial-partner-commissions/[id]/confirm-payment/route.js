@@ -1,0 +1,13 @@
+var R=require("../../../../../../../chunks/[turbopack]_runtime.js")("server/app/api/lawyers/me/commercial-partner-commissions/[id]/confirm-payment/route.js")
+R.c("server/chunks/[root-of-the-server]__276e752a._.js")
+R.c("server/chunks/6d6b6_next_672f6640._.js")
+R.c("server/chunks/6d6b6_4a9fcd3d._.js")
+R.c("server/chunks/6d6b6_next_dist_7d1347b1._.js")
+R.c("server/chunks/6d6b6_131e6e29._.js")
+R.c("server/chunks/[root-of-the-server]__04eaf9e0._.js")
+R.c("server/chunks/[root-of-the-server]__7a18eae2._.js")
+R.c("server/chunks/6d6b6_zod_v4_classic_external_a9be62e6.js")
+R.c("server/chunks/6d6b6_next_b8b5a401._.js")
+R.c("server/chunks/fa058_me_commercial-partner-commissions_[id]_confirm-payment_route_actions_f122e043.js")
+R.m(432325)
+module.exports=R.m(432325).exports

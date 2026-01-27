@@ -1,0 +1,78 @@
+# Ralph Progress: Versotech User Guides
+
+## Session Started: [Not yet started]
+
+---
+
+## Story Status (33 Stories)
+
+### GETTING STARTED (Universal) - 4 stories
+| ID | Title | Status |
+|----|-------|--------|
+| US-GS-001 | First Login | Pending |
+| US-GS-002 | Understanding Personas | Pending |
+| US-GS-003 | Platform Navigation | Pending |
+| US-GS-004 | VersSign Basics | Pending |
+
+### INVESTOR - 4 stories
+| ID | Title | Status |
+|----|-------|--------|
+| US-INV-001 | Profile & KYC Setup | Pending |
+| US-INV-002 | Exploring Opportunities | Pending |
+| US-INV-003 | Subscription Process | Pending |
+| US-INV-004 | Portfolio Management | Pending |
+
+### INTRODUCER - 3 stories
+| ID | Title | Status |
+|----|-------|--------|
+| US-INT-001 | Profile & Agreements | Pending |
+| US-INT-002 | Making Introductions | Pending |
+| US-INT-003 | Commission Management | Pending |
+
+### PARTNER - 3 stories
+| ID | Title | Status |
+|----|-------|--------|
+| US-PAR-001 | Profile Setup | Pending |
+| US-PAR-002 | Referring Investors | Pending |
+| US-PAR-003 | Commissions & Transactions | Pending |
+
+### COMMERCIAL PARTNER - 3 stories
+| ID | Title | Status |
+|----|-------|--------|
+| US-CP-001 | Profile Setup | Pending |
+| US-CP-002 | Placement Agreements | Pending |
+| US-CP-003 | Tracking Earnings | Pending |
+
+### ARRANGER - 6 stories
+| ID | Title | Status |
+|----|-------|--------|
+| US-ARR-001 | Profile & Capabilities | Pending |
+| US-ARR-002 | Creating Deals | Pending |
+| US-ARR-003 | Managing Deal Lifecycle | Pending |
+| US-ARR-004 | Fee Plans | Pending |
+| US-ARR-005 | Managing Network | Pending |
+| US-ARR-006 | Closing Deals | Pending |
+
+### LAWYER - 2 stories
+| ID | Title | Status |
+|----|-------|--------|
+| US-LAW-001 | Profile & Deal Access | Pending |
+| US-LAW-002 | Document Signing | Pending |
+
+### CEO/STAFF - 8 stories
+| ID | Title | Status |
+|----|-------|--------|
+| US-CEO-001 | Dashboard Overview | Pending |
+| US-CEO-002 | Subscription Approvals | Pending |
+| US-CEO-003 | KYC Review | Pending |
+| US-CEO-004 | Request Management | Pending |
+| US-CEO-005 | Deal Oversight | Pending |
+| US-CEO-006 | User & Entity Management | Pending |
+| US-CEO-007 | Reconciliation | Pending |
+| US-CEO-008 | Audit & Compliance | Pending |
+
+---
+
+## Execution Log
+
+[No iterations yet]

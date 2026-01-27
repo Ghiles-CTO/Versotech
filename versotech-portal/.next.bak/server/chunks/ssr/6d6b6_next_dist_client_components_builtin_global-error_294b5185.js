@@ -1,0 +1,3 @@
+module.exports=[308699,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(578644);a.n(d("[project]/versotech-portal/node_modules/next/dist/client/components/builtin/global-error.js <module evaluation>"))},861846,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(578644);a.n(d("[project]/versotech-portal/node_modules/next/dist/client/components/builtin/global-error.js"))},273021,a=>{"use strict";a.i(308699);var b=a.i(861846);a.n(b)}];
+
+//# sourceMappingURL=6d6b6_next_dist_client_components_builtin_global-error_294b5185.js.map

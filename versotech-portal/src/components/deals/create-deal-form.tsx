@@ -28,17 +28,11 @@ interface CreateDealFormProps {
     website_url?: string | null
     arranger_entity_id?: string | null
   }>
-  /** Arranger entities available for assignment */
-  arrangerEntities?: Array<{
-    id: string
-    legal_name: string
-    company_name?: string | null
-  }>
   /** Base path for navigation (e.g., '/versotech/staff' or '/versotech_main') */
   basePath?: string
 }
 
-export function CreateDealForm({ entities, arrangerEntities = [], basePath = '/versotech/staff' }: CreateDealFormProps) {
+export function CreateDealForm({ entities, basePath = '/versotech/staff' }: CreateDealFormProps) {
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -113,12 +107,16 @@ export function CreateDealForm({ entities, arrangerEntities = [], basePath = '/v
     const normalized = value === 'none' ? '' : value
     updateField('vehicle_id', normalized)
 
-    // Auto-populate arranger from vehicle if available and arranger not already set
+    // Auto-set arranger from vehicle (arranger is always inherited from vehicle)
     if (normalized) {
       const vehicle = entities.find(e => e.id === normalized)
-      if (vehicle?.arranger_entity_id && !formData.arranger_entity_id) {
+      if (vehicle?.arranger_entity_id) {
         updateField('arranger_entity_id', vehicle.arranger_entity_id)
+      } else {
+        updateField('arranger_entity_id', '')
       }
+    } else {
+      updateField('arranger_entity_id', '')
     }
   }
 
@@ -210,7 +208,7 @@ export function CreateDealForm({ entities, arrangerEntities = [], basePath = '/v
                   ? 'bg-emerald-500 text-white'
                   : s < step
                   ? 'bg-emerald-500/50 text-white'
-                  : 'bg-white/10 text-muted-foreground'
+                  : 'bg-muted text-muted-foreground'
               }`}
             >
               {s}
@@ -224,7 +222,7 @@ export function CreateDealForm({ entities, arrangerEntities = [], basePath = '/v
       </div>
 
       {/* Form Steps */}
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border-border bg-muted/50">
         <CardHeader>
           <CardTitle className="text-foreground">
             {step === 1 ? 'Basic Information' : step === 2 ? 'Pipeline & Currency' : 'Timeline & Description'}
@@ -323,28 +321,7 @@ export function CreateDealForm({ entities, arrangerEntities = [], basePath = '/v
                   </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="arranger_entity_id" className="text-foreground">Arranger (Optional)</Label>
-                  <Select
-                    value={formData.arranger_entity_id || 'none'}
-                    onValueChange={(v) => updateField('arranger_entity_id', v === 'none' ? '' : v)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select arranger or skip" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No Arranger</SelectItem>
-                      {arrangerEntities.map((arranger) => (
-                        <SelectItem key={arranger.id} value={arranger.id}>
-                          {arranger.company_name || arranger.legal_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Assign an arranger to manage this deal (mandate)
-                  </p>
-                </div>
+                {/* Arranger is inherited from vehicle - no manual selection needed */}
 
                 <div className="space-y-2">
                   <Label htmlFor="sector" className="text-foreground">Sector</Label>
@@ -391,7 +368,7 @@ export function CreateDealForm({ entities, arrangerEntities = [], basePath = '/v
                         className="rounded-lg object-contain bg-white border border-gray-200 p-2"
                       />
                     ) : (
-                      <div className="h-14 w-14 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-muted-foreground">
+                      <div className="h-14 w-14 rounded-lg bg-muted border border-border flex items-center justify-center text-muted-foreground">
                         56×56
                       </div>
                     )}
@@ -507,7 +484,7 @@ export function CreateDealForm({ entities, arrangerEntities = [], basePath = '/v
               </div>
 
               <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                <p className="text-sm text-amber-200">
+                <p className="text-sm text-amber-700 dark:text-amber-200">
                   <strong>Note:</strong> Investment terms (price per share, minimum/maximum investment) are set in the Term Sheet
                   after creating this deal. The termsheet is the source of truth for investor-facing financial details.
                 </p>
@@ -566,13 +543,13 @@ export function CreateDealForm({ entities, arrangerEntities = [], basePath = '/v
 
           {/* Error Message */}
           {error && (
-            <div className="p-4 rounded-lg bg-red-500/20 border border-red-400/30 text-red-200">
+            <div className="p-4 rounded-lg bg-red-500/20 border border-red-400/30 text-red-700 dark:text-red-200">
               {error}
             </div>
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex items-center justify-between pt-4 border-t border-white/10">
+          <div className="flex items-center justify-between pt-4 border-t border-border">
             <Button
               variant="outline"
               onClick={() => setStep(s => Math.max(1, s - 1))}

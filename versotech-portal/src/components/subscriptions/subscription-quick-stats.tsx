@@ -99,8 +99,8 @@ export function SubscriptionQuickStats({
       label: 'Outstanding',
       value: formatCurrency(metrics.totalOutstanding),
       subValue: metrics.overdueCount > 0 ? `${metrics.overdueCount} overdue` : 'All current',
-      color: metrics.totalOutstanding > 0 ? 'text-yellow-400' : 'text-gray-400',
-      bgColor: metrics.totalOutstanding > 0 ? 'bg-yellow-900/20' : 'bg-gray-800/20'
+      color: metrics.totalOutstanding > 0 ? 'text-yellow-400' : 'text-muted-foreground',
+      bgColor: metrics.totalOutstanding > 0 ? 'bg-yellow-900/20' : 'bg-muted'
     },
     {
       icon: BarChart3,
@@ -123,7 +123,7 @@ export function SubscriptionQuickStats({
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
       {statCards.map((stat, index) => (
-        <Card key={index} className="bg-gray-900/70 border-gray-800 p-4 hover:bg-gray-900 transition-all">
+        <Card key={index} className="bg-card border-border p-4 hover:bg-muted transition-all">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
@@ -131,10 +131,10 @@ export function SubscriptionQuickStats({
                   <stat.icon className={`h-4 w-4 ${stat.color}`} />
                 </div>
               </div>
-              <p className="text-xs text-gray-400 mb-1">{stat.label}</p>
+              <p className="text-xs text-muted-foreground mb-1">{stat.label}</p>
               <p className={`text-lg font-bold ${stat.color}`}>{stat.value}</p>
               {stat.subValue && (
-                <p className="text-xs text-gray-500 mt-1">{stat.subValue}</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">{stat.subValue}</p>
               )}
             </div>
           </div>

@@ -370,8 +370,8 @@ export default async function StaffCalendarPage() {
   return (
     <div className="space-y-8 px-6 py-8">
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold text-white">Staff Calendar</h1>
-        <p className="text-gray-400">
+        <h1 className="text-3xl font-bold text-foreground">Staff Calendar</h1>
+        <p className="text-muted-foreground">
           View all important deadlines, events, and tasks across the platform
         </p>
       </div>

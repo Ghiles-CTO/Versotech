@@ -1,0 +1,10 @@
+{
+  "/(main)/versotech_main/dashboard/page": "app/(main)/versotech_main/dashboard/page.js",
+  "/(main)/versotech_main/documents/page": "app/(main)/versotech_main/documents/page.js",
+  "/(public)/versotech_main/login/page": "app/(public)/versotech_main/login/page.js",
+  "/api/auth/signin/route": "app/api/auth/signin/route.js",
+  "/api/commercial-partners/proxy-subscribe/route": "app/api/commercial-partners/proxy-subscribe/route.js",
+  "/api/staff/documents/folders/route": "app/api/staff/documents/folders/route.js",
+  "/api/staff/documents/route": "app/api/staff/documents/route.js",
+  "/page": "app/page.js"
+}

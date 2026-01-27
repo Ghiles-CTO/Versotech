@@ -1,0 +1,3 @@
+{
+  "/api/workflows/[key]/history/route": "app/api/workflows/[key]/history/route.js"
+}

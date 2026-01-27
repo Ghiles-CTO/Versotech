@@ -54,12 +54,12 @@ type EditorMode = 'create' | 'edit' | 'clone'
 const statusClasses: Record<string, string> = {
   draft: 'bg-amber-500/20 text-amber-100',
   published: 'bg-emerald-500/20 text-emerald-100',
-  archived: 'bg-slate-500/20 text-slate-100'
+  archived: 'bg-muted text-muted-foreground'
 }
 
 /** Fee plan status styling */
 const feePlanStatusClasses: Record<string, string> = {
-  draft: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
+  draft: 'bg-muted text-muted-foreground border-border',
   sent: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
   pending_signature: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
   accepted: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
@@ -866,7 +866,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                     return (
                       <div
                         key={fp.id}
-                        className="flex items-center justify-between p-2 rounded-md bg-black/20 border border-emerald-500/10"
+                        className="flex items-center justify-between p-2 rounded-md bg-muted/50 border border-emerald-500/10"
                       >
                         <div className="flex items-center gap-3">
                           {entity && (
@@ -901,7 +901,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
         </h3>
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {ordered.filter(termSheet => termSheet.status !== 'published').map(termSheet => (
-          <Card key={termSheet.id} className="border border-white/10 bg-white/5">
+          <Card key={termSheet.id} className="border-border bg-muted/50">
             <CardHeader className="flex items-start justify-between space-y-0">
               <div>
                 <CardTitle className="text-foreground text-lg">
@@ -1220,7 +1220,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                           return (
                             <div
                               key={fp.id}
-                              className="flex items-center justify-between py-1 px-2 rounded bg-black/20 text-xs"
+                              className="flex items-center justify-between py-1 px-2 rounded bg-muted/50 text-xs"
                             >
                               <div className="flex items-center gap-2 min-w-0">
                                 {entity && (
@@ -1246,7 +1246,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
           </Card>
         ))}
         {ordered.length === 0 && (
-          <Card className="border border-dashed border-white/20 bg-white/5">
+          <Card className="border border-dashed border-border bg-muted/50">
             <CardContent className="py-16 text-center space-y-3">
               <h4 className="text-lg font-semibold text-foreground">No term sheets yet</h4>
               <p className="text-sm text-muted-foreground">

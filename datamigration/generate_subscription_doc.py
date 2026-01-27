@@ -1,14 +1,7 @@
 #!/usr/bin/env python3
 """
 Generate 06_Full_Subscription_Data.xlsx from database.
-Uses positions.units distributed proportionally across subscriptions.
-
-The document includes one row per subscription with shares distributed
-proportionally based on commitment ratio.
-
-Note: Some positions exist without corresponding subscriptions (transfers,
-historical data). These are not included in this document as it focuses
-on subscription data specifically.
+Includes subscription fields plus current position per investor/vehicle.
 """
 
 import json
@@ -26,10 +19,67 @@ def main():
     # Create DataFrame
     df = pd.DataFrame(data)
 
+    column_order = [
+        "Entity Code",
+        "Investor Name",
+        "Investor Type",
+        "Commitment",
+        "Funded Amount",
+        "Shares",
+        "Current Position",
+        "Price Per Share",
+        "Cost Per Share",
+        "Subscription Fee (%)",
+        "Subscription Fee Amount",
+        "Performance Fee Tier 1 (%)",
+        "Performance Fee Tier 1 Threshold",
+        "Performance Fee Tier 2 (%)",
+        "Performance Fee Tier 2 Threshold",
+        "Spread Per Share",
+        "Spread Fee Amount",
+        "Management Fee (%)",
+        "BD Fee (%)",
+        "BD Fee Amount",
+        "FINRA Fee Shares",
+        "FINRA Fee Amount",
+        "Discount Rate",
+        "Interest Rate",
+        "Valuation Cap",
+        "Opportunity Name",
+        "Sourcing Contract Ref",
+        "Contract Date",
+    ]
+
+    df = df[[col for col in column_order if col in df.columns]]
+
     # Convert numeric columns
-    df["Commitment"] = pd.to_numeric(df["Commitment"], errors="coerce")
-    df["Funded Amount"] = pd.to_numeric(df["Funded Amount"], errors="coerce")
-    df["Shares"] = pd.to_numeric(df["Shares"], errors="coerce")
+    numeric_columns = [
+        "Commitment",
+        "Funded Amount",
+        "Shares",
+        "Current Position",
+        "Price Per Share",
+        "Cost Per Share",
+        "Subscription Fee (%)",
+        "Subscription Fee Amount",
+        "Performance Fee Tier 1 (%)",
+        "Performance Fee Tier 1 Threshold",
+        "Performance Fee Tier 2 (%)",
+        "Performance Fee Tier 2 Threshold",
+        "Spread Per Share",
+        "Spread Fee Amount",
+        "Management Fee (%)",
+        "BD Fee (%)",
+        "BD Fee Amount",
+        "FINRA Fee Shares",
+        "FINRA Fee Amount",
+        "Discount Rate",
+        "Interest Rate",
+        "Valuation Cap",
+    ]
+    for col in numeric_columns:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
 
     # Convert Contract Date to datetime, handle nulls
     df["Contract Date"] = pd.to_datetime(df["Contract Date"], errors="coerce")
@@ -38,15 +88,13 @@ def main():
     df = df.sort_values(["Entity Code", "Investor Name", "Contract Date"])
 
     # Calculate totals for TOTALS row
-    totals = {
-        "Entity Code": "TOTALS",
-        "Investor Name": "",
-        "Investor Type": "",
-        "Commitment": df["Commitment"].sum(),
-        "Funded Amount": df["Funded Amount"].sum(),
-        "Shares": df["Shares"].sum(),
-        "Contract Date": None
-    }
+    totals = {col: None for col in df.columns}
+    totals["Entity Code"] = "TOTALS"
+    totals["Investor Name"] = ""
+    totals["Investor Type"] = ""
+    for col in ["Commitment", "Funded Amount", "Shares", "Current Position", "Subscription Fee Amount", "Spread Fee Amount", "BD Fee Amount", "FINRA Fee Amount"]:
+        if col in df.columns:
+            totals[col] = df[col].sum()
 
     # Append totals row
     df = pd.concat([df, pd.DataFrame([totals])], ignore_index=True)
@@ -68,31 +116,92 @@ def main():
         worksheet = writer.sheets["Subscription Data"]
 
         # Adjust column widths
-        column_widths = {
-            "A": 15,  # Entity Code
-            "B": 50,  # Investor Name
-            "C": 15,  # Investor Type
-            "D": 18,  # Commitment
-            "E": 18,  # Funded Amount
-            "F": 15,  # Shares
-            "G": 15,  # Contract Date
+        width_by_name = {
+            "Entity Code": 12,
+            "Investor Name": 40,
+            "Investor Type": 14,
+            "Commitment": 16,
+            "Funded Amount": 16,
+            "Shares": 12,
+            "Current Position": 16,
+            "Price Per Share": 14,
+            "Cost Per Share": 14,
+            "Subscription Fee (%)": 16,
+            "Subscription Fee Amount": 18,
+            "Performance Fee Tier 1 (%)": 20,
+            "Performance Fee Tier 1 Threshold": 22,
+            "Performance Fee Tier 2 (%)": 20,
+            "Performance Fee Tier 2 Threshold": 22,
+            "Spread Per Share": 16,
+            "Spread Fee Amount": 18,
+            "Management Fee (%)": 18,
+            "BD Fee (%)": 14,
+            "BD Fee Amount": 16,
+            "FINRA Fee Shares": 16,
+            "FINRA Fee Amount": 16,
+            "Discount Rate": 14,
+            "Interest Rate": 14,
+            "Valuation Cap": 16,
+            "Opportunity Name": 32,
+            "Sourcing Contract Ref": 24,
+            "Contract Date": 14,
         }
 
-        for col, width in column_widths.items():
-            worksheet.column_dimensions[col].width = width
+        from openpyxl.utils import get_column_letter
+
+        headers = [cell.value for cell in worksheet[1]]
+        for idx, name in enumerate(headers, start=1):
+            width = width_by_name.get(name, 14)
+            worksheet.column_dimensions[get_column_letter(idx)].width = width
 
         # Apply number formatting
         from openpyxl.styles import numbers
 
+        currency_cols = {
+            "Commitment",
+            "Funded Amount",
+            "Subscription Fee Amount",
+            "Spread Fee Amount",
+            "BD Fee Amount",
+            "FINRA Fee Amount",
+            "Valuation Cap",
+        }
+        decimal_cols = {
+            "Shares",
+            "Current Position",
+            "Price Per Share",
+            "Cost Per Share",
+            "Spread Per Share",
+            "FINRA Fee Shares",
+            "Performance Fee Tier 1 Threshold",
+            "Performance Fee Tier 2 Threshold",
+        }
+        percent_cols = {
+            "Subscription Fee (%)",
+            "Performance Fee Tier 1 (%)",
+            "Performance Fee Tier 2 (%)",
+            "Management Fee (%)",
+            "BD Fee (%)",
+            "Discount Rate",
+            "Interest Rate",
+        }
+
+        header_map = {name: idx + 1 for idx, name in enumerate(headers)}
         for row in range(2, len(df) + 2):  # Skip header row
-            # Currency format for Commitment and Funded Amount
-            worksheet[f"D{row}"].number_format = '#,##0.00'
-            worksheet[f"E{row}"].number_format = '#,##0.00'
-            # Number format for Shares
-            worksheet[f"F{row}"].number_format = '#,##0.00'
-            # Date format for Contract Date
-            if worksheet[f"G{row}"].value:
-                worksheet[f"G{row}"].number_format = 'YYYY-MM-DD'
+            for col_name in headers:
+                col_idx = header_map[col_name]
+                cell = worksheet.cell(row=row, column=col_idx)
+                if col_name in currency_cols:
+                    cell.number_format = '#,##0.00'
+                elif col_name in decimal_cols:
+                    if col_name in {"Price Per Share", "Cost Per Share"}:
+                        cell.number_format = '#,##0.000000'
+                    else:
+                        cell.number_format = '#,##0.00'
+                elif col_name in percent_cols:
+                    cell.number_format = '0.00%'
+                elif col_name == "Contract Date" and cell.value:
+                    cell.number_format = 'YYYY-MM-DD'
 
     print(f"\nSaved to: {output_path}")
 
@@ -106,6 +215,7 @@ def main():
         "Commitment": "sum",
         "Funded Amount": "sum",
         "Shares": "sum",
+        "Current Position": "sum",
         "Investor Name": "count"
     }).rename(columns={"Investor Name": "Record Count"})
 

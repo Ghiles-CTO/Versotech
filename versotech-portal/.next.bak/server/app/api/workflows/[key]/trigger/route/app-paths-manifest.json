@@ -1,0 +1,3 @@
+{
+  "/api/workflows/[key]/trigger/route": "app/api/workflows/[key]/trigger/route.js"
+}

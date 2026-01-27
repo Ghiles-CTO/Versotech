@@ -60,7 +60,7 @@ export function ApproveCommitmentModal({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="gap-2 border-emerald-400/30 text-emerald-200 hover:bg-emerald-500/10">
+        <Button size="sm" variant="outline" className="gap-2 border-emerald-400/30 text-emerald-600 dark:text-emerald-200 hover:bg-emerald-500/10">
           <CheckCircle className="h-4 w-4" />
           Approve
         </Button>
@@ -74,7 +74,7 @@ export function ApproveCommitmentModal({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+          <div className="p-4 bg-muted/50 rounded-lg border border-border">
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Investor:</span>
@@ -112,7 +112,7 @@ export function ApproveCommitmentModal({
           </div>
 
           {error && (
-            <div className="p-3 rounded-lg bg-red-500/20 border border-red-400/30 text-red-200 text-sm">
+            <div className="p-3 rounded-lg bg-red-500/20 border border-red-400/30 text-red-700 dark:text-red-200 text-sm">
               {error}
             </div>
           )}

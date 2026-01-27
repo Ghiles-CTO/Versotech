@@ -124,28 +124,28 @@ export function EntityKYCDocuments({ entityId, entityName }: EntityKYCDocumentsP
     switch (status) {
       case 'approved':
         return (
-          <Badge variant="default" className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
+          <Badge variant="default" className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30">
             <CheckCircle2 className="mr-1 h-3 w-3" />
             Approved
           </Badge>
         )
       case 'pending':
         return (
-          <Badge variant="secondary" className="bg-amber-500/20 text-amber-300 border-amber-500/30">
+          <Badge variant="secondary" className="bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30">
             <Clock className="mr-1 h-3 w-3" />
             Pending Review
           </Badge>
         )
       case 'rejected':
         return (
-          <Badge variant="destructive" className="bg-rose-500/20 text-rose-300 border-rose-500/30">
+          <Badge variant="destructive" className="bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-500/30">
             <AlertCircle className="mr-1 h-3 w-3" />
             Rejected
           </Badge>
         )
       case 'expired':
         return (
-          <Badge variant="outline" className="bg-gray-500/20 text-gray-300 border-gray-500/30">
+          <Badge variant="outline" className="bg-gray-500/20 text-gray-600 dark:text-gray-300 border-gray-500/30">
             <AlertCircle className="mr-1 h-3 w-3" />
             Expired
           </Badge>
@@ -173,8 +173,8 @@ export function EntityKYCDocuments({ entityId, entityName }: EntityKYCDocumentsP
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-white">{entityName} - KYC Documents</h3>
-          <p className="text-sm text-slate-400">
+          <h3 className="text-lg font-semibold text-foreground">{entityName} - KYC Documents</h3>
+          <p className="text-sm text-muted-foreground">
             Upload and manage KYC documents for this entity
           </p>
         </div>
@@ -194,14 +194,14 @@ export function EntityKYCDocuments({ entityId, entityName }: EntityKYCDocumentsP
 
       {isLoading ? (
         <div className="flex items-center justify-center p-12">
-          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : submissions.length === 0 ? (
-        <Card className="border-dashed border-slate-700">
+        <Card className="border-dashed border-border">
           <CardContent className="flex flex-col items-center justify-center p-12">
-            <FileText className="h-12 w-12 text-slate-600 mb-4" />
-            <p className="text-slate-400 mb-2">No KYC documents uploaded yet</p>
-            <p className="text-sm text-slate-500 mb-4">
+            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-muted-foreground mb-2">No KYC documents uploaded yet</p>
+            <p className="text-sm text-muted-foreground mb-4">
               Upload entity documents and ID/Utility Bill for each member/director
             </p>
             <Button onClick={() => setIsUploadDialogOpen(true)}>
@@ -230,11 +230,11 @@ export function EntityKYCDocuments({ entityId, entityName }: EntityKYCDocumentsP
                   <TableRow key={submission.id}>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-medium text-white">
+                        <span className="font-medium text-foreground">
                           {getDocumentTypeLabel(submission.document_type, submission.custom_label)}
                         </span>
                         {submission.version > 1 && (
-                          <span className="text-xs text-slate-400">
+                          <span className="text-xs text-muted-foreground">
                             Version {submission.version}
                           </span>
                         )}
@@ -244,28 +244,28 @@ export function EntityKYCDocuments({ entityId, entityName }: EntityKYCDocumentsP
                       <TableCell>
                         {submission.counterparty_member ? (
                           <div className="flex items-center gap-1.5">
-                            <User className="h-3.5 w-3.5 text-slate-400" />
-                            <span className="text-sm text-slate-300">{submission.counterparty_member.full_name}</span>
+                            <User className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">{submission.counterparty_member.full_name}</span>
                           </div>
                         ) : (
-                          <span className="text-sm text-slate-500">—</span>
+                          <span className="text-sm text-muted-foreground">—</span>
                         )}
                       </TableCell>
                     )}
                     <TableCell>{getStatusBadge(submission.status)}</TableCell>
-                    <TableCell className="text-slate-300">
+                    <TableCell className="text-muted-foreground">
                       {formatDate(submission.created_at)}
                     </TableCell>
-                    <TableCell className="text-slate-300">
+                    <TableCell className="text-muted-foreground">
                       {submission.expiry_date ? formatDate(submission.expiry_date) : '—'}
                     </TableCell>
                     <TableCell>
                       {submission.document && (
                         <div className="flex flex-col">
-                          <span className="text-sm text-slate-300 truncate max-w-[200px]">
+                          <span className="text-sm text-muted-foreground truncate max-w-[200px]">
                             {submission.document.name}
                           </span>
-                          <span className="text-xs text-slate-500">
+                          <span className="text-xs text-muted-foreground">
                             {formatFileSize(submission.document.file_size_bytes)}
                           </span>
                         </div>

@@ -41,19 +41,19 @@ type SortField = 'created_at' | 'priority' | 'sla_breach_at' | 'entity_type' | '
 type SortDirection = 'asc' | 'desc'
 
 const priorityColors = {
-  low: 'bg-blue-500/20 text-blue-300',
-  medium: 'bg-yellow-500/20 text-yellow-300',
-  high: 'bg-orange-500/20 text-orange-300',
-  critical: 'bg-red-500/20 text-red-300'
+  low: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300',
+  medium: 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300',
+  high: 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300',
+  critical: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300'
 }
 
 const statusColors = {
-  pending: 'bg-amber-500/20 text-amber-300',
-  approved: 'bg-emerald-500/20 text-emerald-300',
-  rejected: 'bg-rose-500/20 text-rose-300',
-  awaiting_info: 'bg-blue-500/20 text-blue-300',
-  escalated: 'bg-purple-500/20 text-purple-300',
-  cancelled: 'bg-slate-500/20 text-slate-300'
+  pending: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300',
+  approved: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300',
+  rejected: 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300',
+  awaiting_info: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300',
+  escalated: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300',
+  cancelled: 'bg-slate-100 dark:bg-slate-500/20 text-slate-700 dark:text-slate-300'
 }
 
 const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 }
@@ -217,18 +217,18 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
   return (
     <div className="space-y-4">
       {/* Advanced Filters Bar */}
-      <Card className="border-white/10 bg-white/5">
+      <Card className="border-border bg-muted/50">
         <CardContent className="p-4">
           <div className="space-y-4">
             {/* Search Bar */}
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search by deal name, investor, ID, assigned to..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-black/20 border-white/10 text-white placeholder:text-slate-500"
+                  className="pl-10 bg-background border-input text-foreground placeholder:text-muted-foreground"
                 />
               </div>
               {hasActiveFilters && (
@@ -247,12 +247,12 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
             {/* Filter Controls */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
               <div className="space-y-1.5">
-                <label className="text-xs text-slate-400 flex items-center gap-1">
+                <label className="text-xs text-muted-foreground flex items-center gap-1">
                   <Filter className="h-3 w-3" />
                   Status
                 </label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="bg-black/20 border-white/10 text-white">
+                  <SelectTrigger className="bg-background border-input text-foreground">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -265,12 +265,12 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs text-slate-400 flex items-center gap-1">
+                <label className="text-xs text-muted-foreground flex items-center gap-1">
                   <Filter className="h-3 w-3" />
                   Priority
                 </label>
                 <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                  <SelectTrigger className="bg-black/20 border-white/10 text-white">
+                  <SelectTrigger className="bg-background border-input text-foreground">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -284,12 +284,12 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs text-slate-400 flex items-center gap-1">
+                <label className="text-xs text-muted-foreground flex items-center gap-1">
                   <Filter className="h-3 w-3" />
                   Entity Type
                 </label>
                 <Select value={entityTypeFilter} onValueChange={setEntityTypeFilter}>
-                  <SelectTrigger className="bg-black/20 border-white/10 text-white">
+                  <SelectTrigger className="bg-background border-input text-foreground">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -304,12 +304,12 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs text-slate-400 flex items-center gap-1">
+                <label className="text-xs text-muted-foreground flex items-center gap-1">
                   <Filter className="h-3 w-3" />
                   SLA Status
                 </label>
                 <Select value={slaFilter} onValueChange={setSlaFilter}>
-                  <SelectTrigger className="bg-black/20 border-white/10 text-white">
+                  <SelectTrigger className="bg-background border-input text-foreground">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -323,12 +323,12 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs text-slate-400 flex items-center gap-1">
+                <label className="text-xs text-muted-foreground flex items-center gap-1">
                   <SlidersHorizontal className="h-3 w-3" />
                   Sort By
                 </label>
                 <Select value={sortField} onValueChange={(v) => setSortField(v as SortField)}>
-                  <SelectTrigger className="bg-black/20 border-white/10 text-white">
+                  <SelectTrigger className="bg-background border-input text-foreground">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -343,10 +343,10 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
             </div>
 
             {/* Results Counter */}
-            <div className="flex items-center justify-between pt-2 border-t border-white/10">
-              <p className="text-sm text-slate-400">
-                Showing <span className="font-semibold text-white">{filteredAndSortedApprovals.length}</span> of{' '}
-                <span className="font-semibold text-white">{approvals.length}</span> approvals
+            <div className="flex items-center justify-between pt-2 border-t border-border">
+              <p className="text-sm text-muted-foreground">
+                Showing <span className="font-semibold text-foreground">{filteredAndSortedApprovals.length}</span> of{' '}
+                <span className="font-semibold text-foreground">{approvals.length}</span> approvals
               </p>
               {hasActiveFilters && (
                 <Badge variant="outline" className="text-xs">
@@ -359,16 +359,16 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
       </Card>
 
       {/* Database Grid Table */}
-      <Card className="border-white/10 bg-white/5">
+      <Card className="border-border bg-muted/50">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="border-white/10 hover:bg-white/5">
+              <TableRow className="border-border hover:bg-white/5">
                 {visibleColumns.entity_type && (
                   <TableHead>
                     <button
                       onClick={() => handleSort('entity_type')}
-                      className="flex items-center text-slate-300 hover:text-white font-semibold"
+                      className="flex items-center text-muted-foreground hover:text-foreground font-semibold"
                     >
                       Type
                       <SortIcon field="entity_type" />
@@ -376,16 +376,16 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
                   </TableHead>
                 )}
                 {visibleColumns.deal_investor && (
-                  <TableHead className="text-slate-300 font-semibold">Deal / Investor</TableHead>
+                  <TableHead className="text-muted-foreground font-semibold">Deal / Investor</TableHead>
                 )}
                 {visibleColumns.amount && (
-                  <TableHead className="text-slate-300 font-semibold">Amount</TableHead>
+                  <TableHead className="text-muted-foreground font-semibold">Amount</TableHead>
                 )}
                 {visibleColumns.priority && (
                   <TableHead>
                     <button
                       onClick={() => handleSort('priority')}
-                      className="flex items-center text-slate-300 hover:text-white font-semibold"
+                      className="flex items-center text-muted-foreground hover:text-foreground font-semibold"
                     >
                       Priority
                       <SortIcon field="priority" />
@@ -396,7 +396,7 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
                   <TableHead>
                     <button
                       onClick={() => handleSort('status')}
-                      className="flex items-center text-slate-300 hover:text-white font-semibold"
+                      className="flex items-center text-muted-foreground hover:text-foreground font-semibold"
                     >
                       Status
                       <SortIcon field="status" />
@@ -407,7 +407,7 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
                   <TableHead>
                     <button
                       onClick={() => handleSort('sla_breach_at')}
-                      className="flex items-center text-slate-300 hover:text-white font-semibold"
+                      className="flex items-center text-muted-foreground hover:text-foreground font-semibold"
                     >
                       SLA Deadline
                       <SortIcon field="sla_breach_at" />
@@ -415,16 +415,16 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
                   </TableHead>
                 )}
                 {visibleColumns.assigned_to && (
-                  <TableHead className="text-slate-300 font-semibold">Assigned To</TableHead>
+                  <TableHead className="text-muted-foreground font-semibold">Assigned To</TableHead>
                 )}
                 {visibleColumns.requested_by && (
-                  <TableHead className="text-slate-300 font-semibold">Requested By</TableHead>
+                  <TableHead className="text-muted-foreground font-semibold">Requested By</TableHead>
                 )}
                 {visibleColumns.created_at && (
                   <TableHead>
                     <button
                       onClick={() => handleSort('created_at')}
-                      className="flex items-center text-slate-300 hover:text-white font-semibold"
+                      className="flex items-center text-muted-foreground hover:text-foreground font-semibold"
                     >
                       Created
                       <SortIcon field="created_at" />
@@ -442,7 +442,7 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
                   return (
                     <TableRow
                       key={approval.id}
-                      className="border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
+                      className="border-border cursor-pointer hover:bg-muted transition-colors"
                       onClick={() => onApprovalClick(approval)}
                     >
                       {visibleColumns.entity_type && (
@@ -457,10 +457,10 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
                           <div className="space-y-1">
                             {approval.entity_type === 'member_invitation' && approval.entity_metadata ? (
                               <>
-                                <p className="font-medium text-white text-sm">
+                                <p className="font-medium text-foreground text-sm">
                                   {approval.entity_metadata.email}
                                 </p>
-                                <p className="text-xs text-slate-400">
+                                <p className="text-xs text-muted-foreground">
                                   {approval.entity_metadata.entity_name} • {approval.entity_metadata.role || 'Member'}
                                   {approval.entity_metadata.is_signatory && ' • Signatory'}
                                 </p>
@@ -468,17 +468,17 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
                             ) : (
                               <>
                                 {approval.related_deal && (
-                                  <p className="font-medium text-white text-sm">
+                                  <p className="font-medium text-foreground text-sm">
                                     {approval.related_deal.name}
                                   </p>
                                 )}
                                 {approval.related_investor && (
-                                  <p className="text-xs text-slate-400">
+                                  <p className="text-xs text-muted-foreground">
                                     {approval.related_investor.legal_name}
                                   </p>
                                 )}
                                 {!approval.related_deal && !approval.related_investor && (
-                                  <p className="text-xs text-slate-500 font-mono">
+                                  <p className="text-xs text-muted-foreground font-mono">
                                     {approval.entity_id.substring(0, 12)}...
                                   </p>
                                 )}
@@ -495,7 +495,7 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
                               {approval.entity_metadata.indicative_amount.toLocaleString()}
                             </p>
                           ) : (
-                            <span className="text-slate-600 text-xs">—</span>
+                            <span className="text-muted-foreground text-xs">—</span>
                           )}
                         </TableCell>
                       )}
@@ -516,7 +516,7 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
                       {visibleColumns.sla && (
                         <TableCell>
                           {slaBreachDate ? (
-                            <div className={isOverdue ? 'text-red-400 font-semibold' : 'text-slate-300'}>
+                            <div className={isOverdue ? 'text-red-400 font-semibold' : 'text-muted-foreground'}>
                               <p className="text-xs">
                                 {format(slaBreachDate, 'MMM dd, HH:mm')}
                               </p>
@@ -525,32 +525,32 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
                               )}
                             </div>
                           ) : (
-                            <span className="text-slate-600 text-xs">No SLA</span>
+                            <span className="text-muted-foreground text-xs">No SLA</span>
                           )}
                         </TableCell>
                       )}
                       {visibleColumns.assigned_to && (
                         <TableCell>
-                          <p className="text-sm text-white">
+                          <p className="text-sm text-foreground">
                             {approval.assigned_to_profile?.display_name || (
-                              <span className="text-slate-600">Unassigned</span>
+                              <span className="text-muted-foreground">Unassigned</span>
                             )}
                           </p>
                         </TableCell>
                       )}
                       {visibleColumns.requested_by && (
                         <TableCell>
-                          <p className="text-sm text-white">
+                          <p className="text-sm text-foreground">
                             {approval.requested_by_profile?.display_name || 'Unknown'}
                           </p>
                         </TableCell>
                       )}
                       {visibleColumns.created_at && (
                         <TableCell>
-                          <p className="text-xs text-slate-400">
+                          <p className="text-xs text-muted-foreground">
                             {format(new Date(approval.created_at), 'MMM dd, yyyy')}
                           </p>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-muted-foreground">
                             {format(new Date(approval.created_at), 'HH:mm')}
                           </p>
                         </TableCell>
@@ -562,7 +562,7 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
                 <TableRow>
                   <TableCell colSpan={9} className="text-center py-12">
                     <div className="space-y-2">
-                      <p className="text-slate-400">No approvals match your filters</p>
+                      <p className="text-muted-foreground">No approvals match your filters</p>
                       {hasActiveFilters && (
                         <Button
                           variant="outline"

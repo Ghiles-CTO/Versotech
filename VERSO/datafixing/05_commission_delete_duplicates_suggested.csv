@@ -1,0 +1,4 @@
+entity_code,introducer,investor,fee_type,rate_bps,amount,comment_rows,candidate_ids,suggested_action
+VC125,Daniel Baumslag,DALINGA HOLDING AG,performance_fee,500.0,0.0,"491,492","5b97ba0c-7f0a-418c-a950-daf915207f41,bdc307ff-9a0a-4463-8514-2b343748c5bf",delete_all_candidates
+VC125,Terra Financial & Management Services SA,DALINGA HOLDING AG,performance_fee,200.0,0.0,"498,499","9491b3aa-7f1c-4bd4-bf10-7010d3f91e70,ec5fb2c7-bf36-4724-bbcb-455014191a34",delete_all_candidates
+VC133,Altras Capital Financing Broker,Tuygan GOKER,spread,0.0,0.0,"572,573","3b53813f-08e3-4b1c-afbe-0f6deab771ee,9b24e8ad-9999-401d-be22-5fdd2c97ba8c",delete_all_candidates

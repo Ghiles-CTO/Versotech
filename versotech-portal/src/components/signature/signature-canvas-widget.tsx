@@ -63,7 +63,7 @@ export function SignatureCanvasWidget({
 
         <div>
           <p className="text-sm font-medium mb-2">Your Signature</p>
-          <div className="border-2 border-gray-300 rounded-lg bg-white overflow-hidden">
+          <div className="border-2 border-border rounded-lg bg-white dark:bg-zinc-100 overflow-hidden">
             <SignatureCanvas
               ref={sigCanvasRef}
               canvasProps={{

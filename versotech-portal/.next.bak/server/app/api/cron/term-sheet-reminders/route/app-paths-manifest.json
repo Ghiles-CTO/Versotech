@@ -1,0 +1,3 @@
+{
+  "/api/cron/term-sheet-reminders/route": "app/api/cron/term-sheet-reminders/route.js"
+}

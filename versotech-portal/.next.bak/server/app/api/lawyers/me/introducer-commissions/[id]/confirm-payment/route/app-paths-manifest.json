@@ -1,0 +1,3 @@
+{
+  "/api/lawyers/me/introducer-commissions/[id]/confirm-payment/route": "app/api/lawyers/me/introducer-commissions/[id]/confirm-payment/route.js"
+}

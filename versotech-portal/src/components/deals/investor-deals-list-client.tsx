@@ -105,9 +105,9 @@ const referralStageMeta: Record<ReferralStage, {
 }> = {
   dispatched: {
     label: 'Dispatched',
-    bgColor: 'bg-slate-50 dark:bg-slate-900/50',
-    textColor: 'text-slate-600 dark:text-slate-300',
-    borderColor: 'border-slate-200 dark:border-slate-700'
+    bgColor: 'bg-muted',
+    textColor: 'text-muted-foreground',
+    borderColor: 'border-border'
   },
   interested: {
     label: 'Interested',
@@ -294,7 +294,7 @@ const dealTypeLabels: Record<string, string> = {
 }
 
 const statusBadges: Record<string, string> = {
-  draft: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
+  draft: 'bg-muted text-muted-foreground',
   open: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300',
   allocation_pending: 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300',
   closed: 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300',
@@ -321,7 +321,7 @@ const interestStatusMeta: Record<
   pending_review: { label: 'Pending review', tone: 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300' },
   approved: { label: 'NDA active', tone: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300' },
   rejected: { label: 'Declined', tone: 'bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300' },
-  withdrawn: { label: 'Withdrawn', tone: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300' }
+  withdrawn: { label: 'Withdrawn', tone: 'bg-muted text-muted-foreground' }
 }
 
 // Subscription stages 6-9 metadata (before Active/Stage 10)
@@ -438,9 +438,9 @@ const subscriptionStageMeta: Record<string, {
     label: 'Cancelled',
     stage: 0,
     icon: AlertCircle,
-    bgColor: 'bg-slate-50 dark:bg-slate-800/50',
-    textColor: 'text-slate-700 dark:text-slate-300',
-    borderColor: 'border-slate-200 dark:border-slate-700'
+    bgColor: 'bg-muted',
+    textColor: 'text-muted-foreground',
+    borderColor: 'border-border'
   }
 }
 
@@ -792,13 +792,13 @@ export function InvestorDealsListClient({
   if (!mounted) {
     return (
       <div className="p-6 space-y-8">
-        <div className="h-24 bg-gray-100 dark:bg-zinc-800 animate-pulse rounded-lg" />
+        <div className="h-24 bg-muted animate-pulse rounded-lg" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-32 bg-gray-100 dark:bg-zinc-800 animate-pulse rounded-lg" />
+            <div key={i} className="h-32 bg-muted animate-pulse rounded-lg" />
           ))}
         </div>
-        <div className="h-48 bg-gray-100 dark:bg-zinc-800 animate-pulse rounded-lg" />
+        <div className="h-48 bg-muted animate-pulse rounded-lg" />
       </div>
     )
   }
@@ -820,7 +820,7 @@ export function InvestorDealsListClient({
           <>
             {personaMode === 'DUAL_PERSONA' && (
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                <Badge variant="outline" className="bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700">
                   <Share2 className="h-3 w-3 mr-1" />
                   Partner View
                 </Badge>
@@ -890,7 +890,7 @@ export function InvestorDealsListClient({
           <>
             {personaMode === 'DUAL_PERSONA' && (
               <div className="flex items-center gap-2 mt-4">
-                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700">
                   <Activity className="h-3 w-3 mr-1" />
                   Investor View
                 </Badge>
@@ -1083,7 +1083,7 @@ export function InvestorDealsListClient({
           {/* Advanced Filters */}
           {showAdvancedFilters && (
             <div className="pt-4 border-t border-border space-y-3">
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Advanced Filters</h3>
+              <h3 className="text-sm font-medium text-foreground">Advanced Filters</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                 {/* Interest Status */}
                 <Select value={interestStatusFilter} onValueChange={setInterestStatusFilter}>
@@ -1202,7 +1202,7 @@ export function InvestorDealsListClient({
                             alt={`${deal.company_name ?? deal.name} logo`}
                             width={40}
                             height={40}
-                            className="rounded-lg object-contain bg-white border border-gray-200 p-1"
+                            className="rounded-lg object-contain bg-background border border-border p-1"
                           />
                         ) : (
                           <div className="h-10 w-10 rounded-lg bg-background flex items-center justify-center text-muted-foreground text-lg font-semibold border border-border">
@@ -1362,7 +1362,7 @@ export function InvestorDealsListClient({
                             {effectiveStatus.replace(/_/g, ' ').toUpperCase()}
                           </Badge>
                           {isNewlyDispatched && (
-                            <Badge className="bg-blue-100 text-blue-700 text-xs">
+                            <Badge className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs">
                               NEW
                             </Badge>
                           )}
@@ -1506,7 +1506,7 @@ export function InvestorDealsListClient({
                                 key={referral.investor_id}
                                 className="flex items-center justify-between text-sm"
                               >
-                                <span className="text-gray-700 dark:text-gray-300 truncate max-w-[200px]">
+                                <span className="text-foreground truncate max-w-[200px]">
                                   {referral.investor_name}
                                 </span>
                                 <Badge
@@ -1550,7 +1550,7 @@ export function InvestorDealsListClient({
                   {isInvestorView && (
                     <div className="grid grid-cols-1 gap-4">
                       <div>
-                        <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Your pipeline</p>
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">Your pipeline</p>
                         <div className="flex flex-wrap items-center gap-2">
                           {interest ? (
                             interest.is_post_close ? (
@@ -1563,7 +1563,7 @@ export function InvestorDealsListClient({
                               </Badge>
                             )
                           ) : (
-                            <span className="text-sm text-gray-600 dark:text-gray-400">No signal yet</span>
+                            <span className="text-sm text-muted-foreground">No signal yet</span>
                           )}
                           {subscription && (
                             <Badge variant="outline" className="text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700">
@@ -1581,7 +1581,7 @@ export function InvestorDealsListClient({
                             </Badge>
                           )}
                           {feeStructure?.interest_confirmation_deadline && (
-                            <span className="text-xs text-gray-600 dark:text-gray-400">
+                            <span className="text-xs text-muted-foreground">
                               Interest deadline: {new Date(feeStructure.interest_confirmation_deadline).toLocaleDateString()}
                             </span>
                           )}
@@ -1594,10 +1594,10 @@ export function InvestorDealsListClient({
                   {/* GENERIC VIEW: Basic tracking info */}
                   {/* ============================================================ */}
                   {personaMode === 'GENERIC' && (
-                    <div className="rounded-lg border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/50 px-4 py-3">
+                    <div className="rounded-lg border border-border bg-muted px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                        <span className="text-sm text-gray-600 dark:text-gray-400">View-only access</span>
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">View-only access</span>
                       </div>
                     </div>
                   )}
@@ -1613,8 +1613,8 @@ export function InvestorDealsListClient({
                   ) : null}
 
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                    <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-                      <CalendarClock className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <CalendarClock className="h-4 w-4 text-muted-foreground" />
                       {deal.open_at
                         ? `Opened ${new Date(deal.open_at).toLocaleDateString()}`
                         : 'Opening window announced soon'}

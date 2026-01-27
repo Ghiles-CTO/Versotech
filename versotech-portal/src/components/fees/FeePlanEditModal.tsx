@@ -153,17 +153,17 @@ function CollapsibleSection({
   status,
 }: CollapsibleSectionProps) {
   return (
-    <div className="border border-gray-700/50 rounded-2xl overflow-hidden bg-gray-900/40 shadow-lg">
+    <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-lg">
       <button
         type="button"
         onClick={onToggle}
-        className="w-full px-8 py-6 flex items-center justify-between hover:bg-gray-800/40 transition-colors"
+        className="w-full px-8 py-6 flex items-center justify-between hover:bg-muted/60 transition-colors"
       >
         <div className="flex items-center gap-5">
-          <div className="text-blue-400 p-2 bg-blue-500/10 rounded-lg">{icon}</div>
-          <span className="font-bold text-white text-xl">{title}</span>
+          <div className="text-blue-500 dark:text-blue-400 p-2 bg-blue-500/10 rounded-lg">{icon}</div>
+          <span className="font-bold text-foreground text-xl">{title}</span>
           {badge && (
-            <Badge variant="outline" className="text-sm border-gray-500 text-gray-200 px-3 py-1 font-medium">
+            <Badge variant="outline" className="text-sm border-border text-foreground px-3 py-1 font-medium">
               {badge}
             </Badge>
           )}
@@ -171,12 +171,12 @@ function CollapsibleSection({
         <div className="flex items-center gap-5">
           {status === 'complete' && (
             <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
-              <Check className="w-5 h-5 text-green-400" />
+              <Check className="w-5 h-5 text-green-500 dark:text-green-400" />
             </div>
           )}
           {status === 'error' && (
             <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5 text-red-400" />
+              <AlertTriangle className="w-5 h-5 text-red-500 dark:text-red-400" />
             </div>
           )}
           <motion.div
@@ -184,7 +184,7 @@ function CollapsibleSection({
             transition={{ duration: 0.2 }}
             className="p-1"
           >
-            <ChevronDown className="w-6 h-6 text-gray-400" />
+            <ChevronDown className="w-6 h-6 text-muted-foreground" />
           </motion.div>
         </div>
       </button>
@@ -196,7 +196,7 @@ function CollapsibleSection({
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: 'easeInOut' }}
           >
-            <div className="px-8 pb-8 pt-6 border-t border-gray-700/50 bg-black/20">
+            <div className="px-8 pb-8 pt-6 border-t border-border bg-muted/30">
               {children}
             </div>
           </motion.div>
@@ -246,7 +246,7 @@ function FeeComponentCard({
       case 'purple': return 'border-purple-500/40';
       case 'amber': return 'border-amber-500/40';
       case 'cyan': return 'border-cyan-500/40';
-      default: return 'border-gray-600';
+      default: return 'border-border';
     }
   };
 
@@ -257,12 +257,12 @@ function FeeComponentCard({
       case 'purple': return 'bg-purple-500/20 text-purple-400';
       case 'amber': return 'bg-amber-500/20 text-amber-400';
       case 'cyan': return 'bg-cyan-500/20 text-cyan-400';
-      default: return 'bg-gray-500/20 text-gray-400';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
   return (
-    <div className={`border-2 rounded-2xl p-6 bg-gray-900/40 ${getBorderColor()} transition-all hover:bg-gray-900/60`}>
+    <div className={`border-2 rounded-2xl p-6 bg-card ${getBorderColor()} transition-all hover:bg-muted/60`}>
       {/* Header Row */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-5">
@@ -270,15 +270,15 @@ function FeeComponentCard({
             {index + 1}
           </div>
           <div className="space-y-1">
-            <Label className="text-sm text-gray-400">Fee Type</Label>
+            <Label className="text-sm text-muted-foreground">Fee Type</Label>
             <Select
               value={component.kind}
               onValueChange={(val) => onChange({ kind: val as FeeComponent['kind'] })}
             >
-              <SelectTrigger className="w-64 bg-black/60 border-gray-600 text-white h-12 text-base font-medium">
+              <SelectTrigger className="w-64 bg-muted/50 border-border text-foreground h-12 text-base font-medium">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-gray-900 border-gray-700">
+              <SelectContent className="bg-popover border-border">
                 {FEE_KINDS.map((kind) => (
                   <SelectItem key={kind.value} value={kind.value} className="text-base py-3">
                     {kind.label}
@@ -293,7 +293,7 @@ function FeeComponentCard({
           variant="ghost"
           size="icon"
           onClick={onRemove}
-          className="text-gray-500 hover:text-red-400 hover:bg-red-500/10 h-12 w-12 rounded-xl"
+          className="text-muted-foreground hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/10 h-12 w-12 rounded-xl"
         >
           <Trash2 className="w-6 h-6" />
         </Button>
@@ -303,15 +303,15 @@ function FeeComponentCard({
       <div className="grid grid-cols-4 gap-6">
         {/* Calculation Method */}
         <div className="space-y-2">
-          <Label className="text-sm text-gray-400 font-medium">Calculation Method</Label>
+          <Label className="text-sm text-muted-foreground font-medium">Calculation Method</Label>
           <Select
             value={component.calc_method}
             onValueChange={(val) => onChange({ calc_method: val })}
           >
-            <SelectTrigger className="bg-black/60 border-gray-600 text-white h-12 text-base">
+            <SelectTrigger className="bg-muted/50 border-border text-foreground h-12 text-base">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-gray-900 border-gray-700">
+            <SelectContent className="bg-popover border-border">
               {CALC_METHODS.map((method) => (
                 <SelectItem key={method.value} value={method.value} className="text-base py-2.5">
                   {method.label}
@@ -324,7 +324,7 @@ function FeeComponentCard({
         {/* Conditional: Rate OR Flat Amount based on calc_method */}
         {component.calc_method === 'fixed_amount' ? (
           <div className="space-y-2">
-            <Label className="text-sm text-gray-400 font-medium">Amount (USD)</Label>
+            <Label className="text-sm text-muted-foreground font-medium">Amount (USD)</Label>
             <Input
               type="number"
               step="0.01"
@@ -332,26 +332,26 @@ function FeeComponentCard({
               value={component.flat_amount || ''}
               onChange={(e) => onChange({ flat_amount: e.target.value ? Number(e.target.value) : undefined })}
               placeholder="5,000.00"
-              className="bg-black/60 border-gray-600 text-white h-12 text-lg font-mono"
+              className="bg-muted/50 border-border text-foreground h-12 text-lg font-mono"
             />
             {component.flat_amount && (
-              <p className="text-base text-green-400 font-semibold">
+              <p className="text-base text-green-600 dark:text-green-400 font-semibold">
                 ${component.flat_amount.toLocaleString()}
               </p>
             )}
           </div>
         ) : (
           <div className="space-y-2">
-            <Label className="text-sm text-gray-400 font-medium">Rate (Basis Points)</Label>
+            <Label className="text-sm text-muted-foreground font-medium">Rate (Basis Points)</Label>
             <Input
               type="number"
               value={component.rate_bps || ''}
               onChange={(e) => onChange({ rate_bps: e.target.value ? Number(e.target.value) : undefined })}
               placeholder="200"
-              className={`bg-black/60 border-gray-600 text-white h-12 text-lg font-mono ${exceedsLimit ? 'border-red-500 bg-red-500/10' : ''}`}
+              className={`bg-muted/50 border-border text-foreground h-12 text-lg font-mono ${exceedsLimit ? 'border-red-500 bg-red-500/10' : ''}`}
             />
             {ratePercent && (
-              <p className={`text-base font-semibold ${exceedsLimit ? 'text-red-400' : 'text-blue-400'}`}>
+              <p className={`text-base font-semibold ${exceedsLimit ? 'text-red-500 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
                 = {ratePercent}%
                 {exceedsLimit && ' ⚠️ exceeds limit'}
               </p>
@@ -361,15 +361,15 @@ function FeeComponentCard({
 
         {/* Payment Schedule */}
         <div className="space-y-2">
-          <Label className="text-sm text-gray-400 font-medium">Payment Schedule</Label>
+          <Label className="text-sm text-muted-foreground font-medium">Payment Schedule</Label>
           <Select
             value={component.payment_schedule || 'upfront'}
             onValueChange={(val) => onChange({ payment_schedule: val })}
           >
-            <SelectTrigger className="bg-black/60 border-gray-600 text-white h-12 text-base">
+            <SelectTrigger className="bg-muted/50 border-border text-foreground h-12 text-base">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-gray-900 border-gray-700">
+            <SelectContent className="bg-popover border-border">
               <SelectItem value="upfront" className="text-base py-2.5">Upfront</SelectItem>
               <SelectItem value="recurring" className="text-base py-2.5">Recurring</SelectItem>
               <SelectItem value="on_demand" className="text-base py-2.5">On Demand</SelectItem>
@@ -379,12 +379,12 @@ function FeeComponentCard({
 
         {/* Notes */}
         <div className="space-y-2">
-          <Label className="text-sm text-gray-400 font-medium">Notes</Label>
+          <Label className="text-sm text-muted-foreground font-medium">Notes</Label>
           <Input
             value={component.notes || ''}
             onChange={(e) => onChange({ notes: e.target.value })}
             placeholder="Optional notes..."
-            className="bg-black/60 border-gray-600 text-white h-12 text-base"
+            className="bg-muted/50 border-border text-foreground h-12 text-base"
           />
         </div>
       </div>
@@ -747,28 +747,28 @@ export default function FeePlanEditModal({
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="!max-w-[1400px] !w-[96vw] !max-h-[94vh] !p-0 bg-[#080810] border-gray-700/50 text-white overflow-hidden flex flex-col"
+        className="!max-w-[1400px] !w-[96vw] !max-h-[94vh] !p-0 bg-background border-border text-foreground overflow-hidden flex flex-col"
       >
         {/* Header */}
-        <DialogHeader className="px-10 py-6 border-b border-gray-800 bg-gradient-to-r from-blue-900/10 via-gray-900/30 to-transparent shrink-0">
+        <DialogHeader className="px-10 py-6 border-b border-border bg-gradient-to-r from-blue-500/5 dark:from-blue-900/10 via-muted/30 to-transparent shrink-0">
           <div className="flex items-center justify-between">
             <div>
-              <DialogTitle className="text-2xl font-bold text-white tracking-tight">
+              <DialogTitle className="text-2xl font-bold text-foreground tracking-tight">
                 {isEditing ? 'Edit Fee Plan' : 'Create New Fee Plan'}
               </DialogTitle>
-              <p className="text-base text-gray-400 mt-2">
+              <p className="text-base text-muted-foreground mt-2">
                 {isEditing ? 'Modify fee structure and agreement terms' : 'Define a fee structure for a partner or introducer agreement'}
               </p>
             </div>
             <div className="flex items-center gap-6">
-              <div className="flex items-center gap-3 bg-gray-900/50 px-4 py-2 rounded-lg border border-gray-800">
+              <div className="flex items-center gap-3 bg-muted/50 px-4 py-2 rounded-lg border border-border">
                 <Checkbox
                   id="is_active"
                   checked={isActive}
                   onCheckedChange={(checked) => setIsActive(checked as boolean)}
-                  className="border-gray-500 h-5 w-5"
+                  className="border-border h-5 w-5"
                 />
-                <Label htmlFor="is_active" className="text-sm text-gray-300 cursor-pointer font-medium">
+                <Label htmlFor="is_active" className="text-sm text-muted-foreground cursor-pointer font-medium">
                   Plan Active
                 </Label>
               </div>
@@ -777,7 +777,7 @@ export default function FeePlanEditModal({
                 variant="ghost"
                 size="icon"
                 onClick={onClose}
-                className="h-10 w-10 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg"
+                className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </Button>
@@ -816,23 +816,23 @@ export default function FeePlanEditModal({
               {/* Row 1: Plan Name & Description side by side */}
               <div className="grid grid-cols-2 gap-8">
                 <div className="space-y-3">
-                  <Label className="text-base text-gray-200 font-medium">
-                    Plan Name <span className="text-red-400">*</span>
+                  <Label className="text-base text-foreground font-medium">
+                    Plan Name <span className="text-red-500 dark:text-red-400">*</span>
                   </Label>
                   <Input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g., Standard Introducer Fee Plan"
-                    className="bg-black/60 border-gray-600 text-white h-12 text-base focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
+                    className="bg-muted/50 border-border text-foreground h-12 text-base focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
                   />
                 </div>
                 <div className="space-y-3">
-                  <Label className="text-base text-gray-200 font-medium">Description</Label>
+                  <Label className="text-base text-foreground font-medium">Description</Label>
                   <Input
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Optional description of this fee arrangement..."
-                    className="bg-black/60 border-gray-600 text-white h-12 text-base focus:border-blue-500"
+                    className="bg-muted/50 border-border text-foreground h-12 text-base focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -843,16 +843,16 @@ export default function FeePlanEditModal({
                 <div className="space-y-3">
                   {dealId ? (
                     <>
-                      <Label className="text-base text-gray-200 font-medium">Deal</Label>
-                      <div className="flex items-center gap-3 px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white h-12">
-                        <Building2 className="w-5 h-5 text-blue-400" />
+                      <Label className="text-base text-foreground font-medium">Deal</Label>
+                      <div className="flex items-center gap-3 px-4 py-3 bg-muted/50 border border-border rounded-lg text-foreground h-12">
+                        <Building2 className="w-5 h-5 text-blue-500 dark:text-blue-400" />
                         <span className="text-base truncate">{deals.find((d) => d.id === dealId)?.name || 'Loading...'}</span>
                       </div>
                     </>
                   ) : (
                     <>
-                      <Label className="text-base text-gray-200 font-medium">
-                        Deal <span className="text-red-400">*</span>
+                      <Label className="text-base text-foreground font-medium">
+                        Deal <span className="text-red-500 dark:text-red-400">*</span>
                       </Label>
                       <Select
                         value={selectedDealId || ''}
@@ -864,10 +864,10 @@ export default function FeePlanEditModal({
                           setEntityId(undefined);
                         }}
                       >
-                        <SelectTrigger className="bg-black/60 border-gray-600 text-white h-12 text-base">
+                        <SelectTrigger className="bg-muted/50 border-border text-foreground h-12 text-base">
                           <SelectValue placeholder="Select a deal" />
                         </SelectTrigger>
-                        <SelectContent className="bg-gray-900 border-gray-700">
+                        <SelectContent className="bg-popover border-border">
                           {deals.map((deal) => (
                             <SelectItem key={deal.id} value={deal.id} className="text-base py-2.5">
                               {deal.name}
@@ -894,8 +894,8 @@ export default function FeePlanEditModal({
 
                 {/* Entity Type Quick Select - simplified */}
                 <div className="space-y-3">
-                  <Label className="text-base text-gray-200 font-medium">
-                    Entity Type <span className="text-red-400">*</span>
+                  <Label className="text-base text-foreground font-medium">
+                    Entity Type <span className="text-red-500 dark:text-red-400">*</span>
                   </Label>
                   <Select
                     value={entityType || ''}
@@ -905,10 +905,10 @@ export default function FeePlanEditModal({
                     }}
                     disabled={!selectedDealId}
                   >
-                    <SelectTrigger className="bg-black/60 border-gray-600 text-white h-12 text-base">
+                    <SelectTrigger className="bg-muted/50 border-border text-foreground h-12 text-base">
                       <SelectValue placeholder={selectedDealId ? "Select type" : "Select deal first"} />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-900 border-gray-700">
+                    <SelectContent className="bg-popover border-border">
                       <SelectItem value="introducer" className="text-base py-2.5">Introducer</SelectItem>
                       <SelectItem value="partner" className="text-base py-2.5">Partner</SelectItem>
                     </SelectContent>
@@ -918,7 +918,7 @@ export default function FeePlanEditModal({
 
               {/* Row 3: Entity Selection (only if type selected) */}
               {entityType && selectedDealId && (
-                <div className="pt-4 border-t border-gray-800">
+                <div className="pt-4 border-t border-border">
                   <EntitySelector
                     dealId={selectedDealId}
                     entityType={entityType}
@@ -962,15 +962,15 @@ export default function FeePlanEditModal({
 
               {/* Components List */}
               {components.length === 0 ? (
-                <div className="text-center py-8 border-2 border-dashed border-gray-800 rounded-lg">
-                  <DollarSign className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-                  <p className="text-gray-500 text-sm">No fee components defined</p>
+                <div className="text-center py-8 border-2 border-dashed border-border rounded-lg">
+                  <DollarSign className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground text-sm">No fee components defined</p>
                   <Button
                     type="button"
                     onClick={addComponent}
                     variant="outline"
                     size="sm"
-                    className="mt-3 border-gray-700 text-gray-300 hover:bg-gray-800"
+                    className="mt-3 border-border text-muted-foreground hover:bg-muted"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add First Component
@@ -993,7 +993,7 @@ export default function FeePlanEditModal({
                     onClick={addComponent}
                     variant="outline"
                     size="sm"
-                    className="w-full border-gray-700 border-dashed text-gray-400 hover:bg-gray-800 hover:text-white"
+                    className="w-full border-border border-dashed text-muted-foreground hover:bg-muted hover:text-foreground"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add Component
@@ -1015,29 +1015,29 @@ export default function FeePlanEditModal({
               <div className="space-y-6">
                 {/* General Terms */}
                 <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-white flex items-center gap-2">
+                  <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-blue-500" />
                     General Terms
                   </h4>
                   <div className="grid grid-cols-3 gap-4 pl-4">
                     {/* Duration */}
                     <div className="space-y-2">
-                      <Label className="text-xs text-gray-400">Agreement Duration</Label>
+                      <Label className="text-xs text-muted-foreground">Agreement Duration</Label>
                       <div className="flex items-center gap-2">
                         <Input
                           type="number"
                           min="1"
                           value={agreementTerms.duration_months}
                           onChange={(e) => updateAgreementTerms({ duration_months: Number(e.target.value) || 36 })}
-                          className="bg-black/50 border-gray-700 text-white h-9 w-20"
+                          className="bg-muted/50 border-border text-foreground h-9 w-20"
                         />
-                        <span className="text-xs text-gray-500">months</span>
+                        <span className="text-xs text-muted-foreground">months</span>
                       </div>
                     </div>
 
                     {/* Non-Circumvention */}
                     <div className="space-y-2">
-                      <Label className="text-xs text-gray-400">Non-Circumvention</Label>
+                      <Label className="text-xs text-muted-foreground">Non-Circumvention</Label>
                       <div className="flex items-center gap-2">
                         <Checkbox
                           checked={agreementTerms.non_circumvention_indefinite}
@@ -1047,9 +1047,9 @@ export default function FeePlanEditModal({
                               non_circumvention_months: checked ? null : 24,
                             });
                           }}
-                          className="border-gray-600"
+                          className="border-border"
                         />
-                        <span className="text-xs text-gray-400">Indefinite</span>
+                        <span className="text-xs text-muted-foreground">Indefinite</span>
                         {!agreementTerms.non_circumvention_indefinite && (
                           <>
                             <Input
@@ -1057,9 +1057,9 @@ export default function FeePlanEditModal({
                               min="1"
                               value={agreementTerms.non_circumvention_months || ''}
                               onChange={(e) => updateAgreementTerms({ non_circumvention_months: Number(e.target.value) || null })}
-                              className="bg-black/50 border-gray-700 text-white h-8 w-16"
+                              className="bg-muted/50 border-border text-foreground h-8 w-16"
                             />
-                            <span className="text-xs text-gray-500">mo</span>
+                            <span className="text-xs text-muted-foreground">mo</span>
                           </>
                         )}
                       </div>
@@ -1067,15 +1067,15 @@ export default function FeePlanEditModal({
 
                     {/* Governing Law */}
                     <div className="space-y-2">
-                      <Label className="text-xs text-gray-400">Governing Law</Label>
+                      <Label className="text-xs text-muted-foreground">Governing Law</Label>
                       <Select
                         value={agreementTerms.governing_law}
                         onValueChange={(val) => updateAgreementTerms({ governing_law: val })}
                       >
-                        <SelectTrigger className="bg-black/50 border-gray-700 text-white h-9 text-xs">
+                        <SelectTrigger className="bg-muted/50 border-border text-foreground h-9 text-xs">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-gray-900 border-gray-700">
+                        <SelectContent className="bg-popover border-border">
                           {GOVERNING_LAWS.map((law) => (
                             <SelectItem key={law} value={law} className="text-xs">
                               {law}
@@ -1090,13 +1090,13 @@ export default function FeePlanEditModal({
                 {/* Introduction Fee Terms */}
                 {hasSubscriptionComponent && (
                   <div className="space-y-4">
-                    <h4 className="text-sm font-medium text-white flex items-center gap-2">
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-green-500" />
                       Introduction Fee Payment
                     </h4>
                     <div className="pl-4">
                       <div className="space-y-2">
-                        <Label className="text-xs text-gray-400">Payment After Closing</Label>
+                        <Label className="text-xs text-muted-foreground">Payment After Closing</Label>
                         <div className="flex items-center gap-2">
                           <Input
                             type="number"
@@ -1104,9 +1104,9 @@ export default function FeePlanEditModal({
                             max="90"
                             value={agreementTerms.intro_payment_days}
                             onChange={(e) => updateAgreementTerms({ intro_payment_days: Number(e.target.value) || 3 })}
-                            className="bg-black/50 border-gray-700 text-white h-9 w-20"
+                            className="bg-muted/50 border-border text-foreground h-9 w-20"
                           />
-                          <span className="text-xs text-gray-500">business days after share certificate</span>
+                          <span className="text-xs text-muted-foreground">business days after share certificate</span>
                         </div>
                       </div>
                     </div>
@@ -1116,7 +1116,7 @@ export default function FeePlanEditModal({
                 {/* Performance Fee Terms */}
                 {hasPerformanceComponent && (
                   <div className="space-y-4">
-                    <h4 className="text-sm font-medium text-white flex items-center gap-2">
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-purple-500" />
                       Performance Fee (Carried Interest)
                     </h4>
@@ -1124,7 +1124,7 @@ export default function FeePlanEditModal({
                       <div className="grid grid-cols-3 gap-4">
                         {/* Payment Days */}
                         <div className="space-y-2">
-                          <Label className="text-xs text-gray-400">Payment After Redemption</Label>
+                          <Label className="text-xs text-muted-foreground">Payment After Redemption</Label>
                           <div className="flex items-center gap-2">
                             <Input
                               type="number"
@@ -1132,15 +1132,15 @@ export default function FeePlanEditModal({
                               max="90"
                               value={agreementTerms.perf_payment_days}
                               onChange={(e) => updateAgreementTerms({ perf_payment_days: Number(e.target.value) || 10 })}
-                              className="bg-black/50 border-gray-700 text-white h-9 w-20"
+                              className="bg-muted/50 border-border text-foreground h-9 w-20"
                             />
-                            <span className="text-xs text-gray-500">days</span>
+                            <span className="text-xs text-muted-foreground">days</span>
                           </div>
                         </div>
 
                         {/* Hurdle Rate */}
                         <div className="space-y-2">
-                          <Label className="text-xs text-gray-400">Hurdle Rate</Label>
+                          <Label className="text-xs text-muted-foreground">Hurdle Rate</Label>
                           <div className="flex items-center gap-2">
                             <Input
                               type="number"
@@ -1148,12 +1148,12 @@ export default function FeePlanEditModal({
                               value={agreementTerms.hurdle_rate_bps || ''}
                               onChange={(e) => updateAgreementTerms({ hurdle_rate_bps: e.target.value ? Number(e.target.value) : undefined })}
                               placeholder="800"
-                              className="bg-black/50 border-gray-700 text-white h-9 w-24"
+                              className="bg-muted/50 border-border text-foreground h-9 w-24"
                             />
-                            <span className="text-xs text-gray-500">bps</span>
+                            <span className="text-xs text-muted-foreground">bps</span>
                           </div>
                           {agreementTerms.hurdle_rate_bps && (
-                            <p className="text-xs text-blue-400">= {(agreementTerms.hurdle_rate_bps / 100).toFixed(2)}%</p>
+                            <p className="text-xs text-blue-600 dark:text-blue-400">= {(agreementTerms.hurdle_rate_bps / 100).toFixed(2)}%</p>
                           )}
                         </div>
                       </div>
@@ -1165,18 +1165,18 @@ export default function FeePlanEditModal({
                           <Checkbox
                             checked={agreementTerms.has_catchup}
                             onCheckedChange={(checked) => updateAgreementTerms({ has_catchup: !!checked })}
-                            className="border-gray-600"
+                            className="border-border"
                           />
-                          <span className="text-sm text-gray-300">GP Catchup</span>
+                          <span className="text-sm text-muted-foreground">GP Catchup</span>
                           {agreementTerms.has_catchup && (
                             <div className="flex items-center gap-1 ml-2">
                               <Input
                                 type="number"
                                 value={agreementTerms.catchup_rate_bps || ''}
                                 onChange={(e) => updateAgreementTerms({ catchup_rate_bps: e.target.value ? Number(e.target.value) : undefined })}
-                                className="bg-black/50 border-gray-700 text-white h-8 w-20"
+                                className="bg-muted/50 border-border text-foreground h-8 w-20"
                               />
-                              <span className="text-xs text-gray-500">bps</span>
+                              <span className="text-xs text-muted-foreground">bps</span>
                             </div>
                           )}
                         </div>
@@ -1186,9 +1186,9 @@ export default function FeePlanEditModal({
                           <Checkbox
                             checked={agreementTerms.has_high_water_mark}
                             onCheckedChange={(checked) => updateAgreementTerms({ has_high_water_mark: !!checked })}
-                            className="border-gray-600"
+                            className="border-border"
                           />
-                          <span className="text-sm text-gray-300">High Water Mark</span>
+                          <span className="text-sm text-muted-foreground">High Water Mark</span>
                         </div>
 
                         {/* No Cap */}
@@ -1201,9 +1201,9 @@ export default function FeePlanEditModal({
                                 performance_cap_percent: checked ? undefined : 20,
                               });
                             }}
-                            className="border-gray-600"
+                            className="border-border"
                           />
-                          <span className="text-sm text-gray-300">No Cap</span>
+                          <span className="text-sm text-muted-foreground">No Cap</span>
                           {!agreementTerms.has_no_cap && (
                             <div className="flex items-center gap-1 ml-2">
                               <Input
@@ -1213,9 +1213,9 @@ export default function FeePlanEditModal({
                                 max="100"
                                 value={agreementTerms.performance_cap_percent || ''}
                                 onChange={(e) => updateAgreementTerms({ performance_cap_percent: e.target.value ? Number(e.target.value) : undefined })}
-                                className="bg-black/50 border-gray-700 text-white h-8 w-16"
+                                className="bg-muted/50 border-border text-foreground h-8 w-16"
                               />
-                              <span className="text-xs text-gray-500">%</span>
+                              <span className="text-xs text-muted-foreground">%</span>
                             </div>
                           )}
                         </div>
@@ -1226,20 +1226,20 @@ export default function FeePlanEditModal({
 
                 {/* VAT */}
                 <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-white flex items-center gap-2">
+                  <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-amber-500" />
                     VAT Information
                   </h4>
                   <div className="pl-4">
                     <div className="space-y-2 max-w-xs">
-                      <Label className="text-xs text-gray-400">VAT Registration Number</Label>
+                      <Label className="text-xs text-muted-foreground">VAT Registration Number</Label>
                       <Input
                         value={agreementTerms.vat_number}
                         onChange={(e) => updateAgreementTerms({ vat_number: e.target.value })}
                         placeholder="e.g., GB123456789"
-                        className="bg-black/50 border-gray-700 text-white h-9"
+                        className="bg-muted/50 border-border text-foreground h-9"
                       />
-                      <p className="text-xs text-gray-600">Leave blank if not VAT registered</p>
+                      <p className="text-xs text-muted-foreground">Leave blank if not VAT registered</p>
                     </div>
                   </div>
                 </div>
@@ -1249,11 +1249,11 @@ export default function FeePlanEditModal({
         </div>
 
         {/* Footer */}
-        <div className="px-10 py-6 border-t border-gray-700/50 bg-gray-900/60 flex items-center justify-between shrink-0">
-          <div className="text-base text-gray-400">
-            <span className="font-semibold text-white text-lg">{components.length}</span> fee component{components.length !== 1 ? 's' : ''} defined
+        <div className="px-10 py-6 border-t border-border bg-muted/60 flex items-center justify-between shrink-0">
+          <div className="text-base text-muted-foreground">
+            <span className="font-semibold text-foreground text-lg">{components.length}</span> fee component{components.length !== 1 ? 's' : ''} defined
             {validationErrors.length > 0 && (
-              <span className="text-red-400 ml-4 inline-flex items-center gap-2">
+              <span className="text-red-500 dark:text-red-400 ml-4 inline-flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5" />
                 {validationErrors.length} validation error{validationErrors.length !== 1 ? 's' : ''}
               </span>
@@ -1265,7 +1265,7 @@ export default function FeePlanEditModal({
               variant="outline"
               onClick={onClose}
               disabled={loading}
-              className="border-gray-500 text-gray-200 hover:bg-gray-800 hover:text-white h-12 px-8 text-base font-medium"
+              className="border-border text-foreground hover:bg-muted h-12 px-8 text-base font-medium"
             >
               Cancel
             </Button>

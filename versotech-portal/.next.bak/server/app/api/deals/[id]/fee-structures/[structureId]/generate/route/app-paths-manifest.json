@@ -1,0 +1,3 @@
+{
+  "/api/deals/[id]/fee-structures/[structureId]/generate/route": "app/api/deals/[id]/fee-structures/[structureId]/generate/route.js"
+}

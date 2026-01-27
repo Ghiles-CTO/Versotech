@@ -1,0 +1,3 @@
+{
+  "/api/signature/[token]/verify/send-otp/route": "app/api/signature/[token]/verify/send-otp/route.js"
+}

@@ -1,0 +1,3 @@
+{
+  "/(investor)/versoholdings/data-rooms/[dealId]/page": "app/(investor)/versoholdings/data-rooms/[dealId]/page.js"
+}

@@ -184,13 +184,13 @@ export function StyledSubscriptionsPage({ basePath = '/versotech/staff' }: Style
     return (
       <div className="p-6 space-y-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-10 bg-gray-200 rounded w-64" />
+          <div className="h-10 bg-gray-200 dark:bg-zinc-700 rounded w-64" />
           <div className="grid grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded" />
+              <div key={i} className="h-32 bg-gray-200 dark:bg-zinc-700 rounded" />
             ))}
           </div>
-          <div className="h-96 bg-gray-200 rounded" />
+          <div className="h-96 bg-gray-200 dark:bg-zinc-700 rounded" />
         </div>
       </div>
     )
@@ -212,7 +212,6 @@ export function StyledSubscriptionsPage({ basePath = '/versotech/staff' }: Style
             size="sm"
             onClick={handleRefresh}
             disabled={refreshing}
-            className="bg-transparent text-white border-white hover:bg-white hover:text-black"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
@@ -221,7 +220,6 @@ export function StyledSubscriptionsPage({ basePath = '/versotech/staff' }: Style
             variant="outline"
             size="sm"
             onClick={() => router.push(`${basePath}/subscriptions/vehicle-summary`)}
-            className="bg-transparent text-white border-white hover:bg-white hover:text-black"
           >
             <TrendingUp className="h-4 w-4 mr-2" />
             Summary
@@ -250,7 +248,7 @@ export function StyledSubscriptionsPage({ basePath = '/versotech/staff' }: Style
             <CardTitle className="text-sm font-medium text-muted-foreground">Confirmed Interest</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-400">${(confirmedInterestTotal / 1e6).toFixed(1)}M</div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">${(confirmedInterestTotal / 1e6).toFixed(1)}M</div>
             <div className="text-sm text-muted-foreground mt-1">Interests confirmed</div>
           </CardContent>
         </Card>
@@ -260,7 +258,7 @@ export function StyledSubscriptionsPage({ basePath = '/versotech/staff' }: Style
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Commitment</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-400">${(stats.totalCommitment / 1e6).toFixed(1)}M</div>
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">${(stats.totalCommitment / 1e6).toFixed(1)}M</div>
             <div className="text-sm text-muted-foreground mt-1">Committed capital</div>
           </CardContent>
         </Card>
@@ -270,7 +268,7 @@ export function StyledSubscriptionsPage({ basePath = '/versotech/staff' }: Style
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Funded</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-400">${(stats.totalFunded / 1e6).toFixed(1)}M</div>
+            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">${(stats.totalFunded / 1e6).toFixed(1)}M</div>
             <div className="text-sm text-muted-foreground mt-1">Capital deployed</div>
           </CardContent>
         </Card>

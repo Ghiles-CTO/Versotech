@@ -50,21 +50,21 @@ const categoryIcons = {
 }
 
 const categoryColors = {
-  conversion: 'text-purple-600',
-  audit: 'text-gray-600',
-  membership: 'text-blue-600',
-  interest: 'text-pink-600',
-  access: 'text-orange-600',
-  subscription: 'text-green-600'
+  conversion: 'text-purple-500',
+  audit: 'text-muted-foreground',
+  membership: 'text-blue-500',
+  interest: 'text-pink-500',
+  access: 'text-orange-500',
+  subscription: 'text-green-500'
 }
 
 const categoryBgColors = {
-  conversion: 'bg-purple-50',
-  audit: 'bg-gray-50',
-  membership: 'bg-blue-50',
-  interest: 'bg-pink-50',
-  access: 'bg-orange-50',
-  subscription: 'bg-green-50'
+  conversion: 'bg-purple-500/10',
+  audit: 'bg-muted',
+  membership: 'bg-blue-500/10',
+  interest: 'bg-pink-500/10',
+  access: 'bg-orange-500/10',
+  subscription: 'bg-green-500/10'
 }
 
 const categoryLabels = {
@@ -129,7 +129,7 @@ export function DealActivityTab({ dealId }: DealActivityTabProps) {
 
   if (loading && activities.length === 0) {
     return (
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border-border bg-muted/50">
         <CardHeader>
           <Skeleton className="h-6 w-32" />
           <Skeleton className="h-4 w-48" />
@@ -153,7 +153,7 @@ export function DealActivityTab({ dealId }: DealActivityTabProps) {
 
   if (error) {
     return (
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border-border bg-muted/50">
         <CardContent className="pt-6">
           <div className="flex items-center gap-2 text-destructive">
             <AlertCircle className="h-4 w-4" />
@@ -165,7 +165,7 @@ export function DealActivityTab({ dealId }: DealActivityTabProps) {
   }
 
   return (
-    <Card className="border border-white/10 bg-white/5">
+    <Card className="border-border bg-muted/50">
       <CardHeader>
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>

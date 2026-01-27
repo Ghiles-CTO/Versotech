@@ -21,9 +21,7 @@ export async function GET() {
     // Fetch all dropdown options in parallel using service client to bypass RLS
     const [
       { data: arrangers, error: arrangersError },
-      { data: lawyers, error: lawyersError },
-      { data: ceoUsers, error: ceoError },
-      { data: profiles, error: profilesError }
+      { data: lawyers, error: lawyersError }
     ] = await Promise.all([
       // Arrangers from arranger_entities
       serviceSupabase
@@ -37,17 +35,7 @@ export async function GET() {
         .from('lawyers')
         .select('id, firm_name, display_name, primary_contact_email, is_active')
         .or('is_active.eq.true,is_active.is.null')
-        .order('firm_name', { ascending: true }),
-
-      // Get CEO user IDs
-      serviceSupabase
-        .from('ceo_users')
-        .select('user_id'),
-
-      // Get all profiles (we'll filter by CEO user IDs)
-      serviceSupabase
-        .from('profiles')
-        .select('id, display_name, email')
+        .order('firm_name', { ascending: true })
     ])
 
     if (arrangersError) {
@@ -56,22 +44,6 @@ export async function GET() {
     if (lawyersError) {
       console.error('[dropdown-options] Error fetching lawyers:', lawyersError)
     }
-    if (ceoError) {
-      console.error('[dropdown-options] Error fetching CEO users:', ceoError)
-    }
-    if (profilesError) {
-      console.error('[dropdown-options] Error fetching profiles:', profilesError)
-    }
-
-    // Filter profiles to only CEO users
-    const ceoUserIds = (ceoUsers || []).map((cu: any) => cu.user_id)
-    const managingPartners = (profiles || [])
-      .filter((p: any) => ceoUserIds.includes(p.id))
-      .map((p: any) => ({
-        id: p.id,
-        display_name: p.display_name,
-        email: p.email
-      }))
 
     return NextResponse.json({
       arrangers: (arrangers || []).map((a: any) => ({
@@ -84,8 +56,7 @@ export async function GET() {
         name: l.display_name || l.firm_name,
         firm_name: l.firm_name,
         email: l.primary_contact_email
-      })),
-      managingPartners
+      }))
     })
 
   } catch (error) {

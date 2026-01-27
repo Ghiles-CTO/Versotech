@@ -32,11 +32,11 @@ import {
 } from 'lucide-react'
 
 const statusColors = {
-  draft: 'bg-white/10 text-foreground border border-white/20',
-  open: 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/30',
-  allocation_pending: 'bg-amber-500/15 text-amber-200 border border-amber-400/30',
-  closed: 'bg-blue-500/20 text-blue-200 border border-blue-400/30',
-  cancelled: 'bg-red-500/20 text-red-200 border border-red-400/30'
+  draft: 'bg-muted dark:bg-white/10 text-muted-foreground dark:text-foreground border border-border',
+  open: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-400/30',
+  allocation_pending: 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-200 border border-amber-300 dark:border-amber-400/30',
+  closed: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-200 border border-blue-300 dark:border-blue-400/30',
+  cancelled: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-200 border border-red-300 dark:border-red-400/30'
 }
 
 const dealTypeLabels = {
@@ -148,7 +148,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="border border-white/10 bg-white/5">
+        <Card className="border border-border bg-muted/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Deals
@@ -158,12 +158,12 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
           <CardContent>
             <div className="text-2xl font-bold text-foreground">{summary.total}</div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-emerald-200">{summary.open}</span> open
+              <span className="text-emerald-600 dark:text-emerald-200">{summary.open}</span> open
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border border-white/10 bg-white/5">
+        <Card className="border border-border bg-muted/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Draft Deals
@@ -176,7 +176,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
           </CardContent>
         </Card>
 
-        <Card className="border border-white/10 bg-white/5">
+        <Card className="border border-border bg-muted/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Active Pipeline
@@ -189,7 +189,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
           </CardContent>
         </Card>
 
-        <Card className="border border-white/10 bg-white/5">
+        <Card className="border border-border bg-muted/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Completed
@@ -204,7 +204,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
       </div>
 
       {/* Filters and Search */}
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border border-border bg-muted/50">
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search */}
@@ -264,7 +264,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
       </Card>
 
       {/* Deals List */}
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border border-border bg-muted/50">
         <CardHeader>
           <CardTitle className="text-foreground">
             Deals ({filteredDeals.length})
@@ -299,21 +299,21 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
               {paginatedDeals.map((deal) => (
                 <div
                   key={deal.id}
-                  className="border border-white/10 rounded-lg p-4 sm:p-5 bg-white/5 hover:bg-white/10 transition-colors"
+                  className="border border-border rounded-lg p-4 sm:p-5 bg-muted/50 hover:bg-muted transition-colors"
                 >
                   {/* Deal Header Row - stacks on mobile */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                     <div className="flex flex-wrap items-center gap-2 sm:gap-3 flex-1 min-w-0">
                       <Link
                         href={`${basePath}/deals/${deal.id}`}
-                        className="text-lg font-semibold text-sky-200 hover:text-sky-100 truncate"
+                        className="text-lg font-semibold text-sky-600 dark:text-sky-200 hover:text-sky-700 dark:hover:text-sky-100 truncate"
                       >
                         {deal.name}
                       </Link>
                       <Badge className={statusColors[deal.status as keyof typeof statusColors]}>
                         {deal.status.replace('_', ' ')}
                       </Badge>
-                      <Badge variant="outline" className="border-white/20 text-muted-foreground bg-white/5">
+                      <Badge variant="outline" className="border-border text-muted-foreground bg-muted/50">
                         {dealTypeLabels[deal.deal_type as keyof typeof dealTypeLabels]}
                       </Badge>
                     </div>
@@ -322,7 +322,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
                       variant="outline"
                       size="sm"
                       asChild
-                      className="border-white/20 text-foreground hover:bg-white/10 whitespace-nowrap flex-shrink-0"
+                      className="border-border text-foreground hover:bg-muted whitespace-nowrap flex-shrink-0"
                     >
                       <Link href={`${basePath}/deals/${deal.id}`}>View Details</Link>
                     </Button>
@@ -343,10 +343,14 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
                       <span>{deal.deal_memberships.length} participants</span>
                     </div>
 
-                    {deal.offer_unit_price && (
+                    {(deal.fee_structure?.price_per_share_text || deal.offer_unit_price) && (
                       <div className="flex items-center gap-1.5">
                         <CircleDollarSign className="h-4 w-4 flex-shrink-0" />
-                        <span>{deal.currency} {deal.offer_unit_price.toFixed(2)}/unit</span>
+                        <span>
+                          {deal.fee_structure?.price_per_share_text
+                            ? `${deal.currency || 'USD'} ${deal.fee_structure.price_per_share_text}/unit`
+                            : `${deal.currency} ${deal.offer_unit_price.toFixed(2)}/unit`}
+                        </span>
                       </div>
                     )}
 
@@ -360,7 +364,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
 
               {/* Pagination Controls */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                <div className="flex items-center justify-between pt-4 border-t border-border">
                   <p className="text-sm text-muted-foreground">
                     Showing {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, filteredDeals.length)} of {filteredDeals.length} deals
                   </p>
@@ -370,7 +374,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
                       size="sm"
                       onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
-                      className="border-white/20 text-foreground hover:bg-white/10"
+                      className="border-border text-foreground hover:bg-muted"
                     >
                       <ChevronLeft className="h-4 w-4" />
                       Previous
@@ -395,7 +399,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
                             onClick={() => setCurrentPage(pageNum)}
                             className={currentPage === pageNum
                               ? 'bg-primary text-primary-foreground'
-                              : 'border-white/20 text-foreground hover:bg-white/10'}
+                              : 'border-border text-foreground hover:bg-muted'}
                           >
                             {pageNum}
                           </Button>
@@ -407,7 +411,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
                       size="sm"
                       onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
-                      className="border-white/20 text-foreground hover:bg-white/10"
+                      className="border-border text-foreground hover:bg-muted"
                     >
                       Next
                       <ChevronRight className="h-4 w-4" />
@@ -422,7 +426,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border border-white/10 bg-white/5">
+        <Card className="border border-border bg-muted/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg text-foreground">
               <Handshake className="h-5 w-5 text-emerald-200" />
@@ -433,7 +437,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
           <CardContent>
             <Button
               variant="outline"
-              className="w-full border-white/20 text-foreground hover:bg-white/10"
+              className="w-full border-border text-foreground hover:bg-muted"
               asChild
             >
               <Link href={`${basePath}/deals/new`}>Set Up New Deal</Link>
@@ -441,7 +445,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
           </CardContent>
         </Card>
 
-        <Card className="border border-white/10 bg-white/5">
+        <Card className="border border-border bg-muted/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg text-foreground">
               <BarChart3 className="h-5 w-5 text-sky-200" />
@@ -455,7 +459,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
             </p>
             <Button
               variant="outline"
-              className="w-full border-white/20 text-foreground hover:bg-white/10"
+              className="w-full border-border text-foreground hover:bg-muted"
               asChild
             >
               <Link href={`${basePath}/subscriptions`}>View Inventory</Link>
@@ -463,7 +467,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
           </CardContent>
         </Card>
 
-        <Card className="border border-white/10 bg-white/5">
+        <Card className="border border-border bg-muted/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg text-foreground">
               <Timer className="h-5 w-5 text-amber-200" />
@@ -477,7 +481,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
             </p>
             <Button
               variant="outline"
-              className="w-full border-white/20 text-foreground hover:bg-white/10"
+              className="w-full border-border text-foreground hover:bg-muted"
               asChild
             >
               <Link href={`${basePath}/approvals`}>Review Approvals</Link>

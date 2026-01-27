@@ -255,14 +255,14 @@ export function CapitalActivityTable({
   return (
     <>
       <Tabs defaultValue="cashflows" className="w-full" id={`capital-activity-tabs-${vehicleId}-${investorId}`}>
-        <TabsList className="bg-gray-800">
-          <TabsTrigger value="cashflows" className="data-[state=active]:bg-gray-700 text-white">
+        <TabsList className="bg-muted">
+          <TabsTrigger value="cashflows" className="data-[state=active]:bg-muted text-foreground">
             Cashflows ({cashflows.length})
           </TabsTrigger>
-          <TabsTrigger value="calls" className="data-[state=active]:bg-gray-700 text-white">
+          <TabsTrigger value="calls" className="data-[state=active]:bg-muted text-foreground">
             Capital Calls ({capitalCalls.length})
           </TabsTrigger>
-          <TabsTrigger value="distributions" className="data-[state=active]:bg-gray-700 text-white">
+          <TabsTrigger value="distributions" className="data-[state=active]:bg-muted text-foreground">
             Distributions ({distributions.length})
           </TabsTrigger>
         </TabsList>
@@ -276,20 +276,20 @@ export function CapitalActivityTable({
               </Button>
             </div>
           )}
-          <div className="rounded-md border border-gray-700">
+          <div className="rounded-md border border-border">
             <Table>
               <TableHeader>
-                <TableRow className="border-gray-700 hover:bg-gray-800/50">
-                  <TableHead className="text-gray-300">Type</TableHead>
-                  <TableHead className="text-gray-300">Date</TableHead>
-                  <TableHead className="text-right text-gray-300">Amount</TableHead>
-                  {isStaff && <TableHead className="text-right text-gray-300">Actions</TableHead>}
+                <TableRow className="border-border hover:bg-muted/50">
+                  <TableHead className="text-muted-foreground">Type</TableHead>
+                  <TableHead className="text-muted-foreground">Date</TableHead>
+                  <TableHead className="text-right text-muted-foreground">Amount</TableHead>
+                  {isStaff && <TableHead className="text-right text-muted-foreground">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {cashflows.length > 0 ? (
                   cashflows.map((cf) => (
-                    <TableRow key={cf.id} className="border-gray-700 hover:bg-gray-800/50">
+                    <TableRow key={cf.id} className="border-border hover:bg-muted/50">
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {cf.type === 'contribution' || cf.type === 'call' ? (
@@ -297,11 +297,11 @@ export function CapitalActivityTable({
                           ) : (
                             <ArrowUpCircle className="h-4 w-4 text-blue-400" />
                           )}
-                          <span className="capitalize text-white">{cf.type}</span>
+                          <span className="capitalize text-foreground">{cf.type}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-gray-300">{formatDate(cf.date)}</TableCell>
-                      <TableCell className="text-right font-semibold text-white">
+                      <TableCell className="text-muted-foreground">{formatDate(cf.date)}</TableCell>
+                      <TableCell className="text-right font-semibold text-foreground">
                         {formatCurrency(cf.amount)}
                       </TableCell>
                       {isStaff && (
@@ -330,7 +330,7 @@ export function CapitalActivityTable({
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={isStaff ? 4 : 3} className="text-center text-gray-400 py-8">
+                    <TableCell colSpan={isStaff ? 4 : 3} className="text-center text-muted-foreground py-8">
                       No cashflows recorded yet
                     </TableCell>
                   </TableRow>
@@ -349,24 +349,24 @@ export function CapitalActivityTable({
               </Button>
             </div>
           )}
-          <div className="rounded-md border border-gray-700">
+          <div className="rounded-md border border-border">
             <Table>
               <TableHeader>
-                <TableRow className="border-gray-700 hover:bg-gray-800/50">
-                  <TableHead className="text-gray-300">Call Name</TableHead>
-                  <TableHead className="text-gray-300">Call %</TableHead>
-                  <TableHead className="text-gray-300">Due Date</TableHead>
-                  <TableHead className="text-gray-300">Status</TableHead>
-                  {isStaff && <TableHead className="text-right text-gray-300">Actions</TableHead>}
+                <TableRow className="border-border hover:bg-muted/50">
+                  <TableHead className="text-muted-foreground">Call Name</TableHead>
+                  <TableHead className="text-muted-foreground">Call %</TableHead>
+                  <TableHead className="text-muted-foreground">Due Date</TableHead>
+                  <TableHead className="text-muted-foreground">Status</TableHead>
+                  {isStaff && <TableHead className="text-right text-muted-foreground">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {capitalCalls.length > 0 ? (
                   capitalCalls.map((call) => (
-                    <TableRow key={call.id} className="border-gray-700 hover:bg-gray-800/50">
-                      <TableCell className="font-medium text-white">{call.name}</TableCell>
-                      <TableCell className="text-gray-300">{call.call_pct}%</TableCell>
-                      <TableCell className="text-gray-300">{formatDate(call.due_date)}</TableCell>
+                    <TableRow key={call.id} className="border-border hover:bg-muted/50">
+                      <TableCell className="font-medium text-foreground">{call.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{call.call_pct}%</TableCell>
+                      <TableCell className="text-muted-foreground">{formatDate(call.due_date)}</TableCell>
                       <TableCell>
                         <Badge
                           variant={call.status === 'completed' ? 'default' : 'secondary'}
@@ -405,7 +405,7 @@ export function CapitalActivityTable({
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={isStaff ? 5 : 4} className="text-center text-gray-400 py-8">
+                    <TableCell colSpan={isStaff ? 5 : 4} className="text-center text-muted-foreground py-8">
                       No capital calls issued yet
                     </TableCell>
                   </TableRow>
@@ -424,29 +424,29 @@ export function CapitalActivityTable({
               </Button>
             </div>
           )}
-          <div className="rounded-md border border-gray-700">
+          <div className="rounded-md border border-border">
             <Table>
               <TableHeader>
-                <TableRow className="border-gray-700 hover:bg-gray-800/50">
-                  <TableHead className="text-gray-300">Distribution Name</TableHead>
-                  <TableHead className="text-gray-300">Date</TableHead>
-                  <TableHead className="text-gray-300">Classification</TableHead>
-                  <TableHead className="text-right text-gray-300">Amount</TableHead>
-                  {isStaff && <TableHead className="text-right text-gray-300">Actions</TableHead>}
+                <TableRow className="border-border hover:bg-muted/50">
+                  <TableHead className="text-muted-foreground">Distribution Name</TableHead>
+                  <TableHead className="text-muted-foreground">Date</TableHead>
+                  <TableHead className="text-muted-foreground">Classification</TableHead>
+                  <TableHead className="text-right text-muted-foreground">Amount</TableHead>
+                  {isStaff && <TableHead className="text-right text-muted-foreground">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {distributions.length > 0 ? (
                   distributions.map((dist) => (
-                    <TableRow key={dist.id} className="border-gray-700 hover:bg-gray-800/50">
-                      <TableCell className="font-medium text-white">{dist.name}</TableCell>
-                      <TableCell className="text-gray-300">{formatDate(dist.date)}</TableCell>
+                    <TableRow key={dist.id} className="border-border hover:bg-muted/50">
+                      <TableCell className="font-medium text-foreground">{dist.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{formatDate(dist.date)}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="capitalize text-blue-300 border-blue-700">
                           {dist.classification}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right font-semibold text-white">
+                      <TableCell className="text-right font-semibold text-foreground">
                         {formatCurrency(dist.amount)}
                       </TableCell>
                       {isStaff && (
@@ -475,7 +475,7 @@ export function CapitalActivityTable({
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={isStaff ? 5 : 4} className="text-center text-gray-400 py-8">
+                    <TableCell colSpan={isStaff ? 5 : 4} className="text-center text-muted-foreground py-8">
                       No distributions made yet
                     </TableCell>
                   </TableRow>
@@ -494,7 +494,7 @@ export function CapitalActivityTable({
           setFormData({})
         }
       }}>
-        <DialogContent className="bg-gray-900 text-white border-gray-700">
+        <DialogContent className="bg-card text-foreground border-border">
           <DialogHeader>
             <DialogTitle>
               {editDialog.open ? 'Edit' : 'Create'}{' '}
@@ -504,7 +504,7 @@ export function CapitalActivityTable({
                 ? 'Capital Call'
                 : 'Distribution'}
             </DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogDescription className="text-muted-foreground">
               {editDialog.open ? 'Update the details below' : 'Fill in the details below'}
             </DialogDescription>
           </DialogHeader>
@@ -519,10 +519,10 @@ export function CapitalActivityTable({
                     value={formData.type || 'call'}
                     onValueChange={(value) => setFormData({ ...formData, type: value })}
                   >
-                    <SelectTrigger className="bg-gray-800 border-gray-700">
+                    <SelectTrigger className="bg-muted border-border">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-700">
+                    <SelectContent className="bg-muted border-border">
                       <SelectItem value="call">Call</SelectItem>
                       <SelectItem value="distribution">Distribution</SelectItem>
                     </SelectContent>
@@ -536,7 +536,7 @@ export function CapitalActivityTable({
                     step="0.01"
                     value={formData.amount || 0}
                     onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })}
-                    className="bg-gray-800 border-gray-700"
+                    className="bg-muted border-border"
                   />
                 </div>
                 <div className="grid gap-2">
@@ -546,7 +546,7 @@ export function CapitalActivityTable({
                     type="date"
                     value={formData.date || ''}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="bg-gray-800 border-gray-700"
+                    className="bg-muted border-border"
                   />
                 </div>
               </>
@@ -561,7 +561,7 @@ export function CapitalActivityTable({
                     id="name"
                     value={formData.name || ''}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="bg-gray-800 border-gray-700"
+                    className="bg-muted border-border"
                   />
                 </div>
                 <div className="grid gap-2">
@@ -574,7 +574,7 @@ export function CapitalActivityTable({
                     max="100"
                     value={formData.call_pct || 0}
                     onChange={(e) => setFormData({ ...formData, call_pct: parseFloat(e.target.value) })}
-                    className="bg-gray-800 border-gray-700"
+                    className="bg-muted border-border"
                   />
                 </div>
                 <div className="grid gap-2">
@@ -584,7 +584,7 @@ export function CapitalActivityTable({
                     type="date"
                     value={formData.due_date || ''}
                     onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                    className="bg-gray-800 border-gray-700"
+                    className="bg-muted border-border"
                   />
                 </div>
                 <div className="grid gap-2">
@@ -593,10 +593,10 @@ export function CapitalActivityTable({
                     value={formData.status || 'draft'}
                     onValueChange={(value) => setFormData({ ...formData, status: value })}
                   >
-                    <SelectTrigger className="bg-gray-800 border-gray-700">
+                    <SelectTrigger className="bg-muted border-border">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-700">
+                    <SelectContent className="bg-muted border-border">
                       <SelectItem value="draft">Draft</SelectItem>
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>
@@ -616,7 +616,7 @@ export function CapitalActivityTable({
                     id="name"
                     value={formData.name || ''}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="bg-gray-800 border-gray-700"
+                    className="bg-muted border-border"
                   />
                 </div>
                 <div className="grid gap-2">
@@ -627,7 +627,7 @@ export function CapitalActivityTable({
                     step="0.01"
                     value={formData.amount || 0}
                     onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })}
-                    className="bg-gray-800 border-gray-700"
+                    className="bg-muted border-border"
                   />
                 </div>
                 <div className="grid gap-2">
@@ -637,7 +637,7 @@ export function CapitalActivityTable({
                     type="date"
                     value={formData.date || ''}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="bg-gray-800 border-gray-700"
+                    className="bg-muted border-border"
                   />
                 </div>
                 <div className="grid gap-2">
@@ -646,7 +646,7 @@ export function CapitalActivityTable({
                     id="classification"
                     value={formData.classification || ''}
                     onChange={(e) => setFormData({ ...formData, classification: e.target.value })}
-                    className="bg-gray-800 border-gray-700"
+                    className="bg-muted border-border"
                     placeholder="e.g., Return of Capital, Income"
                   />
                 </div>
@@ -663,7 +663,7 @@ export function CapitalActivityTable({
                 setFormData({})
               }}
               disabled={isSubmitting}
-              className="border-gray-700 text-gray-300 hover:bg-gray-800"
+              className="border-border text-muted-foreground hover:bg-muted"
             >
               Cancel
             </Button>
@@ -682,10 +682,10 @@ export function CapitalActivityTable({
       <AlertDialog open={deleteDialog.open} onOpenChange={(open) => {
         if (!open) setDeleteDialog({ open: false, type: null, id: null })
       }}>
-        <AlertDialogContent className="bg-gray-900 text-white border-gray-700">
+        <AlertDialogContent className="bg-card text-foreground border-border">
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-400">
+            <AlertDialogDescription className="text-muted-foreground">
               This action cannot be undone. This will permanently delete this{' '}
               {deleteDialog.type === 'cashflow'
                 ? 'cashflow'
@@ -696,7 +696,7 @@ export function CapitalActivityTable({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-gray-700 text-gray-300 hover:bg-gray-800">
+            <AlertDialogCancel className="border-border text-muted-foreground hover:bg-muted">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction

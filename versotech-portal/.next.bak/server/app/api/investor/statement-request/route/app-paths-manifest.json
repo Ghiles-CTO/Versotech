@@ -1,0 +1,3 @@
+{
+  "/api/investor/statement-request/route": "app/api/investor/statement-request/route.js"
+}

@@ -95,17 +95,17 @@ type Summary = {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  active: 'bg-green-100 text-green-800 border-green-200',
-  pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  inactive: 'bg-gray-100 text-gray-800 border-gray-200',
-  suspended: 'bg-red-100 text-red-800 border-red-200',
+  active: 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 border-green-200 dark:border-green-700',
+  pending: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700',
+  inactive: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-600',
+  suspended: 'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300 border-red-200 dark:border-red-700',
 }
 
 const KYC_STYLES: Record<string, string> = {
-  approved: 'bg-green-100 text-green-800',
-  pending: 'bg-yellow-100 text-yellow-800',
-  expired: 'bg-red-100 text-red-800',
-  not_started: 'bg-gray-100 text-gray-800',
+  approved: 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300',
+  pending: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300',
+  expired: 'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300',
+  not_started: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300',
 }
 
 const STATUS_FILTERS = [
@@ -488,7 +488,7 @@ export default function MyCommercialPartnersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{summary.activeCPs}</div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{summary.activeCPs}</div>
             <p className="text-xs text-muted-foreground mt-1">With valid contracts</p>
           </CardContent>
         </Card>
@@ -499,7 +499,7 @@ export default function MyCommercialPartnersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{summary.totalClients}</div>
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{summary.totalClients}</div>
             <p className="text-xs text-muted-foreground mt-1">Total clients served</p>
           </CardContent>
         </Card>
@@ -510,7 +510,7 @@ export default function MyCommercialPartnersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">{formatCurrency(summary.totalPlacementValue, 'USD')}</div>
+            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{formatCurrency(summary.totalPlacementValue, 'USD')}</div>
             <p className="text-xs text-muted-foreground mt-1">Total placed</p>
           </CardContent>
         </Card>
@@ -521,7 +521,7 @@ export default function MyCommercialPartnersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{formatCurrency(summary.totalOwed, 'USD')}</div>
+            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{formatCurrency(summary.totalOwed, 'USD')}</div>
             <p className="text-xs text-muted-foreground mt-1">Pending payment</p>
           </CardContent>
         </Card>
@@ -532,7 +532,7 @@ export default function MyCommercialPartnersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(summary.totalPaid, 'USD')}</div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(summary.totalPaid, 'USD')}</div>
             <p className="text-xs text-muted-foreground mt-1">Total paid out</p>
           </CardContent>
         </Card>
@@ -674,7 +674,7 @@ export default function MyCommercialPartnersPage() {
                             <Badge variant="outline" className={cn('capitalize', STATUS_STYLES[cp.status] || STATUS_STYLES.active)}>{cp.status}</Badge>
                             {cp.kyc_status && <div><Badge variant="secondary" className={cn('text-xs', KYC_STYLES[cp.kyc_status] || '')}>KYC: {cp.kyc_status.replace('_', ' ')}</Badge></div>}
                             {isExpired && <Badge variant="destructive" className="text-xs">Contract Expired</Badge>}
-                            {isExpiringSoon && !isExpired && <Badge variant="outline" className="text-xs bg-yellow-100">Expiring Soon</Badge>}
+                            {isExpiringSoon && !isExpired && <Badge variant="outline" className="text-xs bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300">Expiring Soon</Badge>}
                           </div>
                         </TableCell>
                         <TableCell>

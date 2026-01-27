@@ -1,0 +1,2 @@
+update introducer_commissions set rate_bps = 500, accrual_amount = 50000.0 where id = 'f9e420b2-09d3-4948-b418-d1576305b6c4';
+update introducer_commissions set rate_bps = 1500 where id = '7916d691-06d5-402b-8c3c-c262a889a0d8';

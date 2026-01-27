@@ -13,12 +13,13 @@ interface CashFlowDataPoint {
 
 interface CashFlowChartProps {
   data: CashFlowDataPoint[]
+  currency?: string
 }
 
-const formatCurrency = (value: number) => {
+const formatCurrency = (value: number, currency: string = 'USD') => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
     notation: Math.abs(value) >= 1000000 ? 'compact' : 'standard',
@@ -26,25 +27,25 @@ const formatCurrency = (value: number) => {
   }).format(value)
 }
 
-export function CashFlowChart({ data }: CashFlowChartProps) {
+export function CashFlowChart({ data, currency = 'USD' }: CashFlowChartProps) {
   const isEmpty = !data || data.length === 0
 
   if (isEmpty) {
     return (
-      <Card className="border-0 shadow-md bg-gradient-to-br from-gray-50 to-white">
+      <Card className="border-0 shadow-md bg-gradient-to-br from-background to-muted/30 dark:from-gray-800 dark:to-gray-900">
         <CardHeader className="pb-4">
-          <CardTitle className="text-base font-semibold flex items-center gap-2 text-gray-900">
+          <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
             <DollarSign className="h-5 w-5 text-violet-600" />
             Cash Flow History
           </CardTitle>
-          <CardDescription className="text-gray-600">Contributions vs distributions over time</CardDescription>
+          <CardDescription className="text-muted-foreground">Contributions vs distributions over time</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[320px] text-gray-400">
+          <div className="flex items-center justify-center h-[320px] text-muted-foreground/70">
             <div className="text-center">
               <DollarSign className="h-16 w-16 mx-auto mb-3 opacity-20" />
               <p className="text-sm font-medium">No cash flow data available</p>
-              <p className="text-xs text-gray-500 mt-2">Staff must add distributions via API</p>
+              <p className="text-xs text-muted-foreground/80 mt-2">Staff must add distributions via API</p>
             </div>
           </div>
         </CardContent>
@@ -53,58 +54,60 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
   }
 
   return (
-    <Card className="border-0 shadow-md bg-gradient-to-br from-gray-50 to-white">
+    <Card className="border-0 shadow-md bg-gradient-to-br from-background to-muted/30 dark:from-gray-800 dark:to-gray-900">
       <CardHeader className="pb-4">
-        <CardTitle className="text-base font-semibold flex items-center gap-2 text-gray-900">
+        <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
           <DollarSign className="h-5 w-5 text-violet-600" />
           Cash Flow History
         </CardTitle>
-        <CardDescription className="text-gray-600">Contributions vs distributions over time</CardDescription>
+        <CardDescription className="text-muted-foreground">Contributions vs distributions over time</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={320}>
           <BarChart data={data} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
             <XAxis
               dataKey="displayPeriod"
-              tick={{ fontSize: 12, fill: '#6b7280' }}
+              tick={{ fontSize: 12 }}
               tickLine={false}
-              axisLine={{ stroke: '#e5e7eb' }}
+              axisLine={false}
+              className="fill-muted-foreground"
             />
             <YAxis
-              tick={{ fontSize: 12, fill: '#6b7280' }}
+              tick={{ fontSize: 12 }}
               tickLine={false}
-              axisLine={{ stroke: '#e5e7eb' }}
-              tickFormatter={formatCurrency}
+              axisLine={false}
+              tickFormatter={(value) => formatCurrency(value as number, currency)}
+              className="fill-muted-foreground"
             />
             <Tooltip
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
                   const data = payload[0].payload
                   return (
-                    <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg">
-                      <p className="font-semibold text-gray-900 mb-3">{data.displayPeriod}</p>
+                    <div className="bg-card p-4 border border-border rounded-lg shadow-lg">
+                      <p className="font-semibold text-foreground mb-3">{data.displayPeriod}</p>
                       <div className="space-y-2">
                         <div className="flex items-center justify-between gap-6">
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-red-500 rounded"></div>
-                            <span className="text-sm text-gray-600">Contributions</span>
+                            <span className="text-sm text-muted-foreground">Contributions</span>
                           </div>
-                          <span className="text-sm font-medium text-red-600">{formatCurrency(data.contributions)}</span>
+                          <span className="text-sm font-medium text-red-600">{formatCurrency(data.contributions, currency)}</span>
                         </div>
                         <div className="flex items-center justify-between gap-6">
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-emerald-500 rounded"></div>
-                            <span className="text-sm text-gray-600">Distributions</span>
+                            <span className="text-sm text-muted-foreground">Distributions</span>
                           </div>
-                          <span className="text-sm font-medium text-emerald-600">{formatCurrency(data.distributions)}</span>
+                          <span className="text-sm font-medium text-emerald-600">{formatCurrency(data.distributions, currency)}</span>
                         </div>
-                        <div className="pt-2 border-t border-gray-200 flex items-center justify-between">
-                          <span className="text-sm font-semibold text-gray-900">Net Cash</span>
+                        <div className="pt-2 border-t border-border flex items-center justify-between">
+                          <span className="text-sm font-semibold text-foreground">Net Cash</span>
                           <span className={`text-sm font-semibold ${
                             (data.distributions - data.contributions) >= 0 ? 'text-emerald-600' : 'text-red-600'
                           }`}>
-                            {formatCurrency(data.distributions - data.contributions)}
+                            {formatCurrency(data.distributions - data.contributions, currency)}
                           </span>
                         </div>
                       </div>

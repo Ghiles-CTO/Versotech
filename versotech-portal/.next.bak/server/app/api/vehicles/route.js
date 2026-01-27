@@ -1,0 +1,13 @@
+var R=require("../../../chunks/[turbopack]_runtime.js")("server/app/api/vehicles/route.js")
+R.c("server/chunks/[root-of-the-server]__6d7dd288._.js")
+R.c("server/chunks/6d6b6_next_dist_esm_build_templates_app-route_4f8463ee.js")
+R.c("server/chunks/6d6b6_next_b8b5a401._.js")
+R.c("server/chunks/6d6b6_next_672f6640._.js")
+R.c("server/chunks/6d6b6_4a9fcd3d._.js")
+R.c("server/chunks/[root-of-the-server]__04eaf9e0._.js")
+R.c("server/chunks/[root-of-the-server]__7a18eae2._.js")
+R.c("server/chunks/6d6b6_131e6e29._.js")
+R.c("server/chunks/6d6b6_next_dist_7d1347b1._.js")
+R.c("server/chunks/versotech-portal__next-internal_server_app_api_vehicles_route_actions_b82c35f8.js")
+R.m(525273)
+module.exports=R.m(525273).exports

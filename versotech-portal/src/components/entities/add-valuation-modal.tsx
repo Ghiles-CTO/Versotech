@@ -69,7 +69,7 @@ export function AddValuationModal({ vehicleId, open, onClose, onSuccess }: AddVa
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] bg-zinc-950 border-white/10">
+      <DialogContent className="sm:max-w-[500px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <div className="flex items-center gap-2">
@@ -96,7 +96,7 @@ export function AddValuationModal({ vehicleId, open, onClose, onSuccess }: AddVa
                 value={formData.as_of_date}
                 onChange={(e) => setFormData({ ...formData, as_of_date: e.target.value })}
                 required
-                className="bg-zinc-900 border-white/10"
+                className="bg-background border-border"
               />
             </div>
 
@@ -110,7 +110,7 @@ export function AddValuationModal({ vehicleId, open, onClose, onSuccess }: AddVa
                 value={formData.nav_total}
                 onChange={(e) => setFormData({ ...formData, nav_total: e.target.value })}
                 required
-                className="bg-zinc-900 border-white/10"
+                className="bg-background border-border"
               />
               <p className="text-xs text-muted-foreground">Total Net Asset Value</p>
             </div>
@@ -125,7 +125,7 @@ export function AddValuationModal({ vehicleId, open, onClose, onSuccess }: AddVa
                 value={formData.nav_per_unit}
                 onChange={(e) => setFormData({ ...formData, nav_per_unit: e.target.value })}
                 required
-                className="bg-zinc-900 border-white/10"
+                className="bg-background border-border"
               />
               <p className="text-xs text-muted-foreground">NAV per individual unit/share</p>
             </div>

@@ -36,7 +36,7 @@ export function WizardNavigation({ onSubmit, isSubmitting }: WizardNavigationPro
   }
 
   return (
-    <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+    <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-zinc-700">
       {/* Left Side - Back & Save */}
       <div className="flex items-center gap-3">
         <Button
@@ -44,7 +44,7 @@ export function WizardNavigation({ onSubmit, isSubmitting }: WizardNavigationPro
           variant="outline"
           onClick={previousStep}
           disabled={!canGoBack || loading}
-          className="gap-2 border-gray-300 hover:bg-gray-50"
+          className="gap-2 border-gray-300 dark:border-zinc-600 hover:bg-gray-50 dark:hover:bg-zinc-800"
         >
           <ChevronLeft className="h-4 w-4" />
           Back
@@ -55,7 +55,7 @@ export function WizardNavigation({ onSubmit, isSubmitting }: WizardNavigationPro
           variant="ghost"
           onClick={() => saveProgress()}
           disabled={loading}
-          className="gap-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+          className="gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800"
         >
           {isSaving ? (
             <Loader2 className="h-4 w-4 animate-spin" />

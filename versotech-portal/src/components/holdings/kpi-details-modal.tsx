@@ -197,7 +197,7 @@ export function KPIDetailsModal({
     return (
       <div
         key={item.id}
-        className="flex items-center justify-between p-4 border rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:shadow-md transition-all duration-300 hover:scale-[1.01] group"
+        className="flex items-center justify-between p-4 border rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 hover:shadow-md transition-all duration-300 hover:scale-[1.01] group"
       >
         <div className="flex items-center gap-3 flex-1">
           <div className={cn(
@@ -225,10 +225,10 @@ export function KPIDetailsModal({
                 <span>{metadata.units.toLocaleString()} units</span>
               )}
               {metadata.nav_per_unit && (
-                <span>${metadata.nav_per_unit.toFixed(3)}/unit</span>
+                <span>{metadata.currency || 'USD'} {metadata.nav_per_unit.toFixed(3)}/unit</span>
               )}
               {metadata.unit_price && (
-                <span>${metadata.unit_price.toFixed(2)}/unit</span>
+                <span>{metadata.currency || 'USD'} {metadata.unit_price.toFixed(2)}/unit</span>
               )}
               {metadata.contribution_count && (
                 <span>{metadata.contribution_count} contributions</span>
@@ -270,7 +270,7 @@ export function KPIDetailsModal({
             {item.percentage.toFixed(1)}%
           </div>
           {metadata.commitment && (
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-muted-foreground/70">
               Commitment: {config?.formatValue(metadata.commitment) || metadata.commitment.toLocaleString()}
             </div>
           )}
@@ -282,7 +282,7 @@ export function KPIDetailsModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl w-[90vw] h-[80vh] p-0 flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95 duration-300">
-        <DialogHeader className="flex-shrink-0 p-6 pb-4 border-b bg-gradient-to-r from-blue-50 via-white to-purple-50">
+        <DialogHeader className="flex-shrink-0 p-6 pb-4 border-b bg-gradient-to-r from-blue-50 via-background to-purple-50 dark:from-blue-900/20 dark:via-background dark:to-purple-900/20">
           <div className="flex items-center gap-3">
             <div className={cn(
               "w-12 h-12 rounded-lg flex items-center justify-center shadow-sm",
@@ -303,7 +303,7 @@ export function KPIDetailsModal({
           {loading && (
             <div className="p-6 space-y-4">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="flex items-center justify-between p-4 border rounded-lg bg-white">
+                <div key={i} className="flex items-center justify-between p-4 border rounded-lg bg-card">
                   <div className="flex items-center gap-3">
                     <Skeleton className="w-10 h-10 rounded-lg" />
                     <div>
@@ -338,7 +338,7 @@ export function KPIDetailsModal({
 
           {data && !loading && (
             <div className="h-full flex flex-col animate-in fade-in-50 duration-300">
-              <div className="flex-shrink-0 p-6 pb-4 border-b bg-gradient-to-r from-slate-50 to-blue-50">
+              <div className="flex-shrink-0 p-6 pb-4 border-b bg-gradient-to-r from-muted/50 to-blue-50 dark:from-muted dark:to-blue-900/20">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-semibold text-foreground">
@@ -364,9 +364,9 @@ export function KPIDetailsModal({
                   <div className="space-y-4">
                     {/* Debug info in development */}
                     {process.env.NODE_ENV === 'development' && data.debug && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
-                        <div className="font-medium text-blue-800 mb-1">Debug Info:</div>
-                        <div className="text-blue-700">
+                      <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-sm">
+                        <div className="font-medium text-blue-800 dark:text-blue-200 mb-1">Debug Info:</div>
+                        <div className="text-blue-700 dark:text-blue-300">
                           Query: {data.debug.queryType} • Items: {data.debug.itemCount} • 
                           Total: ${data.debug.totalValue?.toLocaleString()} • 
                           Investors: {data.debug.investorCount}
@@ -381,7 +381,7 @@ export function KPIDetailsModal({
                 ) : (
                   <div className="flex items-center justify-center h-full animate-in fade-in-50 duration-300">
                     <div className="text-center max-w-md px-6">
-                      <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                      <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
                         <Building2 className="w-10 h-10 text-blue-600" />
                       </div>
                       <div className="text-foreground font-semibold text-lg mb-2">No data available</div>
@@ -397,9 +397,9 @@ export function KPIDetailsModal({
                       </div>
                       {/* Show debug info for troubleshooting */}
                       {process.env.NODE_ENV === 'development' && data.debug && (
-                        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-xs text-left">
-                          <div className="font-medium text-yellow-800">Debug Info:</div>
-                          <div className="text-yellow-700 mt-1">
+                        <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded text-xs text-left">
+                          <div className="font-medium text-yellow-800 dark:text-yellow-200">Debug Info:</div>
+                          <div className="text-yellow-700 dark:text-yellow-300 mt-1">
                             Expected data but got 0 items. Check console for detailed logs.
                           </div>
                         </div>

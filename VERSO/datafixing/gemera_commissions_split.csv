@@ -1,0 +1,16 @@
+introducer_id,entity_code,investor,fee_type,rate_bps,amount,currency
+87571ef2-b05d-4d7d-8095-2992d43b9aa8,VC113,Mrs Nilakantan & Mr Subbiah MAHESWARI & SUBRAMANIAN,performance_fee,500,0.0,USD
+61e01a81-0663-4d4a-9626-fc3a6acb4d63,VC111,Dan BAUMSLAG,performance_fee,200,0.0,USD
+61e01a81-0663-4d4a-9626-fc3a6acb4d63,VC113,ROSEN INVEST HOLDINGS Inc,performance_fee,200,0.0,USD
+87571ef2-b05d-4d7d-8095-2992d43b9aa8,VC113,TEKAPO Group Limited,invested_amount,200,2000.0,USD
+87571ef2-b05d-4d7d-8095-2992d43b9aa8,VC113,Bright Phoenix Holdings LTD,invested_amount,200,2000.0,USD
+87571ef2-b05d-4d7d-8095-2992d43b9aa8,VC113,Bright Phoenix Holdings LTD,performance_fee,500,0.0,USD
+87571ef2-b05d-4d7d-8095-2992d43b9aa8,VC113,Mrs Nilakantan & Mr Subbiah MAHESWARI & SUBRAMANIAN,invested_amount,200,2100.0,USD
+61e01a81-0663-4d4a-9626-fc3a6acb4d63,VC111,ROSEN INVEST HOLDINGS Inc,performance_fee,200,0.0,USD
+87571ef2-b05d-4d7d-8095-2992d43b9aa8,VC113,Mrs Rosario Teresa & Mr Deepak HIQUIANA-TANEJA & TANEJA,invested_amount,200,2200.0,USD
+61e01a81-0663-4d4a-9626-fc3a6acb4d63,VC113,ROSEN INVEST HOLDINGS Inc,invested_amount,200,2000.0,USD
+61e01a81-0663-4d4a-9626-fc3a6acb4d63,VC111,ROSEN INVEST HOLDINGS Inc,invested_amount,200,2000.0,USD
+61e01a81-0663-4d4a-9626-fc3a6acb4d63,VC111,Bright Phoenix Holdings LTD,invested_amount,200,2000.0,USD
+87571ef2-b05d-4d7d-8095-2992d43b9aa8,VC113,TEKAPO Group Limited,performance_fee,500,0.0,USD
+61e01a81-0663-4d4a-9626-fc3a6acb4d63,VC111,Bright Phoenix Holdings LTD,performance_fee,200,0.0,USD
+87571ef2-b05d-4d7d-8095-2992d43b9aa8,VC113,Mrs Rosario Teresa & Mr Deepak HIQUIANA-TANEJA & TANEJA,performance_fee,500,0.0,USD

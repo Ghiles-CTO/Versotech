@@ -89,13 +89,13 @@ export function NewSubscriptionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-black border-gray-800 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="border-b border-gray-800 pb-4">
-          <DialogTitle className="text-2xl font-bold text-white flex items-center gap-2">
+      <DialogContent className="bg-background border-border text-foreground max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="border-b border-border pb-4">
+          <DialogTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Plus className="h-6 w-6 text-blue-400" />
             New Subscription
           </DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogDescription className="text-muted-foreground">
             Create a new subscription for an investor in a vehicle
           </DialogDescription>
         </DialogHeader>
@@ -103,7 +103,7 @@ export function NewSubscriptionDialog({
         <form onSubmit={handleSubmit} className="space-y-6 pt-4">
           {/* Investor Selection */}
           <div className="space-y-2">
-            <Label htmlFor="investor_id" className="text-white text-sm font-medium">
+            <Label htmlFor="investor_id" className="text-foreground text-sm font-medium">
               Investor <span className="text-red-400">*</span>
             </Label>
             <Select
@@ -111,12 +111,12 @@ export function NewSubscriptionDialog({
               onValueChange={(value) => setFormData({ ...formData, investor_id: value })}
               required
             >
-              <SelectTrigger id="investor_id" className="bg-gray-900 border-gray-700 text-white">
+              <SelectTrigger id="investor_id" className="bg-muted border-border text-foreground">
                 <SelectValue placeholder="Select an investor" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-900 border-gray-700 max-h-[200px]">
+              <SelectContent className="bg-muted border-border max-h-[200px]">
                 {investors.map((investor) => (
-                  <SelectItem key={investor.id} value={investor.id} className="text-white">
+                  <SelectItem key={investor.id} value={investor.id} className="text-foreground">
                     {investor.legal_name}
                   </SelectItem>
                 ))}
@@ -126,7 +126,7 @@ export function NewSubscriptionDialog({
 
           {/* Vehicle Selection */}
           <div className="space-y-2">
-            <Label htmlFor="vehicle_id" className="text-white text-sm font-medium">
+            <Label htmlFor="vehicle_id" className="text-foreground text-sm font-medium">
               Vehicle <span className="text-red-400">*</span>
             </Label>
             <Select
@@ -134,12 +134,12 @@ export function NewSubscriptionDialog({
               onValueChange={(value) => setFormData({ ...formData, vehicle_id: value })}
               required
             >
-              <SelectTrigger id="vehicle_id" className="bg-gray-900 border-gray-700 text-white">
+              <SelectTrigger id="vehicle_id" className="bg-muted border-border text-foreground">
                 <SelectValue placeholder="Select a vehicle" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-900 border-gray-700 max-h-[200px]">
+              <SelectContent className="bg-muted border-border max-h-[200px]">
                 {vehicles.map((vehicle) => (
-                  <SelectItem key={vehicle.id} value={vehicle.id} className="text-white">
+                  <SelectItem key={vehicle.id} value={vehicle.id} className="text-foreground">
                     {vehicle.name}
                   </SelectItem>
                 ))}
@@ -150,7 +150,7 @@ export function NewSubscriptionDialog({
           {/* Commitment & Currency */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="commitment" className="text-white text-sm font-medium">
+              <Label htmlFor="commitment" className="text-foreground text-sm font-medium">
                 Commitment Amount <span className="text-red-400">*</span>
               </Label>
               <Input
@@ -160,27 +160,27 @@ export function NewSubscriptionDialog({
                 placeholder="0.00"
                 value={formData.commitment}
                 onChange={(e) => setFormData({ ...formData, commitment: e.target.value })}
-                className="bg-gray-900 border-gray-700 text-white"
+                className="bg-muted border-border text-foreground"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="currency" className="text-white text-sm font-medium">
+              <Label htmlFor="currency" className="text-foreground text-sm font-medium">
                 Currency
               </Label>
               <Select
                 value={formData.currency}
                 onValueChange={(value) => setFormData({ ...formData, currency: value })}
               >
-                <SelectTrigger id="currency" className="bg-gray-900 border-gray-700 text-white">
+                <SelectTrigger id="currency" className="bg-muted border-border text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-gray-700">
-                  <SelectItem value="USD" className="text-white">USD</SelectItem>
-                  <SelectItem value="EUR" className="text-white">EUR</SelectItem>
-                  <SelectItem value="GBP" className="text-white">GBP</SelectItem>
-                  <SelectItem value="CHF" className="text-white">CHF</SelectItem>
+                <SelectContent className="bg-muted border-border">
+                  <SelectItem value="USD" className="text-foreground">USD</SelectItem>
+                  <SelectItem value="EUR" className="text-foreground">EUR</SelectItem>
+                  <SelectItem value="GBP" className="text-foreground">GBP</SelectItem>
+                  <SelectItem value="CHF" className="text-foreground">CHF</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -188,22 +188,22 @@ export function NewSubscriptionDialog({
 
           {/* Status */}
           <div className="space-y-2">
-            <Label htmlFor="status" className="text-white text-sm font-medium">
+            <Label htmlFor="status" className="text-foreground text-sm font-medium">
               Status
             </Label>
             <Select
               value={formData.status}
               onValueChange={(value) => setFormData({ ...formData, status: value })}
             >
-              <SelectTrigger id="status" className="bg-gray-900 border-gray-700 text-white">
+              <SelectTrigger id="status" className="bg-muted border-border text-foreground">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-gray-900 border-gray-700">
-                <SelectItem value="pending" className="text-white">Pending</SelectItem>
-                <SelectItem value="committed" className="text-white">Committed</SelectItem>
-                <SelectItem value="active" className="text-white">Active</SelectItem>
-                <SelectItem value="closed" className="text-white">Closed</SelectItem>
-                <SelectItem value="cancelled" className="text-white">Cancelled</SelectItem>
+              <SelectContent className="bg-muted border-border">
+                <SelectItem value="pending" className="text-foreground">Pending</SelectItem>
+                <SelectItem value="committed" className="text-foreground">Committed</SelectItem>
+                <SelectItem value="active" className="text-foreground">Active</SelectItem>
+                <SelectItem value="closed" className="text-foreground">Closed</SelectItem>
+                <SelectItem value="cancelled" className="text-foreground">Cancelled</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -211,7 +211,7 @@ export function NewSubscriptionDialog({
           {/* Dates */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="effective_date" className="text-white text-sm font-medium">
+              <Label htmlFor="effective_date" className="text-foreground text-sm font-medium">
                 Effective Date
               </Label>
               <Input
@@ -219,12 +219,12 @@ export function NewSubscriptionDialog({
                 type="date"
                 value={formData.effective_date}
                 onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
-                className="bg-gray-900 border-gray-700 text-white"
+                className="bg-muted border-border text-foreground"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="funding_due_at" className="text-white text-sm font-medium">
+              <Label htmlFor="funding_due_at" className="text-foreground text-sm font-medium">
                 Funding Due Date
               </Label>
               <Input
@@ -232,14 +232,14 @@ export function NewSubscriptionDialog({
                 type="date"
                 value={formData.funding_due_at}
                 onChange={(e) => setFormData({ ...formData, funding_due_at: e.target.value })}
-                className="bg-gray-900 border-gray-700 text-white"
+                className="bg-muted border-border text-foreground"
               />
             </div>
           </div>
 
           {/* Units */}
           <div className="space-y-2">
-            <Label htmlFor="units" className="text-white text-sm font-medium">
+            <Label htmlFor="units" className="text-foreground text-sm font-medium">
               Number of Units
             </Label>
             <Input
@@ -249,13 +249,13 @@ export function NewSubscriptionDialog({
               placeholder="Optional"
               value={formData.units}
               onChange={(e) => setFormData({ ...formData, units: e.target.value })}
-              className="bg-gray-900 border-gray-700 text-white"
+              className="bg-muted border-border text-foreground"
             />
           </div>
 
           {/* Notes */}
           <div className="space-y-2">
-            <Label htmlFor="acknowledgement_notes" className="text-white text-sm font-medium">
+            <Label htmlFor="acknowledgement_notes" className="text-foreground text-sm font-medium">
               Notes
             </Label>
             <Textarea
@@ -263,24 +263,24 @@ export function NewSubscriptionDialog({
               placeholder="Add any additional notes..."
               value={formData.acknowledgement_notes}
               onChange={(e) => setFormData({ ...formData, acknowledgement_notes: e.target.value })}
-              className="bg-gray-900 border-gray-700 text-white min-h-[100px]"
+              className="bg-muted border-border text-foreground min-h-[100px]"
             />
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-800">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="bg-gray-900 text-white border-gray-700 hover:bg-gray-800"
+              className="bg-muted text-foreground border-border hover:bg-muted/80"
               disabled={loading}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="bg-white text-black hover:bg-gray-200"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
               disabled={loading}
             >
               {loading ? (

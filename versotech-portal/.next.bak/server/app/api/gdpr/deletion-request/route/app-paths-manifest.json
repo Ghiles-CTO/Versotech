@@ -1,0 +1,3 @@
+{
+  "/api/gdpr/deletion-request/route": "app/api/gdpr/deletion-request/route.js"
+}

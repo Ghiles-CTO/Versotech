@@ -278,11 +278,11 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
 
   // Fee plan status styling
   const feePlanStatusClasses: Record<string, string> = {
-    draft: 'bg-slate-500/20 text-slate-300',
-    sent: 'bg-blue-500/20 text-blue-300',
-    pending_signature: 'bg-amber-500/20 text-amber-300',
-    accepted: 'bg-emerald-500/20 text-emerald-300',
-    rejected: 'bg-red-500/20 text-red-300'
+    draft: 'bg-slate-100 dark:bg-slate-500/20 text-slate-700 dark:text-slate-300',
+    sent: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300',
+    pending_signature: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300',
+    accepted: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300',
+    rejected: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300'
   }
 
   // Get referrer info from member's assigned_fee_plan
@@ -350,16 +350,16 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
   }
 
   const roleColors: Record<string, string> = {
-    investor: 'bg-emerald-500/20 text-emerald-200',
-    co_investor: 'bg-blue-500/20 text-blue-200',
-    partner_investor: 'bg-purple-500/20 text-purple-200',
-    introducer_investor: 'bg-orange-500/20 text-orange-200',
-    commercial_partner_investor: 'bg-teal-500/20 text-teal-200',
-    advisor: 'bg-purple-500/20 text-purple-200',
-    banker: 'bg-cyan-500/20 text-cyan-200',
-    introducer: 'bg-pink-500/20 text-pink-200',
-    verso_staff: 'bg-white/20 text-white',
-    viewer: 'bg-gray-500/20 text-gray-200'
+    investor: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-200',
+    co_investor: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-200',
+    partner_investor: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-200',
+    introducer_investor: 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-200',
+    commercial_partner_investor: 'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-200',
+    advisor: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-200',
+    banker: 'bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-200',
+    introducer: 'bg-pink-100 dark:bg-pink-500/20 text-pink-700 dark:text-pink-200',
+    verso_staff: 'bg-muted text-muted-foreground',
+    viewer: 'bg-muted text-muted-foreground'
   }
 
   // Calculate journey stats
@@ -379,7 +379,7 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
   return (
     <div className="space-y-6">
       {/* Journey Funnel Summary */}
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border border-border bg-muted/50">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
@@ -414,7 +414,7 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
       </Card>
 
       {/* All Participants Header */}
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border border-border bg-muted/50">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -467,7 +467,7 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
               )}
             </div>
           {filteredMembers.length === 0 ? (
-            <div className="text-center py-6 text-gray-400 border border-dashed border-white/10 rounded-lg">
+            <div className="text-center py-6 text-muted-foreground border border-dashed border-border rounded-lg">
               {feePlanFilter !== 'all'
                 ? 'No investors match the selected fee plan filter.'
                 : 'No investors added yet. Click "Add Participant" to invite investors.'}
@@ -520,7 +520,7 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={roleColors[member.role] || 'bg-white/20 text-white'}>
+                        <Badge className={roleColors[member.role] || 'bg-muted text-foreground'}>
                           {member.role?.replace(/_/g, ' ')}
                         </Badge>
                       </TableCell>
@@ -538,7 +538,7 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
                         {feePlan ? (
                           <div className="flex flex-col gap-1">
                             <span className="text-sm">{feePlan.name}</span>
-                            <Badge className={`text-[10px] w-fit ${feePlanStatusClasses[feePlan.status] || 'bg-slate-500/20 text-slate-300'}`}>
+                            <Badge className={`text-[10px] w-fit ${feePlanStatusClasses[feePlan.status] || 'bg-muted text-muted-foreground'}`}>
                               {feePlan.status}
                             </Badge>
                           </div>
@@ -618,7 +618,7 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
                 </Button>
               </div>
             ) : partnerAssignments.length === 0 ? (
-              <div className="text-center py-6 text-gray-400 border border-dashed border-white/10 rounded-lg">
+              <div className="text-center py-6 text-muted-foreground border border-dashed border-border rounded-lg">
                 No partners assigned yet. Click "Add Participant" to add partners, introducers, or commercial partners.
               </div>
             ) : (
@@ -626,7 +626,7 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
                 {partnerAssignments.map((assignment) => (
                   <div
                     key={assignment.fee_plan_id}
-                    className="p-3 rounded-lg border border-white/10 bg-white/5"
+                    className="p-3 rounded-lg border border-border bg-muted/50"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-3">

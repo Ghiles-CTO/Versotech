@@ -1,0 +1,29 @@
+{
+  "name": "versotech-promo",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "remotion studio",
+    "build": "remotion render VersoPromo out/versotech-promo.mp4",
+    "preview": "remotion preview",
+    "record": "npx tsx scripts/record-pages.ts"
+  },
+  "keywords": [],
+  "author": "Versotech",
+  "license": "ISC",
+  "description": "Versotech promotional video",
+  "dependencies": {
+    "@remotion/cli": "^4.0.408",
+    "@remotion/google-fonts": "^4.0.408",
+    "@remotion/transitions": "^4.0.408",
+    "@types/react": "^19.2.9",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "remotion": "^4.0.408",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.57.0"
+  }
+}

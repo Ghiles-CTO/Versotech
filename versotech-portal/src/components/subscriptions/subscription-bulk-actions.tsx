@@ -111,23 +111,23 @@ export function SubscriptionBulkActions({
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-blue-300" />
-                <span className="text-white font-semibold">
+                <span className="text-foreground font-semibold">
                   {selectedIds.length} subscription{selectedIds.length !== 1 ? 's' : ''} selected
                 </span>
               </div>
 
               <div className="hidden md:flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-1">
-                  <span className="text-gray-400">Commitment:</span>
-                  <span className="text-white font-medium">{formatCurrency(totals.commitment)}</span>
+                  <span className="text-muted-foreground">Commitment:</span>
+                  <span className="text-foreground font-medium">{formatCurrency(totals.commitment)}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="text-gray-400">Funded:</span>
+                  <span className="text-muted-foreground">Funded:</span>
                   <span className="text-green-400 font-medium">{formatCurrency(totals.funded)}</span>
                 </div>
                 {totals.outstanding > 0 && (
                   <div className="flex items-center gap-1">
-                    <span className="text-gray-400">Outstanding:</span>
+                    <span className="text-muted-foreground">Outstanding:</span>
                     <span className="text-yellow-400 font-medium">{formatCurrency(totals.outstanding)}</span>
                   </div>
                 )}
@@ -139,33 +139,33 @@ export function SubscriptionBulkActions({
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="default"
-                    className="bg-white text-black hover:bg-gray-200"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
                     disabled={isProcessing}
                   >
                     Bulk Actions
                     <ChevronDown className="ml-2 h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-gray-900 border-gray-700">
-                  <DropdownMenuLabel className="text-white">Actions</DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-gray-700" />
+                <DropdownMenuContent align="end" className="w-56 bg-card border-border">
+                  <DropdownMenuLabel className="text-foreground">Actions</DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-border" />
 
                   <DropdownMenuItem
                     onClick={() => setShowStatusDialog(true)}
-                    className="text-white hover:bg-gray-800 cursor-pointer"
+                    className="text-foreground hover:bg-muted cursor-pointer"
                   >
                     <Edit className="mr-2 h-4 w-4" />
                     Change Status
                   </DropdownMenuItem>
 
-                  <DropdownMenuSeparator className="bg-gray-700" />
+                  <DropdownMenuSeparator className="bg-border" />
 
                   <DropdownMenuItem
                     onClick={() => {
                       // TODO: Implement bulk email
                       toast.info('Bulk email feature coming soon')
                     }}
-                    className="text-white hover:bg-gray-800 cursor-pointer"
+                    className="text-foreground hover:bg-muted cursor-pointer"
                   >
                     <Mail className="mr-2 h-4 w-4" />
                     Send Notification
@@ -176,13 +176,13 @@ export function SubscriptionBulkActions({
                       // TODO: Implement bulk report
                       toast.info('Bulk report generation coming soon')
                     }}
-                    className="text-white hover:bg-gray-800 cursor-pointer"
+                    className="text-foreground hover:bg-muted cursor-pointer"
                   >
                     <FileText className="mr-2 h-4 w-4" />
                     Generate Reports
                   </DropdownMenuItem>
 
-                  <DropdownMenuSeparator className="bg-gray-700" />
+                  <DropdownMenuSeparator className="bg-border" />
 
                   <DropdownMenuItem
                     onClick={async () => {
@@ -196,7 +196,7 @@ export function SubscriptionBulkActions({
                         }
                       }
                     }}
-                    className="text-red-400 hover:bg-gray-800 cursor-pointer"
+                    className="text-red-400 hover:bg-muted cursor-pointer"
                   >
                     <Archive className="mr-2 h-4 w-4" />
                     Archive Selected
@@ -208,7 +208,7 @@ export function SubscriptionBulkActions({
                 variant="ghost"
                 size="icon"
                 onClick={onClearSelection}
-                className="text-white hover:bg-white/10"
+                className="text-foreground hover:bg-white/10"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -219,47 +219,47 @@ export function SubscriptionBulkActions({
 
       {/* Status Change Dialog */}
       <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
-        <DialogContent className="bg-gray-900 text-white border-gray-700">
+        <DialogContent className="bg-card text-foreground border-border">
           <DialogHeader>
-            <DialogTitle className="text-white">Change Status</DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogTitle className="text-foreground">Change Status</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Update the status for {selectedIds.length} selected subscription{selectedIds.length !== 1 ? 's' : ''}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="new-status" className="text-white">New Status</Label>
+              <Label htmlFor="new-status" className="text-foreground">New Status</Label>
               <Select value={newStatus} onValueChange={setNewStatus}>
-                <SelectTrigger id="new-status" className="bg-gray-800 border-gray-700 text-white">
+                <SelectTrigger id="new-status" className="bg-muted border-border text-foreground">
                   <SelectValue placeholder="Select new status" />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-gray-700">
-                  <SelectItem value="pending" className="text-white">
+                <SelectContent className="bg-muted border-border">
+                  <SelectItem value="pending" className="text-foreground">
                     <div className="flex items-center gap-2">
                       <AlertCircle className="h-4 w-4 text-yellow-400" />
                       Pending
                     </div>
                   </SelectItem>
-                  <SelectItem value="committed" className="text-white">
+                  <SelectItem value="committed" className="text-foreground">
                     <div className="flex items-center gap-2">
                       <PlayCircle className="h-4 w-4 text-blue-400" />
                       Committed
                     </div>
                   </SelectItem>
-                  <SelectItem value="active" className="text-white">
+                  <SelectItem value="active" className="text-foreground">
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-400" />
                       Active
                     </div>
                   </SelectItem>
-                  <SelectItem value="closed" className="text-white">
+                  <SelectItem value="closed" className="text-foreground">
                     <div className="flex items-center gap-2">
-                      <Archive className="h-4 w-4 text-gray-400" />
+                      <Archive className="h-4 w-4 text-muted-foreground" />
                       Closed
                     </div>
                   </SelectItem>
-                  <SelectItem value="cancelled" className="text-white">
+                  <SelectItem value="cancelled" className="text-foreground">
                     <div className="flex items-center gap-2">
                       <StopCircle className="h-4 w-4 text-red-400" />
                       Cancelled
@@ -286,14 +286,14 @@ export function SubscriptionBulkActions({
                 setNewStatus('')
               }}
               disabled={isProcessing}
-              className="bg-gray-800 text-white border-gray-700 hover:bg-gray-700"
+              className="bg-muted text-foreground border-border hover:bg-muted/80"
             >
               Cancel
             </Button>
             <Button
               onClick={handleBulkStatusChange}
               disabled={!newStatus || isProcessing}
-              className="bg-white text-black hover:bg-gray-200"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
               {isProcessing ? 'Updating...' : 'Update Status'}
             </Button>

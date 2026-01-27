@@ -34,7 +34,7 @@ function YesNoQuestion({
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem className="flex items-center justify-between gap-4 p-4 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors">
+        <FormItem className="flex items-center justify-between gap-4 p-4 rounded-lg border border-border hover:border-muted-foreground/50 transition-colors">
           <FormLabel className="flex-1 cursor-pointer font-normal">
             {label}
           </FormLabel>
@@ -53,7 +53,7 @@ function YesNoQuestion({
                       ? value === 'yes'
                         ? 'bg-amber-500 text-white'
                         : 'bg-emerald-500 text-white'
-                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
                   )}
                 >
                   <RadioGroupItem value={value} className="sr-only" />

@@ -106,7 +106,7 @@ export function DealHoldingCard({ deal }: DealHoldingCardProps) {
       case 'pending_review':
         return 'bg-yellow-100 text-yellow-700 border-yellow-200'
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200'
+        return 'bg-muted text-muted-foreground border-border'
     }
   }
 
@@ -186,14 +186,14 @@ export function DealHoldingCard({ deal }: DealHoldingCardProps) {
         {/* Key Metrics */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-2xl font-bold text-foreground">
               {formatCurrency(deal.allocation.totalValue)}
             </div>
             <div className="text-xs text-muted-foreground font-medium">Allocation Value</div>
           </div>
 
           <div className="space-y-1">
-            <div className="text-lg font-semibold text-gray-700">
+            <div className="text-lg font-semibold text-muted-foreground">
               {formatUnits(deal.allocation.units)}
             </div>
             <div className="text-xs text-muted-foreground font-medium">Units Allocated</div>
@@ -204,7 +204,7 @@ export function DealHoldingCard({ deal }: DealHoldingCardProps) {
         <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 space-y-3">
           <div className="flex justify-between items-center text-sm">
             <span className="text-muted-foreground font-medium">Unit Price</span>
-            <span className="font-semibold text-gray-900">
+            <span className="font-semibold text-foreground">
               {formatCurrency(deal.allocation.unitPrice)}
             </span>
           </div>
@@ -248,7 +248,7 @@ export function DealHoldingCard({ deal }: DealHoldingCardProps) {
         )}
 
         {/* Last Updated Date - ALWAYS show */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-gray-100 rounded-md px-3 py-2">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted rounded-md px-3 py-2">
           <Calendar className="h-3 w-3" />
           <span className="font-medium">
             Last updated: {new Date(

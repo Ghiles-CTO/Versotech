@@ -1,0 +1,3 @@
+module.exports=[193695,(a,b,c)=>{b.exports=a.x("next/dist/shared/lib/no-fallback-error.external.js",()=>require("next/dist/shared/lib/no-fallback-error.external.js"))},9349,a=>{a.n(a.i(142710))},199585,a=>{a.n(a.i(701395))},929852,a=>{a.n(a.i(816404))},516153,a=>{a.n(a.i(422096))},911164,a=>{a.n(a.i(273021))},450926,a=>{a.n(a.i(933743))},400707,a=>{"use strict";var b=a.i(243085);a.i(937413);var c=a.i(131360);async function d(){let a=await (0,b.getCurrentUser)();a||(0,c.redirect)("/versotech_main/login"),("staff_admin"===a.role||"ceo"===a.role)&&(0,c.redirect)("/versotech_admin/processes"),(0,c.redirect)("/versotech_main/dashboard")}a.s(["default",()=>d,"dynamic",0,"force-dynamic"])}];
+
+//# sourceMappingURL=%5Broot-of-the-server%5D__5caee3ac._.js.map

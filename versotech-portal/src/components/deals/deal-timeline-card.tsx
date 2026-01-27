@@ -64,8 +64,8 @@ function MilestoneMarker({ status }: { status: 'past' | 'current' | 'future' }) 
     )
   }
   return (
-    <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-      <Circle className="w-5 h-5 text-gray-400" />
+    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+      <Circle className="w-5 h-5 text-muted-foreground" />
     </div>
   )
 }
@@ -77,7 +77,7 @@ function TimelineConnector({ status }: { status: 'past' | 'current' | 'future' }
         "flex-1 h-1 rounded-full mx-2",
         status === 'past' && "bg-emerald-400",
         status === 'current' && "bg-gradient-to-r from-emerald-400 to-gray-300",
-        status === 'future' && "bg-gray-200 dark:bg-gray-700"
+        status === 'future' && "bg-muted"
       )}
     />
   )
@@ -116,7 +116,7 @@ export function DealTimelineCard({
             </Badge>
           )}
           {isClosed && (
-            <Badge variant="secondary" className="bg-gray-100">
+            <Badge variant="secondary" className="bg-muted">
               Closed
             </Badge>
           )}
@@ -135,7 +135,7 @@ export function DealTimelineCard({
                       "text-xs font-medium",
                       milestone.status === 'past' && "text-emerald-600",
                       milestone.status === 'current' && "text-blue-600",
-                      milestone.status === 'future' && "text-gray-500"
+                      milestone.status === 'future' && "text-muted-foreground"
                     )}>
                       {milestone.label}
                     </p>
@@ -168,7 +168,7 @@ export function DealTimelineCard({
                 {index < milestones.length - 1 && (
                   <div className={cn(
                     "w-0.5 h-8 mt-2",
-                    milestone.status === 'past' ? "bg-emerald-400" : "bg-gray-200 dark:bg-gray-700"
+                    milestone.status === 'past' ? "bg-emerald-400" : "bg-muted"
                   )} />
                 )}
               </div>
@@ -177,7 +177,7 @@ export function DealTimelineCard({
                   "text-sm font-medium",
                   milestone.status === 'past' && "text-emerald-600",
                   milestone.status === 'current' && "text-blue-600",
-                  milestone.status === 'future' && "text-gray-500"
+                  milestone.status === 'future' && "text-muted-foreground"
                 )}>
                   {milestone.label}
                 </p>

@@ -166,16 +166,16 @@ function DocumentRow({
   }, [dealId, document.id, document.external_link, isExternal])
 
   return (
-    <div className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors group">
+    <div className="flex items-center justify-between py-3 px-4 hover:bg-muted rounded-lg transition-colors group">
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        <div className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500">
+        <div className="p-2 rounded-lg bg-muted text-muted-foreground">
           <FileIcon className="h-5 w-5" />
         </div>
         <div className="min-w-0">
-          <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
+          <p className="font-medium text-foreground truncate">
             {document.file_name}
           </p>
-          <div className="flex items-center gap-2 text-xs text-gray-500">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>{formatFileSize(document.file_size)}</span>
             <span>•</span>
             <span>{formatDate(document.uploaded_at)}</span>
@@ -260,25 +260,25 @@ function FolderSection({
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <CollapsibleTrigger className="w-full">
-        <div className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
+        <div className="flex items-center justify-between py-3 px-4 hover:bg-muted rounded-lg transition-colors">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600">
               {isOpen ? <FolderOpen className="h-5 w-5" /> : <Folder className="h-5 w-5" />}
             </div>
-            <span className="font-medium text-gray-900 dark:text-gray-100">{folderName}</span>
+            <span className="font-medium text-foreground">{folderName}</span>
             <Badge variant="secondary" className="ml-2">
               {documents.length} {documents.length === 1 ? 'file' : 'files'}
             </Badge>
           </div>
           {isOpen ? (
-            <ChevronDown className="h-5 w-5 text-gray-400" />
+            <ChevronDown className="h-5 w-5 text-muted-foreground" />
           ) : (
-            <ChevronRight className="h-5 w-5 text-gray-400" />
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
           )}
         </div>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="ml-6 pl-4 border-l-2 border-gray-100 dark:border-gray-800 space-y-1">
+        <div className="ml-6 pl-4 border-l-2 border-border space-y-1">
           {documents.map((doc) => (
             <DocumentRow
               key={doc.id}
@@ -360,11 +360,11 @@ export function DataRoomViewer({
     return (
       <Card>
         <CardContent className="py-8 text-center">
-          <Folder className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+          <Folder className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold text-foreground mb-2">
             No Documents Available
           </h3>
-          <p className="text-gray-500 max-w-md mx-auto">
+          <p className="text-muted-foreground max-w-md mx-auto">
             Documents for this deal haven&apos;t been uploaded yet. Check back soon.
           </p>
         </CardContent>

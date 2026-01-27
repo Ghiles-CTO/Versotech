@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 22, "column": 0}, "map": {"version":3,"sources":["file:///Users/ghilesmoussaoui/Desktop/Versotech/versotech-portal/src/app/%28admin%29/versotech_admin/page.tsx"],"sourcesContent":["import { redirect } from 'next/navigation'\n\nexport default function AdminPortalRoot() {\n  redirect('/versotech_admin/dashboard')\n}\n"],"names":[],"mappings":";;;;AAAA;AAAA;;AAEe,SAAS;IACtB,IAAA,wNAAQ,EAAC;AACX"}}]
+}

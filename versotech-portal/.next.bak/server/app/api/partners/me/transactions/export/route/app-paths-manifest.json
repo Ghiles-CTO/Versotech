@@ -1,0 +1,3 @@
+{
+  "/api/partners/me/transactions/export/route": "app/api/partners/me/transactions/export/route.js"
+}

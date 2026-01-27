@@ -53,8 +53,8 @@ const stageMetadata: Record<number, StageInfo> = {
     label: 'New',
     description: 'Choose to request a subscription or explore the data room first',
     icon: Sparkles,
-    color: 'text-gray-600',
-    bgColor: 'bg-gray-100 dark:bg-gray-800'
+    color: 'text-muted-foreground',
+    bgColor: 'bg-muted'
   },
   1: {
     label: 'Received',
@@ -194,7 +194,7 @@ export function InterestStatusCard({
         : null
 
   return (
-    <Card className="border-2 border-dashed border-gray-200 dark:border-gray-800 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-950">
+    <Card className="border-2 border-dashed border-border bg-gradient-to-br from-background to-muted">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
@@ -242,7 +242,7 @@ export function InterestStatusCard({
 
         {/* Last Action */}
         {lastAction && (
-          <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-sm">
+          <div className="p-3 rounded-lg bg-muted text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Clock className="w-4 h-4" />
               <span className="font-medium">{lastAction.action}</span>
@@ -282,9 +282,9 @@ export function InterestStatusCard({
             {/* OR Divider */}
             {showSubscribeOption && showExpressOption && (
               <div className="relative flex items-center">
-                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
-                <span className="px-3 text-xs text-muted-foreground font-medium bg-white dark:bg-gray-900">OR</span>
-                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+                <div className="flex-1 h-px bg-border" />
+                <span className="px-3 text-xs text-muted-foreground font-medium bg-background">OR</span>
+                <div className="flex-1 h-px bg-border" />
               </div>
             )}
 
@@ -292,14 +292,14 @@ export function InterestStatusCard({
             {showExpressOption && (
               <button
                 onClick={onExpressInterest}
-                className="w-full p-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 hover:border-amber-400 dark:hover:border-amber-600 transition-colors text-left group"
+                className="w-full p-4 rounded-lg border border-dashed border-border hover:border-amber-400 transition-colors text-left group"
               >
                 <div className="flex items-start gap-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600">
                     <Heart className="w-5 h-5" />
                   </div>
                   <div className="flex-1">
-                    <div className="font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <div className="font-medium text-foreground flex items-center gap-2">
                       Request Data Room Access
                     </div>
                     <div className="text-sm text-muted-foreground mt-0.5">

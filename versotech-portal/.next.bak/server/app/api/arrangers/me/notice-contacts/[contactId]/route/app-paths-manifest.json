@@ -1,0 +1,3 @@
+{
+  "/api/arrangers/me/notice-contacts/[contactId]/route": "app/api/arrangers/me/notice-contacts/[contactId]/route.js"
+}

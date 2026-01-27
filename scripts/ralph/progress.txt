@@ -21,6 +21,11 @@ Started: Mon Jan 26 22:04:55 CET 2026
 - Bulk actions dropdown pattern: Use DropdownMenu with disabled button when `selectedDocuments.size === 0`. Pass callbacks like `onBulkMove`, `onBulkDelete`, `onBulkDownload`. Destructive items use `className="text-destructive focus:text-destructive"`.
 - Bulk operations with progress: For multi-item operations, use sequential API calls (not Promise.all) to show progress "Processing X/Y...". Track success/fail counts and show appropriate toast (success if all pass, warning if partial, error if all fail).
 - ZIP streaming response pattern: Use `archiver` package - collect chunks via `archive.on('data')`, finalize with `archive.finalize()`, wait for `archive.on('end')`, then return `new NextResponse(buffer, { headers: { 'Content-Type': 'application/zip', 'Content-Disposition': 'attachment; filename="..."' } })`.
+- Tree folder drag-drop pattern: Track `treeDragOverFolderId` state for highlight, use `e.relatedTarget` check in dragLeave to avoid flickering. Apply `ring-2 ring-primary bg-primary/10` class when dragging over. On drop, validate files, set target folder state, then open upload dialog.
+- Tag badges with overflow pattern: Use `TagBadges` component from `@/components/documents/tag-badges` with `maxVisible` prop. Returns null for empty tags. Shows "+N" badge with Tooltip for overflow. Slate colors for neutral non-semantic appearance.
+- Popover-in-dropdown pattern: To open a Popover from a DropdownMenuItem, use `onSelect={(e) => e.preventDefault()}` on the MenuItem to prevent dropdown from closing. Pass the MenuItem as the Popover's `trigger` prop.
+- Hidden file input pattern: Use `useRef<HTMLInputElement>` + hidden `<input type="file">`, trigger with `ref.current?.click()`. Reset with `ref.current.value = ''` to allow re-selecting same file. Use `accept=".pdf,.docx,..."` for file type filtering.
+- RefreshKey pattern for child components: Add `refreshKey?: number` prop, include in useEffect deps. Parent increments to trigger child refetch without remounting: `setRefreshKey(prev => prev + 1)`.
 
 ## 2026-01-26 22:15 - US-001
 - **What was implemented:** Fixed hardcoded dark theme in staff documents page
@@ -413,4 +418,377 @@ Started: Mon Jan 26 22:04:55 CET 2026
   - Use `toast.loading()` which returns an ID, then `toast.dismiss(id)` for clean loading state management
   - Extract filename from Content-Disposition header with regex: `/filename="([^"]+)"/`
   - Add `clearSelection` to useCallback dependencies when calling it inside the callback
+---
+
+## 2026-01-27 14:45 - US-018
+- **What was implemented:** Added drag-and-drop upload zone to main content area
+- **Files changed:**
+  - `versotech-portal/src/components/documents/document-upload-dialog.tsx`:
+    - Added `initialFiles?: File[]` prop to interface
+    - Added useEffect to process initialFiles when dialog opens with pre-populated files
+    - Allows external drag-drop to pass files directly into upload dialog
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx`:
+    - Added `isDragOver`, `droppedFiles`, `dragCounterRef` state for drag tracking
+    - Defined `ALLOWED_EXTENSIONS` (pdf, docx, xlsx, txt, jpg, jpeg, png) and `MAX_FILE_SIZE` (50MB)
+    - Created `validateDroppedFiles()` function to validate file type and size
+    - Added `handleDragEnter`, `handleDragLeave`, `handleDragOver`, `handleDrop` handlers
+    - Drop handler validates files, shows toast errors for invalid files, opens upload dialog with valid files
+    - Created `handleUploadDialogChange` to clear dropped files when dialog closes
+    - Added drag event handlers to `<main>` element
+    - Added visual overlay with blue dashed border, backdrop blur, and "Drop files to upload" message
+    - Overlay includes animated upload icon and lists allowed file types
+- **Learnings for future iterations:**
+  - Drag-drop counter pattern: Use `dragCounterRef` to track enter/leave events correctly (prevents flickering when dragging over child elements)
+  - Check both `e.dataTransfer.items.length > 0` AND `e.dataTransfer.types.includes('Files')` for robust file detection
+  - React synthetic events from programmatic dispatch may not trigger state updates like real user interactions
+  - File validation before opening dialog: Validate at drop time, show errors for rejected files, only open dialog with valid files
+  - Pass pre-populated files via prop (`initialFiles`) rather than trying to modify dialog state from outside
+---
+
+## 2026-01-27 15:30 - US-019
+- **What was implemented:** Added drag-drop to tree folders for file upload
+- **Files changed:**
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx`:
+    - Added state: `treeDragOverFolderId`, `uploadTargetFolderId`, `uploadTargetFolderName`
+    - Created `handleTreeFolderDragEnter`, `handleTreeFolderDragLeave`, `handleTreeFolderDragOver`, `handleTreeFolderDrop` handlers
+    - Updated `renderSidebarTreeNode` with drag event handlers and ring-2 ring-primary highlight
+    - Modified upload dialog to use target folder when dropping on tree node
+    - Updated `handleUploadDialogChange` to clear target folder state on close
+- **Learnings for future iterations:**
+  - Tree folder drag-drop pattern: Track drag-over state by folder ID, apply highlight class conditionally
+  - Use `e.relatedTarget` check in dragLeave to avoid flickering when entering child elements
+  - Pre-select upload target folder: Store folder ID/name in state, pass to upload dialog when specified
+  - Toast notification on drop provides immediate feedback: "Uploading to [folder name]"
+  - Drag handlers work on collapsed folders because they're attached to the visible folder row element
+---
+
+## 2026-01-27 16:02 - US-020
+- **What was implemented:** Added document drag to move functionality
+- **Files changed:**
+  - `versotech-portal/src/components/documents/document-card.tsx`:
+    - Added drag props interface: `isDragging`, `onDragStart`, `onDragEnd`
+    - Added `handleDragStart` handler setting dataTransfer with document ID/name
+    - Added `draggable` attribute, cursor-grab styling, opacity when dragging
+  - `versotech-portal/src/components/documents/navigation/FolderNavigator.tsx`:
+    - Added drag props to `FolderNavigatorProps`: `draggingDocumentId`, `onDocumentDragStart`, `onDocumentDragEnd`
+    - Updated `DocumentListRow` with drag props and handlers
+    - Passed drag props through to DocumentCard and DocumentListRow components
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx`:
+    - Added state: `draggingDocumentId`, `draggingDocumentName`
+    - Created `handleDocumentDragStart`, `handleDocumentDragEnd` handlers
+    - Extended `handleTreeFolderDrop` to detect document moves vs file uploads
+    - Inline move logic: PATCH API call, optimistic UI update, toast notifications
+    - Pass drag props to FolderNavigator
+- **Learnings for future iterations:**
+  - Document vs file drag detection: Use custom MIME type `application/x-document-id` in dataTransfer to distinguish from native file drops
+  - Optimistic updates: Remove document from current view immediately, reload on success/error for consistency
+  - Avoid circular callback dependencies: Define move logic inline in drop handler instead of separate useCallback to avoid "used before declaration" errors
+  - Same tree folder highlight works for both file uploads and document moves - just extended the drop handler logic
+---
+
+## 2026-01-27 17:00 - US-021
+- **What was implemented:** Display tags on documents as badges in grid and list views
+- **Files changed:**
+  - `versotech-portal/src/types/documents.ts`:
+    - Added `tags?: string[] | null` field to Document interface
+    - Added `current_version?: number | null` for future versioning feature
+    - Added `document_expiry_date?: string | null` for expiry warnings feature
+  - `versotech-portal/src/components/documents/tag-badges.tsx` - New component:
+    - Displays up to maxVisible tags (default 2) as slate-colored badges with Tag icon
+    - Shows "+N" badge for overflow with Tooltip listing all hidden tags
+    - Returns null for empty/null tags array (no visual clutter)
+    - Supports 'default' and 'sm' size variants
+  - `versotech-portal/src/components/documents/document-card.tsx`:
+    - Imported TagBadges component
+    - Added TagBadges below the existing badges section for grid view
+  - `versotech-portal/src/components/documents/navigation/FolderNavigator.tsx`:
+    - Imported TagBadges component
+    - Updated table header to add "Tags" column (between Name and Size)
+    - Updated grid columns from `[40px_1fr_100px_140px_80px]` to `[40px_1fr_150px_100px_140px_80px]`
+    - Added Tags column to DocumentListRow with TagBadges size="sm"
+    - Added tags to search results: SearchResultCard shows tags below path, SearchResultRow has Tags column
+- **Learnings for future iterations:**
+  - Tag display component pattern: Return null for empty arrays (acceptance: "Empty tags = show nothing")
+  - Tooltip overflow pattern: Use TooltipProvider + Tooltip + TooltipTrigger with Badge + TooltipContent for overflow info
+  - Grid column sizing: Add 150px for tags column - enough for 2 badges + overflow indicator
+  - Slate color for tags: `border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300` provides neutral, non-semantic appearance
+---
+
+## 2026-01-27 18:30 - US-022
+- **What was implemented:** Created tags list API endpoint for autocomplete
+- **Files changed:**
+  - Created Supabase RPC function `get_distinct_document_tags()` via migration:
+    - Uses `SELECT DISTINCT unnest(tags) FROM documents ORDER BY tag`
+    - Returns unique tags sorted alphabetically
+    - STABLE and SECURITY DEFINER for performance and RLS bypass
+  - `versotech-portal/src/app/api/staff/documents/tags/route.ts` - New endpoint:
+    - GET handler with staff authentication via `authenticateStaffForDocuments()`
+    - Calls `serviceSupabase.rpc('get_distinct_document_tags')` for efficient query
+    - Returns `{ tags: string[] }` response format
+    - Error handling with appropriate HTTP status codes
+- **Learnings for future iterations:**
+  - For array unnesting queries, use RPC function with `unnest()` - Supabase query builder doesn't support this directly
+  - Pattern: `SELECT DISTINCT unnest(array_column) as item FROM table ORDER BY item` for unique array values
+  - RPC functions with STABLE modifier can be optimized by PostgreSQL query planner
+  - Current tags in test DB: executed, nda, signed
+---
+
+## 2026-01-27 19:30 - US-023
+- **What was implemented:** Added tag management popover for adding/removing document tags
+- **Files changed:**
+  - `versotech-portal/src/components/documents/tag-management-popover.tsx` - New component:
+    - Popover with current tags displayed as removable badges
+    - Command/Input combo for autocomplete from `/api/staff/documents/tags`
+    - Enter key adds new tag (creates if not in suggestions)
+    - X button on badge removes tag
+    - Saves immediately via PATCH `/api/staff/documents/[id]`
+    - Toast notifications for success/error feedback
+    - Loading states for fetching tags and saving
+  - `versotech-portal/src/components/documents/document-card.tsx`:
+    - Added `Tag` icon import and `onTagsUpdated` prop
+    - Added TagManagementPopover with DropdownMenuItem trigger after Rename option
+    - Passes document ID, name, tags and update callback
+  - `versotech-portal/src/components/documents/navigation/FolderNavigator.tsx`:
+    - Added `Tag` icon import and TagManagementPopover import
+    - Added `onTagsUpdated` prop to interface and destructured props
+    - Added TagManagementPopover to DocumentListRow dropdown menu
+    - Passed `onTagsUpdated` through to DocumentCard and DocumentListRow
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx`:
+    - Added `tags?: string[]` to StaffDocument interface
+    - Created `handleTagsUpdated` callback to update local state optimistically
+    - Passed `onTagsUpdated={handleTagsUpdated}` to FolderNavigator
+- **Learnings for future iterations:**
+  - Popover-in-dropdown pattern: Use `onSelect={(e) => e.preventDefault()}` on DropdownMenuItem to prevent closing when clicking to open popover
+  - Optimistic UI updates: Update local state immediately after API call to provide instant feedback
+  - Command component filtering: Set `shouldFilter={false}` when doing custom filtering to prevent cmdk from double-filtering
+  - Tag autocomplete: Combine "create new" option (shown when input doesn't match existing) with existing tag suggestions
+  - Unified tag management: Same component works in both grid view (DocumentCard) and list view (DocumentListRow) menus
+---
+
+## 2026-01-27 20:27 - US-024
+- **What was implemented:** Added tag filter dropdown for filtering documents by tags
+- **Files changed:**
+  - `versotech-portal/src/components/documents/tag-filter-dropdown.tsx` - New component:
+    - Multi-select dropdown using Popover + Command from shadcn/ui
+    - Fetches available tags from `/api/staff/documents/tags` on mount
+    - Checkboxes for each tag with visual selection state
+    - Badge showing selected count on trigger button
+    - "Clear filters" button appears when tags are selected
+    - Accessible keyboard navigation via Command component
+  - `versotech-portal/src/components/documents/navigation/FolderNavigator.tsx`:
+    - Added `TagFilterDropdown` import
+    - Added `selectedTagFilters` and `onTagFiltersChange` props to interface
+    - Integrated TagFilterDropdown in toolbar next to search input
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx`:
+    - Added `selectedTagFilters` state (Set<string>)
+    - Updated useEffect to load `?tags=` param from URL on mount
+    - Created `handleTagFiltersChange` callback that updates state and URL
+    - Updated `filteredDocuments` memo to filter by tags (ANY match)
+    - Passed tag filter props to FolderNavigator
+- **Learnings for future iterations:**
+  - URL state for Set: Convert Set to array for URL with `Array.from(tags).join(',')`, parse back with `tagsParam.split(',').filter(t => t.trim())`
+  - Multi-select filter UX: Show badge count on trigger, use checkboxes inside Command items, add clear button in footer
+  - Filter logic choice: "ANY" matching (`tags.some()`) is more intuitive for multi-select filters than "ALL" matching
+  - Command component checkbox pattern: Wrap custom checkbox div inside CommandItem, use `onSelect` for toggling
+---
+
+## 2026-01-27 22:30 - US-025
+- **What was implemented:** Added version history panel with right-side Sheet slide-out
+- **Files changed:**
+  - `versotech-portal/src/components/documents/version-history-sheet.tsx` - New component:
+    - Sheet with SheetContent side="right" for slide-out panel
+    - Fetches versions from `/api/staff/documents/[id]/versions` on open
+    - Displays version list with: version number, date (formatted), uploader name, file size
+    - "Current" badge on current version with highlighted styling
+    - Download button for each version
+    - Empty states for no versions (single version documents)
+    - Loading and error states with retry button
+  - `versotech-portal/src/components/documents/document-card.tsx`:
+    - Added `History` icon import from lucide-react
+    - Added `onVersionHistory` prop to interface
+    - Added "Version History" menu item after "Manage Tags" in dropdown
+    - Calls `onVersionHistory(document.id, displayName, document.current_version || 1)`
+  - `versotech-portal/src/components/documents/navigation/FolderNavigator.tsx`:
+    - Added `History` icon import
+    - Added `onVersionHistory` prop to FolderNavigatorProps interface
+    - Passed `onVersionHistory` to DocumentCard and DocumentListRow components
+    - Added "Version History" menu item to DocumentListRow dropdown
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx`:
+    - Imported VersionHistorySheet component
+    - Added version history state: `versionHistoryOpen`, `versionHistoryDocId`, `versionHistoryDocName`, `versionHistoryCurrentVersion`
+    - Added `current_version` field to StaffDocument interface
+    - Created `handleVersionHistory` callback to open sheet with document info
+    - Passed `onVersionHistory={handleVersionHistory}` to FolderNavigator
+    - Rendered VersionHistorySheet in dialogs section
+- **Learnings for future iterations:**
+  - Sheet slide-out pattern: Use `SheetContent side="right"` with controlled open state for detail panels
+  - Version history API already existed at `/api/staff/documents/[id]/versions` with GET (list) and POST (upload)
+  - Database schema `document_versions`: id, document_id, version_number, file_key, file_size_bytes, mime_type, changes_description, created_by, created_at
+  - Current version highlight: Use `bg-primary/5 border-primary/30` for subtle highlight of current version
+  - Empty state for single version: Show friendly message "Upload a new version to see version history"
+---
+
+## 2026-01-27 23:30 - US-026
+- **What was implemented:** Added upload new version functionality
+- **Files changed:**
+  - `versotech-portal/src/components/documents/document-card.tsx`:
+    - Added `Upload` icon import
+    - Added `onUploadNewVersion` prop to interface
+    - Added "Upload New Version" menu item after "Version History" in dropdown
+  - `versotech-portal/src/components/documents/navigation/FolderNavigator.tsx`:
+    - Added `onUploadNewVersion` prop to FolderNavigatorProps interface
+    - Passed prop through to DocumentCard and DocumentListRow components
+    - Added "Upload New Version" menu item to DocumentListRow dropdown
+  - `versotech-portal/src/components/documents/version-history-sheet.tsx`:
+    - Added `refreshKey` prop to interface (incremented to trigger refetch)
+    - Added `refreshKey` to useEffect dependency array for fetch trigger
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx`:
+    - Added upload version state: `uploadVersionDocId`, `uploadVersionDocName`, `isUploadingVersion`, `versionHistoryRefreshKey`
+    - Added `versionFileInputRef` for hidden file input
+    - Created `handleUploadNewVersion` callback (stores doc info, triggers file input click)
+    - Created `handleVersionFileSelected` callback:
+      - Validates file type (PDF, DOCX, XLSX, TXT, JPEG, PNG) and size (50MB max)
+      - POSTs FormData to `/api/staff/documents/[id]/versions`
+      - Shows loading toast during upload, success toast with version number
+      - Updates local document state with new current_version
+      - Increments `versionHistoryRefreshKey` to refresh panel if open
+    - Added hidden `<input type="file">` element with accept attribute
+    - Passed `onUploadNewVersion` to FolderNavigator
+    - Passed `refreshKey` to VersionHistorySheet
+- **Learnings for future iterations:**
+  - Hidden file input pattern: Use ref + hidden input, call `ref.current?.click()` to trigger
+  - File input accept attribute: Use MIME types or extensions like `.pdf,.docx,.xlsx,.txt,.jpg,.jpeg,.png`
+  - FormData for file upload: `formData.append('file', file)` then POST with body: formData (no Content-Type header needed - browser sets multipart boundary)
+  - React file input reset: Set `inputRef.current.value = ''` to allow re-selecting same file
+  - RefreshKey pattern: Add numeric prop to component, include in useEffect deps, increment from parent to trigger refetch
+  - Optimistic local state update: Update document array in state immediately after successful API call for instant feedback
+---
+
+## 2026-01-27 23:45 - US-027
+- **What was implemented:** Added version badge display on documents with multiple versions
+- **Files changed:**
+  - `versotech-portal/src/components/documents/document-card.tsx`:
+    - Added version badge button next to document name in grid view
+    - Badge shows "v{N}" when current_version > 1
+    - Clicking badge opens version history panel
+    - Uses small, gray styling with theme variables (bg-muted, text-muted-foreground)
+    - Has hover states (hover:bg-accent) for interactivity
+    - Uses stopPropagation to prevent triggering document preview
+  - `versotech-portal/src/components/documents/navigation/FolderNavigator.tsx`:
+    - Added same version badge to DocumentListRow component for list view
+    - Badge appears after document name, before tags column
+    - Same styling and behavior as grid view badge
+- **Learnings for future iterations:**
+  - Version badge pattern: Use conditional render `{document.current_version && document.current_version > 1 && (...)}` to only show for versioned docs
+  - Subtle badge styling: `bg-muted text-muted-foreground border-border` provides a non-prominent appearance that doesn't compete with semantic badges
+  - Click handler on badge must call `stopPropagation()` to prevent parent onClick (document preview) from firing
+  - `flex-shrink-0` on badges prevents them from being squished when document names are long
+---
+
+## 2026-01-27 - US-028
+- **What was implemented:** Added expired document warnings throughout the document management system
+- **Files changed:**
+  - `versotech-portal/src/components/documents/document-card.tsx`:
+    - Added AlertTriangle icon import from lucide-react
+    - Added Tooltip imports from @/components/ui/tooltip
+    - Added `isDocumentExpired()` helper to check if document_expiry_date < today
+    - Added `formatExpiryDate()` helper for date formatting
+    - Added amber AlertTriangle icon with tooltip in grid view card showing "Expired on [date]"
+  - `versotech-portal/src/components/documents/navigation/FolderNavigator.tsx`:
+    - Added same imports (AlertTriangle, Tooltip components)
+    - Added same helper functions for expiry check and formatting
+    - Added expired warning to DocumentListRow in list view
+    - Added expired warning to SearchResultCard (grid search results)
+    - Added expired warning to SearchResultRow (list search results)
+  - `versotech-portal/src/components/documents/DocumentViewerFullscreen.tsx`:
+    - Added AlertTriangle icon import
+    - Added expiry check helper functions
+    - Added amber banner below toolbar: "This document expired on [date]"
+    - Changed layout to flexbox with flex-1 viewport for proper banner spacing
+- **Learnings for future iterations:**
+  - Expired document warning pattern: Use `isDocumentExpired(document.document_expiry_date)` to conditionally render warning
+  - Amber color for warnings: `text-amber-500` for icon, `bg-amber-50 border-amber-200 text-amber-800` for banner
+  - TooltipProvider wrapping: Each Tooltip needs its own TooltipProvider when used inside mapped components
+  - Flexbox layout for dynamic content: Use `flex flex-col` on container with `flex-1 min-h-0` on content area to handle optional banners
+  - Document remains accessible: Expired warning is purely informational - no blocking behavior
+---
+
+## 2026-01-27 - US-029
+- **What was implemented:** Added CONFIDENTIAL badge and watermark overlay for confidential documents
+- **Files changed:**
+  - `versotech-portal/src/components/documents/document-card.tsx`:
+    - Changed "Watermarked" badge to "CONFIDENTIAL" with red color styling
+    - Badge uses `border-red-200 bg-red-50 text-red-700` with dark mode variants
+  - `versotech-portal/src/components/documents/navigation/FolderNavigator.tsx`:
+    - Added Shield icon import from lucide-react
+    - Added CONFIDENTIAL badge to DocumentListRow (list view)
+    - Added CONFIDENTIAL badge to SearchResultCard (grid search results)
+    - Added CONFIDENTIAL badge to SearchResultRow (list search results)
+    - Used `!!result.watermark` to fix TypeScript error with `unknown` type
+  - `versotech-portal/src/components/documents/DocumentViewerFullscreen.tsx`:
+    - Added `relative` positioning to main viewport container
+    - Added diagonal watermark overlay with "CONFIDENTIAL - VERSO Holdings" text
+    - Watermark positioned center, rotated -45deg, 30% opacity
+    - Uses `pointer-events-none` to allow clicking through to PDF
+- **Learnings for future iterations:**
+  - Confidential badge pattern: Use red color scheme for confidential/security indicators (`border-red-200 bg-red-50 text-red-700`)
+  - Dark mode for red badges: `dark:border-red-900 dark:bg-red-950 dark:text-red-400`
+  - TypeScript `unknown` type in JSX: Use `!!value` to convert to boolean for conditional rendering
+  - Watermark overlay pattern: Use absolute positioning over iframe with `pointer-events-none` to allow interaction with underlying content
+  - CSS transform for diagonal text: `transform: 'rotate(-45deg)'` with inline style for rotation
+---
+
+## 2026-01-27 17:30 - US-030
+- **What was implemented:** Added right-click context menu to folder tree nodes in sidebar
+- **Files changed:**
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx`:
+    - Added ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger imports
+    - Added Pencil, Trash2 icon imports from lucide-react
+    - Updated `renderSidebarTreeNode` to wrap folder rows with ContextMenu
+    - Added `canDelete` logic: only custom folders without documents can be deleted
+    - Menu items: "New Subfolder" (opens CreateFolderDialog), "Rename" (opens RenameFolderDialog), "Delete" (with disabled state logic)
+    - Delete shows "(System folder)" or "(Has documents)" indicator when disabled
+  - `versotech-portal/src/components/documents/rename-folder-dialog.tsx`:
+    - Removed hardcoded dark theme classes (bg-zinc-900, border-white/10, text-white, etc.)
+    - Dialog now properly inherits theme from shadcn components
+- **Learnings for future iterations:**
+  - ContextMenu pattern: Wrap the triggerable element with `<ContextMenuTrigger asChild>` and place `<ContextMenuContent>` as sibling
+  - ContextMenuItem supports `variant="destructive"` for delete/danger actions
+  - ContextMenuItem supports `disabled` prop for conditional enabling
+  - Delete logic for folders: Check both `folder_type === 'custom'` AND `document_count === 0`
+  - Show explanation text in disabled menu items (e.g., "(System folder)") to help users understand why action is unavailable
+---
+
+## 2026-01-27 21:00 - US-031
+- **What was implemented:** Added "Deals" virtual node under each vehicle in sidebar tree with lazy loading
+- **Files changed:**
+  - `versotech-portal/src/app/api/deals/route.ts`:
+    - Added `vehicle_id` query parameter support to GET endpoint
+    - Filters deals by vehicle_id when provided
+  - `versotech-portal/src/app/api/staff/documents/route.ts`:
+    - Added `deal_id` query parameter support
+    - Filters documents by deal_id when provided
+    - Added deal_id to filters_applied response
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx`:
+    - Added `Briefcase` icon import from lucide-react
+    - Added `Deal` interface with id, name, status, vehicle_id fields
+    - Added state: `expandedDealsNodes` (Set<string>), `vehicleDeals` (Map<string, Deal[]>), `loadingDeals` (Set<string>), `selectedDealId` (string | null)
+    - Created `fetchDealsForVehicle()` callback for lazy loading deals from API
+    - Created `toggleDealsNode()` callback to expand/collapse deals node and trigger fetch
+    - Created `navigateToDeal()` callback to filter documents by deal_id
+    - Created `clearDealFilter()` callback (for future use)
+    - Created `renderDealsNode()` function to render virtual "Deals" node with Briefcase icon (purple)
+    - Updated `renderVehicleNode()` to include renderDealsNode() for each vehicle
+    - Updated `navigateToFolder()` and `navigateToVehicle()` to clear selectedDealId
+    - Updated `loadDocuments()` to include deal_id filter param
+    - Shows deal status badges (draft=gray, active=green, closed=blue)
+    - Shows loading spinner (Loader2) while fetching deals
+    - Shows "No deals for this vehicle" message when empty
+- **Learnings for future iterations:**
+  - Virtual node pattern: Create virtual container nodes (like "Deals") that don't exist in the database but organize related items
+  - Lazy loading pattern: Only fetch data when parent node is expanded - track loading state per node with Set<string>
+  - Cache loaded data: Store fetched deals in Map<vehicleId, Deal[]> to avoid re-fetching on collapse/expand cycles
+  - Deal filtering: Pass deal_id to document API to filter documents associated with specific deals
+  - Clear context on navigation: When navigating to a different folder or vehicle, clear the deal filter to avoid stale results
+  - Status badge colors: Use green for active, gray for draft, blue for closed - consistent with other status indicators in codebase
 ---

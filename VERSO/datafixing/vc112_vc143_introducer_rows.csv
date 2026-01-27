@@ -1,0 +1,4 @@
+vc_code,sheet,row_index,group_label,raw_name,introducer_name_mapped,sub_fee_amt,spread_fee_amt,sub_fee_pct,spread_pps,perf_fee_1_pct,thresh_1,perf_fee_2_pct,thresh_2,investor_last,investor_first,investor_entity,amount_invested,price_per_share,num_shares,ownership_position,contract_date
+VC112,VC12,16,INTRODUCERS,TERRA,Terra Financial & Management Services SA,4000.0,0.0,0.04,0.0,,0x,,,KNOPF,Beatrice and Marcel,,100000.0,12.2154,8186.0,8186.0,2022-08-23
+VC112,VC12,17,INTRODUCERS,TERRA,Terra Financial & Management Services SA,20000.0,0.0,0.04,0.0,,0x,,,ROMANOV,Liudmila and Alexey,,500000.0,12.2154,40931.0,40931.0,2022-08-25
+VC112,VC12,20,INTRODUCERS,FINSA,FINSA,2000.0,,0.04,,0.05,0x,,,ALBERTINI,Giovanni,,50000.0,12.2154,4093.0,4093.0,2022-10-28

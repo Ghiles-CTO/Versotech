@@ -1,0 +1,3 @@
+{
+  "/api/cron/data-room-expiry/route": "app/api/cron/data-room-expiry/route.js"
+}

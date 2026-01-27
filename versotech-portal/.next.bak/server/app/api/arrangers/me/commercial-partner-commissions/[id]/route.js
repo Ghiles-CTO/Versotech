@@ -1,0 +1,13 @@
+var R=require("../../../../../../chunks/[turbopack]_runtime.js")("server/app/api/arrangers/me/commercial-partner-commissions/[id]/route.js")
+R.c("server/chunks/[root-of-the-server]__310b4f18._.js")
+R.c("server/chunks/6d6b6_next_672f6640._.js")
+R.c("server/chunks/6d6b6_4a9fcd3d._.js")
+R.c("server/chunks/6d6b6_next_dist_7d1347b1._.js")
+R.c("server/chunks/6d6b6_131e6e29._.js")
+R.c("server/chunks/[root-of-the-server]__04eaf9e0._.js")
+R.c("server/chunks/[root-of-the-server]__7a18eae2._.js")
+R.c("server/chunks/6d6b6_zod_v4_classic_external_a9be62e6.js")
+R.c("server/chunks/6d6b6_next_b8b5a401._.js")
+R.c("server/chunks/03a74_app_api_arrangers_me_commercial-partner-commissions_[id]_route_actions_c72d639a.js")
+R.m(787619)
+module.exports=R.m(787619).exports

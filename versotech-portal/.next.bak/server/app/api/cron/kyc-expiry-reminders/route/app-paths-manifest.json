@@ -1,0 +1,3 @@
+{
+  "/api/cron/kyc-expiry-reminders/route": "app/api/cron/kyc-expiry-reminders/route.js"
+}

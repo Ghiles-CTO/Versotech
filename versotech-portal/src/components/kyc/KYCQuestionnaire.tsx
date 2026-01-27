@@ -57,10 +57,10 @@ export function KYCQuestionnaire({ onComplete }: KYCQuestionnaireProps) {
   }
 
   return (
-    <Card className="border-gray-200 bg-white shadow-sm">
-      <CardHeader className="border-b border-gray-100 bg-gray-50/50">
-        <CardTitle className="text-gray-900">Compliance Questionnaire</CardTitle>
-        <CardDescription className="text-gray-600">
+    <Card className="border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
+      <CardHeader className="border-b border-gray-100 dark:border-zinc-700 bg-gray-50/50 dark:bg-zinc-800/50">
+        <CardTitle className="text-gray-900 dark:text-white">Compliance Questionnaire</CardTitle>
+        <CardDescription className="text-gray-600 dark:text-gray-400">
           Complete the following compliance questionnaire to proceed with your KYC verification.
           Your progress is saved automatically.
         </CardDescription>

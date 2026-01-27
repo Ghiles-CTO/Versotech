@@ -69,7 +69,7 @@ export function DealOverviewTab({ deal, memberships = [], subscriptionsForJourne
     <div className="space-y-6">
       {/* Investor Journey Pipeline - Minimalist Design */}
       {memberships.length > 0 && (
-        <Card className="border border-white/10 bg-white/[0.02] overflow-hidden">
+        <Card className="border border-border bg-muted/30 overflow-hidden">
           <CardHeader className="pb-2 pt-4 px-6">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-muted-foreground tracking-wide uppercase">
@@ -108,7 +108,7 @@ export function DealOverviewTab({ deal, memberships = [], subscriptionsForJourne
                             ? isFinal
                               ? 'bg-emerald-500/25 text-emerald-300 ring-2 ring-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.15)]'
                               : 'bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25'
-                            : 'bg-white/5 text-muted-foreground/60'
+                            : 'bg-muted text-muted-foreground/60'
                           }
                           group-hover:scale-110 group-hover:ring-emerald-400/40
                         `}
@@ -141,19 +141,19 @@ export function DealOverviewTab({ deal, memberships = [], subscriptionsForJourne
             </div>
 
             {/* Summary stats row */}
-            <div className="flex items-center justify-center gap-8 mt-6 pt-4 border-t border-white/5">
+            <div className="flex items-center justify-center gap-8 mt-6 pt-4 border-t border-border">
               <div className="text-center">
                 <div className="text-lg font-semibold text-foreground">{journeyStats.funded}</div>
                 <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Funded</div>
               </div>
-              <div className="w-px h-8 bg-white/10" />
+              <div className="w-px h-8 bg-muted" />
               <div className="text-center">
                 <div className="text-lg font-semibold text-foreground">
                   {journeyStats.total > 0 ? Math.round((journeyStats.funded / journeyStats.total) * 100) : 0}%
                 </div>
                 <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Conversion</div>
               </div>
-              <div className="w-px h-8 bg-white/10" />
+              <div className="w-px h-8 bg-muted" />
               <div className="text-center">
                 <div className="text-lg font-semibold text-foreground">{journeyStats.signed}</div>
                 <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Signed</div>
@@ -164,7 +164,7 @@ export function DealOverviewTab({ deal, memberships = [], subscriptionsForJourne
       )}
 
       {/* Deal Information */}
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border border-border bg-muted/50">
         <CardHeader>
           <CardTitle className="text-foreground">Deal Information</CardTitle>
           <CardDescription>Core details and structure</CardDescription>
@@ -188,7 +188,7 @@ export function DealOverviewTab({ deal, memberships = [], subscriptionsForJourne
                   <>
                     <Building2 className="h-4 w-4 text-muted-foreground" />
                     <span className="text-foreground">{deal.vehicles.name}</span>
-                    <Badge variant="outline" className="border-white/20">
+                    <Badge variant="outline" className="border-border">
                       {deal.vehicles.type}
                     </Badge>
                   </>
@@ -238,7 +238,7 @@ export function DealOverviewTab({ deal, memberships = [], subscriptionsForJourne
       </Card>
 
       {/* Financial Details */}
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border border-border bg-muted/50">
         <CardHeader>
           <CardTitle className="text-foreground flex items-center gap-2">
             <DollarSign className="h-5 w-5" />
@@ -272,7 +272,7 @@ export function DealOverviewTab({ deal, memberships = [], subscriptionsForJourne
                   {progressPercent}% of target
                 </span>
               </div>
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
                 <div
                   className="h-full bg-emerald-500 transition-all duration-300"
                   style={{ width: `${Math.min(progressPercent, 100)}%` }}
@@ -284,7 +284,7 @@ export function DealOverviewTab({ deal, memberships = [], subscriptionsForJourne
       </Card>
 
       {/* Timeline */}
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border border-border bg-muted/50">
         <CardHeader>
           <CardTitle className="text-foreground flex items-center gap-2">
             <CalendarDays className="h-5 w-5" />
@@ -341,7 +341,7 @@ export function DealOverviewTab({ deal, memberships = [], subscriptionsForJourne
 
       {/* Description & Thesis */}
       {(deal.description || deal.investment_thesis) && (
-        <Card className="border border-white/10 bg-white/5">
+        <Card className="border border-border bg-muted/50">
           <CardHeader>
             <CardTitle className="text-foreground flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />

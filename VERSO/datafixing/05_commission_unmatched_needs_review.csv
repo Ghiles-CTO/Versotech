@@ -1,0 +1,17 @@
+excel_row,action,entity_code,introducer,investor,fee_type,rate_bps,rate_pct,amount,currency,match_reason,candidate_count,candidate_ids
+487,update,VC122,Pierre Paumier,LF GROUP SARL,invested_amount,200.0,2.0,1500.0,USD,NO_CANDIDATES,0,
+488,update,VC122,Pierre Paumier,LF GROUP SARL,performance_fee,500.0,5.0,0.0,USD,NO_CANDIDATES,0,
+491,delete,VC125,Daniel Baumslag,DALINGA HOLDING AG,performance_fee,500.0,5.0,0.0,USD,AMBIGUOUS,2,"5b97ba0c-7f0a-418c-a950-daf915207f41,bdc307ff-9a0a-4463-8514-2b343748c5bf"
+492,delete,VC125,Daniel Baumslag,DALINGA HOLDING AG,performance_fee,500.0,5.0,0.0,USD,AMBIGUOUS,2,"5b97ba0c-7f0a-418c-a950-daf915207f41,bdc307ff-9a0a-4463-8514-2b343748c5bf"
+498,delete,VC125,Terra Financial & Management Services SA,DALINGA HOLDING AG,performance_fee,200.0,2.0,0.0,USD,AMBIGUOUS,2,"9491b3aa-7f1c-4bd4-bf10-7010d3f91e70,ec5fb2c7-bf36-4724-bbcb-455014191a34"
+499,delete,VC125,Terra Financial & Management Services SA,DALINGA HOLDING AG,performance_fee,200.0,2.0,0.0,USD,AMBIGUOUS,2,"9491b3aa-7f1c-4bd4-bf10-7010d3f91e70,ec5fb2c7-bf36-4724-bbcb-455014191a34"
+501,delete,VC125,Terra Financial & Management Services SA,MA GROUP AG,performance_fee,200.0,2.0,0.0,,NO_CANDIDATES,0,
+502,delete,VC125,Terra Financial & Management Services SA,Eric SARASIN,invested_amount,500.0,2.0,5000.0,,NO_CANDIDATES,0,
+503,delete,VC125,Terra Financial & Management Services SA,Eric SARASIN,performance_fee,200.0,2.0,0.0,,NO_CANDIDATES,0,
+504,delete,VC125,Pierre Paumier,LF GROUP SARL,invested_amount,200.0,2.0,2000.0,,NO_CANDIDATES,0,
+526,update,VC126,Setcap,BSV SPV III LLC,performance_fee,0.0,0.0,0.0,USD,NO_CANDIDATES,0,
+527,update,VC126,Setcap,BSV SPV III LLC,spread,290.0,2.9,31030.0,USD,NO_CANDIDATES,0,
+531,update,VC126,Daniel Baumslag,CLOUDSAFE HOLDINGS LIMITED,spread,113.75,13.75,12210.0,USD,AMBIGUOUS_RELAXED_INVESTOR,2,"6f6c330a-c5fe-419a-8178-37069b41a853,8299c507-674d-4b2d-b5fa-8eaa1e65426a"
+554,update,VC133,Setcap,778 WALNUT LLC,spread,8500.0,85.0,2805.0,USD,NO_CANDIDATES,0,
+572,delete,VC133,Altras Capital Financing Broker,Tuygan GOKER,spread,0.0,0.0,0.0,USD,AMBIGUOUS,2,"3b53813f-08e3-4b1c-afbe-0f6deab771ee,9b24e8ad-9999-401d-be22-5fdd2c97ba8c"
+573,delete,VC133,Altras Capital Financing Broker,Tuygan GOKER,spread,0.0,0.0,0.0,USD,AMBIGUOUS,2,"3b53813f-08e3-4b1c-afbe-0f6deab771ee,9b24e8ad-9999-401d-be22-5fdd2c97ba8c"

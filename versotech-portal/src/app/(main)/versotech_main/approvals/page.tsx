@@ -125,7 +125,7 @@ export default async function ApprovalsPage() {
   return (
     <div className="p-6 space-y-8">
       {/* Header */}
-      <div className="border-b border-gray-800 pb-6">
+      <div className="border-b border-border pb-6">
         <h1 className="text-3xl font-bold text-foreground">Approval Queue</h1>
         <p className="text-lg text-muted-foreground mt-1">
           Review and approve investor commitments and allocations

@@ -1,0 +1,557 @@
+{
+  "project": "Versotech User Guides",
+  "branchName": "ralph/user-guides-documentation",
+  "description": "Comprehensive user guides for Versotech platform - 33 stories across 8 personas, each section is a separate focused story",
+  "outputDirectory": "VERSO/User Guides",
+  "userStories": [
+    {
+      "id": "US-GS-001",
+      "title": "Getting Started - First Login",
+      "description": "As any new user, I need documentation on how to accept my invitation, set my password, and complete initial profile setup.",
+      "acceptanceCriteria": [
+        "Creates VERSO/User Guides/getting-started.md with guide header",
+        "Includes 'Who is this for: All new Versotech users' statement",
+        "Section 1: Your First Login with subsections for invitation, password, first-time login, basic profile",
+        "Prerequisites documented: Must have received invitation email",
+        "Result documented: User can access dashboard",
+        "Maximum 2 screenshot placeholders using [SCREENSHOT: description] format",
+        "Uses process format: Prerequisites → Steps → Result → Notes",
+        "File exists and is valid markdown"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "FOUNDATION - Creates the file. Routes: /dashboard, /profile"
+    },
+    {
+      "id": "US-GS-002",
+      "title": "Getting Started - Understanding Personas",
+      "description": "As any user, I need to understand what personas are, which ones I have, and how switching affects my view.",
+      "acceptanceCriteria": [
+        "Adds Section 2 to getting-started.md: Understanding Your Persona",
+        "Covers: what personas are, how to check which you have, how to switch, what changes",
+        "Explains common persona combinations (e.g., investor + introducer)",
+        "Maximum 2 screenshot placeholders (persona switcher, different dashboard views)",
+        "Warning note: Some actions only available in specific persona",
+        "File updated successfully"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Depends on US-GS-001. Persona switcher in layout.tsx"
+    },
+    {
+      "id": "US-GS-003",
+      "title": "Getting Started - Platform Navigation",
+      "description": "As any user, I need to understand the core navigation elements that exist across all personas.",
+      "acceptanceCriteria": [
+        "Adds Section 3 to getting-started.md: Navigating the Platform",
+        "Covers: dashboard overview, notifications center, inbox/messages, finding help",
+        "Maximum 2 screenshot placeholders (dashboard layout, notifications)",
+        "Tip: How to return to dashboard from anywhere",
+        "File updated successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Depends on US-GS-002. Routes: /dashboard, /notifications, /inbox, /messages"
+    },
+    {
+      "id": "US-GS-004",
+      "title": "Getting Started - VersSign Basics",
+      "description": "As any user, I need to understand how to complete signature requests since all personas sign documents.",
+      "acceptanceCriteria": [
+        "Adds Section 4 to getting-started.md: Signing Documents (VersSign)",
+        "Covers: how requests arrive (email + in-app), finding pending signatures, completing signature, multi-signatory workflows, what happens after",
+        "Maximum 2 screenshot placeholders (VersSign task list, signing interface)",
+        "Warning: Multi-signatory requires ALL signatures before proceeding",
+        "Cross-reference note: Each persona guide will reference this section",
+        "File updated successfully"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "Depends on US-GS-003. Route: /versosign"
+    },
+    {
+      "id": "US-INV-001",
+      "title": "Investor - Profile & KYC Setup",
+      "description": "As an investor, I need to complete my profile and KYC requirements before I can subscribe to deals.",
+      "acceptanceCriteria": [
+        "Creates VERSO/User Guides/investor-guide.md with guide header",
+        "Includes 'Who is this for: Users with investor persona' statement",
+        "Section 1: Setting Up Your Investor Profile",
+        "Covers: profile info, KYC requirements, document upload, accreditation status, KYC review status",
+        "Prerequisites: Must have investor persona assigned",
+        "Result: Profile complete, KYC submitted for review",
+        "Maximum 3 screenshot placeholders (profile page, document upload, KYC status)",
+        "Warning: Cannot subscribe until KYC approved",
+        "File exists and is valid markdown"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": "Creates investor guide. Routes: /profile, /kyc-compliance"
+    },
+    {
+      "id": "US-INV-002",
+      "title": "Investor - Exploring Opportunities",
+      "description": "As an investor, I need to browse and evaluate investment opportunities before deciding to invest.",
+      "acceptanceCriteria": [
+        "Adds Section 2 to investor-guide.md: Exploring Investment Opportunities",
+        "Covers: accessing opportunities list, understanding deal cards, viewing details (terms, docs, timeline), expressing interest vs committing, deal membership",
+        "Maximum 3 screenshot placeholders (opportunities list, deal detail page)",
+        "Tip: How to filter/sort opportunities",
+        "Note: You only see deals you've been introduced to or invited to",
+        "File updated successfully"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": "Depends on US-INV-001. Routes: /opportunities, /opportunities/[id]"
+    },
+    {
+      "id": "US-INV-003",
+      "title": "Investor - Subscription Process",
+      "description": "As an investor, I need to subscribe to a deal, complete required documents, and track my subscription status.",
+      "acceptanceCriteria": [
+        "Adds Section 3 to investor-guide.md: Making an Investment (Subscription Process)",
+        "Covers: prerequisites (KYC approved, deal open), starting subscription, form fields, required documents, submitting",
+        "Documents subscription status lifecycle: Pending → Committed → Funded with explanations",
+        "Maximum 3 screenshot placeholders (subscription form, status tracker)",
+        "Uses terminology: Subscribe not Invest, Funded not Closed",
+        "Cross-reference: Getting Started guide for VersSign",
+        "Warning: Subscription requires signature to complete",
+        "File updated successfully"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "Depends on US-INV-002. Routes: /opportunities/[id], /subscriptions"
+    },
+    {
+      "id": "US-INV-004",
+      "title": "Investor - Portfolio Management",
+      "description": "As an investor, I need to view my holdings, track performance, and access investment documents.",
+      "acceptanceCriteria": [
+        "Adds Section 4 to investor-guide.md: Managing Your Portfolio",
+        "Covers: portfolio dashboard, understanding positions (units, cost basis, NAV), position details, performance, documents, vehicle summary",
+        "Maximum 3 screenshot placeholders (portfolio dashboard, position detail)",
+        "Uses terminology: Position not Holdings",
+        "Tip: How to download statements/documents",
+        "File updated successfully"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": "Depends on US-INV-003. Routes: /portfolio, /subscriptions/vehicle-summary"
+    },
+    {
+      "id": "US-INT-001",
+      "title": "Introducer - Profile & Agreements",
+      "description": "As an introducer, I need to set up my profile and understand/sign my fee agreement.",
+      "acceptanceCriteria": [
+        "Creates VERSO/User Guides/introducer-guide.md with guide header",
+        "Includes 'Who is this for: Users with introducer persona' statement",
+        "Section 1: Your Introducer Profile & Agreements",
+        "Covers: accessing profile, required info, understanding fee agreement, reviewing terms, signing via VersSign, agreement status",
+        "Prerequisites: Must have introducer persona assigned",
+        "Maximum 2 screenshot placeholders (profile page, agreement view)",
+        "Cross-reference: Getting Started for VersSign",
+        "Warning: Must sign agreement before earning commissions",
+        "File exists and is valid markdown"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": "Creates introducer guide. Routes: /introducer-profile, /introduction-agreements"
+    },
+    {
+      "id": "US-INT-002",
+      "title": "Introducer - Making Introductions",
+      "description": "As an introducer, I need to introduce investors to deals and track my introduction pipeline.",
+      "acceptanceCriteria": [
+        "Adds Section 2 to introducer-guide.md: Making Introductions",
+        "Covers: what an introduction is, how to create one, required info, tracking pipeline",
+        "Documents introduction statuses: Pending, Active, Converted, Expired/Cancelled with explanations",
+        "Explains when introductions convert to commissions (on deal close)",
+        "Maximum 3 screenshot placeholders (introductions list, create introduction, status view)",
+        "Tip: How to check if investor already introduced by someone else",
+        "Note: Commission only created when deal closes AND investor funded",
+        "File updated successfully"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": "Depends on US-INT-001. Route: /introductions"
+    },
+    {
+      "id": "US-INT-003",
+      "title": "Introducer - Commission Management",
+      "description": "As an introducer, I need to view my commissions, understand the lifecycle, and submit invoices for payment.",
+      "acceptanceCriteria": [
+        "Adds Section 3 to introducer-guide.md: Managing Your Commissions",
+        "Covers: accessing My Commissions, commission calculation (based on funded_amount)",
+        "Documents FULL commission lifecycle: Accrued → Invoice Requested → Invoice Submitted → Invoiced → Paid with explanations for each",
+        "Documents invoice submission: prerequisites, details required, uploading, confirmation",
+        "Covers: tracking payment status, reconciliation view",
+        "Maximum 3 screenshot placeholders (commissions list, invoice submission form)",
+        "Uses terminology: Accrued not Earned",
+        "Warning: Cannot submit invoice until status is Invoice Requested",
+        "File updated successfully"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": "Depends on US-INT-002. Routes: /my-commissions, /introducer-reconciliation"
+    },
+    {
+      "id": "US-PAR-001",
+      "title": "Partner - Profile Setup",
+      "description": "As a partner, I need to set up my partner profile and understand my role.",
+      "acceptanceCriteria": [
+        "Creates VERSO/User Guides/partner-guide.md with guide header",
+        "Includes 'Who is this for: Users with partner persona' statement",
+        "Section 1: Your Partner Profile",
+        "Covers: accessing profile, required info, understanding partner role (referral-based, different from introducer), profile completion",
+        "Prerequisites: Must have partner persona assigned",
+        "Maximum 2 screenshot placeholders (partner profile)",
+        "Note: Explains difference from introducer role",
+        "File exists and is valid markdown"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": "Creates partner guide. Route: /partner-profile"
+    },
+    {
+      "id": "US-PAR-002",
+      "title": "Partner - Referring Investors",
+      "description": "As a partner, I need to refer investors to opportunities and track my referrals.",
+      "acceptanceCriteria": [
+        "Adds Section 2 to partner-guide.md: Referring Investors to Opportunities",
+        "Covers: viewing opportunities, how referral tracking works, making a referral, monitoring pipeline, conversion tracking",
+        "Maximum 2 screenshot placeholders (opportunities with referral indicator)",
+        "Explains how this differs from introducer introductions",
+        "File updated successfully"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": "Depends on US-PAR-001. Route: /opportunities"
+    },
+    {
+      "id": "US-PAR-003",
+      "title": "Partner - Commissions & Transactions",
+      "description": "As a partner, I need to track my commissions and view my transaction history.",
+      "acceptanceCriteria": [
+        "Adds Section 3 to partner-guide.md: Tracking Commissions & Transactions",
+        "Covers: accessing My Commissions, viewing earnings, commission lifecycle (accrued → paid), transaction history, submitting invoices",
+        "Maximum 2 screenshot placeholders (transactions page, commissions)",
+        "Cross-reference: Introducer guide for detailed commission lifecycle",
+        "File updated successfully"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": "Depends on US-PAR-002. Routes: /my-commissions, /partner-transactions"
+    },
+    {
+      "id": "US-CP-001",
+      "title": "Commercial Partner - Profile Setup",
+      "description": "As a commercial partner, I need to set up my profile and understand my role.",
+      "acceptanceCriteria": [
+        "Creates VERSO/User Guides/commercial-partner-guide.md with guide header",
+        "Includes 'Who is this for: Users with commercial_partner persona' statement",
+        "Section 1: Your Commercial Partner Profile",
+        "Covers: accessing profile, required info, understanding CP role (placement-based), profile completion",
+        "Prerequisites: Must have commercial_partner persona assigned",
+        "Maximum 2 screenshot placeholders (CP profile)",
+        "File exists and is valid markdown"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": "Creates CP guide. Route: /commercial-partner-profile"
+    },
+    {
+      "id": "US-CP-002",
+      "title": "Commercial Partner - Placement Agreements",
+      "description": "As a commercial partner, I need to understand, review, and sign my placement agreements.",
+      "acceptanceCriteria": [
+        "Adds Section 2 to commercial-partner-guide.md: Placement Agreements",
+        "Covers: what placement agreements are, accessing them, reviewing terms, signing via VersSign, agreement statuses, viewing signed",
+        "Maximum 2 screenshot placeholders (placement agreement detail)",
+        "Cross-reference: Getting Started for VersSign",
+        "Warning: Must sign agreement before earning commissions",
+        "File updated successfully"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": "Depends on US-CP-001. Route: /placement-agreements"
+    },
+    {
+      "id": "US-CP-003",
+      "title": "Commercial Partner - Tracking Earnings",
+      "description": "As a commercial partner, I need to track my commissions and submit invoices.",
+      "acceptanceCriteria": [
+        "Adds Section 3 to commercial-partner-guide.md: Tracking Your Earnings",
+        "Covers: accessing My Commissions, CP commission structure, viewing accrued, commission lifecycle, invoice submission, payment tracking",
+        "Maximum 2 screenshot placeholders (commissions - CP view)",
+        "Explains how CP commissions differ from introducer/partner commissions",
+        "File updated successfully"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": "Depends on US-CP-002. Route: /my-commissions"
+    },
+    {
+      "id": "US-ARR-001",
+      "title": "Arranger - Profile & Capabilities",
+      "description": "As an arranger, I need to set up my profile and understand my capabilities.",
+      "acceptanceCriteria": [
+        "Creates VERSO/User Guides/arranger-guide.md with guide header",
+        "Includes 'Who is this for: Users with arranger persona' statement",
+        "Section 1: Your Arranger Profile & Setup",
+        "Covers: accessing profile, required info, capabilities overview (create deals, fee plans, manage network, close deals), profile completion",
+        "Prerequisites: Must have arranger persona assigned",
+        "Maximum 2 screenshot placeholders (arranger profile)",
+        "File exists and is valid markdown"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": "Creates arranger guide. Route: /arranger-profile"
+    },
+    {
+      "id": "US-ARR-002",
+      "title": "Arranger - Creating Deals",
+      "description": "As an arranger, I need to create new deals with all required information.",
+      "acceptanceCriteria": [
+        "Adds Section 2A to arranger-guide.md: Creating a New Deal",
+        "Covers: accessing /deals/new, required info (name, description, vehicle, terms, timeline), uploading documents, setting draft status, submitting",
+        "Prerequisites: None (arranger can always create)",
+        "Result: Deal created in draft status",
+        "Maximum 3 screenshot placeholders (new deal form key sections)",
+        "Warning: Deal must have vehicle assigned",
+        "File updated successfully"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": "Depends on US-ARR-001. Route: /deals/new"
+    },
+    {
+      "id": "US-ARR-003",
+      "title": "Arranger - Managing Deal Lifecycle",
+      "description": "As an arranger, I need to manage deals through their lifecycle from draft to closed.",
+      "acceptanceCriteria": [
+        "Adds Section 2B to arranger-guide.md: Managing Deal Lifecycle",
+        "Covers: viewing deals list, deal statuses (Draft, Active, Closing, Closed with explanations), editing details, updating status, managing members, viewing subscriptions",
+        "Maximum 2 screenshot placeholders (deal management page)",
+        "Warning: Changing to Active makes deal visible to assigned investors",
+        "File updated successfully"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": "Depends on US-ARR-002. Routes: /deals, /deals/[id]"
+    },
+    {
+      "id": "US-ARR-004",
+      "title": "Arranger - Fee Plans",
+      "description": "As an arranger, I need to create and send fee plans to partners, introducers, and commercial partners.",
+      "acceptanceCriteria": [
+        "Adds Section 3 to arranger-guide.md: Fee Plans & Commercial Agreements",
+        "CRITICAL: Emphasizes fee plans are deal-specific NOT templates",
+        "Covers: understanding fee plans, creating (select deal, define structure, assign recipients), sending, tracking acknowledgment",
+        "Prerequisites: Must have a deal created first",
+        "Maximum 2 screenshot placeholders (fee plan creation)",
+        "Warning block: Fee plans are deal-specific agreements, not templates",
+        "File updated successfully"
+      ],
+      "priority": 21,
+      "passes": false,
+      "notes": "Depends on US-ARR-003. Route: /fee-plans. CRITICAL: fee plans are deal-specific per CLAUDE.md"
+    },
+    {
+      "id": "US-ARR-005",
+      "title": "Arranger - Managing Network",
+      "description": "As an arranger, I need to manage my network of introducers, partners, commercial partners, and lawyers.",
+      "acceptanceCriteria": [
+        "Adds Section 4 to arranger-guide.md: Managing Your Network",
+        "Covers My Introducers: viewing, adding, details",
+        "Covers My Partners: viewing, adding",
+        "Covers My Commercial Partners: viewing, adding",
+        "Covers My Lawyers: viewing, assigning to deals",
+        "Maximum 3 screenshot placeholders (consolidated network view)",
+        "Note: These are YOUR network - people you work with",
+        "File updated successfully"
+      ],
+      "priority": 22,
+      "passes": false,
+      "notes": "Depends on US-ARR-004. Routes: /my-introducers, /my-partners, /my-commercial-partners, /my-lawyers"
+    },
+    {
+      "id": "US-ARR-006",
+      "title": "Arranger - Closing Deals",
+      "description": "As an arranger, I need to close deals which triggers commission creation.",
+      "acceptanceCriteria": [
+        "Adds Section 5 to arranger-guide.md: Closing a Deal",
+        "Covers prerequisites: all subscriptions final, approvals complete, fee plans in place",
+        "Covers close process: initiating, confirmations, execution",
+        "Documents what happens on close: subscriptions finalized, COMMISSIONS CREATED, deal marked closed",
+        "Covers escrow management if applicable",
+        "Maximum 2 screenshot placeholders (deal close confirmation)",
+        "CRITICAL Note: Closing deal CREATES commissions - this is when they become accrued",
+        "File updated successfully"
+      ],
+      "priority": 23,
+      "passes": false,
+      "notes": "Depends on US-ARR-005. Route: /deals/[id]. Commission creation in deal-close-handler.ts"
+    },
+    {
+      "id": "US-LAW-001",
+      "title": "Lawyer - Profile & Deal Access",
+      "description": "As a lawyer, I need to set up my profile and understand how I get assigned to deals.",
+      "acceptanceCriteria": [
+        "Creates VERSO/User Guides/lawyer-guide.md with guide header",
+        "Includes 'Who is this for: Users with lawyer persona' statement",
+        "Section 1: Your Lawyer Profile & Deal Access",
+        "Covers: accessing profile, required info, how deal assignment works (arranger assigns), what lawyers can see vs others, viewing assigned deals",
+        "Prerequisites: Must have lawyer persona assigned",
+        "Maximum 2 screenshot placeholders (lawyer dashboard)",
+        "Note: Limited access compared to arrangers - focused on document review",
+        "File exists and is valid markdown"
+      ],
+      "priority": 24,
+      "passes": false,
+      "notes": "Creates lawyer guide. Route: /lawyer-profile"
+    },
+    {
+      "id": "US-LAW-002",
+      "title": "Lawyer - Document Signing",
+      "description": "As a lawyer, I need to review and sign subscription documents.",
+      "acceptanceCriteria": [
+        "Adds Section 2 to lawyer-guide.md: Reviewing & Signing Documents",
+        "Covers: accessing subscription packs, VersSign for lawyers (finding tasks, subscription_pack_signature type, reviewing, completing)",
+        "Covers: signature workflow timing, reconciliation view",
+        "Maximum 2 screenshot placeholders (VersSign task list, signing interface)",
+        "Cross-reference: Getting Started for VersSign basics",
+        "Note: Your signature may be required before or after investor signs",
+        "File updated successfully"
+      ],
+      "priority": 25,
+      "passes": false,
+      "notes": "Depends on US-LAW-001. Routes: /versosign, /lawyer-reconciliation"
+    },
+    {
+      "id": "US-CEO-001",
+      "title": "CEO/Staff - Dashboard Overview",
+      "description": "As a CEO or staff member, I need to understand the executive dashboard and platform monitoring.",
+      "acceptanceCriteria": [
+        "Creates VERSO/User Guides/ceo-staff-guide.md with guide header",
+        "Includes 'Who is this for: Users with ceo or staff persona' statement",
+        "Section 1: Dashboard & Platform Overview",
+        "Covers: executive metrics, deal pipeline (ALL deals not just memberships), subscription aggregates, workflow monitoring, KPIs",
+        "Prerequisites: Must have ceo or staff persona assigned",
+        "Maximum 3 screenshot placeholders (CEO dashboard)",
+        "Note: CEO/Staff see ALL deals via service client, not membership-filtered",
+        "File exists and is valid markdown"
+      ],
+      "priority": 26,
+      "passes": false,
+      "notes": "Creates CEO guide. Route: /admin, /dashboard"
+    },
+    {
+      "id": "US-CEO-002",
+      "title": "CEO/Staff - Subscription Approvals",
+      "description": "As a CEO or staff member, I need to review and approve subscription requests.",
+      "acceptanceCriteria": [
+        "Adds Section 2A to ceo-staff-guide.md: Subscription Approvals",
+        "Covers: accessing /approvals, reviewing requests (investor details, amount, documents)",
+        "Documents approval actions: Approve (→ committed), Request Changes (→ revision), Reject (→ declined)",
+        "Covers: bulk actions if available, status after approval",
+        "Maximum 2 screenshot placeholders (approvals queue)",
+        "File updated successfully"
+      ],
+      "priority": 27,
+      "passes": false,
+      "notes": "Depends on US-CEO-001. Route: /approvals"
+    },
+    {
+      "id": "US-CEO-003",
+      "title": "CEO/Staff - KYC Review",
+      "description": "As a CEO or staff member, I need to review and approve KYC documents.",
+      "acceptanceCriteria": [
+        "Adds Section 2B to ceo-staff-guide.md: KYC Approvals",
+        "Covers: accessing /kyc-review, reviewing submissions (document verification, identity, accreditation)",
+        "Documents approval actions: Approve, Request Additional Documents, Reject",
+        "Covers: KYC status after action",
+        "Maximum 2 screenshot placeholders (KYC review interface)",
+        "Warning: Investor cannot subscribe until KYC approved",
+        "File updated successfully"
+      ],
+      "priority": 28,
+      "passes": false,
+      "notes": "Depends on US-CEO-002. Route: /kyc-review"
+    },
+    {
+      "id": "US-CEO-004",
+      "title": "CEO/Staff - Request Management",
+      "description": "As a CEO or staff member, I need to manage the general request queue.",
+      "acceptanceCriteria": [
+        "Adds Section 2C to ceo-staff-guide.md: Request Queue Management",
+        "Covers: accessing /requests, types of requests, prioritization, processing, analytics",
+        "Maximum 1 screenshot placeholder",
+        "File updated successfully"
+      ],
+      "priority": 29,
+      "passes": false,
+      "notes": "Depends on US-CEO-003. Route: /requests"
+    },
+    {
+      "id": "US-CEO-005",
+      "title": "CEO/Staff - Deal Oversight",
+      "description": "As a CEO or staff member, I need to oversee all deals and intervene when needed.",
+      "acceptanceCriteria": [
+        "Adds Section 3 to ceo-staff-guide.md: Deal Oversight",
+        "Covers: viewing ALL deals (not just memberships), intervention capabilities (editing, status changes, managing subscriptions)",
+        "Covers: deal close oversight, termsheet approval (CEO approval for termsheet requests)",
+        "Maximum 2 screenshot placeholders (deals list admin view)",
+        "Note: CEO sees everything, can override normal access",
+        "File updated successfully"
+      ],
+      "priority": 30,
+      "passes": false,
+      "notes": "Depends on US-CEO-004. Route: /deals"
+    },
+    {
+      "id": "US-CEO-006",
+      "title": "CEO/Staff - User & Entity Management",
+      "description": "As a CEO or staff member, I need to manage users and entities across the platform.",
+      "acceptanceCriteria": [
+        "Adds Section 4 to ceo-staff-guide.md: User & Entity Management",
+        "Covers managing users: viewing all, user details, assigning personas, deactivating",
+        "Covers managing entities: viewing all, entity details, members, types",
+        "Maximum 2 screenshot placeholders (user management)",
+        "File updated successfully"
+      ],
+      "priority": 31,
+      "passes": false,
+      "notes": "Depends on US-CEO-005. Routes: /users, /entities"
+    },
+    {
+      "id": "US-CEO-007",
+      "title": "CEO/Staff - Reconciliation",
+      "description": "As a CEO or staff member, I need to run reconciliation reports and track payments.",
+      "acceptanceCriteria": [
+        "Adds Section 5 to ceo-staff-guide.md: Reconciliation & Reporting",
+        "Covers: general reconciliation dashboard, commission reconciliation (introducer, partner, CP), payment tracking, export/reporting",
+        "Maximum 2 screenshot placeholders (reconciliation dashboard)",
+        "File updated successfully"
+      ],
+      "priority": 32,
+      "passes": false,
+      "notes": "Depends on US-CEO-006. Route: /reconciliation"
+    },
+    {
+      "id": "US-CEO-008",
+      "title": "CEO/Staff - Audit & Compliance",
+      "description": "As a CEO or staff member, I need to access audit logs and monitor compliance.",
+      "acceptanceCriteria": [
+        "Adds Section 6 to ceo-staff-guide.md: Audit & Compliance",
+        "Covers: accessing /audit, understanding logged actions (what gets logged, format, timestamps, attribution)",
+        "Covers: searching/filtering logs, compliance monitoring, common audit queries",
+        "Maximum 2 screenshot placeholders (audit log view)",
+        "Note: All mutations are logged per CLAUDE.md requirement",
+        "File updated successfully"
+      ],
+      "priority": 33,
+      "passes": false,
+      "notes": "Depends on US-CEO-007. Route: /audit. References audit.ts"
+    }
+  ]
+}

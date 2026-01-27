@@ -34,7 +34,7 @@ const getFolderStyle = (folderName: string) => {
     return { icon: 'text-violet-600', accent: 'border-l-violet-500' }
   if (name.includes('marketing') || name.includes('presentation'))
     return { icon: 'text-amber-600', accent: 'border-l-amber-500' }
-  return { icon: 'text-slate-600', accent: 'border-l-slate-400' }
+  return { icon: 'text-muted-foreground', accent: 'border-l-primary/40' }
 }
 
 export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGroupedProps) {
@@ -156,13 +156,13 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
       case 'gif':
         return <FileText className="h-4 w-4 text-purple-500" />
       default:
-        return <FileText className="h-4 w-4 text-slate-500" />
+        return <FileText className="h-4 w-4 text-muted-foreground" />
     }
   }
 
   if (documents.length === 0) {
     return (
-      <div className="text-center py-8 text-sm text-slate-500">
+      <div className="text-center py-8 text-sm text-muted-foreground">
         No documents available yet
       </div>
     )
@@ -189,10 +189,10 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <FileText className="h-5 w-5 text-amber-600 flex-shrink-0" />
                   <div className="min-w-0">
-                    <span className="text-sm font-medium text-slate-900 block truncate">
+                    <span className="text-sm font-medium text-foreground block truncate">
                       {doc.file_name || 'Untitled'}
                     </span>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-muted-foreground">
                       {new Date(doc.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </span>
                   </div>
@@ -246,27 +246,27 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
         return (
           <div
             key={folder}
-            className={`bg-white border border-slate-200/80 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden ${isExpanded ? 'border-l-2 ' + style.accent : ''}`}
+            className={`bg-card border border-border rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden ${isExpanded ? 'border-l-2 ' + style.accent : ''}`}
           >
             {/* Folder header */}
             <button
               onClick={() => toggleFolder(folder)}
-              className={`w-full px-5 py-4 flex items-center justify-between transition-all duration-200 ${isExpanded ? 'bg-slate-50/70' : 'hover:bg-slate-50/50'}`}
+              className={`w-full px-5 py-4 flex items-center justify-between transition-all duration-200 ${isExpanded ? 'bg-muted/70' : 'hover:bg-muted/50'}`}
             >
               <div className="flex items-center gap-2">
                 {isExpanded ? (
                   <>
-                    <ChevronDown className="h-4 w-4 text-slate-400" />
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
                     <FolderOpen className={`h-5 w-5 ${style.icon}`} />
                   </>
                 ) : (
                   <>
-                    <ChevronRight className="h-4 w-4 text-slate-400" />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     <Folder className={`h-5 w-5 ${style.icon}`} />
                   </>
                 )}
-                <span className="font-medium text-sm text-slate-900">{folder}</span>
-                <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                <span className="font-medium text-sm text-foreground">{folder}</span>
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                   {folderDocs.length} {folderDocs.length === 1 ? 'item' : 'items'}
                 </span>
               </div>
@@ -274,19 +274,19 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
 
             {/* Documents in folder */}
             {isExpanded && (
-              <div className="bg-white divide-y divide-slate-100">
+              <div className="bg-card divide-y divide-border">
                 {folderDocs.map(doc => (
                   <div
                     key={doc.id}
-                    className="px-5 py-3.5 flex items-center justify-between hover:bg-slate-50/50 transition-all duration-150 border-l-2 border-transparent hover:border-l-blue-400"
+                    className="px-5 py-3.5 flex items-center justify-between hover:bg-muted/50 transition-all duration-150 border-l-2 border-transparent hover:border-l-blue-400"
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       {getFileIcon(doc.file_name || '')}
                       <div className="min-w-0 flex-1">
-                        <span className="text-sm font-medium text-slate-900 block truncate">
+                        <span className="text-sm font-medium text-foreground block truncate">
                           {doc.file_name || 'Untitled'}
                         </span>
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-muted-foreground">
                           {new Date(doc.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </span>
                       </div>
@@ -297,7 +297,7 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
                           onClick={() => handlePreview(doc)}
                           variant="ghost"
                           size="sm"
-                          className="text-slate-600 hover:text-blue-600 hover:bg-blue-50/50"
+                          className="text-muted-foreground hover:text-blue-600 hover:bg-primary/10"
                         >
                           <Eye className="h-4 w-4 mr-1.5" />
                           Preview

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { AlertTriangle, ArrowDown, CheckCircle2, TrendingDown } from 'lucide-react'
+import { AlertTriangle, ArrowDown, CheckCircle2, BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface BiggestDropoff {
@@ -47,7 +47,7 @@ export function DropoffAnalysis({ data }: DropoffAnalysisProps) {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
-            <TrendingDown className="h-5 w-5 text-muted-foreground" />
+            <BarChart3 className="h-5 w-5 text-muted-foreground" />
             Drop-off Analysis
           </CardTitle>
         </CardHeader>
@@ -65,7 +65,7 @@ export function DropoffAnalysis({ data }: DropoffAnalysisProps) {
       <Card className="border-destructive/50">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-destructive">
-            <TrendingDown className="h-5 w-5" />
+            <BarChart3 className="h-5 w-5" />
             Drop-off Analysis
           </CardTitle>
         </CardHeader>
@@ -82,7 +82,7 @@ export function DropoffAnalysis({ data }: DropoffAnalysisProps) {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
-            <TrendingDown className="h-5 w-5 text-emerald-500" />
+            <BarChart3 className="h-5 w-5 text-emerald-500" />
             Drop-off Analysis
           </CardTitle>
           <CardDescription>

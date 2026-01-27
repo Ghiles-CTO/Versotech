@@ -43,7 +43,7 @@ function YesNoQuestion({
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem className="p-4 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors">
+        <FormItem className="p-4 rounded-lg border border-border hover:border-muted-foreground/50 transition-colors">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <FormLabel className="text-base font-medium">{label}</FormLabel>
@@ -66,7 +66,7 @@ function YesNoQuestion({
                         ? value === 'yes'
                           ? 'bg-emerald-500 text-white'
                           : 'bg-red-500 text-white'
-                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     )}
                   >
                     <RadioGroupItem value={value} className="sr-only" />
@@ -155,7 +155,7 @@ export function Step6OfferDetails() {
                               'flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all',
                               field.value === option.value
                                 ? 'border-emerald-500 bg-emerald-500/10'
-                                : 'border-slate-700 hover:border-slate-600'
+                                : 'border-border hover:border-muted-foreground/50'
                             )}
                           >
                             <RadioGroupItem value={option.value} className="sr-only" />
@@ -164,7 +164,7 @@ export function Step6OfferDetails() {
                                 'p-2 rounded-lg',
                                 field.value === option.value
                                   ? 'bg-emerald-500 text-white'
-                                  : 'bg-slate-800 text-slate-400'
+                                  : 'bg-muted text-muted-foreground'
                               )}
                             >
                               <Icon className="h-4 w-4" />

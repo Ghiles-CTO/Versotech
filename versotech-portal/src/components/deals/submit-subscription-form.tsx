@@ -149,14 +149,14 @@ export function SubmitSubscriptionForm({ dealId, currency, existingSubmission }:
       : 'Recently'
 
     return (
-      <Card className="border border-amber-200 bg-amber-50">
-        <CardContent className="py-4 text-sm text-gray-600 space-y-2">
-          <div className="flex items-center gap-2 text-amber-700">
+      <Card className="border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20">
+        <CardContent className="py-4 text-sm text-muted-foreground space-y-2">
+          <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
             <Loader2 className="h-4 w-4 animate-spin" />
             Subscription under review
           </div>
           <p>Submitted on {submittedAt}. The VERSO team is reviewing your request.</p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             You&apos;ll be notified once a decision is made. Contact your relationship manager if you need to make urgent changes.
           </p>
         </CardContent>
@@ -180,22 +180,22 @@ export function SubmitSubscriptionForm({ dealId, currency, existingSubmission }:
     <form onSubmit={handleSubmit} className="space-y-5">
       {/* Deal Capacity Display */}
       {!loadingCapacity && dealCapacity && dealCapacity.target_raise && (
-        <Card className={isOversubscribed ? "border-orange-200 bg-orange-50" : "border-blue-200 bg-blue-50"}>
+        <Card className={isOversubscribed ? "border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20" : "border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20"}>
           <CardContent className="pt-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Deal Progress</span>
-                <span className="text-sm font-bold text-gray-900">
+                <span className="text-sm font-medium text-foreground">Deal Progress</span>
+                <span className="text-sm font-bold text-foreground">
                   {subscriptionPercentage.toFixed(1)}% subscribed
                 </span>
               </div>
 
               <Progress
                 value={Math.min(subscriptionPercentage, 100)}
-                className={isOversubscribed ? "bg-orange-200" : "bg-blue-200"}
+                className={isOversubscribed ? "bg-orange-200 dark:bg-orange-800" : "bg-blue-200 dark:bg-blue-800"}
               />
 
-              <div className="flex justify-between text-xs text-gray-600">
+              <div className="flex justify-between text-xs text-muted-foreground">
                 <span>{formatAmount(dealCapacity.total_subscribed)} committed</span>
                 <span>Target: {formatAmount(dealCapacity.target_raise)}</span>
               </div>
@@ -211,7 +211,7 @@ export function SubmitSubscriptionForm({ dealId, currency, existingSubmission }:
               )}
 
               {dealCapacity.min_ticket && dealCapacity.max_ticket && (
-                <div className="text-xs text-gray-600 pt-1 border-t">
+                <div className="text-xs text-muted-foreground pt-1 border-t border-border">
                   Investment range: {formatAmount(dealCapacity.min_ticket)} - {formatAmount(dealCapacity.max_ticket)}
                 </div>
               )}
@@ -237,7 +237,7 @@ export function SubmitSubscriptionForm({ dealId, currency, existingSubmission }:
           value={amount}
           onChange={event => setAmount(event.target.value)}
           placeholder="e.g. 250000"
-          className="text-black text-lg h-12"
+          className="text-foreground text-lg h-12"
         />
 
         {/* Amount validation warnings */}
@@ -253,14 +253,14 @@ export function SubmitSubscriptionForm({ dealId, currency, existingSubmission }:
 
       <div className="space-y-2">
         <Label className="text-base font-semibold">Bank & Compliance</Label>
-        <div className="flex items-start space-x-3 rounded-md border-2 border-gray-300 px-4 py-3 bg-gray-50">
+        <div className="flex items-start space-x-3 rounded-md border-2 border-border px-4 py-3 bg-muted">
           <Checkbox
             id={`bank-confirmation-${dealId}`}
             checked={bankConfirmation}
             onCheckedChange={checked => setBankConfirmation(Boolean(checked))}
             className="mt-0.5"
           />
-          <Label htmlFor={`bank-confirmation-${dealId}`} className="text-sm text-black font-normal cursor-pointer leading-relaxed">
+          <Label htmlFor={`bank-confirmation-${dealId}`} className="text-sm text-foreground font-normal cursor-pointer leading-relaxed">
             I confirm my bank/KYC documentation is ready for the subscription pack.
           </Label>
         </div>
@@ -274,7 +274,7 @@ export function SubmitSubscriptionForm({ dealId, currency, existingSubmission }:
           onChange={event => setNotes(event.target.value)}
           rows={3}
           placeholder="Share wiring preferences, co-investor details, or other information for the VERSO team."
-          className="text-black"
+          className="text-foreground"
         />
       </div>
 

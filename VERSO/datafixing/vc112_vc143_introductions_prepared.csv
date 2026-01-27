@@ -1,0 +1,4 @@
+vc_code,sheet,row_index,group_label,introducer_raw_name,introducer_name_mapped,introducer_match_status,introducer_id,investor_match_status,investor_match_note,investor_id,deal_id,introduction_match_status,matched_introduction_id,should_insert
+VC112,VC12,16,INTRODUCERS,TERRA,Terra Financial & Management Services SA,MATCH,1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d,MATCH,,5f35adc5-412a-4980-88ce-5d2b6f7fa3fc,c4a16193-8f6b-43e8-b664-caeb46d0de85,MATCH,b4d04063-c708-466d-abef-47981574c564,False
+VC112,VC12,17,INTRODUCERS,TERRA,Terra Financial & Management Services SA,MATCH,1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d,MATCH,,0b1c8fa8-14a1-40fd-bfdd-629ba576a1a7,c4a16193-8f6b-43e8-b664-caeb46d0de85,MATCH,00be726f-53f5-4bfd-8df0-6a0765bf5d0e,False
+VC112,VC12,20,INTRODUCERS,FINSA,FINSA,MATCH,5a765445-bee7-4716-96f6-e2e2ca0329c7,MATCH,,339f94c0-6be8-4590-bbbd-386f6fd30248,c4a16193-8f6b-43e8-b664-caeb46d0de85,MATCH,90967d3a-ad55-4648-aeb9-4955905452f7,False

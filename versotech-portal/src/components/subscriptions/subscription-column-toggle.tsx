@@ -85,7 +85,7 @@ export function SubscriptionColumnToggle({
         <Button
           variant="outline"
           size="sm"
-          className="bg-gray-800 text-white border-gray-700 hover:bg-gray-700"
+          className="bg-muted text-foreground border-border hover:bg-muted/80"
         >
           <Columns3 className="h-4 w-4 mr-2" />
           Columns
@@ -96,21 +96,21 @@ export function SubscriptionColumnToggle({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-64 bg-gray-900 border-gray-700 max-h-96 overflow-y-auto"
+        className="w-64 bg-card border-border max-h-96 overflow-y-auto"
       >
-        <DropdownMenuLabel className="text-white flex items-center justify-between">
+        <DropdownMenuLabel className="text-foreground flex items-center justify-between">
           <span>Manage Columns</span>
-          <span className="text-xs text-gray-400">{visibleCount} visible</span>
+          <span className="text-xs text-muted-foreground">{visibleCount} visible</span>
         </DropdownMenuLabel>
 
-        <DropdownMenuSeparator className="bg-gray-700" />
+        <DropdownMenuSeparator className="bg-border" />
 
         <div className="p-2 space-y-1">
           <Button
             variant="ghost"
             size="sm"
             onClick={showAll}
-            className="w-full justify-start text-xs text-white hover:bg-gray-800"
+            className="w-full justify-start text-xs text-foreground hover:bg-muted"
           >
             <Eye className="h-3 w-3 mr-2" />
             Show All
@@ -119,7 +119,7 @@ export function SubscriptionColumnToggle({
             variant="ghost"
             size="sm"
             onClick={hideAll}
-            className="w-full justify-start text-xs text-white hover:bg-gray-800"
+            className="w-full justify-start text-xs text-foreground hover:bg-muted"
           >
             <EyeOff className="h-3 w-3 mr-2" />
             Hide All
@@ -128,14 +128,14 @@ export function SubscriptionColumnToggle({
             variant="ghost"
             size="sm"
             onClick={resetToDefault}
-            className="w-full justify-start text-xs text-white hover:bg-gray-800"
+            className="w-full justify-start text-xs text-foreground hover:bg-muted"
           >
             <Columns3 className="h-3 w-3 mr-2" />
             Reset to Default
           </Button>
         </div>
 
-        <DropdownMenuSeparator className="bg-gray-700" />
+        <DropdownMenuSeparator className="bg-border" />
 
         <div className="max-h-64 overflow-y-auto scrollbar-hide">
           {columns.map((column) => (
@@ -144,12 +144,12 @@ export function SubscriptionColumnToggle({
               checked={column.visible}
               onCheckedChange={() => toggleColumn(column.id)}
               disabled={column.required}
-              className="text-white hover:bg-gray-800 cursor-pointer"
+              className="text-foreground hover:bg-muted cursor-pointer"
             >
               <div className="flex items-center justify-between w-full">
                 <span>{column.label}</span>
                 {column.required && (
-                  <Badge variant="outline" className="ml-2 text-xs border-gray-600 text-gray-400">
+                  <Badge variant="outline" className="ml-2 text-xs border-border text-muted-foreground">
                     Required
                   </Badge>
                 )}
@@ -158,10 +158,10 @@ export function SubscriptionColumnToggle({
           ))}
         </div>
 
-        <DropdownMenuSeparator className="bg-gray-700" />
+        <DropdownMenuSeparator className="bg-border" />
 
         <div className="p-2">
-          <p className="text-xs text-gray-400 text-center">
+          <p className="text-xs text-muted-foreground text-center">
             Column preferences saved automatically
           </p>
         </div>

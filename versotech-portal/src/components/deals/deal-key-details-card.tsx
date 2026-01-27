@@ -46,9 +46,9 @@ function DetailRow({ item }: { item: DetailItem }) {
   const displayValue = formatValue(item.value)
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50/50 dark:bg-gray-800/50">
-      <div className="p-2 rounded-md bg-white dark:bg-gray-900 shadow-sm">
-        <Icon className="w-4 h-4 text-gray-500" />
+    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+      <div className="p-2 rounded-md bg-card shadow-sm">
+        <Icon className="w-4 h-4 text-muted-foreground" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-xs text-muted-foreground">{item.label}</p>
@@ -133,7 +133,7 @@ export function DealKeyDetailsCard({
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <Info className="h-5 w-5 text-gray-500" />
+          <Info className="h-5 w-5 text-muted-foreground" />
           Key Details
         </CardTitle>
       </CardHeader>

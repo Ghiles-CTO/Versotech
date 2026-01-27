@@ -97,10 +97,10 @@ export function TermSheetSelector({
   if (!dealId) {
     return (
       <div className="space-y-2">
-        <Label className="text-white font-medium">
-          Term Sheet {required && <span className="text-red-400">*</span>}
+        <Label className="text-foreground font-medium">
+          Term Sheet {required && <span className="text-red-500 dark:text-red-400">*</span>}
         </Label>
-        <div className="flex items-center gap-2 text-amber-400 text-sm bg-amber-500/10 p-3 rounded border border-amber-500/30">
+        <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm bg-amber-500/10 p-3 rounded border border-amber-500/30">
           <AlertCircle className="h-4 w-4" />
           <span>Select a deal first to see available term sheets</span>
         </div>
@@ -110,22 +110,22 @@ export function TermSheetSelector({
 
   return (
     <div className="space-y-2">
-      <Label className="text-white font-medium">
-        Term Sheet {required && <span className="text-red-400">*</span>}
+      <Label className="text-foreground font-medium">
+        Term Sheet {required && <span className="text-red-500 dark:text-red-400">*</span>}
       </Label>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-gray-400 h-11 px-3 border border-gray-700 rounded-md bg-black">
+        <div className="flex items-center gap-2 text-muted-foreground h-11 px-3 border border-border rounded-md bg-muted/50">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span className="text-sm">Loading term sheets...</span>
         </div>
       ) : error ? (
-        <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 p-3 rounded border border-red-500/30">
+        <div className="flex items-center gap-2 text-red-500 dark:text-red-400 text-sm bg-red-500/10 p-3 rounded border border-red-500/30">
           <AlertCircle className="h-4 w-4" />
           <span>{error}</span>
         </div>
       ) : termSheets.length === 0 ? (
-        <div className="flex items-center gap-2 text-amber-400 text-sm bg-amber-500/10 p-3 rounded border border-amber-500/30">
+        <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm bg-amber-500/10 p-3 rounded border border-amber-500/30">
           <AlertCircle className="h-4 w-4" />
           <span>No published term sheets available for this deal. Create and publish a term sheet first.</span>
         </div>
@@ -136,20 +136,20 @@ export function TermSheetSelector({
             onValueChange={handleChange}
             disabled={disabled}
           >
-            <SelectTrigger className="bg-black border-gray-700 text-white h-11">
+            <SelectTrigger className="bg-muted/50 border-border text-foreground h-11">
               <SelectValue placeholder="Select a term sheet" />
             </SelectTrigger>
-            <SelectContent className="bg-black border-gray-700 text-white">
+            <SelectContent className="bg-popover border-border">
               {!required && (
                 <SelectItem value="none">No term sheet</SelectItem>
               )}
               {termSheets.map((ts) => (
                 <SelectItem key={ts.id} value={ts.id}>
                   <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-gray-400" />
+                    <FileText className="h-4 w-4 text-muted-foreground" />
                     <span>Version {ts.version}</span>
                     {ts.term_sheet_date && (
-                      <span className="text-gray-400 text-xs">
+                      <span className="text-muted-foreground text-xs">
                         ({new Date(ts.term_sheet_date).toLocaleDateString()})
                       </span>
                     )}
@@ -161,20 +161,20 @@ export function TermSheetSelector({
 
           {/* Show fee summary when a term sheet is selected */}
           {selectedTermSheet && (
-            <div className="bg-gray-900/50 border border-gray-700 rounded-md p-3 mt-2">
-              <p className="text-xs text-gray-400 mb-2 font-medium">Term Sheet Fee Limits:</p>
+            <div className="bg-muted/50 border border-border rounded-md p-3 mt-2">
+              <p className="text-xs text-muted-foreground mb-2 font-medium">Term Sheet Fee Limits:</p>
               <div className="flex flex-wrap gap-2">
-                <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-400">
+                <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-600 dark:text-blue-400">
                   Subscription: {formatFeePercent(selectedTermSheet.subscription_fee_percent)}
                 </Badge>
-                <Badge variant="outline" className="text-xs border-green-500/30 text-green-400">
+                <Badge variant="outline" className="text-xs border-green-500/30 text-green-600 dark:text-green-400">
                   Management: {formatFeePercent(selectedTermSheet.management_fee_percent)}
                 </Badge>
-                <Badge variant="outline" className="text-xs border-purple-500/30 text-purple-400">
+                <Badge variant="outline" className="text-xs border-purple-500/30 text-purple-600 dark:text-purple-400">
                   Performance: {formatFeePercent(selectedTermSheet.carried_interest_percent)}
                 </Badge>
               </div>
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-xs text-muted-foreground mt-2">
                 Fee model values must not exceed these limits.
               </p>
             </div>

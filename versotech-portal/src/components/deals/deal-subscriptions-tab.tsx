@@ -47,19 +47,19 @@ export function DealSubscriptionsTab({ dealId }: DealSubscriptionsTabProps) {
   const [loading, setLoading] = useState(true)
 
   const statusColors: Record<string, string> = {
-    pending_review: 'bg-yellow-500/20 text-yellow-200',
-    approved: 'bg-emerald-500/20 text-emerald-200',
-    rejected: 'bg-red-500/20 text-red-200',
-    pending_signature: 'bg-blue-500/20 text-blue-200',
-    committed: 'bg-green-500/20 text-green-200'
+    pending_review: 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-200',
+    approved: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-200',
+    rejected: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-200',
+    pending_signature: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-200',
+    committed: 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-200'
   }
 
   const packStatusColors: Record<string, string> = {
-    no_pack: 'bg-gray-500/20 text-gray-200',
-    draft: 'bg-purple-500/20 text-purple-200',
-    final: 'bg-cyan-500/20 text-cyan-200',
-    pending_signature: 'bg-amber-500/20 text-amber-200',
-    signed: 'bg-emerald-500/20 text-emerald-200'
+    no_pack: 'bg-muted text-muted-foreground',
+    draft: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-200',
+    final: 'bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-200',
+    pending_signature: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-200',
+    signed: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-200'
   }
 
   const packStatusLabels: Record<string, string> = {
@@ -130,7 +130,7 @@ export function DealSubscriptionsTab({ dealId }: DealSubscriptionsTabProps) {
 
   return (
     <div className="space-y-6">
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border border-border bg-muted/50">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -155,7 +155,7 @@ export function DealSubscriptionsTab({ dealId }: DealSubscriptionsTabProps) {
               {subscriptions.map((subscription) => (
                 <div
                   key={subscription.id}
-                  className="flex items-center justify-between py-4 px-4 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
+                  className="flex items-center justify-between py-4 px-4 rounded-lg border border-border bg-muted/50 hover:bg-muted transition-colors"
                 >
                   <div className="flex items-center gap-4 flex-1">
                     <FileText className="h-5 w-5 text-muted-foreground" />
@@ -201,7 +201,7 @@ export function DealSubscriptionsTab({ dealId }: DealSubscriptionsTabProps) {
         </CardContent>
       </Card>
 
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border border-border bg-muted/50">
         <CardHeader>
           <CardTitle className="text-sm text-foreground">Pack Status Legend</CardTitle>
         </CardHeader>

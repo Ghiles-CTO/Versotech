@@ -64,7 +64,7 @@ function RadioOptionGroup({
             'flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all',
             field.value === option.value
               ? 'border-emerald-500 bg-emerald-500/10'
-              : 'border-slate-700 hover:border-slate-600'
+              : 'border-border hover:border-muted-foreground/50'
           )}
         >
           <RadioGroupItem value={option.value} className="sr-only" />
@@ -372,7 +372,7 @@ export function Step8Suitability() {
                             'px-6 py-2 rounded-lg border cursor-pointer transition-all capitalize',
                             field.value === value
                               ? 'border-emerald-500 bg-emerald-500/10'
-                              : 'border-slate-700 hover:border-slate-600'
+                              : 'border-border hover:border-muted-foreground/50'
                           )}
                         >
                           <RadioGroupItem value={value} className="sr-only" />
@@ -401,7 +401,7 @@ export function Step8Suitability() {
                             'flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all',
                             field.value?.includes(option.value)
                               ? 'border-emerald-500 bg-emerald-500/10'
-                              : 'border-slate-700 hover:border-slate-600'
+                              : 'border-border hover:border-muted-foreground/50'
                           )}
                         >
                           <Checkbox

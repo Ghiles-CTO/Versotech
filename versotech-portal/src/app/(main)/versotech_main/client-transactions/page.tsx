@@ -107,15 +107,15 @@ const JOURNEY_STAGES = [
 ] as const
 
 const STATUS_STYLES: Record<string, string> = {
-  active: 'bg-green-100 text-green-800 border-green-200',
-  pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  approved: 'bg-green-100 text-green-800 border-green-200',
-  funded: 'bg-blue-100 text-blue-800 border-blue-200',
-  signed: 'bg-purple-100 text-purple-800 border-purple-200',
-  committed: 'bg-cyan-100 text-cyan-800 border-cyan-200',
-  cancelled: 'bg-red-100 text-red-800 border-red-200',
-  rejected: 'bg-red-100 text-red-800 border-red-200',
-  withdrawn: 'bg-gray-100 text-gray-800 border-gray-200',
+  active: 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 border-green-200 dark:border-green-700',
+  pending: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700',
+  approved: 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 border-green-200 dark:border-green-700',
+  funded: 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-700',
+  signed: 'bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-700',
+  committed: 'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-800 dark:text-cyan-300 border-cyan-200 dark:border-cyan-700',
+  cancelled: 'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300 border-red-200 dark:border-red-700',
+  rejected: 'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300 border-red-200 dark:border-red-700',
+  withdrawn: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-600',
 }
 
 const STATUS_FILTERS = [
@@ -278,7 +278,7 @@ export default function ClientTransactionsPage() {
             </Button>
           )}
           {placementAgreement && (
-            <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
+            <Badge variant="outline" className="text-green-600 dark:text-green-400 border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/30">
               <Percent className="h-3 w-3 mr-1" />
               {(placementAgreement.default_commission_bps / 100).toFixed(2)}% Commission
             </Badge>
@@ -326,7 +326,7 @@ export default function ClientTransactionsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{summary.activeClients}</div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{summary.activeClients}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Currently active
             </p>
@@ -341,7 +341,7 @@ export default function ClientTransactionsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{summary.totalTransactions}</div>
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{summary.totalTransactions}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Active investments
             </p>
@@ -356,7 +356,7 @@ export default function ClientTransactionsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
               {formatCurrency(summary.totalValue, 'USD')}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -373,7 +373,7 @@ export default function ClientTransactionsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
               {formatCurrency(summary.estimatedCommission, 'USD')}
             </div>
             <p className="text-xs text-muted-foreground mt-1">

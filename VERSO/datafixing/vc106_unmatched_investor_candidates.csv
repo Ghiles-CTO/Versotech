@@ -1,0 +1,4 @@
+row_index,investor_first,investor_last,investor_entity,amount_invested,num_shares,price_per_share,subscription_id,investor_id,investor_name_db,commitment_db,num_shares_db,price_per_share_db,contract_date_db,sourcing_contract_ref_db
+33,Mrs and Mr Beatrice & Marcel,KNOPF,,50000.0,2220.0,22.52,fa43a20f-660b-483e-aca7-6cca36b50b9e,5f35adc5-412a-4980-88ce-5d2b6f7fa3fc,Beatrice and Marcel KNOPF,50000.0,2220.0,22.52,2021-01-29,VEG_VC6_TR4
+39,Mrs and Mr,KARKUN,,50000.0,2272.0,22.0,c0c757a1-1a8e-4166-9861-6033c3055242,a7a6b0b9-538c-44d6-b8c6-3df69b5a5212,Anisha Bansal and Rahul KARKUN,50000.0,2272.0,22.0,2021-02-07,VEG_VC6_TR4
+43,Mrs & Mr Subbiah,SUBRAMANIAN,,155000.0,6733.0,23.02,40a345bc-43f7-4692-8454-bad1f4e11113,0938fe48-c579-4031-8fba-97b348218ddf,Nilakantan MAHESWARI & Subbiah SUBRAMANIAN,155000.0,6733.0,23.02,2021-02-12,VEG_VC6_TR4

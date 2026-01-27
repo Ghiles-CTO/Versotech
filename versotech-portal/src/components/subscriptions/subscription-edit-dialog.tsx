@@ -181,17 +181,17 @@ export function SubscriptionEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-5xl max-h-[90vh] bg-gray-900 text-white border-gray-700">
+      <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-5xl max-h-[90vh] bg-card text-foreground border-border">
         <DialogHeader>
-          <DialogTitle className="text-white">Edit Subscription #{subscription.subscription_number}</DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogTitle className="text-foreground">Edit Subscription #{subscription.subscription_number}</DialogTitle>
+          <DialogDescription className="text-muted-foreground">
             Update all subscription details for {subscription.investor?.legal_name || 'Unknown Investor'}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Tabs defaultValue="basic" className="w-full" id={`subscription-edit-tabs-${subscription.id}`}>
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 bg-gray-800">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 bg-muted">
               <TabsTrigger value="basic" className="text-xs">Basic</TabsTrigger>
               <TabsTrigger value="financial" className="text-xs">Financial</TabsTrigger>
               <TabsTrigger value="shares" className="text-xs">Shares</TabsTrigger>
@@ -206,90 +206,90 @@ export function SubscriptionEditDialog({
               <TabsContent value="basic" className="space-y-4 mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="status" className="text-white">Status *</Label>
+                    <Label htmlFor="status" className="text-foreground">Status *</Label>
                     <Select
                       value={formData.status}
                       onValueChange={(value) => setFormData({ ...formData, status: value as any })}
                     >
-                      <SelectTrigger id="status" className="bg-gray-800 border-gray-700 text-white">
+                      <SelectTrigger id="status" className="bg-muted border-border text-foreground">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-700">
-                        <SelectItem value="pending" className="text-white">Pending</SelectItem>
-                        <SelectItem value="committed" className="text-white">Committed</SelectItem>
-                        <SelectItem value="partially_funded" className="text-white">Partially Funded</SelectItem>
-                        <SelectItem value="funded" className="text-white">Funded</SelectItem>
-                        <SelectItem value="active" className="text-white">Active</SelectItem>
-                        <SelectItem value="closed" className="text-white">Closed</SelectItem>
-                        <SelectItem value="cancelled" className="text-white">Cancelled</SelectItem>
+                      <SelectContent className="bg-muted border-border">
+                        <SelectItem value="pending" className="text-foreground">Pending</SelectItem>
+                        <SelectItem value="committed" className="text-foreground">Committed</SelectItem>
+                        <SelectItem value="partially_funded" className="text-foreground">Partially Funded</SelectItem>
+                        <SelectItem value="funded" className="text-foreground">Funded</SelectItem>
+                        <SelectItem value="active" className="text-foreground">Active</SelectItem>
+                        <SelectItem value="closed" className="text-foreground">Closed</SelectItem>
+                        <SelectItem value="cancelled" className="text-foreground">Cancelled</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="opportunity_name" className="text-white">Opportunity Name</Label>
+                    <Label htmlFor="opportunity_name" className="text-foreground">Opportunity Name</Label>
                     <Input
                       id="opportunity_name"
                       type="text"
                       value={formData.opportunity_name}
                       onChange={(e) => setFormData({ ...formData, opportunity_name: e.target.value })}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-muted border-border text-foreground"
                       placeholder="Deal or opportunity name"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="effective_date" className="text-white">Effective Date</Label>
+                    <Label htmlFor="effective_date" className="text-foreground">Effective Date</Label>
                     <Input
                       id="effective_date"
                       type="date"
                       value={formData.effective_date}
                       onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-muted border-border text-foreground"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="committed_at" className="text-white">Committed Date</Label>
+                    <Label htmlFor="committed_at" className="text-foreground">Committed Date</Label>
                     <Input
                       id="committed_at"
                       type="date"
                       value={formData.committed_at}
                       onChange={(e) => setFormData({ ...formData, committed_at: e.target.value })}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-muted border-border text-foreground"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="funding_due_at" className="text-white">Funding Due Date</Label>
+                    <Label htmlFor="funding_due_at" className="text-foreground">Funding Due Date</Label>
                     <Input
                       id="funding_due_at"
                       type="date"
                       value={formData.funding_due_at}
                       onChange={(e) => setFormData({ ...formData, funding_due_at: e.target.value })}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-muted border-border text-foreground"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="contract_date" className="text-white">Contract Date</Label>
+                    <Label htmlFor="contract_date" className="text-foreground">Contract Date</Label>
                     <Input
                       id="contract_date"
                       type="date"
                       value={formData.contract_date}
                       onChange={(e) => setFormData({ ...formData, contract_date: e.target.value })}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-muted border-border text-foreground"
                     />
                   </div>
 
                   <div className="space-y-2 col-span-2">
-                    <Label htmlFor="sourcing_contract_ref" className="text-white">Sourcing Contract Reference</Label>
+                    <Label htmlFor="sourcing_contract_ref" className="text-foreground">Sourcing Contract Reference</Label>
                     <Input
                       id="sourcing_contract_ref"
                       type="text"
                       value={formData.sourcing_contract_ref}
                       onChange={(e) => setFormData({ ...formData, sourcing_contract_ref: e.target.value })}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-muted border-border text-foreground"
                       placeholder="External contract reference"
                     />
                   </div>
@@ -300,46 +300,46 @@ export function SubscriptionEditDialog({
               <TabsContent value="financial" className="space-y-4 mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="commitment" className="text-white">Commitment Amount *</Label>
+                    <Label htmlFor="commitment" className="text-foreground">Commitment Amount *</Label>
                     <Input
                       id="commitment"
                       type="number"
                       step="0.01"
                       value={formData.commitment}
                       onChange={(e) => setFormData({ ...formData, commitment: e.target.value })}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-muted border-border text-foreground"
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="currency" className="text-white">Currency *</Label>
+                    <Label htmlFor="currency" className="text-foreground">Currency *</Label>
                     <Select
                       value={formData.currency}
                       onValueChange={(value) => setFormData({ ...formData, currency: value })}
                     >
-                      <SelectTrigger id="currency" className="bg-gray-800 border-gray-700 text-white">
+                      <SelectTrigger id="currency" className="bg-muted border-border text-foreground">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-700">
-                        <SelectItem value="USD" className="text-white">USD</SelectItem>
-                        <SelectItem value="EUR" className="text-white">EUR</SelectItem>
-                        <SelectItem value="GBP" className="text-white">GBP</SelectItem>
-                        <SelectItem value="AUD" className="text-white">AUD</SelectItem>
-                        <SelectItem value="CAD" className="text-white">CAD</SelectItem>
+                      <SelectContent className="bg-muted border-border">
+                        <SelectItem value="USD" className="text-foreground">USD</SelectItem>
+                        <SelectItem value="EUR" className="text-foreground">EUR</SelectItem>
+                        <SelectItem value="GBP" className="text-foreground">GBP</SelectItem>
+                        <SelectItem value="AUD" className="text-foreground">AUD</SelectItem>
+                        <SelectItem value="CAD" className="text-foreground">CAD</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2 col-span-2">
-                    <Label htmlFor="units" className="text-white">Units</Label>
+                    <Label htmlFor="units" className="text-foreground">Units</Label>
                     <Input
                       id="units"
                       type="number"
                       step="0.01"
                       value={formData.units}
                       onChange={(e) => setFormData({ ...formData, units: e.target.value })}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-muted border-border text-foreground"
                       placeholder="Number of units"
                     />
                   </div>
@@ -350,46 +350,46 @@ export function SubscriptionEditDialog({
               <TabsContent value="shares" className="space-y-4 mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="num_shares" className="text-white">Number of Shares</Label>
+                    <Label htmlFor="num_shares" className="text-foreground">Number of Shares</Label>
                     <Input
                       id="num_shares"
                       type="number"
                       step="1"
                       value={formData.num_shares}
                       onChange={(e) => setFormData({ ...formData, num_shares: e.target.value })}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-muted border-border text-foreground"
                       placeholder="Total shares"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="price_per_share" className="text-white">Price Per Share</Label>
+                    <Label htmlFor="price_per_share" className="text-foreground">Price Per Share</Label>
                     <Input
                       id="price_per_share"
                       type="number"
                       step="0.01"
                       value={formData.price_per_share}
                       onChange={(e) => setFormData({ ...formData, price_per_share: e.target.value })}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-muted border-border text-foreground"
                       placeholder="Sell price"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="cost_per_share" className="text-white">Cost Per Share</Label>
+                    <Label htmlFor="cost_per_share" className="text-foreground">Cost Per Share</Label>
                     <Input
                       id="cost_per_share"
                       type="number"
                       step="0.01"
                       value={formData.cost_per_share}
                       onChange={(e) => setFormData({ ...formData, cost_per_share: e.target.value })}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-muted border-border text-foreground"
                       placeholder="Acquisition cost"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="spread_per_share" className="text-white">
+                    <Label htmlFor="spread_per_share" className="text-foreground">
                       Spread Per Share
                       <span className="ml-2 text-xs text-amber-400">(auto-calculated)</span>
                     </Label>
@@ -399,14 +399,14 @@ export function SubscriptionEditDialog({
                       step="0.01"
                       value={formData.spread_per_share}
                       onChange={(e) => setFormData({ ...formData, spread_per_share: e.target.value })}
-                      className="bg-gray-800 border-amber-500/30 text-white"
+                      className="bg-muted border-amber-500/30 text-foreground"
                       placeholder="Spread markup"
                     />
-                    <p className="text-xs text-gray-500">Price − Cost (can override)</p>
+                    <p className="text-xs text-muted-foreground/70">Price − Cost (can override)</p>
                   </div>
 
                   <div className="space-y-2 col-span-2">
-                    <Label htmlFor="spread_fee_amount" className="text-white">
+                    <Label htmlFor="spread_fee_amount" className="text-foreground">
                       Spread Fee Amount
                       <span className="ml-2 text-xs text-amber-400">(auto-calculated)</span>
                     </Label>
@@ -416,10 +416,10 @@ export function SubscriptionEditDialog({
                       step="0.01"
                       value={formData.spread_fee_amount}
                       onChange={(e) => setFormData({ ...formData, spread_fee_amount: e.target.value })}
-                      className="bg-gray-800 border-amber-500/30 text-white"
+                      className="bg-muted border-amber-500/30 text-foreground"
                       placeholder="Total spread fee"
                     />
-                    <p className="text-xs text-gray-500">Spread × Shares (can override)</p>
+                    <p className="text-xs text-muted-foreground/70">Spread × Shares (can override)</p>
                   </div>
                 </div>
               </TabsContent>
@@ -429,30 +429,30 @@ export function SubscriptionEditDialog({
                 <div className="space-y-6">
                   {/* Subscription Fees */}
                   <div>
-                    <h3 className="text-sm font-semibold text-white mb-3">Subscription Fees</h3>
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Subscription Fees</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="subscription_fee_percent" className="text-white">Subscription Fee %</Label>
+                        <Label htmlFor="subscription_fee_percent" className="text-foreground">Subscription Fee %</Label>
                         <Input
                           id="subscription_fee_percent"
                           type="number"
                           step="0.01"
                           value={formData.subscription_fee_percent}
                           onChange={(e) => setFormData({ ...formData, subscription_fee_percent: e.target.value })}
-                          className="bg-gray-800 border-gray-700 text-white"
+                          className="bg-muted border-border text-foreground"
                           placeholder="e.g., 2.0"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="subscription_fee_amount" className="text-white">Subscription Fee Amount</Label>
+                        <Label htmlFor="subscription_fee_amount" className="text-foreground">Subscription Fee Amount</Label>
                         <Input
                           id="subscription_fee_amount"
                           type="number"
                           step="0.01"
                           value={formData.subscription_fee_amount}
                           onChange={(e) => setFormData({ ...formData, subscription_fee_amount: e.target.value })}
-                          className="bg-gray-800 border-gray-700 text-white"
+                          className="bg-muted border-border text-foreground"
                           placeholder="Fixed amount"
                         />
                       </div>
@@ -461,30 +461,30 @@ export function SubscriptionEditDialog({
 
                   {/* Broker-Dealer Fees */}
                   <div>
-                    <h3 className="text-sm font-semibold text-white mb-3">Broker-Dealer Fees</h3>
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Broker-Dealer Fees</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="bd_fee_percent" className="text-white">BD Fee %</Label>
+                        <Label htmlFor="bd_fee_percent" className="text-foreground">BD Fee %</Label>
                         <Input
                           id="bd_fee_percent"
                           type="number"
                           step="0.01"
                           value={formData.bd_fee_percent}
                           onChange={(e) => setFormData({ ...formData, bd_fee_percent: e.target.value })}
-                          className="bg-gray-800 border-gray-700 text-white"
+                          className="bg-muted border-border text-foreground"
                           placeholder="e.g., 1.5"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="bd_fee_amount" className="text-white">BD Fee Amount</Label>
+                        <Label htmlFor="bd_fee_amount" className="text-foreground">BD Fee Amount</Label>
                         <Input
                           id="bd_fee_amount"
                           type="number"
                           step="0.01"
                           value={formData.bd_fee_amount}
                           onChange={(e) => setFormData({ ...formData, bd_fee_amount: e.target.value })}
-                          className="bg-gray-800 border-gray-700 text-white"
+                          className="bg-muted border-border text-foreground"
                           placeholder="Fixed amount"
                         />
                       </div>
@@ -493,17 +493,17 @@ export function SubscriptionEditDialog({
 
                   {/* FINRA Fee */}
                   <div>
-                    <h3 className="text-sm font-semibold text-white mb-3">Regulatory Fees</h3>
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Regulatory Fees</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="finra_fee_amount" className="text-white">FINRA Fee Amount</Label>
+                        <Label htmlFor="finra_fee_amount" className="text-foreground">FINRA Fee Amount</Label>
                         <Input
                           id="finra_fee_amount"
                           type="number"
                           step="0.01"
                           value={formData.finra_fee_amount}
                           onChange={(e) => setFormData({ ...formData, finra_fee_amount: e.target.value })}
-                          className="bg-gray-800 border-gray-700 text-white"
+                          className="bg-muted border-border text-foreground"
                           placeholder="FINRA regulatory fee"
                         />
                       </div>
@@ -512,56 +512,56 @@ export function SubscriptionEditDialog({
 
                   {/* Performance Fees */}
                   <div>
-                    <h3 className="text-sm font-semibold text-white mb-3">Performance Fees (Tier Structure)</h3>
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Performance Fees (Tier Structure)</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="performance_fee_tier1_percent" className="text-white">Tier 1 %</Label>
+                        <Label htmlFor="performance_fee_tier1_percent" className="text-foreground">Tier 1 %</Label>
                         <Input
                           id="performance_fee_tier1_percent"
                           type="number"
                           step="0.01"
                           value={formData.performance_fee_tier1_percent}
                           onChange={(e) => setFormData({ ...formData, performance_fee_tier1_percent: e.target.value })}
-                          className="bg-gray-800 border-gray-700 text-white"
+                          className="bg-muted border-border text-foreground"
                           placeholder="e.g., 20.0"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="performance_fee_tier1_threshold" className="text-white">Tier 1 Threshold</Label>
+                        <Label htmlFor="performance_fee_tier1_threshold" className="text-foreground">Tier 1 Threshold</Label>
                         <Input
                           id="performance_fee_tier1_threshold"
                           type="number"
                           step="0.01"
                           value={formData.performance_fee_tier1_threshold}
                           onChange={(e) => setFormData({ ...formData, performance_fee_tier1_threshold: e.target.value })}
-                          className="bg-gray-800 border-gray-700 text-white"
+                          className="bg-muted border-border text-foreground"
                           placeholder="Hurdle amount"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="performance_fee_tier2_percent" className="text-white">Tier 2 %</Label>
+                        <Label htmlFor="performance_fee_tier2_percent" className="text-foreground">Tier 2 %</Label>
                         <Input
                           id="performance_fee_tier2_percent"
                           type="number"
                           step="0.01"
                           value={formData.performance_fee_tier2_percent}
                           onChange={(e) => setFormData({ ...formData, performance_fee_tier2_percent: e.target.value })}
-                          className="bg-gray-800 border-gray-700 text-white"
+                          className="bg-muted border-border text-foreground"
                           placeholder="e.g., 30.0"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="performance_fee_tier2_threshold" className="text-white">Tier 2 Threshold</Label>
+                        <Label htmlFor="performance_fee_tier2_threshold" className="text-foreground">Tier 2 Threshold</Label>
                         <Input
                           id="performance_fee_tier2_threshold"
                           type="number"
                           step="0.01"
                           value={formData.performance_fee_tier2_threshold}
                           onChange={(e) => setFormData({ ...formData, performance_fee_tier2_threshold: e.target.value })}
-                          className="bg-gray-800 border-gray-700 text-white"
+                          className="bg-muted border-border text-foreground"
                           placeholder="Higher hurdle"
                         />
                       </div>
@@ -574,63 +574,63 @@ export function SubscriptionEditDialog({
               <TabsContent value="tracking" className="space-y-4 mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="funded_amount" className="text-white">Funded Amount</Label>
+                    <Label htmlFor="funded_amount" className="text-foreground">Funded Amount</Label>
                     <Input
                       id="funded_amount"
                       type="number"
                       step="0.01"
                       value={formData.funded_amount}
                       onChange={(e) => setFormData({ ...formData, funded_amount: e.target.value })}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-muted border-border text-foreground"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="outstanding_amount" className="text-white">Outstanding Amount</Label>
+                    <Label htmlFor="outstanding_amount" className="text-foreground">Outstanding Amount</Label>
                     <Input
                       id="outstanding_amount"
                       type="number"
                       step="0.01"
                       value={formData.outstanding_amount}
                       onChange={(e) => setFormData({ ...formData, outstanding_amount: e.target.value })}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-muted border-border text-foreground"
                       placeholder="Unfunded commitment"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="capital_calls_total" className="text-white">Capital Calls Total</Label>
+                    <Label htmlFor="capital_calls_total" className="text-foreground">Capital Calls Total</Label>
                     <Input
                       id="capital_calls_total"
                       type="number"
                       step="0.01"
                       value={formData.capital_calls_total}
                       onChange={(e) => setFormData({ ...formData, capital_calls_total: e.target.value })}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-muted border-border text-foreground"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="distributions_total" className="text-white">Distributions Total</Label>
+                    <Label htmlFor="distributions_total" className="text-foreground">Distributions Total</Label>
                     <Input
                       id="distributions_total"
                       type="number"
                       step="0.01"
                       value={formData.distributions_total}
                       onChange={(e) => setFormData({ ...formData, distributions_total: e.target.value })}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-muted border-border text-foreground"
                     />
                   </div>
 
                   <div className="space-y-2 col-span-2">
-                    <Label htmlFor="current_nav" className="text-white">Current NAV</Label>
+                    <Label htmlFor="current_nav" className="text-foreground">Current NAV</Label>
                     <Input
                       id="current_nav"
                       type="number"
                       step="0.01"
                       value={formData.current_nav}
                       onChange={(e) => setFormData({ ...formData, current_nav: e.target.value })}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-muted border-border text-foreground"
                       placeholder="Current net asset value"
                     />
                   </div>
@@ -641,29 +641,29 @@ export function SubscriptionEditDialog({
               <TabsContent value="relationships" className="space-y-4 mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2 col-span-2">
-                    <Label htmlFor="introducer_id" className="text-white">Introducer ID</Label>
+                    <Label htmlFor="introducer_id" className="text-foreground">Introducer ID</Label>
                     <Input
                       id="introducer_id"
                       type="text"
                       value={formData.introducer_id}
                       onChange={(e) => setFormData({ ...formData, introducer_id: e.target.value })}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-muted border-border text-foreground"
                       placeholder="UUID of introducer"
                     />
-                    <p className="text-xs text-gray-500">Link to introducer who referred this subscription</p>
+                    <p className="text-xs text-muted-foreground/70">Link to introducer who referred this subscription</p>
                   </div>
 
                   <div className="space-y-2 col-span-2">
-                    <Label htmlFor="introduction_id" className="text-white">Introduction ID</Label>
+                    <Label htmlFor="introduction_id" className="text-foreground">Introduction ID</Label>
                     <Input
                       id="introduction_id"
                       type="text"
                       value={formData.introduction_id}
                       onChange={(e) => setFormData({ ...formData, introduction_id: e.target.value })}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-muted border-border text-foreground"
                       placeholder="UUID of introduction record"
                     />
-                    <p className="text-xs text-gray-500">Link to specific introduction event</p>
+                    <p className="text-xs text-muted-foreground/70">Link to specific introduction event</p>
                   </div>
                 </div>
               </TabsContent>
@@ -671,12 +671,12 @@ export function SubscriptionEditDialog({
               {/* Notes Tab */}
               <TabsContent value="notes" className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="notes" className="text-white">Acknowledgement Notes</Label>
+                  <Label htmlFor="notes" className="text-foreground">Acknowledgement Notes</Label>
                   <Textarea
                     id="notes"
                     value={formData.acknowledgement_notes}
                     onChange={(e) => setFormData({ ...formData, acknowledgement_notes: e.target.value })}
-                    className="bg-gray-800 border-gray-700 text-white min-h-[300px]"
+                    className="bg-muted border-border text-foreground min-h-[300px]"
                     placeholder="Add any notes, acknowledgements, or special terms for this subscription..."
                   />
                 </div>
@@ -690,14 +690,14 @@ export function SubscriptionEditDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="bg-gray-800 text-white border-gray-700 hover:bg-gray-700"
+              className="bg-muted text-foreground border-border hover:bg-muted/80"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-white text-black hover:bg-gray-200"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
               {isLoading ? 'Saving...' : 'Save All Changes'}
             </Button>

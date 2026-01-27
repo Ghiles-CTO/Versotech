@@ -698,7 +698,7 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
                       'p-4 rounded-lg border text-left transition-all',
                       isSelected
                         ? cat.color + ' border-2'
-                        : 'border-white/10 hover:border-white/20 hover:bg-white/5'
+                        : 'border-border hover:border-primary hover:bg-muted'
                     )}
                   >
                     <div className="flex items-center gap-3">

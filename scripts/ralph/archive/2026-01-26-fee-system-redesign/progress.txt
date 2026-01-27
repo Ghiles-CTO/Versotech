@@ -1,0 +1,22 @@
+# Ralph Progress Log
+Started: Sun Jan 26 2026
+Project: Staff Document Management System
+Branch: ralph/staff-documents-redesign
+---
+
+## Codebase Patterns
+- Staff docs page: src/app/(staff)/versotech/staff/documents/page.tsx
+- Main client: src/components/documents/staff-documents-client.tsx
+- Folder tree: src/components/documents/folder-tree.tsx
+- Viewer: src/components/documents/DocumentViewerFullscreen.tsx
+- APIs: /api/staff/documents/* (CRUD, versions, folders)
+- Dialogs exist: CreateFolderDialog, RenameFolderDialog, MoveDocumentDialog
+- DB: documents (86 cols), deal_data_room_documents (separate)
+- No parent_vehicle_id - parse names to infer hierarchy
+- shadcn theme vars: bg-background, text-foreground, border-border
+
+---
+
+## Execution Log
+
+[No iterations yet]

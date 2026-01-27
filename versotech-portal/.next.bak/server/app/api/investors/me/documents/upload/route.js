@@ -1,0 +1,13 @@
+var R=require("../../../../../../chunks/[turbopack]_runtime.js")("server/app/api/investors/me/documents/upload/route.js")
+R.c("server/chunks/[root-of-the-server]__ac0e181b._.js")
+R.c("server/chunks/6d6b6_next_dist_esm_build_templates_app-route_f4d62798.js")
+R.c("server/chunks/6d6b6_next_672f6640._.js")
+R.c("server/chunks/6d6b6_next_dist_7d1347b1._.js")
+R.c("server/chunks/6d6b6_131e6e29._.js")
+R.c("server/chunks/[root-of-the-server]__04eaf9e0._.js")
+R.c("server/chunks/[root-of-the-server]__7a18eae2._.js")
+R.c("server/chunks/6d6b6_4a9fcd3d._.js")
+R.c("server/chunks/6d6b6_next_b8b5a401._.js")
+R.c("server/chunks/02020_server_app_api_investors_me_documents_upload_route_actions_74a88930.js")
+R.m(110493)
+module.exports=R.m(110493).exports

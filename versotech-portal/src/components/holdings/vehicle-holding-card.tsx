@@ -115,7 +115,7 @@ export function VehicleHoldingCard({ holding }: VehicleHoldingCardProps) {
       case 'real_estate':
         return 'bg-orange-100 border-orange-200 text-orange-700'
       default:
-        return 'bg-gray-100 border-gray-200 text-foreground/80'
+        return 'bg-muted border-border text-muted-foreground'
     }
   }
 
@@ -160,7 +160,7 @@ export function VehicleHoldingCard({ holding }: VehicleHoldingCardProps) {
                   ? 'bg-green-100 text-green-700 border border-green-200'
                   : holding.performance.unrealizedGainPct < 0
                   ? 'bg-red-100 text-red-700 border border-red-200'
-                  : 'bg-gray-100 text-foreground/80 border border-gray-200'
+                  : 'bg-muted text-muted-foreground border border-border'
               )}>
                 {holding.performance.unrealizedGainPct > 0 ? (
                   <TrendingUp className="h-3 w-3" />
@@ -198,7 +198,7 @@ export function VehicleHoldingCard({ holding }: VehicleHoldingCardProps) {
           </div>
 
           <div className="space-y-1">
-            <div className="text-lg font-semibold text-foreground/80">
+            <div className="text-lg font-semibold text-muted-foreground">
               {holding.subscription?.commitment
                 ? formatCurrency(holding.subscription.commitment)
                 : 'N/A'
@@ -227,7 +227,7 @@ export function VehicleHoldingCard({ holding }: VehicleHoldingCardProps) {
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground font-medium">NAV per Unit</span>
                 <span className="font-semibold text-blue-600">
-                  ${holding.valuation.navPerUnit?.toFixed(3)}
+                  {holding.currency || 'USD'} {holding.valuation.navPerUnit?.toFixed(3)}
                 </span>
               </div>
             )}
@@ -247,7 +247,7 @@ export function VehicleHoldingCard({ holding }: VehicleHoldingCardProps) {
         )}
 
         {/* Last Updated Date - ALWAYS show */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-gray-100 rounded-md px-3 py-2">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted rounded-md px-3 py-2">
           <Calendar className="h-3 w-3" />
           <span className="font-medium">
             Last updated: {new Date(

@@ -75,14 +75,14 @@ export default function DealInventoryPanel({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'available': return 'bg-green-100 text-green-800'
-      case 'held': return 'bg-yellow-100 text-yellow-800'
-      case 'exhausted': return 'bg-red-100 text-red-800'
-      case 'pending': return 'bg-blue-100 text-blue-800'
-      case 'approved': return 'bg-green-100 text-green-800'
-      case 'expired': return 'bg-gray-100 text-gray-800'
-      case 'cancelled': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'available': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
+      case 'held': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200'
+      case 'exhausted': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
+      case 'pending': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200'
+      case 'approved': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
+      case 'expired': return 'bg-muted text-muted-foreground'
+      case 'cancelled': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
+      default: return 'bg-muted text-muted-foreground'
     }
   }
 
@@ -94,8 +94,8 @@ export default function DealInventoryPanel({
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="h-32 bg-gray-100 rounded-lg animate-pulse" />
-        <div className="h-64 bg-gray-100 rounded-lg animate-pulse" />
+        <div className="h-32 bg-muted rounded-lg animate-pulse" />
+        <div className="h-64 bg-muted rounded-lg animate-pulse" />
       </div>
     )
   }
@@ -113,25 +113,25 @@ export default function DealInventoryPanel({
                 <div className="text-2xl font-bold text-blue-600">
                   {inventory.total_units.toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-600">Total Units</div>
+                <div className="text-sm text-muted-foreground">Total Units</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">
                   {inventory.available_units.toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-600">Available</div>
+                <div className="text-sm text-muted-foreground">Available</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-yellow-600">
                   {inventory.reserved_units.toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-600">Reserved (Legacy)</div>
+                <div className="text-sm text-muted-foreground">Reserved (Legacy)</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-purple-600">
                   {inventory.allocated_units.toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-600">Allocated</div>
+                <div className="text-sm text-muted-foreground">Allocated</div>
               </div>
             </div>
             
@@ -162,12 +162,12 @@ export default function DealInventoryPanel({
                     {lot.units_remaining.toLocaleString()} / {lot.units_total.toLocaleString()} units
                   </span>
                 </div>
-                <div className="text-sm text-gray-600 mt-1">
+                <div className="text-sm text-muted-foreground mt-1">
                   Cost: {currency} {lot.unit_cost} • Source: {lot.share_sources?.kind} ({lot.share_sources?.counterparty_name})
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-muted-foreground">
                   Available: {((lot.units_remaining / lot.units_total) * 100).toFixed(1)}%
                 </div>
               </div>
@@ -175,7 +175,7 @@ export default function DealInventoryPanel({
           ))}
           
           {shareLots.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               No share lots available for this deal
             </div>
           )}

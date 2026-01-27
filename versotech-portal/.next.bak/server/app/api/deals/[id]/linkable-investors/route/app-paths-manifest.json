@@ -1,0 +1,3 @@
+{
+  "/api/deals/[id]/linkable-investors/route": "app/api/deals/[id]/linkable-investors/route.js"
+}

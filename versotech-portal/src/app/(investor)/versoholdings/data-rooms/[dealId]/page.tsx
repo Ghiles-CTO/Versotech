@@ -178,14 +178,14 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
         {/* Back button */}
         <Link
           href="/versoholdings/data-rooms"
-          className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
+          className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Data Rooms
         </Link>
 
         {/* Deal header with timeline */}
-        <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden">
+        <div className="bg-white dark:bg-zinc-900 border-2 border-gray-200 dark:border-zinc-700 rounded-lg overflow-hidden">
           <div className="p-6 space-y-4">
             <div className="flex items-start gap-4">
               {deal.company_logo_url ? (
@@ -194,29 +194,29 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
                   alt={`${deal.company_name ?? deal.name} logo`}
                   width={80}
                   height={80}
-                  className="rounded-lg object-contain bg-white border-2 border-gray-200 p-2"
+                  className="rounded-lg object-contain bg-white dark:bg-zinc-800 border-2 border-gray-200 dark:border-zinc-700 p-2"
                 />
               ) : (
-                <div className="h-20 w-20 rounded-lg bg-blue-50 border-2 border-blue-600 flex items-center justify-center text-blue-600 text-2xl font-semibold">
+                <div className="h-20 w-20 rounded-lg bg-blue-50 dark:bg-blue-950 border-2 border-blue-600 flex items-center justify-center text-blue-600 text-2xl font-semibold">
                   {deal.name?.charAt(0) ?? 'D'}
                 </div>
               )}
               <div className="flex-1">
-                <h1 className="text-3xl font-bold text-black">{deal.name}</h1>
-                <div className="flex items-center gap-2 text-lg text-black mt-1">
-                  <Users className="h-4 w-4 text-gray-500" />
+                <h1 className="text-3xl font-bold text-foreground">{deal.name}</h1>
+                <div className="flex items-center gap-2 text-lg text-foreground mt-1">
+                  <Users className="h-4 w-4 text-muted-foreground" />
                   {deal.company_name ?? 'Issuer pending'}
                 </div>
                 {(deal.stage || deal.sector || deal.location) && (
                   <div className="flex flex-wrap items-center gap-2 mt-3">
-                    {deal.stage && <Badge variant="outline" className="text-sm border-gray-300 text-black bg-white">{deal.stage}</Badge>}
-                    {deal.sector && <Badge variant="outline" className="text-sm border-gray-300 text-black bg-white">{deal.sector}</Badge>}
-                    {deal.location && <Badge variant="outline" className="text-sm border-gray-300 text-black bg-white">{deal.location}</Badge>}
+                    {deal.stage && <Badge variant="outline" className="text-sm border-gray-300 dark:border-zinc-600 text-foreground bg-white dark:bg-zinc-800">{deal.stage}</Badge>}
+                    {deal.sector && <Badge variant="outline" className="text-sm border-gray-300 dark:border-zinc-600 text-foreground bg-white dark:bg-zinc-800">{deal.sector}</Badge>}
+                    {deal.location && <Badge variant="outline" className="text-sm border-gray-300 dark:border-zinc-600 text-foreground bg-white dark:bg-zinc-800">{deal.location}</Badge>}
                   </div>
                 )}
               </div>
               {latestSubmission && (
-                <Badge variant="outline" className="text-sm border-blue-300 bg-blue-50 text-blue-700">
+                <Badge variant="outline" className="text-sm border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
                   {latestSubmission.status.replace('_', ' ')}
                 </Badge>
               )}
@@ -224,18 +224,18 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
           </div>
 
           {/* Timeline bar */}
-          <div className="bg-gray-50 border-t-2 border-gray-200 px-6 py-4">
+          <div className="bg-gray-50 dark:bg-zinc-800 border-t-2 border-gray-200 dark:border-zinc-700 px-6 py-4">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4 text-gray-500" />
-                  <span className="text-gray-600">Access granted:</span>
-                  <span className="font-medium text-black">{formatDate(accessData.granted_at)}</span>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Access granted:</span>
+                  <span className="font-medium text-foreground">{formatDate(accessData.granted_at)}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <Clock className="h-4 w-4 text-gray-500" />
-                  <span className="text-gray-600">Expires:</span>
-                  <span className="font-medium text-black">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Expires:</span>
+                  <span className="font-medium text-foreground">
                     {accessData.expires_at ? formatDate(accessData.expires_at) : 'No expiry'}
                   </span>
                 </div>
@@ -244,7 +244,7 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
                 {daysRemaining !== null && daysRemaining <= 7 && (
                   <div className="flex items-center gap-2 text-sm">
                     <AlertCircle className="h-4 w-4 text-amber-500" />
-                    <span className="text-amber-700 font-medium">
+                    <span className="text-amber-700 dark:text-amber-400 font-medium">
                       {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining
                     </span>
                   </div>
@@ -265,10 +265,10 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
           {/* Left Column - Documents & Information */}
           <div className="space-y-4">
             {/* 1. Deal Documents - PRIMARY CONTENT AT TOP */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 space-y-4">
+            <div className="bg-white dark:bg-zinc-900 border-2 border-gray-200 dark:border-zinc-700 rounded-lg p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xl font-semibold text-black">
-                  <FileText className="h-5 w-5 text-blue-600" />
+                <div className="flex items-center gap-2 text-xl font-semibold text-foreground">
+                  <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                   Deal Documents
                 </div>
                 <Badge variant="outline" className="text-sm">
@@ -280,12 +280,12 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
 
             {/* 2. Notes section if present */}
             {accessData.notes && (
-              <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-4">
+              <div className="bg-amber-50 dark:bg-amber-950/50 border-2 border-amber-200 dark:border-amber-800 rounded-lg p-4">
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-500 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-amber-900 mb-1">Important Notes from VERSO Team</p>
-                    <p className="text-sm text-amber-800">{accessData.notes}</p>
+                    <p className="text-sm font-medium text-amber-900 dark:text-amber-200 mb-1">Important Notes from VERSO Team</p>
+                    <p className="text-sm text-amber-800 dark:text-amber-300">{accessData.notes}</p>
                   </div>
                 </div>
               </div>
@@ -293,59 +293,59 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
 
             {/* 3. Investment Overview */}
             {(deal.description || deal.investment_thesis) && (
-              <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
-                <div className="flex items-center gap-2 text-lg font-semibold text-black mb-4">
-                  <Info className="h-5 w-5 text-blue-600" />
+              <div className="bg-white dark:bg-zinc-900 border-2 border-gray-200 dark:border-zinc-700 rounded-lg p-6">
+                <div className="flex items-center gap-2 text-lg font-semibold text-foreground mb-4">
+                  <Info className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                   Investment Overview
                 </div>
                 {deal.description && (
-                  <p className="text-sm text-black mb-3">{deal.description}</p>
+                  <p className="text-sm text-foreground mb-3">{deal.description}</p>
                 )}
                 {deal.investment_thesis && (
-                  <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <p className="text-sm font-medium text-black mb-1">Investment Thesis</p>
-                    <p className="text-sm text-gray-700">{deal.investment_thesis}</p>
+                  <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <p className="text-sm font-medium text-foreground mb-1">Investment Thesis</p>
+                    <p className="text-sm text-muted-foreground">{deal.investment_thesis}</p>
                   </div>
                 )}
               </div>
             )}
 
             {/* 4. Investment Terms */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
-              <div className="flex items-center gap-2 text-lg font-semibold text-black mb-4">
-                <DollarSign className="h-5 w-5 text-blue-600" />
+            <div className="bg-white dark:bg-zinc-900 border-2 border-gray-200 dark:border-zinc-700 rounded-lg p-6">
+              <div className="flex items-center gap-2 text-lg font-semibold text-foreground mb-4">
+                <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 Investment Terms
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-gray-600 mb-1">Minimum Investment</p>
-                  <p className="text-base font-semibold text-black">
+                  <p className="text-xs text-muted-foreground mb-1">Minimum Investment</p>
+                  <p className="text-base font-semibold text-foreground">
                     {formatCurrency(deal.minimum_investment, deal.currency || 'USD')}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600 mb-1">Maximum Investment</p>
-                  <p className="text-base font-semibold text-black">
+                  <p className="text-xs text-muted-foreground mb-1">Maximum Investment</p>
+                  <p className="text-base font-semibold text-foreground">
                     {formatCurrency(deal.maximum_investment, deal.currency || 'USD')}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600 mb-1">Unit Price</p>
-                  <p className="text-base font-semibold text-black">
+                  <p className="text-xs text-muted-foreground mb-1">Unit Price</p>
+                  <p className="text-base font-semibold text-foreground">
                     {deal.offer_unit_price
                       ? formatCurrency(deal.offer_unit_price, deal.currency || 'USD') + ' per share'
                       : 'To be determined'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600 mb-1">Deal Type</p>
-                  <p className="text-base font-semibold text-black capitalize">
+                  <p className="text-xs text-muted-foreground mb-1">Deal Type</p>
+                  <p className="text-base font-semibold text-foreground capitalize">
                     {deal.deal_type?.replace('_', ' ') || 'Not specified'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600 mb-1">Target Raise</p>
-                  <p className="text-base font-semibold text-black">
+                  <p className="text-xs text-muted-foreground mb-1">Target Raise</p>
+                  <p className="text-base font-semibold text-foreground">
                     {formatCurrency(deal.target_amount, deal.currency || 'USD')}
                   </p>
                 </div>
@@ -354,40 +354,40 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
 
             {/* 5. Fee Structure */}
             {feeStructure && (
-              <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
-                <div className="flex items-center gap-2 text-lg font-semibold text-black mb-4">
-                  <BarChart3 className="h-5 w-5 text-blue-600" />
+              <div className="bg-white dark:bg-zinc-900 border-2 border-gray-200 dark:border-zinc-700 rounded-lg p-6">
+                <div className="flex items-center gap-2 text-lg font-semibold text-foreground mb-4">
+                  <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                   Fee Structure
                 </div>
                 <div className="space-y-3">
                   {feeStructure.management_fee_percent && (
-                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                      <span className="text-sm text-gray-600">Management Fee</span>
-                      <span className="text-sm font-semibold text-black">
+                    <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-zinc-800">
+                      <span className="text-sm text-muted-foreground">Management Fee</span>
+                      <span className="text-sm font-semibold text-foreground">
                         {feeStructure.management_fee_percent}% annually
                       </span>
                     </div>
                   )}
                   {feeStructure.subscription_fee_percent && (
-                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                      <span className="text-sm text-gray-600">Subscription Fee</span>
-                      <span className="text-sm font-semibold text-black">
+                    <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-zinc-800">
+                      <span className="text-sm text-muted-foreground">Subscription Fee</span>
+                      <span className="text-sm font-semibold text-foreground">
                         {feeStructure.subscription_fee_percent}%
                       </span>
                     </div>
                   )}
                   {feeStructure.carried_interest_percent && (
-                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                      <span className="text-sm text-gray-600">Carried Interest</span>
-                      <span className="text-sm font-semibold text-black">
+                    <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-zinc-800">
+                      <span className="text-sm text-muted-foreground">Carried Interest</span>
+                      <span className="text-sm font-semibold text-foreground">
                         {feeStructure.carried_interest_percent}%
                       </span>
                     </div>
                   )}
                   {feeStructure.minimum_ticket && (
                     <div className="flex items-center justify-between py-2">
-                      <span className="text-sm text-gray-600">Minimum Ticket Size</span>
-                      <span className="text-sm font-semibold text-black">
+                      <span className="text-sm text-muted-foreground">Minimum Ticket Size</span>
+                      <span className="text-sm font-semibold text-foreground">
                         {feeStructure.minimum_ticket}
                       </span>
                     </div>

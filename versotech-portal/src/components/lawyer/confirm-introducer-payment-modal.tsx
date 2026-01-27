@@ -150,7 +150,7 @@ export function ConfirmIntroducerPaymentModal({
             )}
 
             {!commission.invoice_id && (
-              <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm">
+              <div className="flex items-center gap-2 p-3 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg text-yellow-800 dark:text-yellow-200 text-sm">
                 <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                 <span>No invoice document attached to this commission.</span>
               </div>
@@ -197,7 +197,7 @@ export function ConfirmIntroducerPaymentModal({
             </div>
 
             {/* Notification Warning */}
-            <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-800 text-sm">
+            <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg text-blue-800 dark:text-blue-200 text-sm">
               <FileText className="h-4 w-4 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium">Notifications will be sent to:</p>

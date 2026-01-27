@@ -1,0 +1,10 @@
+var R=require("../../../../../chunks/[turbopack]_runtime.js")("server/app/api/admin/growth/cohorts/route.js")
+R.c("server/chunks/6d6b6_@supabase_node-fetch_lib_index_bce6150b.js")
+R.c("server/chunks/6d6b6_next_36379834._.js")
+R.c("server/chunks/6d6b6_tr46_f7ca97fb._.js")
+R.c("server/chunks/6d6b6_@supabase_auth-js_dist_module_4ebeb219._.js")
+R.c("server/chunks/6d6b6_e5e892f7._.js")
+R.c("server/chunks/[root-of-the-server]__6147129a._.js")
+R.c("server/chunks/c6ad4__next-internal_server_app_api_admin_growth_cohorts_route_actions_36864841.js")
+R.m("[project]/versotech-portal/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/versotech-portal/src/app/api/admin/growth/cohorts/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)")
+module.exports=R.m("[project]/versotech-portal/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/versotech-portal/src/app/api/admin/growth/cohorts/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)").exports

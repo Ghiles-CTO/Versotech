@@ -162,7 +162,7 @@ export function InvestorJourneyBar({
         {/* Progress Bar */}
         <div className="relative">
           {/* Background line */}
-          <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 dark:bg-gray-700" />
+          <div className="absolute top-4 left-0 right-0 h-0.5 bg-border" />
 
           {/* Progress line */}
           <div
@@ -186,8 +186,8 @@ export function InvestorJourneyBar({
                           'w-8 h-8 rounded-full flex items-center justify-center transition-all',
                           status === 'completed' && 'bg-emerald-500 text-white',
                           status === 'current' && 'bg-blue-500 text-white ring-4 ring-blue-200 dark:ring-blue-900',
-                          status === 'skipped' && 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400',
-                          status === 'pending' && 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
+                          status === 'skipped' && 'bg-muted text-muted-foreground',
+                          status === 'pending' && 'bg-muted/50 text-muted-foreground'
                         )}
                       >
                         {status === 'completed' ? (
@@ -206,8 +206,8 @@ export function InvestorJourneyBar({
                             'mt-2 text-xs font-medium text-center max-w-[60px] leading-tight',
                             status === 'completed' && 'text-emerald-600 dark:text-emerald-400',
                             status === 'current' && 'text-blue-600 dark:text-blue-400',
-                            status === 'skipped' && 'text-gray-400 dark:text-gray-500',
-                            status === 'pending' && 'text-gray-400 dark:text-gray-500'
+                            status === 'skipped' && 'text-muted-foreground',
+                            status === 'pending' && 'text-muted-foreground'
                           )}
                         >
                           {stageDef.name}
@@ -227,10 +227,10 @@ export function InvestorJourneyBar({
                         <div className="text-xs text-blue-600 mt-1">In Progress</div>
                       )}
                       {status === 'skipped' && (
-                        <div className="text-xs text-gray-500 mt-1">Skipped (optional)</div>
+                        <div className="text-xs text-muted-foreground mt-1">Skipped (optional)</div>
                       )}
                       {status === 'pending' && (
-                        <div className="text-xs text-gray-500 mt-1">Pending</div>
+                        <div className="text-xs text-muted-foreground mt-1">Pending</div>
                       )}
                       {stageDef.optional && (
                         <div className="text-xs text-amber-600 dark:text-amber-400 mt-1">
@@ -288,7 +288,7 @@ export function JourneyProgressBadge({
               'w-2 h-2 rounded-full',
               stage.number <= currentStage
                 ? 'bg-emerald-500'
-                : 'bg-gray-200 dark:bg-gray-700'
+                : 'bg-muted'
             )}
           />
         ))}

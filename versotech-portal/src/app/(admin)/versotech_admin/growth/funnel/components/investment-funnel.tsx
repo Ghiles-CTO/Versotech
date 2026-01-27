@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { TrendingDown, ArrowRight, DollarSign } from 'lucide-react'
+import { BarChart3, ArrowRight, DollarSign } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface FunnelStage {
@@ -102,7 +102,7 @@ export function InvestmentFunnel({ data }: InvestmentFunnelProps) {
       <CardContent>
         {stages.length === 0 || maxCount === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <TrendingDown className="h-12 w-12 text-muted-foreground/50 mb-4" />
+            <BarChart3 className="h-12 w-12 text-muted-foreground/50 mb-4" />
             <p className="text-muted-foreground">No funnel data available yet</p>
             <p className="text-sm text-muted-foreground mt-1">
               Data will appear once investors start engaging with deals

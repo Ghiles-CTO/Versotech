@@ -85,14 +85,24 @@ interface CleanPortfolioDashboardProps {
   allocationData?: AllocationData[]
   performanceData?: PerformanceDataPoint[]
   cashFlowData?: CashFlowDataPoint[]
+  currencyBreakdown?: Array<{
+    currency: string
+    kpis: PortfolioKPIs
+    summary: {
+      totalPositions: number
+      totalVehicles: number
+    }
+  }>
+  selectedCurrency?: string | null
+  onCurrencyChange?: (currency: string) => void
 }
 
-const formatCurrency = (value: number) => {
+const formatCurrency = (value: number, currency: string = 'USD') => {
   // Handle NaN, undefined, or null values
   const safeValue = (value === undefined || value === null || isNaN(value)) ? 0 : value
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
     notation: Math.abs(safeValue) >= 1000000 ? 'compact' : 'standard',
@@ -177,8 +187,15 @@ export function PortfolioDashboard({
   vehicleBreakdown = [],
   allocationData = [],
   performanceData = [],
-  cashFlowData = []
+  cashFlowData = [],
+  currencyBreakdown = [],
+  selectedCurrency,
+  onCurrencyChange
 }: CleanPortfolioDashboardProps) {
+  const hasMixedCurrency = currencyBreakdown.length > 1
+  const activeCurrency = selectedCurrency || (currencyBreakdown[0]?.currency ?? 'USD')
+  const activeKpis = currencyBreakdown.find(entry => entry.currency === activeCurrency)?.kpis || kpis
+  const activeSummary = currencyBreakdown.find(entry => entry.currency === activeCurrency)?.summary || summary
 
   return (
     <div className={cn("space-y-6", className)}>
@@ -187,7 +204,7 @@ export function PortfolioDashboard({
         <div>
           <h2 className="text-2xl font-bold">Portfolio Analytics</h2>
           <p className="text-muted-foreground">
-            {summary.totalVehicles} vehicles, {summary.totalPositions} positions
+            {activeSummary.totalVehicles} vehicles, {activeSummary.totalPositions} positions
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -195,10 +212,30 @@ export function PortfolioDashboard({
             <Activity className="h-3 w-3 mr-1" />
             {new Date(asOfDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
           </Badge>
+          {currencyBreakdown.length > 0 && (
+            <div className="flex items-center gap-2 rounded-md border px-2 py-1 text-xs text-muted-foreground">
+              <span>Currency</span>
+              {hasMixedCurrency ? (
+                <select
+                  className="bg-transparent text-xs text-foreground outline-none"
+                  value={activeCurrency}
+                  onChange={(event) => onCurrencyChange?.(event.target.value)}
+                >
+                  {currencyBreakdown.map(entry => (
+                    <option key={entry.currency} value={entry.currency}>
+                      {entry.currency}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <span className="text-foreground font-medium">{activeCurrency}</span>
+              )}
+            </div>
+          )}
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={onRefresh} 
+            onClick={onRefresh}
             disabled={isLoading}
           >
             <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
@@ -214,32 +251,38 @@ export function PortfolioDashboard({
         </div>
       </div>
 
+      {hasMixedCurrency && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 text-amber-900 px-3 py-2 text-xs">
+          Multiple currencies detected. KPIs shown for the selected currency only. No FX conversion is applied.
+        </div>
+      )}
+
       {/* Primary KPIs Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <CleanKPICard
           title="Portfolio Value"
-          value={formatCurrency(kpis.currentNAV)}
+          value={formatCurrency(activeKpis.currentNAV, activeCurrency)}
           subtitle="Current NAV"
           change={trends?.navChangePct}
           icon={Wallet}
         />
         <CleanKPICard
           title="Invested"
-          value={formatCurrency(kpis.totalContributed)}
-          subtitle={`${kpis.totalCommitment > 0 ? ((kpis.totalContributed / kpis.totalCommitment) * 100).toFixed(0) : 0}% deployed`}
+          value={formatCurrency(activeKpis.totalContributed, activeCurrency)}
+          subtitle={`${activeKpis.totalCommitment > 0 ? ((activeKpis.totalContributed / activeKpis.totalCommitment) * 100).toFixed(0) : 0}% deployed`}
           icon={PiggyBank}
         />
         <CleanKPICard
           title="Distributions"
-          value={formatCurrency(kpis.totalDistributions)}
-          subtitle={`DPI: ${formatRatio(kpis.dpi)}`}
+          value={formatCurrency(activeKpis.totalDistributions, activeCurrency)}
+          subtitle={`DPI: ${formatRatio(activeKpis.dpi)}`}
           icon={TrendingUp}
         />
         <CleanKPICard
           title="Unrealized"
-          value={formatCurrency(kpis.unrealizedGain)}
-          subtitle={`${(kpis.unrealizedGainPct ?? 0).toFixed(1)}% return`}
-          change={kpis.unrealizedGainPct}
+          value={formatCurrency(activeKpis.unrealizedGain, activeCurrency)}
+          subtitle={`${(activeKpis.unrealizedGainPct ?? 0).toFixed(1)}% return`}
+          change={activeKpis.unrealizedGainPct}
           icon={Target}
         />
       </div>
@@ -255,23 +298,23 @@ export function PortfolioDashboard({
             <div>
               <div className="flex justify-between mb-2">
                 <span className="text-sm text-muted-foreground">TVPI</span>
-                <span className="text-sm font-medium">{formatRatio(kpis.tvpi)}</span>
+                <span className="text-sm font-medium">{formatRatio(activeKpis.tvpi)}</span>
               </div>
-              <Progress value={(kpis.tvpi / 3) * 100} className="h-2" />
+              <Progress value={(activeKpis.tvpi / 3) * 100} className="h-2" />
             </div>
             <div>
               <div className="flex justify-between mb-2">
                 <span className="text-sm text-muted-foreground">DPI</span>
-                <span className="text-sm font-medium">{formatRatio(kpis.dpi)}</span>
+                <span className="text-sm font-medium">{formatRatio(activeKpis.dpi)}</span>
               </div>
-              <Progress value={(kpis.dpi / 2) * 100} className="h-2" />
+              <Progress value={(activeKpis.dpi / 2) * 100} className="h-2" />
             </div>
             <div>
               <div className="flex justify-between mb-2">
                 <span className="text-sm text-muted-foreground">Net IRR</span>
-                <span className="text-sm font-medium">{formatPercentage(kpis.irr)}</span>
+                <span className="text-sm font-medium">{formatPercentage(activeKpis.irr)}</span>
               </div>
-              <Progress value={Math.min((kpis.irr / 30) * 100, 100)} className="h-2" />
+              <Progress value={Math.min((activeKpis.irr / 30) * 100, 100)} className="h-2" />
             </div>
           </CardContent>
         </Card>
@@ -287,26 +330,26 @@ export function PortfolioDashboard({
                 <div className="flex justify-between mb-2">
                   <span className="text-sm text-muted-foreground">Deployed</span>
                   <span className="text-sm font-medium">
-                    {kpis.totalCommitment > 0 ? ((kpis.totalContributed / kpis.totalCommitment) * 100).toFixed(0) : 0}%
+                    {activeKpis.totalCommitment > 0 ? ((activeKpis.totalContributed / activeKpis.totalCommitment) * 100).toFixed(0) : 0}%
                   </span>
                 </div>
                 <Progress
-                  value={kpis.totalCommitment > 0 ? (kpis.totalContributed / kpis.totalCommitment) * 100 : 0}
+                  value={activeKpis.totalCommitment > 0 ? (activeKpis.totalContributed / activeKpis.totalCommitment) * 100 : 0}
                   className="h-2"
                 />
               </div>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Commitment</span>
-                  <span>{formatCurrency(kpis.totalCommitment)}</span>
+                  <span>{formatCurrency(activeKpis.totalCommitment, activeCurrency)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Contributed</span>
-                  <span>{formatCurrency(kpis.totalContributed)}</span>
+                  <span>{formatCurrency(activeKpis.totalContributed, activeCurrency)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Unfunded</span>
-                  <span>{formatCurrency(kpis.unfundedCommitment)}</span>
+                  <span>{formatCurrency(activeKpis.unfundedCommitment, activeCurrency)}</span>
                 </div>
               </div>
             </div>
@@ -321,11 +364,11 @@ export function PortfolioDashboard({
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
-                <p className="text-2xl font-bold">{summary.totalVehicles}</p>
+                <p className="text-2xl font-bold">{activeSummary.totalVehicles}</p>
                 <p className="text-xs text-muted-foreground">Vehicles</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold">{summary.totalPositions}</p>
+                <p className="text-2xl font-bold">{activeSummary.totalPositions}</p>
                 <p className="text-xs text-muted-foreground">Positions</p>
               </div>
             </div>
@@ -337,7 +380,7 @@ export function PortfolioDashboard({
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Deal Value</span>
-                <span>{formatCurrency(summary.totalDealValue)}</span>
+                <span>{hasMixedCurrency ? '—' : formatCurrency(summary.totalDealValue, activeCurrency)}</span>
               </div>
             </div>
           </CardContent>
@@ -346,12 +389,12 @@ export function PortfolioDashboard({
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <NAVPerformanceChart data={performanceData} />
-        <PortfolioAllocationChart data={allocationData} />
+        <NAVPerformanceChart data={performanceData} currency={activeCurrency} />
+        <PortfolioAllocationChart data={allocationData} currency={activeCurrency} />
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        <CashFlowChart data={cashFlowData} />
+        <CashFlowChart data={cashFlowData} currency={activeCurrency} />
       </div>
 
     </div>

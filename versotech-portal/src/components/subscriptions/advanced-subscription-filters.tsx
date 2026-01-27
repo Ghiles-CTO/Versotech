@@ -89,7 +89,7 @@ const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending', color: 'bg-yellow-900/30 text-yellow-300' },
   { value: 'committed', label: 'Committed', color: 'bg-blue-900/30 text-blue-300' },
   { value: 'active', label: 'Active', color: 'bg-green-900/30 text-green-300' },
-  { value: 'closed', label: 'Closed', color: 'bg-gray-800/50 text-gray-300' },
+  { value: 'closed', label: 'Closed', color: 'bg-muted/50 text-muted-foreground' },
   { value: 'cancelled', label: 'Cancelled', color: 'bg-red-900/30 text-red-300' },
 ]
 
@@ -170,12 +170,12 @@ export function AdvancedSubscriptionFilters({
   }
 
   return (
-    <Card className="bg-gray-900/70 border-gray-800 shadow-xl">
-      <CardHeader className="border-b border-gray-800">
+    <Card className="bg-card border-border shadow-xl">
+      <CardHeader className="border-b border-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Filter className="h-5 w-5 text-blue-400" />
-            <CardTitle className="text-white text-lg">Advanced Filters</CardTitle>
+            <CardTitle className="text-foreground text-lg">Advanced Filters</CardTitle>
             {activeFilterCount > 0 && (
               <Badge variant="outline" className="border-blue-600 bg-blue-950 text-blue-300">
                 {activeFilterCount} active
@@ -188,7 +188,7 @@ export function AdvancedSubscriptionFilters({
                 variant="ghost"
                 size="sm"
                 onClick={clearFilters}
-                className="text-gray-400 hover:text-white hover:bg-gray-800"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted"
               >
                 <X className="h-4 w-4 mr-1" />
                 Clear All
@@ -201,19 +201,19 @@ export function AdvancedSubscriptionFilters({
       <CardContent className="space-y-4 pt-4 max-h-[calc(100vh-200px)] overflow-y-auto scrollbar-hide">
         {/* Global Search */}
         <div className="space-y-2">
-          <Label className="text-white text-sm font-semibold">Search Everything</Label>
+          <Label className="text-foreground text-sm font-semibold">Search Everything</Label>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search investor, vehicle, opportunity..."
               value={filters.globalSearch || ''}
               onChange={(e) => updateFilter('globalSearch', e.target.value)}
-              className="bg-gray-800 border-gray-700 text-white pl-10"
+              className="bg-muted border-border text-foreground pl-10"
             />
           </div>
         </div>
 
-        <Separator className="bg-gray-800" />
+        <Separator className="bg-muted" />
 
         {/* Quick Filter Presets */}
         <Collapsible
@@ -221,10 +221,10 @@ export function AdvancedSubscriptionFilters({
           onOpenChange={() => toggleSection('quickFilters')}
         >
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full justify-between hover:bg-gray-800">
+            <Button variant="ghost" className="w-full justify-between hover:bg-muted">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-purple-400" />
-                <span className="text-white font-semibold">Quick Filters</span>
+                <span className="text-foreground font-semibold">Quick Filters</span>
               </div>
               {sectionsOpen.quickFilters ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
@@ -234,7 +234,7 @@ export function AdvancedSubscriptionFilters({
               variant="outline"
               size="sm"
               onClick={() => applyQuickFilter('high_value')}
-              className="w-full justify-start bg-gray-800 border-gray-700 hover:bg-gray-700 text-white"
+              className="w-full justify-start bg-muted border-border hover:bg-muted/80 text-foreground"
             >
               <DollarSign className="h-3.5 w-3.5 mr-2 text-green-400" />
               High Value ($1M+)
@@ -243,7 +243,7 @@ export function AdvancedSubscriptionFilters({
               variant="outline"
               size="sm"
               onClick={() => applyQuickFilter('overdue')}
-              className="w-full justify-start bg-gray-800 border-gray-700 hover:bg-gray-700 text-white"
+              className="w-full justify-start bg-muted border-border hover:bg-muted/80 text-foreground"
             >
               <AlertCircle className="h-3.5 w-3.5 mr-2 text-red-400" />
               Overdue Funding
@@ -252,7 +252,7 @@ export function AdvancedSubscriptionFilters({
               variant="outline"
               size="sm"
               onClick={() => applyQuickFilter('needs_funding')}
-              className="w-full justify-start bg-gray-800 border-gray-700 hover:bg-gray-700 text-white"
+              className="w-full justify-start bg-muted border-border hover:bg-muted/80 text-foreground"
             >
               <Clock className="h-3.5 w-3.5 mr-2 text-yellow-400" />
               Needs Funding
@@ -261,7 +261,7 @@ export function AdvancedSubscriptionFilters({
               variant="outline"
               size="sm"
               onClick={() => applyQuickFilter('active_performing')}
-              className="w-full justify-start bg-gray-800 border-gray-700 hover:bg-gray-700 text-white"
+              className="w-full justify-start bg-muted border-border hover:bg-muted/80 text-foreground"
             >
               <TrendingUp className="h-3.5 w-3.5 mr-2 text-blue-400" />
               Active & Performing
@@ -269,7 +269,7 @@ export function AdvancedSubscriptionFilters({
           </CollapsibleContent>
         </Collapsible>
 
-        <Separator className="bg-gray-800" />
+        <Separator className="bg-muted" />
 
         {/* Status Filter (Multi-select) */}
         <Collapsible
@@ -277,9 +277,9 @@ export function AdvancedSubscriptionFilters({
           onOpenChange={() => toggleSection('status')}
         >
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full justify-between hover:bg-gray-800">
+            <Button variant="ghost" className="w-full justify-between hover:bg-muted">
               <div className="flex items-center gap-2">
-                <span className="text-white font-semibold">Status</span>
+                <span className="text-foreground font-semibold">Status</span>
                 {filters.statuses && filters.statuses.length > 0 && (
                   <Badge variant="secondary" className="ml-2">
                     {filters.statuses.length}
@@ -296,7 +296,7 @@ export function AdvancedSubscriptionFilters({
                   id={`status-${status.value}`}
                   checked={filters.statuses?.includes(status.value) || false}
                   onCheckedChange={() => toggleArrayFilter('statuses', status.value)}
-                  className="border-gray-600"
+                  className="border-border"
                 />
                 <Label
                   htmlFor={`status-${status.value}`}
@@ -311,7 +311,7 @@ export function AdvancedSubscriptionFilters({
           </CollapsibleContent>
         </Collapsible>
 
-        <Separator className="bg-gray-800" />
+        <Separator className="bg-muted" />
 
         {/* Vehicles & Investors */}
         <Collapsible
@@ -319,9 +319,9 @@ export function AdvancedSubscriptionFilters({
           onOpenChange={() => toggleSection('entities')}
         >
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full justify-between hover:bg-gray-800">
+            <Button variant="ghost" className="w-full justify-between hover:bg-muted">
               <div className="flex items-center gap-2">
-                <span className="text-white font-semibold">Vehicles & Investors</span>
+                <span className="text-foreground font-semibold">Vehicles & Investors</span>
                 {((filters.vehicleIds?.length || 0) + (filters.investorIds?.length || 0)) > 0 && (
                   <Badge variant="secondary">
                     {(filters.vehicleIds?.length || 0) + (filters.investorIds?.length || 0)}
@@ -334,19 +334,19 @@ export function AdvancedSubscriptionFilters({
           <CollapsibleContent className="space-y-3 mt-2">
             {/* Vehicles Multi-select */}
             <div className="space-y-2">
-              <Label className="text-white text-xs">Vehicles</Label>
-              <div className="max-h-40 overflow-y-auto scrollbar-hide space-y-1 bg-gray-800/50 rounded p-2">
+              <Label className="text-foreground text-xs">Vehicles</Label>
+              <div className="max-h-40 overflow-y-auto scrollbar-hide space-y-1 bg-muted/50 rounded p-2">
                 {vehicles.map(vehicle => (
                   <div key={vehicle.id} className="flex items-center gap-2">
                     <Checkbox
                       id={`vehicle-${vehicle.id}`}
                       checked={filters.vehicleIds?.includes(vehicle.id) || false}
                       onCheckedChange={() => toggleArrayFilter('vehicleIds', vehicle.id)}
-                      className="border-gray-600"
+                      className="border-border"
                     />
                     <Label
                       htmlFor={`vehicle-${vehicle.id}`}
-                      className="flex-1 cursor-pointer text-sm text-white"
+                      className="flex-1 cursor-pointer text-sm text-foreground"
                     >
                       {vehicle.name}
                     </Label>
@@ -357,7 +357,7 @@ export function AdvancedSubscriptionFilters({
 
             {/* Investor Types */}
             <div className="space-y-2">
-              <Label className="text-white text-xs">Investor Types</Label>
+              <Label className="text-foreground text-xs">Investor Types</Label>
               <div className="space-y-1">
                 {INVESTOR_TYPE_OPTIONS.map(type => (
                   <div key={type} className="flex items-center gap-2">
@@ -365,11 +365,11 @@ export function AdvancedSubscriptionFilters({
                       id={`investor-type-${type}`}
                       checked={filters.investorTypes?.includes(type) || false}
                       onCheckedChange={() => toggleArrayFilter('investorTypes', type)}
-                      className="border-gray-600"
+                      className="border-border"
                     />
                     <Label
                       htmlFor={`investor-type-${type}`}
-                      className="flex-1 cursor-pointer text-sm text-white capitalize"
+                      className="flex-1 cursor-pointer text-sm text-foreground capitalize"
                     >
                       {type}
                     </Label>
@@ -380,7 +380,7 @@ export function AdvancedSubscriptionFilters({
           </CollapsibleContent>
         </Collapsible>
 
-        <Separator className="bg-gray-800" />
+        <Separator className="bg-muted" />
 
         {/* Amount Ranges */}
         <Collapsible
@@ -388,78 +388,78 @@ export function AdvancedSubscriptionFilters({
           onOpenChange={() => toggleSection('amounts')}
         >
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full justify-between hover:bg-gray-800">
-              <span className="text-white font-semibold">Amount Ranges</span>
+            <Button variant="ghost" className="w-full justify-between hover:bg-muted">
+              <span className="text-foreground font-semibold">Amount Ranges</span>
               {sectionsOpen.amounts ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-3 mt-2">
             {/* Commitment Range */}
             <div className="space-y-2">
-              <Label className="text-white text-xs">Commitment</Label>
+              <Label className="text-foreground text-xs">Commitment</Label>
               <div className="grid grid-cols-2 gap-2">
                 <Input
                   type="number"
                   placeholder="Min"
                   value={filters.commitmentMin || ''}
                   onChange={(e) => updateFilter('commitmentMin', e.target.value ? Number(e.target.value) : undefined)}
-                  className="bg-gray-800 border-gray-700 text-white text-sm"
+                  className="bg-muted border-border text-foreground text-sm"
                 />
                 <Input
                   type="number"
                   placeholder="Max"
                   value={filters.commitmentMax || ''}
                   onChange={(e) => updateFilter('commitmentMax', e.target.value ? Number(e.target.value) : undefined)}
-                  className="bg-gray-800 border-gray-700 text-white text-sm"
+                  className="bg-muted border-border text-foreground text-sm"
                 />
               </div>
             </div>
 
             {/* Funded Range */}
             <div className="space-y-2">
-              <Label className="text-white text-xs">Funded Amount</Label>
+              <Label className="text-foreground text-xs">Funded Amount</Label>
               <div className="grid grid-cols-2 gap-2">
                 <Input
                   type="number"
                   placeholder="Min"
                   value={filters.fundedMin || ''}
                   onChange={(e) => updateFilter('fundedMin', e.target.value ? Number(e.target.value) : undefined)}
-                  className="bg-gray-800 border-gray-700 text-white text-sm"
+                  className="bg-muted border-border text-foreground text-sm"
                 />
                 <Input
                   type="number"
                   placeholder="Max"
                   value={filters.fundedMax || ''}
                   onChange={(e) => updateFilter('fundedMax', e.target.value ? Number(e.target.value) : undefined)}
-                  className="bg-gray-800 border-gray-700 text-white text-sm"
+                  className="bg-muted border-border text-foreground text-sm"
                 />
               </div>
             </div>
 
             {/* NAV Range */}
             <div className="space-y-2">
-              <Label className="text-white text-xs">Current NAV</Label>
+              <Label className="text-foreground text-xs">Current NAV</Label>
               <div className="grid grid-cols-2 gap-2">
                 <Input
                   type="number"
                   placeholder="Min"
                   value={filters.navMin || ''}
                   onChange={(e) => updateFilter('navMin', e.target.value ? Number(e.target.value) : undefined)}
-                  className="bg-gray-800 border-gray-700 text-white text-sm"
+                  className="bg-muted border-border text-foreground text-sm"
                 />
                 <Input
                   type="number"
                   placeholder="Max"
                   value={filters.navMax || ''}
                   onChange={(e) => updateFilter('navMax', e.target.value ? Number(e.target.value) : undefined)}
-                  className="bg-gray-800 border-gray-700 text-white text-sm"
+                  className="bg-muted border-border text-foreground text-sm"
                 />
               </div>
             </div>
           </CollapsibleContent>
         </Collapsible>
 
-        <Separator className="bg-gray-800" />
+        <Separator className="bg-muted" />
 
         {/* Date Ranges */}
         <Collapsible
@@ -467,72 +467,72 @@ export function AdvancedSubscriptionFilters({
           onOpenChange={() => toggleSection('dates')}
         >
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full justify-between hover:bg-gray-800">
-              <span className="text-white font-semibold">Date Ranges</span>
+            <Button variant="ghost" className="w-full justify-between hover:bg-muted">
+              <span className="text-foreground font-semibold">Date Ranges</span>
               {sectionsOpen.dates ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-3 mt-2">
             {/* Effective Date Range */}
             <div className="space-y-2">
-              <Label className="text-white text-xs">Effective Date</Label>
+              <Label className="text-foreground text-xs">Effective Date</Label>
               <div className="grid grid-cols-2 gap-2">
                 <Input
                   type="date"
                   value={filters.effectiveDateFrom || ''}
                   onChange={(e) => updateFilter('effectiveDateFrom', e.target.value)}
-                  className="bg-gray-800 border-gray-700 text-white text-sm"
+                  className="bg-muted border-border text-foreground text-sm"
                 />
                 <Input
                   type="date"
                   value={filters.effectiveDateTo || ''}
                   onChange={(e) => updateFilter('effectiveDateTo', e.target.value)}
-                  className="bg-gray-800 border-gray-700 text-white text-sm"
+                  className="bg-muted border-border text-foreground text-sm"
                 />
               </div>
             </div>
 
             {/* Committed Date Range */}
             <div className="space-y-2">
-              <Label className="text-white text-xs">Committed Date</Label>
+              <Label className="text-foreground text-xs">Committed Date</Label>
               <div className="grid grid-cols-2 gap-2">
                 <Input
                   type="date"
                   value={filters.committedDateFrom || ''}
                   onChange={(e) => updateFilter('committedDateFrom', e.target.value)}
-                  className="bg-gray-800 border-gray-700 text-white text-sm"
+                  className="bg-muted border-border text-foreground text-sm"
                 />
                 <Input
                   type="date"
                   value={filters.committedDateTo || ''}
                   onChange={(e) => updateFilter('committedDateTo', e.target.value)}
-                  className="bg-gray-800 border-gray-700 text-white text-sm"
+                  className="bg-muted border-border text-foreground text-sm"
                 />
               </div>
             </div>
 
             {/* Funding Due Date Range */}
             <div className="space-y-2">
-              <Label className="text-white text-xs">Funding Due Date</Label>
+              <Label className="text-foreground text-xs">Funding Due Date</Label>
               <div className="grid grid-cols-2 gap-2">
                 <Input
                   type="date"
                   value={filters.fundingDueFrom || ''}
                   onChange={(e) => updateFilter('fundingDueFrom', e.target.value)}
-                  className="bg-gray-800 border-gray-700 text-white text-sm"
+                  className="bg-muted border-border text-foreground text-sm"
                 />
                 <Input
                   type="date"
                   value={filters.fundingDueTo || ''}
                   onChange={(e) => updateFilter('fundingDueTo', e.target.value)}
-                  className="bg-gray-800 border-gray-700 text-white text-sm"
+                  className="bg-muted border-border text-foreground text-sm"
                 />
               </div>
             </div>
           </CollapsibleContent>
         </Collapsible>
 
-        <Separator className="bg-gray-800" />
+        <Separator className="bg-muted" />
 
         {/* Advanced Boolean Filters */}
         <Collapsible
@@ -540,8 +540,8 @@ export function AdvancedSubscriptionFilters({
           onOpenChange={() => toggleSection('advanced')}
         >
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full justify-between hover:bg-gray-800">
-              <span className="text-white font-semibold">Advanced Filters</span>
+            <Button variant="ghost" className="w-full justify-between hover:bg-muted">
+              <span className="text-foreground font-semibold">Advanced Filters</span>
               {sectionsOpen.advanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
           </CollapsibleTrigger>
@@ -551,9 +551,9 @@ export function AdvancedSubscriptionFilters({
                 id="has-performance-fees"
                 checked={filters.hasPerformanceFees || false}
                 onCheckedChange={(checked) => updateFilter('hasPerformanceFees', checked as boolean)}
-                className="border-gray-600"
+                className="border-border"
               />
-              <Label htmlFor="has-performance-fees" className="text-white text-sm cursor-pointer">
+              <Label htmlFor="has-performance-fees" className="text-foreground text-sm cursor-pointer">
                 Has Performance Fees
               </Label>
             </div>
@@ -563,9 +563,9 @@ export function AdvancedSubscriptionFilters({
                 id="has-introducer"
                 checked={filters.hasIntroducer || false}
                 onCheckedChange={(checked) => updateFilter('hasIntroducer', checked as boolean)}
-                className="border-gray-600"
+                className="border-border"
               />
-              <Label htmlFor="has-introducer" className="text-white text-sm cursor-pointer">
+              <Label htmlFor="has-introducer" className="text-foreground text-sm cursor-pointer">
                 Has Introducer
               </Label>
             </div>
@@ -575,9 +575,9 @@ export function AdvancedSubscriptionFilters({
                 id="has-outstanding"
                 checked={filters.hasOutstanding || false}
                 onCheckedChange={(checked) => updateFilter('hasOutstanding', checked as boolean)}
-                className="border-gray-600"
+                className="border-border"
               />
-              <Label htmlFor="has-outstanding" className="text-white text-sm cursor-pointer">
+              <Label htmlFor="has-outstanding" className="text-foreground text-sm cursor-pointer">
                 Has Outstanding Amount
               </Label>
             </div>
@@ -587,16 +587,16 @@ export function AdvancedSubscriptionFilters({
                 id="is-overdue"
                 checked={filters.isOverdue || false}
                 onCheckedChange={(checked) => updateFilter('isOverdue', checked as boolean)}
-                className="border-gray-600"
+                className="border-border"
               />
-              <Label htmlFor="is-overdue" className="text-white text-sm cursor-pointer">
+              <Label htmlFor="is-overdue" className="text-foreground text-sm cursor-pointer">
                 Funding Overdue
               </Label>
             </div>
 
             {/* Currency Filter */}
             <div className="space-y-2 mt-3">
-              <Label className="text-white text-xs">Currency</Label>
+              <Label className="text-foreground text-xs">Currency</Label>
               <div className="flex flex-wrap gap-1">
                 {CURRENCY_OPTIONS.map(currency => (
                   <Badge
@@ -605,7 +605,7 @@ export function AdvancedSubscriptionFilters({
                     className={`cursor-pointer ${
                       filters.currencies?.includes(currency)
                         ? 'bg-blue-900/50 border-blue-500 text-blue-200'
-                        : 'bg-gray-800 border-gray-700 text-gray-400'
+                        : 'bg-muted border-border text-muted-foreground'
                     }`}
                     onClick={() => toggleArrayFilter('currencies', currency)}
                   >

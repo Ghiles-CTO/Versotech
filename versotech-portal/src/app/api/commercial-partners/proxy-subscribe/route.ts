@@ -398,21 +398,23 @@ export async function GET(request: Request) {
     // IMPORTANT: Field names must match the Client interface in proxy-mode-context.tsx
     // Interface expects: { id, name, investor_type, kyc_status }
     const formattedClients = [
-      // Clients from commercial_partner_clients with linked investors
+      // Clients from commercial_partner_clients (with or without linked investors)
       ...(cpClients || [])
-        .filter(c => c.investor)
-        .map(c => ({
-          id: (c.investor as any).id,
-          name: (c.investor as any).legal_name || c.client_name, // Changed: legal_name -> name
-          investor_type: (c.investor as any).type || c.client_type, // Changed: type -> investor_type
-          kyc_status: (c.investor as any).kyc_status,
-          client_record_id: c.id // Include the client record ID for reference
-        })),
+        .map(c => {
+          const investor = c.investor as any
+          return {
+            id: investor?.id || null,  // null if no investor linked
+            name: investor?.legal_name || c.client_name,
+            investor_type: investor?.type || c.client_type || 'entity',
+            kyc_status: investor?.kyc_status || 'not_linked',  // Custom status for unlinked
+            client_record_id: c.id // Include the client record ID for reference
+          }
+        }),
       // Legacy clients directly linked to CP
       ...uniqueLegacyClients.map(lc => ({
         id: lc.id,
-        name: lc.legal_name, // Changed: legal_name -> name
-        investor_type: lc.type, // Changed: type -> investor_type
+        name: lc.legal_name,
+        investor_type: lc.type,
         kyc_status: lc.kyc_status
       }))
     ]

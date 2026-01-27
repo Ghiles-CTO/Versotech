@@ -1,0 +1,11 @@
+var R=require("../../../../../chunks/[turbopack]_runtime.js")("server/app/api/deals/[id]/inventory/route.js")
+R.c("server/chunks/6d6b6_@supabase_node-fetch_lib_index_41964ed8.js")
+R.c("server/chunks/6d6b6_next_31dddae8._.js")
+R.c("server/chunks/6d6b6_tr46_f7ca97fb._.js")
+R.c("server/chunks/6d6b6_@supabase_auth-js_dist_module_4ebeb219._.js")
+R.c("server/chunks/6d6b6_zod_v4_e2c118fe._.js")
+R.c("server/chunks/6d6b6_e5e892f7._.js")
+R.c("server/chunks/[root-of-the-server]__c575c3cd._.js")
+R.c("server/chunks/c6ad4__next-internal_server_app_api_deals_[id]_inventory_route_actions_4387b6e8.js")
+R.m("[project]/versotech-portal/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/versotech-portal/src/app/api/deals/[id]/inventory/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)")
+module.exports=R.m("[project]/versotech-portal/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/versotech-portal/src/app/api/deals/[id]/inventory/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)").exports

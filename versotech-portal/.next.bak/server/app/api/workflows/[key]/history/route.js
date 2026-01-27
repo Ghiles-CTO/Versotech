@@ -1,0 +1,13 @@
+var R=require("../../../../../chunks/[turbopack]_runtime.js")("server/app/api/workflows/[key]/history/route.js")
+R.c("server/chunks/[root-of-the-server]__b8c9f933._.js")
+R.c("server/chunks/versotech-portal_8633f979._.js")
+R.c("server/chunks/6d6b6_next_672f6640._.js")
+R.c("server/chunks/6d6b6_next_dist_7d1347b1._.js")
+R.c("server/chunks/6d6b6_4a9fcd3d._.js")
+R.c("server/chunks/6d6b6_131e6e29._.js")
+R.c("server/chunks/[root-of-the-server]__04eaf9e0._.js")
+R.c("server/chunks/[root-of-the-server]__7a18eae2._.js")
+R.c("server/chunks/6d6b6_next_b8b5a401._.js")
+R.c("server/chunks/c6ad4__next-internal_server_app_api_workflows_[key]_history_route_actions_47f73920.js")
+R.m(11561)
+module.exports=R.m(11561).exports

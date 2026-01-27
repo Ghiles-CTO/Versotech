@@ -1,0 +1,3 @@
+{
+  "/api/arrangers/me/fee-plans/[id]/send/route": "app/api/arrangers/me/fee-plans/[id]/send/route.js"
+}

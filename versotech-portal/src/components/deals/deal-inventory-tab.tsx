@@ -23,7 +23,7 @@ export function DealInventoryTab({ dealId, shareLots, inventorySummary, onRefres
     <div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border border-white/10 bg-white/5">
+        <Card className="border-border bg-muted/50">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Units</CardTitle>
           </CardHeader>
@@ -34,7 +34,7 @@ export function DealInventoryTab({ dealId, shareLots, inventorySummary, onRefres
           </CardContent>
         </Card>
 
-        <Card className="border border-white/10 bg-white/5">
+        <Card className="border-border bg-muted/50">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Available</CardTitle>
           </CardHeader>
@@ -45,7 +45,7 @@ export function DealInventoryTab({ dealId, shareLots, inventorySummary, onRefres
           </CardContent>
         </Card>
 
-        <Card className="border border-white/10 bg-white/5">
+        <Card className="border-border bg-muted/50">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Reserved</CardTitle>
           </CardHeader>
@@ -56,7 +56,7 @@ export function DealInventoryTab({ dealId, shareLots, inventorySummary, onRefres
           </CardContent>
         </Card>
 
-        <Card className="border border-white/10 bg-white/5">
+        <Card className="border-border bg-muted/50">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Allocated</CardTitle>
           </CardHeader>
@@ -69,7 +69,7 @@ export function DealInventoryTab({ dealId, shareLots, inventorySummary, onRefres
       </div>
 
       {/* Share Lots Table */}
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border-border bg-muted/50">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -92,7 +92,7 @@ export function DealInventoryTab({ dealId, shareLots, inventorySummary, onRefres
               {shareLots.map((lot) => (
                 <div
                   key={lot.id}
-                  className="border border-white/10 rounded-lg p-4 bg-white/5 hover:bg-white/10 transition-colors"
+                  className="border border-border rounded-lg p-4 bg-muted/50 hover:bg-muted transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
@@ -100,7 +100,7 @@ export function DealInventoryTab({ dealId, shareLots, inventorySummary, onRefres
                         <span className="font-medium text-foreground">
                           {lot.share_sources?.counterparty_name || 'Unknown Source'}
                         </span>
-                        <Badge variant="outline" className="border-white/20 text-xs">
+                        <Badge variant="outline" className="border-border text-xs">
                           {lot.share_sources?.kind}
                         </Badge>
                         <Badge className={

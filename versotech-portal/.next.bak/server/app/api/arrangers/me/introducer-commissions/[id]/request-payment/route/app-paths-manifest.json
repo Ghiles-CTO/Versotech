@@ -1,0 +1,3 @@
+{
+  "/api/arrangers/me/introducer-commissions/[id]/request-payment/route": "app/api/arrangers/me/introducer-commissions/[id]/request-payment/route.js"
+}

@@ -176,31 +176,31 @@ export function UploadDocumentModal({
           {triggerLabel || 'Upload Document'}
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-zinc-950 border-white/10 max-w-2xl">
+      <DialogContent className="bg-background border-border max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-white">
-            <Upload className="h-5 w-5 text-emerald-400" />
+          <DialogTitle className="flex items-center gap-2 text-foreground">
+            <Upload className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />
             Upload Document
           </DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogDescription className="text-muted-foreground">
             Add a document scoped to this {dealId ? 'deal' : 'entity'}
           </DialogDescription>
         </DialogHeader>
 
         {folderOptions.length > 0 && (
           <div className="mt-4 space-y-2">
-            <Label htmlFor="doc-folder-select" className="text-sm font-medium text-white">Folder</Label>
+            <Label htmlFor="doc-folder-select" className="text-sm font-medium text-foreground">Folder</Label>
             <Select
               value={folderId ?? 'none'}
               onValueChange={(value) => setFolderId(value === 'none' ? null : value)}
             >
-              <SelectTrigger id="doc-folder-select" className="bg-white/5 border-white/10 text-white">
+              <SelectTrigger id="doc-folder-select" className="bg-background border-input text-foreground">
                 <SelectValue placeholder="Select folder" />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-950 border-white/10">
-                <SelectItem value="none" className="text-white">Unfiled</SelectItem>
+              <SelectContent className="bg-popover border-border">
+                <SelectItem value="none" className="text-foreground">Unfiled</SelectItem>
                 {folderOptions.map((folder) => (
-                  <SelectItem key={folder.id} value={folder.id} className="text-white">
+                  <SelectItem key={folder.id} value={folder.id} className="text-foreground">
                     {folder.path ?? folder.name}
                   </SelectItem>
                 ))}
@@ -210,12 +210,12 @@ export function UploadDocumentModal({
         )}
 
         <Tabs value={mode} onValueChange={(value) => setMode(value as 'file' | 'link')}>
-          <TabsList className="grid grid-cols-2 bg-white/5 border border-white/10">
-            <TabsTrigger value="file" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-100 text-white">
+          <TabsList className="grid grid-cols-2 bg-muted/50 border border-border">
+            <TabsTrigger value="file" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-800 dark:data-[state=active]:text-emerald-100 text-foreground">
               <Upload className="h-4 w-4 mr-2" />
               Upload File
             </TabsTrigger>
-            <TabsTrigger value="link" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-100 text-white">
+            <TabsTrigger value="link" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-800 dark:data-[state=active]:text-emerald-100 text-foreground">
               <FileText className="h-4 w-4 mr-2" />
               Link Document
             </TabsTrigger>
@@ -223,57 +223,57 @@ export function UploadDocumentModal({
 
           <TabsContent value="file" className="mt-4 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="doc_type_file" className="text-sm font-medium text-white">Document Type *</Label>
+              <Label htmlFor="doc_type_file" className="text-sm font-medium text-foreground">Document Type *</Label>
               <Select value={docType} onValueChange={setDocType}>
-                <SelectTrigger id="doc_type_file" className="bg-white/5 border-white/10 text-white">
+                <SelectTrigger id="doc_type_file" className="bg-background border-input text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-950 border-white/10">
-                  <SelectItem value="nda" className="text-white">NDA</SelectItem>
-                  <SelectItem value="term_sheet" className="text-white">Term Sheet</SelectItem>
-                  <SelectItem value="subscription" className="text-white">Subscription Agreement</SelectItem>
-                  <SelectItem value="contract" className="text-white">Contract</SelectItem>
-                  <SelectItem value="report" className="text-white">Report</SelectItem>
-                  <SelectItem value="other" className="text-white">Other</SelectItem>
+                <SelectContent className="bg-popover border-border">
+                  <SelectItem value="nda" className="text-foreground">NDA</SelectItem>
+                  <SelectItem value="term_sheet" className="text-foreground">Term Sheet</SelectItem>
+                  <SelectItem value="subscription" className="text-foreground">Subscription Agreement</SelectItem>
+                  <SelectItem value="contract" className="text-foreground">Contract</SelectItem>
+                  <SelectItem value="report" className="text-foreground">Report</SelectItem>
+                  <SelectItem value="other" className="text-foreground">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="doc_name_file" className="text-sm font-medium text-white">Title</Label>
+              <Label htmlFor="doc_name_file" className="text-sm font-medium text-foreground">Title</Label>
               <Input
                 id="doc_name_file"
                 placeholder="e.g., Board Resolution - Jan 2025"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
+                className="bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-emerald-400/50 focus:ring-emerald-400/20"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="doc_description_file" className="text-sm font-medium text-white">Description</Label>
+              <Label htmlFor="doc_description_file" className="text-sm font-medium text-foreground">Description</Label>
               <Input
                 id="doc_description_file"
                 placeholder="Optional summary or context"
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
-                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
+                className="bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-emerald-400/50 focus:ring-emerald-400/20"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="file-input" className="text-sm font-medium text-white">File *</Label>
+              <Label htmlFor="file-input" className="text-sm font-medium text-foreground">File *</Label>
               <Input
                 id="file-input"
                 type="file"
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
                 accept=".pdf,.doc,.docx,.xls,.xlsx"
-                className="bg-white/5 border-white/10 text-white file:text-white"
+                className="bg-background border-input text-foreground file:text-foreground"
               />
               {file && (
-                <div className="flex items-center gap-2 text-sm text-gray-400">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <FileText className="h-4 w-4" />
-                  <span className="text-white">{file.name}</span>
+                  <span className="text-foreground">{file.name}</span>
                   <span className="text-xs">({(file.size / 1024).toFixed(1)} KB)</span>
                 </div>
               )}
@@ -281,25 +281,25 @@ export function UploadDocumentModal({
           </TabsContent>
 
           <TabsContent value="link" className="mt-4 space-y-4">
-            <div className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-3">
-              <div className="flex items-center gap-2 pb-2 border-b border-white/10">
+            <div className="rounded-lg border border-border bg-muted/50 p-4 space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-border">
                 <div className="h-8 w-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                  <FileText className="h-4 w-4 text-emerald-400" />
+                  <FileText className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-white">Link External Document</h3>
-                  <p className="text-xs text-gray-400">Connect to documents stored in Google Drive or other platforms</p>
+                  <h3 className="text-sm font-semibold text-foreground">Link External Document</h3>
+                  <p className="text-xs text-muted-foreground">Connect to documents stored in Google Drive or other platforms</p>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="link-type" className="text-sm font-medium text-white">Link Source *</Label>
+                <Label htmlFor="link-type" className="text-sm font-medium text-foreground">Link Source *</Label>
                 <Select value={linkType} onValueChange={setLinkType}>
-                  <SelectTrigger id="link-type" className="bg-white/5 border-white/10 text-white">
+                  <SelectTrigger id="link-type" className="bg-background border-input text-foreground">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-zinc-950 border-white/10">
-                    <SelectItem value="google_drive" className="text-white">
+                  <SelectContent className="bg-popover border-border">
+                    <SelectItem value="google_drive" className="text-foreground">
                       <div className="flex items-center gap-2">
                         <div className="h-4 w-4 rounded bg-blue-500/20 flex items-center justify-center">
                           <span className="text-xs">G</span>
@@ -307,7 +307,7 @@ export function UploadDocumentModal({
                         Google Drive
                       </div>
                     </SelectItem>
-                    <SelectItem value="sharepoint" className="text-white">
+                    <SelectItem value="sharepoint" className="text-foreground">
                       <div className="flex items-center gap-2">
                         <div className="h-4 w-4 rounded bg-blue-500/20 flex items-center justify-center">
                           <span className="text-xs">S</span>
@@ -315,7 +315,7 @@ export function UploadDocumentModal({
                         SharePoint
                       </div>
                     </SelectItem>
-                    <SelectItem value="dropbox" className="text-white">
+                    <SelectItem value="dropbox" className="text-foreground">
                       <div className="flex items-center gap-2">
                         <div className="h-4 w-4 rounded bg-blue-500/20 flex items-center justify-center">
                           <span className="text-xs">D</span>
@@ -323,19 +323,19 @@ export function UploadDocumentModal({
                         Dropbox
                       </div>
                     </SelectItem>
-                    <SelectItem value="external" className="text-white">External URL</SelectItem>
-                    <SelectItem value="other" className="text-white">Other</SelectItem>
+                    <SelectItem value="external" className="text-foreground">External URL</SelectItem>
+                    <SelectItem value="other" className="text-foreground">Other</SelectItem>
                   </SelectContent>
                 </Select>
                 {linkType === 'google_drive' && (
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-muted-foreground">
                     Make sure the Google Drive link has proper sharing permissions
                   </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="link-url" className="text-sm font-medium text-white">
+                <Label htmlFor="link-url" className="text-sm font-medium text-foreground">
                   {linkType === 'google_drive' ? 'Google Drive Share Link' : 'External URL'} *
                 </Label>
                 <Input
@@ -348,12 +348,12 @@ export function UploadDocumentModal({
                   }
                   value={linkUrl}
                   onChange={(event) => setLinkUrl(event.target.value)}
-                  className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
+                  className="bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-emerald-400/50 focus:ring-emerald-400/20"
                 />
                 {linkType === 'google_drive' && linkUrl && (
                   <div className="flex items-start gap-2 p-2 rounded-md bg-blue-500/10 border border-blue-400/20">
-                    <Info className="h-4 w-4 text-blue-400 mt-0.5 shrink-0" />
-                    <div className="text-xs text-blue-200">
+                    <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                    <div className="text-xs text-blue-800 dark:text-blue-200">
                       <p className="font-medium">Google Drive Link Detected</p>
                       <p className="mt-0.5 opacity-80">Verify the link is accessible to intended users</p>
                     </div>
@@ -363,54 +363,54 @@ export function UploadDocumentModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="doc_type_link" className="text-sm font-medium text-white">Document Type *</Label>
+              <Label htmlFor="doc_type_link" className="text-sm font-medium text-foreground">Document Type *</Label>
               <Select value={docType} onValueChange={setDocType}>
-                <SelectTrigger id="doc_type_link" className="bg-white/5 border-white/10 text-white">
+                <SelectTrigger id="doc_type_link" className="bg-background border-input text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-950 border-white/10">
-                  <SelectItem value="nda" className="text-white">NDA</SelectItem>
-                  <SelectItem value="term_sheet" className="text-white">Term Sheet</SelectItem>
-                  <SelectItem value="subscription" className="text-white">Subscription Agreement</SelectItem>
-                  <SelectItem value="contract" className="text-white">Contract</SelectItem>
-                  <SelectItem value="report" className="text-white">Report</SelectItem>
-                  <SelectItem value="other" className="text-white">Other</SelectItem>
+                <SelectContent className="bg-popover border-border">
+                  <SelectItem value="nda" className="text-foreground">NDA</SelectItem>
+                  <SelectItem value="term_sheet" className="text-foreground">Term Sheet</SelectItem>
+                  <SelectItem value="subscription" className="text-foreground">Subscription Agreement</SelectItem>
+                  <SelectItem value="contract" className="text-foreground">Contract</SelectItem>
+                  <SelectItem value="report" className="text-foreground">Report</SelectItem>
+                  <SelectItem value="other" className="text-foreground">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="doc_name_link" className="text-sm font-medium text-white">Title</Label>
+              <Label htmlFor="doc_name_link" className="text-sm font-medium text-foreground">Title</Label>
               <Input
                 id="doc_name_link"
                 placeholder="e.g., Investor Presentation August 2025"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
+                className="bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-emerald-400/50 focus:ring-emerald-400/20"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="doc_description_link" className="text-sm font-medium text-white">Description</Label>
+              <Label htmlFor="doc_description_link" className="text-sm font-medium text-foreground">Description</Label>
               <Input
                 id="doc_description_link"
                 placeholder="Optional summary or context"
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
-                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
+                className="bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-emerald-400/50 focus:ring-emerald-400/20"
               />
             </div>
           </TabsContent>
         </Tabs>
 
         {error && (
-          <div className="p-3 rounded-lg bg-red-500/20 border border-red-400/30 text-red-200 text-sm">
+          <div className="p-3 rounded-lg bg-red-100 dark:bg-red-500/20 border border-red-300 dark:border-red-400/30 text-red-700 dark:text-red-200 text-sm">
             {error}
           </div>
         )}
 
         <div className="flex justify-end gap-2 pt-4">
-          <Button variant="outline" onClick={() => setOpen(false)} disabled={loading} className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600">
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={loading || (isFileMode && !file) || (!isFileMode && !linkUrl.trim())} className="bg-emerald-600 hover:bg-emerald-700 text-white">

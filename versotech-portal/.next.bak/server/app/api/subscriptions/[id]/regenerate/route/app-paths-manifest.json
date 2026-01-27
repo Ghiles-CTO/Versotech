@@ -1,0 +1,3 @@
+{
+  "/api/subscriptions/[id]/regenerate/route": "app/api/subscriptions/[id]/regenerate/route.js"
+}

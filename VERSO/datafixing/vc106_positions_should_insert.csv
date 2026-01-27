@@ -1,0 +1,3 @@
+vc_code,sheet,row_indices,investor_last,investor_first,investor_entity,ownership_position,investor_match_status,investor_match_note,investor_id,vehicle_id,position_match_status,matched_position_id,should_insert,investor_name_db
+VC106,VC6,18,,,OEP Ltd,11905.0,MATCH,,5ee17648-dd9d-4351-a450-f57119440739,ba584abd-ea2b-4a3f-893a-c7e0999f4039,NOT_FOUND,,True,OEP Ltd
+VC106,VC6,90,,,VERSO GROUP,4547.0,MATCH,,1319a62f-544e-45bf-a208-61041f9f1e34,ba584abd-ea2b-4a3f-893a-c7e0999f4039,NOT_FOUND,,True,VERSO GROUP

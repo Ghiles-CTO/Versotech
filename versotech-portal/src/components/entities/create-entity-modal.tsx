@@ -22,7 +22,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { Upload, Trash2, Loader2 } from 'lucide-react'
+import { Upload, Trash2, Loader2, Building2, Scale } from 'lucide-react'
 import type { Entity } from './entities-views'
 
 interface DropdownOption {
@@ -36,7 +36,6 @@ interface DropdownOption {
 interface DropdownOptions {
   arrangers: DropdownOption[]
   lawyers: DropdownOption[]
-  managingPartners: DropdownOption[]
 }
 
 const STATUS_OPTIONS = [
@@ -84,8 +83,7 @@ const defaultForm = {
   website_url: '',
   address: '',
   arranger_entity_id: '',
-  lawyer_id: '',
-  managing_partner_id: ''
+  lawyer_id: ''
 }
 
 type FormState = typeof defaultForm
@@ -105,8 +103,7 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
   const [loading, setLoading] = useState(false)
   const [dropdownOptions, setDropdownOptions] = useState<DropdownOptions>({
     arrangers: [],
-    lawyers: [],
-    managingPartners: []
+    lawyers: []
   })
   const [dropdownsLoading, setDropdownsLoading] = useState(false)
 
@@ -229,8 +226,7 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
         website_url: formData.website_url.trim() || null,
         address: formData.address.trim() || null,
         arranger_entity_id: formData.arranger_entity_id || null,
-        lawyer_id: formData.lawyer_id || null,
-        managing_partner_id: formData.managing_partner_id || null
+        lawyer_id: formData.lawyer_id || null
       }
 
       const response = await fetch('/api/vehicles', {
@@ -256,11 +252,11 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto no-scrollbar rounded-2xl border border-white/10 bg-black/95 text-white shadow-[0_28px_80px_rgba(0,0,0,0.55)] backdrop-blur">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto no-scrollbar rounded-2xl border border-border bg-background shadow-xl">
         <form onSubmit={handleSubmit} className="space-y-6">
           <DialogHeader className="space-y-2">
-            <DialogTitle className="text-2xl text-white">Create Vehicle</DialogTitle>
-            <DialogDescription className="text-sm text-white/70">
+            <DialogTitle className="text-2xl text-foreground">Create Vehicle</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
               Complete the vehicle profile used when linking deals and investor reporting.
             </DialogDescription>
           </DialogHeader>
@@ -268,7 +264,7 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
           <div className="grid gap-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="vehicle-name" className="text-white">
+                <Label htmlFor="vehicle-name" className="text-foreground">
                   Vehicle Name *
                 </Label>
                 <Input
@@ -276,11 +272,11 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
                   value={formData.name}
                   onChange={handleInputChange('name')}
                   placeholder="e.g., Verso Fund II"
-                  className="bg-white text-black"
+                  className="bg-background border-input text-foreground"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="vehicle-code" className="text-white">
+                <Label htmlFor="vehicle-code" className="text-foreground">
                   Vehicle Code
                 </Label>
                 <Input
@@ -288,16 +284,16 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
                   value={formData.entity_code}
                   onChange={handleInputChange('entity_code')}
                   placeholder="e.g., VC101"
-                  className="bg-white text-black font-mono uppercase"
+                  className="bg-background border-input text-foreground font-mono uppercase"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label className="text-white">Status</Label>
+                <Label className="text-foreground">Status</Label>
                 <Select value={formData.status} onValueChange={(value) => setFormData((prev) => ({ ...prev, status: value }))}>
-                  <SelectTrigger className="bg-white text-black">
+                  <SelectTrigger className="bg-background border-input text-foreground">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -310,9 +306,9 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label className="text-white">Type</Label>
+                <Label className="text-foreground">Type</Label>
                 <Select value={formData.type} onValueChange={(value) => setFormData((prev) => ({ ...prev, type: value }))}>
-                  <SelectTrigger className="bg-white text-black">
+                  <SelectTrigger className="bg-background border-input text-foreground">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -325,9 +321,9 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label className="text-white">Currency</Label>
+                <Label className="text-foreground">Currency</Label>
                 <Select value={formData.currency} onValueChange={(value) => setFormData((prev) => ({ ...prev, currency: value }))}>
-                  <SelectTrigger className="bg-white text-black">
+                  <SelectTrigger className="bg-background border-input text-foreground">
                     <SelectValue placeholder="Currency" />
                   </SelectTrigger>
                   <SelectContent>
@@ -343,7 +339,7 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="platform" className="text-white">
+                <Label htmlFor="platform" className="text-foreground">
                   Platform
                 </Label>
                 <Input
@@ -351,11 +347,11 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
                   value={formData.platform}
                   onChange={handleInputChange('platform')}
                   placeholder="e.g., VC1SCSP"
-                  className="bg-white text-black"
+                  className="bg-background border-input text-foreground"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="investment_name" className="text-white">
+                <Label htmlFor="investment_name" className="text-foreground">
                   Investment Name
                 </Label>
                 <Input
@@ -363,13 +359,13 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
                   value={formData.investment_name}
                   onChange={handleInputChange('investment_name')}
                   placeholder="e.g., Revolut Secondary"
-                  className="bg-white text-black"
+                  className="bg-background border-input text-foreground"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="domicile" className="text-white">
+              <Label htmlFor="domicile" className="text-foreground">
                 Domicile / Jurisdiction *
               </Label>
               <Input
@@ -377,13 +373,13 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
                 value={formData.domicile}
                 onChange={handleInputChange('domicile')}
                 placeholder="e.g., Luxembourg, BVI, Delaware"
-                className="bg-white text-black"
+                className="bg-background border-input text-foreground"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="formation_date" className="text-white">
+                <Label htmlFor="formation_date" className="text-foreground">
                   Formation Date
                 </Label>
                 <Input
@@ -391,11 +387,11 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
                   type="date"
                   value={formData.formation_date}
                   onChange={handleInputChange('formation_date')}
-                  className="bg-white text-black"
+                  className="bg-background border-input text-foreground"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="registration_number" className="text-white">
+                <Label htmlFor="registration_number" className="text-foreground">
                   Registration Number
                 </Label>
                 <Input
@@ -403,14 +399,14 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
                   value={formData.registration_number}
                   onChange={handleInputChange('registration_number')}
                   placeholder="Optional registration reference"
-                  className="bg-white text-black"
+                  className="bg-background border-input text-foreground"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="former_entity" className="text-white">
+                <Label htmlFor="former_entity" className="text-foreground">
                   Former Vehicle Name
                 </Label>
                 <Input
@@ -418,11 +414,11 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
                   value={formData.former_entity}
                   onChange={handleInputChange('former_entity')}
                   placeholder="Previous name if renamed"
-                  className="bg-white text-black"
+                  className="bg-background border-input text-foreground"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="website_url" className="text-white">
+                <Label htmlFor="website_url" className="text-foreground">
                   Website
                 </Label>
                 <Input
@@ -431,13 +427,13 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
                   value={formData.website_url}
                   onChange={handleInputChange('website_url')}
                   placeholder="https://example.com"
-                  className="bg-white text-black"
+                  className="bg-background border-input text-foreground"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="address" className="text-white">
+              <Label htmlFor="address" className="text-foreground">
                 Address
               </Label>
               <Textarea
@@ -446,25 +442,30 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
                 value={formData.address}
                 onChange={(event) => setFormData((prev) => ({ ...prev, address: event.target.value }))}
                 placeholder="Registered address of the vehicle"
-                className="bg-white text-black"
+                className="bg-background border-input text-foreground"
               />
             </div>
 
-            <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.06] p-4">
+            <div className="space-y-4 rounded-xl border border-border bg-muted/30 p-5">
               <div className="space-y-1">
-                <Label className="text-white font-medium">Service Providers</Label>
-                <p className="text-xs text-white/60">Assign the arranger, lawyer, and managing partner for this vehicle.</p>
+                <Label className="text-foreground font-semibold text-base">Service Providers</Label>
+                <p className="text-sm text-muted-foreground">Assign the arranger and legal counsel for this vehicle.</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-white">Arranger</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="space-y-2.5 p-4 rounded-lg bg-background/50 border border-border/50 transition-colors hover:border-border">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+                      <Building2 className="h-4 w-4 text-primary" />
+                    </div>
+                    <Label className="text-foreground font-medium">Arranger</Label>
+                  </div>
                   <Select
                     value={formData.arranger_entity_id}
                     onValueChange={(value) => setFormData((prev) => ({ ...prev, arranger_entity_id: value === 'none' ? '' : value }))}
                     disabled={dropdownsLoading}
                   >
-                    <SelectTrigger className="bg-white text-black">
+                    <SelectTrigger className="bg-background border-input text-foreground h-11">
                       <SelectValue placeholder={dropdownsLoading ? 'Loading...' : 'Select arranger'} />
                     </SelectTrigger>
                     <SelectContent>
@@ -476,17 +477,23 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
                       ))}
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground">Entity responsible for deal structuring</p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-white">Lawyer</Label>
+                <div className="space-y-2.5 p-4 rounded-lg bg-background/50 border border-border/50 transition-colors hover:border-border">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-500/10">
+                      <Scale className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <Label className="text-foreground font-medium">Legal Counsel</Label>
+                  </div>
                   <Select
                     value={formData.lawyer_id}
                     onValueChange={(value) => setFormData((prev) => ({ ...prev, lawyer_id: value === 'none' ? '' : value }))}
                     disabled={dropdownsLoading}
                   >
-                    <SelectTrigger className="bg-white text-black">
-                      <SelectValue placeholder={dropdownsLoading ? 'Loading...' : 'Select lawyer'} />
+                    <SelectTrigger className="bg-background border-input text-foreground h-11">
+                      <SelectValue placeholder={dropdownsLoading ? 'Loading...' : 'Select legal counsel'} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
@@ -497,45 +504,24 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-white">Managing Partner</Label>
-                  <Select
-                    value={formData.managing_partner_id}
-                    onValueChange={(value) => setFormData((prev) => ({ ...prev, managing_partner_id: value === 'none' ? '' : value }))}
-                    disabled={dropdownsLoading}
-                  >
-                    <SelectTrigger className="bg-white text-black">
-                      <SelectValue placeholder={dropdownsLoading ? 'Loading...' : 'Select managing partner'} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {dropdownOptions.managingPartners.map((partner) => (
-                        <SelectItem key={partner.id} value={partner.id}>
-                          {partner.display_name || partner.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <p className="text-xs text-muted-foreground">Law firm handling legal documentation</p>
                 </div>
               </div>
             </div>
 
             <div className="space-y-3">
-              <Label className="text-white">Vehicle Logo</Label>
-              <div className="flex flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.06] p-4">
+              <Label className="text-foreground">Vehicle Logo</Label>
+              <div className="flex flex-col gap-3 rounded-xl border border-border bg-muted/30 p-4">
                 <div className="flex items-center gap-4">
-                  <div className="h-16 w-16 rounded-lg border border-white/10 bg-white/10 flex items-center justify-center">
+                  <div className="h-16 w-16 rounded-lg border border-border bg-muted flex items-center justify-center">
                     {logoUrl ? (
-
                       <Image src={logoUrl} alt="Entity logo preview" width={64} height={64} className="h-full w-full rounded object-contain p-1" />
                     ) : (
-                      <span className="text-xs text-white/60">Upload logo</span>
+                      <span className="text-xs text-muted-foreground">Upload logo</span>
                     )}
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label className="inline-flex items-center gap-2 rounded-md border border-dashed border-white/25 px-3 py-2 text-sm text-white cursor-pointer transition-colors hover:border-white/70 hover:bg-white/[0.04]">
+                    <label className="inline-flex items-center gap-2 rounded-md border border-dashed border-border px-3 py-2 text-sm text-foreground cursor-pointer transition-colors hover:border-primary hover:bg-muted">
                       <Upload className="h-4 w-4" />
                       <span>{logoUrl ? 'Replace Logo' : 'Upload Logo'}</span>
                       <input
@@ -552,7 +538,7 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
                     </label>
                     <div className="flex items-center gap-3">
                       {logoUploading && (
-                        <span className="inline-flex items-center gap-1 text-xs text-white/70">
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                           <Loader2 className="h-3 w-3 animate-spin" />
                           Uploading…
                         </span>
@@ -562,7 +548,7 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="px-0 text-xs text-rose-300 hover:text-rose-200"
+                          className="px-0 text-xs text-destructive hover:text-destructive/80"
                           onClick={() => {
                             setLogoUrl('')
                             setLogoError(null)
@@ -573,18 +559,18 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
                         </Button>
                       )}
                     </div>
-                    <p className="text-xs text-white/60">PNG or JPG, recommended minimum 240×240.</p>
-                    {logoError && <p className="text-xs text-rose-300">{logoError}</p>}
+                    <p className="text-xs text-muted-foreground">PNG or JPG, recommended minimum 240×240.</p>
+                    {logoError && <p className="text-xs text-destructive">{logoError}</p>}
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.06] p-4">
+            <div className="space-y-4 rounded-xl border border-border bg-muted/30 p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1">
-                  <Label className="text-white">Reporting Requirements</Label>
-                  <p className="text-xs text-white/60">{reportingNeedsExplanation}</p>
+                  <Label className="text-foreground font-semibold">Reporting Requirements</Label>
+                  <p className="text-sm text-muted-foreground">{reportingNeedsExplanation}</p>
                 </div>
                 <Switch
                   checked={formData.requires_reporting}
@@ -601,13 +587,13 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-white">Reporting Channel</Label>
+                  <Label className="text-foreground">Reporting Channel</Label>
                   <Select
                     value={formData.reporting_type}
                     onValueChange={(value) => setFormData((prev) => ({ ...prev, reporting_type: value }))}
                     disabled={!formData.requires_reporting}
                   >
-                    <SelectTrigger className="bg-white text-black">
+                    <SelectTrigger className="bg-background border-input text-foreground">
                       <SelectValue placeholder="Reporting channel" />
                     </SelectTrigger>
                     <SelectContent>
@@ -623,7 +609,7 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes" className="text-white">
+              <Label htmlFor="notes" className="text-foreground">
                 Notes
               </Label>
               <Textarea
@@ -632,31 +618,30 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
                 value={formData.notes}
                 onChange={(event) => setFormData((prev) => ({ ...prev, notes: event.target.value }))}
                 placeholder="Add any additional context for this entity."
-                className="bg-white text-black"
+                className="bg-background border-input text-foreground"
               />
             </div>
 
             {error && (
-              <div className="rounded-md border border-rose-400/40 bg-rose-500/10 p-3 text-sm text-rose-200">
+              <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
                 {error}
               </div>
             )}
           </div>
 
-          <DialogFooter className="flex items-center justify-end gap-2 border-t border-white/10 pt-4">
+          <DialogFooter className="flex items-center justify-end gap-2 border-t border-border pt-4">
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={loading}
-              className="border border-white/30 text-white hover:bg-white/10"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={loading}
-              className="bg-emerald-500 text-emerald-950 hover:bg-emerald-400 transition-colors"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
             >
               {loading ? (
                 <span className="inline-flex items-center gap-2">

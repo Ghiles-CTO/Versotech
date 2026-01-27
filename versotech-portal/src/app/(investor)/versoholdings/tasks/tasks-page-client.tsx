@@ -337,11 +337,11 @@ export function TasksPageClient({
 
   const getStatusBadge = (status: string) => {
     const configs = {
-      pending: { label: 'Pending', className: 'bg-gray-100 text-gray-700 border-gray-200' },
-      in_progress: { label: 'In Progress', className: 'bg-blue-50 text-blue-700 border-blue-200' },
-      completed: { label: 'Completed', className: 'bg-green-50 text-green-700 border-green-200' },
-      overdue: { label: 'Overdue', className: 'bg-red-50 text-red-700 border-red-200' },
-      blocked: { label: 'Blocked', className: 'bg-gray-100 text-gray-600 border-gray-300' }
+      pending: { label: 'Pending', className: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700' },
+      in_progress: { label: 'In Progress', className: 'bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' },
+      completed: { label: 'Completed', className: 'bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800' },
+      overdue: { label: 'Overdue', className: 'bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800' },
+      blocked: { label: 'Blocked', className: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-700' }
     }
     const config = configs[status as keyof typeof configs] || configs.pending
     return <Badge variant="outline" className={cn('text-xs font-normal', config.className)}>{config.label}</Badge>
@@ -350,7 +350,7 @@ export function TasksPageClient({
   const getPriorityIndicator = (priority: string) => {
     if (priority === 'high') return <div className="w-2 h-2 rounded-full bg-red-500" />
     if (priority === 'medium') return <div className="w-2 h-2 rounded-full bg-yellow-500" />
-    return <div className="w-2 h-2 rounded-full bg-gray-300" />
+    return <div className="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600" />
   }
 
   const isOverdue = (task: Task) => {
@@ -364,33 +364,33 @@ export function TasksPageClient({
     return (
       <div
         className={cn(
-          "group flex items-center justify-between px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors",
-          isComplete && "bg-green-50/30"
+          "group flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors",
+          isComplete && "bg-green-50/30 dark:bg-green-950/20"
         )}
       >
         <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer" onClick={() => setSelectedTask(task)}>
           <div className="flex-shrink-0">
             {isComplete ? (
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
             ) : overdue ? (
-              <AlertCircle className="h-5 w-5 text-red-600" />
+              <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
             ) : (
-              <Clock className="h-5 w-5 text-gray-400" />
+              <Clock className="h-5 w-5 text-gray-400 dark:text-gray-500" />
             )}
           </div>
-          
+
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               {getPriorityIndicator(task.priority)}
               <h3 className={cn(
-                "text-sm font-medium text-gray-900 truncate",
-                isComplete && "text-gray-500"
+                "text-sm font-medium text-gray-900 dark:text-gray-100 truncate",
+                isComplete && "text-gray-500 dark:text-gray-400"
               )}>
                 {task.title}
               </h3>
             </div>
-            
-            <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+
+            <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 dark:text-gray-400">
               {task.due_at && (
                 <div className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
@@ -440,13 +440,13 @@ export function TasksPageClient({
     )
   }
 
-  const TaskSection = ({ 
-    title, 
-    icon: Icon, 
-    tasks, 
-    sectionKey, 
+  const TaskSection = ({
+    title,
+    icon: Icon,
+    tasks,
+    sectionKey,
     badge
-  }: { 
+  }: {
     title: string
     icon: any
     tasks: Task[]
@@ -460,34 +460,34 @@ export function TasksPageClient({
     if (tasks.length === 0) return null
 
     return (
-      <Card className="border border-gray-200">
-        <div 
-          className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100"
+      <Card className="border border-gray-200 dark:border-zinc-700">
+        <div
+          className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors border-b border-gray-100 dark:border-zinc-800"
           onClick={() => toggleSection(sectionKey)}
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
-              <Icon className="h-4 w-4 text-blue-600" />
+            <div className="w-8 h-8 bg-blue-50 dark:bg-blue-950 rounded-lg flex items-center justify-center">
+              <Icon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-semibold text-gray-900">{title}</h2>
+                <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{title}</h2>
                 {badge}
               </div>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                 {pendingTasks.length} pending · {completedTasks.length} completed
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-white text-gray-600 border-gray-200">
+            <Badge variant="outline" className="bg-white dark:bg-zinc-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-zinc-700">
               {tasks.length}
             </Badge>
             {isExpanded ? (
-              <ChevronUp className="h-5 w-5 text-gray-400" />
+              <ChevronUp className="h-5 w-5 text-gray-400 dark:text-gray-500" />
             ) : (
-              <ChevronDown className="h-5 w-5 text-gray-400" />
+              <ChevronDown className="h-5 w-5 text-gray-400 dark:text-gray-500" />
             )}
           </div>
         </div>
@@ -501,15 +501,15 @@ export function TasksPageClient({
                 ))}
               </div>
             ) : (
-              <div className="px-6 py-8 text-center text-gray-500 text-sm">
+              <div className="px-6 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
                 All tasks completed
               </div>
             )}
 
             {completedTasks.length > 0 && (
-              <details className="border-t border-gray-100">
-                <summary className="px-6 py-3 text-sm text-gray-600 cursor-pointer hover:bg-gray-50 flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <details className="border-t border-gray-100 dark:border-zinc-800">
+                <summary className="px-6 py-3 text-sm text-gray-600 dark:text-gray-400 cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800/50 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
                   <span>Completed ({completedTasks.length})</span>
                 </summary>
                 <div>
@@ -536,72 +536,72 @@ export function TasksPageClient({
     <>
       <div className="max-w-7xl mx-auto p-6 space-y-6">
         {/* Header with Stats */}
-        <div className="border-b border-gray-200 pb-6">
+        <div className="border-b border-gray-200 dark:border-zinc-700 pb-6">
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">Tasks & Onboarding</h1>
-              <p className="text-sm text-gray-600 mt-1">
+              <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Tasks & Onboarding</h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 Manage your investment tasks and requirements
               </p>
             </div>
-            
+
             {totalOverdue > 0 && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-lg">
-                <AlertCircle className="h-4 w-4 text-red-600" />
-                <span className="text-sm font-medium text-red-900">{totalOverdue} Overdue</span>
+              <div className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
+                <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                <span className="text-sm font-medium text-red-900 dark:text-red-200">{totalOverdue} Overdue</span>
               </div>
             )}
           </div>
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <Card className="border border-gray-200">
+            <Card className="border border-gray-200 dark:border-zinc-700">
               <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-gray-500 mb-1">
+                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
                   <ListChecks className="h-4 w-4" />
                   <span className="text-xs font-medium uppercase tracking-wide">Total</span>
                 </div>
-                <div className="text-2xl font-semibold text-gray-900">{allTasks.length}</div>
+                <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{allTasks.length}</div>
               </CardContent>
             </Card>
 
-            <Card className="border border-blue-200 bg-blue-50">
+            <Card className="border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950">
               <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-blue-600 mb-1">
+                <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-1">
                   <Clock className="h-4 w-4" />
                   <span className="text-xs font-medium uppercase tracking-wide">Pending</span>
                 </div>
-                <div className="text-2xl font-semibold text-blue-900">{totalPending}</div>
+                <div className="text-2xl font-semibold text-blue-900 dark:text-blue-200">{totalPending}</div>
               </CardContent>
             </Card>
 
-            <Card className="border border-yellow-200 bg-yellow-50">
+            <Card className="border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950">
               <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-yellow-600 mb-1">
+                <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400 mb-1">
                   <TrendingUp className="h-4 w-4" />
                   <span className="text-xs font-medium uppercase tracking-wide">Active</span>
                 </div>
-                <div className="text-2xl font-semibold text-yellow-900">{totalInProgress}</div>
+                <div className="text-2xl font-semibold text-yellow-900 dark:text-yellow-200">{totalInProgress}</div>
               </CardContent>
             </Card>
 
-            <Card className="border border-green-200 bg-green-50">
+            <Card className="border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950">
               <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-green-600 mb-1">
+                <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-1">
                   <CheckCircle2 className="h-4 w-4" />
                   <span className="text-xs font-medium uppercase tracking-wide">Done</span>
                 </div>
-                <div className="text-2xl font-semibold text-green-900">{totalCompleted}</div>
+                <div className="text-2xl font-semibold text-green-900 dark:text-green-200">{totalCompleted}</div>
               </CardContent>
             </Card>
 
-            <Card className="border border-gray-200">
+            <Card className="border border-gray-200 dark:border-zinc-700">
               <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-gray-500 mb-1">
+                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
                   <TrendingUp className="h-4 w-4" />
                   <span className="text-xs font-medium uppercase tracking-wide">Progress</span>
                 </div>
-                <div className="text-2xl font-semibold text-gray-900">{completionRate}%</div>
+                <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{completionRate}%</div>
               </CardContent>
             </Card>
           </div>
@@ -651,7 +651,7 @@ export function TasksPageClient({
             tasks={group.tasks}
             sectionKey={`vehicle-${group.vehicle.id}`}
             badge={
-              <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200 text-xs">
+              <Badge variant="outline" className="bg-gray-50 dark:bg-zinc-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-zinc-700 text-xs">
                 {group.vehicle.type.toUpperCase()}
               </Badge>
             }
@@ -659,11 +659,11 @@ export function TasksPageClient({
         ))}
 
         {totalPending === 0 && (
-          <Card className="border-2 border-green-200 bg-green-50">
+          <Card className="border-2 border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950">
             <CardContent className="p-12 text-center">
-              <CheckCircle2 className="h-16 w-16 text-green-600 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">All Tasks Completed</h3>
-              <p className="text-gray-600">
+              <CheckCircle2 className="h-16 w-16 text-green-600 dark:text-green-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">All Tasks Completed</h3>
+              <p className="text-gray-600 dark:text-gray-400">
                 Excellent work! You&apos;ve completed all your pending tasks.
               </p>
             </CardContent>
@@ -677,7 +677,7 @@ export function TasksPageClient({
           <DialogHeader>
             <div className="flex items-start justify-between pr-6">
               <div className="flex-1">
-                <DialogTitle className="text-xl font-semibold text-gray-900 mb-2">
+                <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
                   {selectedTask?.title}
                 </DialogTitle>
                 <div className="flex items-center gap-2">
@@ -700,26 +700,26 @@ export function TasksPageClient({
             {/* Description */}
             {selectedTask?.description && (
               <div>
-                <h4 className="text-sm font-semibold text-gray-900 mb-2">Overview</h4>
-                <p className="text-sm text-gray-600 leading-relaxed">{selectedTask.description}</p>
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Overview</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{selectedTask.description}</p>
               </div>
             )}
 
             {/* Task Breakdown */}
             {selectedTask?.instructions && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <CheckCheck className="h-4 w-4 text-blue-600" />
+              <div className="bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <CheckCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   Task Breakdown
                 </h4>
-                
+
                 {/* Steps */}
                 <div className="mb-4">
-                  <p className="text-xs font-medium text-gray-700 uppercase tracking-wide mb-2">Steps to Complete</p>
-                  <ol className="space-y-1.5 text-sm text-gray-700">
+                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Steps to Complete</p>
+                  <ol className="space-y-1.5 text-sm text-gray-700 dark:text-gray-300">
                     {selectedTask.instructions.steps.map((step, idx) => (
                       <li key={idx} className="flex gap-2">
-                        <span className="text-blue-600 font-medium">{idx + 1}.</span>
+                        <span className="text-blue-600 dark:text-blue-400 font-medium">{idx + 1}.</span>
                         <span>{step}</span>
                       </li>
                     ))}
@@ -728,11 +728,11 @@ export function TasksPageClient({
 
                 {/* Requirements */}
                 <div className="mb-4">
-                  <p className="text-xs font-medium text-gray-700 uppercase tracking-wide mb-2">Requirements</p>
-                  <ul className="space-y-1 text-sm text-gray-700">
+                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Requirements</p>
+                  <ul className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
                     {selectedTask.instructions.requirements.map((req, idx) => (
                       <li key={idx} className="flex gap-2">
-                        <span className="text-blue-600">•</span>
+                        <span className="text-blue-600 dark:text-blue-400">•</span>
                         <span>{req}</span>
                       </li>
                     ))}
@@ -741,16 +741,16 @@ export function TasksPageClient({
 
                 {/* Wire Details if applicable */}
                 {selectedTask.instructions.wire_details && (
-                  <div className="bg-white border border-blue-200 rounded p-3">
-                    <p className="text-xs font-medium text-gray-700 uppercase tracking-wide mb-2">Wire Transfer Details</p>
+                  <div className="bg-white dark:bg-zinc-900 border border-blue-200 dark:border-blue-800 rounded p-3">
+                    <p className="text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Wire Transfer Details</p>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <span className="text-gray-600">Amount:</span>
-                        <span className="ml-2 font-semibold">{selectedTask.instructions.wire_details.amount}</span>
+                        <span className="text-gray-600 dark:text-gray-400">Amount:</span>
+                        <span className="ml-2 font-semibold text-foreground">{selectedTask.instructions.wire_details.amount}</span>
                       </div>
                       <div>
-                        <span className="text-gray-600">Bank:</span>
-                        <span className="ml-2 font-semibold">{selectedTask.instructions.wire_details.bank}</span>
+                        <span className="text-gray-600 dark:text-gray-400">Bank:</span>
+                        <span className="ml-2 font-semibold text-foreground">{selectedTask.instructions.wire_details.bank}</span>
                       </div>
                     </div>
                   </div>
@@ -758,7 +758,7 @@ export function TasksPageClient({
 
                 {/* Assigned By */}
                 {selectedTask.instructions.assigned_by && (
-                  <div className="text-xs text-gray-600 pt-2 border-t border-blue-200">
+                  <div className="text-xs text-gray-600 dark:text-gray-400 pt-2 border-t border-blue-200 dark:border-blue-800">
                     <span>Assigned by: </span>
                     <span className="font-medium">{selectedTask.instructions.assigned_by}</span>
                   </div>
@@ -770,12 +770,12 @@ export function TasksPageClient({
             <div className="grid grid-cols-2 gap-4 text-sm">
               {selectedTask?.due_at && (
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Due Date</p>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Due Date</p>
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-gray-400" />
+                    <Calendar className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                     <span className={cn(
                       "font-medium",
-                      isOverdue(selectedTask!) ? "text-red-600" : "text-gray-900"
+                      isOverdue(selectedTask!) ? "text-red-600 dark:text-red-400" : "text-gray-900 dark:text-gray-100"
                     )}>
                       {new Date(selectedTask.due_at).toLocaleDateString('en-US', {
                         weekday: 'long',
@@ -790,20 +790,20 @@ export function TasksPageClient({
 
               {selectedTask?.estimated_minutes && (
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Time Required</p>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Time Required</p>
                   <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-900 font-medium">{selectedTask.estimated_minutes} minutes</span>
+                    <Clock className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                    <span className="text-gray-900 dark:text-gray-100 font-medium">{selectedTask.estimated_minutes} minutes</span>
                   </div>
                 </div>
               )}
 
               {selectedTask?.started_at && (
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Started On</p>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Started On</p>
                   <div className="flex items-center gap-2">
                     <Play className="h-4 w-4 text-blue-400" />
-                    <span className="text-gray-900 font-medium">
+                    <span className="text-gray-900 dark:text-gray-100 font-medium">
                       {new Date(selectedTask.started_at).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
@@ -816,10 +816,10 @@ export function TasksPageClient({
 
               {selectedTask?.completed_at && (
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Completed On</p>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Completed On</p>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-400" />
-                    <span className="text-gray-900 font-medium">
+                    <span className="text-gray-900 dark:text-gray-100 font-medium">
                       {new Date(selectedTask.completed_at).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
@@ -833,12 +833,12 @@ export function TasksPageClient({
 
             {/* Document Upload Section */}
             {selectedTask && isDocumentUploadTask(selectedTask) && selectedTask.status !== 'completed' && selectedTask.status !== 'waived' && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <Upload className="h-4 w-4 text-blue-600" />
+              <div className="bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <Upload className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   Upload Document
                 </h4>
-                <p className="text-xs text-gray-600 mb-3">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
                   Upload your {getDocumentTypeFromTask(selectedTask)?.replace(/_/g, ' ')} to complete this task automatically.
                 </p>
 
@@ -858,7 +858,7 @@ export function TasksPageClient({
                 <label htmlFor="task-document-upload">
                   <Button
                     variant="outline"
-                    className="w-full border-blue-300 hover:bg-blue-100"
+                    className="w-full border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900"
                     disabled={uploading}
                     asChild
                   >
@@ -870,10 +870,10 @@ export function TasksPageClient({
                 </label>
 
                 {uploadError && (
-                  <p className="text-xs text-red-600 mt-2">{uploadError}</p>
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-2">{uploadError}</p>
                 )}
 
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                   Accepted formats: PDF, JPG, PNG, HEIC, WEBP (Max 10MB)
                 </p>
               </div>
@@ -881,9 +881,9 @@ export function TasksPageClient({
 
             {/* Signature Action Button */}
             {selectedTask?.related_entity_type === 'signature_request' && selectedTask?.instructions?.action_url && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <h4 className="text-sm font-semibold text-gray-900 mb-2">Ready to Sign</h4>
-                <p className="text-xs text-gray-600 mb-3">
+              <div className="bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Ready to Sign</h4>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
                   Click below to open the signature page and complete your signature.
                 </p>
                 <a
@@ -900,7 +900,7 @@ export function TasksPageClient({
 
             {/* Action Buttons */}
             {selectedTask && selectedTask.status !== 'completed' && selectedTask.status !== 'waived' && (
-              <div className="flex items-center gap-3 pt-4 border-t">
+              <div className="flex items-center gap-3 pt-4 border-t border-gray-200 dark:border-zinc-700">
                 {selectedTask.status === 'pending' ? (
                   <Button
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
@@ -914,7 +914,7 @@ export function TasksPageClient({
                   <>
                     <Button
                       variant="outline"
-                      className="border-gray-200 hover:bg-gray-50"
+                      className="border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800"
                       onClick={() => cancelTask(selectedTask.id)}
                       disabled={isUpdating}
                     >

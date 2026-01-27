@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { NextResponse } from 'next/server'
 
@@ -24,6 +24,15 @@ interface PortfolioTrends {
   periodDays: number
 }
 
+interface CurrencyBreakdownEntry {
+  currency: string
+  kpis: PortfolioKPIs
+  summary: {
+    totalPositions: number
+    totalVehicles: number
+  }
+}
+
 interface VehicleBreakdown {
   vehicleId: string
   vehicleName: string
@@ -39,6 +48,7 @@ interface VehicleBreakdown {
   distributed: number
   navPerUnit: number
   lastValuationDate: string | null
+  currency?: string | null
 }
 
 export async function GET(request: Request) {
@@ -110,6 +120,156 @@ export async function GET(request: Request) {
 
     const investorIds = investorLinks.map(link => link.investor_id)
 
+    // Service client for currency-aware aggregation (avoids RLS issues)
+    const serviceSupabase = createServiceClient()
+
+    const buildCurrencyBreakdown = async (): Promise<CurrencyBreakdownEntry[]> => {
+      const { data: positions } = await serviceSupabase
+        .from('positions')
+        .select('vehicle_id, units, cost_basis, last_nav')
+        .in('investor_id', investorIds)
+
+      const { data: subscriptions } = await serviceSupabase
+        .from('subscriptions')
+        .select('vehicle_id, commitment, status, currency')
+        .in('investor_id', investorIds)
+
+      const { data: cashflows } = await serviceSupabase
+        .from('cashflows')
+        .select('vehicle_id, amount, type')
+        .in('investor_id', investorIds)
+
+      const vehicleIds = Array.from(
+        new Set([
+          ...(positions || []).map(p => p.vehicle_id).filter(Boolean),
+          ...(subscriptions || []).map(s => s.vehicle_id).filter(Boolean),
+          ...(cashflows || []).map(c => c.vehicle_id).filter(Boolean)
+        ])
+      )
+
+      const { data: vehicles } = vehicleIds.length
+        ? await serviceSupabase
+            .from('vehicles')
+            .select('id, currency')
+            .in('id', vehicleIds)
+        : { data: [] }
+
+      const vehicleCurrency = new Map<string, string>()
+      ;(vehicles || []).forEach(v => {
+        if (v.id) vehicleCurrency.set(v.id, v.currency || 'USD')
+      })
+
+      const { data: valuations } = vehicleIds.length
+        ? await serviceSupabase
+            .from('valuations')
+            .select('vehicle_id, nav_per_unit, as_of_date')
+            .in('vehicle_id', vehicleIds)
+            .order('as_of_date', { ascending: false })
+        : { data: [] }
+
+      const latestValuation = new Map<string, number>()
+      ;(valuations || []).forEach(v => {
+        if (v.vehicle_id && !latestValuation.has(v.vehicle_id) && v.nav_per_unit !== null) {
+          latestValuation.set(v.vehicle_id, parseFloat(v.nav_per_unit))
+        }
+      })
+
+      const breakdown = new Map<string, {
+        current_nav: number
+        total_contributed: number
+        total_distributions: number
+        total_commitment: number
+        total_cost_basis: number
+        total_positions: number
+        vehicles: Set<string>
+      }>()
+
+      const ensure = (currency: string) => {
+        if (!breakdown.has(currency)) {
+          breakdown.set(currency, {
+            current_nav: 0,
+            total_contributed: 0,
+            total_distributions: 0,
+            total_commitment: 0,
+            total_cost_basis: 0,
+            total_positions: 0,
+            vehicles: new Set()
+          })
+        }
+        return breakdown.get(currency)!
+      }
+
+      ;(positions || []).forEach(p => {
+        const units = parseFloat(p.units || 0)
+        if (units <= 0) return
+        const currency = vehicleCurrency.get(p.vehicle_id) || 'USD'
+        const entry = ensure(currency)
+        const navPerUnit = latestValuation.get(p.vehicle_id) ?? (p.last_nav ? parseFloat(p.last_nav) : 0)
+        entry.current_nav += units * (navPerUnit || 0)
+        entry.total_cost_basis += parseFloat(p.cost_basis || 0)
+        entry.total_positions += 1
+        if (p.vehicle_id) entry.vehicles.add(p.vehicle_id)
+      })
+
+      ;(subscriptions || []).forEach(s => {
+        if (!['active', 'pending'].includes(s.status || '')) return
+        const currency = s.currency || vehicleCurrency.get(s.vehicle_id) || 'USD'
+        const entry = ensure(currency)
+        entry.total_commitment += parseFloat(s.commitment || 0)
+      })
+
+      ;(cashflows || []).forEach(cf => {
+        const currency = vehicleCurrency.get(cf.vehicle_id) || 'USD'
+        const entry = ensure(currency)
+        if (cf.type === 'call') {
+          entry.total_contributed += parseFloat(cf.amount || 0)
+        } else if (cf.type === 'distribution') {
+          entry.total_distributions += parseFloat(cf.amount || 0)
+        }
+      })
+
+      const entries: CurrencyBreakdownEntry[] = []
+      for (const [currency, entry] of breakdown.entries()) {
+        const unfunded = Math.max(entry.total_commitment - entry.total_contributed, 0)
+        const unrealizedGain = entry.current_nav - entry.total_cost_basis
+        const unrealizedGainPct = entry.total_cost_basis > 0
+          ? (unrealizedGain / entry.total_cost_basis) * 100
+          : 0
+        const dpi = entry.total_contributed > 0
+          ? entry.total_distributions / entry.total_contributed
+          : 0
+        const tvpi = entry.total_contributed > 0
+          ? (entry.current_nav + entry.total_distributions) / entry.total_contributed
+          : 0
+        const irr = entry.total_contributed > 0 && tvpi > 1
+          ? Math.min(Math.max((tvpi - 1) * 10, 0), 100)
+          : 0
+
+        entries.push({
+          currency,
+          kpis: {
+            currentNAV: Math.round(entry.current_nav),
+            totalContributed: Math.round(entry.total_contributed),
+            totalDistributions: Math.round(entry.total_distributions),
+            unfundedCommitment: Math.round(unfunded),
+            totalCommitment: Math.round(entry.total_commitment),
+            totalCostBasis: Math.round(entry.total_cost_basis),
+            unrealizedGain: Math.round(unrealizedGain),
+            unrealizedGainPct: Math.round(unrealizedGainPct * 100) / 100,
+            dpi: Math.round(dpi * 10000) / 10000,
+            tvpi: Math.round(tvpi * 10000) / 10000,
+            irr: Math.round(irr * 100) / 100
+          },
+          summary: {
+            totalPositions: entry.total_positions,
+            totalVehicles: entry.vehicles.size
+          }
+        })
+      }
+
+      return entries.sort((a, b) => a.currency.localeCompare(b.currency))
+    }
+
     // Calculate comprehensive KPIs using enhanced database function that includes deals
     let kpiData: any
     const { data, error: kpiError } = await supabase
@@ -180,6 +340,11 @@ export async function GET(request: Request) {
       }
     }
 
+    const currencyBreakdown = await buildCurrencyBreakdown()
+    response.currencyBreakdown = currencyBreakdown
+    response.hasMixedCurrency = currencyBreakdown.length > 1
+    response.primaryCurrency = currencyBreakdown.length === 1 ? currencyBreakdown[0].currency : null
+
     // Optimize: Fetch trends and breakdown in parallel if requested
     const parallelQueries = []
     
@@ -226,22 +391,41 @@ export async function GET(request: Request) {
           }
           
           if (type === 'breakdown' && !queryResult.error && queryResult.data) {
-            response.vehicleBreakdown = queryResult.data.map((vehicle: any): VehicleBreakdown => ({
-              vehicleId: vehicle.id,
-              vehicleName: vehicle.name,
-              vehicleType: vehicle.vehicle_type || 'fund',
-              logoUrl: vehicle.logo_url || null,
-              currentValue: Math.round(parseFloat(vehicle.current_value) || 0),
-              costBasis: Math.round(parseFloat(vehicle.cost_basis) || 0),
-              units: parseFloat(vehicle.units) || 0,
-              unrealizedGain: Math.round(parseFloat(vehicle.unrealized_gain) || 0),
-              unrealizedGainPct: Math.round((parseFloat(vehicle.unrealized_gain_pct) || 0) * 100) / 100,
-              commitment: Math.round(parseFloat(vehicle.commitment) || 0),
-              contributed: Math.round(parseFloat(vehicle.contributed) || 0),
-              distributed: Math.round(parseFloat(vehicle.distributed) || 0),
-              navPerUnit: parseFloat(vehicle.nav_per_unit) || 0,
-              lastValuationDate: vehicle.as_of_date || null
-            }))
+            const breakdownVehicleIds = queryResult.data
+              .map((vehicle: any) => vehicle.vehicle_id || vehicle.id)
+              .filter(Boolean)
+
+            const currencyMap: Record<string, string> = {}
+            if (breakdownVehicleIds.length) {
+              const { data: vehicleRows } = await serviceSupabase
+                .from('vehicles')
+                .select('id, currency')
+                .in('id', breakdownVehicleIds)
+              vehicleRows?.forEach((v: any) => {
+                if (v.id) currencyMap[v.id] = v.currency || 'USD'
+              })
+            }
+
+            response.vehicleBreakdown = queryResult.data.map((vehicle: any): VehicleBreakdown => {
+              const vehicleId = vehicle.vehicle_id || vehicle.id
+              return {
+                vehicleId,
+                vehicleName: vehicle.name || vehicle.vehicle_name,
+                vehicleType: vehicle.vehicle_type || 'fund',
+                logoUrl: vehicle.logo_url || null,
+                currentValue: Math.round(parseFloat(vehicle.current_value) || 0),
+                costBasis: Math.round(parseFloat(vehicle.cost_basis) || 0),
+                units: parseFloat(vehicle.units) || 0,
+                unrealizedGain: Math.round(parseFloat(vehicle.unrealized_gain) || 0),
+                unrealizedGainPct: Math.round((parseFloat(vehicle.unrealized_gain_pct) || 0) * 100) / 100,
+                commitment: Math.round(parseFloat(vehicle.commitment) || 0),
+                contributed: Math.round(parseFloat(vehicle.contributed) || 0),
+                distributed: Math.round(parseFloat(vehicle.distributed) || 0),
+                navPerUnit: parseFloat(vehicle.nav_per_unit) || 0,
+                lastValuationDate: vehicle.as_of_date || null,
+                currency: currencyMap[vehicleId] || null
+              }
+            })
             console.log(`✅ Vehicle breakdown calculated successfully: ${response.vehicleBreakdown.length} vehicles`)
           } else if (type === 'breakdown') {
             console.warn('Vehicle breakdown failed:', queryResult.error)

@@ -36,11 +36,11 @@ export function SubscriptionKanbanView({
   const [draggedItem, setDraggedItem] = useState<string | null>(null)
 
   const columns = [
-    { key: 'pending', title: 'Pending', color: 'border-yellow-700', bgColor: 'bg-yellow-900/10', iconColor: 'text-yellow-400' },
-    { key: 'committed', title: 'Committed', color: 'border-blue-700', bgColor: 'bg-blue-900/10', iconColor: 'text-blue-400' },
-    { key: 'active', title: 'Active', color: 'border-green-700', bgColor: 'bg-green-900/10', iconColor: 'text-green-400' },
-    { key: 'closed', title: 'Closed', color: 'border-gray-700', bgColor: 'bg-gray-800/30', iconColor: 'text-gray-400' },
-    { key: 'cancelled', title: 'Cancelled', color: 'border-red-700', bgColor: 'bg-red-900/10', iconColor: 'text-red-400' },
+    { key: 'pending', title: 'Pending', color: 'border-yellow-500/50', bgColor: 'bg-yellow-500/10', iconColor: 'text-yellow-500' },
+    { key: 'committed', title: 'Committed', color: 'border-blue-500/50', bgColor: 'bg-blue-500/10', iconColor: 'text-blue-500' },
+    { key: 'active', title: 'Active', color: 'border-green-500/50', bgColor: 'bg-green-500/10', iconColor: 'text-green-500' },
+    { key: 'closed', title: 'Closed', color: 'border-border', bgColor: 'bg-muted', iconColor: 'text-muted-foreground' },
+    { key: 'cancelled', title: 'Cancelled', color: 'border-red-500/50', bgColor: 'bg-red-500/10', iconColor: 'text-red-500' },
   ]
 
   const formatCurrency = (amount: number, currency: string) => {
@@ -97,11 +97,11 @@ export function SubscriptionKanbanView({
             onDrop={(e) => handleDrop(e, column.key)}
           >
             {/* Column Header */}
-            <Card className={`bg-gray-900/70 border-2 ${column.color} ${column.bgColor} shadow-lg`}>
+            <Card className={`bg-card border-2 ${column.color} ${column.bgColor} shadow-lg`}>
               <CardHeader className="pb-3 pt-4">
-                <CardTitle className="text-base font-bold text-white flex items-center justify-between">
+                <CardTitle className="text-base font-bold text-foreground flex items-center justify-between">
                   <span>{column.title}</span>
-                  <Badge variant="outline" className={`ml-2 border-gray-700 ${column.iconColor} font-mono`}>
+                  <Badge variant="outline" className={`ml-2 border-border ${column.iconColor} font-mono`}>
                     {columnSubscriptions.length}
                   </Badge>
                 </CardTitle>
@@ -115,24 +115,24 @@ export function SubscriptionKanbanView({
                   key={sub.id}
                   draggable
                   onDragStart={() => handleDragStart(sub.id)}
-                  className={`bg-gray-900/70 border-gray-800 cursor-move hover:border-gray-600 hover:shadow-xl transition-all duration-200 ${
+                  className={`bg-card border-border cursor-move hover:border-muted-foreground hover:shadow-xl transition-all duration-200 ${
                     draggedItem === sub.id ? 'opacity-40 scale-95' : ''
                   }`}
                 >
                   <CardContent className="p-4 space-y-3">
                     {/* Subscription Number */}
-                    <div className="font-mono font-bold text-white">
+                    <div className="font-mono font-bold text-foreground">
                       #{sub.subscription_number}
                     </div>
 
                     {/* Investor */}
                     <div>
-                      <div className="text-xs text-gray-400 mb-1">Investor</div>
-                      <div className="text-sm font-semibold text-white truncate">
+                      <div className="text-xs text-muted-foreground mb-1">Investor</div>
+                      <div className="text-sm font-semibold text-foreground truncate">
                         {sub.investor?.legal_name || '-'}
                       </div>
                       {sub.investor && (
-                        <Badge variant="outline" className="text-xs mt-1 border-gray-700 text-gray-400">
+                        <Badge variant="outline" className="text-xs mt-1 border-border text-muted-foreground">
                           {sub.investor.type}
                         </Badge>
                       )}
@@ -140,19 +140,19 @@ export function SubscriptionKanbanView({
 
                     {/* Vehicle */}
                     <div>
-                      <div className="text-xs text-gray-400 mb-1">Vehicle</div>
-                      <div className="text-sm text-white truncate">
+                      <div className="text-xs text-muted-foreground mb-1">Vehicle</div>
+                      <div className="text-sm text-foreground truncate">
                         {sub.vehicle?.name || '-'}
                       </div>
                       {sub.vehicle?.entity_code && (
-                        <div className="text-xs text-gray-500">{sub.vehicle.entity_code}</div>
+                        <div className="text-xs text-muted-foreground">{sub.vehicle.entity_code}</div>
                       )}
                     </div>
 
                     {/* Commitment */}
-                    <div className="pt-2 border-t border-gray-800">
-                      <div className="text-xs text-gray-400">Commitment</div>
-                      <div className="text-sm font-bold text-white">
+                    <div className="pt-2 border-t border-border">
+                      <div className="text-xs text-muted-foreground">Commitment</div>
+                      <div className="text-sm font-bold text-foreground">
                         {formatCurrency(sub.commitment, sub.currency)}
                       </div>
                     </div>
@@ -162,7 +162,7 @@ export function SubscriptionKanbanView({
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-full bg-white text-black border-white hover:bg-gray-200"
+                        className="w-full"
                       >
                         <Eye className="h-3 w-3 mr-2" />
                         View
@@ -174,8 +174,8 @@ export function SubscriptionKanbanView({
 
               {columnSubscriptions.length === 0 && (
                 <div className={`text-center py-12 rounded-lg border-2 border-dashed ${column.color} ${column.bgColor}`}>
-                  <p className="text-gray-500 text-sm">No {column.title.toLowerCase()}</p>
-                  <p className="text-gray-600 text-xs mt-1">Drag subscriptions here</p>
+                  <p className="text-muted-foreground text-sm">No {column.title.toLowerCase()}</p>
+                  <p className="text-muted-foreground/70 text-xs mt-1">Drag subscriptions here</p>
                 </div>
               )}
             </div>

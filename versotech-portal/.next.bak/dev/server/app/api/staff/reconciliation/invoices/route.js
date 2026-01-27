@@ -1,0 +1,10 @@
+var R=require("../../../../../chunks/[turbopack]_runtime.js")("server/app/api/staff/reconciliation/invoices/route.js")
+R.c("server/chunks/6d6b6_@supabase_node-fetch_lib_index_b5138e31.js")
+R.c("server/chunks/6d6b6_next_903b4bd3._.js")
+R.c("server/chunks/6d6b6_tr46_f7ca97fb._.js")
+R.c("server/chunks/6d6b6_@supabase_auth-js_dist_module_4ebeb219._.js")
+R.c("server/chunks/6d6b6_e5e892f7._.js")
+R.c("server/chunks/[root-of-the-server]__90ebac5f._.js")
+R.c("server/chunks/02020_server_app_api_staff_reconciliation_invoices_route_actions_8dde6c13.js")
+R.m("[project]/versotech-portal/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/versotech-portal/src/app/api/staff/reconciliation/invoices/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)")
+module.exports=R.m("[project]/versotech-portal/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/versotech-portal/src/app/api/staff/reconciliation/invoices/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)").exports

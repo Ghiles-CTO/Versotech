@@ -238,19 +238,19 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
                 <div
                   {...getRootProps()}
                   className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                    isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+                    isDragActive ? 'border-blue-500 bg-blue-500/10' : 'border-border hover:border-muted-foreground'
                   }`}
                 >
                   <input {...getInputProps()} />
-                  <Upload className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                   {isDragActive ? (
-                    <p className="text-blue-600 font-medium">Drop files here...</p>
+                    <p className="text-blue-600 dark:text-blue-400 font-medium">Drop files here...</p>
                   ) : (
                     <>
-                      <p className="text-gray-700 font-medium mb-1">
+                      <p className="text-foreground font-medium mb-1">
                         Drag and drop files here, or click to browse
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         Supports all document types (PDF, DOCX, XLSX, JSON, etc.)
                       </p>
                     </>
@@ -270,7 +270,7 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
                       onChange={(e) => setExternalLink(e.target.value)}
                       placeholder="https://drive.google.com/file/d/..."
                     />
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       Paste a Google Drive, Dropbox, or any public link
                     </p>
                   </div>
@@ -296,12 +296,12 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
                   {files.map((file, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-2 bg-gray-50 rounded border"
+                      className="flex items-center justify-between p-2 bg-muted rounded border border-border"
                     >
                       <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <File className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <File className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         <span className="text-sm truncate">{file.name}</span>
-                        <span className="text-xs text-gray-500 flex-shrink-0">
+                        <span className="text-xs text-muted-foreground flex-shrink-0">
                           ({(file.size / 1024).toFixed(1)} KB)
                         </span>
                       </div>

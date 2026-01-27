@@ -30,7 +30,7 @@ const interestStatusStyles: Record<string, string> = {
   pending_review: 'bg-amber-500/20 text-amber-100',
   approved: 'bg-emerald-500/20 text-emerald-100',
   rejected: 'bg-rose-500/20 text-rose-100',
-  withdrawn: 'bg-slate-500/20 text-slate-200',
+  withdrawn: 'bg-muted text-muted-foreground',
   signal: 'bg-purple-500/20 text-purple-100'
 }
 
@@ -38,7 +38,7 @@ const subscriptionStatusStyles: Record<string, string> = {
   pending_review: 'bg-amber-500/20 text-amber-100',
   approved: 'bg-emerald-500/20 text-emerald-100',
   rejected: 'bg-rose-500/20 text-rose-100',
-  cancelled: 'bg-slate-500/20 text-slate-200'
+  cancelled: 'bg-muted text-muted-foreground'
 }
 
 export function DealInterestTab({ dealId, interests, subscriptions }: DealInterestTabProps) {
@@ -53,7 +53,7 @@ export function DealInterestTab({ dealId, interests, subscriptions }: DealIntere
 
   return (
     <div className="space-y-6">
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border-border bg-muted/50">
         <CardHeader className="flex flex-row items-start justify-between">
           <div>
             <CardTitle className="text-foreground">Interest Pipeline</CardTitle>
@@ -80,7 +80,7 @@ export function DealInterestTab({ dealId, interests, subscriptions }: DealIntere
         </CardContent>
       </Card>
 
-      <Card className="border border-white/10 bg-white/5">
+      <Card className="border-border bg-muted/50">
         <CardHeader className="flex flex-row items-start justify-between">
           <div>
             <CardTitle className="text-foreground">Subscription Submissions</CardTitle>
@@ -119,7 +119,7 @@ export function DealInterestTab({ dealId, interests, subscriptions }: DealIntere
                     <TableRow key={subscription.id}>
                       <TableCell>{subscription.investors?.legal_name || 'Unknown investor'}</TableCell>
                       <TableCell>
-                        <Badge className={subscriptionStatusStyles[subscription.status] ?? 'bg-white/10'}>
+                        <Badge className={subscriptionStatusStyles[subscription.status] ?? 'bg-muted'}>
                           {subscription.status.replace('_', ' ').toUpperCase()}
                         </Badge>
                       </TableCell>
@@ -191,7 +191,7 @@ function InterestTable({ title, interests, emptyLabel }: InterestTableProps) {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Badge className={interestStatusStyles[displayStatus] ?? 'bg-white/10'}>
+                    <Badge className={interestStatusStyles[displayStatus] ?? 'bg-muted'}>
                       {statusLabel}
                     </Badge>
                   </TableCell>

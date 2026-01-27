@@ -1,0 +1,77 @@
+module.exports=[868709,e=>{"use strict";var t=e.i(779444),a=e.i(698261),r=e.i(821776),i=e.i(796417),s=e.i(856890),o=e.i(26996),n=e.i(436944),d=e.i(88281),l=e.i(765944),c=e.i(984788),p=e.i(237011),m=e.i(712007),u=e.i(777657),_=e.i(13180),v=e.i(273827),f=e.i(193695);e.i(947956);var y=e.i(36217),h=e.i(414131),b=e.i(433669);async function g(e,{params:t}){let{id:a}=await t,r=await (0,b.createClient)(),i=(0,b.createServiceClient)(),{data:{user:s},error:o}=await r.auth.getUser();if(o||!s)return h.NextResponse.json({error:"Unauthorized"},{status:401});let{data:n}=await r.from("profiles").select("role").eq("id",s.id).single();if(!n||!(n.role.startsWith("staff_")||"ceo"===n.role))return h.NextResponse.json({error:"Staff access required"},{status:403});let d=e.nextUrl.searchParams.get("since")??new Date(Date.now()-7776e6).toISOString(),l=parseInt(e.nextUrl.searchParams.get("limit")??"50"),c=parseInt(e.nextUrl.searchParams.get("offset")??"0");try{let{data:e,error:t}=await i.from("deal_activity_events").select(`
+        id,
+        event_type,
+        payload,
+        occurred_at,
+        investor_id,
+        investors (
+          legal_name,
+          display_name
+        )
+      `).eq("deal_id",a).gte("occurred_at",d);if(t)return console.error("Failed to fetch deal activity events",t),h.NextResponse.json({error:"Failed to load activity events",details:t.message},{status:500});let{data:r,error:s}=await i.from("audit_logs").select("*").eq("entity_type","deals").eq("entity_id",a).gte("timestamp",d);s&&console.error("Failed to fetch audit logs",s);let{data:o,error:n}=await i.from("investor_deal_interest").select(`
+        id,
+        submitted_at,
+        approved_at,
+        updated_at,
+        status,
+        indicative_amount,
+        investor_id,
+        investors (
+          legal_name,
+          display_name
+        )
+      `).eq("deal_id",a).gte("submitted_at",d);n&&console.error("Failed to fetch interests",n);let{data:p,error:m}=await i.from("deal_subscription_submissions").select(`
+        id,
+        submitted_at,
+        decided_at,
+        status,
+        payload_json,
+        investor_id,
+        investors (
+          legal_name,
+          display_name
+        ),
+        decided_by_profile:profiles!deal_subscription_submissions_decided_by_fkey (
+          display_name,
+          email,
+          role
+        )
+      `).eq("deal_id",a).gte("submitted_at",d);m&&console.error("Failed to fetch subscriptions",m);let{data:u,error:_}=await i.from("deal_data_room_access").select(`
+        id,
+        granted_at,
+        revoked_at,
+        auto_granted,
+        investor_id,
+        investors (
+          legal_name,
+          display_name
+        ),
+        granted_by_profile:profiles!deal_data_room_access_granted_by_fkey (
+          display_name,
+          email,
+          role
+        ),
+        revoked_by_profile:profiles!deal_data_room_access_revoked_by_fkey (
+          display_name,
+          email,
+          role
+        )
+      `).eq("deal_id",a).gte("granted_at",d);_&&console.error("Failed to fetch data room access",_);let{data:v,error:f}=await i.from("deal_memberships").select(`
+        id,
+        invited_at,
+        accepted_at,
+        role,
+        user_id,
+        member_profile:profiles!deal_memberships_user_id_fkey (
+          display_name,
+          email,
+          role
+        ),
+        invited_by_profile:profiles!deal_memberships_invited_by_fkey (
+          display_name,
+          email,
+          role
+        )
+      `).eq("deal_id",a).gte("invited_at",d);f&&console.error("Failed to fetch members",f);let y=[];e?.forEach(e=>{var t,a;let r=Array.isArray(e.investors)?e.investors[0]:e.investors,i=r?.legal_name||r?.display_name||"Unknown Investor";y.push({id:e.id,timestamp:e.occurred_at,type:e.event_type,category:"conversion",actor:{name:i,email:null,role:"investor"},description:(t=e.event_type,a=i,({im_interested:`${a} expressed interest in the deal`,data_room_submit:`${a} submitted subscription documents to data room`,interest_submitted:`${a} submitted interest in the deal`,interest_approved:`Interest from ${a} was approved`,interest_rejected:`Interest from ${a} was rejected`,nda_granted:`${a} was granted NDA access`,nda_completed:`${a} completed NDA signing`,data_room_granted:`${a} was granted data room access`,subscription_started:`${a} started subscription process`,subscription_submitted:`${a} submitted subscription documents`,subscription_approved:`Subscription from ${a} was approved`,allocation_confirmed:`Allocation confirmed for ${a}`,capital_called:`Capital call sent to ${a}`,capital_funded:`${a} funded capital call`})[t]||`${a} - ${t.replace(/_/g," ")}`),details:e.payload})}),o?.forEach(e=>{let t=Array.isArray(e.investors)?e.investors[0]:e.investors,a=t?.legal_name||t?.display_name||"Unknown Investor";e.submitted_at&&y.push({id:`interest-submitted-${e.id}`,timestamp:e.submitted_at,type:"interest_submitted",category:"interest",actor:{name:a,email:null,role:"investor"},description:`${a} submitted interest${e.indicative_amount?` for ${$(e.indicative_amount)}`:""}`,details:{interest_id:e.id,indicative_amount:e.indicative_amount,status:e.status}}),e.approved_at&&"approved"===e.status&&y.push({id:`interest-approved-${e.id}`,timestamp:e.approved_at,type:"interest_approved",category:"interest",actor:{name:"Staff",email:null,role:"staff"},description:`Approved interest from ${a}${e.indicative_amount?` (${$(e.indicative_amount)})`:""}`,details:{interest_id:e.id,investor_name:a,indicative_amount:e.indicative_amount}}),"rejected"===e.status&&e.updated_at&&y.push({id:`interest-rejected-${e.id}`,timestamp:e.updated_at,type:"interest_rejected",category:"interest",actor:{name:"Staff",email:null,role:"staff"},description:`Rejected interest from ${a}`,details:{interest_id:e.id,investor_name:a}})}),p?.forEach(e=>{let t=Array.isArray(e.investors)?e.investors[0]:e.investors,a=t?.legal_name||t?.display_name||"Unknown Investor",r=e.payload_json,i=r?.commitment_amount||r?.subscription_amount||null;if(e.submitted_at&&y.push({id:`subscription-submitted-${e.id}`,timestamp:e.submitted_at,type:"subscription_submitted",category:"subscription",actor:{name:a,email:null,role:"investor"},description:`${a} submitted subscription${i?` for ${$(i)}`:""}`,details:{subscription_id:e.id,subscription_amount:i,status:e.status}}),e.decided_at){let t=Array.isArray(e.decided_by_profile)?e.decided_by_profile[0]:e.decided_by_profile,r="approved"===e.status;y.push({id:`subscription-${e.status}-${e.id}`,timestamp:e.decided_at,type:`subscription_${e.status}`,category:"subscription",actor:{name:t?.display_name||"Staff",email:t?.email||null,role:t?.role||"staff"},description:`${r?"Approved":"Rejected"} subscription from ${a}${i?` (${$(i)})`:""}`,details:{subscription_id:e.id,investor_name:a,subscription_amount:i}})}}),u?.forEach(e=>{let t=Array.isArray(e.investors)?e.investors[0]:e.investors,a=t?.legal_name||t?.display_name||"Unknown Investor";if(e.granted_at){let t=Array.isArray(e.granted_by_profile)?e.granted_by_profile[0]:e.granted_by_profile,r=!0===e.auto_granted;y.push({id:`access-granted-${e.id}`,timestamp:e.granted_at,type:"data_room_granted",category:"access",actor:{name:t?.display_name||(r?"System":"Staff"),email:t?.email||null,role:t?.role||(r?"system":"staff")},description:`${r?"Auto-granted":"Manually granted"} data room access to ${a}`,details:{access_id:e.id,auto_granted:e.auto_granted,investor_name:a}})}if(e.revoked_at){let t=Array.isArray(e.revoked_by_profile)?e.revoked_by_profile[0]:e.revoked_by_profile;y.push({id:`access-revoked-${e.id}`,timestamp:e.revoked_at,type:"data_room_revoked",category:"access",actor:{name:t?.display_name||"Staff",email:t?.email||null,role:t?.role||"staff"},description:`Revoked data room access from ${a}`,details:{access_id:e.id,investor_name:a}})}}),v?.forEach(e=>{let t=Array.isArray(e.member_profile)?e.member_profile[0]:e.member_profile,a=Array.isArray(e.invited_by_profile)?e.invited_by_profile[0]:e.invited_by_profile,r=t?.display_name||"Unknown Member";e.invited_at&&y.push({id:`member-added-${e.id}`,timestamp:e.invited_at,type:"member_added",category:"membership",actor:{name:a?.display_name||"System",email:a?.email||null,role:a?.role||"staff"},description:`Added ${r} as ${e.role||"team member"}`,details:{membership_id:e.id,member_name:r,member_role:e.role}})}),r?.forEach(e=>{var t,a;let r;y.push({id:e.id,timestamp:e.timestamp,type:`${e.action}_${e.event_type}`,category:"audit",actor:{name:e.actor_name,email:e.actor_email,role:e.actor_role},description:(t=e.action,a=e.event_type,r=e.actor_name||"System",({create:`${r} created the deal`,update:`${r} updated deal information`,delete:`${r} deleted the deal`,publish:`${r} published the deal`,archive:`${r} archived the deal`,member_added:`${r} added a team member`,member_removed:`${r} removed a team member`,term_sheet_published:`${r} published term sheet`,allocation_updated:`${r} updated allocations`})[a||t]||`${r} performed ${t}`),details:e.action_details||{}})}),y.sort((e,t)=>new Date(t.timestamp).getTime()-new Date(e.timestamp).getTime());let b=y.slice(c,c+l);return h.NextResponse.json({deal_id:a,since:d,events:b,total:y.length,limit:l,offset:c})}catch(e){return console.error("Failed to fetch deal activity timeline",e),h.NextResponse.json({error:"Failed to load activity timeline"},{status:500})}}function $(e){if(!e)return"";let t="string"==typeof e?parseFloat(e):e;return`$${t.toLocaleString("en-US",{maximumFractionDigits:0})}`}e.s(["GET",()=>g],776829);var R=e.i(776829);let w=new t.AppRouteRouteModule({definition:{kind:a.RouteKind.APP_ROUTE,page:"/api/deals/[id]/activity/route",pathname:"/api/deals/[id]/activity",filename:"route",bundlePath:""},distDir:".next",relativeProjectDir:"",resolvedPagePath:"[project]/versotech-portal/src/app/api/deals/[id]/activity/route.ts",nextConfigOutput:"",userland:R}),{workAsyncStorage:A,workUnitAsyncStorage:E,serverHooks:x}=w;function C(){return(0,r.patchFetch)({workAsyncStorage:A,workUnitAsyncStorage:E})}async function k(e,t,r){w.isDev&&(0,i.addRequestMeta)(e,"devRequestTimingInternalsEnd",process.hrtime.bigint());let h="/api/deals/[id]/activity/route";h=h.replace(/\/index$/,"")||"/";let b=await w.prepare(e,t,{srcPage:h,multiZoneDraftMode:!1});if(!b)return t.statusCode=400,t.end("Bad Request"),null==r.waitUntil||r.waitUntil.call(r,Promise.resolve()),null;let{buildId:g,params:$,nextConfig:R,parsedUrl:A,isDraftMode:E,prerenderManifest:x,routerServerContext:C,isOnDemandRevalidate:k,revalidateOnlyGenerated:S,resolvedPathname:N,clientReferenceManifest:T,serverActionsManifest:U}=b,P=(0,n.normalizeAppPath)(h),I=!!(x.dynamicRoutes[P]||x.routes[N]),q=async()=>((null==C?void 0:C.render404)?await C.render404(e,t,A,!1):t.end("This page could not be found"),null);if(I&&!E){let e=!!x.routes[N],t=x.dynamicRoutes[P];if(t&&!1===t.fallback&&!e){if(R.experimental.adapterPath)return await q();throw new f.NoFallbackError}}let O=null;!I||w.isDev||E||(O="/index"===(O=N)?"/":O);let j=!0===w.isDev||!I,D=I&&!j;U&&T&&(0,o.setManifestsSingleton)({page:h,clientReferenceManifest:T,serverActionsManifest:U});let F=e.method||"GET",H=(0,s.getTracer)(),M=H.getActiveScopeSpan(),K={params:$,prerenderManifest:x,renderOpts:{experimental:{authInterrupts:!!R.experimental.authInterrupts},cacheComponents:!!R.cacheComponents,supportsDynamicResponse:j,incrementalCache:(0,i.getRequestMeta)(e,"incrementalCache"),cacheLifeProfiles:R.cacheLife,waitUntil:r.waitUntil,onClose:e=>{t.on("close",e)},onAfterTaskError:void 0,onInstrumentationRequestError:(t,a,r,i)=>w.onRequestError(e,t,r,i,C)},sharedContext:{buildId:g}},L=new d.NodeNextRequest(e),B=new d.NodeNextResponse(t),G=l.NextRequestAdapter.fromNodeNextRequest(L,(0,l.signalFromNodeResponse)(t));try{let o=async e=>w.handle(G,K).finally(()=>{if(!e)return;e.setAttributes({"http.status_code":t.statusCode,"next.rsc":!1});let a=H.getRootSpanAttributes();if(!a)return;if(a.get("next.span_type")!==c.BaseServerSpan.handleRequest)return void console.warn(`Unexpected root span type '${a.get("next.span_type")}'. Please report this Next.js issue https://github.com/vercel/next.js`);let r=a.get("next.route");if(r){let t=`${F} ${r}`;e.setAttributes({"next.route":r,"http.route":r,"next.span_name":t}),e.updateName(t)}else e.updateName(`${F} ${h}`)}),n=!!(0,i.getRequestMeta)(e,"minimalMode"),d=async i=>{var s,d;let l=async({previousCacheEntry:a})=>{try{if(!n&&k&&S&&!a)return t.statusCode=404,t.setHeader("x-nextjs-cache","REVALIDATED"),t.end("This page could not be found"),null;let s=await o(i);e.fetchMetrics=K.renderOpts.fetchMetrics;let d=K.renderOpts.pendingWaitUntil;d&&r.waitUntil&&(r.waitUntil(d),d=void 0);let l=K.renderOpts.collectedTags;if(!I)return await (0,m.sendResponse)(L,B,s,K.renderOpts.pendingWaitUntil),null;{let e=await s.blob(),t=(0,u.toNodeOutgoingHttpHeaders)(s.headers);l&&(t[v.NEXT_CACHE_TAGS_HEADER]=l),!t["content-type"]&&e.type&&(t["content-type"]=e.type);let a=void 0!==K.renderOpts.collectedRevalidate&&!(K.renderOpts.collectedRevalidate>=v.INFINITE_CACHE)&&K.renderOpts.collectedRevalidate,r=void 0===K.renderOpts.collectedExpire||K.renderOpts.collectedExpire>=v.INFINITE_CACHE?void 0:K.renderOpts.collectedExpire;return{value:{kind:y.CachedRouteKind.APP_ROUTE,status:s.status,body:Buffer.from(await e.arrayBuffer()),headers:t},cacheControl:{revalidate:a,expire:r}}}}catch(t){throw(null==a?void 0:a.isStale)&&await w.onRequestError(e,t,{routerKind:"App Router",routePath:h,routeType:"route",revalidateReason:(0,p.getRevalidateReason)({isStaticGeneration:D,isOnDemandRevalidate:k})},!1,C),t}},c=await w.handleResponse({req:e,nextConfig:R,cacheKey:O,routeKind:a.RouteKind.APP_ROUTE,isFallback:!1,prerenderManifest:x,isRoutePPREnabled:!1,isOnDemandRevalidate:k,revalidateOnlyGenerated:S,responseGenerator:l,waitUntil:r.waitUntil,isMinimalMode:n});if(!I)return null;if((null==c||null==(s=c.value)?void 0:s.kind)!==y.CachedRouteKind.APP_ROUTE)throw Object.defineProperty(Error(`Invariant: app-route received invalid cache entry ${null==c||null==(d=c.value)?void 0:d.kind}`),"__NEXT_ERROR_CODE",{value:"E701",enumerable:!1,configurable:!0});n||t.setHeader("x-nextjs-cache",k?"REVALIDATED":c.isMiss?"MISS":c.isStale?"STALE":"HIT"),E&&t.setHeader("Cache-Control","private, no-cache, no-store, max-age=0, must-revalidate");let f=(0,u.fromNodeOutgoingHttpHeaders)(c.value.headers);return n&&I||f.delete(v.NEXT_CACHE_TAGS_HEADER),!c.cacheControl||t.getHeader("Cache-Control")||f.get("Cache-Control")||f.set("Cache-Control",(0,_.getCacheControlHeader)(c.cacheControl)),await (0,m.sendResponse)(L,B,new Response(c.value.body,{headers:f,status:c.value.status||200})),null};M?await d(M):await H.withPropagatedContext(e.headers,()=>H.trace(c.BaseServerSpan.handleRequest,{spanName:`${F} ${h}`,kind:s.SpanKind.SERVER,attributes:{"http.method":F,"http.target":e.url}},d))}catch(t){if(t instanceof f.NoFallbackError||await w.onRequestError(e,t,{routerKind:"App Router",routePath:P,routeType:"route",revalidateReason:(0,p.getRevalidateReason)({isStaticGeneration:D,isOnDemandRevalidate:k})},!1,C),I)throw t;return await (0,m.sendResponse)(L,B,new Response(null,{status:500})),null}}e.s(["handler",()=>k,"patchFetch",()=>C,"routeModule",()=>w,"serverHooks",()=>x,"workAsyncStorage",()=>A,"workUnitAsyncStorage",()=>E],868709)}];
+
+//# sourceMappingURL=6d6b6_next_dist_esm_build_templates_app-route_08ca0218.js.map

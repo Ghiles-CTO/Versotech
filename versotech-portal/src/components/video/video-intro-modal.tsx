@@ -46,17 +46,17 @@ export function VideoIntroModal({ open, videoUrl, onComplete }: VideoIntroModalP
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent
-        className="!max-w-[95vw] !w-[1600px] !h-[90vh] !max-h-[90vh] p-0 overflow-hidden bg-slate-900 border-slate-700"
+        className="!max-w-[95vw] !w-[1600px] !h-[90vh] !max-h-[90vh] p-0 overflow-hidden bg-background border-border"
         showCloseButton={false}
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <div className="flex flex-col h-full">
-          <DialogHeader className="p-6 pb-4 border-b border-slate-700 bg-slate-900 shrink-0">
-            <DialogTitle className="text-xl font-semibold text-white">
+          <DialogHeader className="p-6 pb-4 border-b border-border bg-background shrink-0">
+            <DialogTitle className="text-xl font-semibold text-foreground">
               Welcome to VERSO
             </DialogTitle>
-            <DialogDescription className="text-sm text-slate-300">
+            <DialogDescription className="text-sm text-muted-foreground">
               Please watch this short introduction to get started with the platform.
             </DialogDescription>
           </DialogHeader>
@@ -64,16 +64,16 @@ export function VideoIntroModal({ open, videoUrl, onComplete }: VideoIntroModalP
           {/* Video Container - overflow-hidden and absolute video */}
           <div className="relative flex-1 min-h-0 overflow-hidden">
             {isLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-10">
-                <Loader2 className="h-12 w-12 animate-spin text-white" />
+              <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
+                <Loader2 className="h-12 w-12 animate-spin text-foreground" />
               </div>
             )}
 
             {hasError ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-900 text-white z-10">
+              <div className="absolute inset-0 flex items-center justify-center bg-background text-foreground z-10">
                 <div className="text-center p-8">
                   <p className="text-lg font-medium mb-2">Unable to load video</p>
-                  <p className="text-sm text-slate-400 mb-4">
+                  <p className="text-sm text-muted-foreground mb-4">
                     Please check your connection and try again.
                   </p>
                   <Button variant="outline" onClick={() => { setHasError(false); setIsLoading(true); videoRef.current?.load() }}>
@@ -84,7 +84,7 @@ export function VideoIntroModal({ open, videoUrl, onComplete }: VideoIntroModalP
             ) : (
               <video
                 ref={videoRef}
-                className="absolute inset-0 w-full h-full object-contain bg-slate-900"
+                className="absolute inset-0 w-full h-full object-contain bg-black"
                 src={videoUrl}
                 onEnded={() => setVideoEnded(true)}
                 onLoadedData={() => setIsLoading(false)}
@@ -99,7 +99,7 @@ export function VideoIntroModal({ open, videoUrl, onComplete }: VideoIntroModalP
           </div>
 
           {/* Footer - ALWAYS visible */}
-          <div className="p-6 pt-4 border-t border-slate-700 bg-slate-900 flex justify-end shrink-0">
+          <div className="p-6 pt-4 border-t border-border bg-background flex justify-end shrink-0">
             <Button
               size="lg"
               disabled={!videoEnded || isSubmitting}

@@ -1,0 +1,33 @@
+{
+  "[project]/versotech-portal/src/app/auth-init.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/versotech-portal/src/app/auth-init.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/versotech-portal_src_676ef566._.js",
+      "static/chunks/versotech-portal_src_app_auth-init_tsx_76a3be53._.js"
+    ]
+  },
+  "[project]/versotech-portal/src/app/(main)/versotech_main/inbox/messages-content.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/versotech-portal/src/app/(main)/versotech_main/inbox/messages-content.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/versotech-portal_src_cd93e2d5._.js",
+      "static/chunks/6d6b6_e612a2ed._.js",
+      "static/chunks/c6ad4_src_app_(main)_versotech_main_inbox_messages-content_tsx_4ffbec9a._.js"
+    ]
+  },
+  "[project]/versotech-portal/src/app/(main)/versotech_main/inbox/approvals-content.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/versotech-portal/src/app/(main)/versotech_main/inbox/approvals-content.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/versotech-portal_src_838c6544._.js",
+      "static/chunks/6d6b6_62c67516._.js",
+      "static/chunks/c6ad4_src_app_(main)_versotech_main_inbox_approvals-content_tsx_4ffbec9a._.js"
+    ]
+  },
+  "[project]/versotech-portal/src/app/(main)/versotech_main/inbox/requests-content.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/versotech-portal/src/app/(main)/versotech_main/inbox/requests-content.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/versotech-portal_src_8a136dab._.js",
+      "static/chunks/6d6b6_16552c60._.js",
+      "static/chunks/c6ad4_src_app_(main)_versotech_main_inbox_requests-content_tsx_4ffbec9a._.js"
+    ]
+  }
+}

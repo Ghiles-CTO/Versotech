@@ -1,0 +1,17 @@
+{
+  "[project]/versotech-portal/src/app/auth-init.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/versotech-portal/src/app/auth-init.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/versotech-portal_src_676ef566._.js",
+      "static/chunks/versotech-portal_src_app_auth-init_tsx_76a3be53._.js"
+    ]
+  },
+  "[project]/versotech-portal/src/app/(main)/versotech_main/accounts/unified-accounts-content.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/versotech-portal/src/app/(main)/versotech_main/accounts/unified-accounts-content.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/versotech-portal_src_ef45c357._.js",
+      "static/chunks/6d6b6_a69f3814._.js",
+      "static/chunks/c6ad4_src_app_(main)_versotech_main_accounts_unified-accounts-content_tsx_cce85f04._.js"
+    ]
+  }
+}

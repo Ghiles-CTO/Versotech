@@ -1,0 +1,3 @@
+{
+  "/api/staff/vehicles/[vehicleId]/positions/import/route": "app/api/staff/vehicles/[vehicleId]/positions/import/route.js"
+}

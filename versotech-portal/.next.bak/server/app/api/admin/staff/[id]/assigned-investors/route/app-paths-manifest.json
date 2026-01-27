@@ -1,0 +1,3 @@
+{
+  "/api/admin/staff/[id]/assigned-investors/route": "app/api/admin/staff/[id]/assigned-investors/route.js"
+}

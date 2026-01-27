@@ -308,35 +308,35 @@ export function ReconciliationPageClient() {
 
           {/* Summary KPIs */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border">
               <div className="p-2 rounded-lg bg-amber-500/10">
-                <Clock className="h-5 w-5 text-amber-400" />
+                <Clock className="h-5 w-5 text-amber-500 dark:text-amber-400" />
               </div>
               <div>
                 <div className="text-sm text-muted-foreground">Total Outstanding</div>
-                <div className="text-lg font-bold text-amber-200">{formatCurrency(filteredSummary.outstandingAmount)}</div>
+                <div className="text-lg font-bold text-amber-600 dark:text-amber-200">{formatCurrency(filteredSummary.outstandingAmount)}</div>
                 <div className="text-xs text-muted-foreground">{filteredSummary.unmatched + filteredSummary.partiallyMatched} transactions</div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border">
               <div className="p-2 rounded-lg bg-emerald-500/10">
-                <CheckCircle className="h-5 w-5 text-emerald-400" />
+                <CheckCircle className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />
               </div>
               <div>
                 <div className="text-sm text-muted-foreground">Total Matched</div>
-                <div className="text-lg font-bold text-emerald-200">{formatCurrency(filteredSummary.matchedAmount)}</div>
+                <div className="text-lg font-bold text-emerald-600 dark:text-emerald-200">{formatCurrency(filteredSummary.matchedAmount)}</div>
                 <div className="text-xs text-muted-foreground">{filteredSummary.matched} transactions</div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border">
               <div className="p-2 rounded-lg bg-rose-500/10">
-                <AlertCircle className="h-5 w-5 text-rose-400" />
+                <AlertCircle className="h-5 w-5 text-rose-500 dark:text-rose-400" />
               </div>
               <div>
                 <div className="text-sm text-muted-foreground">Total Unmatched</div>
-                <div className="text-lg font-bold text-rose-200">{formatCurrency(filteredSummary.unmatchedAmount)}</div>
+                <div className="text-lg font-bold text-rose-600 dark:text-rose-200">{formatCurrency(filteredSummary.unmatchedAmount)}</div>
                 <div className="text-xs text-muted-foreground">{filteredSummary.unmatched} transactions</div>
               </div>
             </div>
@@ -359,7 +359,7 @@ export function ReconciliationPageClient() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-6">
-        <Card className="bg-white/5 border border-white/10">
+        <Card className="bg-muted/50 border border-border">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Activity className="h-4 w-4" />
@@ -367,7 +367,7 @@ export function ReconciliationPageClient() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-200">{matchRate}%</div>
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-200">{matchRate}%</div>
             <div className="text-sm text-muted-foreground mt-1">
               {stats?.matched || 0} of {stats?.total || 0}
             </div>
@@ -382,7 +382,7 @@ export function ReconciliationPageClient() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-200">{stats?.matched || 0}</div>
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-200">{stats?.matched || 0}</div>
             <div className="text-sm text-muted-foreground mt-1">
               {formatCurrency(stats?.matchedAmount || 0)}
             </div>
@@ -397,7 +397,7 @@ export function ReconciliationPageClient() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-200">{stats?.partiallyMatched || stats?.partially_matched || 0}</div>
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-200">{stats?.partiallyMatched || stats?.partially_matched || 0}</div>
             <div className="text-sm text-muted-foreground mt-1">
               {formatCurrency(partialRemainingAmount || 0)}
             </div>
@@ -412,7 +412,7 @@ export function ReconciliationPageClient() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-rose-200">{stats?.unmatched || 0}</div>
+            <div className="text-2xl font-bold text-rose-600 dark:text-rose-200">{stats?.unmatched || 0}</div>
             <div className="text-sm text-muted-foreground mt-1">
               {formatCurrency(stats?.unmatchedAmount || 0)}
             </div>
@@ -427,7 +427,7 @@ export function ReconciliationPageClient() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-200">{stats?.suggestedMatchesCount || 0}</div>
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-200">{stats?.suggestedMatchesCount || 0}</div>
             <div className="text-sm text-muted-foreground mt-1">Ready for review</div>
           </CardContent>
         </Card>
