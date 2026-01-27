@@ -33,6 +33,7 @@ import {
   FolderInput,
   Archive,
   Tag,
+  History,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -130,6 +131,8 @@ interface FolderNavigatorProps {
   // Tag filter props
   selectedTagFilters?: Set<string>
   onTagFiltersChange?: (tags: Set<string>) => void
+  // Version history props
+  onVersionHistory?: (documentId: string, documentName: string, currentVersion: number) => void
 }
 
 /**
@@ -193,6 +196,8 @@ export function FolderNavigator({
   // Tag filter props
   selectedTagFilters = new Set<string>(),
   onTagFiltersChange,
+  // Version history props
+  onVersionHistory,
 }: FolderNavigatorProps) {
   const isEmpty = !isLoading && !isSearchMode && subfolders.length === 0 && documents.length === 0
   const hasContent = subfolders.length > 0 || documents.length > 0
@@ -522,6 +527,7 @@ export function FolderNavigator({
                         onRename={onRenameDocument}
                         onDelete={onDeleteDocument}
                         onTagsUpdated={onTagsUpdated}
+                        onVersionHistory={onVersionHistory}
                         variant="default"
                         isSelected={selectedDocuments.has(document.id)}
                         onSelectToggle={onToggleSelection ? () => onToggleSelection(document.id) : undefined}
@@ -619,6 +625,7 @@ export function FolderNavigator({
                           onRename={onRenameDocument}
                           onDelete={onDeleteDocument}
                           onTagsUpdated={onTagsUpdated}
+                          onVersionHistory={onVersionHistory}
                           isSelected={selectedDocuments.has(document.id)}
                           onSelectToggle={onToggleSelection ? () => onToggleSelection(document.id) : undefined}
                           showCheckbox={!!onToggleSelection}
@@ -883,6 +890,7 @@ function DocumentListRow({
   onRename,
   onDelete,
   onTagsUpdated,
+  onVersionHistory,
   isSelected = false,
   onSelectToggle,
   showCheckbox = false,
@@ -895,6 +903,7 @@ function DocumentListRow({
   onRename?: (id: string) => void
   onDelete?: (id: string) => void
   onTagsUpdated?: (documentId: string, newTags: string[]) => void
+  onVersionHistory?: (documentId: string, documentName: string, currentVersion: number) => void
   isSelected?: boolean
   onSelectToggle?: () => void
   showCheckbox?: boolean
@@ -1050,6 +1059,17 @@ function DocumentListRow({
                 </DropdownMenuItem>
               }
             />
+            {onVersionHistory && (
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onVersionHistory(document.id, displayName, document.current_version || 1)
+                }}
+              >
+                <History className="w-4 h-4 mr-2 text-muted-foreground" strokeWidth={2} />
+                <span>Version History</span>
+              </DropdownMenuItem>
+            )}
             {onDelete && (
               <>
                 <DropdownMenuSeparator />

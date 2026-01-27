@@ -23,6 +23,7 @@ import {
   Edit,
   Trash2,
   Tag,
+  History,
 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -43,6 +44,7 @@ interface DocumentCardProps {
   onRename?: (documentId: string) => void
   onDelete?: (documentId: string) => void
   onTagsUpdated?: (documentId: string, newTags: string[]) => void
+  onVersionHistory?: (documentId: string, documentName: string, currentVersion: number) => void
   variant?: 'default' | 'compact'
   className?: string
   // Selection props
@@ -108,6 +110,7 @@ export function DocumentCard({
   onRename,
   onDelete,
   onTagsUpdated,
+  onVersionHistory,
   variant = 'default',
   className,
   isSelected = false,
@@ -368,6 +371,17 @@ export function DocumentCard({
                   </DropdownMenuItem>
                 }
               />
+              {onVersionHistory && (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onVersionHistory(document.id, displayName, document.current_version || 1)
+                  }}
+                >
+                  <History className="w-4 h-4 mr-2 text-muted-foreground" strokeWidth={2} />
+                  <span>Version History</span>
+                </DropdownMenuItem>
+              )}
               {onDelete && (
                 <>
                   <DropdownMenuSeparator />

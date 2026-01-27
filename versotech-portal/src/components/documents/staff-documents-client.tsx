@@ -41,6 +41,7 @@ import { parseVehicleHierarchy, VehicleNode } from '@/lib/documents/vehicle-hier
 import { toast } from 'sonner'
 import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from './DocumentViewerFullscreen'
+import { VersionHistorySheet } from './version-history-sheet'
 
 interface Vehicle {
   id: string
@@ -58,6 +59,7 @@ interface StaffDocument {
   created_at: string
   mime_type?: string
   tags?: string[]
+  current_version?: number
   folder?: {
     id: string
     name: string
@@ -132,6 +134,12 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
 
   // Bulk Delete Dialog State
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
+
+  // Version History Sheet State
+  const [versionHistoryOpen, setVersionHistoryOpen] = useState(false)
+  const [versionHistoryDocId, setVersionHistoryDocId] = useState<string | null>(null)
+  const [versionHistoryDocName, setVersionHistoryDocName] = useState<string>('')
+  const [versionHistoryCurrentVersion, setVersionHistoryCurrentVersion] = useState<number>(1)
 
   // Drag and Drop Upload State
   const [isDragOver, setIsDragOver] = useState(false)
@@ -1271,6 +1279,14 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     ))
   }, [])
 
+  // Handle version history - open the version history sheet
+  const handleVersionHistory = useCallback((documentId: string, documentName: string, currentVersion: number) => {
+    setVersionHistoryDocId(documentId)
+    setVersionHistoryDocName(documentName)
+    setVersionHistoryCurrentVersion(currentVersion)
+    setVersionHistoryOpen(true)
+  }, [])
+
   const handlePublishDocument = async (documentId: string) => {
     try {
       const response = await fetch(`/api/staff/documents/${documentId}/publish`, {
@@ -1897,6 +1913,8 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
               // Tag filter props
               selectedTagFilters={selectedTagFilters}
               onTagFiltersChange={handleTagFiltersChange}
+              // Version history props
+              onVersionHistory={handleVersionHistory}
             />
           </div>
         </main>
@@ -1975,6 +1993,15 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
         documentNames={selectedDocumentNames}
         onSuccess={() => loadDocuments()}
         onClearSelection={clearSelection}
+      />
+
+      {/* Version History Sheet */}
+      <VersionHistorySheet
+        open={versionHistoryOpen}
+        onOpenChange={setVersionHistoryOpen}
+        documentId={versionHistoryDocId}
+        documentName={versionHistoryDocName}
+        currentVersion={versionHistoryCurrentVersion}
       />
 
       {/* Document Preview Modal */}
