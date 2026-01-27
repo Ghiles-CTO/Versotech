@@ -20,12 +20,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger
+} from '@/components/ui/context-menu'
 import { FolderBreadcrumbs } from './navigation/FolderBreadcrumbs'
 import { FolderNavigator } from './navigation/FolderNavigator'
 import { FolderTreeDrawer } from './navigation/FolderTreeDrawer'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
-import { Search, X, Folder, FolderOpen, ChevronRight, ChevronDown } from 'lucide-react'
+import { Search, X, Folder, FolderOpen, ChevronRight, ChevronDown, Pencil, Trash2 } from 'lucide-react'
 import { FOLDER_ICON_COLORS } from '@/lib/design-tokens'
 import { cn } from '@/lib/utils'
 import { UploadDestinationBanner } from './upload/UploadDestinationBanner'
@@ -1616,81 +1623,125 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     )
   }
 
-  // Recursive tree node renderer for sidebar
+  // Recursive tree node renderer for sidebar with context menu
   const renderSidebarTreeNode = (node: TreeNode, level: number = 0) => {
     const isExpanded = effectiveExpandedFolders.has(node.folder.id)
     const hasChildren = node.children.length > 0
     const isCurrent = currentFolderId === node.folder.id
     const isDragTarget = treeDragOverFolderId === node.folder.id
 
+    // Determine if folder can be deleted:
+    // - Only custom folders can be deleted (not vehicle_root or category)
+    // - Folder must be empty (no documents)
+    const isCustomFolder = node.folder.folder_type === 'custom'
+    const hasDocuments = (node.folder.document_count || 0) > 0
+    const canDelete = isCustomFolder && !hasDocuments
+
     return (
       <div key={node.folder.id}>
-        <div
-          className={cn(
-            'flex items-center gap-1 rounded-md transition-colors',
-            isDragTarget
-              ? 'ring-2 ring-primary bg-primary/10'
-              : isCurrent
-                ? 'bg-primary/20 border border-primary'
-                : 'hover:bg-muted border border-transparent'
-          )}
-          style={{ paddingLeft: `${level * 16 + 8}px` }}
-          onDragEnter={(e) => handleTreeFolderDragEnter(e, node.folder.id)}
-          onDragLeave={handleTreeFolderDragLeave}
-          onDragOver={handleTreeFolderDragOver}
-          onDrop={(e) => handleTreeFolderDrop(e, node.folder.id, node.folder.name)}
-        >
-          {hasChildren ? (
-            <button
-              onClick={() => toggleSidebarFolder(node.folder.id)}
-              className="p-1 hover:bg-accent rounded transition-colors"
-              aria-label={isExpanded ? 'Collapse folder' : 'Expand folder'}
-            >
-              {isExpanded ? (
-                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-              ) : (
-                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
-              )}
-            </button>
-          ) : (
-            <div className="w-5" />
-          )}
-          <button
-            onClick={() => navigateToFolder(node.folder.id)}
-            className="flex items-center gap-2 flex-1 py-2 pr-3 text-left text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded"
-          >
-            {isExpanded ? (
-              <FolderOpen
-                className={cn(
-                  'w-4 h-4 flex-shrink-0',
-                  node.folder.folder_type === 'vehicle_root' ? 'text-blue-500' :
-                  node.folder.folder_type === 'category' ? 'text-green-500' :
-                  'text-muted-foreground'
-                )}
-              />
-            ) : (
-              <Folder
-                className={cn(
-                  'w-4 h-4 flex-shrink-0',
-                  node.folder.folder_type === 'vehicle_root' ? 'text-blue-500' :
-                  node.folder.folder_type === 'category' ? 'text-green-500' :
-                  'text-muted-foreground'
-                )}
-              />
-            )}
-            <span
+        <ContextMenu>
+          <ContextMenuTrigger asChild>
+            <div
               className={cn(
-                'truncate font-medium',
-                isCurrent ? 'text-foreground' : 'text-muted-foreground'
+                'flex items-center gap-1 rounded-md transition-colors',
+                isDragTarget
+                  ? 'ring-2 ring-primary bg-primary/10'
+                  : isCurrent
+                    ? 'bg-primary/20 border border-primary'
+                    : 'hover:bg-muted border border-transparent'
               )}
+              style={{ paddingLeft: `${level * 16 + 8}px` }}
+              onDragEnter={(e) => handleTreeFolderDragEnter(e, node.folder.id)}
+              onDragLeave={handleTreeFolderDragLeave}
+              onDragOver={handleTreeFolderDragOver}
+              onDrop={(e) => handleTreeFolderDrop(e, node.folder.id, node.folder.name)}
             >
-              {debouncedTreeSearch ? highlightText(node.folder.name, debouncedTreeSearch) : node.folder.name}
-            </span>
-            {node.folder.document_count !== undefined && node.folder.document_count > 0 && (
-              <span className="text-xs text-muted-foreground ml-auto">({node.folder.document_count})</span>
-            )}
-          </button>
-        </div>
+              {hasChildren ? (
+                <button
+                  onClick={() => toggleSidebarFolder(node.folder.id)}
+                  className="p-1 hover:bg-accent rounded transition-colors"
+                  aria-label={isExpanded ? 'Collapse folder' : 'Expand folder'}
+                >
+                  {isExpanded ? (
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+                  )}
+                </button>
+              ) : (
+                <div className="w-5" />
+              )}
+              <button
+                onClick={() => navigateToFolder(node.folder.id)}
+                className="flex items-center gap-2 flex-1 py-2 pr-3 text-left text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded"
+              >
+                {isExpanded ? (
+                  <FolderOpen
+                    className={cn(
+                      'w-4 h-4 flex-shrink-0',
+                      node.folder.folder_type === 'vehicle_root' ? 'text-blue-500' :
+                      node.folder.folder_type === 'category' ? 'text-green-500' :
+                      'text-muted-foreground'
+                    )}
+                  />
+                ) : (
+                  <Folder
+                    className={cn(
+                      'w-4 h-4 flex-shrink-0',
+                      node.folder.folder_type === 'vehicle_root' ? 'text-blue-500' :
+                      node.folder.folder_type === 'category' ? 'text-green-500' :
+                      'text-muted-foreground'
+                    )}
+                  />
+                )}
+                <span
+                  className={cn(
+                    'truncate font-medium',
+                    isCurrent ? 'text-foreground' : 'text-muted-foreground'
+                  )}
+                >
+                  {debouncedTreeSearch ? highlightText(node.folder.name, debouncedTreeSearch) : node.folder.name}
+                </span>
+                {node.folder.document_count !== undefined && node.folder.document_count > 0 && (
+                  <span className="text-xs text-muted-foreground ml-auto">({node.folder.document_count})</span>
+                )}
+              </button>
+            </div>
+          </ContextMenuTrigger>
+          <ContextMenuContent>
+            <ContextMenuItem
+              onClick={() => handleCreateFolder(node.folder.id)}
+            >
+              <FolderPlus className="w-4 h-4 mr-2" />
+              New Subfolder
+            </ContextMenuItem>
+            <ContextMenuItem
+              onClick={() => handleRenameFolder(node.folder.id)}
+            >
+              <Pencil className="w-4 h-4 mr-2" />
+              Rename
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+            <ContextMenuItem
+              variant="destructive"
+              disabled={!canDelete}
+              onClick={() => {
+                if (canDelete) {
+                  handleDeleteFolder(node.folder.id)
+                }
+              }}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete
+              {!isCustomFolder && (
+                <span className="ml-auto text-xs opacity-50">(System folder)</span>
+              )}
+              {isCustomFolder && hasDocuments && (
+                <span className="ml-auto text-xs opacity-50">(Has documents)</span>
+              )}
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
 
         {isExpanded && hasChildren && (
           <div className="mt-0.5">

@@ -83,17 +83,17 @@ export function RenameFolderDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="bg-zinc-900 border-white/10 text-white">
+      <DialogContent>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle className="text-white">Rename Folder</DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogTitle>Rename Folder</DialogTitle>
+            <DialogDescription>
               Enter a new name for this folder
             </DialogDescription>
           </DialogHeader>
 
           <div className="py-4">
-            <Label htmlFor="folder-name" className="text-white">
+            <Label htmlFor="folder-name">
               Folder Name
             </Label>
             <Input
@@ -101,7 +101,7 @@ export function RenameFolderDialog({
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="Enter folder name"
-              className="mt-2 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+              className="mt-2"
               disabled={isSubmitting}
               autoFocus
             />
@@ -113,14 +113,12 @@ export function RenameFolderDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="border-white/20 text-white hover:bg-white/10"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting || !newName.trim()}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               {isSubmitting ? 'Renaming...' : 'Rename'}
             </Button>
