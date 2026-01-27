@@ -32,6 +32,7 @@ import { UploadDestinationBanner } from './upload/UploadDestinationBanner'
 import { DocumentUploadDialog } from './document-upload-dialog'
 import { MoveDocumentDialog } from './move-document-dialog'
 import { BulkMoveDialog } from './bulk-move-dialog'
+import { BulkDeleteDialog } from './bulk-delete-dialog'
 import { CreateFolderDialog } from './create-folder-dialog'
 import { RenameFolderDialog } from './rename-folder-dialog'
 import { RenameDocumentDialog } from './rename-document-dialog'
@@ -127,6 +128,9 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
 
   // Bulk Move Dialog State
   const [bulkMoveDialogOpen, setBulkMoveDialogOpen] = useState(false)
+
+  // Bulk Delete Dialog State
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
 
   // URL State for sorting
   const searchParams = useSearchParams()
@@ -344,8 +348,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
 
   const handleBulkDelete = useCallback(() => {
     if (selectedDocuments.size === 0) return
-    // TODO: US-015 - Show confirmation dialog and delete
-    toast.info(`Delete ${selectedDocuments.size} document(s) - coming soon`)
+    setBulkDeleteDialogOpen(true)
   }, [selectedDocuments])
 
   const handleBulkDownload = useCallback(() => {
@@ -513,6 +516,13 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     const allIds = filteredDocuments.map(doc => doc.id)
     setSelectedDocuments(new Set(allIds))
   }, [filteredDocuments])
+
+  // Get names of selected documents (for bulk delete dialog)
+  const selectedDocumentNames = useMemo(() => {
+    return filteredDocuments
+      .filter(doc => selectedDocuments.has(doc.id))
+      .map(doc => doc.name)
+  }, [filteredDocuments, selectedDocuments])
 
   // Build tree structure for sidebar
   interface TreeNode {
@@ -1596,6 +1606,16 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
         open={bulkMoveDialogOpen}
         onOpenChange={setBulkMoveDialogOpen}
         documentIds={Array.from(selectedDocuments)}
+        onSuccess={() => loadDocuments()}
+        onClearSelection={clearSelection}
+      />
+
+      {/* Bulk Delete Dialog */}
+      <BulkDeleteDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+        documentIds={Array.from(selectedDocuments)}
+        documentNames={selectedDocumentNames}
         onSuccess={() => loadDocuments()}
         onClearSelection={clearSelection}
       />
