@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import {
   Upload,
   FolderPlus,
@@ -103,11 +104,17 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   const [renameDocumentId, setRenameDocumentId] = useState<string | null>(null)
   const [renameDocumentName, setRenameDocumentName] = useState<string>('')
 
+  // URL State for sorting
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+
   // UI State
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [sortBy, setSortBy] = useState<'name' | 'date' | 'type'>('name')
+  const [sortBy, setSortBy] = useState<'name' | 'date' | 'size'>('date')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
 
   // Load viewMode from localStorage on mount (client-side only)
   useEffect(() => {
@@ -116,6 +123,50 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       setViewMode(saved)
     }
   }, [])
+
+  // Load sort preferences from URL on mount
+  useEffect(() => {
+    const sortParam = searchParams.get('sort')
+    const dirParam = searchParams.get('dir')
+
+    if (sortParam === 'name' || sortParam === 'date' || sortParam === 'size') {
+      setSortBy(sortParam)
+    }
+    if (dirParam === 'asc' || dirParam === 'desc') {
+      setSortDir(dirParam)
+    }
+  }, [searchParams])
+
+  // Update URL when sort changes (debounced to avoid excessive history entries)
+  const updateSortUrl = useCallback((newSortBy: 'name' | 'date' | 'size', newSortDir: 'asc' | 'desc') => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('sort', newSortBy)
+    params.set('dir', newSortDir)
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+  }, [searchParams, router, pathname])
+
+  // Handle sort change with smart defaults for direction
+  const handleSortChange = useCallback((newSortBy: 'name' | 'date' | 'size') => {
+    let newDir: 'asc' | 'desc'
+
+    if (newSortBy === sortBy) {
+      // Same column: toggle direction
+      newDir = sortDir === 'asc' ? 'desc' : 'asc'
+    } else {
+      // New column: use smart defaults (date = desc, name/size = asc)
+      newDir = newSortBy === 'date' ? 'desc' : 'asc'
+    }
+
+    setSortBy(newSortBy)
+    setSortDir(newDir)
+    updateSortUrl(newSortBy, newDir)
+  }, [sortBy, sortDir, updateSortUrl])
+
+  // Handle direct direction change (from dropdown)
+  const handleSortDirChange = useCallback((newDir: 'asc' | 'desc') => {
+    setSortDir(newDir)
+    updateSortUrl(sortBy, newDir)
+  }, [sortBy, updateSortUrl])
 
   // Tree Sidebar State
   const [treeSearchQuery, setTreeSearchQuery] = useState('')
@@ -245,20 +296,24 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       })
     }
 
-    // Sort
+    // Sort with direction support
     result = [...result].sort((a, b) => {
+      let comparison = 0
+
       if (sortBy === 'name') {
-        return a.name.localeCompare(b.name)
+        comparison = a.name.localeCompare(b.name)
       } else if (sortBy === 'date') {
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      } else if (sortBy === 'type') {
-        return a.type.localeCompare(b.type)
+        comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      } else if (sortBy === 'size') {
+        comparison = (a.file_size_bytes || 0) - (b.file_size_bytes || 0)
       }
-      return 0
+
+      // Apply direction
+      return sortDir === 'desc' ? -comparison : comparison
     })
 
     return result
-  }, [documents, searchQuery, sortBy])
+  }, [documents, searchQuery, sortBy, sortDir])
 
   // Build tree structure for sidebar
   interface TreeNode {
@@ -1081,6 +1136,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
               isLoading={loading}
               viewMode={viewMode}
               sortBy={sortBy}
+              sortDir={sortDir}
               searchQuery={searchQuery}
               onNavigateToFolder={navigateToFolder}
               onDocumentClick={(docId) => {
@@ -1095,7 +1151,8 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
               onRenameDocument={handleRenameDocument}
               onDeleteDocument={handleDeleteDocument}
               onViewModeChange={setViewMode}
-              onSortChange={setSortBy}
+              onSortChange={handleSortChange}
+              onSortDirChange={handleSortDirChange}
               onSearchChange={setSearchQuery}
             />
           </div>

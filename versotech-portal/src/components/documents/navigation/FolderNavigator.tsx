@@ -10,6 +10,8 @@ import {
   Grid3x3,
   List,
   ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   Download,
   MoreVertical,
   Eye,
@@ -55,7 +57,8 @@ interface FolderNavigatorProps {
   documents: Document[]
   isLoading?: boolean
   viewMode?: 'grid' | 'list'
-  sortBy?: 'name' | 'date' | 'type'
+  sortBy?: 'name' | 'date' | 'size'
+  sortDir?: 'asc' | 'desc'
   onNavigateToFolder: (folderId: string) => void
   onDocumentClick: (documentId: string) => void
   onUploadClick: () => void
@@ -66,7 +69,8 @@ interface FolderNavigatorProps {
   onRenameDocument?: (documentId: string) => void
   onDeleteDocument?: (documentId: string) => void
   onViewModeChange?: (mode: 'grid' | 'list') => void
-  onSortChange?: (sort: 'name' | 'date' | 'type') => void
+  onSortChange?: (sort: 'name' | 'date' | 'size') => void
+  onSortDirChange?: (dir: 'asc' | 'desc') => void
   onSearchChange?: (query: string) => void
   searchQuery?: string
   className?: string
@@ -91,7 +95,8 @@ export function FolderNavigator({
   documents,
   isLoading = false,
   viewMode = 'grid',
-  sortBy = 'name',
+  sortBy = 'date',
+  sortDir = 'desc',
   onNavigateToFolder,
   onDocumentClick,
   onUploadClick,
@@ -103,6 +108,7 @@ export function FolderNavigator({
   onDeleteDocument,
   onViewModeChange,
   onSortChange,
+  onSortDirChange,
   onSearchChange,
   searchQuery = '',
   className,
@@ -128,16 +134,32 @@ export function FolderNavigator({
 
         {/* Right: Controls */}
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          {/* Sort */}
-          <Select value={sortBy} onValueChange={(value) => onSortChange?.(value as any)}>
-            <SelectTrigger className="w-[140px] h-9 text-sm">
+          {/* Sort Field */}
+          <Select value={sortBy} onValueChange={(value) => onSortChange?.(value as 'name' | 'date' | 'size')}>
+            <SelectTrigger className="w-[130px] h-9 text-sm">
               <ArrowUpDown className="w-3.5 h-3.5 mr-2 text-muted-foreground" strokeWidth={2} />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="name">Name</SelectItem>
-              <SelectItem value="date">Date Modified</SelectItem>
-              <SelectItem value="type">Type</SelectItem>
+              <SelectItem value="date">Date</SelectItem>
+              <SelectItem value="size">Size</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Sort Direction */}
+          <Select value={sortDir} onValueChange={(value) => onSortDirChange?.(value as 'asc' | 'desc')}>
+            <SelectTrigger className="w-[100px] h-9 text-sm">
+              {sortDir === 'asc' ? (
+                <ArrowUp className="w-3.5 h-3.5 mr-2 text-muted-foreground" strokeWidth={2} />
+              ) : (
+                <ArrowDown className="w-3.5 h-3.5 mr-2 text-muted-foreground" strokeWidth={2} />
+              )}
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="asc">Asc</SelectItem>
+              <SelectItem value="desc">Desc</SelectItem>
             </SelectContent>
           </Select>
 
@@ -263,11 +285,56 @@ export function FolderNavigator({
                 {/* List View - Table with columns */}
                 {viewMode === 'list' && (
                   <div className="border border-border rounded-lg overflow-hidden">
-                    {/* Table Header */}
+                    {/* Table Header - Clickable for sorting */}
                     <div className="grid grid-cols-[1fr_100px_140px_80px] gap-4 px-4 py-3 bg-muted/50 border-b border-border text-sm font-medium text-muted-foreground">
-                      <div>Name</div>
-                      <div>Size</div>
-                      <div>Date</div>
+                      <button
+                        onClick={() => onSortChange?.('name')}
+                        className={cn(
+                          'flex items-center gap-1 hover:text-foreground transition-colors text-left',
+                          sortBy === 'name' && 'text-foreground'
+                        )}
+                      >
+                        Name
+                        {sortBy === 'name' && (
+                          sortDir === 'asc' ? (
+                            <ArrowUp className="w-3.5 h-3.5" strokeWidth={2} />
+                          ) : (
+                            <ArrowDown className="w-3.5 h-3.5" strokeWidth={2} />
+                          )
+                        )}
+                      </button>
+                      <button
+                        onClick={() => onSortChange?.('size')}
+                        className={cn(
+                          'flex items-center gap-1 hover:text-foreground transition-colors text-left',
+                          sortBy === 'size' && 'text-foreground'
+                        )}
+                      >
+                        Size
+                        {sortBy === 'size' && (
+                          sortDir === 'asc' ? (
+                            <ArrowUp className="w-3.5 h-3.5" strokeWidth={2} />
+                          ) : (
+                            <ArrowDown className="w-3.5 h-3.5" strokeWidth={2} />
+                          )
+                        )}
+                      </button>
+                      <button
+                        onClick={() => onSortChange?.('date')}
+                        className={cn(
+                          'flex items-center gap-1 hover:text-foreground transition-colors text-left',
+                          sortBy === 'date' && 'text-foreground'
+                        )}
+                      >
+                        Date
+                        {sortBy === 'date' && (
+                          sortDir === 'asc' ? (
+                            <ArrowUp className="w-3.5 h-3.5" strokeWidth={2} />
+                          ) : (
+                            <ArrowDown className="w-3.5 h-3.5" strokeWidth={2} />
+                          )
+                        )}
+                      </button>
                       <div className="text-right">Actions</div>
                     </div>
                     {/* Table Body */}
