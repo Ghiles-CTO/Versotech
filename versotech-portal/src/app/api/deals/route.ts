@@ -85,13 +85,18 @@ export async function GET(request: Request) {
     // Apply filters
     const status = searchParams.get('status')
     const deal_type = searchParams.get('deal_type')
-    
+    const vehicle_id = searchParams.get('vehicle_id')
+
     if (status) {
       query = query.eq('status', status)
     }
-    
+
     if (deal_type) {
       query = query.eq('deal_type', deal_type)
+    }
+
+    if (vehicle_id) {
+      query = query.eq('vehicle_id', vehicle_id)
     }
 
     const { data: deals, error } = await query.order('created_at', { ascending: false })

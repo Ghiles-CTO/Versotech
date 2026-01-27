@@ -11,7 +11,8 @@ import {
   Home,
   Building2,
   Package,
-  Loader2
+  Loader2,
+  Briefcase
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -54,6 +55,13 @@ interface Vehicle {
   id: string
   name: string
   type: string
+}
+
+interface Deal {
+  id: string
+  name: string
+  status: string
+  vehicle_id: string | null
 }
 
 interface StaffDocument {
@@ -688,6 +696,12 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   const [searchExpandedVehicles, setSearchExpandedVehicles] = useState<Set<string>>(new Set())
   const [searchExpandedFolders, setSearchExpandedFolders] = useState<Set<string>>(new Set())
 
+  // Deals Tree State (for virtual "Deals" nodes under vehicles)
+  const [expandedDealsNodes, setExpandedDealsNodes] = useState<Set<string>>(new Set())
+  const [vehicleDeals, setVehicleDeals] = useState<Map<string, Deal[]>>(new Map())
+  const [loadingDeals, setLoadingDeals] = useState<Set<string>>(new Set())
+  const [selectedDealId, setSelectedDealId] = useState<string | null>(null)
+
   // Vehicle Context State (for breadcrumbs)
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null)
 
@@ -736,6 +750,9 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     // Clear selection when navigating to different folder
     setSelectedDocuments(new Set())
 
+    // Clear deal filter when navigating to a folder
+    setSelectedDealId(null)
+
     // Update vehicle context based on folder
     if (folder?.vehicle_id) {
       setSelectedVehicleId(folder.vehicle_id)
@@ -754,6 +771,8 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     setCurrentFolderId(null)
     setCurrentFolder(null)
     setSelectedVehicleId(vehicleId)
+    // Clear deal filter when navigating to a vehicle
+    setSelectedDealId(null)
     // Expand the vehicle in sidebar
     setExpandedVehicles(prev => new Set([...prev, vehicleId]))
   }
@@ -1081,6 +1100,81 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     })
   }
 
+  // Fetch deals for a vehicle (lazy loading)
+  const fetchDealsForVehicle = useCallback(async (vehicleId: string) => {
+    // Skip if already loaded or currently loading
+    if (vehicleDeals.has(vehicleId) || loadingDeals.has(vehicleId)) {
+      return
+    }
+
+    setLoadingDeals(prev => new Set([...prev, vehicleId]))
+
+    try {
+      const response = await fetch(`/api/deals?vehicle_id=${vehicleId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setVehicleDeals(prev => {
+          const next = new Map(prev)
+          next.set(vehicleId, data.deals || [])
+          return next
+        })
+      } else {
+        console.error('Failed to fetch deals for vehicle:', vehicleId)
+        setVehicleDeals(prev => {
+          const next = new Map(prev)
+          next.set(vehicleId, [])
+          return next
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching deals:', error)
+      setVehicleDeals(prev => {
+        const next = new Map(prev)
+        next.set(vehicleId, [])
+        return next
+      })
+    } finally {
+      setLoadingDeals(prev => {
+        const next = new Set(prev)
+        next.delete(vehicleId)
+        return next
+      })
+    }
+  }, [vehicleDeals, loadingDeals])
+
+  // Toggle deals node expansion for a vehicle
+  const toggleDealsNode = useCallback((vehicleId: string) => {
+    setExpandedDealsNodes(prev => {
+      const next = new Set(prev)
+      const dealsNodeId = `deals-${vehicleId}`
+      if (next.has(dealsNodeId)) {
+        next.delete(dealsNodeId)
+      } else {
+        next.add(dealsNodeId)
+        // Fetch deals when expanding (lazy load)
+        fetchDealsForVehicle(vehicleId)
+      }
+      return next
+    })
+  }, [fetchDealsForVehicle])
+
+  // Navigate to deal (filters documents by deal_id)
+  const navigateToDeal = useCallback((dealId: string, dealName: string, vehicleId: string) => {
+    setSelectedDealId(dealId)
+    setSelectedVehicleId(vehicleId)
+    setCurrentFolderId(null)
+    setCurrentFolder(null)
+    // Ensure vehicle and deals node are expanded
+    setExpandedVehicles(prev => new Set([...prev, vehicleId]))
+    setExpandedDealsNodes(prev => new Set([...prev, `deals-${vehicleId}`]))
+    toast.info(`Viewing documents for deal: ${dealName}`)
+  }, [])
+
+  // Clear deal filter
+  const clearDealFilter = useCallback(() => {
+    setSelectedDealId(null)
+  }, [])
+
   // Auto-expand current folder's ancestors
   useEffect(() => {
     if (currentFolderId && folders.length > 0) {
@@ -1185,6 +1279,10 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       if (statusFilter !== 'all') {
         params.append('status', statusFilter)
       }
+      // Filter by deal_id when a deal is selected
+      if (selectedDealId) {
+        params.append('deal_id', selectedDealId)
+      }
 
       const response = await fetch(`/api/staff/documents?${params.toString()}`)
 
@@ -1202,7 +1300,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     } finally {
       setLoading(false)
     }
-  }, [currentFolderId, searchQuery, statusFilter, getDescendantFolderIds])
+  }, [currentFolderId, searchQuery, statusFilter, getDescendantFolderIds, selectedDealId])
 
   // Load data on mount and when filters change
   useEffect(() => {
@@ -1538,11 +1636,121 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     )
   }, [])
 
+  // Render the "Deals" virtual node under a vehicle
+  const renderDealsNode = (vehicleId: string, level: number) => {
+    const dealsNodeId = `deals-${vehicleId}`
+    const isExpanded = expandedDealsNodes.has(dealsNodeId)
+    const deals = vehicleDeals.get(vehicleId) || []
+    const isLoading = loadingDeals.has(vehicleId)
+
+    return (
+      <div key={dealsNodeId}>
+        <div
+          className={cn(
+            'flex items-center gap-1 rounded-md transition-colors hover:bg-muted border border-transparent'
+          )}
+          style={{ paddingLeft: `${level * 16 + 8}px` }}
+        >
+          <button
+            onClick={() => toggleDealsNode(vehicleId)}
+            className="p-1 hover:bg-accent rounded transition-colors"
+            aria-label={isExpanded ? 'Collapse deals' : 'Expand deals'}
+          >
+            {isLoading ? (
+              <Loader2 className="w-3.5 h-3.5 text-muted-foreground animate-spin" />
+            ) : isExpanded ? (
+              <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+            )}
+          </button>
+          <button
+            onClick={() => toggleDealsNode(vehicleId)}
+            className="flex items-center gap-2 flex-1 py-2 pr-3 text-left text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded"
+          >
+            <Briefcase className="w-4 h-4 flex-shrink-0 text-purple-500" />
+            <span className="truncate font-medium text-muted-foreground">Deals</span>
+            {deals.length > 0 && (
+              <span className="text-xs text-muted-foreground ml-auto">({deals.length})</span>
+            )}
+          </button>
+        </div>
+
+        {/* Render deal children when expanded */}
+        {isExpanded && !isLoading && (
+          <div className="mt-0.5">
+            {deals.length === 0 ? (
+              <div
+                className="text-xs text-muted-foreground py-2"
+                style={{ paddingLeft: `${(level + 1) * 16 + 8 + 20}px` }}
+              >
+                No deals for this vehicle
+              </div>
+            ) : (
+              deals.map((deal) => (
+                <div
+                  key={deal.id}
+                  className={cn(
+                    'flex items-center gap-1 rounded-md transition-colors',
+                    selectedDealId === deal.id
+                      ? 'bg-primary/20 border border-primary'
+                      : 'hover:bg-muted border border-transparent'
+                  )}
+                  style={{ paddingLeft: `${(level + 1) * 16 + 8}px` }}
+                >
+                  <div className="w-5" />
+                  <button
+                    onClick={() => navigateToDeal(deal.id, deal.name, vehicleId)}
+                    className={cn(
+                      'flex items-center gap-2 flex-1 py-2 pr-3 text-left text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded',
+                      selectedDealId === deal.id ? 'text-foreground' : ''
+                    )}
+                  >
+                    <Briefcase
+                      className={cn(
+                        'w-3.5 h-3.5 flex-shrink-0',
+                        selectedDealId === deal.id ? 'text-purple-600' : 'text-purple-400'
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        'truncate',
+                        selectedDealId === deal.id
+                          ? 'text-foreground font-medium'
+                          : 'text-muted-foreground'
+                      )}
+                    >
+                      {deal.name}
+                    </span>
+                    {deal.status && (
+                      <span
+                        className={cn(
+                          'text-xs px-1.5 py-0.5 rounded-full ml-auto flex-shrink-0',
+                          deal.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                          deal.status === 'draft' ? 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400' :
+                          deal.status === 'closed' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                          'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                        )}
+                      >
+                        {deal.status}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   // Render a vehicle node in the sidebar
   const renderVehicleNode = (vehicle: VehicleNode, level: number = 0) => {
     const isExpanded = effectiveExpandedVehicles.has(vehicle.id)
     const vehicleFolders = getFoldersForVehicle(vehicle.id)
-    const hasChildren = vehicle.children.length > 0 || vehicleFolders.length > 0
+    // A vehicle always has children now because we add the "Deals" virtual node
+    const hasChildren = true
     const documentCount = getVehicleDocumentCount(vehicle.id)
 
     // Filter vehicle folders based on search query
@@ -1553,7 +1761,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     // Determine icon based on vehicle type
     const VehicleIcon = vehicle.isParent ? Building2 : Package
 
-    const isVehicleSelected = selectedVehicleId === vehicle.id && !currentFolderId
+    const isVehicleSelected = selectedVehicleId === vehicle.id && !currentFolderId && !selectedDealId
 
     return (
       <div key={vehicle.id}>
@@ -1585,7 +1793,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
             onClick={() => navigateToVehicle(vehicle.id)}
             className={cn(
               'flex items-center gap-2 flex-1 py-2 pr-3 text-left text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded',
-              selectedVehicleId === vehicle.id && !currentFolderId
+              isVehicleSelected
                 ? 'text-foreground'
                 : ''
             )}
@@ -1598,7 +1806,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
             />
             <span className={cn(
               'truncate font-medium',
-              selectedVehicleId === vehicle.id && !currentFolderId
+              isVehicleSelected
                 ? 'text-foreground'
                 : 'text-muted-foreground'
             )}>
@@ -1610,11 +1818,13 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
           </button>
         </div>
 
-        {/* Render child vehicles and folders when expanded */}
-        {isExpanded && hasChildren && (
+        {/* Render child vehicles, deals, and folders when expanded */}
+        {isExpanded && (
           <div className="mt-0.5">
             {/* Render child vehicles (compartments/series) */}
             {vehicle.children.map((child) => renderVehicleNode(child, level + 1))}
+            {/* Render "Deals" virtual node */}
+            {renderDealsNode(vehicle.id, level + 1)}
             {/* Render folders for this vehicle */}
             {filteredVehicleFolders.map((folderNode) => renderSidebarTreeNode(folderNode, level + 1))}
           </div>

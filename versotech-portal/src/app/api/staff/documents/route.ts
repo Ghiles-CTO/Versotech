@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     const folderIds = searchParams.getAll('folder_ids') // For recursive folder search
     const includeSubfolders = searchParams.get('include_subfolders') === 'true'
     const vehicleId = searchParams.get('vehicle_id')
+    const dealId = searchParams.get('deal_id')
     const status = searchParams.get('status')
     const search = searchParams.get('search')
     const type = searchParams.get('type')
@@ -51,6 +52,10 @@ export async function GET(request: NextRequest) {
 
     if (vehicleId) {
       query = query.eq('vehicle_id', vehicleId)
+    }
+
+    if (dealId) {
+      query = query.eq('deal_id', dealId)
     }
 
     if (status) {
@@ -128,6 +133,7 @@ export async function GET(request: NextRequest) {
       filters_applied: {
         folder_id: folderId,
         vehicle_id: vehicleId,
+        deal_id: dealId,
         status,
         search,
         type,
