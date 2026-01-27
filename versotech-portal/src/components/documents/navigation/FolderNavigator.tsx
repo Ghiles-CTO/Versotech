@@ -10,7 +10,30 @@ import {
   Grid3x3,
   List,
   ArrowUpDown,
+  Download,
+  MoreVertical,
+  Eye,
+  Edit,
+  Trash2,
+  Clock,
+  FileSpreadsheet,
+  FileCheck,
+  Scale,
+  Receipt,
+  Lock,
+  FileSignature,
+  Clipboard,
+  UserCheck,
 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { useState } from 'react'
+import { toast } from 'sonner'
 import { DocumentFolder, Document } from '@/types/documents'
 import { FolderCard, FolderCardSkeleton } from './FolderCard'
 import { DocumentCard } from '../document-card'
@@ -88,18 +111,18 @@ export function FolderNavigator({
   const hasContent = subfolders.length > 0 || documents.length > 0
 
   return (
-    <div className={cn('flex flex-col h-full bg-[#0a0a0a]', className)}>
+    <div className={cn('flex flex-col h-full bg-background', className)}>
       {/* Toolbar - Always visible for search access */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-6 py-4 bg-black/40 border-b border-white/10">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-6 py-4 bg-muted/50 border-b border-border">
         {/* Left: Search */}
         <div className="relative w-full sm:w-auto sm:min-w-[300px]">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" strokeWidth={2} />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" strokeWidth={2} />
           <Input
             type="text"
             placeholder="Search folders and documents..."
             value={searchQuery}
             onChange={(e) => onSearchChange?.(e.target.value)}
-            className="pl-10 h-9 text-sm bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
+            className="pl-10 h-9 text-sm"
           />
         </div>
 
@@ -107,40 +130,40 @@ export function FolderNavigator({
         <div className="flex items-center gap-2 w-full sm:w-auto">
           {/* Sort */}
           <Select value={sortBy} onValueChange={(value) => onSortChange?.(value as any)}>
-            <SelectTrigger className="w-[140px] h-9 text-sm bg-white/5 border-white/10 text-white">
-              <ArrowUpDown className="w-3.5 h-3.5 mr-2 text-gray-400" strokeWidth={2} />
+            <SelectTrigger className="w-[140px] h-9 text-sm">
+              <ArrowUpDown className="w-3.5 h-3.5 mr-2 text-muted-foreground" strokeWidth={2} />
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-white/10 text-white">
-              <SelectItem value="name" className="text-white focus:bg-white/10 focus:text-white">Name</SelectItem>
-              <SelectItem value="date" className="text-white focus:bg-white/10 focus:text-white">Date Modified</SelectItem>
-              <SelectItem value="type" className="text-white focus:bg-white/10 focus:text-white">Type</SelectItem>
+            <SelectContent>
+              <SelectItem value="name">Name</SelectItem>
+              <SelectItem value="date">Date Modified</SelectItem>
+              <SelectItem value="type">Type</SelectItem>
             </SelectContent>
           </Select>
 
           {/* View Mode Toggle */}
           {onViewModeChange && (
-            <div className="flex items-center border border-white/10 rounded-md overflow-hidden">
+            <div className="flex items-center border border-border rounded-md overflow-hidden">
               <button
                 onClick={() => onViewModeChange('grid')}
                 className={cn(
                   'p-1.5 transition-colors',
                   viewMode === 'grid'
-                    ? 'bg-blue-500/20 text-blue-400'
-                    : 'text-gray-400 hover:bg-white/10'
+                    ? 'bg-primary/20 text-primary'
+                    : 'text-muted-foreground hover:bg-muted'
                 )}
                 aria-label="Grid view"
               >
                 <Grid3x3 className="w-4 h-4" strokeWidth={2} />
               </button>
-              <div className="w-px h-6 bg-white/10" />
+              <div className="w-px h-6 bg-border" />
               <button
                 onClick={() => onViewModeChange('list')}
                 className={cn(
                   'p-1.5 transition-colors',
                   viewMode === 'list'
-                    ? 'bg-blue-500/20 text-blue-400'
-                    : 'text-gray-400 hover:bg-white/10'
+                    ? 'bg-primary/20 text-primary'
+                    : 'text-muted-foreground hover:bg-muted'
                 )}
                 aria-label="List view"
               >
@@ -181,11 +204,11 @@ export function FolderNavigator({
             {subfolders.length > 0 && (
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
+                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                     Folders
                   </h2>
-                  <div className="flex-1 h-px bg-white/10" />
-                  <span className="text-xs text-gray-500">{subfolders.length}</span>
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="text-xs text-muted-foreground">{subfolders.length}</span>
                 </div>
                 <div
                   className={cn(
@@ -214,31 +237,53 @@ export function FolderNavigator({
             {documents.length > 0 && (
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
+                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                     Documents
                   </h2>
-                  <div className="flex-1 h-px bg-white/10" />
-                  <span className="text-xs text-gray-500">{documents.length}</span>
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="text-xs text-muted-foreground">{documents.length}</span>
                 </div>
-                <div
-                  className={cn(
-                    'grid gap-4',
-                    viewMode === 'grid'
-                      ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-4'
-                      : 'grid-cols-1 max-w-4xl'
-                  )}
-                >
-                  {documents.map((document) => (
-                    <DocumentCard
-                      key={document.id}
-                      document={document}
-                      onPreview={() => onDocumentClick(document.id)}
-                      onRename={onRenameDocument}
-                      onDelete={onDeleteDocument}
-                      variant={viewMode === 'list' ? 'compact' : 'default'}
-                    />
-                  ))}
-                </div>
+
+                {/* Grid View */}
+                {viewMode === 'grid' && (
+                  <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
+                    {documents.map((document) => (
+                      <DocumentCard
+                        key={document.id}
+                        document={document}
+                        onPreview={() => onDocumentClick(document.id)}
+                        onRename={onRenameDocument}
+                        onDelete={onDeleteDocument}
+                        variant="default"
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* List View - Table with columns */}
+                {viewMode === 'list' && (
+                  <div className="border border-border rounded-lg overflow-hidden">
+                    {/* Table Header */}
+                    <div className="grid grid-cols-[1fr_100px_140px_80px] gap-4 px-4 py-3 bg-muted/50 border-b border-border text-sm font-medium text-muted-foreground">
+                      <div>Name</div>
+                      <div>Size</div>
+                      <div>Date</div>
+                      <div className="text-right">Actions</div>
+                    </div>
+                    {/* Table Body */}
+                    <div className="divide-y divide-border">
+                      {documents.map((document) => (
+                        <DocumentListRow
+                          key={document.id}
+                          document={document}
+                          onPreview={() => onDocumentClick(document.id)}
+                          onRename={onRenameDocument}
+                          onDelete={onDeleteDocument}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -261,30 +306,198 @@ function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4">
       {/* Icon */}
-      <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6 border border-white/10">
-        <FolderOpen className="w-10 h-10 text-gray-400" strokeWidth={1.5} />
+      <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-6 border border-border">
+        <FolderOpen className="w-10 h-10 text-muted-foreground" strokeWidth={1.5} />
       </div>
 
       {/* Heading */}
-      <h3 className="text-lg font-semibold text-white mb-2">
+      <h3 className="text-lg font-semibold text-foreground mb-2">
         This folder is empty
       </h3>
 
       {/* Description */}
-      <p className="text-sm text-gray-400 mb-8 text-center max-w-md leading-relaxed">
+      <p className="text-sm text-muted-foreground mb-8 text-center max-w-md leading-relaxed">
         Get started by uploading documents or creating subfolders to organize your files.
       </p>
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <Button onClick={onUploadClick} size="default" className="min-w-[160px] bg-blue-600 hover:bg-blue-700 text-white">
+        <Button onClick={onUploadClick} size="default" className="min-w-[160px]">
           <Upload className="w-4 h-4 mr-2" strokeWidth={2} />
           Upload Documents
         </Button>
-        <Button onClick={onCreateFolderClick} variant="outline" size="default" className="min-w-[160px] border-white/20 text-white hover:bg-white/10">
+        <Button onClick={onCreateFolderClick} variant="outline" size="default" className="min-w-[160px]">
           <FolderPlus className="w-4 h-4 mr-2" strokeWidth={2} />
           New Folder
         </Button>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Get icon for document type
+ */
+function getDocumentIcon(type: string) {
+  const iconMap: Record<string, typeof FileText> = {
+    statement: FileSpreadsheet,
+    report: FileCheck,
+    legal: Scale,
+    tax: Receipt,
+    nda: Lock,
+    subscription: FileSignature,
+    agreement: FileSignature,
+    term_sheet: Clipboard,
+    kyc: UserCheck,
+    other: FileText,
+  }
+  return iconMap[type?.toLowerCase()] || FileText
+}
+
+/**
+ * Format file size for display
+ */
+function formatFileSize(bytes?: number): string {
+  if (!bytes) return '-'
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+}
+
+/**
+ * Document List Row for table view
+ */
+function DocumentListRow({
+  document,
+  onPreview,
+  onRename,
+  onDelete,
+}: {
+  document: Document
+  onPreview: () => void
+  onRename?: (id: string) => void
+  onDelete?: (id: string) => void
+}) {
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  const displayName = (document as any).file_name || (document as any).name || 'Untitled Document'
+  const DocIcon = getDocumentIcon(document.type)
+  const formattedSize = formatFileSize(document.file_size_bytes)
+  const formattedDate = new Date(document.created_at).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+
+  const handleDownload = async () => {
+    setIsDownloading(true)
+    try {
+      const response = await fetch(`/api/documents/${document.id}/download`)
+      if (!response.ok) {
+        toast.error('Failed to generate download link')
+        return
+      }
+      const { download_url } = await response.json()
+      window.open(download_url, '_blank')
+      toast.success('Download started')
+    } catch {
+      toast.error('Failed to download document')
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  return (
+    <div
+      className="grid grid-cols-[1fr_100px_140px_80px] gap-4 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer items-center"
+      onClick={onPreview}
+    >
+      {/* Name Column */}
+      <div className="flex items-center gap-3 min-w-0">
+        <DocIcon className="w-5 h-5 text-primary flex-shrink-0" strokeWidth={2} />
+        <span className="text-sm font-medium text-foreground truncate">{displayName}</span>
+      </div>
+
+      {/* Size Column */}
+      <div className="text-sm text-muted-foreground">{formattedSize}</div>
+
+      {/* Date Column */}
+      <div className="text-sm text-muted-foreground flex items-center gap-1">
+        <Clock className="w-3.5 h-3.5" strokeWidth={2} />
+        {formattedDate}
+      </div>
+
+      {/* Actions Column */}
+      <div className="flex items-center justify-end">
+        <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+          <DropdownMenuTrigger
+            className={cn(
+              'p-1 rounded hover:bg-muted transition-colors',
+              'focus:outline-none focus:ring-2 focus:ring-primary'
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MoreVertical className="w-4 h-4 text-muted-foreground" strokeWidth={2} />
+            <span className="sr-only">Document actions</span>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation()
+                onPreview()
+              }}
+            >
+              <Eye className="w-4 h-4 mr-2 text-primary" strokeWidth={2} />
+              <span>Preview</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation()
+                handleDownload()
+              }}
+              disabled={isDownloading}
+            >
+              {isDownloading ? (
+                <>
+                  <Clock className="w-4 h-4 mr-2 animate-spin text-muted-foreground" strokeWidth={2} />
+                  <span>Generating...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 mr-2 text-muted-foreground" strokeWidth={2} />
+                  <span>Download</span>
+                </>
+              )}
+            </DropdownMenuItem>
+            {onRename && (
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onRename(document.id)
+                }}
+              >
+                <Edit className="w-4 h-4 mr-2 text-muted-foreground" strokeWidth={2} />
+                <span>Rename</span>
+              </DropdownMenuItem>
+            )}
+            {onDelete && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDelete(document.id)
+                  }}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" strokeWidth={2} />
+                  <span>Delete</span>
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   )

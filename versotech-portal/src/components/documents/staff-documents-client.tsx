@@ -109,6 +109,14 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'type'>('name')
 
+  // Load viewMode from localStorage on mount (client-side only)
+  useEffect(() => {
+    const saved = localStorage.getItem('staff-docs-view')
+    if (saved === 'grid' || saved === 'list') {
+      setViewMode(saved)
+    }
+  }, [])
+
   // Tree Sidebar State
   const [treeSearchQuery, setTreeSearchQuery] = useState('')
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
@@ -514,6 +522,11 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   useEffect(() => {
     loadDocuments()
   }, [loadDocuments])
+
+  // Persist viewMode to localStorage
+  useEffect(() => {
+    localStorage.setItem('staff-docs-view', viewMode)
+  }, [viewMode])
 
   const oldGetDescendantFolderIds = (folderId: string): string[] => {
     const result = [folderId]
