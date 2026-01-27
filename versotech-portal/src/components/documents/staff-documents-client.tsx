@@ -272,13 +272,54 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       if (searchDebounceRef.current) {
         clearTimeout(searchDebounceRef.current)
       }
+      if (treeSearchDebounceRef.current) {
+        clearTimeout(treeSearchDebounceRef.current)
+      }
+    }
+  }, [])
+
+  // Debounced tree search handler (150ms)
+  const handleTreeSearchChange = useCallback((query: string) => {
+    setTreeSearchQuery(query)
+
+    // Clear previous timeout
+    if (treeSearchDebounceRef.current) {
+      clearTimeout(treeSearchDebounceRef.current)
+    }
+
+    // If empty, clear immediately
+    if (!query.trim()) {
+      setDebouncedTreeSearch('')
+      setSearchExpandedVehicles(new Set())
+      setSearchExpandedFolders(new Set())
+      return
+    }
+
+    // Debounce the actual filter
+    treeSearchDebounceRef.current = setTimeout(() => {
+      setDebouncedTreeSearch(query)
+    }, 150)
+  }, [])
+
+  // Clear tree search
+  const clearTreeSearch = useCallback(() => {
+    setTreeSearchQuery('')
+    setDebouncedTreeSearch('')
+    setSearchExpandedVehicles(new Set())
+    setSearchExpandedFolders(new Set())
+    if (treeSearchDebounceRef.current) {
+      clearTimeout(treeSearchDebounceRef.current)
     }
   }, [])
 
   // Tree Sidebar State
   const [treeSearchQuery, setTreeSearchQuery] = useState('')
+  const [debouncedTreeSearch, setDebouncedTreeSearch] = useState('')
+  const treeSearchDebounceRef = useRef<NodeJS.Timeout | null>(null)
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   const [expandedVehicles, setExpandedVehicles] = useState<Set<string>>(new Set())
+  const [searchExpandedVehicles, setSearchExpandedVehicles] = useState<Set<string>>(new Set())
+  const [searchExpandedFolders, setSearchExpandedFolders] = useState<Set<string>>(new Set())
 
   // Vehicle Context State (for breadcrumbs)
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null)
@@ -493,9 +534,9 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   }, [])
 
   const filteredTree = useMemo(() => {
-    if (!treeSearchQuery.trim()) return folderTree
-    return filterTreeBySearch(folderTree, treeSearchQuery.toLowerCase())
-  }, [folderTree, treeSearchQuery, filterTreeBySearch])
+    if (!debouncedTreeSearch.trim()) return folderTree
+    return filterTreeBySearch(folderTree, debouncedTreeSearch.toLowerCase())
+  }, [folderTree, debouncedTreeSearch, filterTreeBySearch])
 
   // Filter vehicle hierarchy based on search
   const filterVehicleHierarchy = useCallback((nodes: VehicleNode[], query: string): VehicleNode[] => {
@@ -523,9 +564,105 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   }, [folders])
 
   const filteredVehicleHierarchy = useMemo(() => {
-    if (!treeSearchQuery.trim()) return vehicleHierarchy
-    return filterVehicleHierarchy(vehicleHierarchy, treeSearchQuery.toLowerCase())
-  }, [vehicleHierarchy, treeSearchQuery, filterVehicleHierarchy])
+    if (!debouncedTreeSearch.trim()) return vehicleHierarchy
+    return filterVehicleHierarchy(vehicleHierarchy, debouncedTreeSearch.toLowerCase())
+  }, [vehicleHierarchy, debouncedTreeSearch, filterVehicleHierarchy])
+
+  // Auto-expand parents when search matches children
+  useEffect(() => {
+    if (!debouncedTreeSearch.trim()) {
+      setSearchExpandedVehicles(new Set())
+      setSearchExpandedFolders(new Set())
+      return
+    }
+
+    const query = debouncedTreeSearch.toLowerCase()
+    const vehiclesToExpand = new Set<string>()
+    const foldersToExpand = new Set<string>()
+
+    // Helper to check if vehicle or any children match
+    const findMatchingVehicles = (nodes: VehicleNode[], parentIds: string[] = []) => {
+      nodes.forEach(node => {
+        const nameMatches = node.name.toLowerCase().includes(query)
+        const vehicleFolders = folders.filter(f => f.vehicle_id === node.id)
+        const folderMatches = vehicleFolders.some(f =>
+          f.name.toLowerCase().includes(query) ||
+          f.path.toLowerCase().includes(query)
+        )
+
+        // Check if any children match
+        let childMatches = false
+        if (node.children.length > 0) {
+          node.children.forEach(child => {
+            if (child.name.toLowerCase().includes(query)) {
+              childMatches = true
+            }
+            // Check child's folders too
+            const childFolders = folders.filter(f => f.vehicle_id === child.id)
+            if (childFolders.some(f => f.name.toLowerCase().includes(query))) {
+              childMatches = true
+            }
+          })
+        }
+
+        // If name matches, folder matches, or children match, expand this node and all parents
+        if (nameMatches || folderMatches || childMatches) {
+          vehiclesToExpand.add(node.id)
+          parentIds.forEach(pid => vehiclesToExpand.add(pid))
+        }
+
+        // Recurse into children
+        if (node.children.length > 0) {
+          findMatchingVehicles(node.children, [...parentIds, node.id])
+        }
+      })
+    }
+
+    // Helper to check folders and auto-expand ancestors
+    const findMatchingFolders = (nodes: TreeNode[], parentIds: string[] = []) => {
+      nodes.forEach(node => {
+        const nameMatches = node.folder.name.toLowerCase().includes(query)
+        const pathMatches = node.folder.path.toLowerCase().includes(query)
+
+        // Check if any children match
+        let childMatches = false
+        const checkChildren = (children: TreeNode[]): boolean => {
+          return children.some(child => {
+            if (child.folder.name.toLowerCase().includes(query)) return true
+            if (child.folder.path.toLowerCase().includes(query)) return true
+            return checkChildren(child.children)
+          })
+        }
+        childMatches = checkChildren(node.children)
+
+        // If name matches or children match, expand this node and all parents
+        if (nameMatches || pathMatches || childMatches) {
+          foldersToExpand.add(node.folder.id)
+          parentIds.forEach(pid => foldersToExpand.add(pid))
+        }
+
+        // Recurse into children
+        if (node.children.length > 0) {
+          findMatchingFolders(node.children, [...parentIds, node.folder.id])
+        }
+      })
+    }
+
+    findMatchingVehicles(vehicleHierarchy)
+    findMatchingFolders(folderTree)
+
+    setSearchExpandedVehicles(vehiclesToExpand)
+    setSearchExpandedFolders(foldersToExpand)
+  }, [debouncedTreeSearch, vehicleHierarchy, folderTree, folders])
+
+  // Combined expansion sets (manual + search-triggered)
+  const effectiveExpandedVehicles = useMemo(() => {
+    return new Set([...expandedVehicles, ...searchExpandedVehicles])
+  }, [expandedVehicles, searchExpandedVehicles])
+
+  const effectiveExpandedFolders = useMemo(() => {
+    return new Set([...expandedFolders, ...searchExpandedFolders])
+  }, [expandedFolders, searchExpandedFolders])
 
   // Toggle folder expansion in sidebar
   const toggleSidebarFolder = (folderId: string) => {
@@ -874,16 +1011,39 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     )
   })
 
+  // Helper to highlight matching text with mark element
+  const highlightText = useCallback((text: string, query: string) => {
+    if (!query.trim()) return text
+
+    const lowerText = text.toLowerCase()
+    const lowerQuery = query.toLowerCase()
+    const index = lowerText.indexOf(lowerQuery)
+
+    if (index === -1) return text
+
+    const before = text.slice(0, index)
+    const match = text.slice(index, index + query.length)
+    const after = text.slice(index + query.length)
+
+    return (
+      <>
+        {before}
+        <mark className="bg-yellow-300 dark:bg-yellow-500/40 text-foreground rounded-sm px-0.5">{match}</mark>
+        {after}
+      </>
+    )
+  }, [])
+
   // Render a vehicle node in the sidebar
   const renderVehicleNode = (vehicle: VehicleNode, level: number = 0) => {
-    const isExpanded = expandedVehicles.has(vehicle.id)
+    const isExpanded = effectiveExpandedVehicles.has(vehicle.id)
     const vehicleFolders = getFoldersForVehicle(vehicle.id)
     const hasChildren = vehicle.children.length > 0 || vehicleFolders.length > 0
     const documentCount = getVehicleDocumentCount(vehicle.id)
 
     // Filter vehicle folders based on search query
-    const filteredVehicleFolders = treeSearchQuery
-      ? filterTreeBySearch(vehicleFolders, treeSearchQuery.toLowerCase())
+    const filteredVehicleFolders = debouncedTreeSearch
+      ? filterTreeBySearch(vehicleFolders, debouncedTreeSearch.toLowerCase())
       : vehicleFolders
 
     // Determine icon based on vehicle type
@@ -938,7 +1098,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
                 ? 'text-foreground'
                 : 'text-muted-foreground'
             )}>
-              {vehicle.name}
+              {debouncedTreeSearch ? highlightText(vehicle.name, debouncedTreeSearch) : vehicle.name}
             </span>
             {documentCount > 0 && (
               <span className="text-xs text-muted-foreground ml-auto">({documentCount})</span>
@@ -961,7 +1121,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
 
   // Recursive tree node renderer for sidebar
   const renderSidebarTreeNode = (node: TreeNode, level: number = 0) => {
-    const isExpanded = expandedFolders.has(node.folder.id)
+    const isExpanded = effectiveExpandedFolders.has(node.folder.id)
     const hasChildren = node.children.length > 0
     const isCurrent = currentFolderId === node.folder.id
 
@@ -1018,7 +1178,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
                 isCurrent ? 'text-foreground' : 'text-muted-foreground'
               )}
             >
-              {node.folder.name}
+              {debouncedTreeSearch ? highlightText(node.folder.name, debouncedTreeSearch) : node.folder.name}
             </span>
             {node.folder.document_count !== undefined && node.folder.document_count > 0 && (
               <span className="text-xs text-muted-foreground ml-auto">({node.folder.document_count})</span>
@@ -1085,15 +1245,16 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
               />
               <Input
                 type="text"
-                placeholder="Search folders..."
+                placeholder="Filter vehicles & folders..."
                 value={treeSearchQuery}
-                onChange={(e) => setTreeSearchQuery(e.target.value)}
+                onChange={(e) => handleTreeSearchChange(e.target.value)}
                 className="pl-10 pr-10 h-9 text-sm"
               />
               {treeSearchQuery && (
                 <button
-                  onClick={() => setTreeSearchQuery('')}
+                  onClick={clearTreeSearch}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Clear search"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1137,10 +1298,33 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
                 </div>
               )}
 
-              {/* Empty State */}
+              {/* Empty State - No Matches */}
               {filteredVehicleHierarchy.length === 0 && filteredTree.filter(node => !node.folder.vehicle_id).length === 0 && (
-                <div className="text-center py-8 text-sm text-muted-foreground">
-                  {treeSearchQuery ? 'No vehicles or folders match your search' : 'No vehicles or folders found'}
+                <div className="flex flex-col items-center justify-center py-8 px-4">
+                  {debouncedTreeSearch ? (
+                    <>
+                      <Search className="w-10 h-10 text-muted-foreground/50 mb-3" />
+                      <p className="text-sm text-muted-foreground text-center mb-1">
+                        No matches for &ldquo;<span className="font-medium text-foreground">{debouncedTreeSearch}</span>&rdquo;
+                      </p>
+                      <p className="text-xs text-muted-foreground text-center mb-3">
+                        Try a different search term
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={clearTreeSearch}
+                        className="text-xs"
+                      >
+                        <X className="w-3 h-3 mr-1" />
+                        Clear search
+                      </Button>
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center">
+                      No vehicles or folders found
+                    </p>
+                  )}
                 </div>
               )}
             </div>
