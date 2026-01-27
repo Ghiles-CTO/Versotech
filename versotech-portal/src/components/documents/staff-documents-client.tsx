@@ -144,6 +144,9 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   const [searchTotal, setSearchTotal] = useState(0)
   const searchDebounceRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Document Selection State (for bulk operations)
+  const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(new Set())
+
   // Load viewMode from localStorage on mount (client-side only)
   useEffect(() => {
     const saved = localStorage.getItem('staff-docs-view')
@@ -312,6 +315,23 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     }
   }, [])
 
+  // Document Selection Handlers
+  const toggleDocumentSelection = useCallback((documentId: string) => {
+    setSelectedDocuments(prev => {
+      const next = new Set(prev)
+      if (next.has(documentId)) {
+        next.delete(documentId)
+      } else {
+        next.add(documentId)
+      }
+      return next
+    })
+  }, [])
+
+  const clearSelection = useCallback(() => {
+    setSelectedDocuments(new Set())
+  }, [])
+
   // Tree Sidebar State
   const [treeSearchQuery, setTreeSearchQuery] = useState('')
   const [debouncedTreeSearch, setDebouncedTreeSearch] = useState('')
@@ -365,6 +385,9 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
 
     const folder = folders.find(f => f.id === folderId)
     setCurrentFolder(folder || null)
+
+    // Clear selection when navigating to different folder
+    setSelectedDocuments(new Set())
 
     // Update vehicle context based on folder
     if (folder?.vehicle_id) {
@@ -462,6 +485,12 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
 
     return result
   }, [documents, searchQuery, sortBy, sortDir])
+
+  // Select all visible/filtered documents (defined after filteredDocuments)
+  const selectAllDocuments = useCallback(() => {
+    const allIds = filteredDocuments.map(doc => doc.id)
+    setSelectedDocuments(new Set(allIds))
+  }, [filteredDocuments])
 
   // Build tree structure for sidebar
   interface TreeNode {
@@ -1471,6 +1500,11 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
               isSearching={isSearching}
               searchResults={searchResults}
               searchTotal={searchTotal}
+              // Selection props
+              selectedDocuments={selectedDocuments}
+              onToggleSelection={toggleDocumentSelection}
+              onSelectAll={selectAllDocuments}
+              onClearSelection={clearSelection}
             />
           </div>
         </main>

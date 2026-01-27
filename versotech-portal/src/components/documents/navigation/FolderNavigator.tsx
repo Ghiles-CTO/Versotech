@@ -45,6 +45,8 @@ import { DocumentCard } from '../document-card'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
@@ -104,6 +106,11 @@ interface FolderNavigatorProps {
   isSearching?: boolean
   searchResults?: SearchResult[]
   searchTotal?: number
+  // Document selection props
+  selectedDocuments?: Set<string>
+  onToggleSelection?: (documentId: string) => void
+  onSelectAll?: () => void
+  onClearSelection?: () => void
 }
 
 /**
@@ -150,6 +157,11 @@ export function FolderNavigator({
   isSearching = false,
   searchResults = [],
   searchTotal = 0,
+  // Selection props
+  selectedDocuments = new Set<string>(),
+  onToggleSelection,
+  onSelectAll,
+  onClearSelection,
 }: FolderNavigatorProps) {
   const isEmpty = !isLoading && !isSearchMode && subfolders.length === 0 && documents.length === 0
   const hasContent = subfolders.length > 0 || documents.length > 0
@@ -158,8 +170,18 @@ export function FolderNavigator({
     <div className={cn('flex flex-col h-full bg-background', className)}>
       {/* Toolbar - Always visible for search access */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-6 py-4 bg-muted/50 border-b border-border">
-        {/* Left: Global Search */}
-        <div className="relative w-full sm:w-auto sm:min-w-[300px]">
+        {/* Left: Global Search + Selection Badge */}
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          {/* Selection Count Badge */}
+          {selectedDocuments.size > 0 && (
+            <Badge
+              variant="secondary"
+              className="bg-primary/10 text-primary border-primary/20 flex-shrink-0"
+            >
+              {selectedDocuments.size} selected
+            </Badge>
+          )}
+          <div className="relative flex-1 sm:flex-initial sm:min-w-[300px]">
           {isSearching ? (
             <Loader2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-primary animate-spin" strokeWidth={2} />
           ) : (
@@ -184,6 +206,7 @@ export function FolderNavigator({
               <X className="w-4 h-4" strokeWidth={2} />
             </button>
           )}
+          </div>
         </div>
 
         {/* Right: Controls */}
@@ -384,6 +407,22 @@ export function FolderNavigator({
             {documents.length > 0 && (
               <div>
                 <div className="flex items-center gap-3 mb-4">
+                  {/* Select All Checkbox */}
+                  {onToggleSelection && (
+                    <Checkbox
+                      id="select-all-documents"
+                      checked={documents.length > 0 && documents.every(doc => selectedDocuments.has(doc.id))}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          onSelectAll?.()
+                        } else {
+                          onClearSelection?.()
+                        }
+                      }}
+                      className="flex-shrink-0"
+                      aria-label="Select all documents"
+                    />
+                  )}
                   <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                     Documents
                   </h2>
@@ -402,6 +441,8 @@ export function FolderNavigator({
                         onRename={onRenameDocument}
                         onDelete={onDeleteDocument}
                         variant="default"
+                        isSelected={selectedDocuments.has(document.id)}
+                        onSelectToggle={onToggleSelection ? () => onToggleSelection(document.id) : undefined}
                       />
                     ))}
                   </div>
@@ -411,7 +452,27 @@ export function FolderNavigator({
                 {viewMode === 'list' && (
                   <div className="border border-border rounded-lg overflow-hidden">
                     {/* Table Header - Clickable for sorting */}
-                    <div className="grid grid-cols-[1fr_100px_140px_80px] gap-4 px-4 py-3 bg-muted/50 border-b border-border text-sm font-medium text-muted-foreground">
+                    <div className={cn(
+                      "gap-4 px-4 py-3 bg-muted/50 border-b border-border text-sm font-medium text-muted-foreground grid",
+                      onToggleSelection ? "grid-cols-[40px_1fr_100px_140px_80px]" : "grid-cols-[1fr_100px_140px_80px]"
+                    )}>
+                      {/* Checkbox Header */}
+                      {onToggleSelection && (
+                        <div className="flex items-center">
+                          <Checkbox
+                            id="select-all-list"
+                            checked={documents.length > 0 && documents.every(doc => selectedDocuments.has(doc.id))}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                onSelectAll?.()
+                              } else {
+                                onClearSelection?.()
+                              }
+                            }}
+                            aria-label="Select all documents"
+                          />
+                        </div>
+                      )}
                       <button
                         onClick={() => onSortChange?.('name')}
                         className={cn(
@@ -471,6 +532,9 @@ export function FolderNavigator({
                           onPreview={() => onDocumentClick(document.id)}
                           onRename={onRenameDocument}
                           onDelete={onDeleteDocument}
+                          isSelected={selectedDocuments.has(document.id)}
+                          onSelectToggle={onToggleSelection ? () => onToggleSelection(document.id) : undefined}
+                          showCheckbox={!!onToggleSelection}
                         />
                       ))}
                     </div>
@@ -716,11 +780,17 @@ function DocumentListRow({
   onPreview,
   onRename,
   onDelete,
+  isSelected = false,
+  onSelectToggle,
+  showCheckbox = false,
 }: {
   document: Document
   onPreview: () => void
   onRename?: (id: string) => void
   onDelete?: (id: string) => void
+  isSelected?: boolean
+  onSelectToggle?: () => void
+  showCheckbox?: boolean
 }) {
   const [isDownloading, setIsDownloading] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -754,9 +824,23 @@ function DocumentListRow({
 
   return (
     <div
-      className="grid grid-cols-[1fr_100px_140px_80px] gap-4 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer items-center"
+      className={cn(
+        "gap-4 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer items-center grid",
+        showCheckbox ? "grid-cols-[40px_1fr_100px_140px_80px]" : "grid-cols-[1fr_100px_140px_80px]",
+        isSelected && "bg-primary/5"
+      )}
       onClick={onPreview}
     >
+      {/* Checkbox Column */}
+      {showCheckbox && (
+        <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={() => onSelectToggle?.()}
+            aria-label={`Select ${displayName}`}
+          />
+        </div>
+      )}
       {/* Name Column */}
       <div className="flex items-center gap-3 min-w-0">
         <DocIcon className="w-5 h-5 text-primary flex-shrink-0" strokeWidth={2} />

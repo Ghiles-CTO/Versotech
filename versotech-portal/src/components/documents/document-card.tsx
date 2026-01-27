@@ -2,6 +2,7 @@
 
 import { Document, DocumentType } from '@/types/documents'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Download,
   Shield,
@@ -40,6 +41,9 @@ interface DocumentCardProps {
   onDelete?: (documentId: string) => void
   variant?: 'default' | 'compact'
   className?: string
+  // Selection props
+  isSelected?: boolean
+  onSelectToggle?: () => void
 }
 
 /**
@@ -97,6 +101,8 @@ export function DocumentCard({
   onDelete,
   variant = 'default',
   className,
+  isSelected = false,
+  onSelectToggle,
 }: DocumentCardProps) {
   const [isDownloading, setIsDownloading] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -180,12 +186,29 @@ export function DocumentCard({
         'hover:bg-muted/50 hover:border-border hover:shadow-md',
         'transition-all duration-200',
         'cursor-pointer',
+        isSelected && 'bg-primary/5 border-primary/50',
         className
       )}
       onClick={() => onPreview?.(document)}
     >
       <div className="p-5">
         <div className="flex items-start gap-4">
+          {/* Selection Checkbox */}
+          {onSelectToggle && (
+            <div
+              className="flex-shrink-0 pt-1"
+              onClick={(e) => {
+                e.stopPropagation()
+                onSelectToggle()
+              }}
+            >
+              <Checkbox
+                checked={isSelected}
+                onCheckedChange={() => onSelectToggle()}
+                aria-label={`Select ${displayName}`}
+              />
+            </div>
+          )}
           {/* Document Icon */}
           <div
             className={cn(
