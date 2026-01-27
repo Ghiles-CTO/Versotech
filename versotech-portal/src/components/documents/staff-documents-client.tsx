@@ -132,6 +132,11 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   // Bulk Delete Dialog State
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
 
+  // Drag and Drop Upload State
+  const [isDragOver, setIsDragOver] = useState(false)
+  const [droppedFiles, setDroppedFiles] = useState<File[]>([])
+  const dragCounterRef = useRef(0)
+
   // URL State for sorting
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -350,6 +355,105 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     if (selectedDocuments.size === 0) return
     setBulkDeleteDialogOpen(true)
   }, [selectedDocuments])
+
+  // Drag-Drop Upload Constants and Handlers
+  const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'xlsx', 'txt', 'jpg', 'jpeg', 'png']
+  const ALLOWED_MIME_TYPES = [
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/plain',
+    'image/jpeg',
+    'image/png'
+  ]
+  const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
+
+  const validateDroppedFiles = useCallback((files: File[]): { valid: File[], invalid: { file: File, reason: string }[] } => {
+    const valid: File[] = []
+    const invalid: { file: File, reason: string }[] = []
+
+    files.forEach(file => {
+      const ext = file.name.split('.').pop()?.toLowerCase() || ''
+      const isValidType = ALLOWED_EXTENSIONS.includes(ext) || ALLOWED_MIME_TYPES.includes(file.type)
+      const isValidSize = file.size <= MAX_FILE_SIZE
+
+      if (!isValidType) {
+        invalid.push({ file, reason: 'type' })
+      } else if (!isValidSize) {
+        invalid.push({ file, reason: 'size' })
+      } else {
+        valid.push(file)
+      }
+    })
+
+    return { valid, invalid }
+  }, [])
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounterRef.current++
+    // Check if files are being dragged - items may exist or types may contain 'Files'
+    const hasFiles = (e.dataTransfer.items && e.dataTransfer.items.length > 0) ||
+                     (e.dataTransfer.types && e.dataTransfer.types.includes('Files'))
+    if (hasFiles) {
+      setIsDragOver(true)
+    }
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounterRef.current--
+    if (dragCounterRef.current === 0) {
+      setIsDragOver(false)
+    }
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+    dragCounterRef.current = 0
+
+    const files = Array.from(e.dataTransfer.files)
+    if (files.length === 0) return
+
+    const { valid, invalid } = validateDroppedFiles(files)
+
+    // Show errors for invalid files
+    if (invalid.length > 0) {
+      const sizeErrors = invalid.filter(i => i.reason === 'size')
+      const typeErrors = invalid.filter(i => i.reason === 'type')
+
+      if (sizeErrors.length > 0) {
+        toast.error(`${sizeErrors.length} file(s) exceed 50MB limit: ${sizeErrors.map(i => i.file.name).join(', ')}`)
+      }
+
+      if (typeErrors.length > 0) {
+        toast.error(`Unsupported file type(s): ${typeErrors.map(i => i.file.name).join(', ')}. Allowed: PDF, DOCX, XLSX, TXT, JPG, PNG`)
+      }
+    }
+
+    // Open dialog with valid files
+    if (valid.length > 0) {
+      setDroppedFiles(valid)
+      setUploadDialogOpen(true)
+    }
+  }, [validateDroppedFiles])
+
+  // Clear dropped files when dialog closes
+  const handleUploadDialogChange = useCallback((open: boolean) => {
+    setUploadDialogOpen(open)
+    if (!open) {
+      setDroppedFiles([])
+    }
+  }, [])
 
   const handleBulkDownload = useCallback(async () => {
     if (selectedDocuments.size === 0) return
@@ -1469,8 +1573,26 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
           )}
         </aside>
 
-        {/* Main Content Area */}
-        <main className="flex flex-col overflow-hidden">
+        {/* Main Content Area - Drop Zone */}
+        <main
+          className="flex flex-col overflow-hidden relative"
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
+          {/* Drag Overlay */}
+          {isDragOver && (
+            <div className="absolute inset-0 z-50 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center backdrop-blur-sm">
+              <div className="text-center p-8 bg-background/95 rounded-lg shadow-lg border border-primary/50">
+                <Upload className="h-16 w-16 mx-auto mb-4 text-primary animate-bounce" />
+                <p className="text-lg font-semibold text-foreground">Drop files to upload</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  PDF, DOCX, XLSX, TXT, JPG, PNG (max 50MB each)
+                </p>
+              </div>
+            </div>
+          )}
           {/* Breadcrumbs - show when vehicle or folder is selected */}
           {(currentFolder || currentVehicle) && (
             <FolderBreadcrumbs
@@ -1520,7 +1642,10 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
               )}
             </div>
             <div className="flex items-center gap-2">
-              <Button onClick={() => setUploadDialogOpen(true)}>
+              <Button onClick={() => {
+                setDroppedFiles([]) // Clear any dropped files
+                setUploadDialogOpen(true)
+              }}>
                 <Upload className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Upload</span>
               </Button>
@@ -1566,7 +1691,10 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
                   if (doc) handlePreview(doc)
                 }
               }}
-              onUploadClick={() => setUploadDialogOpen(true)}
+              onUploadClick={() => {
+                setDroppedFiles([]) // Clear any dropped files
+                setUploadDialogOpen(true)
+              }}
               onCreateFolderClick={() => handleCreateFolder()}
               onRenameFolder={handleRenameFolder}
               onDeleteFolder={handleDeleteFolder}
@@ -1611,11 +1739,12 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       {/* Upload Dialog */}
       <DocumentUploadDialog
         open={uploadDialogOpen}
-        onOpenChange={setUploadDialogOpen}
+        onOpenChange={handleUploadDialogChange}
         folderId={currentFolderId}
         currentFolder={currentFolder}
         vehicleId={currentFolder?.vehicle_id || undefined}
         onSuccess={() => loadDocuments()}
+        initialFiles={droppedFiles.length > 0 ? droppedFiles : undefined}
       />
 
       {/* Move Document Dialog */}

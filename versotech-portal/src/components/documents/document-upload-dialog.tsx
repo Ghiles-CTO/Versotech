@@ -20,6 +20,8 @@ interface DocumentUploadDialogProps {
   vehicleId?: string | null
   currentFolder?: DocumentFolder | null
   onSuccess?: () => void
+  /** Pre-populated files from external drag-drop */
+  initialFiles?: File[]
 }
 
 interface FileWithMetadata extends File {
@@ -35,7 +37,8 @@ export function DocumentUploadDialog({
   folderId,
   vehicleId,
   currentFolder,
-  onSuccess
+  onSuccess,
+  initialFiles
 }: DocumentUploadDialogProps) {
   const [files, setFiles] = useState<FileWithMetadata[]>([])
   const [documentType, setDocumentType] = useState('Other')
@@ -72,6 +75,19 @@ export function DocumentUploadDialog({
   useEffect(() => {
     setSelectedFolderId(folderId || null)
   }, [folderId])
+
+  // Process initialFiles when dialog opens with pre-populated files
+  useEffect(() => {
+    if (open && initialFiles && initialFiles.length > 0) {
+      const newFiles: FileWithMetadata[] = initialFiles.map((file, index) => ({
+        ...file,
+        id: `${Date.now()}-${index}`,
+        progress: 0,
+        status: 'pending' as const
+      }))
+      setFiles(newFiles)
+    }
+  }, [open, initialFiles])
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles: FileWithMetadata[] = acceptedFiles.map((file, index) => ({
