@@ -22,6 +22,10 @@ interface DocumentUploadDialogProps {
   onSuccess?: () => void
   /** Pre-populated files from external drag-drop */
   initialFiles?: File[]
+  /** If provided, uploads to deal data room instead of regular documents */
+  dataRoomDealId?: string | null
+  /** Deal name for display when uploading to data room */
+  dataRoomDealName?: string | null
 }
 
 interface FileWithMetadata extends File {
@@ -38,7 +42,9 @@ export function DocumentUploadDialog({
   vehicleId,
   currentFolder,
   onSuccess,
-  initialFiles
+  initialFiles,
+  dataRoomDealId,
+  dataRoomDealName
 }: DocumentUploadDialogProps) {
   const [files, setFiles] = useState<FileWithMetadata[]>([])
   const [documentType, setDocumentType] = useState('Other')
@@ -130,16 +136,30 @@ export function DocumentUploadDialog({
     let failedCount = 0
     const totalFiles = files.length
 
+    // Determine upload endpoint based on data room mode
+    const isDataRoomUpload = !!dataRoomDealId
+    const uploadEndpoint = isDataRoomUpload
+      ? `/api/deals/${dataRoomDealId}/documents/upload`
+      : '/api/documents/upload'
+
     try {
       // Upload files one by one for better progress tracking
       for (const file of files) {
         const formData = new FormData()
         formData.append('file', file)
-        formData.append('type', documentType)
-        formData.append('tags', tags)
-        formData.append('description', description)
-        if (selectedFolderId) formData.append('folder_id', selectedFolderId)
-        if (vehicleId) formData.append('vehicle_id', vehicleId)
+
+        if (isDataRoomUpload) {
+          // Data room upload fields
+          formData.append('folder', documentType) // Use documentType as folder in data room
+          formData.append('visible_to_investors', 'false') // Default to not visible
+        } else {
+          // Regular document upload fields
+          formData.append('type', documentType)
+          formData.append('tags', tags)
+          formData.append('description', description)
+          if (selectedFolderId) formData.append('folder_id', selectedFolderId)
+          if (vehicleId) formData.append('vehicle_id', vehicleId)
+        }
 
         // Update file status
         setFiles(prev => prev.map(f =>
@@ -147,7 +167,7 @@ export function DocumentUploadDialog({
         ))
 
         try {
-          const response = await fetch('/api/documents/upload', {
+          const response = await fetch(uploadEndpoint, {
             method: 'POST',
             body: formData
           })
@@ -176,7 +196,8 @@ export function DocumentUploadDialog({
 
       // Check results using tracked counts (not stale React state)
       if (failedCount === 0) {
-        toast.success(`Successfully uploaded ${totalFiles} file(s)`)
+        const destination = isDataRoomUpload ? `Data Room (${dataRoomDealName})` : 'documents'
+        toast.success(`Successfully uploaded ${totalFiles} file(s) to ${destination}`)
         onSuccess?.()
         handleClose()
       } else {

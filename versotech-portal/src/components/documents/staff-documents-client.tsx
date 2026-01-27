@@ -12,7 +12,8 @@ import {
   Building2,
   Package,
   Loader2,
-  Briefcase
+  Briefcase,
+  Database
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -62,6 +63,26 @@ interface Deal {
   name: string
   status: string
   vehicle_id: string | null
+}
+
+interface DataRoomDocument {
+  id: string
+  deal_id: string
+  folder: string | null
+  file_key: string | null
+  file_name: string | null
+  visible_to_investors: boolean
+  tags: string[] | null
+  document_expires_at: string | null
+  document_notes: string | null
+  version: number
+  file_size_bytes: number | null
+  mime_type: string | null
+  external_link: string | null
+  is_featured: boolean | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
 }
 
 interface StaffDocument {
@@ -702,6 +723,14 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   const [loadingDeals, setLoadingDeals] = useState<Set<string>>(new Set())
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null)
 
+  // Data Room State (for virtual "Data Room" folder under deals)
+  const [isDataRoomMode, setIsDataRoomMode] = useState(false)
+  const [dataRoomDealId, setDataRoomDealId] = useState<string | null>(null)
+  const [dataRoomDealName, setDataRoomDealName] = useState<string>('')
+  const [dataRoomDocuments, setDataRoomDocuments] = useState<DataRoomDocument[]>([])
+  const [loadingDataRoom, setLoadingDataRoom] = useState(false)
+  const [expandedDealDataRooms, setExpandedDealDataRooms] = useState<Set<string>>(new Set())
+
   // Vehicle Context State (for breadcrumbs)
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null)
 
@@ -753,6 +782,12 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     // Clear deal filter when navigating to a folder
     setSelectedDealId(null)
 
+    // Clear data room mode when navigating to a folder
+    setIsDataRoomMode(false)
+    setDataRoomDealId(null)
+    setDataRoomDealName('')
+    setDataRoomDocuments([])
+
     // Update vehicle context based on folder
     if (folder?.vehicle_id) {
       setSelectedVehicleId(folder.vehicle_id)
@@ -773,6 +808,11 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     setSelectedVehicleId(vehicleId)
     // Clear deal filter when navigating to a vehicle
     setSelectedDealId(null)
+    // Clear data room mode when navigating to a vehicle
+    setIsDataRoomMode(false)
+    setDataRoomDealId(null)
+    setDataRoomDealName('')
+    setDataRoomDocuments([])
     // Expand the vehicle in sidebar
     setExpandedVehicles(prev => new Set([...prev, vehicleId]))
   }
@@ -860,18 +900,82 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     return result
   }, [documents, searchQuery, sortBy, sortDir, selectedTagFilters])
 
-  // Select all visible/filtered documents (defined after filteredDocuments)
+  // Transform data room documents to StaffDocument format for display
+  const transformedDataRoomDocuments = useMemo((): StaffDocument[] => {
+    if (!isDataRoomMode || dataRoomDocuments.length === 0) return []
+
+    let result = dataRoomDocuments.map((doc): StaffDocument => ({
+      id: doc.id,
+      name: doc.file_name || 'Untitled',
+      type: doc.external_link ? 'link' : (doc.mime_type?.split('/')[1] || 'file'),
+      status: doc.visible_to_investors ? 'published' : 'draft',
+      file_size_bytes: doc.file_size_bytes || 0,
+      is_published: doc.visible_to_investors,
+      created_at: doc.created_at,
+      mime_type: doc.mime_type || undefined,
+      tags: doc.tags || undefined,
+      current_version: doc.version || 1,
+      folder: doc.folder ? {
+        id: doc.folder,
+        name: doc.folder,
+        path: `/${doc.folder}`
+      } : undefined,
+      vehicle: undefined,
+      created_by_profile: undefined
+    }))
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      result = result.filter(doc => {
+        const nameMatch = doc.name.toLowerCase().includes(query)
+        const typeMatch = doc.type.toLowerCase().includes(query)
+        const folderMatch = doc.folder?.name.toLowerCase().includes(query) || false
+        return nameMatch || typeMatch || folderMatch
+      })
+    }
+
+    // Apply tag filter
+    if (selectedTagFilters.size > 0) {
+      result = result.filter(doc => {
+        if (!doc.tags || doc.tags.length === 0) return false
+        return doc.tags.some(tag => selectedTagFilters.has(tag))
+      })
+    }
+
+    // Sort with direction support
+    result = [...result].sort((a, b) => {
+      let comparison = 0
+      if (sortBy === 'name') {
+        comparison = a.name.localeCompare(b.name)
+      } else if (sortBy === 'date') {
+        comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      } else if (sortBy === 'size') {
+        comparison = (a.file_size_bytes || 0) - (b.file_size_bytes || 0)
+      }
+      return sortDir === 'desc' ? -comparison : comparison
+    })
+
+    return result
+  }, [isDataRoomMode, dataRoomDocuments, searchQuery, sortBy, sortDir, selectedTagFilters])
+
+  // Effective documents: use data room documents when in data room mode, otherwise regular documents
+  const effectiveDocuments = useMemo(() => {
+    return isDataRoomMode ? transformedDataRoomDocuments : filteredDocuments
+  }, [isDataRoomMode, transformedDataRoomDocuments, filteredDocuments])
+
+  // Select all visible/filtered documents (defined after effectiveDocuments)
   const selectAllDocuments = useCallback(() => {
-    const allIds = filteredDocuments.map(doc => doc.id)
+    const allIds = effectiveDocuments.map(doc => doc.id)
     setSelectedDocuments(new Set(allIds))
-  }, [filteredDocuments])
+  }, [effectiveDocuments])
 
   // Get names of selected documents (for bulk delete dialog)
   const selectedDocumentNames = useMemo(() => {
-    return filteredDocuments
+    return effectiveDocuments
       .filter(doc => selectedDocuments.has(doc.id))
       .map(doc => doc.name)
-  }, [filteredDocuments, selectedDocuments])
+  }, [effectiveDocuments, selectedDocuments])
 
   // Build tree structure for sidebar
   interface TreeNode {
@@ -1173,6 +1277,66 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   // Clear deal filter
   const clearDealFilter = useCallback(() => {
     setSelectedDealId(null)
+  }, [])
+
+  // Load data room documents for a deal
+  const loadDataRoomDocuments = useCallback(async (dealId: string) => {
+    setLoadingDataRoom(true)
+    try {
+      const response = await fetch(`/api/staff/documents/data-room/${dealId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setDataRoomDocuments(data.documents || [])
+      } else {
+        toast.error('Failed to load data room documents')
+        setDataRoomDocuments([])
+      }
+    } catch (error) {
+      console.error('Error loading data room documents:', error)
+      toast.error('Failed to load data room documents')
+      setDataRoomDocuments([])
+    } finally {
+      setLoadingDataRoom(false)
+    }
+  }, [])
+
+  // Navigate to a deal's data room
+  const navigateToDataRoom = useCallback((dealId: string, dealName: string, vehicleId: string) => {
+    setIsDataRoomMode(true)
+    setDataRoomDealId(dealId)
+    setDataRoomDealName(dealName)
+    setSelectedDealId(null) // Clear deal documents mode
+    setSelectedVehicleId(vehicleId)
+    setCurrentFolderId(null)
+    setCurrentFolder(null)
+    // Ensure vehicle, deals node, and deal's data room are expanded
+    setExpandedVehicles(prev => new Set([...prev, vehicleId]))
+    setExpandedDealsNodes(prev => new Set([...prev, `deals-${vehicleId}`]))
+    setExpandedDealDataRooms(prev => new Set([...prev, dealId]))
+    // Load data room documents
+    loadDataRoomDocuments(dealId)
+    toast.info(`Viewing Data Room for: ${dealName}`)
+  }, [loadDataRoomDocuments])
+
+  // Exit data room mode
+  const exitDataRoom = useCallback(() => {
+    setIsDataRoomMode(false)
+    setDataRoomDealId(null)
+    setDataRoomDealName('')
+    setDataRoomDocuments([])
+  }, [])
+
+  // Toggle data room expansion for a deal in sidebar
+  const toggleDealDataRoom = useCallback((dealId: string) => {
+    setExpandedDealDataRooms(prev => {
+      const next = new Set(prev)
+      if (next.has(dealId)) {
+        next.delete(dealId)
+      } else {
+        next.add(dealId)
+      }
+      return next
+    })
   }, [])
 
   // Auto-expand current folder's ancestors
@@ -1687,57 +1851,114 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
                 No deals for this vehicle
               </div>
             ) : (
-              deals.map((deal) => (
-                <div
-                  key={deal.id}
-                  className={cn(
-                    'flex items-center gap-1 rounded-md transition-colors',
-                    selectedDealId === deal.id
-                      ? 'bg-primary/20 border border-primary'
-                      : 'hover:bg-muted border border-transparent'
-                  )}
-                  style={{ paddingLeft: `${(level + 1) * 16 + 8}px` }}
-                >
-                  <div className="w-5" />
-                  <button
-                    onClick={() => navigateToDeal(deal.id, deal.name, vehicleId)}
-                    className={cn(
-                      'flex items-center gap-2 flex-1 py-2 pr-3 text-left text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded',
-                      selectedDealId === deal.id ? 'text-foreground' : ''
-                    )}
-                  >
-                    <Briefcase
+              deals.map((deal) => {
+                const isDealExpanded = expandedDealDataRooms.has(deal.id)
+                const isDataRoomSelected = isDataRoomMode && dataRoomDealId === deal.id
+
+                return (
+                  <div key={deal.id}>
+                    {/* Deal row */}
+                    <div
                       className={cn(
-                        'w-3.5 h-3.5 flex-shrink-0',
-                        selectedDealId === deal.id ? 'text-purple-600' : 'text-purple-400'
-                      )}
-                    />
-                    <span
-                      className={cn(
-                        'truncate',
+                        'flex items-center gap-1 rounded-md transition-colors',
                         selectedDealId === deal.id
-                          ? 'text-foreground font-medium'
-                          : 'text-muted-foreground'
+                          ? 'bg-primary/20 border border-primary'
+                          : 'hover:bg-muted border border-transparent'
                       )}
+                      style={{ paddingLeft: `${(level + 1) * 16 + 8}px` }}
                     >
-                      {deal.name}
-                    </span>
-                    {deal.status && (
-                      <span
+                      {/* Expand/collapse button for Data Room */}
+                      <button
+                        onClick={() => toggleDealDataRoom(deal.id)}
+                        className="p-1 hover:bg-accent rounded transition-colors"
+                        aria-label={isDealExpanded ? 'Collapse deal' : 'Expand deal'}
+                      >
+                        {isDealExpanded ? (
+                          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                        ) : (
+                          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => navigateToDeal(deal.id, deal.name, vehicleId)}
                         className={cn(
-                          'text-xs px-1.5 py-0.5 rounded-full ml-auto flex-shrink-0',
-                          deal.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                          deal.status === 'draft' ? 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400' :
-                          deal.status === 'closed' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-                          'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                          'flex items-center gap-2 flex-1 py-2 pr-3 text-left text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded',
+                          selectedDealId === deal.id ? 'text-foreground' : ''
                         )}
                       >
-                        {deal.status}
-                      </span>
+                        <Briefcase
+                          className={cn(
+                            'w-3.5 h-3.5 flex-shrink-0',
+                            selectedDealId === deal.id ? 'text-purple-600' : 'text-purple-400'
+                          )}
+                        />
+                        <span
+                          className={cn(
+                            'truncate',
+                            selectedDealId === deal.id
+                              ? 'text-foreground font-medium'
+                              : 'text-muted-foreground'
+                          )}
+                        >
+                          {deal.name}
+                        </span>
+                        {deal.status && (
+                          <span
+                            className={cn(
+                              'text-xs px-1.5 py-0.5 rounded-full ml-auto flex-shrink-0',
+                              deal.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                              deal.status === 'draft' ? 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400' :
+                              deal.status === 'closed' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                              'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                            )}
+                          >
+                            {deal.status}
+                          </span>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Data Room virtual folder under each deal */}
+                    {isDealExpanded && (
+                      <div
+                        className={cn(
+                          'flex items-center gap-1 rounded-md transition-colors mt-0.5',
+                          isDataRoomSelected
+                            ? 'bg-primary/20 border border-primary'
+                            : 'hover:bg-muted border border-transparent'
+                        )}
+                        style={{ paddingLeft: `${(level + 2) * 16 + 8}px` }}
+                      >
+                        <div className="w-5" />
+                        <button
+                          onClick={() => navigateToDataRoom(deal.id, deal.name, vehicleId)}
+                          className={cn(
+                            'flex items-center gap-2 flex-1 py-2 pr-3 text-left text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded',
+                            isDataRoomSelected ? 'text-foreground' : ''
+                          )}
+                        >
+                          <Database
+                            className={cn(
+                              'w-3.5 h-3.5 flex-shrink-0',
+                              isDataRoomSelected ? 'text-cyan-600' : 'text-cyan-500'
+                            )}
+                          />
+                          <span
+                            className={cn(
+                              'truncate',
+                              isDataRoomSelected
+                                ? 'text-foreground font-medium'
+                                : 'text-muted-foreground'
+                            )}
+                          >
+                            Data Room
+                          </span>
+                        </button>
+                      </div>
                     )}
-                  </button>
-                </div>
-              ))
+                  </div>
+                )
+              })
             )}
           </div>
         )}
@@ -1761,7 +1982,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     // Determine icon based on vehicle type
     const VehicleIcon = vehicle.isParent ? Building2 : Package
 
-    const isVehicleSelected = selectedVehicleId === vehicle.id && !currentFolderId && !selectedDealId
+    const isVehicleSelected = selectedVehicleId === vehicle.id && !currentFolderId && !selectedDealId && !isDataRoomMode
 
     return (
       <div key={vehicle.id}>
@@ -2142,14 +2363,81 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
               </div>
             </div>
           )}
-          {/* Breadcrumbs - show when vehicle or folder is selected */}
-          {(currentFolder || currentVehicle) && (
-            <FolderBreadcrumbs
-              currentFolder={currentFolder}
-              onNavigate={navigateToFolder}
-              vehicle={currentVehicle ? { id: currentVehicle.id, name: currentVehicle.name } : undefined}
-              onVehicleClick={handleBreadcrumbVehicleClick}
-            />
+          {/* Breadcrumbs - show when vehicle, folder, or data room is selected */}
+          {(currentFolder || currentVehicle || isDataRoomMode) && (
+            isDataRoomMode && dataRoomDealId ? (
+              // Custom breadcrumb for Data Room mode: Vehicle > Deal > Data Room
+              <nav
+                className="flex items-center gap-2 px-6 py-3.5 bg-muted/50 border-b border-border transition-colors duration-200"
+                aria-label="Data room breadcrumbs"
+              >
+                {/* Home Button */}
+                <button
+                  onClick={() => {
+                    exitDataRoom()
+                    navigateToFolder(null)
+                  }}
+                  className="inline-flex items-center justify-center w-8 h-8 rounded-md transition-all duration-150 text-muted-foreground hover:bg-accent hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                  aria-label="Navigate to root"
+                >
+                  <Home className="w-4 h-4" strokeWidth={2} />
+                </button>
+
+                {/* Vehicle Segment */}
+                {currentVehicle && (
+                  <>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" strokeWidth={2} />
+                    <button
+                      onClick={() => {
+                        exitDataRoom()
+                        navigateToVehicle(currentVehicle.id)
+                      }}
+                      className="flex items-center gap-2 text-sm text-muted-foreground px-3 py-1.5 rounded-md hover:text-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-150 truncate max-w-[160px]"
+                      title={currentVehicle.name}
+                    >
+                      <Building2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" strokeWidth={2} />
+                      {currentVehicle.name}
+                    </button>
+                  </>
+                )}
+
+                {/* Deal Segment */}
+                <ChevronRight className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" strokeWidth={2} />
+                <button
+                  onClick={() => {
+                    // Navigate to deal documents (exit data room but stay on deal)
+                    if (currentVehicle) {
+                      setIsDataRoomMode(false)
+                      setDataRoomDealId(null)
+                      setDataRoomDealName('')
+                      setDataRoomDocuments([])
+                      navigateToDeal(dataRoomDealId, dataRoomDealName, currentVehicle.id)
+                    }
+                  }}
+                  className="flex items-center gap-2 text-sm text-muted-foreground px-3 py-1.5 rounded-md hover:text-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-150 truncate max-w-[160px]"
+                  title={dataRoomDealName}
+                >
+                  <Briefcase className="w-3.5 h-3.5 text-purple-500 flex-shrink-0" strokeWidth={2} />
+                  {dataRoomDealName}
+                </button>
+
+                {/* Data Room Segment (current - not clickable) */}
+                <ChevronRight className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" strokeWidth={2} />
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-muted border border-border rounded-md">
+                  <Database className="w-3.5 h-3.5 text-cyan-500 flex-shrink-0" strokeWidth={2} />
+                  <span className="text-sm font-medium text-foreground truncate max-w-[200px]">
+                    Data Room
+                  </span>
+                </div>
+              </nav>
+            ) : (
+              <FolderBreadcrumbs
+                currentFolder={currentFolder}
+                onNavigate={navigateToFolder}
+                vehicle={currentVehicle ? { id: currentVehicle.id, name: currentVehicle.name } : undefined}
+                onVehicleClick={handleBreadcrumbVehicleClick}
+              />
+            )
           )}
 
           {/* Upload Destination Banner */}
@@ -2210,9 +2498,9 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
             <FolderNavigator
               currentFolderId={currentFolderId}
               currentFolder={currentFolder}
-              subfolders={getSubfolders}
-              documents={filteredDocuments as any}
-              isLoading={loading}
+              subfolders={isDataRoomMode ? [] : getSubfolders}
+              documents={effectiveDocuments as any}
+              isLoading={isDataRoomMode ? loadingDataRoom : loading}
               viewMode={viewMode}
               sortBy={sortBy}
               sortDir={sortDir}
@@ -2301,11 +2589,13 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       <DocumentUploadDialog
         open={uploadDialogOpen}
         onOpenChange={handleUploadDialogChange}
-        folderId={uploadTargetFolderId || currentFolderId}
-        currentFolder={uploadTargetFolderId ? folders.find(f => f.id === uploadTargetFolderId) || null : currentFolder}
-        vehicleId={uploadTargetFolderId ? folders.find(f => f.id === uploadTargetFolderId)?.vehicle_id || undefined : currentFolder?.vehicle_id || undefined}
-        onSuccess={() => loadDocuments()}
+        folderId={isDataRoomMode ? null : (uploadTargetFolderId || currentFolderId)}
+        currentFolder={isDataRoomMode ? null : (uploadTargetFolderId ? folders.find(f => f.id === uploadTargetFolderId) || null : currentFolder)}
+        vehicleId={isDataRoomMode ? undefined : (uploadTargetFolderId ? folders.find(f => f.id === uploadTargetFolderId)?.vehicle_id || undefined : currentFolder?.vehicle_id || undefined)}
+        onSuccess={() => isDataRoomMode ? loadDataRoomDocuments(dataRoomDealId!) : loadDocuments()}
         initialFiles={droppedFiles.length > 0 ? droppedFiles : undefined}
+        dataRoomDealId={isDataRoomMode ? dataRoomDealId : null}
+        dataRoomDealName={isDataRoomMode ? dataRoomDealName : null}
       />
 
       {/* Move Document Dialog */}
