@@ -137,6 +137,11 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   const [droppedFiles, setDroppedFiles] = useState<File[]>([])
   const dragCounterRef = useRef(0)
 
+  // Tree folder drag-drop state (for dropping files onto folder nodes in sidebar)
+  const [treeDragOverFolderId, setTreeDragOverFolderId] = useState<string | null>(null)
+  const [uploadTargetFolderId, setUploadTargetFolderId] = useState<string | null>(null)
+  const [uploadTargetFolderName, setUploadTargetFolderName] = useState<string | null>(null)
+
   // URL State for sorting
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -447,11 +452,74 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     }
   }, [validateDroppedFiles])
 
-  // Clear dropped files when dialog closes
+  // Tree folder drag handlers (for dropping files on tree folder nodes)
+  const handleTreeFolderDragEnter = useCallback((e: React.DragEvent, folderId: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    // Check if files are being dragged
+    const hasFiles = (e.dataTransfer.items && e.dataTransfer.items.length > 0) ||
+                     (e.dataTransfer.types && e.dataTransfer.types.includes('Files'))
+    if (hasFiles) {
+      setTreeDragOverFolderId(folderId)
+    }
+  }, [])
+
+  const handleTreeFolderDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    // Only clear if leaving the folder (not entering a child)
+    const relatedTarget = e.relatedTarget as HTMLElement | null
+    if (!relatedTarget || !e.currentTarget.contains(relatedTarget)) {
+      setTreeDragOverFolderId(null)
+    }
+  }, [])
+
+  const handleTreeFolderDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }, [])
+
+  const handleTreeFolderDrop = useCallback((e: React.DragEvent, folderId: string, folderName: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setTreeDragOverFolderId(null)
+
+    const files = Array.from(e.dataTransfer.files)
+    if (files.length === 0) return
+
+    const { valid, invalid } = validateDroppedFiles(files)
+
+    // Show errors for invalid files
+    if (invalid.length > 0) {
+      const sizeErrors = invalid.filter(i => i.reason === 'size')
+      const typeErrors = invalid.filter(i => i.reason === 'type')
+
+      if (sizeErrors.length > 0) {
+        toast.error(`${sizeErrors.length} file(s) exceed 50MB limit: ${sizeErrors.map(i => i.file.name).join(', ')}`)
+      }
+
+      if (typeErrors.length > 0) {
+        toast.error(`Unsupported file type(s): ${typeErrors.map(i => i.file.name).join(', ')}. Allowed: PDF, DOCX, XLSX, TXT, JPG, PNG`)
+      }
+    }
+
+    // Open dialog with valid files and target folder
+    if (valid.length > 0) {
+      setDroppedFiles(valid)
+      setUploadTargetFolderId(folderId)
+      setUploadTargetFolderName(folderName)
+      toast.info(`Uploading to ${folderName}`)
+      setUploadDialogOpen(true)
+    }
+  }, [validateDroppedFiles])
+
+  // Clear dropped files and target folder when dialog closes
   const handleUploadDialogChange = useCallback((open: boolean) => {
     setUploadDialogOpen(open)
     if (!open) {
       setDroppedFiles([])
+      setUploadTargetFolderId(null)
+      setUploadTargetFolderName(null)
     }
   }, [])
 
@@ -1342,15 +1410,24 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     const isExpanded = effectiveExpandedFolders.has(node.folder.id)
     const hasChildren = node.children.length > 0
     const isCurrent = currentFolderId === node.folder.id
+    const isDragTarget = treeDragOverFolderId === node.folder.id
 
     return (
       <div key={node.folder.id}>
         <div
           className={cn(
             'flex items-center gap-1 rounded-md transition-colors',
-            isCurrent ? 'bg-primary/20 border border-primary' : 'hover:bg-muted border border-transparent'
+            isDragTarget
+              ? 'ring-2 ring-primary bg-primary/10'
+              : isCurrent
+                ? 'bg-primary/20 border border-primary'
+                : 'hover:bg-muted border border-transparent'
           )}
           style={{ paddingLeft: `${level * 16 + 8}px` }}
+          onDragEnter={(e) => handleTreeFolderDragEnter(e, node.folder.id)}
+          onDragLeave={handleTreeFolderDragLeave}
+          onDragOver={handleTreeFolderDragOver}
+          onDrop={(e) => handleTreeFolderDrop(e, node.folder.id, node.folder.name)}
         >
           {hasChildren ? (
             <button
@@ -1740,9 +1817,9 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       <DocumentUploadDialog
         open={uploadDialogOpen}
         onOpenChange={handleUploadDialogChange}
-        folderId={currentFolderId}
-        currentFolder={currentFolder}
-        vehicleId={currentFolder?.vehicle_id || undefined}
+        folderId={uploadTargetFolderId || currentFolderId}
+        currentFolder={uploadTargetFolderId ? folders.find(f => f.id === uploadTargetFolderId) || null : currentFolder}
+        vehicleId={uploadTargetFolderId ? folders.find(f => f.id === uploadTargetFolderId)?.vehicle_id || undefined : currentFolder?.vehicle_id || undefined}
         onSuccess={() => loadDocuments()}
         initialFiles={droppedFiles.length > 0 ? droppedFiles : undefined}
       />
