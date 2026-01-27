@@ -332,6 +332,25 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     setSelectedDocuments(new Set())
   }, [])
 
+  // Bulk action handlers (placeholder - will be implemented in US-014, US-015, US-017)
+  const handleBulkMove = useCallback(() => {
+    if (selectedDocuments.size === 0) return
+    // TODO: US-014 - Open folder picker dialog
+    toast.info(`Move ${selectedDocuments.size} document(s) - coming soon`)
+  }, [selectedDocuments])
+
+  const handleBulkDelete = useCallback(() => {
+    if (selectedDocuments.size === 0) return
+    // TODO: US-015 - Show confirmation dialog and delete
+    toast.info(`Delete ${selectedDocuments.size} document(s) - coming soon`)
+  }, [selectedDocuments])
+
+  const handleBulkDownload = useCallback(() => {
+    if (selectedDocuments.size === 0) return
+    // TODO: US-017 - Call bulk download endpoint
+    toast.info(`Download ${selectedDocuments.size} document(s) as ZIP - coming soon`)
+  }, [selectedDocuments])
+
   // Tree Sidebar State
   const [treeSearchQuery, setTreeSearchQuery] = useState('')
   const [debouncedTreeSearch, setDebouncedTreeSearch] = useState('')
@@ -1505,6 +1524,10 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
               onToggleSelection={toggleDocumentSelection}
               onSelectAll={selectAllDocuments}
               onClearSelection={clearSelection}
+              // Bulk action props
+              onBulkMove={handleBulkMove}
+              onBulkDelete={handleBulkDelete}
+              onBulkDownload={handleBulkDownload}
             />
           </div>
         </main>

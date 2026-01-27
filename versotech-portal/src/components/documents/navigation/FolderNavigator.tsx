@@ -29,6 +29,9 @@ import {
   X,
   Loader2,
   ChevronRight,
+  ChevronDown,
+  FolderInput,
+  Archive,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -111,6 +114,10 @@ interface FolderNavigatorProps {
   onToggleSelection?: (documentId: string) => void
   onSelectAll?: () => void
   onClearSelection?: () => void
+  // Bulk action props
+  onBulkMove?: () => void
+  onBulkDelete?: () => void
+  onBulkDownload?: () => void
 }
 
 /**
@@ -162,6 +169,10 @@ export function FolderNavigator({
   onToggleSelection,
   onSelectAll,
   onClearSelection,
+  // Bulk action props
+  onBulkMove,
+  onBulkDelete,
+  onBulkDownload,
 }: FolderNavigatorProps) {
   const isEmpty = !isLoading && !isSearchMode && subfolders.length === 0 && documents.length === 0
   const hasContent = subfolders.length > 0 || documents.length > 0
@@ -170,7 +181,7 @@ export function FolderNavigator({
     <div className={cn('flex flex-col h-full bg-background', className)}>
       {/* Toolbar - Always visible for search access */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-6 py-4 bg-muted/50 border-b border-border">
-        {/* Left: Global Search + Selection Badge */}
+        {/* Left: Global Search + Selection Badge + Bulk Actions */}
         <div className="flex items-center gap-3 w-full sm:w-auto">
           {/* Selection Count Badge */}
           {selectedDocuments.size > 0 && (
@@ -181,6 +192,48 @@ export function FolderNavigator({
               {selectedDocuments.size} selected
             </Badge>
           )}
+          {/* Bulk Actions Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={selectedDocuments.size === 0}
+                className={cn(
+                  "h-9 flex-shrink-0",
+                  selectedDocuments.size === 0 && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                Actions
+                <ChevronDown className="w-4 h-4 ml-2" strokeWidth={2} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem
+                onClick={onBulkMove}
+                disabled={selectedDocuments.size === 0}
+              >
+                <FolderInput className="w-4 h-4 mr-2 text-muted-foreground" strokeWidth={2} />
+                <span>Move to...</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={onBulkDelete}
+                disabled={selectedDocuments.size === 0}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="w-4 h-4 mr-2" strokeWidth={2} />
+                <span>Delete</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={onBulkDownload}
+                disabled={selectedDocuments.size === 0}
+              >
+                <Archive className="w-4 h-4 mr-2 text-muted-foreground" strokeWidth={2} />
+                <span>Download ZIP</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <div className="relative flex-1 sm:flex-initial sm:min-w-[300px]">
           {isSearching ? (
             <Loader2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-primary animate-spin" strokeWidth={2} />
