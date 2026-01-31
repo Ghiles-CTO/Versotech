@@ -79,6 +79,26 @@ export async function GET(request: Request, { params }: RouteParams) {
       }
     }
 
+    let investorAccountApprovalStatus: string | null = null
+    let investorKycStatus: string | null = null
+    let isAccountApproved: boolean | null = null
+
+    if (effectiveInvestorId) {
+      const { data: investorRecord, error: investorError } = await serviceSupabase
+        .from('investors')
+        .select('account_approval_status, kyc_status')
+        .eq('id', effectiveInvestorId)
+        .maybeSingle()
+
+      if (investorError) {
+        console.error('[opportunities/[id]] Failed to fetch investor account approval:', investorError)
+      } else if (investorRecord) {
+        investorAccountApprovalStatus = investorRecord.account_approval_status ?? null
+        investorKycStatus = investorRecord.kyc_status ?? null
+        isAccountApproved = investorRecord.account_approval_status === 'approved'
+      }
+    }
+
     // Check if investor has access to this deal (must be a member or deal is public)
     const { data: deal, error: dealError } = await serviceSupabase
       .from('deals')
@@ -490,6 +510,9 @@ export async function GET(request: Request, { params }: RouteParams) {
       stock_type: deal.stock_type,
       deal_round: deal.deal_round,
       vehicle: vehicle,
+      account_approval_status: investorAccountApprovalStatus,
+      kyc_status: investorKycStatus,
+      is_account_approved: isAccountApproved,
 
       // Membership status
       has_membership: !!membership,
@@ -570,13 +593,13 @@ export async function GET(request: Request, { params }: RouteParams) {
 
       // Computed flags for UI
       // Only show express interest for users with an investor persona
-      can_express_interest: effectiveInvestorId !== null && !membership?.interest_confirmed_at,
-      can_sign_nda: !!membership?.interest_confirmed_at && !membership?.nda_signed_at,
+      can_express_interest: effectiveInvestorId !== null && isAccountApproved === true && !membership?.interest_confirmed_at,
+      can_sign_nda: isAccountApproved === true && !!membership?.interest_confirmed_at && !membership?.nda_signed_at,
       can_access_data_room: hasDataRoomAccess,
       // SECURITY FIX: Only allow subscription for roles that permit investing
       // commercial_partner_proxy has its own endpoint at /api/commercial-partners/proxy-subscribe
       // Must have an investor profile (effectiveInvestorId) to be able to subscribe
-      can_subscribe: effectiveInvestorId !== null && !subscription && !hasPendingSubmission && isDealOpen && (
+      can_subscribe: effectiveInvestorId !== null && isAccountApproved === true && !subscription && !hasPendingSubmission && isDealOpen && (
         !membership?.role || // Public deal without membership (user still needs investor profile - checked above)
         ['investor', 'partner_investor', 'introducer_investor', 'commercial_partner_investor', 'co_investor'].includes(membership.role)
       ),

@@ -73,6 +73,7 @@ interface FeeStructure {
   id: string
   deal_id: string
   allocation_up_to: number | null
+  price_per_share: number | null
   price_per_share_text: string | null
   minimum_ticket: number | null
   term_sheet_date: string | null
@@ -272,7 +273,9 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
       {
         label: 'Price per Share',
         value:
-          termSheet.price_per_share_text ??
+          (termSheet.price_per_share != null
+            ? formatCurrency(termSheet.price_per_share, deal.currency)
+            : termSheet.price_per_share_text) ??
           (deal.offer_unit_price ? `${formatCurrency(deal.offer_unit_price, deal.currency)} per unit` : '—')
       },
       {

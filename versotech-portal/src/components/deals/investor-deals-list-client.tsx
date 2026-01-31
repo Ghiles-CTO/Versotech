@@ -200,6 +200,7 @@ interface FeeStructure {
   effective_at?: string | null
   published_at?: string | null
   allocation_up_to: number | null
+  price_per_share: number | null
   price_per_share_text: string | null
   minimum_ticket: number | null
   term_sheet_date: string | null
@@ -259,6 +260,8 @@ interface InvestorDealsListClientProps {
   accessByDeal: Map<string, DataRoomAccess>
   subscriptionByDeal: Map<string, SubscriptionSubmission>
   primaryInvestorId: string | null
+  accountApprovalStatus?: string | null
+  kycStatus?: string | null
   /** Partner ID - if present, user can share deals with investors (PRD Rows 95-96) */
   partnerId?: string | null
   /** Investor-centric summary metrics */
@@ -517,6 +520,8 @@ export function InvestorDealsListClient({
   accessByDeal,
   subscriptionByDeal,
   primaryInvestorId,
+  accountApprovalStatus = null,
+  kycStatus = null,
   partnerId,
   summary,
   detailUrlBase = '/versotech_main/opportunities',
@@ -542,6 +547,9 @@ export function InvestorDealsListClient({
 
   const isPartnerView = personaMode === 'PARTNER_ONLY' || personaMode === 'DUAL_PERSONA'
   const isInvestorView = personaMode === 'INVESTOR_ONLY' || personaMode === 'DUAL_PERSONA'
+  const isAccountApproved = accountApprovalStatus === 'approved'
+  const showAccountBlock = isInvestorView && !!primaryInvestorId && accountApprovalStatus !== 'approved'
+  const approvalStatusLabel = accountApprovalStatus?.replace(/_/g, ' ') || 'pending approval'
 
   // Helper function to determine referral stage for an investor
   const getReferralStage = (
@@ -949,6 +957,16 @@ export function InvestorDealsListClient({
           </>
         )}
 
+        {showAccountBlock && (
+          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
+            <p className="text-sm font-medium">Account approval required</p>
+            <p className="text-xs text-amber-700 dark:text-amber-300">
+              Status: {approvalStatusLabel}. Complete KYC and wait for CEO approval to request access or subscribe.
+              {kycStatus ? ` KYC status: ${kycStatus.replace(/_/g, ' ')}.` : ''}
+            </p>
+          </div>
+        )}
+
         {/* ================================================================ */}
         {/* GENERIC View (no investor/partner - just deal counts) */}
         {/* ================================================================ */}
@@ -1311,8 +1329,10 @@ export function InvestorDealsListClient({
             const ndaAccess = accessByDeal.get(deal.id) ?? null
             const subscription = subscriptionByDeal.get(deal.id) ?? null
             const membershipRole = deal.deal_memberships?.[0]?.role ?? null
-            const canInvest = isInvestorEligibleRole(membershipRole)
-            const isTrackingOnly = !!membershipRole && !canInvest
+            const roleAllowsInvest = isInvestorEligibleRole(membershipRole)
+            const isTrackingOnly = !!membershipRole && !roleAllowsInvest
+            const canInvest = roleAllowsInvest && isAccountApproved
+            const showAccountBlockForCard = showAccountBlock && roleAllowsInvest
 
             const effectiveStatus = getEffectiveStatus(deal)
             const statusLabel =
@@ -1419,11 +1439,13 @@ export function InvestorDealsListClient({
                     <div>
                       <p className="text-xs uppercase tracking-wide text-muted-foreground">Unit price</p>
                       <p className="text-lg font-semibold text-foreground">
-                        {feeStructure?.price_per_share_text
-                          ? feeStructure.price_per_share_text
-                          : deal.offer_unit_price
-                            ? `${formatCurrency(deal.offer_unit_price, deal.currency)} per unit`
-                            : '(Pending)'}
+                        {feeStructure?.price_per_share != null
+                          ? `${formatCurrency(feeStructure.price_per_share, deal.currency)} per unit`
+                          : feeStructure?.price_per_share_text
+                            ? feeStructure.price_per_share_text
+                            : deal.offer_unit_price
+                              ? `${formatCurrency(deal.offer_unit_price, deal.currency)} per unit`
+                              : '(Pending)'}
                       </p>
                     </div>
                   </div>
@@ -1542,38 +1564,46 @@ export function InvestorDealsListClient({
                       <div>
                         <p className="text-xs uppercase tracking-wide text-muted-foreground">Your pipeline</p>
                         <div className="flex flex-wrap items-center gap-2">
-                          {interest ? (
-                            interest.is_post_close ? (
-                              <Badge className="w-fit bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300">
-                                Future interest signal
-                              </Badge>
-                            ) : (
-                              <Badge className={cn('w-fit', interestStatusMeta[interest.status].tone)}>
-                                {interestStatusMeta[interest.status].label}
-                              </Badge>
-                            )
-                          ) : (
-                            <span className="text-sm text-muted-foreground">No signal yet</span>
-                          )}
-                          {subscription && (
-                            <Badge variant="outline" className="text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700">
-                              Subscription {subscription.status.replace(/_/g, ' ')}
-                            </Badge>
-                          )}
-                          {isTrackingOnly && (
+                          {showAccountBlockForCard ? (
                             <Badge variant="outline" className="border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300">
-                              Tracking only
+                              Account approval pending
                             </Badge>
-                          )}
-                          {hasDataRoomAccess && (
-                            <Badge variant="outline" className="text-sky-600 dark:text-sky-400 border-sky-300 dark:border-sky-700">
-                              Data room unlocked
-                            </Badge>
-                          )}
-                          {feeStructure?.interest_confirmation_deadline && (
-                            <span className="text-xs text-muted-foreground">
-                              Interest deadline: {new Date(feeStructure.interest_confirmation_deadline).toLocaleDateString()}
-                            </span>
+                          ) : (
+                            <>
+                              {interest ? (
+                                interest.is_post_close ? (
+                                  <Badge className="w-fit bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300">
+                                    Future interest signal
+                                  </Badge>
+                                ) : (
+                                  <Badge className={cn('w-fit', interestStatusMeta[interest.status].tone)}>
+                                    {interestStatusMeta[interest.status].label}
+                                  </Badge>
+                                )
+                              ) : (
+                                <span className="text-sm text-muted-foreground">No signal yet</span>
+                              )}
+                              {subscription && (
+                                <Badge variant="outline" className="text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700">
+                                  Subscription {subscription.status.replace(/_/g, ' ')}
+                                </Badge>
+                              )}
+                              {isTrackingOnly && (
+                                <Badge variant="outline" className="border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300">
+                                  Tracking only
+                                </Badge>
+                              )}
+                              {hasDataRoomAccess && (
+                                <Badge variant="outline" className="text-sky-600 dark:text-sky-400 border-sky-300 dark:border-sky-700">
+                                  Data room unlocked
+                                </Badge>
+                              )}
+                              {feeStructure?.interest_confirmation_deadline && (
+                                <span className="text-xs text-muted-foreground">
+                                  Interest deadline: {new Date(feeStructure.interest_confirmation_deadline).toLocaleDateString()}
+                                </span>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>

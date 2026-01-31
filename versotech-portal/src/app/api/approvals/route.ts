@@ -3,6 +3,51 @@ import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { getAuthenticatedUser } from '@/lib/api-auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { SupabaseClient } from '@supabase/supabase-js'
+
+/**
+ * Handles account_activation approval - updates entity's account_approval_status
+ */
+async function handleAccountActivationApproval(
+  supabase: SupabaseClient,
+  entityId: string,
+  metadata: any,
+  status: 'approved' | 'rejected',
+  notes?: string
+) {
+  const entityTable = metadata?.entity_table
+  const personaType = metadata?.persona_type
+
+  if (!entityTable) {
+    console.error('[Account Activation] Missing entity_table in metadata')
+    return
+  }
+
+  const updateData: any = {
+    account_approval_status: status,
+    updated_at: new Date().toISOString(),
+  }
+
+  if (status === 'rejected' && notes) {
+    updateData.account_rejection_reason = notes
+  }
+
+  try {
+    const { error } = await supabase
+      .from(entityTable)
+      .update(updateData)
+      .eq('id', entityId)
+
+    if (error) {
+      console.error(`[Account Activation] Error updating ${entityTable}:`, error)
+      throw error
+    }
+
+    console.log(`[Account Activation] Updated ${entityTable} ${entityId} to ${status}`)
+  } catch (error) {
+    console.error('[Account Activation] Failed to update entity status:', error)
+  }
+}
 
 // Validation schema for creating approvals
 const createApprovalSchema = z.object({
@@ -119,7 +164,15 @@ export async function POST(request: NextRequest) {
         entityExists = !!document
         entityName = document?.type || 'Unknown'
         break
-        
+
+      case 'account_activation':
+        // Account activation can be for any entity type
+        // The entity_id is the ID in the respective entity table
+        // Entity table is determined by metadata.entity_table
+        entityExists = true // Will be validated when approval is processed
+        entityName = 'Account Activation'
+        break
+
       default:
         return NextResponse.json(
           { error: `Unsupported entity type: ${entity_type}` },
@@ -504,6 +557,17 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json(
         { error: 'Failed to update approval' },
         { status: 500 }
+      )
+    }
+
+    // Handle account_activation approval - update entity account_approval_status
+    if (approval.entity_type === 'account_activation' && ['approved', 'rejected'].includes(approval.status)) {
+      await handleAccountActivationApproval(
+        serviceSupabase,
+        approval.entity_id,
+        approval.entity_metadata,
+        approval.status as 'approved' | 'rejected',
+        approval.notes
       )
     }
 

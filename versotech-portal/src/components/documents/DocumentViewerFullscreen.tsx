@@ -127,7 +127,7 @@ export function DocumentViewerFullscreen({
   const modalContent = (
     <div className="fixed inset-0 z-[9999] bg-black/95 overflow-hidden flex flex-col">
       {/* Toolbar */}
-      <div className="h-16 bg-white border-b shadow-md flex items-center justify-between px-6 flex-shrink-0">
+      <div className="h-16 bg-white border-b shadow-md flex items-center justify-between px-6 flex-shrink-0 text-gray-900">
         <div className="flex items-center gap-4 flex-1 min-w-0">
           <FileText className="h-5 w-5 text-gray-500 flex-shrink-0" />
           <div className="min-w-0 flex-1">
@@ -153,7 +153,7 @@ export function DocumentViewerFullscreen({
             variant="outline"
             size="sm"
             onClick={onDownload}
-            className="gap-2"
+            className="gap-2 text-gray-900"
           >
             <Download className="h-4 w-4" />
             Download
@@ -162,7 +162,7 @@ export function DocumentViewerFullscreen({
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="gap-2"
+            className="gap-2 text-gray-900"
           >
             <X className="h-4 w-4" />
             Close

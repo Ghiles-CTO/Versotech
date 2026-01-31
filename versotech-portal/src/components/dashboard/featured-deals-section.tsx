@@ -27,6 +27,7 @@ import { DealLogo } from '@/components/deals/deal-logo'
 
 export interface FeaturedDealFeeStructure {
   id: string
+  price_per_share: number | null
   price_per_share_text: string | null
   allocation_up_to: number | null
   minimum_ticket: number | null
@@ -213,11 +214,14 @@ export function FeaturedDealsSection({ deals }: FeaturedDealsSectionProps) {
             const headline = deal.company_name || deal.name
             const initial = (headline ?? 'V').trim().charAt(0).toUpperCase() || 'V'
             const closingCopy = formatDeadlineCopy(deal.close_at, dealStatus)
-            // Priority: fee_structure.price_per_share_text > deal.offer_unit_price
-            const priceFromFeeStructure = deal.fee_structure?.price_per_share_text
-            const formattedPrice = priceFromFeeStructure
-              ? `${deal.currency || 'USD'} ${priceFromFeeStructure}`
-              : formatCurrency(deal.offer_unit_price, deal.currency)
+            // Priority: fee_structure.price_per_share > fee_structure.price_per_share_text > deal.offer_unit_price
+            const priceFromFeeStructure = deal.fee_structure?.price_per_share
+            const priceFromFeeStructureText = deal.fee_structure?.price_per_share_text
+            const formattedPrice = priceFromFeeStructure != null
+              ? `${deal.currency || 'USD'} ${priceFromFeeStructure.toFixed(2)}`
+              : priceFromFeeStructureText
+                ? `${deal.currency || 'USD'} ${priceFromFeeStructureText}`
+                : formatCurrency(deal.offer_unit_price, deal.currency)
 
             return (
               <Card key={deal.id} className={cn(

@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { createInvestorNotification, getInvestorPrimaryUserId } from '@/lib/notifications'
+import {
+  handleKYCApproval,
+  updateMemberKYCStatus,
+  getEntityTypeFromSubmission,
+} from '@/lib/kyc/check-entity-kyc-status'
 
 interface ReviewBody {
   action: 'approve' | 'reject' | 'request_info'
@@ -68,12 +73,23 @@ export async function POST(
     // Use service client for privileged operations
     const serviceSupabase = createServiceClient()
 
-    // Get submission details
+    // Get submission details with all possible entity relations
     const { data: submission, error: submissionError } = await serviceSupabase
       .from('kyc_submissions')
       .select(`
         *,
-        investor:investors(id, legal_name, display_name, email, kyc_status)
+        investor:investors(id, legal_name, display_name, email, kyc_status),
+        partner:partners(id, name, legal_name, kyc_status),
+        introducer:introducers(id, display_name, legal_name, kyc_status),
+        lawyer:lawyers(id, firm_name, display_name, kyc_status),
+        commercial_partner:commercial_partners(id, name, legal_name, kyc_status),
+        arranger_entity:arranger_entities(id, legal_name, kyc_status),
+        investor_member:investor_members(id, full_name, kyc_status),
+        partner_member:partner_members(id, full_name, kyc_status),
+        introducer_member:introducer_members(id, full_name, kyc_status),
+        lawyer_member:lawyer_members(id, full_name, kyc_status),
+        commercial_partner_member:commercial_partner_members(id, full_name, kyc_status),
+        arranger_member:arranger_members(id, full_name, kyc_status)
       `)
       .eq('id', submissionId)
       .single()
@@ -136,23 +152,43 @@ export async function POST(
       )
     }
 
-    // If approved, check if all required documents for this investor are now approved
+    // If approved, handle KYC approval for any entity type
     if (action === 'approve') {
-      await checkAndUpdateInvestorKYCStatus(
-        serviceSupabase,
-        submission.investor.id
-      )
+      // Use generic handler for all entity types
+      await handleKYCApproval(serviceSupabase, submission)
+
+      // Also check investor-specific status for backwards compatibility
+      if (submission.investor_id) {
+        await checkAndUpdateInvestorKYCStatus(
+          serviceSupabase,
+          submission.investor_id
+        )
+      }
     }
 
-    // Auto-complete related tasks if approved
-    if (action === 'approve') {
+    // If rejected and this is a personal_info submission, update member status
+    if (action === 'reject' && submission.document_type === 'personal_info') {
+      const { entityType, memberId } = getEntityTypeFromSubmission(submission)
+      if (entityType && memberId) {
+        await updateMemberKYCStatus(serviceSupabase, entityType, memberId, 'rejected', rejection_reason)
+      }
+    }
+
+    // Auto-complete related tasks if approved (investor-specific)
+    if (action === 'approve' && submission.investor_id) {
       await autoCompleteRelatedTasks(
         serviceSupabase,
-        submission.investor.id,
+        submission.investor_id,
         submission.document_type,
         user.id
       )
     }
+
+    // Determine entity info for audit log
+    const { entityType, entityId } = getEntityTypeFromSubmission(submission)
+    const entity = submission.investor || submission.partner || submission.introducer ||
+                   submission.lawyer || submission.commercial_partner || submission.arranger_entity
+    const entityName = entity?.legal_name || entity?.display_name || entity?.name || entity?.firm_name || 'Unknown'
 
     // Create audit log
     const auditActions: Record<string, string> = {
@@ -169,8 +205,15 @@ export async function POST(
       entity_id: submissionId,
       action_details: {
         document_type: submission.document_type,
-        investor_id: submission.investor.id,
-        investor_name: submission.investor.legal_name || submission.investor.display_name,
+        persona_type: entityType,
+        related_entity_id: entityId,
+        entity_name: entityName,
+        investor_id: submission.investor_id || null,
+        partner_id: submission.partner_id || null,
+        introducer_id: submission.introducer_id || null,
+        lawyer_id: submission.lawyer_id || null,
+        commercial_partner_id: submission.commercial_partner_id || null,
+        arranger_entity_id: submission.arranger_entity_id || null,
         rejection_reason: rejection_reason || null,
         info_request_reason: action === 'request_info' ? rejection_reason : null,
         notes: notes || null
@@ -178,57 +221,67 @@ export async function POST(
       timestamp: new Date().toISOString()
     })
 
-    // Send notification to investor
-    try {
-      const investorUserId = await getInvestorPrimaryUserId(submission.investor.id)
-      if (investorUserId) {
-        const investorName = submission.investor.display_name || submission.investor.legal_name || 'Investor'
+    // Send notification to investor (only for investor entity types)
+    // TODO: Add notification support for other entity types
+    if (submission.investor_id && submission.investor) {
+      try {
+        const investorUserId = await getInvestorPrimaryUserId(submission.investor.id)
+        if (investorUserId) {
+          const investorName = submission.investor.display_name || submission.investor.legal_name || 'Investor'
+          const docTypeLabel = submission.document_type.replace(/_/g, ' ')
 
-        if (action === 'approve') {
-          await createInvestorNotification({
-            userId: investorUserId,
-            investorId: submission.investor.id,
-            title: 'KYC Documents Approved',
-            message: 'Your KYC documents have been reviewed and approved. Thank you for completing your verification.',
-            link: '/versotech_main/documents',
-            type: 'kyc_status',
-            extraMetadata: {
-              submission_id: submissionId,
-              document_type: submission.document_type
-            }
-          })
-        } else if (action === 'request_info') {
-          await createInvestorNotification({
-            userId: investorUserId,
-            investorId: submission.investor.id,
-            title: 'Additional Information Requested',
-            message: `Our compliance team has requested additional information for your ${submission.document_type.replace(/_/g, ' ')} submission. Please review and provide the requested details.`,
-            link: '/versotech_main/documents',
-            type: 'kyc_status',
-            extraMetadata: {
-              submission_id: submissionId,
-              document_type: submission.document_type,
-              info_request_reason: rejection_reason
-            }
-          })
-        } else {
-          await createInvestorNotification({
-            userId: investorUserId,
-            investorId: submission.investor.id,
-            title: 'KYC Submission Requires Attention',
-            message: `Your ${submission.document_type.replace(/_/g, ' ')} submission requires attention. Please review and resubmit.`,
-            link: '/versotech_main/documents',
-            type: 'kyc_status',
-            extraMetadata: {
-              submission_id: submissionId,
-              document_type: submission.document_type,
-              rejection_reason: rejection_reason
-            }
-          })
+          if (action === 'approve') {
+            await createInvestorNotification({
+              userId: investorUserId,
+              investorId: submission.investor.id,
+              title: submission.document_type === 'personal_info' ? 'Personal KYC Approved' :
+                     submission.document_type === 'entity_info' ? 'Entity KYC Approved' :
+                     'KYC Documents Approved',
+              message: submission.document_type === 'personal_info'
+                ? 'Your personal KYC information has been reviewed and approved.'
+                : submission.document_type === 'entity_info'
+                ? 'Your entity information has been reviewed and approved.'
+                : 'Your KYC documents have been reviewed and approved. Thank you for completing your verification.',
+              link: '/versotech_main/profile',
+              type: 'kyc_status',
+              extraMetadata: {
+                submission_id: submissionId,
+                document_type: submission.document_type
+              }
+            })
+          } else if (action === 'request_info') {
+            await createInvestorNotification({
+              userId: investorUserId,
+              investorId: submission.investor.id,
+              title: 'Additional Information Requested',
+              message: `Our compliance team has requested additional information for your ${docTypeLabel} submission. Please review and provide the requested details.`,
+              link: '/versotech_main/profile',
+              type: 'kyc_status',
+              extraMetadata: {
+                submission_id: submissionId,
+                document_type: submission.document_type,
+                info_request_reason: rejection_reason
+              }
+            })
+          } else {
+            await createInvestorNotification({
+              userId: investorUserId,
+              investorId: submission.investor.id,
+              title: 'KYC Submission Requires Attention',
+              message: `Your ${docTypeLabel} submission requires attention. Please review and resubmit.`,
+              link: '/versotech_main/profile',
+              type: 'kyc_status',
+              extraMetadata: {
+                submission_id: submissionId,
+                document_type: submission.document_type,
+                rejection_reason: rejection_reason
+              }
+            })
+          }
         }
+      } catch (notificationError) {
+        console.error('[kyc-review] Failed to send notification:', notificationError)
       }
-    } catch (notificationError) {
-      console.error('[kyc-review] Failed to send notification:', notificationError)
     }
 
     const successMessages: Record<string, string> = {

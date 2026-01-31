@@ -306,7 +306,7 @@ async function getFeaturedDeals(userId: string | null): Promise<FeaturedDeal[]> 
         location,
         vehicles ( id, name, type ),
         deal_memberships!inner ( user_id ),
-        deal_fee_structures ( id, price_per_share_text, allocation_up_to, minimum_ticket, status, effective_at )
+        deal_fee_structures ( id, price_per_share, price_per_share_text, allocation_up_to, minimum_ticket, status, effective_at )
       `)
       .eq('deal_memberships.user_id', userId)
       .eq('status', 'open')
@@ -336,6 +336,7 @@ async function getFeaturedDeals(userId: string | null): Promise<FeaturedDeal[]> 
         ...deal,
         fee_structure: latestFeeStructure ? {
           id: latestFeeStructure.id,
+          price_per_share: latestFeeStructure.price_per_share,
           price_per_share_text: latestFeeStructure.price_per_share_text,
           allocation_up_to: latestFeeStructure.allocation_up_to,
           minimum_ticket: latestFeeStructure.minimum_ticket,

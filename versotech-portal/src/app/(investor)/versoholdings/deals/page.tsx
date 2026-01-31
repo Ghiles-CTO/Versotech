@@ -62,6 +62,7 @@ interface FeeStructure {
   effective_at?: string | null
   published_at?: string | null
   allocation_up_to: number | null
+  price_per_share: number | null
   price_per_share_text: string | null
   minimum_ticket: number | null
   maximum_ticket: number | null
@@ -186,6 +187,20 @@ export default async function InvestorDealsPage() {
   const investorIds = investorLinks.map(link => link.investor_id)
   const primaryInvestorId = investorIds[0]
 
+  let accountApprovalStatus: string | null = null
+  let investorKycStatus: string | null = null
+
+  if (primaryInvestorId) {
+    const { data: investorAccount } = await serviceSupabase
+      .from('investors')
+      .select('account_approval_status, kyc_status')
+      .eq('id', primaryInvestorId)
+      .maybeSingle()
+
+    accountApprovalStatus = investorAccount?.account_approval_status ?? null
+    investorKycStatus = investorAccount?.kyc_status ?? null
+  }
+
   // Fetch all deals accessible to this user (including closed ones for historical view)
   const { data: deals, error: dealsError } = await serviceSupabase
     .from('deals')
@@ -243,6 +258,7 @@ export default async function InvestorDealsPage() {
         effective_at,
         published_at,
         allocation_up_to,
+        price_per_share,
         price_per_share_text,
         minimum_ticket,
         maximum_ticket,
@@ -381,6 +397,8 @@ export default async function InvestorDealsPage() {
         accessByDeal={accessByDeal}
         subscriptionByDeal={subscriptionByDeal}
         primaryInvestorId={primaryInvestorId}
+        accountApprovalStatus={accountApprovalStatus}
+        kycStatus={investorKycStatus}
         summary={summary}
       />
     </AppLayout>

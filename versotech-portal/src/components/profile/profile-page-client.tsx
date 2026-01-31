@@ -34,9 +34,12 @@ import {
   Edit,
   Shield,
   Globe,
+  Send,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
+import { PersonalKYCSection, type MemberKYCData } from '@/components/profile/personal-kyc-section'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { IndividualKycDisplay, EntityKYCEditDialog, EntityAddressEditDialog, EntityInfoEditDialog } from '@/components/shared'
 
@@ -131,6 +134,7 @@ interface ProfilePageClientProps {
   defaultTab?: string
   investorInfo?: InvestorInfo | null
   investorUserInfo?: InvestorUserInfo | null
+  memberInfo?: MemberKYCData | null
 }
 
 // Status badge configurations
@@ -154,13 +158,39 @@ export function ProfilePageClient({
   variant = 'investor',
   defaultTab = 'overview',
   investorInfo,
-  investorUserInfo
+  investorUserInfo,
+  memberInfo,
 }: ProfilePageClientProps) {
   const [profile, setProfile] = useState(initialProfile)
   const [showKycDialog, setShowKycDialog] = useState(false)
   const [showAddressDialog, setShowAddressDialog] = useState(false)
   const [showEntityInfoDialog, setShowEntityInfoDialog] = useState(false)
+  const [isSubmittingEntityKyc, setIsSubmittingEntityKyc] = useState(false)
   const isStaff = variant === 'staff'
+
+  // Submit entity KYC for review
+  const handleSubmitEntityKyc = async () => {
+    setIsSubmittingEntityKyc(true)
+    try {
+      const response = await fetch('/api/investors/me/submit-entity-kyc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to submit entity KYC')
+      }
+
+      toast.success('Entity KYC submitted for review')
+      window.location.reload()
+    } catch (error) {
+      console.error('Error submitting entity KYC:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to submit entity KYC')
+    } finally {
+      setIsSubmittingEntityKyc(false)
+    }
+  }
 
   // Use server-passed investorInfo instead of client-side fetching
   const hasInvestorEntity = !!investorInfo
@@ -435,10 +465,14 @@ export function ProfilePageClient({
                       Organization details
                     </CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setShowEntityInfoDialog(true)}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {investorInfo.kyc_status !== 'approved' && investorInfo.kyc_status !== 'submitted' && (
+                      <Button variant="outline" size="sm" onClick={() => setShowEntityInfoDialog(true)}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
@@ -463,6 +497,34 @@ export function ProfilePageClient({
                       {(investorInfo.type || 'entity').replace(/_/g, ' ')}
                     </Badge>
                   </div>
+
+                  {/* Submit Entity KYC Button */}
+                  {investorInfo.kyc_status !== 'approved' && investorInfo.kyc_status !== 'submitted' && (
+                    <div className="pt-4 border-t">
+                      {(investorUserInfo?.is_primary || investorUserInfo?.role === 'admin') ? (
+                        <Button
+                          onClick={handleSubmitEntityKyc}
+                          disabled={isSubmittingEntityKyc}
+                          size="sm"
+                        >
+                          <Send className="h-4 w-4 mr-2" />
+                          {isSubmittingEntityKyc ? 'Submitting...' : 'Submit Entity Info for Review'}
+                        </Button>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          Only primary contacts can submit entity information for review.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  {investorInfo.kyc_status === 'submitted' && (
+                    <div className="pt-4 border-t">
+                      <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                        <Send className="h-3 w-3 mr-1" />
+                        Entity Info Submitted for Review
+                      </Badge>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -591,6 +653,16 @@ export function ProfilePageClient({
                 </CardContent>
               </Card>
             </div>
+          )}
+
+          {/* Personal KYC Section for Entity Members */}
+          {isEntity && investorInfo && (
+            <PersonalKYCSection
+              memberData={memberInfo || null}
+              entityType="investor"
+              entityId={investorInfo.id}
+              onRefresh={() => window.location.reload()}
+            />
           )}
 
           {/* Individual KYC Info Display */}

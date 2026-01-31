@@ -55,7 +55,9 @@ export function VersoSignPageClient({
   stats
 }: VersoSignPageClientProps) {
   const router = useRouter()
-  const [selectedTab, setSelectedTab] = useState('countersignatures')
+  // Default to NDA tab if there are NDA tasks, otherwise countersignatures
+  const hasNdaTasks = (signatureGroups.find(g => g.category === 'nda_signatures')?.tasks.length || 0) > 0
+  const [selectedTab, setSelectedTab] = useState(hasNdaTasks ? 'nda_signatures' : 'countersignatures')
   const [loadingTaskId, setLoadingTaskId] = useState<string | null>(null)
   const [signingMode, setSigningMode] = useState<{
     active: boolean
@@ -415,6 +417,16 @@ Action Required: ${task.instructions?.action_required || 'Send signature link to
       {/* Tabs for different signature categories */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="mb-6">
+          {/* NDA Signatures Tab - only show if there are NDA tasks */}
+          {(signatureGroups.find(g => g.category === 'nda_signatures')?.tasks.length || 0) > 0 && (
+            <TabsTrigger value="nda_signatures">
+              <FileSignature className="h-4 w-4 mr-2" />
+              NDA Signing
+              <Badge className="ml-2" variant="default">
+                {signatureGroups.find(g => g.category === 'nda_signatures')?.tasks.length || 0}
+              </Badge>
+            </TabsTrigger>
+          )}
           <TabsTrigger value="countersignatures">
             <FileSignature className="h-4 w-4 mr-2" />
             Countersignatures
@@ -609,14 +621,14 @@ Action Required: ${task.instructions?.action_required || 'Send signature link to
                           <div className="flex gap-2">
                             {(task.status === 'pending' || task.status === 'in_progress') && (
                               <>
-                                {task.kind === 'countersignature' && task.instructions?.action_url && (
+                                {(task.kind === 'countersignature' || task.kind === 'deal_nda_signature') && task.instructions?.action_url && (
                                   <Button
                                     size="sm"
                                     onClick={() => handleSignDocument(task)}
                                     disabled={loadingTaskId === task.id}
                                   >
                                     <FileSignature className="h-4 w-4 mr-2" />
-                                    {loadingTaskId === task.id ? 'Loading...' : 'Sign Document'}
+                                    {loadingTaskId === task.id ? 'Loading...' : (task.kind === 'deal_nda_signature' ? 'Sign NDA' : 'Sign Document')}
                                   </Button>
                                 )}
                                 {task.metadata?.issue === 'investor_no_user_account' && (

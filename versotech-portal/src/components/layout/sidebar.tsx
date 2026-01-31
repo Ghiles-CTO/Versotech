@@ -298,14 +298,21 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
       <div className="p-6 flex items-center justify-between h-20">
         {!collapsed && (
           <div className="flex items-center gap-3 animate-in fade-in duration-300">
-            <div className={cn(
-              "relative h-10 w-32 overflow-hidden", // Increased size
-            )}>
+            <div className="relative h-8 w-40 overflow-hidden">
+              {/* Light mode logo */}
               <Image
-                src={brand === 'versotech' ? '/versotech-logo.jpg' : '/versoholdings-logo.jpg'}
-                alt="Logo"
+                src="/versotech-logo.png"
+                alt="VERSOTECH"
                 fill
-                className="object-contain object-left dark:invert"
+                className="object-contain object-left dark:hidden"
+                priority
+              />
+              {/* Dark mode logo */}
+              <Image
+                src="/versotech-logo-dark.png"
+                alt="VERSOTECH"
+                fill
+                className="object-contain object-left hidden dark:block"
                 priority
               />
             </div>
@@ -314,12 +321,21 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
 
         {collapsed && (
           <div className="mx-auto">
-            <div className="relative h-8 w-8 rounded-lg overflow-hidden bg-gray-50 dark:bg-white/5 ring-1 ring-gray-100 dark:ring-white/10">
+            <div className="relative h-10 w-10 overflow-hidden">
+              {/* Light mode icon */}
               <Image
-                src={brand === 'versotech' ? '/versotech-logo.jpg' : '/versoholdings-logo.jpg'}
-                alt="Logo"
+                src="/versotech-icon.png"
+                alt="VERSOTECH"
                 fill
-                className="object-cover"
+                className="object-contain dark:hidden"
+                priority
+              />
+              {/* Dark mode icon */}
+              <Image
+                src="/versotech-icon-dark.png"
+                alt="VERSOTECH"
+                fill
+                className="object-contain hidden dark:block"
                 priority
               />
             </div>

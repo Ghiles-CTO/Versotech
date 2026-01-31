@@ -274,7 +274,7 @@ export default async function VersoSignPage() {
     const { data: investorTasks } = await serviceSupabase
       .from('tasks')
       .select('*')
-      .in('kind', ['countersignature', 'subscription_pack_signature', 'other'])
+      .in('kind', ['countersignature', 'subscription_pack_signature', 'deal_nda_signature', 'other'])
       .or(`owner_user_id.eq.${user.id},owner_investor_id.in.(${investorIds.join(',')})`)
       .order('due_at', { ascending: true, nullsFirst: false })
     addTasksWithDedup(investorTasks || [])
@@ -447,6 +447,15 @@ export default async function VersoSignPage() {
 
   // Group tasks by type
   const signatureGroups: SignatureGroup[] = [
+    {
+      category: 'nda_signatures',
+      title: 'NDA Signing Required',
+      description: 'Non-Disclosure Agreements awaiting your signature',
+      tasks: actionableTasks.filter(t =>
+        t.kind === 'deal_nda_signature' &&
+        (t.status === 'pending' || t.status === 'in_progress')
+      )
+    },
     {
       category: 'countersignatures',
       title: 'Pending Countersignatures',

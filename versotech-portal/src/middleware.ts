@@ -571,6 +571,61 @@ export async function middleware(request: NextRequest) {
 
       const matchesPrefix = (prefixes: string[]) => prefixes.some((prefix) => pathname.startsWith(prefix))
 
+      // =========================================================================
+      // ACCOUNT APPROVAL STATUS CHECK
+      // Block accounts that are pending_approval or pending_onboarding from
+      // accessing most platform features. They can only access their profile
+      // and KYC submission endpoints.
+      // =========================================================================
+      if (Array.isArray(personas) && personas.length > 0) {
+        // Check if ANY persona has a pending or rejected status
+        const hasPendingAccount = personas.some((p: any) =>
+          p.account_approval_status === 'pending_approval' ||
+          p.account_approval_status === 'pending_onboarding'
+        )
+
+        const hasRejectedAccount = personas.some((p: any) =>
+          p.account_approval_status === 'rejected'
+        )
+
+        // Paths allowed for pending accounts (profile + KYC submission only)
+        const allowedPendingPaths = [
+          '/versotech_main/profile',
+          '/versotech_main/investor-profile',
+          '/versotech_main/partner-profile',
+          '/versotech_main/lawyer-profile',
+          '/versotech_main/arranger-profile',
+          '/versotech_main/introducer-profile',
+          '/versotech_main/commercial-partner-profile',
+          '/versotech_main/onboarding',
+          '/api/me/personal-kyc',
+          '/api/me/entity-kyc',
+          '/api/investors/me',
+          '/api/partners/me',
+          '/api/lawyers/me',
+          '/api/arrangers/me',
+          '/api/introducers/me',
+          '/api/commercial-partners/me',
+        ]
+
+        const isAllowedForPending = allowedPendingPaths.some(p =>
+          pathname.startsWith(p) || pathname === p
+        ) || pathname === '/logout' || pathname.startsWith('/api/auth')
+
+        if (hasPendingAccount && !isCEO && !hasPersona('staff') && !isAllowedForPending) {
+          console.log(`[auth] Account pending approval, redirecting to profile: ${user.email}`)
+          return NextResponse.redirect(new URL('/versotech_main/profile', request.url))
+        }
+
+        if (hasRejectedAccount && !isCEO && !hasPersona('staff')) {
+          // Rejected accounts can only logout
+          if (pathname !== '/logout' && !pathname.startsWith('/api/auth')) {
+            console.log(`[auth] Account rejected, redirecting to login: ${user.email}`)
+            return NextResponse.redirect(new URL('/versotech_main/login?error=account_rejected', request.url))
+          }
+        }
+      }
+
       const ceoOnlyPaths = [
         '/versotech_admin',
         '/versotech_main/kyc-review',

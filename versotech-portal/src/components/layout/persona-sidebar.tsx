@@ -278,15 +278,21 @@ export function PersonaSidebar() {
       <div className="p-6 flex items-center justify-between h-20">
         {!collapsed && (
           <div className="flex items-center gap-3 animate-in fade-in duration-300">
-            <div className="relative h-10 w-32 overflow-hidden">
+            <div className="relative h-8 w-40 overflow-hidden">
+              {/* Light mode logo */}
               <Image
-                src="/versotech-logo.jpg"
-                alt="Logo"
+                src="/versotech-logo.png"
+                alt="VERSOTECH"
                 fill
-                className={cn(
-                  "object-contain object-left",
-                  isDark && "invert"
-                )}
+                className={cn("object-contain object-left", isDark && "hidden")}
+                priority
+              />
+              {/* Dark mode logo */}
+              <Image
+                src="/versotech-logo-dark.png"
+                alt="VERSOTECH"
+                fill
+                className={cn("object-contain object-left hidden", isDark && "block")}
                 priority
               />
             </div>
@@ -295,15 +301,21 @@ export function PersonaSidebar() {
 
         {collapsed && (
           <div className="mx-auto">
-            <div className={cn(
-              "relative h-8 w-8 rounded-lg overflow-hidden",
-              isDark ? "bg-white/5 ring-1 ring-white/10" : "bg-gray-50 ring-1 ring-gray-100"
-            )}>
+            <div className="relative h-10 w-10 overflow-hidden">
+              {/* Light mode icon */}
               <Image
-                src="/versotech-logo.jpg"
-                alt="Logo"
+                src="/versotech-icon.png"
+                alt="VERSOTECH"
                 fill
-                className="object-cover"
+                className={cn("object-contain", isDark ? "hidden" : "block")}
+                priority
+              />
+              {/* Dark mode icon */}
+              <Image
+                src="/versotech-icon-dark.png"
+                alt="VERSOTECH"
+                fill
+                className={cn("object-contain", isDark ? "block" : "hidden")}
                 priority
               />
             </div>
@@ -471,12 +483,21 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
     )}>
       {/* Logo */}
       <div className="p-6 h-20">
-        <div className="relative h-10 w-32">
+        <div className="relative h-8 w-40">
+          {/* Light mode logo */}
           <Image
-            src="/versotech-logo.jpg"
-            alt="Logo"
+            src="/versotech-logo.png"
+            alt="VERSOTECH"
             fill
-            className={cn("object-contain object-left", isDark && "invert")}
+            className={cn("object-contain object-left", isDark && "hidden")}
+            priority
+          />
+          {/* Dark mode logo */}
+          <Image
+            src="/versotech-logo-dark.png"
+            alt="VERSOTECH"
+            fill
+            className={cn("object-contain object-left hidden", isDark && "block")}
             priority
           />
         </div>

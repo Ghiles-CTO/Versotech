@@ -3,6 +3,7 @@
 Purpose: Capture the end-to-end work items requested in the Friday client meeting and break them into actionable checklists.
 
 ## Scope (from client feedback)
+- User status/KYC gating: unapproved users must not request data room access or subscribe; interest must not appear confirmed before account approval.
 - Two-route investor journey (Data Room -> NDA -> Subscribe vs Direct Subscribe without NDA) must be clear in BOTH progress bars (deal page and opportunity page).
 - Wording fixes: "Request Data Room Access" should not show "Interest Confirmed"; it should lead to NDA flow.
 - NDA data correctness: Party A fields should use entity vs individual correctly; "Represented by" and email must be the user/signatory; multi-signatory NDA generation must be correct.
@@ -33,7 +34,32 @@ Checklist:
 
 ---
 
-## 2) NDA Workflow and Template Data Correctness
+## 2) User Status / KYC Gating (Hard Requirement)
+Context files:
+- VERSO/launch/KYC_UNIFICATION_IMPLEMENTATION.md
+- VERSO/launch/KYC_UNIFICATION_TEST_SCENARIO.md
+
+Likely code touchpoints:
+- versotech-portal/src/app/api/deals/[id]/interests/route.ts
+- versotech-portal/src/app/api/investors/me/opportunities/[id]/route.ts
+- versotech-portal/src/components/deals/interest-status-card.tsx
+- versotech-portal/src/components/deals/investor-deals-list-client.tsx
+- versotech-portal/src/components/deals/interest-modal.tsx
+- versotech-portal/src/components/deals/investor-journey-bar.tsx
+
+Checklist:
+- [x] Confirm account activation flow: all KYC approved -> account_activation approval -> CEO approval -> account_approval_status=approved.
+- [x] Block "Request Data Room Access" and "Subscribe" server-side until account_approval_status=approved (and KYC approved).
+- [x] Hide/disable UI CTAs and prevent "interest confirmed" status for unapproved users.
+- [x] Add UI messaging for blocked users (e.g., "Complete KYC/await approval to proceed").
+- [ ] Await full status list from Fred; map "new" and intermediate statuses in UI copy/logic.
+
+Note:
+- Per-signatory approvals vs entity-level NDA access (item 02 from meeting) is deferred for now.
+
+---
+
+## 3) NDA Workflow and Template Data Correctness
 Files to review:
 - NDA_template.html
 - versotech-portal/src/app/api/approvals/[id]/action/route.ts (NDA payload + signatories)
@@ -56,7 +82,7 @@ Checklist:
 
 ---
 
-## 3) Approval Queue Terminology and UX
+## 4) Approval Queue Terminology and UX
 Files to review:
 - versotech-portal/src/components/approvals/approval-filters.tsx
 - versotech-portal/src/components/approvals/views/approvals-list-view.tsx
@@ -72,7 +98,7 @@ Checklist:
 
 ---
 
-## 4) Deal Creation UI and Field Updates
+## 5) Deal Creation UI and Field Updates
 Files to review:
 - versotech-portal/src/components/deals/create-deal-form.tsx
 - versotech-portal/src/components/deals/deal-detail-client.tsx
@@ -93,7 +119,7 @@ Checklist:
 
 ---
 
-## 5) Deal Logo Cropping and Display
+## 6) Deal Logo Cropping and Display
 Files to review (examples, not exhaustive):
 - versotech-portal/src/app/(main)/versotech_main/opportunities/[id]/page.tsx
 - versotech-portal/src/components/deals/investor-deals-list-client.tsx
@@ -109,7 +135,7 @@ Checklist:
 
 ---
 
-## 6) Validation and QA
+## 7) Validation and QA
 Checklist:
 - [ ] Manual test: Data room request -> NDA -> data room access (multi-signatory).
 - [ ] Manual test: Direct subscribe bypasses NDA and proceeds to subscription pack only.
@@ -117,8 +143,18 @@ Checklist:
 - [ ] Manual test: Draft deal saved and later resumed.
 - [ ] Manual test: CHF/AED propagate into subscription creation + display.
 - [ ] Manual test: Logos display correctly across main personas.
+- [ ] Manual test: Unapproved/KYC-incomplete user cannot request data room or subscribe; status text stays blocked.
 
 ---
 
-## Deferred (Next)
-- Term sheet fixes (as requested to handle later).
+## 8) Term Sheet Fixes (Next Focus)
+Files likely:
+- versotech-portal/src/components/deals/deal-term-sheet-tab.tsx
+- versotech-portal/src/components/deals/term-sheet-template.html (or equivalent template)
+
+Checklist:
+- [x] Remove "display text" fields from term sheet form.
+- [x] Make "issuer" and "vehicle" prefilled or dropdown (not free text).
+- [x] Fix mapping of "TO" vs "Purchaser" in term sheet preview/template.
+- [x] Allow editing of default free-text sections (e.g., "in principle approval", "subject to change").
+- [x] Fix preview modal close button glitch.

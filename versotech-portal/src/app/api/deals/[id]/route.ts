@@ -30,7 +30,11 @@ export async function GET(
           id,
           name,
           type,
-          currency
+          currency,
+          investment_name,
+          series_number,
+          series_short_title,
+          entity_code
         ),
         deal_memberships (
           user_id,
@@ -228,4 +232,3 @@ export async function PATCH(
     )
   }
 }
-

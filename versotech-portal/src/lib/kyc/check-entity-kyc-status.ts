@@ -278,6 +278,18 @@ async function createAccountActivationApproval(
 
     const entityName = entity?.display_name || entity?.legal_name || 'Unknown Entity'
 
+    // Find the primary user (member with linked_user_id) to set as requested_by
+    const { data: primaryMember } = await supabase
+      .from(config.memberTable)
+      .select('linked_user_id')
+      .eq(config.entityIdColumn, entityId)
+      .not('linked_user_id', 'is', null)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+
+    const requestedBy = primaryMember?.linked_user_id || null
+
     // Check if there's already a pending activation approval
     const { data: existingApproval } = await supabase
       .from('approvals')
@@ -300,6 +312,7 @@ async function createAccountActivationApproval(
         entity_id: entityId,
         status: 'pending',
         priority: 'medium',
+        requested_by: requestedBy,
         entity_metadata: {
           entity_table: config.entityTable,
           entity_name: entityName,
@@ -308,7 +321,7 @@ async function createAccountActivationApproval(
         created_at: new Date().toISOString(),
       })
 
-    console.log(`[KYC] Created account activation approval for ${entityType} ${entityId}`)
+    console.log(`[KYC] Created account activation approval for ${entityType} ${entityId}${requestedBy ? ` (requested_by: ${requestedBy})` : ''}`)
 
   } catch (error) {
     console.error(`[KYC] Error creating account activation approval:`, error)

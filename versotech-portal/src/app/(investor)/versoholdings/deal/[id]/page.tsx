@@ -58,6 +58,16 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
 
   const investorId = investorLinks[0].investor_id
 
+  const { data: investorAccount } = await serviceSupabase
+    .from('investors')
+    .select('account_approval_status, kyc_status')
+    .eq('id', investorId)
+    .maybeSingle()
+
+  const accountApprovalStatus = investorAccount?.account_approval_status ?? null
+  const isAccountApproved = accountApprovalStatus === 'approved'
+  const approvalStatusLabel = accountApprovalStatus?.replace(/_/g, ' ') || 'pending approval'
+
   // Fetch deal with all related data
   // IMPORTANT: Filter by user_id (dispatch-based), not investor_id (entity-based)
   // This ensures entity users only see deals they've been specifically dispatched to
@@ -446,8 +456,10 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                       <div>
                         <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Price Per Share</p>
                         <p className="font-medium text-gray-900 dark:text-gray-100">
-                          {feeStructure.price_per_share_text ??
-                            (deal.offer_unit_price ? formatCurrency(deal.offer_unit_price, deal.currency) : '—')}
+                          {feeStructure.price_per_share != null
+                            ? formatCurrency(feeStructure.price_per_share, deal.currency)
+                            : feeStructure.price_per_share_text ??
+                              (deal.offer_unit_price ? formatCurrency(deal.offer_unit_price, deal.currency) : '—')}
                         </p>
                       </div>
                       <div>
@@ -620,33 +632,44 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
               <CardContent className="space-y-3">
                 {!isClosed ? (
                   <>
-                    {/* Subscribe Now - Primary CTA for open deals */}
-                    <SubscribeNowDialog
-                      dealId={deal.id}
-                      dealName={deal.name}
-                      currency={deal.currency}
-                      existingSubmission={subscription}
-                    >
-                      <Button className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
-                        <ArrowRight className="h-4 w-4" />
-                        Subscribe Now
-                      </Button>
-                    </SubscribeNowDialog>
+                    {isAccountApproved ? (
+                      <>
+                        {/* Subscribe Now - Primary CTA for open deals */}
+                        <SubscribeNowDialog
+                          dealId={deal.id}
+                          dealName={deal.name}
+                          currency={deal.currency}
+                          existingSubmission={subscription}
+                        >
+                          <Button className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
+                            <ArrowRight className="h-4 w-4" />
+                            Subscribe Now
+                          </Button>
+                        </SubscribeNowDialog>
 
-                    {/* Request Data Room Access */}
-                    <InterestModal
-                      dealId={deal.id}
-                      dealName={deal.name}
-                      currency={deal.currency}
-                      investorId={investorId}
-                      defaultAmount={interest?.indicative_amount}
-                      isClosed={false}
-                    >
-                      <Button variant="outline" className="w-full gap-2">
-                        <FileText className="h-4 w-4" />
-                        Request data room access
-                      </Button>
-                    </InterestModal>
+                        {/* Request Data Room Access */}
+                        <InterestModal
+                          dealId={deal.id}
+                          dealName={deal.name}
+                          currency={deal.currency}
+                          investorId={investorId}
+                          defaultAmount={interest?.indicative_amount}
+                          isClosed={false}
+                        >
+                          <Button variant="outline" className="w-full gap-2">
+                            <FileText className="h-4 w-4" />
+                            Request data room access
+                          </Button>
+                        </InterestModal>
+                      </>
+                    ) : (
+                      <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
+                        <p className="text-sm font-medium">Account approval required</p>
+                        <p className="text-xs text-amber-700 dark:text-amber-300">
+                          Status: {approvalStatusLabel}. Complete KYC and wait for CEO approval to request access or subscribe.
+                        </p>
+                      </div>
+                    )}
                   </>
                 ) : (
                   /* Notify Me About Similar - for closed deals */

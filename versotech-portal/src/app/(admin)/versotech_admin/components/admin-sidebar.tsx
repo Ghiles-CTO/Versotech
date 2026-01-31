@@ -121,12 +121,21 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       <div className="p-4 flex items-center justify-between h-16 border-b border-gray-100 dark:border-white/5">
         {!collapsed && (
           <div className="flex items-center gap-2 animate-in fade-in duration-200">
-            <div className="relative h-8 w-28 overflow-hidden">
+            <div className="relative h-7 w-36 overflow-hidden">
+              {/* Light mode logo */}
               <Image
-                src="/versotech-logo.jpg"
-                alt="Versotech Admin"
+                src="/versotech-logo.png"
+                alt="VERSOTECH Admin"
                 fill
-                className="object-contain object-left dark:invert"
+                className="object-contain object-left dark:hidden"
+                priority
+              />
+              {/* Dark mode logo */}
+              <Image
+                src="/versotech-logo-dark.png"
+                alt="VERSOTECH Admin"
+                fill
+                className="object-contain object-left hidden dark:block"
                 priority
               />
             </div>

@@ -31,6 +31,30 @@ import { toast } from 'sonner'
 
 type TermSheet = Record<string, any>
 
+type VehicleMeta = {
+  name?: string | null
+  investment_name?: string | null
+  series_number?: string | null
+  series_short_title?: string | null
+  entity_code?: string | null
+}
+
+function deriveIssuerAndVehicle(vehicle?: VehicleMeta | null) {
+  const rawName = (vehicle?.name || '').trim()
+  const seriesMatch = rawName.match(/\bseries\s+(.+)$/i)
+  const seriesToken = seriesMatch?.[1]?.trim()
+  const issuer = seriesMatch ? rawName.slice(0, seriesMatch.index).trim() : rawName
+  const entitySeries = vehicle?.series_number || vehicle?.entity_code?.match(/\d+/)?.[0] || ''
+  const vehicleLabel = seriesToken
+    ? `Series ${seriesToken}`
+    : (entitySeries ? `Series ${entitySeries}` : (vehicle?.investment_name || rawName))
+
+  return {
+    issuer: issuer || rawName,
+    vehicle: vehicleLabel || rawName
+  }
+}
+
 /** Fee plan with entity and term sheet info for display */
 interface LinkedFeePlan {
   id: string
@@ -74,8 +98,23 @@ const feePlanStatusLabels: Record<string, string> = {
   rejected: 'Rejected'
 }
 
+const DEFAULT_TERMSHEET_TEXT = {
+  to_description: 'Qualified, Professional and Institutional Investors only',
+  capital_call_timeline:
+    'No later than 3 days prior to confirmed Completion Date by Company with effective funds on Escrow Account (T-3)',
+  in_principle_approval_text:
+    'The Arranger has obtained approval for the present offering from the Issuer',
+  subscription_pack_note:
+    'The Issuer shall issue a Subscription Pack to be executed by the Purchaser',
+  share_certificates_note:
+    'The Issuer shall provide the Purchasers Share Certificates and Statement of Holdings upon Completion',
+  subject_to_change_note:
+    'The content of the present term sheet remains indicative, subject to change'
+}
+
 const emptyForm = {
   term_sheet_date: '',
+  to_description: DEFAULT_TERMSHEET_TEXT.to_description,
   transaction_type: '',
   opportunity_summary: '',
   issuer: '',
@@ -85,7 +124,6 @@ const emptyForm = {
   seller: '',
   structure: '',
   allocation_up_to: '',
-  price_per_share_text: '',
   price_per_share: '',
   cost_per_share: '',
   minimum_ticket: '',
@@ -96,17 +134,29 @@ const emptyForm = {
   performance_fee_clause: '',
   legal_counsel: '',
   interest_confirmation_deadline: '',
+  capital_call_timeline: DEFAULT_TERMSHEET_TEXT.capital_call_timeline,
   validity_date: '',
   completion_date: '',
-  completion_date_text: ''
+  completion_date_text: '',
+  in_principle_approval_text: DEFAULT_TERMSHEET_TEXT.in_principle_approval_text,
+  subscription_pack_note: DEFAULT_TERMSHEET_TEXT.subscription_pack_note,
+  share_certificates_note: DEFAULT_TERMSHEET_TEXT.share_certificates_note,
+  subject_to_change_note: DEFAULT_TERMSHEET_TEXT.subject_to_change_note
 }
 
 type FormState = typeof emptyForm
 
 function mapTermSheetToForm(termSheet?: TermSheet): FormState {
   if (!termSheet) return emptyForm
+  const parsedPrice = termSheet.price_per_share_text
+    ? Number(String(termSheet.price_per_share_text).replace(/[^\d.]/g, ''))
+    : null
+  const formattedCompletionDate = termSheet.completion_date
+    ? `By ${format(new Date(termSheet.completion_date), 'MMMM d, yyyy')}`
+    : ''
   return {
     term_sheet_date: termSheet.term_sheet_date ? termSheet.term_sheet_date.slice(0, 10) : '',
+    to_description: termSheet.to_description ?? DEFAULT_TERMSHEET_TEXT.to_description,
     transaction_type: termSheet.transaction_type ?? '',
     opportunity_summary: termSheet.opportunity_summary ?? '',
     issuer: termSheet.issuer ?? '',
@@ -116,8 +166,9 @@ function mapTermSheetToForm(termSheet?: TermSheet): FormState {
     seller: termSheet.seller ?? '',
     structure: termSheet.structure ?? '',
     allocation_up_to: termSheet.allocation_up_to ?? '',
-    price_per_share_text: termSheet.price_per_share_text ?? '',
-    price_per_share: termSheet.price_per_share != null ? String(termSheet.price_per_share) : '',
+    price_per_share: termSheet.price_per_share != null
+      ? String(termSheet.price_per_share)
+      : (parsedPrice ? String(parsedPrice) : ''),
     cost_per_share: termSheet.cost_per_share != null ? String(termSheet.cost_per_share) : '',
     minimum_ticket: termSheet.minimum_ticket ?? '',
     subscription_fee_percent: termSheet.subscription_fee_percent ?? '',
@@ -129,9 +180,14 @@ function mapTermSheetToForm(termSheet?: TermSheet): FormState {
     interest_confirmation_deadline: termSheet.interest_confirmation_deadline
       ? termSheet.interest_confirmation_deadline.slice(0, 16)
       : '',
+    capital_call_timeline: termSheet.capital_call_timeline ?? DEFAULT_TERMSHEET_TEXT.capital_call_timeline,
     validity_date: termSheet.validity_date ? termSheet.validity_date.slice(0, 16) : '',
     completion_date: termSheet.completion_date ? termSheet.completion_date.slice(0, 10) : '',
-    completion_date_text: termSheet.completion_date_text ?? ''
+    completion_date_text: termSheet.completion_date_text ?? formattedCompletionDate,
+    in_principle_approval_text: termSheet.in_principle_approval_text ?? DEFAULT_TERMSHEET_TEXT.in_principle_approval_text,
+    subscription_pack_note: termSheet.subscription_pack_note ?? DEFAULT_TERMSHEET_TEXT.subscription_pack_note,
+    share_certificates_note: termSheet.share_certificates_note ?? DEFAULT_TERMSHEET_TEXT.share_certificates_note,
+    subject_to_change_note: termSheet.subject_to_change_note ?? DEFAULT_TERMSHEET_TEXT.subject_to_change_note
   }
 }
 
@@ -141,9 +197,28 @@ function toNumber(value: string) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+function formatPrice(value?: number | null) {
+  if (value === null || value === undefined || Number.isNaN(value)) return ''
+  return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)
+}
+
+function getPricePerShareDisplay(termSheet: TermSheet) {
+  if (termSheet?.price_per_share != null && termSheet.price_per_share !== '') {
+    return formatPrice(Number(termSheet.price_per_share))
+  }
+  if (termSheet?.price_per_share_text) {
+    const parsed = Number(String(termSheet.price_per_share_text).replace(/[^\d.]/g, ''))
+    return parsed ? formatPrice(parsed) : termSheet.price_per_share_text
+  }
+  return ''
+}
+
 function buildPayload(values: FormState) {
+  const pricePerShare = toNumber(values.price_per_share)
+  const pricePerShareText = pricePerShare != null ? pricePerShare.toFixed(2) : null
   return {
     term_sheet_date: values.term_sheet_date || null,
+    to_description: values.to_description || null,
     transaction_type: values.transaction_type || null,
     opportunity_summary: values.opportunity_summary || null,
     issuer: values.issuer || null,
@@ -153,8 +228,8 @@ function buildPayload(values: FormState) {
     seller: values.seller || null,
     structure: values.structure || null,
     allocation_up_to: toNumber(values.allocation_up_to),
-    price_per_share_text: values.price_per_share_text || null,
-    price_per_share: toNumber(values.price_per_share),
+    price_per_share_text: pricePerShareText,
+    price_per_share: pricePerShare,
     cost_per_share: toNumber(values.cost_per_share),
     minimum_ticket: toNumber(values.minimum_ticket),
     subscription_fee_percent: toNumber(values.subscription_fee_percent),
@@ -164,9 +239,14 @@ function buildPayload(values: FormState) {
     performance_fee_clause: values.performance_fee_clause || null,
     legal_counsel: values.legal_counsel || null,
     interest_confirmation_deadline: values.interest_confirmation_deadline || null,
+    capital_call_timeline: values.capital_call_timeline || null,
     validity_date: values.validity_date || null,
     completion_date: values.completion_date || null,
-    completion_date_text: values.completion_date_text || null
+    completion_date_text: values.completion_date_text || null,
+    in_principle_approval_text: values.in_principle_approval_text || null,
+    subscription_pack_note: values.subscription_pack_note || null,
+    share_certificates_note: values.share_certificates_note || null,
+    subject_to_change_note: values.subject_to_change_note || null
   }
 }
 
@@ -181,12 +261,42 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
   const [attachmentError, setAttachmentError] = useState<string | null>(null)
   const [uploadingAttachmentId, setUploadingAttachmentId] = useState<string | null>(null)
   const fileInputsRef = useRef<Record<string, HTMLInputElement | null>>({})
+  const [dealVehicle, setDealVehicle] = useState<VehicleMeta | null>(null)
 
   // Fee plan state
   const [feePlans, setFeePlans] = useState<LinkedFeePlan[]>([])
   const [feePlansLoading, setFeePlansLoading] = useState(false)
   const [feePlanModalOpen, setFeePlanModalOpen] = useState(false)
   const [selectedTermSheetIdForFeePlan, setSelectedTermSheetIdForFeePlan] = useState<string | undefined>()
+
+  const vehicleDefaults = useMemo(() => deriveIssuerAndVehicle(dealVehicle), [dealVehicle])
+
+  const applyVehicleDefaults = useCallback((values: FormState) => ({
+    ...values,
+    issuer: values.issuer || vehicleDefaults.issuer || '',
+    vehicle: values.vehicle || vehicleDefaults.vehicle || ''
+  }), [vehicleDefaults])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadDeal = async () => {
+      try {
+        const response = await fetch(`/api/deals/${dealId}`)
+        if (!response.ok) return
+        const data = await response.json()
+        if (cancelled) return
+        setDealVehicle(data?.deal?.vehicles ?? null)
+      } catch (error) {
+        console.error('Failed to load deal vehicle data', error)
+      }
+    }
+
+    loadDeal()
+    return () => {
+      cancelled = true
+    }
+  }, [dealId])
 
   // Document preview state (fullscreen viewer)
   const [previewOpen, setPreviewOpen] = useState(false)
@@ -446,7 +556,8 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
   const openEditor = (mode: EditorMode, termSheet?: TermSheet) => {
     setEditorMode(mode)
     setTargetId(mode === 'edit' ? termSheet?.id ?? null : null)
-    setFormValues(mapTermSheetToForm(mode === 'create' ? undefined : termSheet))
+    const baseValues = mapTermSheetToForm(mode === 'create' ? undefined : termSheet)
+    setFormValues(applyVehicleDefaults(baseValues))
     setErrorMessage(null)
     setEditorOpen(true)
   }
@@ -456,6 +567,16 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
     setTargetId(null)
     setFormValues(emptyForm)
   }
+
+  useEffect(() => {
+    if (!editorOpen || editorMode !== 'create') return
+    if (!vehicleDefaults.issuer && !vehicleDefaults.vehicle) return
+    setFormValues(prev => ({
+      ...prev,
+      issuer: prev.issuer || vehicleDefaults.issuer || '',
+      vehicle: prev.vehicle || vehicleDefaults.vehicle || ''
+    }))
+  }, [editorOpen, editorMode, vehicleDefaults])
 
   const refresh = async () => {
     const response = await fetch(`/api/deals/${dealId}/fee-structures`)
@@ -732,7 +853,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                 </div>
                 <div>
                   <span className="text-muted-foreground block text-xs">Price Per Share</span>
-                  <span className="text-foreground font-medium">{published.price_per_share_text || '—'}</span>
+                  <span className="text-foreground font-medium">{getPricePerShareDisplay(published) || '—'}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground block text-xs">Minimum Ticket</span>
@@ -986,10 +1107,10 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                       {termSheet.allocation_up_to ? termSheet.allocation_up_to.toLocaleString() : '—'}
                     </span>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Price Per Share</span>
-                    <span className="text-foreground font-medium">{termSheet.price_per_share_text || '—'}</span>
-                  </div>
+                <div>
+                  <span className="text-muted-foreground block text-xs">Price Per Share</span>
+                  <span className="text-foreground font-medium">{getPricePerShareDisplay(termSheet) || '—'}</span>
+                </div>
                   <div>
                     <span className="text-muted-foreground block text-xs">Min Ticket</span>
                     <span className="text-foreground font-medium">
@@ -1291,6 +1412,14 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   onChange={event => setFormValues(prev => ({ ...prev, term_sheet_date: event.target.value }))}
                 />
               </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="to_description">To</Label>
+                <Input
+                  id="to_description"
+                  value={formValues.to_description}
+                  onChange={event => setFormValues(prev => ({ ...prev, to_description: event.target.value }))}
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="transaction_type">Transaction Type</Label>
                 <Input
@@ -1394,19 +1523,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="price_per_share_text">Price per Share (Display Text)</Label>
-                <Input
-                  id="price_per_share_text"
-                  placeholder="e.g., £10.00 per share"
-                  value={formValues.price_per_share_text}
-                  onChange={event => setFormValues(prev => ({ ...prev, price_per_share_text: event.target.value }))}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Display text for investors (e.g., "£10.00 per share", "~$15-20")
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="price_per_share">Price per Share (Numeric)</Label>
+                <Label htmlFor="price_per_share">Price per Share</Label>
                 <Input
                   id="price_per_share"
                   type="number"
@@ -1416,7 +1533,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   onChange={event => setFormValues(prev => ({ ...prev, price_per_share: event.target.value }))}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Used for subscription calculations
+                  Numeric price used for calculations and display
                 </p>
               </div>
             </div>
@@ -1580,6 +1697,70 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                 <p className="text-xs text-muted-foreground">
                   When set, enables automatic CEO approval for deal closing.
                 </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="capital_call_timeline">Capital Call Timeline</Label>
+              <Textarea
+                id="capital_call_timeline"
+                rows={2}
+                value={formValues.capital_call_timeline}
+                onChange={event => setFormValues(prev => ({ ...prev, capital_call_timeline: event.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="completion_date_text">Completion Date Text</Label>
+              <Textarea
+                id="completion_date_text"
+                rows={2}
+                value={formValues.completion_date_text}
+                onChange={event => setFormValues(prev => ({ ...prev, completion_date_text: event.target.value }))}
+              />
+              <p className="text-xs text-muted-foreground">
+                Optional override shown in the term sheet. Defaults to "By [Completion Date]".
+              </p>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="in_principle_approval_text">In-Principle Approval Text</Label>
+                <Textarea
+                  id="in_principle_approval_text"
+                  rows={2}
+                  value={formValues.in_principle_approval_text}
+                  onChange={event => setFormValues(prev => ({ ...prev, in_principle_approval_text: event.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subscription_pack_note">Subscription Pack Note</Label>
+                <Textarea
+                  id="subscription_pack_note"
+                  rows={2}
+                  value={formValues.subscription_pack_note}
+                  onChange={event => setFormValues(prev => ({ ...prev, subscription_pack_note: event.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="share_certificates_note">Share Certificates Note</Label>
+                <Textarea
+                  id="share_certificates_note"
+                  rows={2}
+                  value={formValues.share_certificates_note}
+                  onChange={event => setFormValues(prev => ({ ...prev, share_certificates_note: event.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subject_to_change_note">Subject to Change Note</Label>
+                <Textarea
+                  id="subject_to_change_note"
+                  rows={2}
+                  value={formValues.subject_to_change_note}
+                  onChange={event => setFormValues(prev => ({ ...prev, subject_to_change_note: event.target.value }))}
+                />
               </div>
             </div>
           </div>

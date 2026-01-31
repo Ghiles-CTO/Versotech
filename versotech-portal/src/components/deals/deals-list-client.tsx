@@ -343,13 +343,15 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
                       <span>{deal.deal_memberships.length} participants</span>
                     </div>
 
-                    {(deal.fee_structure?.price_per_share_text || deal.offer_unit_price) && (
+                    {(deal.fee_structure?.price_per_share != null || deal.fee_structure?.price_per_share_text || deal.offer_unit_price) && (
                       <div className="flex items-center gap-1.5">
                         <CircleDollarSign className="h-4 w-4 flex-shrink-0" />
                         <span>
-                          {deal.fee_structure?.price_per_share_text
-                            ? `${deal.currency || 'USD'} ${deal.fee_structure.price_per_share_text}/unit`
-                            : `${deal.currency} ${deal.offer_unit_price.toFixed(2)}/unit`}
+                          {deal.fee_structure?.price_per_share != null
+                            ? `${deal.currency || 'USD'} ${deal.fee_structure.price_per_share.toFixed(2)}/unit`
+                            : deal.fee_structure?.price_per_share_text
+                              ? `${deal.currency || 'USD'} ${deal.fee_structure.price_per_share_text}/unit`
+                              : `${deal.currency} ${deal.offer_unit_price.toFixed(2)}/unit`}
                         </span>
                       </div>
                     )}

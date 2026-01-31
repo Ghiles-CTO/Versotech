@@ -63,7 +63,59 @@ export default async function ProfilePage({
 
   console.log('[ProfilePage] investorUser result:', { investorUser, investorUserError })
 
+  // Also fetch the user's linked member record for personal KYC
+  let memberInfo = null
+
   if (investorUser) {
+    // Fetch the user's member record (linked via linked_user_id)
+    const { data: memberData, error: memberError } = await serviceSupabase
+      .from('investor_members')
+      .select(`
+        id,
+        full_name,
+        first_name,
+        middle_name,
+        last_name,
+        name_suffix,
+        role,
+        email,
+        phone,
+        phone_mobile,
+        phone_office,
+        date_of_birth,
+        country_of_birth,
+        nationality,
+        residential_street,
+        residential_line_2,
+        residential_city,
+        residential_state,
+        residential_postal_code,
+        residential_country,
+        is_us_citizen,
+        is_us_taxpayer,
+        us_taxpayer_id,
+        country_of_tax_residency,
+        tax_id_number,
+        id_type,
+        id_number,
+        id_issue_date,
+        id_expiry_date,
+        id_issuing_country,
+        kyc_status,
+        kyc_approved_at,
+        kyc_notes
+      `)
+      .eq('investor_id', investorUser.investor_id)
+      .eq('linked_user_id', user.id)
+      .eq('is_active', true)
+      .maybeSingle()
+
+    if (memberError) {
+      console.error('[ProfilePage] Error fetching member:', memberError)
+    } else if (memberData) {
+      memberInfo = memberData
+    }
+
     // Fetch investor entity details including KYC fields
     const { data: investor, error: investorError } = await serviceSupabase
       .from('investors')
@@ -253,6 +305,7 @@ export default async function ProfilePage({
       defaultTab={defaultTab}
       investorInfo={investorInfo}
       investorUserInfo={investorUserInfo}
+      memberInfo={memberInfo}
     />
   )
 }

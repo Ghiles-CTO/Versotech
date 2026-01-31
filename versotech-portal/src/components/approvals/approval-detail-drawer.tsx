@@ -26,7 +26,10 @@ import {
   ExternalLink,
   TrendingUp,
   Info,
-  MessageCircle
+  MessageCircle,
+  UserCheck,
+  Shield,
+  Users
 } from 'lucide-react'
 import { Approval } from '@/types/approvals'
 import { format, formatDistanceToNow } from 'date-fns'
@@ -61,7 +64,8 @@ const entityTypeLabels: Record<string, string> = {
   profile_update: 'Profile Update',
   fee_override: 'Fee Override',
   document_access: 'Document Access',
-  permission_grant: 'Permission Grant'
+  permission_grant: 'Permission Grant',
+  account_activation: 'Account Activation'
 }
 
 export function ApprovalDetailDrawer({
@@ -351,6 +355,111 @@ export function ApprovalDetailDrawer({
                       <p className="font-medium text-foreground capitalize">{(approval.related_investor as any).type || 'N/A'}</p>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Account Activation Information */}
+            {approval.entity_type === 'account_activation' && approval.entity_metadata && (
+              <Card className="border-emerald-300 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                        <UserCheck className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg text-foreground">
+                          {approval.entity_metadata.entity_name || 'Account Activation'}
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground capitalize">
+                          {approval.entity_metadata.persona_type?.replace('_', ' ') || 'User'} Account
+                        </p>
+                      </div>
+                    </div>
+                    <Badge className="bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30">
+                      Pending Activation
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    This account has completed all KYC requirements and is ready for activation.
+                    Once activated, the user will have full platform access.
+                  </p>
+
+                  {/* Entity Details */}
+                  {(approval.entity_metadata.entity_type || approval.entity_metadata.jurisdiction) && (
+                    <div className="grid grid-cols-2 gap-4 p-3 rounded-lg bg-muted border border-border">
+                      {approval.entity_metadata.entity_type && (
+                        <div>
+                          <p className="text-xs text-muted-foreground">Entity Type</p>
+                          <p className="font-medium text-foreground capitalize">
+                            {approval.entity_metadata.entity_type.replace('_', ' ')}
+                          </p>
+                        </div>
+                      )}
+                      {approval.entity_metadata.jurisdiction && (
+                        <div>
+                          <p className="text-xs text-muted-foreground">Jurisdiction</p>
+                          <p className="font-medium text-foreground">
+                            {approval.entity_metadata.jurisdiction}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Members KYC Status Summary */}
+                  {approval.entity_metadata.members_summary && (
+                    <div className="p-3 rounded-lg bg-muted border border-border">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <p className="text-sm font-medium text-foreground">Members KYC Status</p>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3 text-center">
+                        <div className="p-2 rounded bg-emerald-500/10">
+                          <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                            {approval.entity_metadata.members_summary.approved || 0}
+                          </p>
+                          <p className="text-xs text-muted-foreground">Approved</p>
+                        </div>
+                        <div className="p-2 rounded bg-amber-500/10">
+                          <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
+                            {approval.entity_metadata.members_summary.pending || 0}
+                          </p>
+                          <p className="text-xs text-muted-foreground">Pending</p>
+                        </div>
+                        <div className="p-2 rounded bg-blue-500/10">
+                          <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                            {approval.entity_metadata.members_summary.total || 0}
+                          </p>
+                          <p className="text-xs text-muted-foreground">Total</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* KYC Completion Indicator */}
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-300 dark:border-emerald-500/30">
+                    <Shield className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                    <div>
+                      <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                        KYC Verification Complete
+                      </p>
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                        All required documentation has been reviewed and approved
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Additional Notes */}
+                  {approval.entity_metadata.notes && (
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Additional Notes</p>
+                      <p className="text-sm text-foreground">{approval.entity_metadata.notes}</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}

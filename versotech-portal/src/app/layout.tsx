@@ -22,8 +22,11 @@ const spartanFont = League_Spartan({
 });
 
 export const metadata: Metadata = {
-  title: "VERSO Holdings | Investment Portal",
-  description: "Secure investment platform for VERSO Holdings - Access your portfolio, documents, and performance reports",
+  title: "VERSOTECH | Investment Portal",
+  description: "Secure investment platform for VERSOTECH - Access your portfolio, documents, and performance reports",
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 // Viewport configuration for proper mobile scaling

@@ -32,6 +32,7 @@ import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
 import { PreferencesEditor } from '@/components/profile/preferences-editor'
 import { GDPRControls } from '@/components/profile/gdpr-controls'
 import { EntityKYCEditDialog, EntityAddressEditDialog, IndividualKycDisplay } from '@/components/shared'
+import { PersonalKYCSection, MemberKYCData } from '@/components/profile/personal-kyc-section'
 import { formatDate } from '@/lib/format'
 
 type Profile = {
@@ -114,6 +115,7 @@ interface PartnerProfileClientProps {
   profile: Profile | null
   partnerInfo: PartnerInfo
   partnerUserInfo: PartnerUserInfo
+  memberInfo: MemberKYCData | null
 }
 
 const STATUS_BADGES: Record<string, { label: string; className: string; icon: typeof CheckCircle2 }> = {
@@ -134,7 +136,8 @@ export function PartnerProfileClient({
   userEmail,
   profile,
   partnerInfo,
-  partnerUserInfo
+  partnerUserInfo,
+  memberInfo
 }: PartnerProfileClientProps) {
   const [activeTab, setActiveTab] = useState('overview')
   const [showKycDialog, setShowKycDialog] = useState(false)
@@ -391,6 +394,14 @@ export function PartnerProfileClient({
               </CardContent>
             </Card>
           </div>
+
+          {/* Personal KYC Section - For the logged-in user's member record */}
+          <PersonalKYCSection
+            memberData={memberInfo}
+            entityType="partner"
+            entityId={partnerInfo.id}
+            onRefresh={() => window.location.reload()}
+          />
 
           {/* Personal KYC for Individual Partners */}
           {partnerInfo.type === 'individual' && (

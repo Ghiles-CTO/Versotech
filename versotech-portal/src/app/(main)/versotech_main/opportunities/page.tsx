@@ -104,6 +104,7 @@ interface FeeStructure {
   effective_at?: string | null
   published_at?: string | null
   allocation_up_to: number | null
+  price_per_share: number | null
   price_per_share_text: string | null
   minimum_ticket: number | null
   term_sheet_date: string | null
@@ -272,6 +273,20 @@ export default async function OpportunitiesPage() {
   const investorIds = investorLinks?.map(link => link.investor_id) ?? []
   const primaryInvestorId = investorIds[0] ?? null
 
+  let accountApprovalStatus: string | null = null
+  let investorKycStatus: string | null = null
+
+  if (primaryInvestorId) {
+    const { data: investorAccount } = await serviceSupabase
+      .from('investors')
+      .select('account_approval_status, kyc_status')
+      .eq('id', primaryInvestorId)
+      .maybeSingle()
+
+    accountApprovalStatus = investorAccount?.account_approval_status ?? null
+    investorKycStatus = investorAccount?.kyc_status ?? null
+  }
+
   // Get partner ID if user is a partner (PRD Rows 95-96: Partner Share feature)
   const { data: partnerUser } = await serviceSupabase
     .from('partner_users')
@@ -432,6 +447,7 @@ export default async function OpportunitiesPage() {
         effective_at,
         published_at,
         allocation_up_to,
+        price_per_share,
         price_per_share_text,
         minimum_ticket,
         term_sheet_date,
@@ -568,6 +584,8 @@ export default async function OpportunitiesPage() {
       accessByDeal={accessByDeal}
       subscriptionByDeal={subscriptionByDeal}
       primaryInvestorId={primaryInvestorId}
+      accountApprovalStatus={accountApprovalStatus}
+      kycStatus={investorKycStatus}
       partnerId={partnerId}
       summary={summary}
       detailUrlBase="/versotech_main/opportunities"

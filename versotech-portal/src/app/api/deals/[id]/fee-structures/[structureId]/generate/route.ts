@@ -148,6 +148,12 @@ export async function POST(
       vehicleData = vehicle
     }
 
+    const pricePerShareText = feeStructure.price_per_share_text
+      || (feeStructure.price_per_share != null ? feeStructure.price_per_share.toFixed(2) : '')
+
+    const completionDateText = feeStructure.completion_date_text
+      || (feeStructure.completion_date ? `By ${formatDate(feeStructure.completion_date)}` : '')
+
     // Build termsheet payload with all template variables
     const termsheetPayload = {
       // Branding
@@ -158,8 +164,8 @@ export async function POST(
         deal?.name || deal?.company_name || feeStructure.transaction_type || 'Investment Opportunity',
       term_sheet_date: formatDate(feeStructure.term_sheet_date),
 
-      // Static field
-      to_description: 'Qualified, Professional and Institutional Investors only',
+      // Static/default field (editable in term sheet form)
+      to_description: feeStructure.to_description || 'Qualified, Professional and Institutional Investors only',
 
       // Core fields from deal_fee_structures
       transaction_type: feeStructure.transaction_type || '',
@@ -179,7 +185,7 @@ export async function POST(
       // Financial terms
       currency: deal?.currency || 'USD',
       allocation_up_to: formatNumber(feeStructure.allocation_up_to),
-      price_per_share_text: feeStructure.price_per_share_text || '',
+      price_per_share_text: pricePerShareText,
       minimum_ticket: formatNumber(feeStructure.minimum_ticket),
       maximum_ticket: formatNumber(feeStructure.maximum_ticket),
 
@@ -201,9 +207,7 @@ export async function POST(
       capital_call_timeline:
         feeStructure.capital_call_timeline ||
         'No later than 3 days prior to confirmed Completion Date by Company with effective funds on Escrow Account (T-3)',
-      completion_date_text: feeStructure.completion_date
-        ? `By ${formatDate(feeStructure.completion_date)}`
-        : (feeStructure.completion_date_text || ''),
+      completion_date_text: completionDateText,
 
       // Notes with defaults
       in_principle_approval_text:

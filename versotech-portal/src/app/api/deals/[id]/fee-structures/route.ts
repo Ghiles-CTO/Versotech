@@ -9,6 +9,7 @@ import { marked } from 'marked'
 
 const termSheetFieldsSchema = z.object({
   term_sheet_date: z.string().optional().nullable(),
+  to_description: z.string().optional().nullable(),
   transaction_type: z.string().max(255).optional().nullable(),
   opportunity_summary: z.string().optional().nullable(),
   issuer: z.string().optional().nullable(),

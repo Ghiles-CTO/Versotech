@@ -210,6 +210,31 @@ export async function POST(
     }
   }
 
+  const { data: investorRecord, error: investorError } = await serviceSupabase
+    .from('investors')
+    .select('account_approval_status, kyc_status')
+    .eq('id', resolvedInvestorId)
+    .maybeSingle()
+
+  if (investorError || !investorRecord) {
+    console.error('Failed to fetch investor account approval status:', investorError)
+    return NextResponse.json(
+      { error: 'Unable to verify account approval status' },
+      { status: 500 }
+    )
+  }
+
+  if (investorRecord.account_approval_status !== 'approved') {
+    return NextResponse.json(
+      {
+        error: 'Account approval required before subscribing.',
+        account_approval_status: investorRecord.account_approval_status,
+        kyc_status: investorRecord.kyc_status
+      },
+      { status: 403 }
+    )
+  }
+
   // Entity Investment Eligibility Gate
   // Check if the investor entity meets all requirements:
   // 1. Entity KYC must be approved

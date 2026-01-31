@@ -43,11 +43,11 @@ const NavBar = () => {
       <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="relative w-40 h-10">
-             <Image 
-               src="/versotech-logo.jpg" 
-               alt="Verso Logo" 
+             <Image
+               src="/versotech-logo-dark.png"
+               alt="VERSOTECH"
                fill
-               className="object-contain object-left invert" // Invert for dark mode if needed, or use specific dark mode logo
+               className="object-contain object-left"
              />
           </div>
         </div>

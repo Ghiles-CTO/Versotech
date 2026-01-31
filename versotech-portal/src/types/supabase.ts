@@ -2767,6 +2767,7 @@ export type Database = {
           term_sheet_attachment_key: string | null
           term_sheet_date: string | null
           term_sheet_html: string | null
+          to_description: string | null
           transaction_type: string | null
           updated_at: string
           validity_date: string | null
@@ -2828,6 +2829,7 @@ export type Database = {
           term_sheet_attachment_key?: string | null
           term_sheet_date?: string | null
           term_sheet_html?: string | null
+          to_description?: string | null
           transaction_type?: string | null
           updated_at?: string
           validity_date?: string | null
@@ -2889,6 +2891,7 @@ export type Database = {
           term_sheet_attachment_key?: string | null
           term_sheet_date?: string | null
           term_sheet_html?: string | null
+          to_description?: string | null
           transaction_type?: string | null
           updated_at?: string
           validity_date?: string | null

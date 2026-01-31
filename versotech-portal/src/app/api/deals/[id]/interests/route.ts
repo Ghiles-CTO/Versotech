@@ -146,6 +146,33 @@ export async function POST(
     )
   }
 
+  if (!is_post_close) {
+    const { data: investorRecord, error: investorError } = await serviceSupabase
+      .from('investors')
+      .select('account_approval_status, kyc_status')
+      .eq('id', resolvedInvestorId)
+      .maybeSingle()
+
+    if (investorError || !investorRecord) {
+      console.error('Failed to fetch investor account approval status:', investorError)
+      return NextResponse.json(
+        { error: 'Unable to verify account approval status' },
+        { status: 500 }
+      )
+    }
+
+    if (investorRecord.account_approval_status !== 'approved') {
+      return NextResponse.json(
+        {
+          error: 'Account approval required before requesting data room access.',
+          account_approval_status: investorRecord.account_approval_status,
+          kyc_status: investorRecord.kyc_status
+        },
+        { status: 403 }
+      )
+    }
+  }
+
   const { data: dealRecord } = await serviceSupabase
     .from('deals')
     .select('id, name, status')

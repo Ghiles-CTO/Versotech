@@ -39,6 +39,7 @@ import { LawyerKYCDocumentsTab } from '@/components/profile/lawyer-kyc-documents
 import { EntityAddressEditDialog, EntityKYCEditDialog, IndividualKycDisplay } from '@/components/shared'
 import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
 import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
+import { PersonalKYCSection, MemberKYCData } from '@/components/profile/personal-kyc-section'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
@@ -123,6 +124,7 @@ interface LawyerProfileClientProps {
   profile: Profile | null
   lawyerInfo: LawyerInfo | null
   lawyerUserInfo: LawyerUserInfo
+  memberInfo: MemberKYCData | null
 }
 
 // KYC Status styling with dark mode support
@@ -185,7 +187,8 @@ export function LawyerProfileClient({
   userEmail,
   profile,
   lawyerInfo,
-  lawyerUserInfo
+  lawyerUserInfo,
+  memberInfo
 }: LawyerProfileClientProps) {
   const [activeTab, setActiveTab] = useState('overview')
   const [isEditing, setIsEditing] = useState(false)
@@ -608,6 +611,16 @@ export function LawyerProfileClient({
               </div>
             </CardContent>
           </Card>
+
+          {/* Personal KYC Section - For the logged-in user's member record */}
+          {lawyerInfo && (
+            <PersonalKYCSection
+              memberData={memberInfo}
+              entityType="lawyer"
+              entityId={lawyerInfo.id}
+              onRefresh={() => window.location.reload()}
+            />
+          )}
 
           {/* Specializations Card */}
           {lawyerInfo?.specializations?.length ? (

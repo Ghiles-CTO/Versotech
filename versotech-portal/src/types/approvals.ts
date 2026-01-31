@@ -13,6 +13,7 @@ export type ApprovalEntityType =
   | 'gdpr_deletion_request'
   | 'member_invitation'
   | 'commission_invoice'
+  | 'account_activation'
 
 // Approval status values
 export type ApprovalStatus =

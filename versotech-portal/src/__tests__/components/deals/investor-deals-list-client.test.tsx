@@ -56,6 +56,7 @@ const baseProps = {
   accessByDeal: new Map(),
   subscriptionByDeal: new Map(),
   primaryInvestorId: 'investor-1',
+  accountApprovalStatus: 'approved',
   summary: {
     totalDeals: 1,
     openDeals: 1,

@@ -14,7 +14,8 @@ import {
   Rocket,
   ArrowRight,
   Clock,
-  Sparkles
+  Sparkles,
+  AlertCircle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -37,6 +38,9 @@ interface InterestStatusCardProps {
   canSignNda: boolean
   canSubscribe: boolean
   isTrackingOnly: boolean
+  isAccountApproved?: boolean | null
+  accountApprovalStatus?: string | null
+  kycStatus?: string | null
   onExpressInterest: () => void
   onSignNda: () => void
   onSubscribe: () => void
@@ -130,6 +134,14 @@ const stageMetadata: Record<number, StageInfo> = {
   }
 }
 
+const blockedStageInfo: StageInfo = {
+  label: 'Account Approval Pending',
+  description: 'Complete KYC and await approval to request data room access or subscribe.',
+  icon: AlertCircle,
+  color: 'text-amber-700 dark:text-amber-300',
+  bgColor: 'bg-amber-100 dark:bg-amber-900/30'
+}
+
 function formatDate(dateString: string | null): string {
   if (!dateString) return ''
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -173,30 +185,35 @@ export function InterestStatusCard({
   canSignNda,
   canSubscribe,
   isTrackingOnly,
+  isAccountApproved,
+  accountApprovalStatus,
   onExpressInterest,
   onSignNda,
   onSubscribe
 }: InterestStatusCardProps) {
-  const stageInfo = stageMetadata[currentStage] || stageMetadata[0]
+  const isApprovalBlocked = isAccountApproved === false
+  const stageInfo = isApprovalBlocked ? blockedStageInfo : (stageMetadata[currentStage] || stageMetadata[0])
   const Icon = stageInfo.icon
-  const lastAction = getLastAction(membership, subscription)
+  const lastAction = isApprovalBlocked ? null : getLastAction(membership, subscription)
+  const approvalStatusLabel = accountApprovalStatus?.replace(/_/g, ' ') || 'pending approval'
 
   // Determine if we're in early stages where both options should be shown
   const isEarlyStage = currentStage <= 2 && !subscription
   const showTrackingNotice = isTrackingOnly
-  const showSubscribeOption = canSubscribe && !showTrackingNotice
-  const showExpressOption = canExpressInterest && !showTrackingNotice
+  const actionsBlocked = showTrackingNotice || isApprovalBlocked
+  const showSubscribeOption = canSubscribe && !actionsBlocked
+  const showExpressOption = canExpressInterest && !actionsBlocked
   const showEarlyStageActions = isEarlyStage && (showSubscribeOption || showExpressOption)
 
   // Determine primary action based on stage
   const primaryAction: { label: string; onClick: () => void; icon: typeof Heart } | null =
-    !showTrackingNotice && canSignNda
+    !actionsBlocked && canSignNda
       ? { label: 'Sign NDA', onClick: onSignNda, icon: FileSignature }
-      : !showTrackingNotice && canSubscribe
+      : !actionsBlocked && canSubscribe
         ? { label: 'Subscribe Now', onClick: onSubscribe, icon: Rocket }
         : null
 
-  const fallbackJourneySummary: JourneySummary = journeySummary || {
+  const baseJourneySummary: JourneySummary = journeySummary || {
     received: null,
     viewed: null,
     interest_confirmed: membership?.interest_confirmed_at ?? null,
@@ -208,6 +225,17 @@ export function InterestStatusCard({
     funded: subscription?.funded_at ?? null,
     active: null
   }
+  const fallbackJourneySummary: JourneySummary = isApprovalBlocked ? {
+    ...baseJourneySummary,
+    interest_confirmed: null,
+    nda_signed: null,
+    data_room_access: null,
+    pack_generated: null,
+    pack_sent: null,
+    signed: null,
+    funded: null,
+    active: null
+  } : baseJourneySummary
 
   return (
     <Card className="border-2 border-dashed border-border bg-gradient-to-br from-background to-muted">
@@ -218,7 +246,7 @@ export function InterestStatusCard({
             Your Interest Status
           </CardTitle>
           <Badge className={cn(stageInfo.bgColor, stageInfo.color, "border-0")}>
-            Stage {currentStage}/10
+            {isApprovalBlocked ? 'Approval required' : `Stage ${currentStage}/10`}
           </Badge>
         </div>
       </CardHeader>
@@ -246,6 +274,15 @@ export function InterestStatusCard({
             compact
           />
         </div>
+
+        {isApprovalBlocked && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
+            <p className="text-sm font-medium">Account approval required</p>
+            <p className="text-xs text-amber-700 dark:text-amber-300">
+              Status: {approvalStatusLabel}. Complete KYC and wait for CEO approval to continue.
+            </p>
+          </div>
+        )}
 
         {showTrackingNotice && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">

@@ -134,8 +134,8 @@ function SetPasswordContent() {
           <div className="flex justify-center mb-6">
              <div className="relative w-48 h-16">
                 <Image
-                  src="/versoholdings-logo.jpg"
-                  alt="VERSO Holdings"
+                  src="/versotech-logo.png"
+                  alt="VERSOTECH"
                   fill
                   className="object-contain"
                   priority

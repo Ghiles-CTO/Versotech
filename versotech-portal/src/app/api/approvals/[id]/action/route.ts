@@ -1985,6 +1985,43 @@ async function handleEntityApproval(
           }
         }
 
+      case 'account_activation': {
+        // Account activation approval - updates the entity's account_approval_status
+        // The entity_table comes from metadata to support all 6 entity types
+        const entityTable = metadata?.entity_table || 'investors'
+
+        // Validate supported entity tables
+        const validTables = ['investors', 'partners', 'lawyers', 'introducers', 'commercial_partners', 'arranger_entities']
+        if (!validTables.includes(entityTable)) {
+          console.error(`[AccountActivation] Invalid entity table: ${entityTable}`)
+          return { success: false, error: `Unsupported entity table: ${entityTable}` }
+        }
+
+        const { error: activationError } = await supabase
+          .from(entityTable)
+          .update({
+            account_approval_status: 'approved',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', entityId)
+
+        if (activationError) {
+          console.error('[AccountActivation] Failed to approve:', activationError)
+          return { success: false, error: 'Failed to activate account' }
+        }
+
+        console.log(`[AccountActivation] Account approved: ${entityTable}.${entityId}`)
+
+        return {
+          success: true,
+          notificationData: {
+            type: 'account_activated',
+            entity_id: entityId,
+            entity_table: entityTable
+          }
+        }
+      }
+
       default:
         console.log(`No specific approval handler for entity type: ${entityType}`)
     }
@@ -2213,6 +2250,27 @@ async function handleEntityRejection(
           await supabase.from('investor_notifications').insert(notifications)
           console.log('[rejection] Sent', notifications.length, 'rejection notifications for', commissionType)
         }
+      }
+    }
+
+    if (entityType === 'account_activation') {
+      // Account activation rejection - updates the entity's account_approval_status to rejected
+      const metadata = approval.entity_metadata || {}
+      const entityTable = metadata?.entity_table || 'investors'
+
+      // Validate supported entity tables
+      const validTables = ['investors', 'partners', 'lawyers', 'introducers', 'commercial_partners', 'arranger_entities']
+      if (validTables.includes(entityTable)) {
+        await supabase
+          .from(entityTable)
+          .update({
+            account_approval_status: 'rejected',
+            account_rejection_reason: reason,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', entityId)
+
+        console.log(`[AccountActivation] Account rejected: ${entityTable}.${entityId}`)
       }
     }
   } catch (error) {

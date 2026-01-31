@@ -397,7 +397,10 @@ export async function POST(
     // Calculate subscription details using SUBSCRIPTION table values
     // Use subscription.price_per_share if set, otherwise fall back to fee structure
     const subscriptionPricePerShare = Number(subscription.price_per_share)
-    const feeStructurePricePerShare = parseFloat(feeStructure.price_per_share_text?.replace(/[^\d.]/g, '') || '0')
+    const parsedTextPrice = parseFloat(feeStructure.price_per_share_text?.replace(/[^\d.]/g, '') || '0')
+    const feeStructurePricePerShare = (feeStructure.price_per_share && feeStructure.price_per_share > 0)
+      ? feeStructure.price_per_share
+      : (parsedTextPrice > 0 ? parsedTextPrice : 0)
     const pricePerShare = subscriptionPricePerShare > 0
       ? subscriptionPricePerShare
       : (feeStructurePricePerShare > 0 ? feeStructurePricePerShare : 1.00)

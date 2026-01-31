@@ -87,6 +87,7 @@ interface FeeStructure {
   structure: string | null
   // Investment Terms
   allocation_up_to: number | null
+  price_per_share: number | null
   price_per_share_text: string | null
   minimum_ticket: number | null
   // Fee Structure
@@ -149,6 +150,9 @@ interface Opportunity {
     name: string
     type: string
   } | null
+  account_approval_status: string | null
+  kyc_status: string | null
+  is_account_approved: boolean | null
   has_membership: boolean
   membership: {
     role: string
@@ -556,13 +560,28 @@ export default function OpportunityDetailPage() {
   }
 
   const isTrackingOnly = !!opportunity.is_tracking_only || (isPartnerPersona && !opportunity.membership?.role)
-  const canSubscribe = opportunity.can_subscribe && !isTrackingOnly
-  const canExpressInterest = opportunity.can_express_interest && !isTrackingOnly
-  const canSignNda = opportunity.can_sign_nda && !isTrackingOnly
+  const isAccountApproved = opportunity.is_account_approved === true || opportunity.account_approval_status === 'approved'
+  const showAccountBlock = opportunity.is_account_approved === false ||
+    (opportunity.account_approval_status !== null && opportunity.account_approval_status !== 'approved')
+  const approvalStatusLabel = opportunity.account_approval_status?.replace(/_/g, ' ') || 'pending approval'
+  const canSubscribe = opportunity.can_subscribe && !isTrackingOnly && isAccountApproved
+  const canExpressInterest = opportunity.can_express_interest && !isTrackingOnly && isAccountApproved
+  const canSignNda = opportunity.can_sign_nda && !isTrackingOnly && isAccountApproved
   const showActionChoices =
     opportunity.status !== 'closed' &&
     !opportunity.subscription &&
     (canSubscribe || canExpressInterest)
+  const journeySummary = showAccountBlock ? {
+    ...opportunity.journey.summary,
+    interest_confirmed: null,
+    nda_signed: null,
+    data_room_access: null,
+    pack_generated: null,
+    pack_sent: null,
+    signed: null,
+    funded: null,
+    active: null
+  } : opportunity.journey.summary
 
   return (
     <div className="p-6 space-y-6">
@@ -590,7 +609,7 @@ export default function OpportunityDetailPage() {
           </CardHeader>
           <CardContent>
             <InvestorJourneyBar
-              summary={opportunity.journey.summary}
+              summary={journeySummary}
               currentStage={opportunity.journey.current_stage}
               subscriptionSubmittedAt={opportunity.subscription_submission?.submitted_at ?? null}
             />
@@ -662,6 +681,14 @@ export default function OpportunityDetailPage() {
 
         {/* Action buttons */}
         <div className="flex flex-col gap-3 min-w-[280px]">
+          {showAccountBlock && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
+              <p className="text-sm font-medium">Account approval required</p>
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                Status: {approvalStatusLabel}. Complete KYC and wait for CEO approval to request access or subscribe.
+              </p>
+            </div>
+          )}
           {/* Two Investment Paths for Open Deals */}
           {showActionChoices && (
             <div className="space-y-3">
@@ -801,12 +828,14 @@ export default function OpportunityDetailPage() {
                 currentStage={opportunity.journey.current_stage}
                 membership={opportunity.membership}
                 subscription={null}
-                journeySummary={opportunity.journey.summary}
+                journeySummary={journeySummary}
                 subscriptionSubmittedAt={opportunity.subscription_submission?.submitted_at ?? null}
                 canExpressInterest={canExpressInterest}
                 canSignNda={canSignNda}
                 canSubscribe={canSubscribe}
                 isTrackingOnly={isTrackingOnly}
+                isAccountApproved={isAccountApproved}
+                accountApprovalStatus={opportunity.account_approval_status}
                 onExpressInterest={() => setShowInterestDialog(true)}
                 onSignNda={() => setShowNdaDialog(true)}
                 onSubscribe={() => setShowSubscribeDialog(true)}
@@ -986,10 +1015,14 @@ export default function OpportunityDetailPage() {
 
                 <CardContent className="space-y-8">
                   {/* Price Per Share - Hero display when available */}
-                  {termSheet.price_per_share_text && (
+                  {(termSheet.price_per_share != null || termSheet.price_per_share_text) && (
                     <div className="text-center py-6 px-4 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/50 dark:to-teal-950/50 border border-emerald-200 dark:border-emerald-800">
                       <div className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-1">Price Per Share</div>
-                      <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-300">{termSheet.price_per_share_text}</div>
+                      <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-300">
+                        {termSheet.price_per_share != null
+                          ? formatCurrency(termSheet.price_per_share, opportunity.currency)
+                          : termSheet.price_per_share_text}
+                      </div>
                     </div>
                   )}
 
