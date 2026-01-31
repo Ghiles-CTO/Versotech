@@ -463,7 +463,27 @@ async function handleEntityApproval(
       }
 
       case 'deal_interest':
-      case 'deal_interest_nda':
+      case 'deal_interest_nda': {
+        // Fetch deal interest details for NDA workflow
+        const { data: dealInterest, error: dealInterestError } = await supabase
+          .from('investor_deal_interest')
+          .select(`
+            *,
+            deal:deals!inner(
+              id,
+              name
+            )
+          `)
+          .eq('id', entityId)
+          .single()
+
+        if (dealInterestError || !dealInterest) {
+          console.error('Error loading deal interest for NDA workflow:', dealInterestError)
+          return { success: false, error: 'Deal interest not found' }
+        }
+
+        const previousInterestStatus = dealInterest.status
+
         // Update investor deal interest status
         const { error: interestError } = await supabase
           .from('investor_deal_interest')
@@ -477,19 +497,6 @@ async function handleEntityApproval(
           console.error('Error approving deal interest:', interestError)
           return { success: false, error: 'Failed to approve deal interest' }
         }
-
-        // Fetch deal interest details for NDA workflow
-        const { data: dealInterest } = await supabase
-          .from('investor_deal_interest')
-          .select(`
-            *,
-            deal:deals!inner(
-              id,
-              name
-            )
-          `)
-          .eq('id', entityId)
-          .single()
 
         console.log('🔍 DEBUG: dealInterest:', dealInterest ? 'EXISTS' : 'NULL')
 
@@ -515,260 +522,323 @@ async function handleEntityApproval(
               hasUser: !!user
             })
 
-            if (investorData && dealData && user) {
-              const ceoSigner = await getCeoSigner(supabase)
-              if (!ceoSigner) {
-                console.warn('[approvals] No CEO signer found, defaulting to approver profile')
+            const missingNdaData: string[] = []
+            if (!investorData) missingNdaData.push('investor')
+            if (!dealData) missingNdaData.push('deal')
+            if (!user) missingNdaData.push('approver')
+
+            if (missingNdaData.length > 0) {
+              console.warn('[NDA] Missing core data for NDA workflow:', missingNdaData)
+              await supabase
+                .from('investor_deal_interest')
+                .update({
+                  status: previousInterestStatus,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', entityId)
+
+              return {
+                success: false,
+                error: `Missing NDA data: ${missingNdaData.join(', ')}`
+              }
+            }
+
+            const ceoSigner = await getCeoSigner(supabase)
+            if (!ceoSigner) {
+              console.warn('[approvals] No CEO signer found, defaulting to approver profile')
+            }
+
+            const countersignerName = ceoSigner?.displayName || user.displayName || user.email?.split('@')[0] || 'Authorized Signatory'
+            const countersignerTitle = ceoSigner?.title || 'Authorized Signatory'
+
+            const vehicle = dealData.vehicle
+            const vehicleName = vehicle?.name || 'Vehicle Name'
+            const rawEntityCode = vehicle?.entity_code || ''
+            const rawSeriesCode = vehicle?.series_short_title || ''
+            const rawSeriesNumber = vehicle?.series_number || ''
+            const seriesCode = rawSeriesCode || (rawEntityCode ? rawEntityCode.replace(/\d+/g, '') : '')
+            const seriesNumber = rawSeriesNumber || (rawEntityCode ? rawEntityCode.replace(/\D+/g, '') : '')
+            const derivedEntityCode = [seriesCode, seriesNumber].filter(Boolean).join('')
+            const seriesEntityCode = rawEntityCode || derivedEntityCode || 'VC206'
+            const projectSeriesLabel = [seriesCode, seriesNumber].filter(Boolean).join(' ')
+            const projectDescription = `VERSO Capital 2 SCSP ${vehicleName}${projectSeriesLabel ? ` Series ${projectSeriesLabel}` : ''}${seriesEntityCode ? ` ("${seriesEntityCode}")` : ''}`
+            const investmentName = dealData.name || dealData.description || vehicle?.investment_name || 'Investment Opportunity'
+
+            const requestedByProfile = approval.requested_by_profile
+            const isEntityInvestor = investorData.type && investorData.type !== 'individual'
+            const partyAName = isEntityInvestor
+              ? (investorData.legal_name || investorData.display_name)
+              : (requestedByProfile?.display_name || investorData.legal_name || investorData.display_name)
+
+            const residentialStreet = investorData.residential_street?.trim()
+            const residentialLine2 = investorData.residential_line_2?.trim()
+            const residentialPostal = investorData.residential_postal_code?.trim()
+            const residentialAddress = [residentialStreet, residentialLine2, residentialPostal].filter(Boolean).join(', ')
+
+            const partyARegisteredAddress = isEntityInvestor
+              ? investorData.registered_address?.trim()
+              : (residentialAddress || investorData.registered_address?.trim())
+
+            const partyACity = isEntityInvestor
+              ? investorData.city?.trim()
+              : (investorData.residential_city?.trim() || investorData.city?.trim())
+            const partyACountry = isEntityInvestor
+              ? investorData.country?.trim()
+              : (investorData.residential_country?.trim() || investorData.country?.trim())
+            const partyACityCountry = [partyACity, partyACountry].filter(Boolean).join(' / ')
+
+            const vehicleAddress = vehicle?.address || '2, Avenue Charles de Gaulle – L-1653'
+            const vehicleDomicile = vehicle?.domicile || 'Luxembourg, LU'
+
+            let managingPartnerName = countersignerName
+            let managingPartnerTitle = countersignerTitle
+            if (vehicle?.managing_partner_id) {
+              const { data: managingPartner, error: managingPartnerError } = await supabase
+                .from('profiles')
+                .select('display_name, title')
+                .eq('id', vehicle.managing_partner_id)
+                .single()
+
+              if (managingPartnerError) {
+                console.warn('[approvals] Failed to load managing partner profile:', managingPartnerError.message)
               }
 
-              const countersignerName = ceoSigner?.displayName || user.displayName || user.email?.split('@')[0] || 'Authorized Signatory'
-              const countersignerTitle = ceoSigner?.title || 'Authorized Signatory'
+              if (managingPartner?.display_name) {
+                managingPartnerName = managingPartner.display_name
+              }
+              if (managingPartner?.title) {
+                managingPartnerTitle = managingPartner.title
+              }
+            }
 
-              const vehicle = dealData.vehicle
-              const vehicleName = vehicle?.name || 'Vehicle Name'
-              const rawEntityCode = vehicle?.entity_code || ''
-              const rawSeriesCode = vehicle?.series_short_title || ''
-              const rawSeriesNumber = vehicle?.series_number || ''
-              const seriesCode = rawSeriesCode || (rawEntityCode ? rawEntityCode.replace(/\d+/g, '') : '')
-              const seriesNumber = rawSeriesNumber || (rawEntityCode ? rawEntityCode.replace(/\D+/g, '') : '')
-              const derivedEntityCode = [seriesCode, seriesNumber].filter(Boolean).join('')
-              const seriesEntityCode = rawEntityCode || derivedEntityCode || 'VC206'
-              const projectSeriesLabel = [seriesCode, seriesNumber].filter(Boolean).join(' ')
-              const projectDescription = `VERSO Capital 2 SCSP ${vehicleName}${projectSeriesLabel ? ` Series ${projectSeriesLabel}` : ''}${seriesEntityCode ? ` ("${seriesEntityCode}")` : ''}`
-              const investmentName = dealData.name || dealData.description || vehicle?.investment_name || 'Investment Opportunity'
+            const now = new Date()
+            const executionDate = `${String(now.getDate()).padStart(2, '0')} / ${String(now.getMonth() + 1).padStart(2, '0')} / ${now.getFullYear()}`
 
-              const city = investorData.city?.trim()
-              const country = investorData.country?.trim()
-              const partyACityCountry = [city, country].filter(Boolean).join(' / ') || 'Country to be provided'
+            // ========================================================
+            // MULTI-SIGNATORY NDA SUPPORT
+            // For entity investors: generate 1 NDA per authorized signatory
+            // For individual investors: generate 1 NDA for the investor
+            // ========================================================
 
-              const vehicleAddress = vehicle?.address || '2, Avenue Charles de Gaulle – L-1653'
-              const vehicleDomicile = vehicle?.domicile || 'Luxembourg, LU'
+            // Determine if this is an entity investor (has type and is not 'individual')
+            console.log('👥 [NDA] Investor type detection:', {
+              type: investorData.type,
+              isEntity: isEntityInvestor
+            })
 
-              let managingPartnerName = countersignerName
-              let managingPartnerTitle = countersignerTitle
-              if (vehicle?.managing_partner_id) {
-                const { data: managingPartner, error: managingPartnerError } = await supabase
-                  .from('profiles')
-                  .select('display_name, title')
-                  .eq('id', vehicle.managing_partner_id)
-                  .single()
+            // Build list of signatories
+            interface NdaSignatory {
+              member_id: string | null
+              full_name: string
+              email: string
+              title: string | null
+            }
 
-                if (managingPartnerError) {
-                  console.warn('[approvals] Failed to load managing partner profile:', managingPartnerError.message)
-                }
+            let signatories: NdaSignatory[] = []
 
-                if (managingPartner?.display_name) {
-                  managingPartnerName = managingPartner.display_name
-                }
-                if (managingPartner?.title) {
-                  managingPartnerTitle = managingPartner.title
-                }
+            if (isEntityInvestor) {
+              // Load authorized signatories for entity investors
+              const { data: members, error: membersError } = await supabase
+                .from('investor_members')
+                .select('id, full_name, email, role_title')
+                .eq('investor_id', investorData.id)
+                .eq('is_signatory', true)
+                .eq('is_active', true)
+
+              if (membersError) {
+                console.warn('[NDA] Failed to load investor members:', membersError.message)
               }
 
-              const now = new Date()
-              const executionDate = `${String(now.getDate()).padStart(2, '0')} / ${String(now.getMonth() + 1).padStart(2, '0')} / ${now.getFullYear()}`
-
-              // ========================================================
-              // MULTI-SIGNATORY NDA SUPPORT
-              // For entity investors: generate 1 NDA per authorized signatory
-              // For individual investors: generate 1 NDA for the investor
-              // ========================================================
-
-              // Determine if this is an entity investor (has type and is not 'individual')
-              const isEntityInvestor = investorData.type && investorData.type !== 'individual'
-              console.log('👥 [NDA] Investor type detection:', {
-                type: investorData.type,
-                isEntity: isEntityInvestor
-              })
-
-              // Build list of signatories
-              interface NdaSignatory {
-                member_id: string | null
-                full_name: string
-                email: string
-                title: string | null
-              }
-
-              let signatories: NdaSignatory[] = []
-
-              if (isEntityInvestor) {
-                // Load authorized signatories for entity investors
-                const { data: members, error: membersError } = await supabase
-                  .from('investor_members')
-                  .select('id, full_name, email, role_title')
-                  .eq('investor_id', investorData.id)
-                  .eq('is_signatory', true)
-                  .eq('is_active', true)
-
-                if (membersError) {
-                  console.warn('[NDA] Failed to load investor members:', membersError.message)
-                }
-
-                if (members && members.length > 0) {
-                  signatories = members.map((m: { id: string; full_name: string | null; email: string | null; role_title: string | null }) => ({
-                    member_id: m.id,
-                    full_name: m.full_name || 'Authorized Signatory',
-                    email: m.email || investorData.email, // Fallback to investor email
-                    title: m.role_title || 'Authorized Representative'
-                  }))
-                  console.log(`👥 [NDA] Found ${signatories.length} authorized signatories for entity`)
-                } else {
-                  // Fallback: use investor's representative if no signatories marked
-                  console.warn('[NDA] No signatories marked for entity, using representative fallback')
-                  signatories = [{
-                    member_id: null,
-                    full_name: investorData.representative_name || investorData.legal_name || 'Authorized Representative',
-                    email: investorData.email,
-                    title: investorData.representative_title || 'Authorized Representative'
-                  }]
-                }
+              if (members && members.length > 0) {
+                signatories = members.map((m: { id: string; full_name: string | null; email: string | null; role_title: string | null }) => ({
+                  member_id: m.id,
+                  full_name: m.full_name || '',
+                  email: m.email || '',
+                  title: m.role_title || null
+                }))
+                console.log(`👥 [NDA] Found ${signatories.length} authorized signatories for entity`)
               } else {
-                // Individual investor - single signatory
+                // Fallback: use requestor if no signatories marked
+                console.warn('[NDA] No signatories marked for entity, using requestor fallback')
+                const fallbackName = requestedByProfile?.display_name || investorData.representative_name || investorData.legal_name || 'Authorized Representative'
+                const fallbackEmail = requestedByProfile?.email || investorData.email || ''
                 signatories = [{
                   member_id: null,
-                  full_name: investorData.legal_name || investorData.display_name || 'Investor',
-                  email: investorData.email,
-                  title: null
+                  full_name: fallbackName,
+                  email: fallbackEmail,
+                  title: investorData.representative_title || 'Authorized Representative'
                 }]
-                console.log('👤 [NDA] Individual investor - single signatory')
               }
-
-              console.log(`🔔 [NDA] Processing ${signatories.length} NDA(s) for: ${investorData.legal_name}`)
-
-              // Loop through each signatory and generate their NDA
-              for (const signatory of signatories) {
-                console.log(`📄 [NDA] Generating NDA for signatory: ${signatory.full_name} (${signatory.email})`)
-
-                // Prepare NDA payload with signatory-specific fields
-                const ndaPayload = {
-                  series_number: seriesNumber || seriesEntityCode,
-                  project_description: projectDescription,
-                  investment_description: investmentName,
-                  series_entity_code: seriesEntityCode,
-                  vehicle_name: vehicleName,
-                  series_code: seriesCode,
-                  series_numeric: seriesNumber,
-                  investment_name: investmentName,
-                  vehicle_managing_partner_name: managingPartnerName,
-                  vehicle_managing_partner_title: managingPartnerTitle,
-
-                  // Party A (Investor) - uses signatory-specific data
-                  party_a_name: investorData.legal_name || investorData.display_name,
-                  party_a_registered_address: investorData.registered_address || 'Address to be provided',
-                  party_a_city_country: partyACityCountry,
-                  party_a_representative_name: signatory.full_name,
-                  party_a_representative_title: signatory.title || 'Authorized Representative',
-
-                  // Party B (VERSO)
-                  party_b_name: projectDescription,
-                  party_b_registered_address: vehicleAddress,
-                  party_b_city_country: vehicleDomicile,
-                  party_b_representative_name: managingPartnerName,
-                  party_b_representative_title: managingPartnerTitle,
-
-                  // Execution details - uses signatory's email for data room
-                  dataroom_email: signatory.email,
-                  execution_date: executionDate,
-                  zoho_sign_document_id: '' // Auto-generated by n8n
-                }
-
-                // Trigger NDA workflow for this signatory
-                const result = await triggerWorkflow({
-                  workflowKey: 'process-nda',
-                  payload: ndaPayload,
-                  entityType: 'deal_interest_nda',
-                  entityId: dealInterest.id,
-                  user: {
-                    id: user.id,
-                    email: user.email,
-                    displayName: user.displayName,
-                    role: user.role,
-                    title: user.title
-                  }
-                })
-
-                if (!result.success) {
-                  console.error(`❌ [NDA] Failed to trigger NDA workflow for ${signatory.full_name}:`, result.error)
-                  continue // Try next signatory
-                }
-
-                console.log(`✅ [NDA] Workflow triggered for ${signatory.full_name}:`, {
-                  workflow_run_id: result.workflow_run_id
-                })
-
-                // Create signature requests if n8n returned Google Drive file
-                if (result.n8n_response && result.workflow_run_id) {
-                  const googleDriveFile = Array.isArray(result.n8n_response)
-                    ? result.n8n_response[0]
-                    : result.n8n_response
-
-                  try {
-                    // Create investor signature request (PARTY A) with member_id
-                    const investorSigPayload = {
-                      workflow_run_id: result.workflow_run_id,
-                      investor_id: investorData.id,
-                      member_id: signatory.member_id || undefined, // Track specific signatory
-                      deal_id: dealInterest.deal_id,
-                      signer_email: signatory.email,
-                      signer_name: signatory.full_name,
-                      document_type: 'nda' as const,
-                      google_drive_file_id: googleDriveFile.id,
-                      google_drive_url: googleDriveFile.webContentLink || googleDriveFile.webViewLink,
-                      signer_role: 'investor' as const,
-                      signature_position: 'party_a' as const
-                    }
-
-                    console.log('🔍 [NDA] Investor signature request:', {
-                      signatory: signatory.full_name,
-                      member_id: signatory.member_id
-                    })
-
-                    const investorSigResult = await createSignatureRequest(investorSigPayload, supabase)
-
-                    if (investorSigResult.success) {
-                      console.log(`📧 [NDA] Investor signature request created for ${signatory.full_name}`)
-                    } else {
-                      console.error(`Failed to create investor signature request for ${signatory.full_name}:`, investorSigResult.error)
-                    }
-
-                    // Create admin signature request (PARTY B) for this NDA document
-                    const adminSigPayload = {
-                      workflow_run_id: result.workflow_run_id,
-                      investor_id: investorData.id,
-                      deal_id: dealInterest.deal_id,
-                      signer_email: ceoSigner?.email || user.email,
-                      signer_name: countersignerName,
-                      document_type: 'nda' as const,
-                      google_drive_file_id: googleDriveFile.id,
-                      google_drive_url: googleDriveFile.webContentLink || googleDriveFile.webViewLink,
-                      signer_role: 'admin' as const,
-                      signature_position: 'party_b' as const
-                    }
-
-                    const adminSigResult = await createSignatureRequest(adminSigPayload, supabase)
-
-                    if (adminSigResult.success) {
-                      console.log(`📧 [NDA] Admin signature request created for ${signatory.full_name}'s NDA`)
-                    } else {
-                      console.error(`Failed to create admin signature request:`, adminSigResult.error)
-                    }
-                  } catch (sigError) {
-                    console.error(`Error creating signature requests for ${signatory.full_name}:`, sigError)
-                    // Continue to next signatory
-                  }
-                } else {
-                  console.warn(`⚠️ [NDA] No workflow_run_id or n8n_response for ${signatory.full_name}`)
-                }
-              }
-
-              console.log(`✅ [NDA] Completed processing ${signatories.length} NDA(s) for ${investorData.legal_name}`)
             } else {
-              console.log('⚠️ Skipping NDA workflow - missing data:', {
-                hasInvestor: !!investorData,
-                hasDeal: !!dealData,
-                hasUser: !!user
-              })
+              // Individual investor - single signatory
+              const fallbackName = requestedByProfile?.display_name || investorData.legal_name || investorData.display_name || 'Investor'
+              const fallbackEmail = requestedByProfile?.email || investorData.email || ''
+              signatories = [{
+                member_id: null,
+                full_name: fallbackName,
+                email: fallbackEmail,
+                title: 'Investor'
+              }]
+              console.log('👤 [NDA] Individual investor - single signatory')
             }
+
+            const missingFields: string[] = []
+
+            if (!partyAName) missingFields.push('Party A name')
+            if (!partyARegisteredAddress) missingFields.push('Party A registered address')
+            if (!partyACityCountry) missingFields.push('Party A city/country')
+            if (signatories.length === 0) missingFields.push('At least one signatory')
+
+            signatories.forEach((signatory, index) => {
+              if (!signatory.full_name) missingFields.push(`Signatory ${index + 1} name`)
+              if (!signatory.email) missingFields.push(`Signatory ${index + 1} email`)
+            })
+
+            if (missingFields.length > 0) {
+              console.error('[NDA] Missing required data:', missingFields)
+              await supabase
+                .from('investor_deal_interest')
+                .update({
+                  status: previousInterestStatus,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', entityId)
+
+              return {
+                success: false,
+                error: `Missing NDA data: ${missingFields.join(', ')}`
+              }
+            }
+
+            console.log(`🔔 [NDA] Processing ${signatories.length} NDA(s) for: ${investorData.legal_name}`)
+
+            // Loop through each signatory and generate their NDA
+            for (const signatory of signatories) {
+              console.log(`📄 [NDA] Generating NDA for signatory: ${signatory.full_name} (${signatory.email})`)
+
+              // Prepare NDA payload with signatory-specific fields
+              const ndaPayload = {
+                series_number: seriesNumber || seriesEntityCode,
+                project_description: projectDescription,
+                investment_description: investmentName,
+                series_entity_code: seriesEntityCode,
+                vehicle_name: vehicleName,
+                series_code: seriesCode,
+                series_numeric: seriesNumber,
+                investment_name: investmentName,
+                vehicle_managing_partner_name: managingPartnerName,
+                vehicle_managing_partner_title: managingPartnerTitle,
+
+                // Party A (Investor) - uses signatory-specific data
+                party_a_name: partyAName,
+                party_a_registered_address: partyARegisteredAddress,
+                party_a_city_country: partyACityCountry,
+                party_a_representative_name: signatory.full_name,
+                party_a_representative_title: signatory.title || (isEntityInvestor ? 'Authorized Representative' : 'Investor'),
+
+                // Party B (VERSO)
+                party_b_name: projectDescription,
+                party_b_registered_address: vehicleAddress,
+                party_b_city_country: vehicleDomicile,
+                party_b_representative_name: managingPartnerName,
+                party_b_representative_title: managingPartnerTitle,
+
+                // Execution details - uses signatory's email for data room
+                dataroom_email: signatory.email,
+                execution_date: executionDate,
+                zoho_sign_document_id: '' // Auto-generated by n8n
+              }
+
+              // Trigger NDA workflow for this signatory
+              const result = await triggerWorkflow({
+                workflowKey: 'process-nda',
+                payload: ndaPayload,
+                entityType: 'deal_interest_nda',
+                entityId: dealInterest.id,
+                user: {
+                  id: user.id,
+                  email: user.email,
+                  displayName: user.displayName,
+                  role: user.role,
+                  title: user.title
+                }
+              })
+
+              if (!result.success) {
+                console.error(`❌ [NDA] Failed to trigger NDA workflow for ${signatory.full_name}:`, result.error)
+                continue // Try next signatory
+              }
+
+              console.log(`✅ [NDA] Workflow triggered for ${signatory.full_name}:`, {
+                workflow_run_id: result.workflow_run_id
+              })
+
+              // Create signature requests if n8n returned Google Drive file
+              if (result.n8n_response && result.workflow_run_id) {
+                const googleDriveFile = Array.isArray(result.n8n_response)
+                  ? result.n8n_response[0]
+                  : result.n8n_response
+
+                try {
+                  // Create investor signature request (PARTY A) with member_id
+                  const investorSigPayload = {
+                    workflow_run_id: result.workflow_run_id,
+                    investor_id: investorData.id,
+                    member_id: signatory.member_id || undefined, // Track specific signatory
+                    deal_id: dealInterest.deal_id,
+                    signer_email: signatory.email,
+                    signer_name: signatory.full_name,
+                    document_type: 'nda' as const,
+                    google_drive_file_id: googleDriveFile.id,
+                    google_drive_url: googleDriveFile.webContentLink || googleDriveFile.webViewLink,
+                    signer_role: 'investor' as const,
+                    signature_position: 'party_a' as const
+                  }
+
+                  console.log('🔍 [NDA] Investor signature request:', {
+                    signatory: signatory.full_name,
+                    member_id: signatory.member_id
+                  })
+
+                  const investorSigResult = await createSignatureRequest(investorSigPayload, supabase)
+
+                  if (investorSigResult.success) {
+                    console.log(`📧 [NDA] Investor signature request created for ${signatory.full_name}`)
+                  } else {
+                    console.error(`Failed to create investor signature request for ${signatory.full_name}:`, investorSigResult.error)
+                  }
+
+                  // Create admin signature request (PARTY B) for this NDA document
+                  const adminSigPayload = {
+                    workflow_run_id: result.workflow_run_id,
+                    investor_id: investorData.id,
+                    deal_id: dealInterest.deal_id,
+                    signer_email: ceoSigner?.email || user.email,
+                    signer_name: countersignerName,
+                    document_type: 'nda' as const,
+                    google_drive_file_id: googleDriveFile.id,
+                    google_drive_url: googleDriveFile.webContentLink || googleDriveFile.webViewLink,
+                    signer_role: 'admin' as const,
+                    signature_position: 'party_b' as const
+                  }
+
+                  const adminSigResult = await createSignatureRequest(adminSigPayload, supabase)
+
+                  if (adminSigResult.success) {
+                    console.log(`📧 [NDA] Admin signature request created for ${signatory.full_name}'s NDA`)
+                  } else {
+                    console.error(`Failed to create admin signature request:`, adminSigResult.error)
+                  }
+                } catch (sigError) {
+                  console.error(`Error creating signature requests for ${signatory.full_name}:`, sigError)
+                  // Continue to next signatory
+                }
+              } else {
+                console.warn(`⚠️ [NDA] No workflow_run_id or n8n_response for ${signatory.full_name}`)
+              }
+            }
+
+            console.log(`✅ [NDA] Completed processing ${signatories.length} NDA(s) for ${investorData.legal_name}`)
           } catch (ndaError) {
             console.error('❌ Error triggering NDA workflow:', ndaError)
             // Don't fail the approval if NDA trigger fails
@@ -777,6 +847,7 @@ async function handleEntityApproval(
           console.log('⚠️ No deal interest found for entityId:', entityId)
         }
         break
+      }
 
       case 'data_room_access_extension':
         // Extend data room access by 7 days
@@ -979,6 +1050,12 @@ async function handleEntityApproval(
               ? new Date(Date.now() + feeStructureForSub.payment_deadline_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
               : null
 
+            const subscriptionCurrency =
+              submission.deal.currency ||
+              submission.payload_json?.currency ||
+              submission.deal.vehicle?.currency ||
+              'USD'
+
             const { data: newSubscription, error: createSubError } = await supabase
               .from('subscriptions')
               .insert({
@@ -987,7 +1064,7 @@ async function handleEntityApproval(
                 deal_id: submission.deal_id,
                 fee_plan_id: defaultFeePlan?.id || null,
                 commitment: amount,
-                currency: submission.deal.currency || 'USD',
+                currency: subscriptionCurrency,
                 status: 'pending',
                 subscription_date: new Date().toISOString(),
                 effective_date: submission.effective_date || new Date().toISOString(),

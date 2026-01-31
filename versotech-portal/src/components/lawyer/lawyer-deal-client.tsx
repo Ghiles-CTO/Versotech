@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useCallback } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
+import { DealLogo } from '@/components/deals/deal-logo'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -372,18 +372,14 @@ export function LawyerDealClient({ data }: LawyerDealClientProps) {
 
           <div className="flex flex-col sm:flex-row items-start gap-6">
             {/* Company Logo */}
-            <div className="relative h-24 w-24 rounded-2xl bg-card flex items-center justify-center overflow-hidden shadow-lg border border-border">
-              {deal.company_logo_url ? (
-                <Image
-                  src={deal.company_logo_url}
-                  alt={deal.company_name || deal.name}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <Building2 className="h-12 w-12 text-muted-foreground/50" />
-              )}
-            </div>
+            <DealLogo
+              src={deal.company_logo_url}
+              alt={deal.company_name || deal.name}
+              size={96}
+              rounded="xl"
+              className="rounded-2xl bg-card shadow-lg border border-border"
+              fallback={<Building2 className="h-12 w-12 text-muted-foreground/50" />}
+            />
 
             {/* Deal Title & Meta */}
             <div className="flex-1 space-y-3">

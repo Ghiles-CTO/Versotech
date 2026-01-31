@@ -1,10 +1,10 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { FileText, Users, Calendar, Clock, MapPin, TrendingUp } from 'lucide-react'
+import { DealLogo } from '@/components/deals/deal-logo'
 
 interface DataRoomPreviewCardProps {
   deal: {
@@ -47,19 +47,14 @@ export function DataRoomPreviewCard({ deal, access, documentCount, status }: Dat
         <CardContent className="p-4 space-y-3">
           {/* Header with logo and name */}
           <div className="flex items-start gap-3">
-            {deal.company_logo_url ? (
-              <Image
-                src={deal.company_logo_url}
-                alt={`${deal.company_name ?? deal.name} logo`}
-                width={48}
-                height={48}
-                className="rounded-lg object-contain bg-card border-2 border-border p-1.5 flex-shrink-0"
-              />
-            ) : (
-              <div className="h-12 w-12 rounded-lg bg-blue-50 border-2 border-blue-600 flex items-center justify-center text-blue-600 text-lg font-semibold flex-shrink-0">
-                {deal.name?.charAt(0) ?? 'D'}
-              </div>
-            )}
+            <DealLogo
+              src={deal.company_logo_url}
+              alt={`${deal.company_name ?? deal.name} logo`}
+              size={48}
+              rounded="lg"
+              className="flex-shrink-0 bg-card border-2 border-border"
+              fallbackText={deal.name?.charAt(0) ?? 'D'}
+            />
             <div className="flex-1 min-w-0">
               <h3 className="text-base font-bold text-foreground truncate">
                 {deal.name}

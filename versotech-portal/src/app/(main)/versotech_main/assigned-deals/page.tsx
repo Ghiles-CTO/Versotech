@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DealLogo } from '@/components/deals/deal-logo'
 import {
   Select,
   SelectContent,
@@ -489,17 +490,14 @@ export default function AssignedDealsPage() {
                     <TableRow key={deal.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          {deal.company_logo_url ? (
-                            <img
-                              src={deal.company_logo_url}
-                              alt={deal.company_name || ''}
-                              className="h-10 w-10 rounded-lg object-cover"
-                            />
-                          ) : (
-                            <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-                              <Building2 className="h-5 w-5 text-muted-foreground" />
-                            </div>
-                          )}
+                          <DealLogo
+                            src={deal.company_logo_url}
+                            alt={deal.company_name || deal.name}
+                            size={40}
+                            rounded="lg"
+                            className="bg-muted"
+                            fallback={<Building2 className="h-5 w-5 text-muted-foreground" />}
+                          />
                           <div>
                             <div className="font-medium">{deal.name}</div>
                             {deal.company_name && (

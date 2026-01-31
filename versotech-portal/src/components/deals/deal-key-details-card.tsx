@@ -77,6 +77,10 @@ export function DealKeyDetailsCard({
   stage,
   round
 }: DealKeyDetailsCardProps) {
+  const stockTypeLabel = stockType
+    ? (stockType === 'common' ? 'Common and Ordinary Shares' : stockType.replace(/_/g, ' '))
+    : null
+
   const details: DetailItem[] = [
     {
       label: 'Deal Type',
@@ -87,7 +91,7 @@ export function DealKeyDetailsCard({
     },
     {
       label: 'Stock Type',
-      value: stockType,
+      value: stockTypeLabel,
       icon: Tag,
       isBadge: true,
       badgeColor: 'bg-purple-100 text-purple-700 hover:bg-purple-100'

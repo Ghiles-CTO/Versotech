@@ -21,9 +21,9 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/components/theme-provider'
+import { DealLogo } from '@/components/deals/deal-logo'
 
 export interface FeaturedDealFeeStructure {
   id: string
@@ -235,21 +235,24 @@ export function FeaturedDealsSection({ deals }: FeaturedDealsSectionProps) {
                 <CardHeader className="relative space-y-4 p-6">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex gap-4">
-                      <Avatar className={cn(
-                        "h-14 w-14 border shadow-sm",
-                        isDark ? "border-zinc-700 bg-zinc-900" : "border-slate-100 bg-white"
-                      )}>
-                        {deal.company_logo_url ? (
-                          <AvatarImage src={deal.company_logo_url} alt={headline ?? deal.name} className="object-contain p-2" />
-                        ) : (
-                          <AvatarFallback className={cn(
+                      <DealLogo
+                        src={deal.company_logo_url}
+                        alt={headline ?? deal.name}
+                        size={56}
+                        rounded="full"
+                        className={cn(
+                          "h-14 w-14 border shadow-sm",
+                          isDark ? "border-zinc-700 bg-zinc-900" : "border-slate-100 bg-white"
+                        )}
+                        fallback={
+                          <span className={cn(
                             "font-serif text-lg",
-                            isDark ? "bg-white text-black" : "bg-slate-900 text-white"
+                            isDark ? "text-white" : "text-slate-900"
                           )}>
                             {initial}
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
+                          </span>
+                        }
+                      />
                       <div className="space-y-1">
                         <div className="flex flex-wrap gap-2">
                           <Badge variant="secondary" className={cn(

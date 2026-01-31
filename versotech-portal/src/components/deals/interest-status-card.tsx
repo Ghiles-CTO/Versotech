@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
+import { InvestorJourneyBar, JourneySummary } from '@/components/deals/investor-journey-bar'
 import {
   Heart,
   FileSignature,
@@ -31,6 +31,8 @@ interface InterestStatusCardProps {
     signed_at: string | null
     funded_at: string | null
   } | null
+  journeySummary?: JourneySummary
+  subscriptionSubmittedAt?: string | null
   canExpressInterest: boolean
   canSignNda: boolean
   canSubscribe: boolean
@@ -51,7 +53,7 @@ interface StageInfo {
 const stageMetadata: Record<number, StageInfo> = {
   0: {
     label: 'New',
-    description: 'Choose to request a subscription or explore the data room first',
+    description: 'Choose whether to request data room access or subscribe directly',
     icon: Sparkles,
     color: 'text-muted-foreground',
     bgColor: 'bg-muted'
@@ -71,8 +73,8 @@ const stageMetadata: Record<number, StageInfo> = {
     bgColor: 'bg-blue-100 dark:bg-blue-900/30'
   },
   3: {
-    label: 'Interest Confirmed',
-    description: 'Next: Sign NDA to access documents',
+    label: 'Access Requested',
+    description: 'Request received. NDA sent after team approval.',
     icon: Heart,
     color: 'text-pink-600',
     bgColor: 'bg-pink-100 dark:bg-pink-900/30'
@@ -150,7 +152,7 @@ function getLastAction(
     { action: 'Pack sent', timestamp: subscription?.pack_sent_at ?? null },
     { action: 'Data room access granted', timestamp: membership?.data_room_granted_at ?? null },
     { action: 'NDA signed', timestamp: membership?.nda_signed_at ?? null },
-    { action: 'Interest confirmed', timestamp: membership?.interest_confirmed_at ?? null }
+    { action: 'Data room access requested', timestamp: membership?.interest_confirmed_at ?? null }
   ]
 
   for (const item of actions) {
@@ -165,6 +167,8 @@ export function InterestStatusCard({
   currentStage,
   membership,
   subscription,
+  journeySummary,
+  subscriptionSubmittedAt,
   canExpressInterest,
   canSignNda,
   canSubscribe,
@@ -176,7 +180,6 @@ export function InterestStatusCard({
   const stageInfo = stageMetadata[currentStage] || stageMetadata[0]
   const Icon = stageInfo.icon
   const lastAction = getLastAction(membership, subscription)
-  const progressPercentage = (currentStage / 10) * 100
 
   // Determine if we're in early stages where both options should be shown
   const isEarlyStage = currentStage <= 2 && !subscription
@@ -192,6 +195,19 @@ export function InterestStatusCard({
       : !showTrackingNotice && canSubscribe
         ? { label: 'Subscribe Now', onClick: onSubscribe, icon: Rocket }
         : null
+
+  const fallbackJourneySummary: JourneySummary = journeySummary || {
+    received: null,
+    viewed: null,
+    interest_confirmed: membership?.interest_confirmed_at ?? null,
+    nda_signed: membership?.nda_signed_at ?? null,
+    data_room_access: membership?.data_room_granted_at ?? null,
+    pack_generated: null,
+    pack_sent: subscription?.pack_sent_at ?? null,
+    signed: subscription?.signed_at ?? null,
+    funded: subscription?.funded_at ?? null,
+    active: null
+  }
 
   return (
     <Card className="border-2 border-dashed border-border bg-gradient-to-br from-background to-muted">
@@ -224,11 +240,11 @@ export function InterestStatusCard({
 
         {/* Progress Bar */}
         <div className="space-y-2">
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Journey Progress</span>
-            <span>{currentStage}/10 stages</span>
-          </div>
-          <Progress value={progressPercentage} className="h-2" />
+          <InvestorJourneyBar
+            summary={fallbackJourneySummary}
+            subscriptionSubmittedAt={subscriptionSubmittedAt ?? null}
+            compact
+          />
         </div>
 
         {showTrackingNotice && (
@@ -272,7 +288,7 @@ export function InterestStatusCard({
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </div>
                     <div className="text-sm text-emerald-600 dark:text-emerald-400 mt-0.5">
-                      Direct path • NDA + Subscription Pack
+                      Direct path • Subscription pack only (no NDA)
                     </div>
                   </div>
                 </div>

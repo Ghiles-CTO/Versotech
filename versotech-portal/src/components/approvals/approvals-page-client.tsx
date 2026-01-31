@@ -385,30 +385,6 @@ export function ApprovalsPageClient({
     setPagination(prev => ({ ...prev, page: 1 }))
   }
 
-  // Quick action: Show low priority
-  const handleProcessLowValue = async () => {
-    const newFilters = {
-      entity_types: [] as any[],
-      priorities: ['low'] as any[],
-      assigned_to_me: false,
-      overdue_only: false
-    }
-    setFilters(newFilters)
-    setPagination(prev => ({ ...prev, page: 1 }))
-  }
-
-  // Quick action: Review high priority
-  const handleReviewHighPriority = async () => {
-    const newFilters = { 
-      entity_types: [], 
-      priorities: ['critical', 'high'] as any[], 
-      assigned_to_me: false, 
-      overdue_only: false 
-    }
-    setFilters(newFilters)
-    setPagination(prev => ({ ...prev, page: 1 }))
-  }
-
   const handleReviewInterests = async () => {
     const newFilters = {
       entity_types: ['deal_interest'] as any[],
@@ -553,8 +529,7 @@ export function ApprovalsPageClient({
                           />
                         </TableHead>
                         <TableHead>Request Type / User</TableHead>
-                        <TableHead>Entity</TableHead>
-                        <TableHead>Priority</TableHead>
+                        <TableHead>Deal / Investor</TableHead>
                         <TableHead>SLA Status</TableHead>
                         <TableHead>Assigned To</TableHead>
                         <TableHead>Actions</TableHead>
@@ -581,7 +556,9 @@ export function ApprovalsPageClient({
                               <TableCell>
                                 <div>
                                   <div className="font-medium text-foreground">
-                                    {approval.entity_type.replace(/_/g, ' ').toUpperCase()}
+                                    {approval.entity_type === 'deal_interest'
+                                      ? 'DATA ROOM ACCESS REQUEST'
+                                      : approval.entity_type.replace(/_/g, ' ').toUpperCase()}
                                   </div>
                                   <div className="text-sm text-muted-foreground">
                                     {approval.requested_by_profile?.display_name || 'Unknown User'}
@@ -656,18 +633,6 @@ export function ApprovalsPageClient({
                               <TableCell>
                                 <Badge
                                   variant={
-                                    approval.priority === 'critical' || approval.priority === 'high'
-                                      ? 'destructive'
-                                      : 'secondary'
-                                  }
-                                >
-                                  {approval.priority.toUpperCase()}
-                                </Badge>
-                              </TableCell>
-
-                              <TableCell>
-                                <Badge
-                                  variant={
                                     slaStatus.isOverdue
                                       ? 'destructive'
                                       : slaStatus.urgency === 'high'
@@ -719,7 +684,7 @@ export function ApprovalsPageClient({
                         })
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                             {isLoading ? 'Loading approvals...' : 'No pending approvals found'}
                           </TableCell>
                         </TableRow>
@@ -803,31 +768,13 @@ export function ApprovalsPageClient({
                 <Clock className="mr-2 h-4 w-4 text-red-600" />
                 Review Overdue ({stats.overdue_count})
               </Button>
-              <Button 
-                className="w-full justify-start" 
-                variant="outline"
-                onClick={handleProcessLowValue}
-                disabled={approvals.length === 0}
-              >
-                <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
-                Show Low Priority
-              </Button>
-              <Button 
-                className="w-full justify-start" 
-                variant="outline"
-                onClick={handleReviewHighPriority}
-                disabled={approvals.length === 0}
-              >
-                <AlertTriangle className="mr-2 h-4 w-4 text-amber-600" />
-                Review High Priority
-              </Button>
               <Button
                 className="w-full justify-start"
                 variant="outline"
                 onClick={handleReviewInterests}
               >
                 <HandCoins className="mr-2 h-4 w-4 text-purple-600" />
-                Deal Interest Approvals
+                Data Room Access Requests
               </Button>
               <Button
                 className="w-full justify-start"

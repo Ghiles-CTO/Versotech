@@ -488,7 +488,7 @@ export function DealDetailClient({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="common">Common/Ordinary Shares</SelectItem>
+                    <SelectItem value="common">Common and Ordinary Shares</SelectItem>
                     <SelectItem value="preferred">Preferred Shares</SelectItem>
                     <SelectItem value="convertible">Convertible Notes</SelectItem>
                     <SelectItem value="warrant">Warrants</SelectItem>
@@ -563,6 +563,8 @@ export function DealDetailClient({
                     <SelectItem value="USD">USD</SelectItem>
                     <SelectItem value="EUR">EUR</SelectItem>
                     <SelectItem value="GBP">GBP</SelectItem>
+                    <SelectItem value="CHF">CHF</SelectItem>
+                    <SelectItem value="AED">AED</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

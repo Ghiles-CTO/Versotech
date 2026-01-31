@@ -12,8 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import Image from 'next/image'
 import Link from 'next/link'
+import { DealLogo } from '@/components/deals/deal-logo'
 import {
   ArrowUpRight,
   BadgeCheck,
@@ -322,19 +322,14 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
         <DialogHeader className="space-y-2">
           <DialogTitle className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              {deal.company_logo_url ? (
-                <Image
-                  src={deal.company_logo_url}
-                  alt={`${deal.company_name ?? deal.name} logo`}
-                  width={48}
-                  height={48}
-                  className="rounded-lg object-contain bg-background border border-border p-2"
-                />
-              ) : (
-                <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center text-muted-foreground font-semibold">
-                  {deal.name.charAt(0)}
-                </div>
-              )}
+              <DealLogo
+                src={deal.company_logo_url}
+                alt={`${deal.company_name ?? deal.name} logo`}
+                size={48}
+                rounded="lg"
+                className="bg-background"
+                fallbackText={deal.name.charAt(0)}
+              />
               <div>
                 <div className="flex items-center gap-3">
                   <span className="text-xl font-semibold text-foreground">{deal.name}</span>

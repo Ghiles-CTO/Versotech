@@ -77,7 +77,7 @@ interface PartnerAssignment {
 const JOURNEY_STAGES = [
   { key: 'dispatched', label: 'Dispatched', icon: Send, field: 'dispatched_at' },
   { key: 'viewed', label: 'Viewed', icon: Eye, field: 'viewed_at' },
-  { key: 'interest', label: 'Interest', icon: TrendingUp, field: 'interest_confirmed_at' },
+  { key: 'interest', label: 'Access Request', icon: TrendingUp, field: 'interest_confirmed_at' },
   { key: 'nda', label: 'NDA', icon: FileSignature, field: 'nda_signed_at' },
   { key: 'data_room', label: 'Data Room', icon: FolderOpen, field: 'data_room_granted_at' },
   { key: 'pack_gen', label: 'Pack Gen', icon: FileText, field: 'pack_generated_at', fromSubscription: true },

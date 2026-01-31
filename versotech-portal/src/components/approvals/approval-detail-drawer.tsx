@@ -42,13 +42,6 @@ interface ApprovalDetailDrawerProps {
   onReject?: (approvalId: string, reason: string) => Promise<void>
 }
 
-const priorityColors = {
-  low: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-500/30',
-  medium: 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-300 dark:border-yellow-500/30',
-  high: 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-500/30',
-  critical: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 border-red-300 dark:border-red-500/30'
-}
-
 const statusColors = {
   pending: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300',
   approved: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300',
@@ -59,7 +52,7 @@ const statusColors = {
 }
 
 const entityTypeLabels: Record<string, string> = {
-  deal_interest: 'Deal Interest',
+  deal_interest: 'Data Room Access Request',
   deal_subscription: 'Subscription',
   deal_close: 'Deal Close',
   allocation: 'Allocation',
@@ -197,9 +190,6 @@ export function ApprovalDetailDrawer({
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="text-sm text-foreground border-border">
                   {entityTypeLabels[approval.entity_type] || approval.entity_type}
-                </Badge>
-                <Badge className={priorityColors[approval.priority]}>
-                  {approval.priority.toUpperCase()}
                 </Badge>
                 <Badge className={statusColors[approval.status]}>
                   {approval.status.replace('_', ' ').toUpperCase()}

@@ -214,7 +214,7 @@ function groupPlansByEntityType(plans: FeePlanWithDeal[]): Record<EntityGroup, F
   return groups;
 }
 
-export default function FeePlansTab({}: FeePlansTabProps) {
+export default function FeePlansTab(_props: FeePlansTabProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 

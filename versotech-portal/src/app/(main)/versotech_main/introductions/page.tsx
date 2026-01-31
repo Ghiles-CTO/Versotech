@@ -951,7 +951,9 @@ export default function IntroductionsPage() {
                       <div>
                         <Label className="text-xs text-muted-foreground">Stock Type</Label>
                         <p className="font-medium mt-1 capitalize">
-                          {selectedDeal.stock_type.replace(/_/g, ' ')}
+                          {selectedDeal.stock_type === 'common'
+                            ? 'Common and Ordinary Shares'
+                            : selectedDeal.stock_type.replace(/_/g, ' ')}
                         </p>
                       </div>
                     )}

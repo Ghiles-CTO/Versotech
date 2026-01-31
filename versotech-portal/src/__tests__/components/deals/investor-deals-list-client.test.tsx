@@ -75,7 +75,7 @@ describe('InvestorDealsListClient', () => {
     )
 
     expect(screen.queryByText('Subscribe to Investment Opportunity')).toBeNull()
-    expect(screen.queryByText('Submit Interest for Data Room')).toBeNull()
+    expect(screen.queryByText('Request Data Room Access')).toBeNull()
     expect(screen.getByText('Tracking only')).toBeTruthy()
   })
 
@@ -99,6 +99,6 @@ describe('InvestorDealsListClient', () => {
     )
 
     expect(screen.getByText('Subscribe to Investment Opportunity')).toBeTruthy()
-    expect(screen.getByText('Submit Interest for Data Room')).toBeTruthy()
+    expect(screen.getByText('Request Data Room Access')).toBeTruthy()
   })
 })

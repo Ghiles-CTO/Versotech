@@ -14,6 +14,7 @@ export default [
     ignores: [
       'node_modules/**',
       '.next/**',
+      '.next.bak/**',
       'out/**',
       'build/**',
       'next-env.d.ts',

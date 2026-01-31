@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select'
 import { ArrowLeft, ArrowRight, Loader2, Upload } from 'lucide-react'
 import Link from 'next/link'
-import Image from 'next/image'
+import { DealLogo } from '@/components/deals/deal-logo'
 
 interface CreateDealFormProps {
   entities: Array<{
@@ -37,6 +37,7 @@ export function CreateDealForm({ entities, basePath = '/versotech/staff' }: Crea
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [submitMode, setSubmitMode] = useState<'create' | 'draft' | null>(null)
 
   const [formData, setFormData] = useState({
     // Step 1: Basic Info
@@ -68,6 +69,8 @@ export function CreateDealForm({ entities, basePath = '/versotech/staff' }: Crea
   const [logoError, setLogoError] = useState<string | null>(null)
   const [companyLogoUrl, setCompanyLogoUrl] = useState<string>('')
   const [logoSource, setLogoSource] = useState<'entity' | 'manual' | 'none'>('none')
+  const isSavingDraft = loading && submitMode === 'draft'
+  const isCreating = loading && submitMode !== 'draft'
 
   const selectedEntity = useMemo(
     () => entities.find((entity) => entity.id === formData.vehicle_id),
@@ -120,12 +123,13 @@ export function CreateDealForm({ entities, basePath = '/versotech/staff' }: Crea
     }
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (options?: { status?: 'draft' | 'open'; redirect?: 'detail' | 'list' }) => {
     setLoading(true)
+    setSubmitMode(options?.status === 'draft' ? 'draft' : 'create')
     setError(null)
 
     try {
-      const payload = {
+      const payload: Record<string, any> = {
         name: formData.name.trim(),
         company_name: formData.company_name.trim() || null,
         deal_type: formData.deal_type,
@@ -143,6 +147,10 @@ export function CreateDealForm({ entities, basePath = '/versotech/staff' }: Crea
         description: formData.description.trim() || null,
         investment_thesis: formData.investment_thesis.trim() || null,
         company_logo_url: companyLogoUrl || undefined
+      }
+
+      if (options?.status) {
+        payload.status = options.status
       }
       
       console.log('[CreateDealForm] Submitting payload:', payload)
@@ -175,10 +183,14 @@ export function CreateDealForm({ entities, basePath = '/versotech/staff' }: Crea
       }
 
       const { deal } = await response.json()
-      router.push(`${basePath}/deals/${deal.id}`)
+      const target = options?.redirect === 'list'
+        ? `${basePath}/deals`
+        : `${basePath}/deals/${deal.id}`
+      router.push(target)
     } catch (err: any) {
       setError(err.message)
       setLoading(false)
+      setSubmitMode(null)
     }
   }
 
@@ -283,7 +295,7 @@ export function CreateDealForm({ entities, basePath = '/versotech/staff' }: Crea
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="common">Common/Ordinary Shares</SelectItem>
+                      <SelectItem value="common">Common and Ordinary Shares</SelectItem>
                       <SelectItem value="preferred">Preferred Shares</SelectItem>
                       <SelectItem value="convertible">Convertible Notes</SelectItem>
                       <SelectItem value="warrant">Warrants</SelectItem>
@@ -297,15 +309,15 @@ export function CreateDealForm({ entities, basePath = '/versotech/staff' }: Crea
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="vehicle_id" className="text-foreground">
-                      Entity (Optional)
+                      Vehicle (Optional)
                     </Label>
                   </div>
                   <Select value={formData.vehicle_id || 'none'} onValueChange={handleVehicleSelect}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select entity or skip" />
+                      <SelectValue placeholder="Select vehicle or skip" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">No entity - Direct deal</SelectItem>
+                      <SelectItem value="none">No vehicle - Direct deal</SelectItem>
                       {entities.map((entity) => (
                         <SelectItem key={entity.id} value={entity.id}>
                           {entity.name} ({entity.type})
@@ -314,7 +326,7 @@ export function CreateDealForm({ entities, basePath = '/versotech/staff' }: Crea
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    Choose an entity for pooled investments, or "No entity" for direct ownership deals. Manage entities from{' '}
+                    Choose a vehicle for pooled investments, or "No vehicle" for direct ownership deals. Manage vehicles from{' '}
                     <Link href={`${basePath}/entities`} className="text-emerald-300 hover:text-emerald-200 underline">
                       Entities
                     </Link>
@@ -359,19 +371,14 @@ export function CreateDealForm({ entities, basePath = '/versotech/staff' }: Crea
                 <Label className="text-foreground">Company Logo</Label>
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-4">
-                    {companyLogoUrl ? (
-                      <Image
-                        src={companyLogoUrl}
-                        alt={`${(selectedEntity?.name ?? formData.name) || 'Deal'} logo`}
-                        width={56}
-                        height={56}
-                        className="rounded-lg object-contain bg-white border border-gray-200 p-2"
-                      />
-                    ) : (
-                      <div className="h-14 w-14 rounded-lg bg-muted border border-border flex items-center justify-center text-muted-foreground">
-                        56×56
-                      </div>
-                    )}
+                    <DealLogo
+                      src={companyLogoUrl}
+                      alt={`${(selectedEntity?.name ?? formData.name) || 'Deal'} logo`}
+                      size={56}
+                      rounded="lg"
+                      className="bg-white border border-gray-200"
+                      fallbackText="56×56"
+                    />
                     <div className="space-y-2">
                       <label
                         className="inline-flex items-center gap-2 px-3 py-2 border rounded-md cursor-pointer text-sm"
@@ -463,6 +470,8 @@ export function CreateDealForm({ entities, basePath = '/versotech/staff' }: Crea
                       <SelectItem value="USD">USD</SelectItem>
                       <SelectItem value="EUR">EUR</SelectItem>
                       <SelectItem value="GBP">GBP</SelectItem>
+                      <SelectItem value="CHF">CHF</SelectItem>
+                      <SelectItem value="AED">AED</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -568,16 +577,32 @@ export function CreateDealForm({ entities, basePath = '/versotech/staff' }: Crea
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             ) : (
-              <Button onClick={handleSubmit} disabled={loading || !formData.name}>
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  'Create Deal'
-                )}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => handleSubmit({ status: 'draft', redirect: 'list' })}
+                  disabled={loading || !formData.name}
+                >
+                  {isSavingDraft ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving Draft...
+                    </>
+                  ) : (
+                    'Save Draft'
+                  )}
+                </Button>
+                <Button onClick={() => handleSubmit()} disabled={loading || !formData.name}>
+                  {isCreating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    'Create Deal'
+                  )}
+                </Button>
+              </div>
             )}
           </div>
         </CardContent>

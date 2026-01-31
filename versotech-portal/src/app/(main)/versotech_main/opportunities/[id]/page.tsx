@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import Image from 'next/image'
+import { DealLogo } from '@/components/deals/deal-logo'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -592,6 +592,7 @@ export default function OpportunityDetailPage() {
             <InvestorJourneyBar
               summary={opportunity.journey.summary}
               currentStage={opportunity.journey.current_stage}
+              subscriptionSubmittedAt={opportunity.subscription_submission?.submitted_at ?? null}
             />
           </CardContent>
         </Card>
@@ -619,19 +620,14 @@ export default function OpportunityDetailPage() {
 
       {/* Header */}
       <div className="flex items-start gap-6">
-        {opportunity.company_logo_url ? (
-          <Image
-            src={opportunity.company_logo_url}
-            alt={opportunity.company_name || opportunity.name}
-            width={80}
-            height={80}
-            className="rounded-xl object-cover"
-          />
-        ) : (
-          <div className="w-20 h-20 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-            <Building2 className="w-10 h-10 text-gray-400" />
-          </div>
-        )}
+        <DealLogo
+          src={opportunity.company_logo_url}
+          alt={opportunity.company_name || opportunity.name}
+          size={80}
+          rounded="xl"
+          className="bg-gray-100 dark:bg-gray-800"
+          fallback={<Building2 className="w-10 h-10 text-gray-400" />}
+        />
         <div className="flex-1">
           <h1 className="text-2xl font-bold">{opportunity.name}</h1>
           {opportunity.company_name && (
@@ -656,7 +652,9 @@ export default function OpportunityDetailPage() {
             {opportunity.stock_type && (
               <Badge variant="outline" className="border-purple-300 text-purple-700 dark:text-purple-300">
                 <Tag className="w-3 h-3 mr-1" />
-                {opportunity.stock_type.replace(/_/g, ' ')}
+                {opportunity.stock_type === 'common'
+                  ? 'Common and Ordinary Shares'
+                  : opportunity.stock_type.replace(/_/g, ' ')}
               </Badge>
             )}
           </div>
@@ -678,7 +676,7 @@ export default function OpportunityDetailPage() {
                       <TrendingUp className="w-5 h-5" />
                       <div className="text-left">
                         <div className="font-semibold">Subscribe to Investment</div>
-                        <div className="text-xs opacity-90 font-normal">Submit for review • NDA + Subscription</div>
+                        <div className="text-xs opacity-90 font-normal">Submit for review • Subscription pack only (no NDA)</div>
                       </div>
                     </div>
                   </Button>
@@ -803,6 +801,8 @@ export default function OpportunityDetailPage() {
                 currentStage={opportunity.journey.current_stage}
                 membership={opportunity.membership}
                 subscription={null}
+                journeySummary={opportunity.journey.summary}
+                subscriptionSubmittedAt={opportunity.subscription_submission?.submitted_at ?? null}
                 canExpressInterest={canExpressInterest}
                 canSignNda={canSignNda}
                 canSubscribe={canSubscribe}
@@ -1275,7 +1275,7 @@ export default function OpportunityDetailPage() {
               <div className="flex items-start gap-3 text-sm">
                 <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 text-xs font-medium">1</div>
                 <div>
-                  <div className="font-medium">Submit Interest</div>
+                  <div className="font-medium">Request Access</div>
                   <div className="text-muted-foreground">Team reviews your request</div>
                 </div>
               </div>
@@ -1300,14 +1300,14 @@ export default function OpportunityDetailPage() {
             <Button variant="outline" onClick={() => setShowInterestDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleExpressInterest} disabled={actionLoading} className="gap-2">
-              {actionLoading ? 'Processing...' : (
-                <>
-                  <FolderOpen className="w-4 h-4" />
-                  Submit Interest
-                </>
-              )}
-            </Button>
+              <Button onClick={handleExpressInterest} disabled={actionLoading} className="gap-2">
+                {actionLoading ? 'Processing...' : (
+                  <>
+                    <FolderOpen className="w-4 h-4" />
+                    Request Access
+                  </>
+                )}
+              </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1362,7 +1362,7 @@ export default function OpportunityDetailPage() {
             <DialogTitle>Subscribe to Investment Opportunity</DialogTitle>
             <DialogDescription>
               Enter your commitment amount to submit a subscription request for {opportunity.name}. Once reviewed,
-              you&apos;ll receive the NDA and subscription documents to sign.
+              you&apos;ll receive the subscription documents to sign.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">

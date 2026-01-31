@@ -37,15 +37,8 @@ interface ApprovalsDatabaseViewProps {
   onApprovalClick: (approval: Approval) => void
 }
 
-type SortField = 'created_at' | 'priority' | 'sla_breach_at' | 'entity_type' | 'status'
+type SortField = 'created_at' | 'sla_breach_at' | 'entity_type' | 'status'
 type SortDirection = 'asc' | 'desc'
-
-const priorityColors = {
-  low: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300',
-  medium: 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300',
-  high: 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300',
-  critical: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300'
-}
 
 const statusColors = {
   pending: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300',
@@ -56,13 +49,10 @@ const statusColors = {
   cancelled: 'bg-slate-100 dark:bg-slate-500/20 text-slate-700 dark:text-slate-300'
 }
 
-const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 }
-
 export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsDatabaseViewProps) {
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [priorityFilter, setPriorityFilter] = useState<string>('all')
   const [entityTypeFilter, setEntityTypeFilter] = useState<string>('all')
   const [slaFilter, setSlaFilter] = useState<string>('all')
 
@@ -75,7 +65,6 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
     entity_type: true,
     deal_investor: true,
     amount: true,
-    priority: true,
     status: true,
     sla: true,
     assigned_to: true,
@@ -112,11 +101,6 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
       filtered = filtered.filter((a) => a.status === statusFilter)
     }
 
-    // Priority filter
-    if (priorityFilter !== 'all') {
-      filtered = filtered.filter((a) => a.priority === priorityFilter)
-    }
-
     // Entity type filter
     if (entityTypeFilter !== 'all') {
       filtered = filtered.filter((a) => a.entity_type === entityTypeFilter)
@@ -151,10 +135,6 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
           aVal = new Date(a.created_at).getTime()
           bVal = new Date(b.created_at).getTime()
           break
-        case 'priority':
-          aVal = priorityOrder[a.priority]
-          bVal = priorityOrder[b.priority]
-          break
         case 'sla_breach_at':
           aVal = a.sla_breach_at ? new Date(a.sla_breach_at).getTime() : Infinity
           bVal = b.sla_breach_at ? new Date(b.sla_breach_at).getTime() : Infinity
@@ -177,7 +157,7 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
     })
 
     return filtered
-  }, [approvals, searchQuery, statusFilter, priorityFilter, entityTypeFilter, slaFilter, sortField, sortDirection])
+  }, [approvals, searchQuery, statusFilter, entityTypeFilter, slaFilter, sortField, sortDirection])
 
   // Unique values for filters
   const uniqueEntityTypes = useMemo(
@@ -197,13 +177,12 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
   const clearFilters = () => {
     setSearchQuery('')
     setStatusFilter('all')
-    setPriorityFilter('all')
     setEntityTypeFilter('all')
     setSlaFilter('all')
   }
 
   const hasActiveFilters =
-    searchQuery || statusFilter !== 'all' || priorityFilter !== 'all' || entityTypeFilter !== 'all' || slaFilter !== 'all'
+    searchQuery || statusFilter !== 'all' || entityTypeFilter !== 'all' || slaFilter !== 'all'
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-50" />
@@ -245,7 +224,7 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
             </div>
 
             {/* Filter Controls */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
               <div className="space-y-1.5">
                 <label className="text-xs text-muted-foreground flex items-center gap-1">
                   <Filter className="h-3 w-3" />
@@ -267,25 +246,6 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
               <div className="space-y-1.5">
                 <label className="text-xs text-muted-foreground flex items-center gap-1">
                   <Filter className="h-3 w-3" />
-                  Priority
-                </label>
-                <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                  <SelectTrigger className="bg-background border-input text-foreground">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Priorities</SelectItem>
-                    <SelectItem value="critical">Critical</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Filter className="h-3 w-3" />
                   Entity Type
                 </label>
                 <Select value={entityTypeFilter} onValueChange={setEntityTypeFilter}>
@@ -296,7 +256,7 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
                     <SelectItem value="all">All Types</SelectItem>
                     {uniqueEntityTypes.map((type) => (
                       <SelectItem key={type} value={type}>
-                        {type.replace(/_/g, ' ')}
+                        {type === 'deal_interest' ? 'Data Room Access Request' : type.replace(/_/g, ' ')}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -333,7 +293,6 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="created_at">Created Date</SelectItem>
-                    <SelectItem value="priority">Priority</SelectItem>
                     <SelectItem value="sla_breach_at">SLA Deadline</SelectItem>
                     <SelectItem value="entity_type">Entity Type</SelectItem>
                     <SelectItem value="status">Status</SelectItem>
@@ -380,17 +339,6 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
                 )}
                 {visibleColumns.amount && (
                   <TableHead className="text-muted-foreground font-semibold">Amount</TableHead>
-                )}
-                {visibleColumns.priority && (
-                  <TableHead>
-                    <button
-                      onClick={() => handleSort('priority')}
-                      className="flex items-center text-muted-foreground hover:text-foreground font-semibold"
-                    >
-                      Priority
-                      <SortIcon field="priority" />
-                    </button>
-                  </TableHead>
                 )}
                 {visibleColumns.status && (
                   <TableHead>
@@ -448,7 +396,9 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
                       {visibleColumns.entity_type && (
                         <TableCell>
                           <Badge variant="outline" className="text-xs">
-                            {approval.entity_type.replace(/_/g, ' ')}
+                            {approval.entity_type === 'deal_interest'
+                              ? 'Data Room Access Request'
+                              : approval.entity_type.replace(/_/g, ' ')}
                           </Badge>
                         </TableCell>
                       )}
@@ -497,13 +447,6 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
                           ) : (
                             <span className="text-muted-foreground text-xs">—</span>
                           )}
-                        </TableCell>
-                      )}
-                      {visibleColumns.priority && (
-                        <TableCell>
-                          <Badge className={priorityColors[approval.priority]}>
-                            {approval.priority.toUpperCase()}
-                          </Badge>
                         </TableCell>
                       )}
                       {visibleColumns.status && (

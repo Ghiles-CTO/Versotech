@@ -29,7 +29,7 @@ export function ApprovalFilters({ onFilterChange, currentFilters }: ApprovalFilt
 
   const entityTypes: { value: ApprovalEntityType; label: string }[] = [
     { value: 'member_invitation', label: 'Member Invitations' },
-    { value: 'deal_interest', label: 'Deal Interests' },
+    { value: 'deal_interest', label: 'Data Room Access Requests' },
     { value: 'deal_subscription', label: 'Subscriptions' },
     { value: 'deal_close', label: 'Deal Close' },
     { value: 'allocation', label: 'Allocations' },
@@ -38,13 +38,6 @@ export function ApprovalFilters({ onFilterChange, currentFilters }: ApprovalFilt
     { value: 'profile_update', label: 'Profile Updates' },
     { value: 'document_access', label: 'Document Access' },
     { value: 'gdpr_deletion_request', label: 'GDPR Deletion Requests' },
-  ]
-
-  const priorities: { value: ApprovalPriority; label: string; color: string }[] = [
-    { value: 'critical', label: 'Critical', color: 'text-red-600' },
-    { value: 'high', label: 'High', color: 'text-orange-600' },
-    { value: 'medium', label: 'Medium', color: 'text-yellow-600' },
-    { value: 'low', label: 'Low', color: 'text-blue-600' },
   ]
 
   const updateFilter = (newFilters: Partial<FilterState>) => {
@@ -106,33 +99,6 @@ export function ApprovalFilters({ onFilterChange, currentFilters }: ApprovalFilt
                     className="text-sm font-normal cursor-pointer"
                   >
                     {type.label}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="border-t pt-4">
-            <h4 className="font-medium mb-3 text-sm">Priority</h4>
-            <div className="space-y-2">
-              {priorities.map((priority) => (
-                <div key={priority.value} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`priority-${priority.value}`}
-                    checked={filters.priorities.includes(priority.value)}
-                    onCheckedChange={(checked) => {
-                      updateFilter({
-                        priorities: checked
-                          ? [...filters.priorities, priority.value]
-                          : filters.priorities.filter(p => p !== priority.value)
-                      })
-                    }}
-                  />
-                  <Label 
-                    htmlFor={`priority-${priority.value}`}
-                    className={`text-sm font-normal cursor-pointer ${priority.color}`}
-                  >
-                    {priority.label}
                   </Label>
                 </div>
               ))}

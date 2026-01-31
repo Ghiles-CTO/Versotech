@@ -1,11 +1,8 @@
 'use client'
-
-import { useState } from 'react'
 import { Approval } from '@/types/approvals'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Clock, DollarSign, LayoutGrid, ListFilter, Mail, Shield } from 'lucide-react'
+import { Clock, DollarSign, Mail, Shield } from 'lucide-react'
 import { format } from 'date-fns'
 
 interface ApprovalsKanbanViewProps {
@@ -13,27 +10,11 @@ interface ApprovalsKanbanViewProps {
   onApprovalClick: (approval: Approval) => void
 }
 
-type GroupBy = 'status' | 'priority'
-
 const statusColumns = [
   { id: 'pending', title: 'Pending Review', color: 'border-amber-500', bgColor: 'bg-amber-500/10' },
   { id: 'approved', title: 'Approved', color: 'border-emerald-500', bgColor: 'bg-emerald-500/10' },
   { id: 'rejected', title: 'Rejected', color: 'border-rose-500', bgColor: 'bg-rose-500/10' }
 ]
-
-const priorityColumns = [
-  { id: 'critical', title: 'Critical Priority', color: 'border-red-500', bgColor: 'bg-red-500/10' },
-  { id: 'high', title: 'High Priority', color: 'border-orange-500', bgColor: 'bg-orange-500/10' },
-  { id: 'medium', title: 'Medium Priority', color: 'border-yellow-500', bgColor: 'bg-yellow-500/10' },
-  { id: 'low', title: 'Low Priority', color: 'border-blue-500', bgColor: 'bg-blue-500/10' }
-]
-
-const priorityColors = {
-  low: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300',
-  medium: 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300',
-  high: 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300',
-  critical: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300'
-}
 
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300',
@@ -43,46 +24,14 @@ const statusColors: Record<string, string> = {
 }
 
 export function ApprovalsKanbanView({ approvals, onApprovalClick }: ApprovalsKanbanViewProps) {
-  const [groupBy, setGroupBy] = useState<GroupBy>('status')
-
-  const columns = groupBy === 'status' ? statusColumns : priorityColumns
+  const columns = statusColumns
 
   return (
     <div className="space-y-4">
-      {/* Grouping Controls */}
-      <div className="flex items-center justify-between bg-muted/50 p-3 rounded-lg border border-border">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <LayoutGrid className="h-4 w-4" />
-          <span>Group by:</span>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant={groupBy === 'status' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setGroupBy('status')}
-            className={groupBy === 'status' ? 'bg-blue-600 hover:bg-blue-700' : ''}
-          >
-            <ListFilter className="h-4 w-4 mr-2" />
-            Status
-          </Button>
-          <Button
-            variant={groupBy === 'priority' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setGroupBy('priority')}
-            className={groupBy === 'priority' ? 'bg-blue-600 hover:bg-blue-700' : ''}
-          >
-            <ListFilter className="h-4 w-4 mr-2" />
-            Priority
-          </Button>
-        </div>
-      </div>
-
       {/* Kanban Board */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
         {columns.map((column) => {
-          const columnApprovals = approvals.filter((a) =>
-            groupBy === 'status' ? a.status === column.id : a.priority === column.id
-          )
+          const columnApprovals = approvals.filter((a) => a.status === column.id)
 
           return (
             <div key={column.id} className="space-y-4">
@@ -102,7 +51,9 @@ export function ApprovalsKanbanView({ approvals, onApprovalClick }: ApprovalsKan
                       <div className="flex items-start justify-between gap-2">
                         <div className="space-y-1.5 flex-1 min-w-0">
                           <Badge variant="outline" className="text-xs">
-                            {approval.entity_type.replace(/_/g, ' ')}
+                            {approval.entity_type === 'deal_interest'
+                              ? 'Data Room Access Request'
+                              : approval.entity_type.replace(/_/g, ' ')}
                           </Badge>
                           <p className="font-semibold text-sm truncate text-foreground">
                             {approval.entity_type === 'member_invitation'
@@ -110,15 +61,9 @@ export function ApprovalsKanbanView({ approvals, onApprovalClick }: ApprovalsKan
                               : (approval.related_deal?.name || approval.related_investor?.legal_name || 'Unknown')}
                           </p>
                         </div>
-                        {groupBy === 'status' ? (
-                          <Badge className={priorityColors[approval.priority]}>
-                            {approval.priority}
-                          </Badge>
-                        ) : (
-                          <Badge className={statusColors[approval.status]}>
-                            {approval.status}
-                          </Badge>
-                        )}
+                        <Badge className={statusColors[approval.status]}>
+                          {approval.status}
+                        </Badge>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-2.5">
@@ -159,6 +104,11 @@ export function ApprovalsKanbanView({ approvals, onApprovalClick }: ApprovalsKan
                       {approval.entity_type !== 'member_invitation' && approval.related_investor && (
                         <p className="text-xs text-muted-foreground truncate">
                           {approval.related_investor.legal_name}
+                        </p>
+                      )}
+                      {approval.entity_type === 'deal_interest' && approval.requested_by_profile && (
+                        <p className="text-xs text-muted-foreground truncate">
+                          Requested by {approval.requested_by_profile.display_name}
                         </p>
                       )}
                       <p className="text-xs text-muted-foreground">

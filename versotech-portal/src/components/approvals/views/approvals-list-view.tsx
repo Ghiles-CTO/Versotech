@@ -24,13 +24,6 @@ interface ApprovalsListViewProps {
   onReject?: (approvalId: string, reason: string) => Promise<void>
 }
 
-const priorityColors = {
-  low: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300',
-  medium: 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300',
-  high: 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300',
-  critical: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300'
-}
-
 const statusColors = {
   pending: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300',
   approved: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300',
@@ -60,10 +53,9 @@ export function ApprovalsListView({
               <div className="flex-1 space-y-4">
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge variant="outline">
-                    {approval.entity_type.replace(/_/g, ' ').toUpperCase()}
-                  </Badge>
-                  <Badge className={priorityColors[approval.priority]}>
-                    {approval.priority.toUpperCase()}
+                    {approval.entity_type === 'deal_interest'
+                      ? 'DATA ROOM ACCESS REQUEST'
+                      : approval.entity_type.replace(/_/g, ' ').toUpperCase()}
                   </Badge>
                   <Badge className={statusColors[approval.status]}>
                     {approval.status.replace(/_/g, ' ').toUpperCase()}
@@ -75,6 +67,11 @@ export function ApprovalsListView({
                     ? `Member Invitation: ${approval.entity_metadata?.email || 'Unknown'}`
                     : (approval.related_deal?.name || approval.related_investor?.legal_name || 'Approval Request')}
                 </h3>
+                {approval.entity_type === 'deal_interest' && (
+                  <p className="text-sm text-muted-foreground">
+                    Deal: {approval.related_deal?.name || 'Unknown'} • Requested by {approval.requested_by_profile?.display_name || 'Unknown'}
+                  </p>
+                )}
 
                 {/* Member Invitation specific info */}
                 {approval.entity_type === 'member_invitation' && approval.entity_metadata && (

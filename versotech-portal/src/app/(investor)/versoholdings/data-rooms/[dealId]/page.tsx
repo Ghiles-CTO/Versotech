@@ -1,7 +1,7 @@
 import { AppLayout } from '@/components/layout/app-layout'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
+import { DealLogo } from '@/components/deals/deal-logo'
 import { Badge } from '@/components/ui/badge'
 import {
   FileText,
@@ -188,19 +188,14 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
         <div className="bg-white dark:bg-zinc-900 border-2 border-gray-200 dark:border-zinc-700 rounded-lg overflow-hidden">
           <div className="p-6 space-y-4">
             <div className="flex items-start gap-4">
-              {deal.company_logo_url ? (
-                <Image
-                  src={deal.company_logo_url}
-                  alt={`${deal.company_name ?? deal.name} logo`}
-                  width={80}
-                  height={80}
-                  className="rounded-lg object-contain bg-white dark:bg-zinc-800 border-2 border-gray-200 dark:border-zinc-700 p-2"
-                />
-              ) : (
-                <div className="h-20 w-20 rounded-lg bg-blue-50 dark:bg-blue-950 border-2 border-blue-600 flex items-center justify-center text-blue-600 text-2xl font-semibold">
-                  {deal.name?.charAt(0) ?? 'D'}
-                </div>
-              )}
+              <DealLogo
+                src={deal.company_logo_url}
+                alt={`${deal.company_name ?? deal.name} logo`}
+                size={80}
+                rounded="lg"
+                className="bg-white dark:bg-zinc-800 border-2 border-gray-200 dark:border-zinc-700"
+                fallbackText={deal.name?.charAt(0) ?? 'D'}
+              />
               <div className="flex-1">
                 <h1 className="text-3xl font-bold text-foreground">{deal.name}</h1>
                 <div className="flex items-center gap-2 text-lg text-foreground mt-1">

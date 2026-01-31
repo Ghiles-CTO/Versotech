@@ -605,7 +605,7 @@ describe('Admin Users API', () => {
             select: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 order: vi.fn().mockReturnValue({
-                  limit: vi.fn().mockReturnValue({
+                  range: vi.fn().mockReturnValue({
                     data: [
                       {
                         id: 'log-1',
@@ -618,7 +618,8 @@ describe('Admin Users API', () => {
                         user_agent: 'Mozilla/5.0'
                       }
                     ],
-                    error: null
+                    error: null,
+                    count: 1
                   })
                 })
               })

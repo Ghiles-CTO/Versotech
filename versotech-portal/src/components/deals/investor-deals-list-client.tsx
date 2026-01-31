@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -16,6 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { DealLogo } from '@/components/deals/deal-logo'
 import {
   Activity,
   AlertCircle,
@@ -1196,19 +1196,14 @@ export function InvestorDealsListClient({
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        {deal.company_logo_url ? (
-                          <Image
-                            src={deal.company_logo_url}
-                            alt={`${deal.company_name ?? deal.name} logo`}
-                            width={40}
-                            height={40}
-                            className="rounded-lg object-contain bg-background border border-border p-1"
-                          />
-                        ) : (
-                          <div className="h-10 w-10 rounded-lg bg-background flex items-center justify-center text-muted-foreground text-lg font-semibold border border-border">
-                            {deal.name.charAt(0)}
-                          </div>
-                        )}
+                        <DealLogo
+                          src={deal.company_logo_url}
+                          alt={`${deal.company_name ?? deal.name} logo`}
+                          size={40}
+                          rounded="lg"
+                          className="bg-background"
+                          fallbackText={deal.name.charAt(0)}
+                        />
                         <div>
                           <CardTitle className="text-base text-foreground">
                             {deal.name}
@@ -1342,19 +1337,14 @@ export function InvestorDealsListClient({
                 <CardHeader className="space-y-3">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
-                      {deal.company_logo_url ? (
-                        <Image
-                          src={deal.company_logo_url}
-                          alt={`${deal.company_name ?? deal.name} logo`}
-                          width={56}
-                          height={56}
-                          className="rounded-lg object-contain bg-background border border-border p-2"
-                        />
-                      ) : (
-                        <div className="h-14 w-14 rounded-lg bg-muted flex items-center justify-center text-muted-foreground text-xl font-semibold">
-                          {deal.name.charAt(0)}
-                        </div>
-                      )}
+                      <DealLogo
+                        src={deal.company_logo_url}
+                        alt={`${deal.company_name ?? deal.name} logo`}
+                        size={56}
+                        rounded="lg"
+                        className="bg-muted"
+                        fallbackText={deal.name.charAt(0)}
+                      />
                       <div>
                         <CardTitle className="text-xl text-foreground flex items-center gap-2">
                           {deal.name}
@@ -1662,7 +1652,7 @@ export function InvestorDealsListClient({
                           isClosed={isClosed}
                         >
                           <Button className="gap-2" variant={isClosed ? 'secondary' : 'outline'}>
-                            {isClosed ? "Notify Me About Similar" : "Submit Interest for Data Room"}
+                            {isClosed ? "Notify Me About Similar" : "Request Data Room Access"}
                             <ArrowUpRight className="h-4 w-4" />
                           </Button>
                         </InterestModal>

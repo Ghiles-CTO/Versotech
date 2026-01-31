@@ -35,6 +35,7 @@ import {
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import Link from 'next/link'
+import { DealLogo } from '@/components/deals/deal-logo'
 import { formatDate } from '@/lib/format'
 
 const statusColors: Record<string, string> = {
@@ -247,17 +248,14 @@ export function MandateDetailClient({
             </Button>
           </Link>
           <div className="flex items-center gap-4">
-            {deal.company_logo_url ? (
-              <img
-                src={deal.company_logo_url}
-                alt={deal.company_name || deal.name}
-                className="h-12 w-12 rounded-lg object-cover"
-              />
-            ) : (
-              <div className="h-12 w-12 rounded-lg bg-white/10 flex items-center justify-center">
-                <Building2 className="h-6 w-6 text-muted-foreground" />
-              </div>
-            )}
+            <DealLogo
+              src={deal.company_logo_url}
+              alt={deal.company_name || deal.name}
+              size={48}
+              rounded="lg"
+              className="bg-white/10"
+              fallback={<Building2 className="h-6 w-6 text-muted-foreground" />}
+            />
             <div>
               <h1 className="text-2xl font-bold text-foreground">{deal.name}</h1>
               <div className="flex items-center gap-2 mt-1">

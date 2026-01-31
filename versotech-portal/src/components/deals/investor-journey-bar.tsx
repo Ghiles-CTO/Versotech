@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { Check, Circle, SkipForward } from 'lucide-react'
+import { Check } from 'lucide-react'
 import {
   Tooltip,
   TooltipContent,
@@ -33,69 +33,77 @@ interface InvestorJourneyBarProps {
   stages?: JourneyStage[]
   summary?: JourneySummary
   currentStage?: number
+  subscriptionSubmittedAt?: string | null
   className?: string
   compact?: boolean
 }
 
-// Stage definitions with optional flag
-const STAGE_DEFINITIONS = [
-  { number: 1, name: 'Received', key: 'received', optional: true },
-  { number: 2, name: 'Viewed', key: 'viewed', optional: false },
-  { number: 3, name: 'Interest', key: 'interest_confirmed', optional: true },
-  { number: 4, name: 'NDA', key: 'nda_signed', optional: true },
-  { number: 5, name: 'Data Room', key: 'data_room_access', optional: true },
-  { number: 6, name: 'Pack Gen', key: 'pack_generated', optional: false },
-  { number: 7, name: 'Pack Sent', key: 'pack_sent', optional: false },
-  { number: 8, name: 'Signed', key: 'signed', optional: false },
-  { number: 9, name: 'Funded', key: 'funded', optional: false },
-  { number: 10, name: 'Active', key: 'active', optional: false },
-] as const
+type JourneyRoute = 'data_room' | 'direct_subscribe' | 'choose'
 
-type StageStatus = 'completed' | 'current' | 'skipped' | 'pending'
+type SummaryKey = keyof JourneySummary | 'subscription_requested'
 
-/**
- * Detect if investor took Direct Subscribe path
- * Direct Subscribe: pack_generated is set but interest_confirmed is null
- * This means they skipped the Interest and Data Room stages
- */
-function isDirectSubscribePath(summary: JourneySummary): boolean {
-  return summary.pack_generated !== null && summary.interest_confirmed === null
+type StageStatus = 'completed' | 'current' | 'pending'
+
+interface StageDefinition {
+  name: string
+  key: SummaryKey
+}
+
+const DATA_ROOM_STAGES: StageDefinition[] = [
+  { name: 'Received', key: 'received' },
+  { name: 'Viewed', key: 'viewed' },
+  { name: 'Access Request', key: 'interest_confirmed' },
+  { name: 'NDA Signed', key: 'nda_signed' },
+  { name: 'Data Room', key: 'data_room_access' },
+  { name: 'Pack Gen', key: 'pack_generated' },
+  { name: 'Pack Sent', key: 'pack_sent' },
+  { name: 'Signed', key: 'signed' },
+  { name: 'Funded', key: 'funded' },
+  { name: 'Active', key: 'active' }
+]
+
+const DIRECT_SUBSCRIBE_STAGES: StageDefinition[] = [
+  { name: 'Received', key: 'received' },
+  { name: 'Viewed', key: 'viewed' },
+  { name: 'Subscribe Request', key: 'subscription_requested' },
+  { name: 'Pack Gen', key: 'pack_generated' },
+  { name: 'Pack Sent', key: 'pack_sent' },
+  { name: 'Signed', key: 'signed' },
+  { name: 'Funded', key: 'funded' },
+  { name: 'Active', key: 'active' }
+]
+
+interface ExtendedSummary extends JourneySummary {
+  subscription_requested: string | null
+}
+
+function detectRoute(summary: JourneySummary, subscriptionSubmittedAt?: string | null): JourneyRoute {
+  if (summary.interest_confirmed || summary.nda_signed || summary.data_room_access) {
+    return 'data_room'
+  }
+
+  if (subscriptionSubmittedAt || summary.pack_generated || summary.pack_sent || summary.signed || summary.funded || summary.active) {
+    return 'direct_subscribe'
+  }
+
+  return 'choose'
+}
+
+function getRouteLabel(route: JourneyRoute): string {
+  if (route === 'data_room') return 'Data Room Route'
+  if (route === 'direct_subscribe') return 'Direct Subscribe Route (No NDA)'
+  return 'Choose Your Path'
 }
 
 function getStageStatus(
-  stageDef: typeof STAGE_DEFINITIONS[number],
-  summary: JourneySummary,
-  currentStage: number
+  stageDef: StageDefinition,
+  summary: ExtendedSummary,
+  currentIndex: number,
+  index: number
 ): StageStatus {
-  const completedAt = summary[stageDef.key as keyof JourneySummary]
-
-  if (completedAt) {
-    return 'completed'
-  }
-
-  if (stageDef.number === currentStage) {
-    return 'current'
-  }
-
-  // Special handling for Direct Subscribe path
-  // Interest (stage 3) and Data Room (stage 5) are explicitly skipped
-  const isDirectPath = isDirectSubscribePath(summary)
-  if (isDirectPath) {
-    // For Direct Subscribe: Interest and Data Room are skipped
-    if (stageDef.number === 3 || stageDef.number === 5) {
-      // Only mark as skipped if we're past these stages
-      if (currentStage > stageDef.number || summary.pack_generated) {
-        return 'skipped'
-      }
-    }
-  }
-
-  // Check if this is an optional stage that was skipped
-  // A stage is skipped if it's optional and a later stage is completed
-  if (stageDef.optional && stageDef.number < currentStage) {
-    return 'skipped'
-  }
-
+  const completedAt = summary[stageDef.key] as string | null
+  if (completedAt) return 'completed'
+  if (index === currentIndex) return 'current'
   return 'pending'
 }
 
@@ -113,6 +121,7 @@ export function InvestorJourneyBar({
   stages,
   summary,
   currentStage = 0,
+  subscriptionSubmittedAt,
   className,
   compact = false
 }: InvestorJourneyBarProps) {
@@ -141,72 +150,74 @@ export function InvestorJourneyBar({
     active: null,
   })
 
-  // Calculate effective current stage if not provided
-  const effectiveCurrentStage = currentStage || (() => {
-    if (effectiveSummary.active) return 10
-    if (effectiveSummary.funded) return 9
-    if (effectiveSummary.signed) return 8
-    if (effectiveSummary.pack_sent) return 7
-    if (effectiveSummary.pack_generated) return 6
-    if (effectiveSummary.data_room_access) return 5
-    if (effectiveSummary.nda_signed) return 4
-    if (effectiveSummary.interest_confirmed) return 3
-    if (effectiveSummary.viewed) return 2
-    if (effectiveSummary.received) return 1
-    return 0
-  })()
+  const extendedSummary: ExtendedSummary = {
+    ...effectiveSummary,
+    subscription_requested: subscriptionSubmittedAt || null
+  }
 
-  return (
-    <TooltipProvider>
-      <div className={cn('w-full', className)}>
-        {/* Progress Bar */}
+  const route = detectRoute(effectiveSummary, subscriptionSubmittedAt)
+  const stagesForRoute = route === 'direct_subscribe' ? DIRECT_SUBSCRIBE_STAGES : DATA_ROOM_STAGES
+
+  const getCurrentIndex = (stageList: StageDefinition[]) => {
+    let lastCompleted = -1
+    stageList.forEach((stage, idx) => {
+      if (extendedSummary[stage.key]) {
+        lastCompleted = idx
+      }
+    })
+    if (lastCompleted === -1) return 0
+    if (lastCompleted >= stageList.length - 1) return stageList.length - 1
+    return lastCompleted + 1
+  }
+
+  const renderRouteBar = (stageList: StageDefinition[], label: string) => {
+    const currentIndex = getCurrentIndex(stageList)
+    const lastCompletedIndex = Math.max(currentIndex - 1, 0)
+    const progressWidth = stageList.length > 1
+      ? (lastCompletedIndex / (stageList.length - 1)) * 100
+      : 0
+
+    return (
+      <div className="space-y-3">
+        {!compact && (
+          <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
+        )}
         <div className="relative">
-          {/* Background line */}
           <div className="absolute top-4 left-0 right-0 h-0.5 bg-border" />
-
-          {/* Progress line */}
           <div
             className="absolute top-4 left-0 h-0.5 bg-emerald-500 transition-all duration-500"
-            style={{ width: `${Math.max(0, (effectiveCurrentStage - 1) / 9) * 100}%` }}
+            style={{ width: `${Math.max(0, Math.min(progressWidth, 100))}%` }}
           />
-
-          {/* Stage indicators */}
           <div className="relative flex justify-between">
-            {STAGE_DEFINITIONS.map((stageDef) => {
-              const status = getStageStatus(stageDef, effectiveSummary, effectiveCurrentStage)
-              const completedAt = effectiveSummary[stageDef.key as keyof JourneySummary]
+            {stageList.map((stageDef, index) => {
+              const status = getStageStatus(stageDef, extendedSummary, currentIndex, index)
+              const completedAt = extendedSummary[stageDef.key]
 
               return (
-                <Tooltip key={stageDef.number}>
+                <Tooltip key={`${label}-${stageDef.key}`}>
                   <TooltipTrigger asChild>
                     <div className="flex flex-col items-center">
-                      {/* Stage circle */}
                       <div
                         className={cn(
                           'w-8 h-8 rounded-full flex items-center justify-center transition-all',
                           status === 'completed' && 'bg-emerald-500 text-white',
                           status === 'current' && 'bg-blue-500 text-white ring-4 ring-blue-200 dark:ring-blue-900',
-                          status === 'skipped' && 'bg-muted text-muted-foreground',
                           status === 'pending' && 'bg-muted/50 text-muted-foreground'
                         )}
                       >
                         {status === 'completed' ? (
                           <Check className="w-4 h-4" />
-                        ) : status === 'skipped' ? (
-                          <SkipForward className="w-3 h-3" />
                         ) : (
-                          <span className="text-xs font-medium">{stageDef.number}</span>
+                          <span className="text-xs font-medium">{index + 1}</span>
                         )}
                       </div>
 
-                      {/* Stage label */}
                       {!compact && (
                         <span
                           className={cn(
-                            'mt-2 text-xs font-medium text-center max-w-[60px] leading-tight',
+                            'mt-2 text-xs font-medium text-center max-w-[70px] leading-tight',
                             status === 'completed' && 'text-emerald-600 dark:text-emerald-400',
                             status === 'current' && 'text-blue-600 dark:text-blue-400',
-                            status === 'skipped' && 'text-muted-foreground',
                             status === 'pending' && 'text-muted-foreground'
                           )}
                         >
@@ -226,16 +237,8 @@ export function InvestorJourneyBar({
                       {status === 'current' && (
                         <div className="text-xs text-blue-600 mt-1">In Progress</div>
                       )}
-                      {status === 'skipped' && (
-                        <div className="text-xs text-muted-foreground mt-1">Skipped (optional)</div>
-                      )}
                       {status === 'pending' && (
                         <div className="text-xs text-muted-foreground mt-1">Pending</div>
-                      )}
-                      {stageDef.optional && (
-                        <div className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                          Optional stage
-                        </div>
                       )}
                     </div>
                   </TooltipContent>
@@ -244,22 +247,35 @@ export function InvestorJourneyBar({
             })}
           </div>
         </div>
+      </div>
+    )
+  }
 
-        {/* Stage summary text */}
-        {!compact && (
-          <div className="mt-4 text-center">
+  const currentRouteStages = stagesForRoute
+  const currentRouteIndex = getCurrentIndex(currentRouteStages)
+  const currentStageName = currentRouteStages[currentRouteIndex]?.name || 'Not started'
+
+  return (
+    <TooltipProvider>
+      <div className={cn('w-full space-y-4', className)}>
+        {route === 'choose' ? (
+          <div className="space-y-4">
+            {renderRouteBar(DATA_ROOM_STAGES, 'Data Room Access')}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-xs text-muted-foreground font-medium">OR</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+            {renderRouteBar(DIRECT_SUBSCRIBE_STAGES, 'Direct Subscribe')}
+          </div>
+        ) : (
+          renderRouteBar(currentRouteStages, getRouteLabel(route))
+        )}
+
+        {!compact && route !== 'choose' && (
+          <div className="text-center">
             <span className="text-sm text-muted-foreground">
-              {effectiveCurrentStage === 0 && 'Not started'}
-              {effectiveCurrentStage === 1 && 'Opportunity received'}
-              {effectiveCurrentStage === 2 && 'Viewed opportunity'}
-              {effectiveCurrentStage === 3 && 'Interest confirmed'}
-              {effectiveCurrentStage === 4 && 'NDA signed'}
-              {effectiveCurrentStage === 5 && 'Data room access granted'}
-              {effectiveCurrentStage === 6 && 'Subscription pack generated'}
-              {effectiveCurrentStage === 7 && 'Subscription pack sent for signing'}
-              {effectiveCurrentStage === 8 && 'Subscription signed'}
-              {effectiveCurrentStage === 9 && 'Investment funded'}
-              {effectiveCurrentStage === 10 && 'Investment active'}
+              {getRouteLabel(route)} • Current stage: {currentStageName}
             </span>
           </div>
         )}
@@ -276,17 +292,17 @@ export function JourneyProgressBadge({
   currentStage: number
   className?: string
 }) {
-  const stageName = STAGE_DEFINITIONS[currentStage - 1]?.name || 'Not Started'
+  const stageName = DATA_ROOM_STAGES[currentStage - 1]?.name || 'Not Started'
 
   return (
     <div className={cn('flex items-center gap-2', className)}>
       <div className="flex gap-0.5">
-        {STAGE_DEFINITIONS.map((stage) => (
+        {DATA_ROOM_STAGES.map((stage, index) => (
           <div
-            key={stage.number}
+            key={stage.key}
             className={cn(
               'w-2 h-2 rounded-full',
-              stage.number <= currentStage
+              index + 1 <= currentStage
                 ? 'bg-emerald-500'
                 : 'bg-muted'
             )}

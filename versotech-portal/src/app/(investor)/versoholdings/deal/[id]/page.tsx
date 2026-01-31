@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
+import { DealLogo } from '@/components/deals/deal-logo'
 import {
   Building2,
   ArrowLeft,
@@ -207,19 +207,14 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
         {/* Header */}
         <div className="flex items-start justify-between gap-6">
           <div className="flex items-start gap-4">
-            {deal.company_logo_url ? (
-              <Image
-                src={deal.company_logo_url}
-                alt={`${deal.company_name ?? deal.name} logo`}
-                width={80}
-                height={80}
-                className="rounded-lg object-contain bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 p-3"
-              />
-            ) : (
-              <div className="h-20 w-20 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-400 dark:text-gray-500 text-2xl font-semibold">
-                {deal.name.charAt(0)}
-              </div>
-            )}
+            <DealLogo
+              src={deal.company_logo_url}
+              alt={`${deal.company_name ?? deal.name} logo`}
+              size={80}
+              rounded="lg"
+              className="bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700"
+              fallbackText={deal.name.charAt(0)}
+            />
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{deal.name}</h1>
               <div className="flex items-center gap-3 mt-2">
