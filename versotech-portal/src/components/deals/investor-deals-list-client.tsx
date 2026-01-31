@@ -46,6 +46,7 @@ import {
 import { InterestModal } from '@/components/deals/interest-modal'
 import { SubscribeNowDialog } from '@/components/deals/subscribe-now-dialog'
 import { ShareDealDialog } from '@/components/deals/share-deal-dialog'
+import { getAccountStatusCopy, formatKycStatusLabel } from '@/lib/account-approval-status'
 
 type Nullable<T> = T | null
 
@@ -549,7 +550,9 @@ export function InvestorDealsListClient({
   const isInvestorView = personaMode === 'INVESTOR_ONLY' || personaMode === 'DUAL_PERSONA'
   const isAccountApproved = accountApprovalStatus === 'approved'
   const showAccountBlock = isInvestorView && !!primaryInvestorId && accountApprovalStatus !== 'approved'
-  const approvalStatusLabel = accountApprovalStatus?.replace(/_/g, ' ') || 'pending approval'
+  const accountStatusCopy = getAccountStatusCopy(accountApprovalStatus, kycStatus)
+  const approvalStatusLabel = accountStatusCopy.label
+  const kycStatusLabel = formatKycStatusLabel(kycStatus)
 
   // Helper function to determine referral stage for an investor
   const getReferralStage = (
@@ -961,8 +964,8 @@ export function InvestorDealsListClient({
           <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
             <p className="text-sm font-medium">Account approval required</p>
             <p className="text-xs text-amber-700 dark:text-amber-300">
-              Status: {approvalStatusLabel}. Complete KYC and wait for CEO approval to request access or subscribe.
-              {kycStatus ? ` KYC status: ${kycStatus.replace(/_/g, ' ')}.` : ''}
+              Status: {approvalStatusLabel}. {accountStatusCopy.description}
+              {kycStatusLabel ? ` KYC status: ${kycStatusLabel}.` : ''}
             </p>
           </div>
         )}

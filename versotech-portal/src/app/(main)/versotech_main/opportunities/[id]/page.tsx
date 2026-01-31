@@ -56,6 +56,7 @@ import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerF
 import type { DocumentReference } from '@/types/document-viewer.types'
 import { usePersona } from '@/contexts/persona-context'
 import { useProxyMode } from '@/components/commercial-partner'
+import { getAccountStatusCopy, formatKycStatusLabel } from '@/lib/account-approval-status'
 
 interface Document {
   id: string
@@ -563,7 +564,9 @@ export default function OpportunityDetailPage() {
   const isAccountApproved = opportunity.is_account_approved === true || opportunity.account_approval_status === 'approved'
   const showAccountBlock = opportunity.is_account_approved === false ||
     (opportunity.account_approval_status !== null && opportunity.account_approval_status !== 'approved')
-  const approvalStatusLabel = opportunity.account_approval_status?.replace(/_/g, ' ') || 'pending approval'
+  const accountStatusCopy = getAccountStatusCopy(opportunity.account_approval_status, opportunity.kyc_status)
+  const approvalStatusLabel = accountStatusCopy.label
+  const kycStatusLabel = formatKycStatusLabel(opportunity.kyc_status)
   const canSubscribe = opportunity.can_subscribe && !isTrackingOnly && isAccountApproved
   const canExpressInterest = opportunity.can_express_interest && !isTrackingOnly && isAccountApproved
   const canSignNda = opportunity.can_sign_nda && !isTrackingOnly && isAccountApproved
@@ -685,7 +688,8 @@ export default function OpportunityDetailPage() {
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
               <p className="text-sm font-medium">Account approval required</p>
               <p className="text-xs text-amber-700 dark:text-amber-300">
-                Status: {approvalStatusLabel}. Complete KYC and wait for CEO approval to request access or subscribe.
+                Status: {approvalStatusLabel}. {accountStatusCopy.description}
+                {kycStatusLabel ? ` KYC status: ${kycStatusLabel}.` : ''}
               </p>
             </div>
           )}

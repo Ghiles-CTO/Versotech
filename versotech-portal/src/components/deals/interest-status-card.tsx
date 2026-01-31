@@ -18,6 +18,7 @@ import {
   AlertCircle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getAccountStatusCopy, formatKycStatusLabel } from '@/lib/account-approval-status'
 
 interface InterestStatusCardProps {
   currentStage: number
@@ -135,7 +136,7 @@ const stageMetadata: Record<number, StageInfo> = {
 }
 
 const blockedStageInfo: StageInfo = {
-  label: 'Account Approval Pending',
+  label: 'Account approval required',
   description: 'Complete KYC and await approval to request data room access or subscribe.',
   icon: AlertCircle,
   color: 'text-amber-700 dark:text-amber-300',
@@ -187,15 +188,24 @@ export function InterestStatusCard({
   isTrackingOnly,
   isAccountApproved,
   accountApprovalStatus,
+  kycStatus,
   onExpressInterest,
   onSignNda,
   onSubscribe
 }: InterestStatusCardProps) {
   const isApprovalBlocked = isAccountApproved === false
-  const stageInfo = isApprovalBlocked ? blockedStageInfo : (stageMetadata[currentStage] || stageMetadata[0])
+  const accountStatusCopy = getAccountStatusCopy(accountApprovalStatus, kycStatus)
+  const stageInfo = isApprovalBlocked
+    ? {
+        ...blockedStageInfo,
+        label: accountStatusCopy.label,
+        description: accountStatusCopy.description || blockedStageInfo.description
+      }
+    : (stageMetadata[currentStage] || stageMetadata[0])
   const Icon = stageInfo.icon
   const lastAction = isApprovalBlocked ? null : getLastAction(membership, subscription)
-  const approvalStatusLabel = accountApprovalStatus?.replace(/_/g, ' ') || 'pending approval'
+  const approvalStatusLabel = accountStatusCopy.label
+  const kycStatusLabel = formatKycStatusLabel(kycStatus)
 
   // Determine if we're in early stages where both options should be shown
   const isEarlyStage = currentStage <= 2 && !subscription
@@ -279,7 +289,8 @@ export function InterestStatusCard({
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
             <p className="text-sm font-medium">Account approval required</p>
             <p className="text-xs text-amber-700 dark:text-amber-300">
-              Status: {approvalStatusLabel}. Complete KYC and wait for CEO approval to continue.
+              Status: {approvalStatusLabel}. {accountStatusCopy.description}
+              {kycStatusLabel ? ` KYC status: ${kycStatusLabel}.` : ''}
             </p>
           </div>
         )}

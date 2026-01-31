@@ -27,6 +27,7 @@ import { InterestModal } from '@/components/deals/interest-modal'
 import { SubscribeNowDialog } from '@/components/deals/subscribe-now-dialog'
 import { AskQuestionButton } from '@/components/deals/ask-question-button'
 import { DealFaqSection } from '@/components/deals/deal-faq-section'
+import { getAccountStatusCopy, formatKycStatusLabel } from '@/lib/account-approval-status'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,7 +67,9 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
 
   const accountApprovalStatus = investorAccount?.account_approval_status ?? null
   const isAccountApproved = accountApprovalStatus === 'approved'
-  const approvalStatusLabel = accountApprovalStatus?.replace(/_/g, ' ') || 'pending approval'
+  const accountStatusCopy = getAccountStatusCopy(accountApprovalStatus, investorAccount?.kyc_status ?? null)
+  const approvalStatusLabel = accountStatusCopy.label
+  const kycStatusLabel = formatKycStatusLabel(investorAccount?.kyc_status ?? null)
 
   // Fetch deal with all related data
   // IMPORTANT: Filter by user_id (dispatch-based), not investor_id (entity-based)
@@ -666,7 +669,8 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                       <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
                         <p className="text-sm font-medium">Account approval required</p>
                         <p className="text-xs text-amber-700 dark:text-amber-300">
-                          Status: {approvalStatusLabel}. Complete KYC and wait for CEO approval to request access or subscribe.
+                          Status: {approvalStatusLabel}. {accountStatusCopy.description}
+                          {kycStatusLabel ? ` KYC status: ${kycStatusLabel}.` : ''}
                         </p>
                       </div>
                     )}
