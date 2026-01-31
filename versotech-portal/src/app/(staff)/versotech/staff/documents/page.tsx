@@ -1,13 +1,21 @@
 import { createClient } from '@/lib/supabase/server'
-import { requireStaffAuth } from '@/lib/auth'
-import { StaffDocumentsClient } from '@/components/documents/staff-documents-client'
+import { checkCeoOnlyAccess, getCurrentUser } from '@/lib/auth'
+import { redirect } from 'next/navigation'
+import { StaffDocuments } from '@/components/documents/staff'
 
 export const dynamic = 'force-dynamic'
 
 export default async function StaffDocumentsPage() {
-  // Auth check using the same method as other staff pages
-  const user = await requireStaffAuth()
-  
+  const user = await getCurrentUser()
+  if (!user) {
+    redirect('/versotech_main/login')
+  }
+
+  const hasAccess = await checkCeoOnlyAccess(user.id)
+  if (!hasAccess) {
+    throw new Error('CEO access required')
+  }
+
   const supabase = await createClient()
 
   // Fetch all vehicles for folder initialization
@@ -24,9 +32,9 @@ export default async function StaffDocumentsPage() {
   }
 
   return (
-    <StaffDocumentsClient
-        initialVehicles={vehicles || []}
-        userProfile={userProfile}
-      />
-    )
+    <StaffDocuments
+      initialVehicles={vehicles || []}
+      userProfile={userProfile}
+    />
+  )
 }

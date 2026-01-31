@@ -1,9 +1,9 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { StaffDocumentsClient } from '@/components/documents/staff-documents-client'
+import { StaffDocuments } from '@/components/documents/staff'
 import { CategorizedDocumentsClient } from '@/components/documents/categorized-documents-client'
 import { loadInvestorDocuments } from '@/lib/documents/investor-documents'
 import { AlertCircle, FileText } from 'lucide-react'
-import { checkStaffAccess } from '@/lib/auth'
+import { checkCeoOnlyAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
  * Documents Page for Unified Portal (versotech_main)
  *
  * Persona-aware document management:
- * - Staff/CEO personas: Full access to all documents (staff view)
+ * - CEO persona: Full access to all documents (staff view)
  * - Investors: Full categorized document experience (agreements, statements, NDAs, reports)
  * - Lawyers/Partners/CPs/Introducers: Same categorized view based on their investor links
  */
@@ -36,11 +36,11 @@ export default async function DocumentsPage() {
   }
 
   // Check user personas for access level
-  const isStaff = await checkStaffAccess(user.id)
+  const isCeo = await checkCeoOnlyAccess(user.id)
   const serviceSupabase = createServiceClient()
 
-  // Staff get full document management access
-  if (isStaff) {
+  // CEO gets full document management access
+  if (isCeo) {
     const { data: profile } = await serviceSupabase
       .from('profiles')
       .select('role, display_name, title')
@@ -59,12 +59,10 @@ export default async function DocumentsPage() {
     }
 
     return (
-      <div className="p-6">
-        <StaffDocumentsClient
-          initialVehicles={vehicles || []}
-          userProfile={userProfile}
-        />
-      </div>
+      <StaffDocuments
+        initialVehicles={vehicles || []}
+        userProfile={userProfile}
+      />
     )
   }
 

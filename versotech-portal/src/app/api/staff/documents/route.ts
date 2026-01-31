@@ -17,6 +17,10 @@ export async function GET(request: NextRequest) {
     const includeSubfolders = searchParams.get('include_subfolders') === 'true'
     const vehicleId = searchParams.get('vehicle_id')
     const dealId = searchParams.get('deal_id')
+    const participantId = searchParams.get('participant_id') || searchParams.get('investor_id')
+    const participantType =
+      searchParams.get('participant_type') ||
+      (searchParams.get('investor_id') ? 'investor' : null)
     const status = searchParams.get('status')
     const search = searchParams.get('search')
     const type = searchParams.get('type')
@@ -42,20 +46,68 @@ export async function GET(request: NextRequest) {
         publishing_schedule:document_publishing_schedule(id, publish_at, unpublish_at, published)
       `, { count: 'exact' })
 
-    // Apply filters
-    if (folderIds && folderIds.length > 0 && includeSubfolders) {
-      // Include documents from all folders (parent and descendants)
-      query = query.in('folder_id', folderIds)
-    } else if (folderId) {
-      query = query.eq('folder_id', folderId)
+    const hasParticipantFilter = !!participantId && !!participantType
+    let subscriptionIds: string[] = []
+    let submissionIds: string[] = []
+
+    if (hasParticipantFilter && participantType === 'investor') {
+      let subsQuery = serviceSupabase
+        .from('subscriptions')
+        .select('id')
+        .eq('investor_id', participantId)
+
+      let submissionsQuery = serviceSupabase
+        .from('deal_subscription_submissions')
+        .select('id')
+        .eq('investor_id', participantId)
+
+      if (dealId) {
+        subsQuery = subsQuery.eq('deal_id', dealId)
+        submissionsQuery = submissionsQuery.eq('deal_id', dealId)
+      }
+
+      const { data: subs } = await subsQuery
+      subscriptionIds = (subs || []).map(s => s.id)
+
+      const { data: submissions } = await submissionsQuery
+      submissionIds = (submissions || []).map(s => s.id)
     }
 
-    if (vehicleId) {
+    // Apply filters
+    if (!hasParticipantFilter) {
+      if (folderIds && folderIds.length > 0 && includeSubfolders) {
+        // Include documents from all folders (parent and descendants)
+        query = query.in('folder_id', folderIds)
+      } else if (folderId) {
+        query = query.eq('folder_id', folderId)
+      }
+    }
+
+    if (vehicleId && !hasParticipantFilter) {
       query = query.eq('vehicle_id', vehicleId)
     }
 
-    if (dealId) {
+    if (dealId && !hasParticipantFilter) {
       query = query.eq('deal_id', dealId)
+    }
+
+    if (hasParticipantFilter) {
+      if (participantType === 'investor') {
+        const orConditions = [`owner_investor_id.eq.${participantId}`]
+        if (subscriptionIds.length > 0) {
+          orConditions.push(`subscription_id.in.(${subscriptionIds.join(',')})`)
+        }
+        if (submissionIds.length > 0) {
+          orConditions.push(`subscription_submission_id.in.(${submissionIds.join(',')})`)
+        }
+        query = query.or(orConditions.join(','))
+      } else if (participantType === 'partner') {
+        query = query.eq('partner_id', participantId)
+      } else if (participantType === 'introducer') {
+        query = query.eq('introducer_id', participantId)
+      } else if (participantType === 'commercial_partner') {
+        query = query.eq('commercial_partner_id', participantId)
+      }
     }
 
     if (status) {
@@ -134,6 +186,8 @@ export async function GET(request: NextRequest) {
         folder_id: folderId,
         vehicle_id: vehicleId,
         deal_id: dealId,
+        participant_id: participantId,
+        participant_type: participantType,
         status,
         search,
         type,
@@ -149,4 +203,3 @@ export async function GET(request: NextRequest) {
     )
   }
 }
-

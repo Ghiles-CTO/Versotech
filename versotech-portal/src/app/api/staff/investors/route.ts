@@ -51,6 +51,8 @@ export async function GET(request: NextRequest) {
     // Get search parameter
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
+    const limitParam = parseInt(searchParams.get('limit') || '500', 10)
+    const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 2000) : 500
 
     // Build query
     let query = serviceClient
@@ -64,7 +66,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Limit results
-    query = query.limit(50)
+    query = query.limit(limit)
 
     const { data: investors, error } = await query
 

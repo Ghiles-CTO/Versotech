@@ -10,12 +10,20 @@ interface FolderBreadcrumbsProps {
   onNavigate: (folderId: string | null) => void
   /** Vehicle context for the current folder hierarchy */
   vehicle?: { id: string; name: string } | null
+  /** Virtual parent name (for SCSP/LLC grouped vehicles) */
+  virtualParentName?: string
   /** Called when user clicks the vehicle segment (navigates to vehicle's root) */
   onVehicleClick?: () => void
   className?: string
 }
 
 /**
+ * @deprecated Use StaffDocumentsBreadcrumb instead.
+ * This component has navigation issues:
+ * - Intermediate breadcrumbs navigate to null (no folder IDs stored)
+ * - Does not track full navigation history
+ * - Inconsistent with data room mode
+ *
  * FolderBreadcrumbs - Institutional Navigation Component
  *
  * Professional breadcrumb navigation for folder hierarchy.
@@ -31,6 +39,7 @@ export function FolderBreadcrumbs({
   currentFolder,
   onNavigate,
   vehicle,
+  virtualParentName,
   onVehicleClick,
   className,
 }: FolderBreadcrumbsProps) {
@@ -91,6 +100,23 @@ export function FolderBreadcrumbs({
       >
         <Home className="w-4 h-4" strokeWidth={2} />
       </button>
+
+      {/* Virtual Parent Segment (for SCSP/LLC grouped vehicles) */}
+      {virtualParentName && !vehicle && (
+        <>
+          <ChevronRight
+            className="w-4 h-4 text-muted-foreground/60 flex-shrink-0"
+            strokeWidth={2}
+            aria-hidden="true"
+          />
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-muted border border-border rounded-md">
+            <Building2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" strokeWidth={2} />
+            <span className="text-sm font-medium text-foreground truncate max-w-[200px]">
+              {virtualParentName}
+            </span>
+          </div>
+        </>
+      )}
 
       {/* Vehicle Segment (if vehicle context exists) */}
       {vehicle && (

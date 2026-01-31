@@ -244,17 +244,27 @@ export function DocumentViewerFullscreen({
         {/* CONFIDENTIAL Watermark Overlay for watermarked documents */}
         {document?.watermark && !isLoading && !error && !iframeError && (
           <div
-            className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden"
+            className="absolute inset-0 pointer-events-none overflow-hidden"
             aria-hidden="true"
           >
-            <div
-              className="text-6xl md:text-8xl font-bold text-red-500 whitespace-nowrap select-none"
-              style={{
-                transform: 'rotate(-45deg)',
-                opacity: 0.3,
-              }}
-            >
-              CONFIDENTIAL - VERSO Holdings
+            {/* Diagonal watermark text */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div
+                className="text-[100px] md:text-[140px] font-bold text-gray-400 whitespace-nowrap select-none"
+                style={{
+                  transform: 'rotate(-45deg)',
+                  opacity: 0.08,
+                  textShadow: '0 0 10px rgba(0,0,0,0.1)',
+                }}
+              >
+                CONFIDENTIAL
+              </div>
+            </div>
+            {/* Footer attribution */}
+            <div className="absolute bottom-4 right-4 text-xs text-gray-400/50 bg-black/20 px-2 py-1 rounded select-none">
+              VERSO Holdings • {document.watermark.uploaded_at
+                ? new Date(document.watermark.uploaded_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                : 'Confidential Document'}
             </div>
           </div>
         )}

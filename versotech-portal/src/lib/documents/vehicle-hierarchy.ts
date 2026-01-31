@@ -23,6 +23,25 @@ export interface VehicleNode extends Vehicle {
 }
 
 /**
+ * Formats a virtual parent ID into a display name.
+ * Example: "virtual-series-verso-capital-1-scsp" -> "Verso Capital 1 SCSP"
+ */
+export function getVirtualParentDisplayName(virtualId: string): string {
+  const slug = virtualId.replace(/^virtual-/, '')
+  const normalized = slug.replace(/^series-/, '')
+  return normalized
+    .split('-')
+    .map(word => {
+      const lower = word.toLowerCase()
+      if (['scsp', 'llc', 'lp', 'ltd', 'sarl', 'spv'].includes(lower)) {
+        return lower.toUpperCase()
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1)
+    })
+    .join(' ')
+}
+
+/**
  * Determines if a vehicle should be treated as a parent node
  */
 export function isParentVehicle(vehicle: Vehicle): boolean {
@@ -62,6 +81,22 @@ function normalizeName(name: string): string {
   return name.toLowerCase().replace(/\s+/g, ' ').trim()
 }
 
+function isSeriesVehicleName(name: string): boolean {
+  return extractSeriesParentName(name) !== null
+}
+
+function isCompartmentVehicleName(name: string): boolean {
+  return extractCompartmentParentName(name) !== null
+}
+
+function getParentScore(vehicle: Vehicle): number {
+  // Prefer true parent vehicles; avoid choosing series/compartment children as parents.
+  const isSeries = isSeriesVehicleName(vehicle.name)
+  const isCompartment = isCompartmentVehicleName(vehicle.name)
+  const isChild = isSeries || isCompartment
+  return (isParentVehicle(vehicle) ? 2 : 0) + (isChild ? 0 : 1)
+}
+
 /**
  * Finds the best matching parent for a compartment vehicle
  */
@@ -72,32 +107,34 @@ function findCompartmentParent(
   const normalizedBase = normalizeName(compartmentBaseName)
 
   // Try exact match first
-  for (const parent of parentVehicles) {
-    if (normalizeName(parent.name) === normalizedBase) {
-      return parent
-    }
-  }
+  const exact = parentVehicles.find(
+    (parent) => normalizeName(parent.name) === normalizedBase
+  )
+  if (exact) return exact
 
   // Try prefix match (e.g., "Real Empire Capital" matches "REAL Empire")
-  for (const parent of parentVehicles) {
+  const prefixCandidates = parentVehicles.filter((parent) => {
     const normalizedParent = normalizeName(parent.name)
-    // Check if the compartment base starts with or contains the parent name
-    if (normalizedBase.startsWith(normalizedParent) ||
-        normalizedBase.includes(normalizedParent) ||
-        normalizedParent.includes(normalizedBase.split(' ')[0])) {
-      return parent
-    }
-  }
+    return (
+      normalizedBase.startsWith(normalizedParent) ||
+      normalizedBase.includes(normalizedParent) ||
+      normalizedParent.startsWith(normalizedBase)
+    )
+  })
+  if (prefixCandidates.length === 1) return prefixCandidates[0]
 
   // Try matching first two words
   const baseWords = normalizedBase.split(' ')
-  for (const parent of parentVehicles) {
+  const wordCandidates = parentVehicles.filter((parent) => {
     const parentWords = normalizeName(parent.name).split(' ')
-    if (baseWords.length >= 2 && parentWords.length >= 2 &&
-        baseWords[0] === parentWords[0] && baseWords[1] === parentWords[1]) {
-      return parent
-    }
-  }
+    return (
+      baseWords.length >= 2 &&
+      parentWords.length >= 2 &&
+      baseWords[0] === parentWords[0] &&
+      baseWords[1] === parentWords[1]
+    )
+  })
+  if (wordCandidates.length === 1) return wordCandidates[0]
 
   return null
 }
@@ -113,28 +150,57 @@ export function parseVehicleHierarchy(vehicles: Vehicle[]): VehicleNode[] {
     return []
   }
 
-  // Separate parent vehicles from potential children
-  const parentVehicles = vehicles.filter(isParentVehicle)
-  const childCandidates = vehicles.filter(v => !isParentVehicle(v))
+  const vehiclesByName = new Map<string, Vehicle>()
+  vehicles.forEach((vehicle) => {
+    const key = normalizeName(vehicle.name)
+    const existing = vehiclesByName.get(key)
+    if (!existing) {
+      vehiclesByName.set(key, vehicle)
+      return
+    }
+    const existingScore = getParentScore(existing)
+    const nextScore = getParentScore(vehicle)
+    if (nextScore > existingScore) {
+      vehiclesByName.set(key, vehicle)
+    }
+  })
 
   // Track which vehicles have been assigned to a parent
   const assignedVehicleIds = new Set<string>()
 
-  // Map to collect series children by their SCSP/LLC parent name
-  const seriesGroups = new Map<string, Vehicle[]>()
+  // Map to collect series children by their SCSP/LLC parent name (normalized key)
+  const seriesGroups = new Map<string, { name: string; vehicles: Vehicle[] }>()
+  const realSeriesChildren = new Map<string, Vehicle[]>()
 
   // Map to collect compartment children by their parent vehicle ID
   const compartmentChildren = new Map<string, Vehicle[]>()
 
-  // Process child candidates
-  for (const vehicle of childCandidates) {
+  const compartmentParentCandidates = vehicles.filter(
+    (vehicle) =>
+      isParentVehicle(vehicle) &&
+      !isSeriesVehicleName(vehicle.name) &&
+      !isCompartmentVehicleName(vehicle.name)
+  )
+
+  // Process all vehicles for potential series/compartment grouping
+  for (const vehicle of vehicles) {
     // Check for Series pattern (e.g., "VERSO Capital 1 SCSP Series 101")
     const seriesParentName = extractSeriesParentName(vehicle.name)
     if (seriesParentName) {
-      if (!seriesGroups.has(seriesParentName)) {
-        seriesGroups.set(seriesParentName, [])
+      const seriesKey = normalizeName(seriesParentName)
+      const realParent = vehiclesByName.get(seriesKey)
+      if (realParent && realParent.id !== vehicle.id) {
+        if (!realSeriesChildren.has(realParent.id)) {
+          realSeriesChildren.set(realParent.id, [])
+        }
+        realSeriesChildren.get(realParent.id)!.push(vehicle)
+      } else {
+        const displayName = realParent?.name || seriesParentName
+        if (!seriesGroups.has(seriesKey)) {
+          seriesGroups.set(seriesKey, { name: displayName, vehicles: [] })
+        }
+        seriesGroups.get(seriesKey)!.vehicles.push(vehicle)
       }
-      seriesGroups.get(seriesParentName)!.push(vehicle)
       assignedVehicleIds.add(vehicle.id)
       continue
     }
@@ -142,7 +208,7 @@ export function parseVehicleHierarchy(vehicles: Vehicle[]): VehicleNode[] {
     // Check for Compartment pattern (e.g., "Real Empire Capital Compartment 1")
     const compartmentBaseName = extractCompartmentParentName(vehicle.name)
     if (compartmentBaseName) {
-      const parent = findCompartmentParent(compartmentBaseName, parentVehicles)
+      const parent = findCompartmentParent(compartmentBaseName, compartmentParentCandidates)
       if (parent) {
         if (!compartmentChildren.has(parent.id)) {
           compartmentChildren.set(parent.id, [])
@@ -153,12 +219,36 @@ export function parseVehicleHierarchy(vehicles: Vehicle[]): VehicleNode[] {
     }
   }
 
+  const childrenByParentId = new Map<string, Vehicle[]>()
+  const addChildren = (parentId: string, children: Vehicle[]) => {
+    if (!childrenByParentId.has(parentId)) {
+      childrenByParentId.set(parentId, [])
+    }
+    childrenByParentId.get(parentId)!.push(...children)
+  }
+
+  for (const [parentId, children] of compartmentChildren.entries()) {
+    addChildren(parentId, children)
+  }
+
+  for (const [parentId, children] of realSeriesChildren.entries()) {
+    addChildren(parentId, children)
+  }
+
+  const hasChildren = (vehicleId: string) =>
+    (childrenByParentId.get(vehicleId) || []).length > 0
+
   // Build the result hierarchy
   const result: VehicleNode[] = []
 
-  // Add parent vehicles with their compartment children
-  for (const parent of parentVehicles) {
-    const children = compartmentChildren.get(parent.id) || []
+  // Add real parent vehicles (funds/securitizations or vehicles with children)
+  const topLevelParents = vehicles.filter((vehicle) => {
+    if (assignedVehicleIds.has(vehicle.id)) return false
+    return isParentVehicle(vehicle) || hasChildren(vehicle.id)
+  })
+
+  for (const parent of topLevelParents) {
+    const children = childrenByParentId.get(parent.id) || []
     result.push({
       ...parent,
       isParent: true,
@@ -172,7 +262,9 @@ export function parseVehicleHierarchy(vehicles: Vehicle[]): VehicleNode[] {
   }
 
   // Add virtual SCSP/LLC parent nodes with their series children
-  for (const [parentName, seriesVehicles] of seriesGroups) {
+  for (const [seriesKey, group] of seriesGroups) {
+    const parentName = group.name
+    const seriesVehicles = group.vehicles
     // Sort series by extracting the series number
     const sortedSeries = [...seriesVehicles].sort((a, b) => {
       const aMatch = a.name.match(/Series\s+(\w+)$/i)
@@ -183,7 +275,7 @@ export function parseVehicleHierarchy(vehicles: Vehicle[]): VehicleNode[] {
     })
 
     result.push({
-      id: `virtual-${parentName.replace(/\s+/g, '-').toLowerCase()}`,
+      id: `virtual-series-${seriesKey.replace(/\s+/g, '-')}`,
       name: parentName,
       type: 'scsp', // Virtual type for SCSP parents
       isParent: true,
@@ -197,7 +289,9 @@ export function parseVehicleHierarchy(vehicles: Vehicle[]): VehicleNode[] {
   }
 
   // Collect standalone vehicles (not assigned to any parent)
-  const standaloneVehicles = vehicles.filter(v => !assignedVehicleIds.has(v.id))
+  const standaloneVehicles = vehicles.filter(
+    v => !assignedVehicleIds.has(v.id) && !hasChildren(v.id) && !isParentVehicle(v)
+  )
 
   // Add "Other" group if there are standalone vehicles
   if (standaloneVehicles.length > 0) {
@@ -215,8 +309,36 @@ export function parseVehicleHierarchy(vehicles: Vehicle[]): VehicleNode[] {
     })
   }
 
+  // Deduplicate any accidental ID collisions (prevents React key warnings)
+  const uniqueMap = new Map<string, VehicleNode>()
+  for (const node of result) {
+    const existing = uniqueMap.get(node.id)
+    if (!existing) {
+      uniqueMap.set(node.id, { ...node, children: [...node.children] })
+      continue
+    }
+
+    const mergedChildrenMap = new Map<string, VehicleNode>()
+    for (const child of [...existing.children, ...node.children]) {
+      if (!mergedChildrenMap.has(child.id)) {
+        mergedChildrenMap.set(child.id, child)
+      }
+    }
+
+    uniqueMap.set(node.id, {
+      ...existing,
+      name: existing.name || node.name,
+      type: existing.type || node.type,
+      isParent: existing.isParent || node.isParent,
+      isVirtual: existing.isVirtual || node.isVirtual,
+      children: Array.from(mergedChildrenMap.values()),
+    })
+  }
+
+  const uniqueResult = Array.from(uniqueMap.values())
+
   // Sort result: real vehicles first (alphabetically), then virtual groups
-  result.sort((a, b) => {
+  uniqueResult.sort((a, b) => {
     // Virtual groups go last
     if (a.isVirtual && !b.isVirtual) return 1
     if (!a.isVirtual && b.isVirtual) return -1
@@ -224,7 +346,7 @@ export function parseVehicleHierarchy(vehicles: Vehicle[]): VehicleNode[] {
     return a.name.localeCompare(b.name)
   })
 
-  return result
+  return uniqueResult
 }
 
 /**

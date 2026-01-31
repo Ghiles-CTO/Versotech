@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { authenticateStaffForDocuments } from '@/lib/document-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,27 +16,12 @@ export async function GET(
   const { dealId } = await params
 
   try {
-    const clientSupabase = await createClient()
-    const { data: { user }, error: authError } = await clientSupabase.auth.getUser()
+    const auth = await authenticateStaffForDocuments()
+    if (auth.error) return auth.error
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Verify staff access
-    const { data: profile } = await clientSupabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    const isStaff = profile?.role?.startsWith('staff_') || profile?.role === 'ceo'
-    if (!isStaff) {
-      return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
-    }
+    const { serviceSupabase } = auth
 
     // Verify deal exists and get deal info
-    const serviceSupabase = createServiceClient()
     const { data: deal, error: dealError } = await serviceSupabase
       .from('deals')
       .select('id, name, vehicle_id')

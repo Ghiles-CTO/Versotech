@@ -9,6 +9,7 @@ export interface AuthResult {
 
 export async function authenticateStaffForDocuments(): Promise<AuthResult> {
   const supabase = await createClient()
+  const serviceSupabase = createServiceClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   
   if (authError || !user) {
@@ -25,17 +26,27 @@ export async function authenticateStaffForDocuments(): Promise<AuthResult> {
     .eq('id', user.id)
     .single()
 
-  if (!profile || !['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(profile.role)) {
+  const hasCeoRole = !!profile && profile.role === 'ceo'
+  let hasCeoPersona = false
+  if (!hasCeoRole) {
+    const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
+      p_user_id: user.id
+    })
+    hasCeoPersona = personas?.some(
+      (p: { persona_type: string }) => p.persona_type === 'ceo'
+    ) || false
+  }
+
+  if (!hasCeoRole && !hasCeoPersona) {
     return {
       serviceSupabase: null,
       userId: '',
-      error: NextResponse.json({ error: 'Staff access required' }, { status: 403 })
+      error: NextResponse.json({ error: 'CEO access required' }, { status: 403 })
     }
   }
   
   return {
-    serviceSupabase: createServiceClient(),
+    serviceSupabase,
     userId: user.id
   }
 }
-

@@ -11,6 +11,7 @@ const createDealSchema = z.object({
   arranger_entity_id: z.string().uuid().optional().nullable(),
   deal_type: z.enum(['equity_secondary', 'equity_primary', 'credit_trade_finance', 'other']).default('equity_secondary'),
   stock_type: z.enum(['common', 'preferred', 'convertible', 'warrant', 'bond', 'note', 'other']).optional().nullable().default('common'),
+  status: z.enum(['draft', 'open', 'allocation_pending', 'closed', 'cancelled']).optional().nullable(),
   currency: z.string().default('USD'),
   company_logo_url: z.string().url('Invalid company logo URL').optional().nullable(),
   offer_unit_price: z.number().optional().nullable(),
@@ -64,7 +65,19 @@ export async function GET(request: Request) {
       )
     }
 
-    let query = supabase
+    const serviceSupabase = createServiceClient()
+    const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
+      p_user_id: user.id
+    })
+
+    const hasStaffPersona = personas?.some(
+      (p: { persona_type: string }) => p.persona_type === 'staff' || p.persona_type === 'ceo'
+    ) || false
+
+    const isStaff = profile?.role?.startsWith('staff_') || profile?.role === 'ceo' || hasStaffPersona
+    const queryClient = isStaff ? serviceSupabase : supabase
+
+    let query = queryClient
       .from('deals')
       .select(`
         *,
@@ -247,11 +260,16 @@ export async function POST(request: Request) {
       }
     }
 
-    const dealData = {
-      ...validatedData,
+    const { status, ...dealPayload } = validatedData
+
+    const dealData: Record<string, any> = {
+      ...dealPayload,
       company_logo_url: companyLogoUrl,
-      created_by: createdBy,
-      status: 'draft' // Always start as draft
+      created_by: createdBy
+    }
+
+    if (status) {
+      dealData.status = status
     }
     
     console.log('[API /deals POST] Inserting deal:', dealData)

@@ -12,6 +12,7 @@ interface CreateFolderDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   parentFolderId?: string | null
+  vehicleId?: string | null
   onSuccess?: () => void
 }
 
@@ -19,6 +20,7 @@ export function CreateFolderDialog({
   open,
   onOpenChange,
   parentFolderId,
+  vehicleId,
   onSuccess
 }: CreateFolderDialogProps) {
   const [folderName, setFolderName] = useState('')
@@ -35,7 +37,8 @@ export function CreateFolderDialog({
       const payload = {
         name: folderName.trim(),
         folder_type: 'custom' as const,
-        ...(parentFolderId && { parent_folder_id: parentFolderId })
+        ...(parentFolderId && { parent_folder_id: parentFolderId }),
+        ...(vehicleId && { vehicle_id: vehicleId })
       }
 
       const response = await fetch('/api/staff/documents/folders', {
@@ -134,4 +137,3 @@ export function CreateFolderDialog({
     </Dialog>
   )
 }
-

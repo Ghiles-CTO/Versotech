@@ -258,5 +258,31 @@ export async function checkCeoAccess(userId: string): Promise<boolean> {
   return profile?.role === 'ceo' || profile?.role === 'staff_admin'
 }
 
+/**
+ * Check if a user is strictly a CEO (not staff_admin).
+ * Useful for pages restricted to CEO only.
+ */
+export async function checkCeoOnlyAccess(userId: string): Promise<boolean> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single()
+
+  if (profile?.role === 'ceo') {
+    return true
+  }
+
+  const { data: personas } = await supabase.rpc('get_user_personas', {
+    p_user_id: userId
+  })
+
+  return (
+    personas?.some((p: { persona_type: string }) => p.persona_type === 'ceo') || false
+  )
+}
+
 // Export STAFF_ROLES for use in pages
 export { STAFF_ROLES }

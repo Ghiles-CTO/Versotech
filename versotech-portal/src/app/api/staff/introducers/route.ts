@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient, createServiceClient } from "@/lib/supabase/server"
-import { isStaffUser } from "@/lib/api-auth"
+import { getAuthenticatedUser, isStaffUser } from "@/lib/api-auth"
 import { z } from "zod"
 
 const bodySchema = z.object({
@@ -24,6 +24,55 @@ const bodySchema = z.object({
   status: z.enum(["active", "inactive", "suspended"]).optional().default("active"),
   notes: z.string().trim().optional().nullable(),
 })
+
+/**
+ * GET /api/staff/introducers?search=...
+ * Lightweight list endpoint for staff selectors.
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = await createClient()
+    const { user, error: authError } = await getAuthenticatedUser(supabase)
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const isStaff = await isStaffUser(supabase, user)
+    if (!isStaff) {
+      return NextResponse.json({ error: "Staff access required" }, { status: 403 })
+    }
+
+    const serviceClient = createServiceClient()
+    const { searchParams } = new URL(request.url)
+    const search = searchParams.get("search")
+    const limitParam = parseInt(searchParams.get("limit") || "500", 10)
+    const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 2000) : 500
+
+    let query = serviceClient
+      .from("introducers")
+      .select("id, display_name, legal_name, email, status, type")
+      .order("display_name", { ascending: true })
+
+    if (search && search.trim().length > 0) {
+      query = query.or(
+        `display_name.ilike.%${search}%,legal_name.ilike.%${search}%,email.ilike.%${search}%`
+      )
+    }
+
+    const { data: introducers, error } = await query.limit(limit)
+
+    if (error) {
+      console.error("Error fetching introducers:", error)
+      return NextResponse.json({ error: "Failed to fetch introducers" }, { status: 500 })
+    }
+
+    return NextResponse.json({ introducers: introducers || [] })
+  } catch (error) {
+    console.error("Introducers API error:", error)
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {

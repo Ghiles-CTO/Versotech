@@ -1687,8 +1687,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     const officeExtensions = ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt', 'odt', 'ods', 'odp']
 
     if (officeExtensions.includes(fileExt)) {
-      toast.info('Office documents cannot be previewed. Use Download to view.')
-      handleDownload(doc.id)
+      toast.info('Office documents cannot be previewed. Click Download to view.')
       return
     }
 
@@ -2613,6 +2612,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
         open={createFolderDialogOpen}
         onOpenChange={setCreateFolderDialogOpen}
         parentFolderId={createFolderParentId}
+        vehicleId={selectedVehicleId}
         onSuccess={() => loadFolders()}
       />
 
