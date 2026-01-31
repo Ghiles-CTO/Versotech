@@ -51,6 +51,7 @@ import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
 
 // Import shared KYC dialog components
 import { EntityKYCEditDialog, EntityAddressEditDialog, IndividualKycDisplay } from '@/components/shared'
+import { PersonalKYCSection, MemberKYCData } from '@/components/profile/personal-kyc-section'
 
 type IntroducerInfo = {
   id: string
@@ -145,6 +146,7 @@ interface IntroducerProfileClientProps {
   introducerUserInfo: IntroducerUserInfo
   activeAgreement: ActiveAgreement | null
   introductionCount: number
+  memberInfo: MemberKYCData | null
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -214,6 +216,7 @@ export function IntroducerProfileClient({
   introducerUserInfo,
   activeAgreement,
   introductionCount,
+  memberInfo,
 }: IntroducerProfileClientProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -612,6 +615,16 @@ export function IntroducerProfileClient({
               </div>
             </CardContent>
           </Card>
+
+          {/* Personal KYC Section - For the logged-in user's member record */}
+          {introducerInfo && (
+            <PersonalKYCSection
+              memberData={memberInfo}
+              entityType="introducer"
+              entityId={introducerInfo.id}
+              onRefresh={() => window.location.reload()}
+            />
+          )}
 
           {/* Individual KYC Card (only for individual introducers) - Full Display */}
           {introducerInfo?.type === 'individual' && (

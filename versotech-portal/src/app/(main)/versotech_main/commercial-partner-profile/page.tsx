@@ -92,6 +92,52 @@ export default async function CommercialPartnerProfilePage() {
     .select('id', { count: 'exact', head: true })
     .eq('commercial_partner_id', cpUser.commercial_partner_id)
 
+  // Fetch the user's member record for personal KYC (linked via linked_user_id)
+  const { data: memberData, error: memberError } = await serviceSupabase
+    .from('commercial_partner_members')
+    .select(`
+      id,
+      full_name,
+      first_name,
+      middle_name,
+      last_name,
+      name_suffix,
+      role,
+      email,
+      phone,
+      phone_mobile,
+      phone_office,
+      date_of_birth,
+      country_of_birth,
+      nationality,
+      residential_street,
+      residential_line_2,
+      residential_city,
+      residential_state,
+      residential_postal_code,
+      residential_country,
+      is_us_citizen,
+      is_us_taxpayer,
+      us_taxpayer_id,
+      country_of_tax_residency,
+      tax_id_number,
+      id_type,
+      id_number,
+      id_issue_date,
+      id_expiry_date,
+      id_issuing_country,
+      kyc_status,
+      kyc_approved_at,
+      kyc_notes
+    `)
+    .eq('commercial_partner_id', cpUser.commercial_partner_id)
+    .eq('linked_user_id', user.id)
+    .maybeSingle()
+
+  if (memberError) {
+    console.error('[CommercialPartnerProfilePage] Error fetching member:', memberError)
+  }
+
   return (
     <CommercialPartnerProfileClient
       userEmail={user.email || ''}
@@ -164,6 +210,7 @@ export default async function CommercialPartnerProfilePage() {
         can_execute_for_clients: cpUser.can_execute_for_clients || false,
       }}
       agreementCount={agreementCount || 0}
+      memberInfo={memberData || null}
     />
   )
 }

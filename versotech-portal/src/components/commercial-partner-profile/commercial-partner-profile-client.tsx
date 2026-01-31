@@ -47,6 +47,7 @@ import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-ta
 import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
 import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
 import { EntityKYCEditDialog, EntityAddressEditDialog, IndividualKycDisplay } from '@/components/shared'
+import { PersonalKYCSection, MemberKYCData } from '@/components/profile/personal-kyc-section'
 
 type CommercialPartnerInfo = {
   id: string
@@ -125,6 +126,7 @@ interface CommercialPartnerProfileClientProps {
   cpInfo: CommercialPartnerInfo | null
   cpUserInfo: CommercialPartnerUserInfo
   agreementCount: number
+  memberInfo: MemberKYCData | null
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -194,6 +196,7 @@ export function CommercialPartnerProfileClient({
   cpInfo,
   cpUserInfo,
   agreementCount,
+  memberInfo,
 }: CommercialPartnerProfileClientProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -623,6 +626,16 @@ export function CommercialPartnerProfileClient({
               </div>
             </CardContent>
           </Card>
+
+          {/* Personal KYC Section - For the logged-in user's member record */}
+          {cpInfo && (
+            <PersonalKYCSection
+              memberData={memberInfo}
+              entityType="commercial_partner"
+              entityId={cpInfo.id}
+              onRefresh={() => window.location.reload()}
+            />
+          )}
 
           {/* Individual KYC for Individual Commercial Partners */}
           {cpInfo?.type === 'individual' && (
