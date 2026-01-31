@@ -215,7 +215,6 @@ function getPricePerShareDisplay(termSheet: TermSheet) {
 
 function buildPayload(values: FormState) {
   const pricePerShare = toNumber(values.price_per_share)
-  const pricePerShareText = pricePerShare != null ? pricePerShare.toFixed(2) : null
   return {
     term_sheet_date: values.term_sheet_date || null,
     to_description: values.to_description || null,
@@ -228,7 +227,6 @@ function buildPayload(values: FormState) {
     seller: values.seller || null,
     structure: values.structure || null,
     allocation_up_to: toNumber(values.allocation_up_to),
-    price_per_share_text: pricePerShareText,
     price_per_share: pricePerShare,
     cost_per_share: toNumber(values.cost_per_share),
     minimum_ticket: toNumber(values.minimum_ticket),

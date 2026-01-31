@@ -7,31 +7,37 @@ const ENTITY_CONFIGS = {
     memberTable: 'investor_members',
     entityIdColumn: 'investor_id',
     userTable: 'investor_users',
+    entityTable: 'investors',
   },
   partner: {
     memberTable: 'partner_members',
     entityIdColumn: 'partner_id',
     userTable: 'partner_users',
+    entityTable: 'partners',
   },
   introducer: {
     memberTable: 'introducer_members',
     entityIdColumn: 'introducer_id',
     userTable: 'introducer_users',
+    entityTable: 'introducers',
   },
   lawyer: {
     memberTable: 'lawyer_members',
     entityIdColumn: 'lawyer_id',
     userTable: 'lawyer_users',
+    entityTable: 'lawyers',
   },
   commercial_partner: {
     memberTable: 'commercial_partner_members',
     entityIdColumn: 'commercial_partner_id',
     userTable: 'commercial_partner_users',
+    entityTable: 'commercial_partners',
   },
   arranger: {
     memberTable: 'arranger_members',
     entityIdColumn: 'arranger_id',
     userTable: 'arranger_users',
+    entityTable: 'arranger_entities',
   },
 } as const
 
@@ -201,6 +207,26 @@ export async function POST(request: Request) {
     if (updateError) {
       console.error('Error updating member KYC status:', updateError)
       // Don't fail the request - submission was created
+    }
+
+    const { data: entityStatus } = await serviceSupabase
+      .from(config.entityTable)
+      .select('account_approval_status')
+      .eq('id', entityId)
+      .maybeSingle()
+
+    const existingAccountStatus = entityStatus?.account_approval_status?.toLowerCase() ?? null
+    const shouldUpdateAccountStatus = !existingAccountStatus ||
+      ['pending_onboarding', 'new', 'incomplete'].includes(existingAccountStatus)
+
+    if (shouldUpdateAccountStatus) {
+      await serviceSupabase
+        .from(config.entityTable)
+        .update({
+          account_approval_status: 'incomplete',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', entityId)
     }
 
     return NextResponse.json({

@@ -61,11 +61,14 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
 
   const { data: investorAccount } = await serviceSupabase
     .from('investors')
-    .select('account_approval_status, kyc_status')
+    .select('account_approval_status, kyc_status, status')
     .eq('id', investorId)
     .maybeSingle()
 
-  const accountApprovalStatus = investorAccount?.account_approval_status ?? null
+  const investorStatus = investorAccount?.status?.toLowerCase() ?? null
+  const accountApprovalStatus = (investorStatus === 'unauthorized' || investorStatus === 'blacklisted')
+    ? 'unauthorized'
+    : investorAccount?.account_approval_status ?? null
   const isAccountApproved = accountApprovalStatus === 'approved'
   const accountStatusCopy = getAccountStatusCopy(accountApprovalStatus, investorAccount?.kyc_status ?? null)
   const approvalStatusLabel = accountStatusCopy.label
@@ -167,7 +170,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
   }
 
   const effectiveStatus = getEffectiveStatus()
-  const isClosed = effectiveStatus === 'closed'
+  const isClosed = effectiveStatus === 'closed' || accountApprovalStatus === 'unauthorized'
 
   const statusBadges: Record<string, string> = {
     draft: 'bg-slate-100 text-slate-700',

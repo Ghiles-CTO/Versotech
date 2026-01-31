@@ -567,10 +567,12 @@ export default function OpportunityDetailPage() {
   const accountStatusCopy = getAccountStatusCopy(opportunity.account_approval_status, opportunity.kyc_status)
   const approvalStatusLabel = accountStatusCopy.label
   const kycStatusLabel = formatKycStatusLabel(opportunity.kyc_status)
+  const isBlacklisted = opportunity.account_approval_status === 'unauthorized'
   const canSubscribe = opportunity.can_subscribe && !isTrackingOnly && isAccountApproved
   const canExpressInterest = opportunity.can_express_interest && !isTrackingOnly && isAccountApproved
   const canSignNda = opportunity.can_sign_nda && !isTrackingOnly && isAccountApproved
   const showActionChoices =
+    !isBlacklisted &&
     opportunity.status !== 'closed' &&
     !opportunity.subscription &&
     (canSubscribe || canExpressInterest)

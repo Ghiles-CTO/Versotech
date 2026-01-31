@@ -52,7 +52,10 @@ Checklist:
 - [x] Block "Request Data Room Access" and "Subscribe" server-side until account_approval_status=approved (and KYC approved).
 - [x] Hide/disable UI CTAs and prevent "interest confirmed" status for unapproved users.
 - [x] Add UI messaging for blocked users (e.g., "Complete KYC/await approval to proceed").
-- [ ] Await full status list from Fred; map "new" and intermediate statuses in UI copy/logic.
+- [x] Map NEW / INCOMPLETE / PENDING APPROVAL / APPROVED / REJECTED / UNAUTHORIZED statuses and descriptions.
+- [x] Set account_approval_status=INCOMPLETE when KYC submissions are sent or info is requested.
+- [x] Set account_approval_status=REJECTED when KYC items are rejected.
+- [x] Exclude blacklisted users from deal dispatch; treat existing deals as closed for them.
 
 Note:
 - Per-signatory approvals vs entity-level NDA access (item 02 from meeting) is deferred for now.
@@ -144,6 +147,7 @@ Checklist:
 - [ ] Manual test: CHF/AED propagate into subscription creation + display.
 - [ ] Manual test: Logos display correctly across main personas.
 - [ ] Manual test: Unapproved/KYC-incomplete user cannot request data room or subscribe; status text stays blocked.
+- [ ] Manual test: Blacklisted users cannot be dispatched; existing deals appear closed.
 
 ---
 

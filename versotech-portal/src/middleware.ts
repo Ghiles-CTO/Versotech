@@ -579,9 +579,9 @@ export async function middleware(request: NextRequest) {
       // =========================================================================
       if (Array.isArray(personas) && personas.length > 0) {
         // Check if ANY persona has a pending or rejected status
-        const hasPendingAccount = personas.some((p: any) =>
-          p.account_approval_status === 'pending_approval' ||
-          p.account_approval_status === 'pending_onboarding'
+        const hasNewAccount = personas.some((p: any) =>
+          p.account_approval_status === 'pending_onboarding' ||
+          p.account_approval_status === 'new'
         )
 
         // Note: Rejected accounts can browse freely - transaction blocking is handled at API level
@@ -611,7 +611,7 @@ export async function middleware(request: NextRequest) {
           pathname.startsWith(p) || pathname === p
         ) || pathname === '/logout' || pathname.startsWith('/api/auth')
 
-        if (hasPendingAccount && !isCEO && !hasPersona('staff') && !isAllowedForPending) {
+        if (hasNewAccount && !isCEO && !hasPersona('staff') && !isAllowedForPending) {
           console.log(`[auth] Account pending approval, redirecting to profile: ${user.email}`)
           return NextResponse.redirect(new URL('/versotech_main/profile', request.url))
         }

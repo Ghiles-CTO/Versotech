@@ -468,7 +468,10 @@ function formatCurrency(amount: Nullable<number>, currency: Nullable<string>) {
   }
 }
 
-function getEffectiveStatus(deal: InvestorDeal): string {
+function getEffectiveStatus(deal: InvestorDeal, accountApprovalStatus?: string | null): string {
+  if (accountApprovalStatus === 'unauthorized') {
+    return 'closed'
+  }
   if (deal.status === 'closed' || deal.status === 'cancelled') {
     return deal.status
   }
@@ -681,7 +684,7 @@ export function InvestorDealsListClient({
     // Deal status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter((deal) => {
-        const effectiveStatus = getEffectiveStatus(deal)
+        const effectiveStatus = getEffectiveStatus(deal, accountApprovalStatus)
         return effectiveStatus === statusFilter
       })
     }
@@ -1337,7 +1340,7 @@ export function InvestorDealsListClient({
             const canInvest = roleAllowsInvest && isAccountApproved
             const showAccountBlockForCard = showAccountBlock && roleAllowsInvest
 
-            const effectiveStatus = getEffectiveStatus(deal)
+            const effectiveStatus = getEffectiveStatus(deal, accountApprovalStatus)
             const statusLabel =
               dealTypeLabels[deal.deal_type] ?? deal.deal_type.replace(/_/g, ' ')
 

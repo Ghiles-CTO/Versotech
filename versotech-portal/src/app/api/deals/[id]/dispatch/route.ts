@@ -323,9 +323,54 @@ export async function POST(request: Request, { params }: RouteParams) {
       }
     }
 
+    // Filter out blacklisted investors
+    const blockedUserIds: string[] = []
+    const investorIdsForStatus = [...new Set((investorLinks || [])
+      .map(link => link.investor_id)
+      .filter(Boolean))]
+
+    if (investorIdsForStatus.length > 0) {
+      const { data: investorStatuses } = await serviceSupabase
+        .from('investors')
+        .select('id, status, account_approval_status')
+        .in('id', investorIdsForStatus)
+
+      const blockedInvestorIds = new Set(
+        (investorStatuses || [])
+          .filter(record => {
+            const investorStatus = record.status?.toLowerCase()
+            const approvalStatus = record.account_approval_status?.toLowerCase()
+            return investorStatus === 'unauthorized' ||
+              investorStatus === 'blacklisted' ||
+              approvalStatus === 'unauthorized'
+          })
+          .map(record => record.id)
+      )
+
+      blockedUserIds.push(
+        ...(investorLinks || [])
+          .filter(link => blockedInvestorIds.has(link.investor_id))
+          .map(link => link.user_id)
+      )
+    }
+
+    const dispatchUserIds = blockedUserIds.length > 0
+      ? newUserIds.filter(id => !blockedUserIds.includes(id))
+      : newUserIds
+
+    if (dispatchUserIds.length === 0) {
+      return NextResponse.json(
+        {
+          error: 'Cannot dispatch blacklisted users',
+          users_blocked: blockedUserIds
+        },
+        { status: 400 }
+      )
+    }
+
     // Create memberships
     const now = new Date().toISOString()
-    const membershipsToCreate = newUserIds.map(userId => ({
+    const membershipsToCreate = dispatchUserIds.map(userId => ({
       deal_id: dealId,
       user_id: userId,
       investor_id: investorIdMap.get(userId) || null,
@@ -361,9 +406,10 @@ export async function POST(request: Request, { params }: RouteParams) {
         entity_type: 'deal',
         entity_id: dealId,
         details: {
-          dispatched_users: newUserIds,
+          dispatched_users: dispatchUserIds,
           role,
           skipped_existing: user_ids.length - newUserIds.length,
+          skipped_blacklisted: blockedUserIds,
           deal_name: deal.name,
           // Fee plan linkage audit trail
           referred_by_entity_id: referred_by_entity_id || null,
@@ -378,8 +424,10 @@ export async function POST(request: Request, { params }: RouteParams) {
 
     return NextResponse.json({
       success: true,
-      dispatched_count: newUserIds.length,
+      dispatched_count: dispatchUserIds.length,
       skipped_count: user_ids.length - newUserIds.length,
+      blocked_count: blockedUserIds.length,
+      users_blocked: blockedUserIds,
       memberships: createdMemberships
     })
   } catch (error) {
@@ -435,12 +483,51 @@ export async function GET(request: Request, { params }: RouteParams) {
     // Get available users not in the deal
     const existingUserIds = (memberships || []).map(m => m.user_id)
 
-    const { data: availableUsers } = await serviceSupabase
+    let { data: availableUsers } = await serviceSupabase
       .from('profiles')
       .select('id, display_name, email, role')
       .in('role', ['investor', 'partner', 'introducer', 'commercial_partner', 'lawyer', 'multi_persona'])
       .not('id', 'in', existingUserIds.length > 0 ? `(${existingUserIds.join(',')})` : '()')
       .order('display_name')
+
+    if (availableUsers && availableUsers.length > 0) {
+      const availableUserIds = availableUsers.map(user => user.id)
+      const { data: investorLinks } = await serviceSupabase
+        .from('investor_users')
+        .select('user_id, investor_id')
+        .in('user_id', availableUserIds)
+
+      const investorIds = [...new Set((investorLinks || [])
+        .map(link => link.investor_id)
+        .filter(Boolean))]
+
+      if (investorIds.length > 0) {
+        const { data: investorStatuses } = await serviceSupabase
+          .from('investors')
+          .select('id, status, account_approval_status')
+          .in('id', investorIds)
+
+        const blockedInvestorIds = new Set(
+          (investorStatuses || [])
+            .filter(record => {
+              const investorStatus = record.status?.toLowerCase()
+              const approvalStatus = record.account_approval_status?.toLowerCase()
+              return investorStatus === 'unauthorized' ||
+                investorStatus === 'blacklisted' ||
+                approvalStatus === 'unauthorized'
+            })
+            .map(record => record.id)
+        )
+
+        const blockedUserIds = new Set(
+          (investorLinks || [])
+            .filter(link => blockedInvestorIds.has(link.investor_id))
+            .map(link => link.user_id)
+        )
+
+        availableUsers = availableUsers.filter(user => !blockedUserIds.has(user.id))
+      }
+    }
 
     return NextResponse.json({
       deal_id: dealId,

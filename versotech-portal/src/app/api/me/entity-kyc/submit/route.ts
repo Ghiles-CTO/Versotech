@@ -223,6 +223,26 @@ export async function POST(request: Request) {
       // Don't fail the request - submission was created
     }
 
+    const { data: entityStatus } = await serviceSupabase
+      .from(config.entityTable)
+      .select('account_approval_status')
+      .eq('id', entityId)
+      .maybeSingle()
+
+    const existingAccountStatus = entityStatus?.account_approval_status?.toLowerCase() ?? null
+    const shouldUpdateAccountStatus = !existingAccountStatus ||
+      ['pending_onboarding', 'new', 'incomplete'].includes(existingAccountStatus)
+
+    if (shouldUpdateAccountStatus) {
+      await serviceSupabase
+        .from(config.entityTable)
+        .update({
+          account_approval_status: 'incomplete',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', entityId)
+    }
+
     return NextResponse.json({
       success: true,
       submission_id: submission.id,

@@ -89,7 +89,9 @@ export async function GET(request: Request, { params }: RouteParams) {
           id,
           legal_name,
           display_name,
-          email
+          email,
+          status,
+          account_approval_status
         ),
         user:user_id (
           id,
@@ -115,7 +117,16 @@ export async function GET(request: Request, { params }: RouteParams) {
     console.log('🔍 [LINKABLE-INVESTORS] Raw memberships:', JSON.stringify(memberships, null, 2))
 
     // Transform to response shape
-    const investors = (memberships || []).map(membership => {
+    const investors = (memberships || [])
+      .filter(membership => {
+        const investor = membership.investor as any
+        const investorStatus = investor?.status?.toLowerCase()
+        const approvalStatus = investor?.account_approval_status?.toLowerCase()
+        return investorStatus !== 'unauthorized' &&
+          investorStatus !== 'blacklisted' &&
+          approvalStatus !== 'unauthorized'
+      })
+      .map(membership => {
       const investor = membership.investor as any
       const userProfile = membership.user as any
 

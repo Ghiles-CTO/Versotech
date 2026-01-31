@@ -193,11 +193,14 @@ export default async function InvestorDealsPage() {
   if (primaryInvestorId) {
     const { data: investorAccount } = await serviceSupabase
       .from('investors')
-      .select('account_approval_status, kyc_status')
+      .select('account_approval_status, kyc_status, status')
       .eq('id', primaryInvestorId)
       .maybeSingle()
 
-    accountApprovalStatus = investorAccount?.account_approval_status ?? null
+    const investorStatus = investorAccount?.status?.toLowerCase() ?? null
+    accountApprovalStatus = (investorStatus === 'unauthorized' || investorStatus === 'blacklisted')
+      ? 'unauthorized'
+      : investorAccount?.account_approval_status ?? null
     investorKycStatus = investorAccount?.kyc_status ?? null
   }
 
@@ -376,13 +379,15 @@ export default async function InvestorDealsPage() {
 
   // Calculate summary statistics (client-side filtering for getEffectiveStatus compatibility)
   const now = new Date()
+  const computedOpenDeals = dealsData.filter(deal => {
+    if (deal.status === 'closed' || deal.status === 'cancelled') return false
+    if (deal.close_at && new Date(deal.close_at) < now) return false
+    return deal.status === 'open'
+  }).length
+
   const summary = {
     totalDeals: dealsData.length,
-    openDeals: dealsData.filter(deal => {
-      if (deal.status === 'closed' || deal.status === 'cancelled') return false
-      if (deal.close_at && new Date(deal.close_at) < now) return false
-      return deal.status === 'open'
-    }).length,
+    openDeals: accountApprovalStatus === 'unauthorized' ? 0 : computedOpenDeals,
     pendingInterests: investorInterests.filter(interest => interest.status === 'pending_review').length,
     activeNdas: ndaAccessRecords.length,
     submittedSubscriptions: subscriptionRecords.length

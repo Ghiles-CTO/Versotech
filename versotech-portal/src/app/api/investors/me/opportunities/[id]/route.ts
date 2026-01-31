@@ -86,16 +86,22 @@ export async function GET(request: Request, { params }: RouteParams) {
     if (effectiveInvestorId) {
       const { data: investorRecord, error: investorError } = await serviceSupabase
         .from('investors')
-        .select('account_approval_status, kyc_status')
+        .select('account_approval_status, kyc_status, status')
         .eq('id', effectiveInvestorId)
         .maybeSingle()
 
       if (investorError) {
         console.error('[opportunities/[id]] Failed to fetch investor account approval:', investorError)
       } else if (investorRecord) {
-        investorAccountApprovalStatus = investorRecord.account_approval_status ?? null
+        const investorStatus = investorRecord.status?.toLowerCase() ?? null
+        const isUnauthorized = investorStatus === 'unauthorized' || investorStatus === 'blacklisted' ||
+          investorRecord.account_approval_status === 'unauthorized'
+
+        investorAccountApprovalStatus = isUnauthorized
+          ? 'unauthorized'
+          : investorRecord.account_approval_status ?? null
         investorKycStatus = investorRecord.kyc_status ?? null
-        isAccountApproved = investorRecord.account_approval_status === 'approved'
+        isAccountApproved = investorAccountApprovalStatus === 'approved'
       }
     }
 

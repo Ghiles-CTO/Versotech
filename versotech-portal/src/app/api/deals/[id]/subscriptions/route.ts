@@ -212,7 +212,7 @@ export async function POST(
 
   const { data: investorRecord, error: investorError } = await serviceSupabase
     .from('investors')
-    .select('account_approval_status, kyc_status')
+    .select('account_approval_status, kyc_status, status')
     .eq('id', resolvedInvestorId)
     .maybeSingle()
 
@@ -224,11 +224,16 @@ export async function POST(
     )
   }
 
-  if (investorRecord.account_approval_status !== 'approved') {
+  const investorStatus = investorRecord.status?.toLowerCase() ?? null
+  const normalizedAccountStatus = (investorStatus === 'unauthorized' || investorStatus === 'blacklisted')
+    ? 'unauthorized'
+    : investorRecord.account_approval_status
+
+  if (normalizedAccountStatus !== 'approved') {
     return NextResponse.json(
       {
         error: 'Account approval required before subscribing.',
-        account_approval_status: investorRecord.account_approval_status,
+        account_approval_status: normalizedAccountStatus,
         kyc_status: investorRecord.kyc_status
       },
       { status: 403 }

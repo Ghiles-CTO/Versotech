@@ -7,6 +7,15 @@ import {
   getEntityTypeFromSubmission,
 } from '@/lib/kyc/check-entity-kyc-status'
 
+const ENTITY_TABLES: Record<string, string> = {
+  investor: 'investors',
+  partner: 'partners',
+  introducer: 'introducers',
+  lawyer: 'lawyers',
+  commercial_partner: 'commercial_partners',
+  arranger: 'arranger_entities'
+}
+
 interface ReviewBody {
   action: 'approve' | 'reject' | 'request_info'
   rejection_reason?: string
@@ -150,6 +159,31 @@ export async function POST(
         { error: 'Failed to update submission' },
         { status: 500 }
       )
+    }
+
+    if (action !== 'approve') {
+      const { entityType, entityId } = getEntityTypeFromSubmission(submission)
+      const entityTable = entityType ? ENTITY_TABLES[entityType] : null
+      if (entityTable && entityId) {
+        const { data: entityStatus } = await serviceSupabase
+          .from(entityTable)
+          .select('account_approval_status')
+          .eq('id', entityId)
+          .maybeSingle()
+
+        const currentStatus = entityStatus?.account_approval_status?.toLowerCase() ?? null
+        const isUnauthorized = currentStatus === 'unauthorized' || currentStatus === 'blacklisted'
+
+        if (!isUnauthorized) {
+          await serviceSupabase
+            .from(entityTable)
+            .update({
+              account_approval_status: action === 'reject' ? 'rejected' : 'incomplete',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', entityId)
+        }
+      }
     }
 
     // If approved, handle KYC approval for any entity type
