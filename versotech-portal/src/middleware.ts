@@ -584,9 +584,8 @@ export async function middleware(request: NextRequest) {
           p.account_approval_status === 'pending_onboarding'
         )
 
-        const hasRejectedAccount = personas.some((p: any) =>
-          p.account_approval_status === 'rejected'
-        )
+        // Note: Rejected accounts can browse freely - transaction blocking is handled at API level
+        // (see /api/deals/[id]/interests and /api/deals/[id]/subscriptions routes)
 
         // Paths allowed for pending accounts (profile + KYC submission only)
         const allowedPendingPaths = [
@@ -615,14 +614,6 @@ export async function middleware(request: NextRequest) {
         if (hasPendingAccount && !isCEO && !hasPersona('staff') && !isAllowedForPending) {
           console.log(`[auth] Account pending approval, redirecting to profile: ${user.email}`)
           return NextResponse.redirect(new URL('/versotech_main/profile', request.url))
-        }
-
-        if (hasRejectedAccount && !isCEO && !hasPersona('staff')) {
-          // Rejected accounts can only logout
-          if (pathname !== '/logout' && !pathname.startsWith('/api/auth')) {
-            console.log(`[auth] Account rejected, redirecting to login: ${user.email}`)
-            return NextResponse.redirect(new URL('/versotech_main/login?error=account_rejected', request.url))
-          }
         }
       }
 
