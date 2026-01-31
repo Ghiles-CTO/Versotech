@@ -14,6 +14,7 @@ import { TreeNode } from './TreeNode'
 import { FolderActions } from './FolderActions'
 import { parseVehicleHierarchy, VehicleNode } from '@/lib/documents/vehicle-hierarchy'
 import { DocumentFolder } from '@/types/documents'
+import type { ParticipantEntityType } from '../context/types'
 import { Loader2 } from 'lucide-react'
 
 interface VehicleTreeProps {
@@ -175,7 +176,7 @@ export function VehicleTree({ className }: VehicleTreeProps) {
     (
       investorId: string,
       investorName: string,
-      investorType: string,
+      investorType: ParticipantEntityType,
       dealId: string,
       vehicleId: string
     ) => {

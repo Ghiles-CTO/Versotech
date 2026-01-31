@@ -1644,7 +1644,7 @@ export function StaffDocumentsProvider({
         dispatch({ type: 'SET_DOCUMENTS', documents: data.documents || [] })
 
         const docTypes = Array.from(
-          new Set(
+          new Set<string>(
             (data.documents || [])
               .map((doc: StaffDocument) => doc.type)
               .filter((type: string) => type && type.trim())

@@ -1,5 +1,6 @@
 'use client'
 
+import type { ComponentType } from 'react'
 import { TrendingUp, TrendingDown, DollarSign, PiggyBank, Wallet, Target } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -21,7 +22,7 @@ interface KPICardProps {
   title: string
   value: number
   currency: string
-  icon: React.ElementType
+  icon: ComponentType<{ className?: string }>
   trend?: number
   trendLabel?: string
   accentColor: string

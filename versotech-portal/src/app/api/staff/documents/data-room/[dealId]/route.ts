@@ -86,7 +86,9 @@ export async function GET(
       .eq('deal_id', dealId)
       .is('replaced_by_id', null)
 
-    const uniqueFolders = [...new Set(folderData?.map(d => d.folder).filter(Boolean) || [])]
+    const uniqueFolders = [...new Set(
+      (folderData?.map((d: { folder: string | null }) => d.folder).filter(Boolean) || []) as string[]
+    )]
 
     return NextResponse.json({
       documents: documents || [],

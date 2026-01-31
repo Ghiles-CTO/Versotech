@@ -67,10 +67,10 @@ export async function GET(request: NextRequest) {
       }
 
       const { data: subs } = await subsQuery
-      subscriptionIds = (subs || []).map(s => s.id)
+      subscriptionIds = (subs || []).map((s: { id: string }) => s.id)
 
       const { data: submissions } = await submissionsQuery
-      submissionIds = (submissions || []).map(s => s.id)
+      submissionIds = (submissions || []).map((s: { id: string }) => s.id)
     }
 
     // Apply filters

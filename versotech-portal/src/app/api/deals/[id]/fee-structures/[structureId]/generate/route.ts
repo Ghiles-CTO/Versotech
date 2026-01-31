@@ -55,6 +55,11 @@ function formatNumber(num: number | null): string {
   return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(num)
 }
 
+function formatPrice(value: number | null): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return ''
+  return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)
+}
+
 /**
  * Format fee percentage with appropriate text
  * Database stores fees as actual percentages (2 = 2%, 25 = 25%)
@@ -148,8 +153,12 @@ export async function POST(
       vehicleData = vehicle
     }
 
-    const pricePerShareText = feeStructure.price_per_share_text
-      || (feeStructure.price_per_share != null ? feeStructure.price_per_share.toFixed(2) : '')
+    const pricePerShareValue = feeStructure.price_per_share != null
+      ? feeStructure.price_per_share
+      : feeStructure.price_per_share_text
+        ? Number(String(feeStructure.price_per_share_text).replace(/[^\d.]/g, ''))
+        : null
+    const pricePerShareDisplay = formatPrice(pricePerShareValue)
 
     const completionDateText = feeStructure.completion_date_text
       || (feeStructure.completion_date ? `By ${formatDate(feeStructure.completion_date)}` : '')
@@ -185,7 +194,7 @@ export async function POST(
       // Financial terms
       currency: deal?.currency || 'USD',
       allocation_up_to: formatNumber(feeStructure.allocation_up_to),
-      price_per_share_text: pricePerShareText,
+      price_per_share: pricePerShareDisplay,
       minimum_ticket: formatNumber(feeStructure.minimum_ticket),
       maximum_ticket: formatNumber(feeStructure.maximum_ticket),
 

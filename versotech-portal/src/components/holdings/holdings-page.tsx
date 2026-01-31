@@ -87,14 +87,24 @@ const deriveHoldingStatus = (holding: Partial<EnhancedHolding>) => {
 
 // Removed DealHolding interface - only showing holdings per user request
 
-interface HoldingsPageProps {
-  initialData?: {
+interface PortfolioData {
+  kpis: any
+  trends?: any
+  summary: any
+  asOfDate: string
+  vehicleBreakdown?: any[]
+  currencyBreakdown?: Array<{
+    currency: string
     kpis: any
-    trends?: any
-    summary: any
-    asOfDate: string
-    vehicleBreakdown?: any[]
-  }
+    summary: {
+      totalPositions: number
+      totalVehicles: number
+    }
+  }>
+}
+
+interface HoldingsPageProps {
+  initialData?: PortfolioData
   detailsBasePath?: string
   holdingsPath?: string
   dealsPath?: string
@@ -111,7 +121,7 @@ export function HoldingsPage({
   // State management
   const [holdings, setHoldings] = useState<EnhancedHolding[]>([])
   // Removed dealHoldings - only showing holdings per user request
-  const [portfolioData, setPortfolioData] = useState(initialData)
+  const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(initialData ?? null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -272,13 +282,14 @@ export function HoldingsPage({
   }, [initialData, fetchPortfolioData, fetchHoldings])
 
   useEffect(() => {
-    if (!portfolioData?.currencyBreakdown || portfolioData.currencyBreakdown.length === 0) return
+    const currencyBreakdown = portfolioData?.currencyBreakdown ?? []
+    if (currencyBreakdown.length === 0) return
 
     setSelectedCurrency((current) => {
-      if (current && portfolioData.currencyBreakdown.some(entry => entry.currency === current)) {
+      if (current && currencyBreakdown.some(entry => entry.currency === current)) {
         return current
       }
-      return portfolioData.currencyBreakdown[0].currency
+      return currencyBreakdown[0]?.currency ?? null
     })
   }, [portfolioData])
 

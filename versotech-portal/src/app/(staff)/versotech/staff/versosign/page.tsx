@@ -65,7 +65,7 @@ export interface ExpiredSignature {
 }
 
 export interface SignatureGroup {
-  category: 'countersignatures' | 'follow_ups' | 'other' | 'expired'
+  category: 'nda_signatures' | 'countersignatures' | 'follow_ups' | 'other' | 'expired'
   title: string
   description: string
   tasks: SignatureTask[]

@@ -94,16 +94,16 @@ export async function GET(
           : Promise.resolve({ data: [] }),
       ])
 
-    const introducerUserIdsResolved = new Set(
-      (introducerUsersRes as any).data?.map((row: any) => row.introducer_id).filter(Boolean) || []
+    const introducerUserIdsResolved = new Set<string>(
+      ((introducerUsersRes as any).data?.map((row: any) => row.introducer_id).filter(Boolean) || []) as string[]
     )
-    const partnerUserIdsResolved = new Set(
-      (partnerUsersRes as any).data?.map((row: any) => row.partner_id).filter(Boolean) || []
+    const partnerUserIdsResolved = new Set<string>(
+      ((partnerUsersRes as any).data?.map((row: any) => row.partner_id).filter(Boolean) || []) as string[]
     )
-    const commercialPartnerUserIdsResolved = new Set(
-      (commercialPartnerUsersRes as any).data
+    const commercialPartnerUserIdsResolved = new Set<string>(
+      (((commercialPartnerUsersRes as any).data
         ?.map((row: any) => row.commercial_partner_id)
-        .filter(Boolean) || []
+        .filter(Boolean)) || []) as string[]
     )
 
     introducerUserIdsResolved.forEach(id => introducerIds.add(id))

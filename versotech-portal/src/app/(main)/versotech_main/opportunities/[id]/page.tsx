@@ -835,7 +835,7 @@ export default function OpportunityDetailPage() {
                 membership={opportunity.membership}
                 subscription={null}
                 journeySummary={journeySummary}
-                subscriptionSubmittedAt={opportunity.subscription_submission?.submitted_at ?? null}
+                subscriptionSubmittedAt={null}
                 canExpressInterest={canExpressInterest}
                 canSignNda={canSignNda}
                 canSubscribe={canSubscribe}

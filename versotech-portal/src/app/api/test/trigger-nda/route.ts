@@ -85,7 +85,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         error: 'No signatories found for investor',
         investor_id: interest.investor_id,
-        debug: { investorUsers, userIds, profiles }
+        debug: { investorUsers, userIds }
       }, { status: 400 })
     }
 
