@@ -20,39 +20,17 @@ export async function GET(
 
     const { id: dealId } = await params
 
-    // Fetch fee plans with components, term sheet, entity info, and generated agreements
+    // Fetch fee plans (lightweight for deal term sheet UI)
     const { data: feePlans, error } = await supabase
       .from('fee_plans')
       .select(`
-        *,
-        fee_components (
-          id,
-          kind,
-          calc_method,
-          rate_bps,
-          flat_amount,
-          frequency,
-          hurdle_rate_bps,
-          has_high_water_mark,
-          has_catchup,
-          catchup_rate_bps,
-          notes,
-          duration_periods,
-          duration_unit,
-          payment_schedule,
-          base_calculation,
-          tier_threshold_multiplier,
-          next_tier_component_id
-        ),
-        term_sheet:term_sheet_id (
-          id,
-          version,
-          status,
-          term_sheet_date,
-          subscription_fee_percent,
-          management_fee_percent,
-          carried_interest_percent
-        ),
+        id,
+        name,
+        status,
+        term_sheet_id,
+        is_default,
+        accepted_at,
+        accepted_by,
         introducer:introducer_id (
           id,
           legal_name,
@@ -72,18 +50,6 @@ export async function GET(
           legal_name,
           contact_name,
           contact_email
-        ),
-        introducer_agreement:generated_agreement_id (
-          id,
-          reference_number,
-          status,
-          pdf_url
-        ),
-        placement_agreement:generated_placement_agreement_id (
-          id,
-          reference_number,
-          status,
-          pdf_url
         )
       `)
       .eq('deal_id', dealId)
