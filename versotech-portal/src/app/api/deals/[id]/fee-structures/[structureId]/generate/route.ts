@@ -60,6 +60,29 @@ function formatPrice(value: number | null): string {
   return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)
 }
 
+function deriveIssuerAndVehicleFromName(vehicleName: string | null, entityCode: string | null) {
+  const rawName = (vehicleName || '').trim()
+  if (!rawName) {
+    return { issuer: '', vehicle: '' }
+  }
+
+  const seriesMatch = rawName.match(/\bseries\s+(.+)$/i)
+  const seriesToken = seriesMatch?.[1]?.trim() || ''
+  const baseName = seriesMatch ? rawName.slice(0, seriesMatch.index).trim() : rawName
+  const entitySeries = entityCode?.match(/\d+/)?.[0] || ''
+
+  const vehicleLabel = seriesToken
+    ? `Series ${seriesToken}`
+    : (entitySeries ? `Series ${entitySeries}` : '')
+
+  const hasSarL = /s\.à\s?r\.l\.?/i.test(baseName)
+  const issuer = baseName
+    ? (hasSarL ? baseName : `${baseName} S.à r.l.`)
+    : ''
+
+  return { issuer, vehicle: vehicleLabel }
+}
+
 /**
  * Format fee percentage with appropriate text
  * Database stores fees as actual percentages (2 = 2%, 25 = 25%)
@@ -153,6 +176,11 @@ export async function POST(
       vehicleData = vehicle
     }
 
+    const derived = deriveIssuerAndVehicleFromName(
+      vehicleData?.name ?? null,
+      vehicleData?.entity_code ?? null
+    )
+
     const pricePerShareValue = feeStructure.price_per_share != null
       ? feeStructure.price_per_share
       : feeStructure.price_per_share_text
@@ -179,8 +207,8 @@ export async function POST(
       // Core fields from deal_fee_structures
       transaction_type: feeStructure.transaction_type || '',
       opportunity_summary: feeStructure.opportunity_summary || '',
-      issuer: feeStructure.issuer || 'VERSO Capital 2 SCSP ("Issuer")',
-      vehicle: feeStructure.vehicle || vehicleData?.name || '',
+      issuer: feeStructure.issuer || derived.issuer,
+      vehicle: feeStructure.vehicle || derived.vehicle,
       series_number: vehicleData?.series_number || '',
       exclusive_arranger:
         feeStructure.exclusive_arranger ||

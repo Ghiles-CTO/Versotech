@@ -41,17 +41,27 @@ type VehicleMeta = {
 
 function deriveIssuerAndVehicle(vehicle?: VehicleMeta | null) {
   const rawName = (vehicle?.name || '').trim()
+  if (!rawName) {
+    return { issuer: '', vehicle: '' }
+  }
+
   const seriesMatch = rawName.match(/\bseries\s+(.+)$/i)
-  const seriesToken = seriesMatch?.[1]?.trim()
-  const issuer = seriesMatch ? rawName.slice(0, seriesMatch.index).trim() : rawName
-  const entitySeries = vehicle?.series_number || vehicle?.entity_code?.match(/\d+/)?.[0] || ''
+  const seriesToken = seriesMatch?.[1]?.trim() || ''
+  const baseName = seriesMatch ? rawName.slice(0, seriesMatch.index).trim() : rawName
+  const entitySeries = vehicle?.entity_code?.match(/\d+/)?.[0] || ''
+
   const vehicleLabel = seriesToken
     ? `Series ${seriesToken}`
-    : (entitySeries ? `Series ${entitySeries}` : (vehicle?.investment_name || rawName))
+    : (entitySeries ? `Series ${entitySeries}` : '')
+
+  const hasSarL = /s\.à\s?r\.l\.?/i.test(baseName)
+  const issuer = baseName
+    ? (hasSarL ? baseName : `${baseName} S.à r.l.`)
+    : ''
 
   return {
-    issuer: issuer || rawName,
-    vehicle: vehicleLabel || rawName
+    issuer,
+    vehicle: vehicleLabel
   }
 }
 
