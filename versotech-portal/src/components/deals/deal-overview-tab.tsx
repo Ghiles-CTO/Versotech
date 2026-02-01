@@ -13,61 +13,155 @@ interface DealOverviewTabProps {
   deal: any
   memberships?: any[]
   subscriptionsForJourney?: any[]
+  subscriptionSubmissions?: any[]
 }
 
-export function DealOverviewTab({ deal, memberships = [], subscriptionsForJourney = [] }: DealOverviewTabProps) {
+export function DealOverviewTab({
+  deal,
+  memberships = [],
+  subscriptionsForJourney = [],
+  subscriptionSubmissions = []
+}: DealOverviewTabProps) {
   const progressPercent = deal.target_amount
     ? Math.round((deal.raised_amount / deal.target_amount) * 100)
     : 0
 
-  // Create subscription map for journey tracking
+  // Create subscription maps for journey tracking
   const subscriptionMap = new Map(
     subscriptionsForJourney.map(s => [s.investor_id, s])
+  )
+  const submissionMap = new Map(
+    subscriptionSubmissions.map(s => [s.investor_id, s])
   )
 
   // Enhance memberships with subscription data
   const enhancedMembers = memberships.map(m => ({
     ...m,
-    subscription: m.investor_id ? subscriptionMap.get(m.investor_id) : null
+    subscription: m.investor_id ? subscriptionMap.get(m.investor_id) : null,
+    subscriptionSubmission: m.investor_id ? submissionMap.get(m.investor_id) : null
   }))
 
-  // Calculate journey stats
-  const journeyStats = {
-    total: enhancedMembers.length,
-    dispatched: enhancedMembers.filter(m => m.dispatched_at).length,
-    viewed: enhancedMembers.filter(m => m.viewed_at).length,
-    interested: enhancedMembers.filter(m => m.interest_confirmed_at).length,
-    ndaSigned: enhancedMembers.filter(m => m.nda_signed_at).length,
-    dataRoom: enhancedMembers.filter(m => m.data_room_granted_at).length,
-    packGen: enhancedMembers.filter(m => m.subscription?.pack_generated_at).length,
-    packSent: enhancedMembers.filter(m => m.subscription?.pack_sent_at).length,
-    signed: enhancedMembers.filter(m => m.subscription?.signed_at).length,
-    funded: enhancedMembers.filter(m => m.subscription?.funded_at).length,
-  }
+  const hasSubscriptionActivity = (member: any) => (
+    !!member.subscriptionSubmission?.submitted_at ||
+    !!member.subscription?.pack_generated_at ||
+    !!member.subscription?.pack_sent_at ||
+    !!member.subscription?.signed_at ||
+    !!member.subscription?.funded_at
+  )
 
-  const journeyStages = [
-    { label: 'Dispatched', count: journeyStats.dispatched },
-    { label: 'Viewed', count: journeyStats.viewed },
-    { label: 'Interested', count: journeyStats.interested },
-    { label: 'NDA', count: journeyStats.ndaSigned },
-    { label: 'Data Room', count: journeyStats.dataRoom },
-    { label: 'Pack Gen', count: journeyStats.packGen },
-    { label: 'Pack Sent', count: journeyStats.packSent },
-    { label: 'Signed', count: journeyStats.signed },
-    { label: 'Funded', count: journeyStats.funded },
+  const buildJourneyStats = (members: any[]) => ({
+    total: members.length,
+    dispatched: members.filter(m => m.dispatched_at).length,
+    viewed: members.filter(m => m.viewed_at).length,
+    interested: members.filter(m => m.interest_confirmed_at).length,
+    ndaSigned: members.filter(m => m.nda_signed_at).length,
+    dataRoom: members.filter(m => m.data_room_granted_at).length,
+    subscriptionRequested: members.filter(m => hasSubscriptionActivity(m)).length,
+    packGen: members.filter(m => m.subscription?.pack_generated_at).length,
+    packSent: members.filter(m => m.subscription?.pack_sent_at).length,
+    signed: members.filter(m => m.subscription?.signed_at).length,
+    funded: members.filter(m => m.subscription?.funded_at).length,
+  })
+
+  const overallStats = buildJourneyStats(enhancedMembers)
+
+  const journeyStages: { label: string; key: keyof ReturnType<typeof buildJourneyStats> }[] = [
+    { label: 'Dispatched', key: 'dispatched' },
+    { label: 'Viewed', key: 'viewed' },
+    { label: 'Interested', key: 'interested' },
+    { label: 'NDA', key: 'ndaSigned' },
+    { label: 'Data Room', key: 'dataRoom' },
+    { label: 'Subscribe Req', key: 'subscriptionRequested' },
+    { label: 'Pack Gen', key: 'packGen' },
+    { label: 'Pack Sent', key: 'packSent' },
+    { label: 'Signed', key: 'signed' },
+    { label: 'Funded', key: 'funded' },
   ]
 
-  // Calculate conversion from previous stage
-  const getConversion = (idx: number) => {
-    if (idx === 0) return journeyStats.total > 0 ? Math.round((journeyStages[0].count / journeyStats.total) * 100) : 0
-    const prev = journeyStages[idx - 1].count
-    if (prev === 0) return 0
-    return Math.round((journeyStages[idx].count / prev) * 100)
+  const renderPipeline = (
+    title: string,
+    stats: ReturnType<typeof buildJourneyStats>,
+    stages: { label: string; key: keyof ReturnType<typeof buildJourneyStats> }[],
+    showHeader = true
+  ) => {
+    const stagesWithCounts = stages.map(stage => ({
+      ...stage,
+      count: stats[stage.key] as number
+    }))
+
+    const getConversion = (idx: number) => {
+      if (idx === 0) return stats.total > 0 ? Math.round((stagesWithCounts[0].count / stats.total) * 100) : 0
+      const prev = stagesWithCounts[idx - 1].count
+      if (prev === 0) return 0
+      return Math.round((stagesWithCounts[idx].count / prev) * 100)
+    }
+
+    return (
+      <div className="space-y-3">
+        {showHeader && (
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{title}</span>
+            <span className="text-xs text-muted-foreground">{stats.total} total</span>
+          </div>
+        )}
+        <div className="relative pt-2">
+          <div className="absolute top-[26px] left-5 right-5 h-[2px] bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-transparent" />
+          <div className="relative flex items-start justify-between">
+            {stagesWithCounts.map((stage, idx) => {
+              const isActive = stage.count > 0
+              const isFinal = stage.label === 'Funded'
+              const conversion = getConversion(idx)
+
+              return (
+                <div
+                  key={`${title}-${stage.label}`}
+                  className="flex flex-col items-center group"
+                  style={{ flex: '1 1 0' }}
+                >
+                  <div
+                    className={`
+                      relative z-10 w-11 h-11 rounded-full flex items-center justify-center
+                      text-sm font-semibold transition-all duration-300 cursor-default
+                      ${isActive
+                        ? isFinal
+                          ? 'bg-emerald-500/25 text-emerald-300 ring-2 ring-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.15)]'
+                          : 'bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25'
+                        : 'bg-muted text-muted-foreground/60'
+                      }
+                      group-hover:scale-110 group-hover:ring-emerald-400/40
+                    `}
+                  >
+                    {stage.count}
+                  </div>
+
+                  <span className={`
+                    text-[10px] mt-2 text-center leading-tight transition-colors
+                    ${isActive ? 'text-foreground/70' : 'text-muted-foreground/50'}
+                    group-hover:text-foreground
+                  `}>
+                    {stage.label}
+                  </span>
+
+                  {idx > 0 && (
+                    <span className={`
+                      text-[9px] mt-0.5 transition-opacity
+                      ${stage.count > 0 ? 'text-emerald-400/60' : 'text-muted-foreground/30'}
+                    `}>
+                      {conversion}%
+                    </span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
-      {/* Investor Journey Pipeline - Minimalist Design */}
+      {/* Investor Journey Pipeline */}
       {memberships.length > 0 && (
         <Card className="border border-border bg-muted/30 overflow-hidden">
           <CardHeader className="pb-2 pt-4 px-6">
@@ -76,86 +170,29 @@ export function DealOverviewTab({ deal, memberships = [], subscriptionsForJourne
                 Investor Pipeline
               </CardTitle>
               <span className="text-xs text-muted-foreground">
-                {journeyStats.total} total
+                {overallStats.total} total
               </span>
             </div>
           </CardHeader>
           <CardContent className="px-6 pb-5">
-            {/* Pipeline visualization */}
-            <div className="relative pt-2">
-              {/* Connecting line */}
-              <div className="absolute top-[26px] left-5 right-5 h-[2px] bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-transparent" />
-
-              {/* Stage nodes */}
-              <div className="relative flex items-start justify-between">
-                {journeyStages.map((stage, idx) => {
-                  const isActive = stage.count > 0
-                  const isFinal = stage.label === 'Funded'
-                  const conversion = getConversion(idx)
-
-                  return (
-                    <div
-                      key={stage.label}
-                      className="flex flex-col items-center group"
-                      style={{ flex: '1 1 0' }}
-                    >
-                      {/* Node circle */}
-                      <div
-                        className={`
-                          relative z-10 w-11 h-11 rounded-full flex items-center justify-center
-                          text-sm font-semibold transition-all duration-300 cursor-default
-                          ${isActive
-                            ? isFinal
-                              ? 'bg-emerald-500/25 text-emerald-300 ring-2 ring-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.15)]'
-                              : 'bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25'
-                            : 'bg-muted text-muted-foreground/60'
-                          }
-                          group-hover:scale-110 group-hover:ring-emerald-400/40
-                        `}
-                      >
-                        {stage.count}
-                      </div>
-
-                      {/* Label */}
-                      <span className={`
-                        text-[10px] mt-2 text-center leading-tight transition-colors
-                        ${isActive ? 'text-foreground/70' : 'text-muted-foreground/50'}
-                        group-hover:text-foreground
-                      `}>
-                        {stage.label}
-                      </span>
-
-                      {/* Conversion rate tooltip on hover */}
-                      {idx > 0 && (
-                        <span className={`
-                          text-[9px] mt-0.5 transition-opacity
-                          ${stage.count > 0 ? 'text-emerald-400/60' : 'text-muted-foreground/30'}
-                        `}>
-                          {conversion}%
-                        </span>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
+            {renderPipeline('Investor Journey', overallStats, journeyStages, false)}
 
             {/* Summary stats row */}
             <div className="flex items-center justify-center gap-8 mt-6 pt-4 border-t border-border">
               <div className="text-center">
-                <div className="text-lg font-semibold text-foreground">{journeyStats.funded}</div>
+                <div className="text-lg font-semibold text-foreground">{overallStats.funded}</div>
                 <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Funded</div>
               </div>
               <div className="w-px h-8 bg-muted" />
               <div className="text-center">
                 <div className="text-lg font-semibold text-foreground">
-                  {journeyStats.total > 0 ? Math.round((journeyStats.funded / journeyStats.total) * 100) : 0}%
+                  {overallStats.total > 0 ? Math.round((overallStats.funded / overallStats.total) * 100) : 0}%
                 </div>
                 <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Conversion</div>
               </div>
               <div className="w-px h-8 bg-muted" />
               <div className="text-center">
-                <div className="text-lg font-semibold text-foreground">{journeyStats.signed}</div>
+                <div className="text-lg font-semibold text-foreground">{overallStats.signed}</div>
                 <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Signed</div>
               </div>
             </div>

@@ -365,6 +365,7 @@ export function DealDetailClient({
             deal={deal}
             memberships={deal.deal_memberships || []}
             subscriptionsForJourney={subscriptionsForJourney}
+            subscriptionSubmissions={subscriptions}
           />
         </TabsContent>
 

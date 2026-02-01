@@ -55,6 +55,7 @@ const DATA_ROOM_STAGES: StageDefinition[] = [
   { name: 'Access Request', key: 'interest_confirmed' },
   { name: 'NDA Signed', key: 'nda_signed' },
   { name: 'Data Room', key: 'data_room_access' },
+  { name: 'Subscribe Request', key: 'subscription_requested' },
   { name: 'Pack Gen', key: 'pack_generated' },
   { name: 'Pack Sent', key: 'pack_sent' },
   { name: 'Signed', key: 'signed' },
@@ -66,6 +67,17 @@ const DIRECT_SUBSCRIBE_STAGES: StageDefinition[] = [
   { name: 'Received', key: 'received' },
   { name: 'Viewed', key: 'viewed' },
   { name: 'Subscribe Request', key: 'subscription_requested' },
+  { name: 'Pack Gen', key: 'pack_generated' },
+  { name: 'Pack Sent', key: 'pack_sent' },
+  { name: 'Signed', key: 'signed' },
+  { name: 'Funded', key: 'funded' },
+  { name: 'Active', key: 'active' }
+]
+
+const CHOOSE_STAGES: StageDefinition[] = [
+  { name: 'Received', key: 'received' },
+  { name: 'Viewed', key: 'viewed' },
+  { name: 'Choose Path', key: 'subscription_requested' },
   { name: 'Pack Gen', key: 'pack_generated' },
   { name: 'Pack Sent', key: 'pack_sent' },
   { name: 'Signed', key: 'signed' },
@@ -90,8 +102,8 @@ function detectRoute(summary: JourneySummary, subscriptionSubmittedAt?: string |
 }
 
 function getRouteLabel(route: JourneyRoute): string {
-  if (route === 'data_room') return 'Data Room Route'
-  if (route === 'direct_subscribe') return 'Direct Subscribe Route (No NDA)'
+  if (route === 'data_room') return 'NDA → Data Room → Subscription Pack'
+  if (route === 'direct_subscribe') return 'Direct Subscription (No NDA)'
   return 'Choose Your Path'
 }
 
@@ -156,7 +168,13 @@ export function InvestorJourneyBar({
   }
 
   const route = detectRoute(effectiveSummary, subscriptionSubmittedAt)
-  const stagesForRoute = route === 'direct_subscribe' ? DIRECT_SUBSCRIBE_STAGES : DATA_ROOM_STAGES
+  const stagesForRoute =
+    route === 'direct_subscribe'
+      ? DIRECT_SUBSCRIBE_STAGES
+      : route === 'choose'
+        ? CHOOSE_STAGES
+        : DATA_ROOM_STAGES
+  const showRouteLabels = !compact
 
   const getCurrentIndex = (stageList: StageDefinition[]) => {
     let lastCompleted = -1
@@ -179,7 +197,7 @@ export function InvestorJourneyBar({
 
     return (
       <div className="space-y-3">
-        {!compact && (
+        {showRouteLabels && (
           <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
         )}
         <div className="relative">
@@ -212,7 +230,7 @@ export function InvestorJourneyBar({
                         )}
                       </div>
 
-                      {!compact && (
+                      {showRouteLabels && (
                         <span
                           className={cn(
                             'mt-2 text-xs font-medium text-center max-w-[70px] leading-tight',
@@ -258,19 +276,7 @@ export function InvestorJourneyBar({
   return (
     <TooltipProvider>
       <div className={cn('w-full space-y-4', className)}>
-        {route === 'choose' ? (
-          <div className="space-y-4">
-            {renderRouteBar(DATA_ROOM_STAGES, 'Data Room Access')}
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-muted-foreground font-medium">OR</span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-            {renderRouteBar(DIRECT_SUBSCRIBE_STAGES, 'Direct Subscribe')}
-          </div>
-        ) : (
-          renderRouteBar(currentRouteStages, getRouteLabel(route))
-        )}
+        {renderRouteBar(currentRouteStages, getRouteLabel(route))}
 
         {!compact && route !== 'choose' && (
           <div className="text-center">
