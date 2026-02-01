@@ -286,7 +286,7 @@ export function InvestorJourneyBar({
   const renderSplitBar = (label: string) => {
     const columns = 10
     const rowHeight = 32
-    const rowGap = 20
+    const rowGap = 18
     const layoutHeight = rowHeight * 3 + rowGap * 2
     const row1Y = rowHeight / 2
     const row2Y = rowHeight + rowGap + rowHeight / 2
@@ -334,14 +334,17 @@ export function InvestorJourneyBar({
             <line x1={colX(1)} y1={row1Y} x2={colX(2)} y2={row1Y} stroke="hsl(var(--border))" strokeWidth="2" />
             <line x1={colX(6)} y1={row1Y} x2={colX(10)} y2={row1Y} stroke="hsl(var(--border))" strokeWidth="2" />
 
-            <line x1={colX(2)} y1={row1Y} x2={colX(2)} y2={row3Y} stroke="hsl(var(--border))" strokeWidth="2" />
-            <line x1={colX(6)} y1={row1Y} x2={colX(6)} y2={row3Y} stroke="hsl(var(--border))" strokeWidth="2" />
+            <line x1={colX(2)} y1={row1Y} x2={colX(3)} y2={row2Y} stroke="hsl(var(--border))" strokeWidth="2" />
+            <line x1={colX(2)} y1={row1Y} x2={colX(4)} y2={row3Y} stroke="hsl(var(--border))" strokeWidth="2" />
 
-            <line x1={colX(2)} y1={row2Y} x2={colX(6)} y2={row2Y} stroke="hsl(var(--border))" strokeWidth="2" />
-            <line x1={colX(2)} y1={row3Y} x2={colX(6)} y2={row3Y} stroke="hsl(var(--border))" strokeWidth="2" />
+            <line x1={colX(3)} y1={row2Y} x2={colX(4)} y2={row2Y} stroke="hsl(var(--border))" strokeWidth="2" />
+            <line x1={colX(4)} y1={row2Y} x2={colX(5)} y2={row2Y} stroke="hsl(var(--border))" strokeWidth="2" />
+
+            <line x1={colX(4)} y1={row3Y} x2={colX(6)} y2={row1Y} stroke="hsl(var(--border))" strokeWidth="2" />
+            <line x1={colX(5)} y1={row2Y} x2={colX(6)} y2={row1Y} stroke="hsl(var(--border))" strokeWidth="2" />
           </svg>
 
-          <div className="relative grid gap-5" style={{ gridTemplateRows: `repeat(3, ${rowHeight}px)` }}>
+          <div className="relative grid gap-4" style={{ gridTemplateRows: `repeat(3, ${rowHeight}px)` }}>
             <div className="grid items-center" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
               {receivedStage && renderNode(receivedStage, sharedStatuses.received, 1)}
               {viewedStage && renderNode(viewedStage, sharedStatuses.viewed, 2)}
@@ -353,22 +356,12 @@ export function InvestorJourneyBar({
             </div>
 
             <div className="grid items-center" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
-              {!compact && (
-                <div className="text-[10px] text-muted-foreground uppercase" style={{ gridColumn: '1 / 3' }}>
-                  NDA path
-                </div>
-              )}
               {accessStage && renderNode(accessStage, dataRoomStatuses.interest_confirmed, 3, muteNda)}
               {ndaSignedStage && renderNode(ndaSignedStage, dataRoomStatuses.nda_signed, 4, muteNda)}
               {dataRoomStage && renderNode(dataRoomStage, dataRoomStatuses.data_room_access, 5, muteNda)}
             </div>
 
             <div className="grid items-center" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
-              {!compact && (
-                <div className="text-[10px] text-muted-foreground uppercase" style={{ gridColumn: '1 / 3' }}>
-                  Direct subscribe
-                </div>
-              )}
               {subscribeStage && renderNode(subscribeStage, directStatuses.subscription_requested, 4, muteDirect)}
             </div>
           </div>
