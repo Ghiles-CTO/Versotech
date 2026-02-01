@@ -476,6 +476,40 @@ export async function GET(request: Request, { params }: RouteParams) {
       .eq('role', 'authorized_signatory')
       .eq('is_active', true)
 
+    // Get NDA signing link for the current user (if they are a signatory)
+    let ndaSigningUrl: string | null = null
+    if (effectiveInvestorId) {
+      const { data: linkedMember } = await serviceSupabase
+        .from('investor_members')
+        .select('id')
+        .eq('investor_id', effectiveInvestorId)
+        .eq('linked_user_id', user.id)
+        .eq('role', 'authorized_signatory')
+        .eq('is_active', true)
+        .maybeSingle()
+
+      if (linkedMember?.id) {
+        const { data: ndaRequest } = await serviceSupabase
+          .from('signature_requests')
+          .select('signing_token, token_expires_at, status')
+          .eq('deal_id', dealId)
+          .eq('investor_id', effectiveInvestorId)
+          .eq('member_id', linkedMember.id)
+          .eq('document_type', 'nda')
+          .in('status', ['pending', 'in_progress'])
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        if (ndaRequest?.signing_token && ndaRequest?.token_expires_at) {
+          const expiresAt = new Date(ndaRequest.token_expires_at)
+          if (expiresAt > new Date()) {
+            ndaSigningUrl = `/sign/${ndaRequest.signing_token}`
+          }
+        }
+      }
+    }
+
     // Calculate current journey stage
     let currentStage = 0
     if (subscription?.activated_at) currentStage = 10
@@ -596,6 +630,7 @@ export async function GET(request: Request, { params }: RouteParams) {
 
       // Signatories for NDA/subscription signing
       signatories: signatories || [],
+      nda_signing_url: ndaSigningUrl,
 
       // Computed flags for UI
       // Only show express interest for users with an investor persona

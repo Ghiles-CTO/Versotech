@@ -241,6 +241,7 @@ interface Opportunity {
   fee_structures: FeeStructure[]
   faqs: FAQ[]
   signatories: Signatory[]
+  nda_signing_url?: string | null
   can_express_interest: boolean
   can_sign_nda: boolean
   can_access_data_room: boolean
@@ -568,6 +569,7 @@ export default function OpportunityDetailPage() {
   const approvalStatusLabel = accountStatusCopy.label
   const kycStatusLabel = formatKycStatusLabel(opportunity.kyc_status)
   const isBlacklisted = opportunity.account_approval_status === 'unauthorized'
+  const subscriptionSubmittedAt = opportunity.subscription_submission?.submitted_at ?? null
   const canSubscribe = opportunity.can_subscribe && !isTrackingOnly && isAccountApproved
   const canExpressInterest = opportunity.can_express_interest && !isTrackingOnly && isAccountApproved
   const canSignNda = opportunity.can_sign_nda && !isTrackingOnly && isAccountApproved
@@ -587,6 +589,15 @@ export default function OpportunityDetailPage() {
     funded: null,
     active: null
   } : opportunity.journey.summary
+
+  const handleSignNda = () => {
+    if (opportunity.nda_signing_url) {
+      router.push(opportunity.nda_signing_url)
+      return
+    }
+
+    setShowNdaDialog(true)
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -616,7 +627,7 @@ export default function OpportunityDetailPage() {
             <InvestorJourneyBar
               summary={journeySummary}
               currentStage={opportunity.journey.current_stage}
-              subscriptionSubmittedAt={opportunity.subscription_submission?.submitted_at ?? null}
+              subscriptionSubmittedAt={subscriptionSubmittedAt}
             />
           </CardContent>
         </Card>
@@ -747,9 +758,9 @@ export default function OpportunityDetailPage() {
 
           {/* Show NDA info when in NDA stage - signing is triggered after CEO approval */}
           {canSignNda && (
-            <Button variant="outline" onClick={() => setShowNdaDialog(true)}>
+            <Button variant="outline" onClick={handleSignNda}>
               <FileSignature className="w-4 h-4 mr-2" />
-              About NDA Signing
+              Sign NDA
             </Button>
           )}
 
@@ -835,7 +846,7 @@ export default function OpportunityDetailPage() {
                 membership={opportunity.membership}
                 subscription={null}
                 journeySummary={journeySummary}
-                subscriptionSubmittedAt={null}
+                subscriptionSubmittedAt={subscriptionSubmittedAt}
                 canExpressInterest={canExpressInterest}
                 canSignNda={canSignNda}
                 canSubscribe={canSubscribe}
@@ -843,7 +854,7 @@ export default function OpportunityDetailPage() {
                 isAccountApproved={isAccountApproved}
                 accountApprovalStatus={opportunity.account_approval_status}
                 onExpressInterest={() => setShowInterestDialog(true)}
-                onSignNda={() => setShowNdaDialog(true)}
+                onSignNda={handleSignNda}
                 onSubscribe={() => setShowSubscribeDialog(true)}
               />
             )}
@@ -1256,7 +1267,7 @@ export default function OpportunityDetailPage() {
               hasAccess={opportunity.data_room.has_access}
               requiresNda={opportunity.data_room.requires_nda}
               dealId={opportunity.id}
-              onRequestAccess={opportunity.can_sign_nda ? () => setShowNdaDialog(true) : undefined}
+              onRequestAccess={opportunity.can_sign_nda ? handleSignNda : undefined}
             />
           </TabsContent>
         )}
