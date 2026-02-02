@@ -139,6 +139,20 @@ function formatLegalCounsel(counsel: string | null): string {
 }
 
 /**
+ * Append identifier in parentheses if not already present
+ * Example: "ABC Company" + "Seller" → 'ABC Company ("Seller")'
+ */
+function appendIdentifier(text: string | null, identifier: string): string {
+  if (!text) return ''
+  const trimmed = text.trim()
+  // Check if already has this identifier in brackets (case-insensitive)
+  if (trimmed.includes(`("${identifier}")`) || trimmed.includes(`("${identifier.toUpperCase()}")`)) {
+    return trimmed
+  }
+  return `${trimmed} ("${identifier}")`
+}
+
+/**
  * Format fee percentage with appropriate text
  * Database stores fees as actual percentages (2 = 2%, 25 = 25%)
  * When fee is 0%, displays fixed "Waived (instead of X%)" text
@@ -263,16 +277,28 @@ export async function POST(
       // Core fields from deal_fee_structures
       transaction_type: feeStructure.transaction_type || '',
       opportunity_summary: feeStructure.opportunity_summary || '',
-      issuer: feeStructure.issuer || derived.issuer,
-      vehicle: feeStructure.vehicle || derived.vehicle,
+      issuer: appendIdentifier(
+        feeStructure.issuer || derived.issuer,
+        'Issuer'
+      ),
+      vehicle: appendIdentifier(
+        feeStructure.vehicle || derived.vehicle,
+        vehicleData?.entity_code || `VC${vehicleData?.series_number || 'XXX'}`
+      ),
       series_number: vehicleData?.series_number || '',
-      exclusive_arranger:
+      exclusive_arranger: appendIdentifier(
         feeStructure.exclusive_arranger ||
-        'VERSO Management Limited, regulated by BVI FSC ("Arranger")',
-      purchaser:
+          'VERSO Management Limited, regulated by BVI FSC',
+        'Arranger'
+      ),
+      purchaser: appendIdentifier(
         feeStructure.purchaser ||
-        'Qualified Limited Partners and Institutional Clients ("Purchaser")',
-      seller: feeStructure.seller || '',
+          'Qualified Limited Partners and Institutional Clients',
+        'Purchaser'
+      ),
+      seller: feeStructure.seller
+        ? appendIdentifier(feeStructure.seller, 'Seller')
+        : '',
       structure: feeStructure.structure || '',
 
       // Financial terms

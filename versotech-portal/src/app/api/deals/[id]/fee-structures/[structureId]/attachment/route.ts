@@ -203,6 +203,16 @@ export async function GET(
 
   if (signedUrlError || !signedUrlData?.signedUrl) {
     console.error('Failed to create signed URL:', signedUrlError)
+    // Check if file doesn't exist in storage (data inconsistency)
+    if (signedUrlError?.message?.includes('not found') || (signedUrlError as any)?.statusCode === '404') {
+      // Clear the stale attachment key
+      await serviceSupabase
+        .from('deal_fee_structures')
+        .update({ term_sheet_attachment_key: null, updated_at: new Date().toISOString() })
+        .eq('id', structureId)
+        .eq('deal_id', dealId)
+      return NextResponse.json({ error: 'Term sheet document not found. Please upload a new one.' }, { status: 404 })
+    }
     return NextResponse.json({ error: 'Failed to generate preview URL' }, { status: 500 })
   }
 

@@ -60,7 +60,7 @@ export function DealLogo({
           onLoadingComplete={handleLoad}
           className={cn(
             'h-full w-full',
-            fit === 'contain' ? 'object-contain p-2' : 'object-cover'
+            fit === 'contain' ? 'object-contain p-1' : 'object-cover'
           )}
         />
       ) : (

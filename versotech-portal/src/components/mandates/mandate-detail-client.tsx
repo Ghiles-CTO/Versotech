@@ -134,10 +134,10 @@ export function MandateDetailClient({
   const journeyStages = [
     { label: 'Dispatched', count: journeyStats.dispatched },
     { label: 'Viewed', count: journeyStats.viewed },
-    { label: 'Interested', count: journeyStats.interested },
-    { label: 'NDA', count: journeyStats.ndaSigned },
+    { label: 'Access Requested', count: journeyStats.interested },
+    { label: 'NDA Signed', count: journeyStats.ndaSigned },
     { label: 'Data Room', count: journeyStats.dataRoom },
-    { label: 'Pack Gen', count: journeyStats.packGen },
+    { label: 'Subscription Pack', count: journeyStats.packGen },
     { label: 'Pack Sent', count: journeyStats.packSent },
     { label: 'Signed', count: journeyStats.signed },
     { label: 'Funded', count: journeyStats.funded },

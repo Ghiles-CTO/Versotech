@@ -390,7 +390,7 @@ const subscriptionStageMeta: Record<string, {
   },
   // Legacy/alternative status names (for compatibility)
   pack_generated: {
-    label: 'Pack Generated',
+    label: 'Subscription Pack',
     stage: 6,
     icon: Package,
     bgColor: 'bg-blue-50 dark:bg-blue-900/30',
