@@ -91,7 +91,7 @@ export function calculateSignaturePosition(
   if (party === 'b') {
     return {
       xPercent: 0.704, // 70.4% from left (right column)
-      yFromBottom: 433  // Fixed Y position
+      yFromBottom: 460  // Fixed Y position (higher = appears higher on page)
     }
   }
 
@@ -102,7 +102,7 @@ export function calculateSignaturePosition(
   if (totalPartyASignatories === 1) {
     return {
       xPercent,
-      yFromBottom: 433 // Same as Party B for single signer
+      yFromBottom: 460 // Same as Party B for single signer
     }
   }
 

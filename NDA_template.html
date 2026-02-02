@@ -20,6 +20,8 @@
 
     * {
       box-sizing: border-box;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
 
     body {
@@ -34,18 +36,12 @@
     .page {
       position: relative;
       min-height: 100%;
-      padding-bottom: 1.5cm;
+      padding-bottom: 1cm;
     }
 
     .page-header {
       text-align: center;
       margin-bottom: 0.5cm;
-    }
-
-    .zoho-header {
-      font-size: 8pt;
-      color: #666;
-      margin-bottom: 0.3cm;
     }
 
     .verso-logo {
@@ -104,19 +100,8 @@
       background-color: #fff;
     }
 
-    table.party-details {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 6px 0 0 0;
-    }
-
-    table.party-details td {
-      padding: 6px 10px;
-      border: 1px solid #bfbfbf;
-      font-size: 9.5pt;
-    }
-
-    table.party-details .label-cell {
+    /* Parties table - flat structure matching DOCX */
+    table.parties-table td.label-cell {
       width: 32%;
       font-weight: bold;
       background-color: #f2f2f2;
@@ -185,12 +170,12 @@
 
     table.signature-table .sig-space {
       height: 160px;
-      vertical-align: bottom;
+      vertical-align: middle;
     }
 
     .page-footer {
       text-align: center;
-      margin-top: 0.8cm;
+      margin-top: 0.5cm;
       padding-top: 0.3cm;
     }
 
@@ -225,7 +210,6 @@
 <!-- ==================== PAGE 1 ==================== -->
 <div class="page">
   <div class="page-header">
-    <div class="zoho-header">Zoho Sign Document ID: {{ $json.zoho_sign_document_id }}</div>
     <div class="verso-logo">VERSO</div>
   </div>
 
@@ -244,7 +228,7 @@
     </tr>
     <tr>
       <td class="section-content" colspan="2">
-        VERSO Capital 2 SCSP {{ $json.vehicle_name }} Series {{ $json.series_code }} {{ $json.series_numeric }} ("{{ $json.series_entity_code }}")
+        {{ $json.vehicle_name }} ("{{ $json.series_entity_code }}")
       </td>
     </tr>
   </table>
@@ -262,59 +246,47 @@
     </tr>
   </table>
 
-  <table class="section-table">
+  <table class="section-table parties-table">
     <tr>
-      <td class="section-header">Parties ("Parties")</td>
+      <td colspan="2" class="section-header">Parties ("Parties")</td>
     </tr>
     <tr>
-      <td class="section-subheader">PARTY A ("Receiving Party")</td>
+      <td colspan="2" class="section-subheader">PARTY A ("Receiving Party")</td>
     </tr>
     <tr>
-      <td class="section-content">
-        <table class="party-details">
-          <tr>
-            <td class="label-cell">Name:</td>
-            <td>{{ $json.party_a_name }}</td>
-          </tr>
-          <tr>
-            <td class="label-cell">Registered Address:</td>
-            <td>{{ $json.party_a_registered_address }}</td>
-          </tr>
-          <tr>
-            <td class="label-cell">City / Country:</td>
-            <td>{{ $json.party_a_city_country }}</td>
-          </tr>
-          <tr>
-            <td class="label-cell">Represented by:</td>
-            <td>{{ $json.party_a_representative_name }}, {{ $json.party_a_representative_title }}</td>
-          </tr>
-        </table>
-      </td>
+      <td class="label-cell">Name:</td>
+      <td>{{ $json.party_a_name }}</td>
     </tr>
     <tr>
-      <td class="section-subheader">PARTY B ("Disclosing Party")</td>
+      <td class="label-cell">Registered Address:</td>
+      <td>{{ $json.party_a_registered_address }}</td>
     </tr>
     <tr>
-      <td class="section-content">
-        <table class="party-details">
-          <tr>
-            <td class="label-cell">Name:</td>
-            <td>{{ $json.party_b_name }}</td>
-          </tr>
-          <tr>
-            <td class="label-cell">Registered Address:</td>
-            <td>{{ $json.party_b_registered_address }}</td>
-          </tr>
-          <tr>
-            <td class="label-cell">City / Country:</td>
-            <td>{{ $json.party_b_city_country }}</td>
-          </tr>
-          <tr>
-            <td class="label-cell">Represented by:</td>
-            <td>{{ $json.vehicle_managing_partner_name }}, {{ $json.vehicle_managing_partner_title }}</td>
-          </tr>
-        </table>
-      </td>
+      <td class="label-cell">City / Country:</td>
+      <td>{{ $json.party_a_city_country }}</td>
+    </tr>
+    <tr>
+      <td class="label-cell">Represented by:</td>
+      <td>{{ $json.party_a_representative_name }}, {{ $json.party_a_representative_title }}</td>
+    </tr>
+    <tr>
+      <td colspan="2" class="section-subheader">PARTY B ("Disclosing Party")</td>
+    </tr>
+    <tr>
+      <td class="label-cell">Name:</td>
+      <td>{{ $json.party_b_name }}</td>
+    </tr>
+    <tr>
+      <td class="label-cell">Registered Address:</td>
+      <td>{{ $json.party_b_registered_address }}</td>
+    </tr>
+    <tr>
+      <td class="label-cell">City / Country:</td>
+      <td>{{ $json.party_b_city_country }}</td>
+    </tr>
+    <tr>
+      <td class="label-cell">Represented by:</td>
+      <td>{{ $json.vehicle_managing_partner_name }}, {{ $json.vehicle_managing_partner_title }}</td>
     </tr>
   </table>
 
@@ -329,7 +301,6 @@
 <!-- ==================== PAGE 2+ (Clauses - flows naturally) ==================== -->
 <div class="page-break-before">
   <div class="page-header">
-    <div class="zoho-header">Zoho Sign Document ID: {{ $json.zoho_sign_document_id }}</div>
     <div class="verso-logo">VERSO</div>
   </div>
 </div>
@@ -388,7 +359,6 @@
 <!-- ==================== SIGNATURE PAGE ==================== -->
 <div class="page-break-before">
   <div class="page-header">
-    <div class="zoho-header">Zoho Sign Document ID: {{ $json.zoho_sign_document_id }}</div>
     <div class="verso-logo">VERSO</div>
   </div>
 

@@ -25,10 +25,9 @@ export const SIGNATURE_CONFIG = {
     },
     table: {
       // Y position calibrated from actual NDA template (Page 5, US Letter 612×792pt)
-      // Signature boxes: y=433 from bottom, height=112
-      // Formula: signatureY = bottom + height/2 - sigHeight/2
-      // Target Y = 433 + 56 - 35 = 454 (centered in 112pt box)
-      bottom: 433,
+      // NOTE: This config is NOT used for NDA - see helpers.ts yFromBottom hardcoded values
+      // For reference: higher yFromBottom = signature appears HIGHER on page
+      bottom: 460,
       height: 112
     },
     positions: {
