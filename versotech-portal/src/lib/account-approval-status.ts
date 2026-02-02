@@ -63,14 +63,14 @@ export function getAccountStatusCopy(
   if (accountStatus === 'pending_onboarding') {
     if (kyc && KYC_PROGRESS_STATUSES.has(kyc)) return STATUS_LABELS.incomplete
     if (kyc && KYC_APPROVED_STATUSES.has(kyc)) return STATUS_LABELS.pending_approval
-    if (kyc && KYC_REJECTED_STATUSES.has(kyc)) return STATUS_LABELS.incomplete
+    if (kyc && KYC_REJECTED_STATUSES.has(kyc)) return STATUS_LABELS.rejected
     return STATUS_LABELS.new
   }
 
   // Unknown/empty account status: infer from KYC if possible
   if (kyc && KYC_PROGRESS_STATUSES.has(kyc)) return STATUS_LABELS.incomplete
   if (kyc && KYC_APPROVED_STATUSES.has(kyc)) return STATUS_LABELS.pending_approval
-  if (kyc && KYC_REJECTED_STATUSES.has(kyc)) return STATUS_LABELS.incomplete
+  if (kyc && KYC_REJECTED_STATUSES.has(kyc)) return STATUS_LABELS.rejected
 
   return STATUS_LABELS.new
 }
