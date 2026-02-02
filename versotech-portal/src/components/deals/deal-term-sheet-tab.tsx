@@ -119,7 +119,8 @@ const DEFAULT_TERMSHEET_TEXT = {
   share_certificates_note:
     'The Issuer shall provide the Purchasers Share Certificates and Statement of Holdings upon Completion',
   subject_to_change_note:
-    'The content of the present term sheet remains indicative, subject to change'
+    'The content of the present term sheet remains indicative, subject to change',
+  interest_confirmation_text: 'COB for firm commitments only'
 }
 
 const emptyForm = {
@@ -139,11 +140,10 @@ const emptyForm = {
   minimum_ticket: '',
   subscription_fee_percent: '',
   management_fee_percent: '',
-  management_fee_clause: '',
   carried_interest_percent: '',
-  performance_fee_clause: '',
   legal_counsel: '',
   interest_confirmation_deadline: '',
+  interest_confirmation_text: DEFAULT_TERMSHEET_TEXT.interest_confirmation_text,
   capital_call_timeline: DEFAULT_TERMSHEET_TEXT.capital_call_timeline,
   validity_date: '',
   completion_date: '',
@@ -183,13 +183,12 @@ function mapTermSheetToForm(termSheet?: TermSheet): FormState {
     minimum_ticket: termSheet.minimum_ticket ?? '',
     subscription_fee_percent: termSheet.subscription_fee_percent ?? '',
     management_fee_percent: termSheet.management_fee_percent ?? '',
-    management_fee_clause: termSheet.management_fee_clause ?? '',
     carried_interest_percent: termSheet.carried_interest_percent ?? '',
-    performance_fee_clause: termSheet.performance_fee_clause ?? '',
     legal_counsel: termSheet.legal_counsel ?? '',
     interest_confirmation_deadline: termSheet.interest_confirmation_deadline
       ? termSheet.interest_confirmation_deadline.slice(0, 16)
       : '',
+    interest_confirmation_text: termSheet.interest_confirmation_text ?? DEFAULT_TERMSHEET_TEXT.interest_confirmation_text,
     capital_call_timeline: termSheet.capital_call_timeline ?? DEFAULT_TERMSHEET_TEXT.capital_call_timeline,
     validity_date: termSheet.validity_date ? termSheet.validity_date.slice(0, 16) : '',
     completion_date: termSheet.completion_date ? termSheet.completion_date.slice(0, 10) : '',
@@ -242,11 +241,10 @@ function buildPayload(values: FormState) {
     minimum_ticket: toNumber(values.minimum_ticket),
     subscription_fee_percent: toNumber(values.subscription_fee_percent),
     management_fee_percent: toNumber(values.management_fee_percent),
-    management_fee_clause: values.management_fee_clause || null,
     carried_interest_percent: toNumber(values.carried_interest_percent),
-    performance_fee_clause: values.performance_fee_clause || null,
     legal_counsel: values.legal_counsel || null,
     interest_confirmation_deadline: values.interest_confirmation_deadline || null,
+    interest_confirmation_text: values.interest_confirmation_text || null,
     capital_call_timeline: values.capital_call_timeline || null,
     validity_date: values.validity_date || null,
     completion_date: values.completion_date || null,
@@ -893,9 +891,6 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                       ? `${published.management_fee_percent}% p.a.`
                       : '—'}
                   </span>
-                  {published.management_fee_clause && (
-                    <span className="text-muted-foreground block text-xs mt-1 italic">{published.management_fee_clause}</span>
-                  )}
                 </div>
                 <div>
                   <span className="text-muted-foreground block text-xs">Carried Interest</span>
@@ -904,9 +899,6 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                       ? `${published.carried_interest_percent}%`
                       : '—'}
                   </span>
-                  {published.performance_fee_clause && (
-                    <span className="text-muted-foreground block text-xs mt-1 italic">{published.performance_fee_clause}</span>
-                  )}
                 </div>
                 <div>
                   <span className="text-muted-foreground block text-xs">Legal Counsel</span>
@@ -1149,9 +1141,6 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                         ? `${termSheet.management_fee_percent}% p.a.`
                         : '—'}
                     </span>
-                    {termSheet.management_fee_clause && (
-                      <span className="text-muted-foreground block text-xs italic mt-1">{termSheet.management_fee_clause}</span>
-                    )}
                   </div>
                   <div>
                     <span className="text-muted-foreground block text-xs">Carried Interest</span>
@@ -1160,9 +1149,6 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                         ? `${termSheet.carried_interest_percent}%`
                         : '—'}
                     </span>
-                    {termSheet.performance_fee_clause && (
-                      <span className="text-muted-foreground block text-xs italic mt-1">{termSheet.performance_fee_clause}</span>
-                    )}
                   </div>
                 </div>
               </div>
@@ -1646,33 +1632,6 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="management_fee_clause">Management Fee Clause</Label>
-                <p className="text-xs text-muted-foreground">
-                  Optional descriptive text (e.g., "Waived instead of 2.00% per annum")
-                </p>
-                <Input
-                  id="management_fee_clause"
-                  placeholder="e.g., Waived (instead of 2.00% per annum)"
-                  value={formValues.management_fee_clause}
-                  onChange={event => setFormValues(prev => ({ ...prev, management_fee_clause: event.target.value }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="performance_fee_clause">Performance Fee Clause</Label>
-                <p className="text-xs text-muted-foreground">
-                  Optional descriptive text (e.g., "Waived instead of 20% no hurdle")
-                </p>
-                <Input
-                  id="performance_fee_clause"
-                  placeholder="e.g., Waived (instead of 20.00% no hurdle rate)"
-                  value={formValues.performance_fee_clause}
-                  onChange={event => setFormValues(prev => ({ ...prev, performance_fee_clause: event.target.value }))}
-                />
-              </div>
-            </div>
-
             <Separator />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1685,6 +1644,21 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   onChange={event => setFormValues(prev => ({ ...prev, interest_confirmation_deadline: event.target.value }))}
                 />
               </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="interest_confirmation_text">Interest Confirmation Text</Label>
+                <Input
+                  id="interest_confirmation_text"
+                  placeholder="e.g., COB for firm commitments only"
+                  value={formValues.interest_confirmation_text}
+                  onChange={event => setFormValues(prev => ({ ...prev, interest_confirmation_text: event.target.value }))}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Text that appears after the date (e.g., "COB for firm commitments only")
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="validity_date">Validity Date</Label>
                 <Input

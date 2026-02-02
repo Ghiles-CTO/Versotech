@@ -84,8 +84,64 @@ function deriveIssuerAndVehicleFromName(vehicleName: string | null, entityCode: 
 }
 
 /**
+ * Format datetime with timezone for validity date
+ * Returns format like "June 13, 2025 5:00 PM Luxembourg time"
+ */
+function formatDateTimeWithTimezone(dateStr: string | null): string {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return ''
+  const dateFormatted = date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  })
+  const timeFormatted = date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  })
+  return `${dateFormatted} ${timeFormatted} Luxembourg time`
+}
+
+/**
+ * Format subscription fee percentage with appropriate text
+ * Returns "Waived (instead of 2.00%)" for 0%, percentage for other values
+ */
+function formatSubscriptionFeeText(percent: number | null): string {
+  if (percent === null || percent === undefined) return 'N/A'
+  if (percent === 0) return 'Waived (instead of 2.00%)'
+  return `${percent.toFixed(2)}%`
+}
+
+/**
+ * Format interest confirmation combining date and text
+ * Returns format like "By June 13, 2025 COB for firm commitments only"
+ */
+function formatInterestConfirmation(
+  deadline: string | null,
+  text: string | null
+): string {
+  if (!deadline) return ''
+  const formattedDate = formatDate(deadline)
+  if (!formattedDate) return ''
+  const suffix = text || 'COB for firm commitments only'
+  return `By ${formattedDate} ${suffix}`
+}
+
+/**
+ * Format legal counsel with "(Lead Counsel)" suffix if not present
+ */
+function formatLegalCounsel(counsel: string | null): string {
+  if (!counsel) return ''
+  if (counsel.includes('Lead Counsel')) return counsel
+  return `${counsel} ("Lead Counsel")`
+}
+
+/**
  * Format fee percentage with appropriate text
  * Database stores fees as actual percentages (2 = 2%, 25 = 25%)
+ * When fee is 0%, displays fixed "Waived (instead of X%)" text
  */
 function formatFeeText(
   percent: number | null,
@@ -226,7 +282,10 @@ export async function POST(
       minimum_ticket: formatNumber(feeStructure.minimum_ticket),
       maximum_ticket: formatNumber(feeStructure.maximum_ticket),
 
-      // Fee terms
+      // Fee terms - fixed "Waived (instead of X%)" text when fee is 0%
+      subscription_fee_text: formatSubscriptionFeeText(
+        feeStructure.subscription_fee_percent
+      ),
       management_fee_text: formatFeeText(
         feeStructure.management_fee_percent,
         'management'
@@ -237,9 +296,10 @@ export async function POST(
       ),
 
       // Legal & Timeline
-      legal_counsel: feeStructure.legal_counsel || '',
-      interest_confirmation_deadline: formatDate(
-        feeStructure.interest_confirmation_deadline
+      legal_counsel: formatLegalCounsel(feeStructure.legal_counsel),
+      interest_confirmation_text: formatInterestConfirmation(
+        feeStructure.interest_confirmation_deadline,
+        feeStructure.interest_confirmation_text
       ),
       capital_call_timeline:
         feeStructure.capital_call_timeline ||
@@ -259,7 +319,7 @@ export async function POST(
       subject_to_change_note:
         feeStructure.subject_to_change_note ||
         'The content of the present term sheet remains indicative, subject to change',
-      validity_date: formatDate(feeStructure.validity_date),
+      validity_date: formatDateTimeWithTimezone(feeStructure.validity_date),
 
       // Footer
       footer_arranger: 'VERSO Management',
