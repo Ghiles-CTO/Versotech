@@ -461,13 +461,6 @@ export async function createSignatureRequest(
     const signing_url = generateSigningUrl(signing_token)
     console.log('🔗 [SIGNATURE] Generated signing URL:', signing_url)
 
-    // EMAIL DISABLED FOR TESTING
-    // Users will access signature requests via tasks portal instead
-    // To re-enable: uncomment the block below
-    console.log('📧 [SIGNATURE] Email sending DISABLED - user can access via tasks portal')
-    console.log('📧 [SIGNATURE] Would have sent email to:', signer_email)
-
-    /*
     // Send email with signing link using Resend
     console.log('📧 [SIGNATURE] Sending signature request email to:', signer_email)
 
@@ -501,7 +494,6 @@ export async function createSignatureRequest(
         })
         .eq('id', signatureRequest.id)
     }
-    */
 
     // Create task for CEO/admin and arranger signatures to appear in VERSOSign
     // - CEO tasks: owned by ceo_entity_id (found via owner_ceo_entity_id)
