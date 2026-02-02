@@ -138,10 +138,10 @@ export function InterestModal({
           <div className="flex flex-col items-center justify-center py-10 text-center">
             <CheckCircle2 className="h-12 w-12 text-green-500 mb-4" />
             <p className="text-lg font-semibold text-green-700">
-              Interest submitted
+              Data room access requested
             </p>
             <p className="text-sm text-green-600">
-              We&apos;ll notify you as soon as the team responds.
+              You&apos;ll receive the NDA to sign once approved.
             </p>
           </div>
         ) : (

@@ -75,6 +75,8 @@ interface FeeStructure {
   id: string
   status: string
   version: number
+  // Header
+  to_description: string | null
   // Opportunity Summary
   opportunity_summary: string | null
   term_sheet_html: string | null
@@ -91,6 +93,7 @@ interface FeeStructure {
   price_per_share: number | null
   price_per_share_text: string | null
   minimum_ticket: number | null
+  maximum_ticket: number | null
   // Fee Structure
   subscription_fee_percent: number | null
   management_fee_percent: number | null
@@ -100,11 +103,18 @@ interface FeeStructure {
   // Timeline
   term_sheet_date: string | null
   interest_confirmation_deadline: string | null
+  interest_confirmation_text: string | null
   validity_date: string | null
   completion_date: string | null
   completion_date_text: string | null
+  capital_call_timeline: string | null
   // Legal
   legal_counsel: string | null
+  // Notes
+  in_principle_approval_text: string | null
+  subscription_pack_note: string | null
+  share_certificates_note: string | null
+  subject_to_change_note: string | null
   // Attachment
   term_sheet_attachment_key: string | null
 }
@@ -150,6 +160,8 @@ interface Opportunity {
     id: string
     name: string
     type: string
+    entity_code: string | null
+    series_number: number | null
   } | null
   account_approval_status: string | null
   kyc_status: string | null
@@ -274,6 +286,27 @@ function formatDate(dateString: string | null): string {
     day: 'numeric',
     year: 'numeric'
   })
+}
+
+// Format with identifier like PDF does - e.g., "ABC Company" → 'ABC Company ("Issuer")'
+function withIdentifier(text: string | null | undefined, identifier: string): string {
+  if (!text) return ''
+  const trimmed = text.trim()
+  if (trimmed.includes(`("${identifier}")`)) return trimmed
+  return `${trimmed} ("${identifier}")`
+}
+
+// Format fee like PDF: "Waived (instead of X%)" or "X%"
+function formatFeeDisplay(percent: number | null, type: 'subscription' | 'management' | 'carry'): string {
+  if (percent === null || percent === undefined) return 'N/A'
+  if (percent === 0) {
+    if (type === 'subscription') return 'Waived (instead of 2.00%)'
+    if (type === 'management') return 'Waived (instead of 2.00% per annum)'
+    return 'Waived (instead of 20.00% no hurdle rate, no applicable cap)'
+  }
+  if (type === 'management') return `${percent.toFixed(2)}% per annum`
+  if (type === 'carry') return `${percent.toFixed(2)}% (no hurdle rate)`
+  return `${percent.toFixed(2)}%`
 }
 
 function formatFileSize(bytes: number): string {
@@ -591,12 +624,9 @@ export default function OpportunityDetailPage() {
   } : opportunity.journey.summary
 
   const handleSignNda = () => {
-    if (opportunity.nda_signing_url) {
-      router.push(opportunity.nda_signing_url)
-      return
-    }
-
-    setShowNdaDialog(true)
+    // Navigate to tasks page where all signature tasks are listed
+    // This handles multiple signatories properly and works for investors
+    router.push('/versotech_main/tasks')
   }
 
   return (
@@ -720,7 +750,7 @@ export default function OpportunityDetailPage() {
                       <TrendingUp className="w-5 h-5" />
                       <div className="text-left">
                         <div className="font-semibold">Subscribe to Investment</div>
-                        <div className="text-xs opacity-90 font-normal">Submit for review • Subscription pack only (no NDA)</div>
+                        <div className="text-xs opacity-90 font-normal">Submit for review • Subscription pack</div>
                       </div>
                     </div>
                   </Button>
@@ -845,7 +875,6 @@ export default function OpportunityDetailPage() {
                 currentStage={opportunity.journey.current_stage}
                 membership={opportunity.membership}
                 subscription={null}
-                journeySummary={journeySummary}
                 subscriptionSubmittedAt={subscriptionSubmittedAt}
                 canExpressInterest={canExpressInterest}
                 canSignNda={canSignNda}
@@ -860,7 +889,6 @@ export default function OpportunityDetailPage() {
             )}
             <div className="lg:col-span-2">
               <DealKeyDetailsCard
-                dealType={opportunity.deal_type || 'N/A'}
                 currency={opportunity.currency}
                 stockType={opportunity.stock_type}
                 sector={opportunity.sector}
@@ -872,78 +900,45 @@ export default function OpportunityDetailPage() {
             </div>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Investment Details */}
+          {/* Company Info - Full Width */}
+          {(opportunity.description || opportunity.investment_thesis || opportunity.company_website) && (
             <Card>
               <CardHeader>
-                <CardTitle>Investment Details</CardTitle>
+                <CardTitle>About the Opportunity</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-muted-foreground">Target Raise</Label>
-                    <p className="font-medium">{formatCurrency(opportunity.target_amount, opportunity.currency)}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Raised</Label>
-                    <p className="font-medium">{formatCurrency(opportunity.raised_amount, opportunity.currency)}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Min Investment</Label>
-                    <p className="font-medium">{formatCurrency(opportunity.minimum_investment, opportunity.currency)}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Max Investment</Label>
-                    <p className="font-medium">{formatCurrency(opportunity.maximum_investment, opportunity.currency)}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Closing Date</Label>
-                    <p className="font-medium">{formatDate(opportunity.close_at)}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Deal Type</Label>
-                    <p className="font-medium">{opportunity.deal_type || '-'}</p>
-                  </div>
+                <div className="grid gap-6 md:grid-cols-2">
+                  {opportunity.description && (
+                    <div className="md:col-span-2">
+                      <Label className="text-muted-foreground text-sm">Description</Label>
+                      <p className="mt-1.5 text-foreground leading-relaxed">{opportunity.description}</p>
+                    </div>
+                  )}
+                  {opportunity.investment_thesis && (
+                    <div className="md:col-span-2">
+                      <Label className="text-muted-foreground text-sm">Investment Thesis</Label>
+                      <p className="mt-1.5 text-foreground leading-relaxed">{opportunity.investment_thesis}</p>
+                    </div>
+                  )}
+                  {opportunity.company_website && (
+                    <div>
+                      <Label className="text-muted-foreground text-sm">Website</Label>
+                      <a
+                        href={opportunity.company_website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 hover:underline mt-1.5 font-medium"
+                      >
+                        <Globe className="w-4 h-4" />
+                        {opportunity.company_website.replace(/^https?:\/\//, '')}
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
-
-            {/* Company Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Company Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {opportunity.description && (
-                  <div>
-                    <Label className="text-muted-foreground">Description</Label>
-                    <p className="mt-1">{opportunity.description}</p>
-                  </div>
-                )}
-                {opportunity.investment_thesis && (
-                  <div>
-                    <Label className="text-muted-foreground">Investment Thesis</Label>
-                    <p className="mt-1">{opportunity.investment_thesis}</p>
-                  </div>
-                )}
-                {opportunity.company_website && (
-                  <div>
-                    <Label className="text-muted-foreground">Website</Label>
-                    <a
-                      href={opportunity.company_website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-blue-600 hover:underline mt-1"
-                    >
-                      <Globe className="w-4 h-4" />
-                      {opportunity.company_website}
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+          )}
 
           {/* Term Sheet */}
           {/* PERSONA ACCESS RULE: Hide Term Sheet for introducers and lawyers */}
@@ -995,32 +990,15 @@ export default function OpportunityDetailPage() {
               }
             }
 
-            // Check if any transaction details exist
-            const hasTransactionDetails = termSheet.transaction_type || termSheet.structure || termSheet.issuer ||
-              termSheet.vehicle || termSheet.exclusive_arranger || termSheet.purchaser || termSheet.seller || termSheet.legal_counsel
-
-            // Check if any timeline info exists
-            const hasTimeline = termSheet.interest_confirmation_deadline || termSheet.validity_date ||
-              termSheet.completion_date || termSheet.completion_date_text
-
-            // Check if any fees exist
-            const hasFees = termSheet.subscription_fee_percent !== null ||
-              termSheet.management_fee_percent !== null || termSheet.carried_interest_percent !== null
+            // Get vehicle identifier (entity_code like VC209)
+            const vehicleIdentifier = opportunity.vehicle?.entity_code ||
+              (opportunity.vehicle?.series_number ? `VC${opportunity.vehicle.series_number}` : 'Vehicle')
 
             return (
               <Card className="border-2">
-                <CardHeader className="pb-4">
+                <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <CardTitle className="text-xl">Term Sheet</CardTitle>
-                      {(termSheet.term_sheet_date || termSheet.version) && (
-                        <CardDescription className="text-sm">
-                          {termSheet.term_sheet_date && formatDate(termSheet.term_sheet_date)}
-                          {termSheet.term_sheet_date && termSheet.version && ' • '}
-                          {termSheet.version && `Version ${termSheet.version}`}
-                        </CardDescription>
-                      )}
-                    </div>
+                    <CardTitle className="text-xl">Indicative Term Sheet</CardTitle>
                     {termSheet.term_sheet_attachment_key && (
                       <Button onClick={handlePreviewTermSheet} size="sm" className="gap-2">
                         <Eye className="w-4 h-4" />
@@ -1030,172 +1008,181 @@ export default function OpportunityDetailPage() {
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-8">
-                  {/* Price Per Share - Hero display when available */}
-                  {(termSheet.price_per_share != null || termSheet.price_per_share_text) && (
-                    <div className="text-center py-6 px-4 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/50 dark:to-teal-950/50 border border-emerald-200 dark:border-emerald-800">
-                      <div className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-1">Price Per Share</div>
-                      <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-300">
-                        {termSheet.price_per_share != null
-                          ? formatCurrency(termSheet.price_per_share, opportunity.currency)
-                          : termSheet.price_per_share_text}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Opportunity Summary */}
-                  {(termSheet.term_sheet_html || termSheet.opportunity_summary) && (
-                    <div>
-                      <h4 className="text-sm font-semibold text-muted-foreground mb-3">Opportunity Summary</h4>
-                      <div className="prose prose-sm dark:prose-invert max-w-none">
-                        {termSheet.term_sheet_html ? (
-                          <div dangerouslySetInnerHTML={{ __html: termSheet.term_sheet_html }} />
-                        ) : (
-                          <p className="whitespace-pre-wrap text-foreground/80">{termSheet.opportunity_summary}</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Key Terms Grid */}
-                  {(termSheet.allocation_up_to || termSheet.minimum_ticket) && (
-                    <div className="grid grid-cols-2 gap-4">
-                      {termSheet.allocation_up_to && (
-                        <div className="text-center p-4 rounded-lg bg-muted/50">
-                          <div className="text-xs text-muted-foreground mb-1">Allocation ({opportunity.currency})</div>
-                          <div className="text-lg font-semibold">{formatCurrency(termSheet.allocation_up_to, opportunity.currency)}</div>
-                        </div>
-                      )}
-                      {termSheet.minimum_ticket && (
-                        <div className="text-center p-4 rounded-lg bg-muted/50">
-                          <div className="text-xs text-muted-foreground mb-1">Min. Ticket</div>
-                          <div className="text-lg font-semibold">{formatCurrency(termSheet.minimum_ticket, opportunity.currency)}</div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Fee Structure */}
-                  {hasFees && (
-                    <div>
-                      <h4 className="text-sm font-semibold text-muted-foreground mb-3">Fee Structure</h4>
-                      <div className="grid grid-cols-3 gap-4">
-                        {termSheet.subscription_fee_percent !== null && (
-                          <div className="p-4 rounded-lg border bg-card">
-                            <div className="text-xs text-muted-foreground">Subscription Fee</div>
-                            <div className="text-2xl font-bold mt-1">{termSheet.subscription_fee_percent}%</div>
-                          </div>
-                        )}
-                        {termSheet.management_fee_percent !== null && (
-                          <div className="p-4 rounded-lg border bg-card">
-                            <div className="text-xs text-muted-foreground">Management Fee</div>
-                            <div className="text-2xl font-bold mt-1">{termSheet.management_fee_percent}%</div>
-                            <div className="text-xs text-muted-foreground">per annum</div>
-                            {termSheet.management_fee_clause && (
-                              <p className="text-xs text-muted-foreground mt-2 border-t pt-2">{termSheet.management_fee_clause}</p>
-                            )}
-                          </div>
-                        )}
-                        {termSheet.carried_interest_percent !== null && (
-                          <div className="p-4 rounded-lg border bg-card">
-                            <div className="text-xs text-muted-foreground">Carried Interest</div>
-                            <div className="text-2xl font-bold mt-1">{termSheet.carried_interest_percent}%</div>
-                            {termSheet.performance_fee_clause && (
-                              <p className="text-xs text-muted-foreground mt-2 border-t pt-2">{termSheet.performance_fee_clause}</p>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Transaction Details */}
-                  {hasTransactionDetails && (
-                    <div>
-                      <h4 className="text-sm font-semibold text-muted-foreground mb-3">Transaction Details</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4">
+                <CardContent className="pt-4">
+                  {/* Table format matching PDF template exactly */}
+                  <div className="border rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <tbody className="divide-y">
+                        {/* Date */}
+                        <tr>
+                          <td className="px-4 py-3 bg-muted/50 font-semibold w-1/4">Date</td>
+                          <td className="px-4 py-3">{termSheet.term_sheet_date ? formatDate(termSheet.term_sheet_date) : '-'}</td>
+                        </tr>
+                        {/* To */}
+                        <tr>
+                          <td className="px-4 py-3 bg-muted/50 font-semibold">To</td>
+                          <td className="px-4 py-3">{termSheet.to_description || 'Qualified, Professional and Institutional Investors only'}</td>
+                        </tr>
+                        {/* Transaction Type */}
                         {termSheet.transaction_type && (
-                          <div>
-                            <div className="text-xs text-muted-foreground">Type</div>
-                            <div className="font-medium">{termSheet.transaction_type}</div>
-                          </div>
+                          <tr>
+                            <td className="px-4 py-3 bg-muted/50 font-semibold">Transaction Type</td>
+                            <td className="px-4 py-3">{termSheet.transaction_type}</td>
+                          </tr>
                         )}
-                        {termSheet.structure && (
-                          <div>
-                            <div className="text-xs text-muted-foreground">Structure</div>
-                            <div className="font-medium">{termSheet.structure}</div>
-                          </div>
+                        {/* Opportunity */}
+                        {(termSheet.term_sheet_html || termSheet.opportunity_summary) && (
+                          <tr>
+                            <td className="px-4 py-3 bg-muted/50 font-semibold align-top">Opportunity</td>
+                            <td className="px-4 py-3">
+                              {termSheet.term_sheet_html ? (
+                                <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: termSheet.term_sheet_html }} />
+                              ) : (
+                                <p className="whitespace-pre-wrap">{termSheet.opportunity_summary}</p>
+                              )}
+                            </td>
+                          </tr>
                         )}
+                        {/* Issuer */}
                         {termSheet.issuer && (
-                          <div>
-                            <div className="text-xs text-muted-foreground">Issuer</div>
-                            <div className="font-medium">{termSheet.issuer}</div>
-                          </div>
+                          <tr>
+                            <td className="px-4 py-3 bg-muted/50 font-semibold">Issuer</td>
+                            <td className="px-4 py-3">{withIdentifier(termSheet.issuer, 'Issuer')}</td>
+                          </tr>
                         )}
+                        {/* Vehicle */}
                         {termSheet.vehicle && (
-                          <div>
-                            <div className="text-xs text-muted-foreground">Vehicle</div>
-                            <div className="font-medium">{termSheet.vehicle}</div>
-                          </div>
+                          <tr>
+                            <td className="px-4 py-3 bg-muted/50 font-semibold">Vehicle</td>
+                            <td className="px-4 py-3">{withIdentifier(termSheet.vehicle, vehicleIdentifier)}</td>
+                          </tr>
                         )}
-                        {termSheet.exclusive_arranger && (
-                          <div>
-                            <div className="text-xs text-muted-foreground">Arranger</div>
-                            <div className="font-medium">{termSheet.exclusive_arranger}</div>
-                          </div>
-                        )}
-                        {termSheet.purchaser && (
-                          <div>
-                            <div className="text-xs text-muted-foreground">Purchaser</div>
-                            <div className="font-medium">{termSheet.purchaser}</div>
-                          </div>
-                        )}
+                        {/* Exclusive Arranger */}
+                        <tr>
+                          <td className="px-4 py-3 bg-muted/50 font-semibold">Exclusive Arranger</td>
+                          <td className="px-4 py-3">{withIdentifier(termSheet.exclusive_arranger || 'VERSO Management Limited, regulated by BVI FSC', 'Arranger')}</td>
+                        </tr>
+                        {/* Purchaser */}
+                        <tr>
+                          <td className="px-4 py-3 bg-muted/50 font-semibold">Purchaser</td>
+                          <td className="px-4 py-3">{withIdentifier(termSheet.purchaser || 'Qualified Limited Partners and Institutional Clients', 'Purchaser')}</td>
+                        </tr>
+                        {/* Seller */}
                         {termSheet.seller && (
-                          <div>
-                            <div className="text-xs text-muted-foreground">Seller</div>
-                            <div className="font-medium">{termSheet.seller}</div>
-                          </div>
+                          <tr>
+                            <td className="px-4 py-3 bg-muted/50 font-semibold">Seller</td>
+                            <td className="px-4 py-3">{withIdentifier(termSheet.seller, 'Seller')}</td>
+                          </tr>
                         )}
+                        {/* Structure */}
+                        {termSheet.structure && (
+                          <tr>
+                            <td className="px-4 py-3 bg-muted/50 font-semibold">Structure</td>
+                            <td className="px-4 py-3">{termSheet.structure}</td>
+                          </tr>
+                        )}
+                        {/* Allocation */}
+                        {termSheet.allocation_up_to && (
+                          <tr>
+                            <td className="px-4 py-3 bg-muted/50 font-semibold">Allocation</td>
+                            <td className="px-4 py-3">Up to {opportunity.currency} {termSheet.allocation_up_to.toLocaleString()} only</td>
+                          </tr>
+                        )}
+                        {/* Price per Share */}
+                        {(termSheet.price_per_share != null || termSheet.price_per_share_text) && (
+                          <tr>
+                            <td className="px-4 py-3 bg-muted/50 font-semibold">Price per Share</td>
+                            <td className="px-4 py-3">
+                              {termSheet.price_per_share != null
+                                ? `${opportunity.currency} ${termSheet.price_per_share.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                : termSheet.price_per_share_text}
+                            </td>
+                          </tr>
+                        )}
+                        {/* Minimum Ticket */}
+                        {termSheet.minimum_ticket && (
+                          <tr>
+                            <td className="px-4 py-3 bg-muted/50 font-semibold">Minimum Ticket</td>
+                            <td className="px-4 py-3">{opportunity.currency} {termSheet.minimum_ticket.toLocaleString()}</td>
+                          </tr>
+                        )}
+                        {/* Subscription Fee */}
+                        {termSheet.subscription_fee_percent !== null && (
+                          <tr>
+                            <td className="px-4 py-3 bg-muted/50 font-semibold">Subscription Fee</td>
+                            <td className="px-4 py-3">{formatFeeDisplay(termSheet.subscription_fee_percent, 'subscription')}</td>
+                          </tr>
+                        )}
+                        {/* Management Fee */}
+                        {termSheet.management_fee_percent !== null && (
+                          <tr>
+                            <td className="px-4 py-3 bg-muted/50 font-semibold">Management Fee</td>
+                            <td className="px-4 py-3">{formatFeeDisplay(termSheet.management_fee_percent, 'management')}</td>
+                          </tr>
+                        )}
+                        {/* Carried Interest */}
+                        {termSheet.carried_interest_percent !== null && (
+                          <tr>
+                            <td className="px-4 py-3 bg-muted/50 font-semibold">Carried Interest</td>
+                            <td className="px-4 py-3">{formatFeeDisplay(termSheet.carried_interest_percent, 'carry')}</td>
+                          </tr>
+                        )}
+                        {/* Legal Counsel */}
                         {termSheet.legal_counsel && (
-                          <div>
-                            <div className="text-xs text-muted-foreground">Legal Counsel</div>
-                            <div className="font-medium">{termSheet.legal_counsel}</div>
-                          </div>
+                          <tr>
+                            <td className="px-4 py-3 bg-muted/50 font-semibold">Legal Counsel</td>
+                            <td className="px-4 py-3">{withIdentifier(termSheet.legal_counsel, 'Lead Counsel')}</td>
+                          </tr>
                         )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Timeline */}
-                  {hasTimeline && (
-                    <div>
-                      <h4 className="text-sm font-semibold text-muted-foreground mb-3">Timeline</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {/* Interest Confirmation */}
                         {termSheet.interest_confirmation_deadline && (
-                          <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
-                            <div className="text-xs font-medium text-amber-600 dark:text-amber-400">Interest Deadline</div>
-                            <div className="font-semibold text-amber-700 dark:text-amber-300 mt-1">{formatDate(termSheet.interest_confirmation_deadline)}</div>
-                          </div>
+                          <tr>
+                            <td className="px-4 py-3 bg-muted/50 font-semibold">Interest Confirmation</td>
+                            <td className="px-4 py-3">By {formatDate(termSheet.interest_confirmation_deadline)} {termSheet.interest_confirmation_text || 'COB for firm commitments only'}</td>
+                          </tr>
                         )}
-                        {termSheet.validity_date && (
-                          <div className="p-3 rounded-lg bg-muted/50">
-                            <div className="text-xs text-muted-foreground">Valid Until</div>
-                            <div className="font-medium mt-1">{formatDate(termSheet.validity_date)}</div>
-                          </div>
-                        )}
+                        {/* Capital Call */}
+                        <tr>
+                          <td className="px-4 py-3 bg-muted/50 font-semibold">Capital Call</td>
+                          <td className="px-4 py-3">{termSheet.capital_call_timeline || 'No later than 3 days prior to confirmed Completion Date by Company with effective funds on Escrow Account (T-3)'}</td>
+                        </tr>
+                        {/* Completion Date */}
                         {(termSheet.completion_date || termSheet.completion_date_text) && (
-                          <div className="p-3 rounded-lg bg-muted/50">
-                            <div className="text-xs text-muted-foreground">Completion</div>
-                            <div className="font-medium mt-1">
-                              {termSheet.completion_date
-                                ? formatDate(termSheet.completion_date)
-                                : termSheet.completion_date_text}
-                            </div>
-                          </div>
+                          <tr>
+                            <td className="px-4 py-3 bg-muted/50 font-semibold">Completion Date</td>
+                            <td className="px-4 py-3">{termSheet.completion_date ? formatDate(termSheet.completion_date) : termSheet.completion_date_text}</td>
+                          </tr>
                         )}
-                      </div>
-                    </div>
-                  )}
+                        {/* In-Principle Approval */}
+                        <tr>
+                          <td className="px-4 py-3 bg-muted/50 font-semibold">In-Principle Approval</td>
+                          <td className="px-4 py-3">{termSheet.in_principle_approval_text || 'The Arranger has obtained approval for the present offering from the Issuer'}</td>
+                        </tr>
+                        {/* Subscription Pack */}
+                        <tr>
+                          <td className="px-4 py-3 bg-muted/50 font-semibold">Subscription Pack</td>
+                          <td className="px-4 py-3">{termSheet.subscription_pack_note || 'The Issuer shall issue a Subscription Pack to be executed by the Purchaser'}</td>
+                        </tr>
+                        {/* Share Certificates */}
+                        <tr>
+                          <td className="px-4 py-3 bg-muted/50 font-semibold">Share Certificates</td>
+                          <td className="px-4 py-3">{termSheet.share_certificates_note || 'The Issuer shall provide the Purchasers Share Certificates and Statement of Holdings upon Completion'}</td>
+                        </tr>
+                        {/* Subject to Change */}
+                        <tr>
+                          <td className="px-4 py-3 bg-muted/50 font-semibold">Subject to Change</td>
+                          <td className="px-4 py-3">{termSheet.subject_to_change_note || 'The content of the present term sheet remains indicative, subject to change'}</td>
+                        </tr>
+                        {/* Validity Date */}
+                        {termSheet.validity_date && (
+                          <tr>
+                            <td className="px-4 py-3 bg-muted/50 font-semibold">Validity Date</td>
+                            <td className="px-4 py-3">This indicative term sheet expires on {formatDate(termSheet.validity_date)}</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </CardContent>
               </Card>
             )

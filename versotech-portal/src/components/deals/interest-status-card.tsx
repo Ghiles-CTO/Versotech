@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { InvestorJourneyBar, JourneySummary } from '@/components/deals/investor-journey-bar'
 import {
   Heart,
   FileSignature,
@@ -33,8 +32,6 @@ interface InterestStatusCardProps {
     signed_at: string | null
     funded_at: string | null
   } | null
-  journeySummary?: JourneySummary
-  subscriptionSubmittedAt?: string | null
   canExpressInterest: boolean
   canSignNda: boolean
   canSubscribe: boolean
@@ -78,8 +75,8 @@ const stageMetadata: Record<number, StageInfo> = {
     bgColor: 'bg-blue-100 dark:bg-blue-900/30'
   },
   3: {
-    label: 'Access Requested',
-    description: 'Request received. NDA sent after team approval.',
+    label: 'Data Room Access Requested',
+    description: 'Your request is being reviewed by the team.',
     icon: Heart,
     color: 'text-pink-600',
     bgColor: 'bg-pink-100 dark:bg-pink-900/30'
@@ -99,8 +96,8 @@ const stageMetadata: Record<number, StageInfo> = {
     bgColor: 'bg-amber-100 dark:bg-amber-900/30'
   },
   6: {
-    label: 'Pack Generated',
-    description: 'Subscription documents prepared',
+    label: 'Subscription Pack',
+    description: 'Your subscription documents are ready',
     icon: CheckCircle2,
     color: 'text-cyan-600',
     bgColor: 'bg-cyan-100 dark:bg-cyan-900/30'
@@ -180,8 +177,6 @@ export function InterestStatusCard({
   currentStage,
   membership,
   subscription,
-  journeySummary,
-  subscriptionSubmittedAt,
   canExpressInterest,
   canSignNda,
   canSubscribe,
@@ -223,30 +218,6 @@ export function InterestStatusCard({
         ? { label: 'Subscribe Now', onClick: onSubscribe, icon: Rocket }
         : null
 
-  const baseJourneySummary: JourneySummary = journeySummary || {
-    received: null,
-    viewed: null,
-    interest_confirmed: membership?.interest_confirmed_at ?? null,
-    nda_signed: membership?.nda_signed_at ?? null,
-    data_room_access: membership?.data_room_granted_at ?? null,
-    pack_generated: null,
-    pack_sent: subscription?.pack_sent_at ?? null,
-    signed: subscription?.signed_at ?? null,
-    funded: subscription?.funded_at ?? null,
-    active: null
-  }
-  const fallbackJourneySummary: JourneySummary = isApprovalBlocked ? {
-    ...baseJourneySummary,
-    interest_confirmed: null,
-    nda_signed: null,
-    data_room_access: null,
-    pack_generated: null,
-    pack_sent: null,
-    signed: null,
-    funded: null,
-    active: null
-  } : baseJourneySummary
-
   return (
     <Card className="border-2 border-dashed border-border bg-gradient-to-br from-background to-muted">
       <CardHeader className="pb-3">
@@ -274,15 +245,6 @@ export function InterestStatusCard({
               {stageInfo.description}
             </p>
           </div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="space-y-2">
-          <InvestorJourneyBar
-            summary={fallbackJourneySummary}
-            subscriptionSubmittedAt={subscriptionSubmittedAt ?? null}
-            compact
-          />
         </div>
 
         {isApprovalBlocked && (
@@ -336,7 +298,7 @@ export function InterestStatusCard({
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </div>
                     <div className="text-sm text-emerald-600 dark:text-emerald-400 mt-0.5">
-                      Direct path • Subscription pack only (no NDA)
+                      Direct path • Subscription pack
                     </div>
                   </div>
                 </div>

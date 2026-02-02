@@ -130,7 +130,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     if (deal.vehicle_id) {
       const { data: v } = await serviceSupabase
         .from('vehicles')
-        .select('id, name, type, formation_date, currency')
+        .select('id, name, type, formation_date, currency, entity_code, series_number')
         .eq('id', deal.vehicle_id)
         .single()
       vehicle = v
@@ -635,7 +635,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       // Computed flags for UI
       // Only show express interest for users with an investor persona
       can_express_interest: effectiveInvestorId !== null && isAccountApproved === true && !membership?.interest_confirmed_at,
-      can_sign_nda: isAccountApproved === true && !!membership?.interest_confirmed_at && !membership?.nda_signed_at,
+      can_sign_nda: isAccountApproved === true && !!ndaSigningUrl && !membership?.nda_signed_at,
       can_access_data_room: hasDataRoomAccess,
       // SECURITY FIX: Only allow subscription for roles that permit investing
       // commercial_partner_proxy has its own endpoint at /api/commercial-partners/proxy-subscribe

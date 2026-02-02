@@ -16,7 +16,6 @@ import {
 import { cn } from '@/lib/utils'
 
 interface DealKeyDetailsCardProps {
-  dealType: string
   currency: string
   stockType: string | null
   sector: string | null
@@ -68,7 +67,6 @@ function DetailRow({ item }: { item: DetailItem }) {
 }
 
 export function DealKeyDetailsCard({
-  dealType,
   currency,
   stockType,
   sector,
@@ -82,13 +80,6 @@ export function DealKeyDetailsCard({
     : null
 
   const details: DetailItem[] = [
-    {
-      label: 'Deal Type',
-      value: dealType,
-      icon: Briefcase,
-      isBadge: true,
-      badgeColor: 'bg-blue-100 text-blue-700 hover:bg-blue-100'
-    },
     {
       label: 'Stock Type',
       value: stockTypeLabel,
@@ -128,9 +119,9 @@ export function DealKeyDetailsCard({
     }
   ]
 
-  // Filter out items with no value (except Deal Type and Currency which are always shown)
+  // Filter out items with no value (except Currency which is always shown)
   const visibleDetails = details.filter(
-    (d) => d.value || d.label === 'Deal Type' || d.label === 'Currency'
+    (d) => d.value || d.label === 'Currency'
   )
 
   return (
