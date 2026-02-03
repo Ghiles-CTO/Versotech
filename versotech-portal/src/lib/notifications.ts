@@ -152,7 +152,7 @@ export async function createInvestorNotification(params: CreateNotificationParam
 
         await sendEmail({
           to: profile.email,
-          subject: `${params.title} - VERSO Holdings`,
+          subject: `${params.title} - VERSO`,
           html: generateNotificationEmail({
             recipientName: profile.display_name || 'Investor',
             title: params.title,
@@ -272,7 +272,7 @@ function generateNotificationEmail(params: {
               <!-- Header -->
               <tr>
                 <td style="background-color: #1a1a2e; color: #ffffff; padding: 30px; text-align: center;">
-                  <h1 style="margin: 0; font-size: 24px; font-weight: bold; color: #ffffff;">VERSO Holdings</h1>
+                  <h1 style="margin: 0; font-size: 24px; font-weight: bold; color: #ffffff;">VERSO</h1>
                 </td>
               </tr>
               <!-- Accent Bar -->
@@ -311,7 +311,7 @@ function generateNotificationEmail(params: {
               <!-- Footer -->
               <tr>
                 <td style="background-color: #f8fafc; text-align: center; padding: 20px;">
-                  <p style="margin: 0 0 8px 0; color: #666666; font-size: 12px;">&copy; ${new Date().getFullYear()} VERSO Holdings. All rights reserved.</p>
+                  <p style="margin: 0 0 8px 0; color: #666666; font-size: 12px;">&copy; ${new Date().getFullYear()} VERSO. All rights reserved.</p>
                   <p style="margin: 0; color: #666666; font-size: 12px;">This is an automated notification. Please do not reply to this email.</p>
                 </td>
               </tr>
