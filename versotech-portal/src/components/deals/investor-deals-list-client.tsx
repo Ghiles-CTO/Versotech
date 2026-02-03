@@ -1663,7 +1663,7 @@ export function InvestorDealsListClient({
                       </Button>
 
                       {/* Subscribe to Investment - primary CTA for investors with valid investor ID */}
-                      {!isClosed && primaryInvestorId && canInvest && (
+                      {!isClosed && primaryInvestorId && canInvest && !subscription && (
                         <SubscribeNowDialog
                           dealId={deal.id}
                           dealName={deal.name}
@@ -1678,7 +1678,7 @@ export function InvestorDealsListClient({
                       )}
 
                       {/* Submit Interest for Data Room - secondary CTA for investors with a valid investor ID */}
-                      {primaryInvestorId && canInvest && (
+                      {primaryInvestorId && canInvest && !interest && !ndaAccess && !subscription && (
                         <InterestModal
                           dealId={deal.id}
                           dealName={deal.name}
