@@ -9,6 +9,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { PostSignatureHandlerParams, SignaturePosition } from './types'
 import { calculateSubscriptionFeeEvents, createFeeEvents } from '../fees/subscription-fee-calculator'
 import { detectAnchors, getPlacementsFromAnchors, getRequiredAnchorsForIntroducerAgreement, validateRequiredAnchors } from './anchor-detector'
+import { buildExecutedDocumentName, formatCounterpartyName } from '../documents/executed-document-name'
 
 /**
  * NDA Post-Signature Handler
@@ -90,18 +91,40 @@ export async function handleNDASignature(
   console.log('🔍 [NDA HANDLER] Fetching investor information for document naming')
   const { data: investor } = await supabase
     .from('investors')
-    .select('id, legal_name, display_name')
+    .select('id, legal_name, display_name, first_name, last_name, type')
     .eq('id', dealInterest.investor_id)
     .single()
 
-  const investorName = investor?.display_name || investor?.legal_name || 'Investor'
-  const signatoryName = signatureRequest.signer_name || ''
+  const investorName = formatCounterpartyName({
+    type: investor?.type,
+    firstName: investor?.first_name,
+    lastName: investor?.last_name,
+    legalName: investor?.legal_name,
+    displayName: investor?.display_name
+  })
+
   const dealName = deal?.name || 'Deal'
+
+  const { data: vehicle } = deal?.vehicle_id
+    ? await supabase
+        .from('vehicles')
+        .select('entity_code')
+        .eq('id', deal.vehicle_id)
+        .maybeSingle()
+    : { data: null }
+
+  const vehicleCode = vehicle?.entity_code || 'VCXXX'
+  const { displayName: executedDocumentName, storageFileName } = buildExecutedDocumentName({
+    vehicleCode,
+    documentLabel: 'NDA NDNC',
+    counterpartyName: investorName
+  })
 
   console.log('✅ [NDA HANDLER] Names for document:', {
     investor_name: investorName,
-    signatory_name: signatoryName,
-    deal_name: dealName
+    deal_name: dealName,
+    vehicle_code: vehicleCode,
+    executed_name: executedDocumentName
   })
 
   // Look up the NDAs folder for this vehicle
@@ -137,19 +160,7 @@ export async function handleNDASignature(
 
   // Generate document storage path with human-readable names
   const timestamp = Date.now()
-  // Sanitize names for file path (remove special chars, replace spaces with underscores)
-  // Falls back to 'Unknown' if sanitization removes all characters (e.g., non-ASCII names)
-  const sanitize = (str: string): string => {
-    if (!str) return 'Unknown'
-    const sanitized = str.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_').trim().substring(0, 50)
-    return sanitized || 'Unknown'
-  }
-  const safeInvestorName = sanitize(investorName)
-  const safeSignatoryName = signatoryName ? sanitize(signatoryName) : ''
-  const safeDealName = sanitize(dealName)
-
-  // Path format: ndas/{deal_id}/{DealName}_{InvestorName}_{SignatoryName}_{timestamp}.pdf
-  const documentFileName = `ndas/${dealInterest.deal_id}/${safeDealName}_${safeInvestorName}${safeSignatoryName ? `_${safeSignatoryName}` : ''}_${timestamp}.pdf`
+  const documentFileName = `ndas/${dealInterest.deal_id}/${timestamp}-${storageFileName}`
   console.log('📤 [NDA HANDLER] Uploading to documents bucket:', documentFileName)
 
   // Upload to documents bucket
@@ -179,10 +190,7 @@ export async function handleNDASignature(
   })
 
   // Build document display name with length safety (max 200 chars to fit DB column)
-  let documentDisplayName = `NDA - ${dealName} - ${investorName}${signatoryName ? ` - ${signatoryName}` : ''}.pdf`
-  if (documentDisplayName.length > 200) {
-    documentDisplayName = documentDisplayName.substring(0, 196) + '.pdf'
-  }
+  const documentDisplayName = executedDocumentName
 
   const { data: document, error: docError } = await supabase
     .from('documents')
@@ -554,10 +562,13 @@ export async function handleSubscriptionSignature(
         id,
         legal_name,
         display_name,
+        first_name,
+        last_name,
+        type,
         email,
         investor_users!inner(user_id)
       ),
-      vehicle:vehicles(id, name),
+      vehicle:vehicles(id, name, entity_code),
       deal:deals(id, name)
     `)
     .eq('id', subscriptionId)
@@ -590,9 +601,23 @@ export async function handleSubscriptionSignature(
 
   console.log('✅ [SUBSCRIPTION HANDLER] Downloaded signed PDF from signatures bucket')
 
+  const investorName = formatCounterpartyName({
+    type: (subscription as any)?.investor?.type,
+    firstName: (subscription as any)?.investor?.first_name,
+    lastName: (subscription as any)?.investor?.last_name,
+    legalName: (subscription as any)?.investor?.legal_name,
+    displayName: (subscription as any)?.investor?.display_name
+  })
+  const vehicleCode = (subscription as any)?.vehicle?.entity_code || 'VCXXX'
+  const { displayName: executedDocumentName, storageFileName } = buildExecutedDocumentName({
+    vehicleCode,
+    documentLabel: 'SUBSCRIPTION PACK',
+    counterpartyName: investorName
+  })
+
   // Generate document storage path
   const timestamp = Date.now()
-  const documentFileName = `subscriptions/${subscription.vehicle_id}/${subscription.investor_id}_subscription_${timestamp}.pdf`
+  const documentFileName = `subscriptions/${subscription.vehicle_id}/${timestamp}-${storageFileName}`
   console.log('📤 [SUBSCRIPTION HANDLER] Uploading to deal-documents bucket:', documentFileName)
 
   // Upload to deal-documents bucket (same bucket used for subscription pack generation)
@@ -652,6 +677,7 @@ export async function handleSubscriptionSignature(
     .from('documents')
     .update({
       file_key: docUploadData.path,
+      name: executedDocumentName,
       is_published: true,
       published_at: new Date().toISOString(),
       status: 'published',
@@ -1127,6 +1153,10 @@ export async function handleIntroducerAgreementSignature(
       introducer:introducer_id (
         id,
         legal_name,
+        display_name,
+        first_name,
+        last_name,
+        type,
         email,
         user_id
       )
@@ -1412,13 +1442,66 @@ export async function handleIntroducerAgreementSignature(
     // All signatories have signed - activate agreement
     console.log('✅ [INTRODUCER AGREEMENT HANDLER] All signatories have signed - activating agreement')
 
+    const introducerName = formatCounterpartyName({
+      type: (agreement.introducer as any)?.type,
+      firstName: (agreement.introducer as any)?.first_name,
+      lastName: (agreement.introducer as any)?.last_name,
+      legalName: (agreement.introducer as any)?.legal_name,
+      displayName: (agreement.introducer as any)?.display_name
+    })
+
+    let vehicleCode = 'VCXXX'
+    if (agreement.deal_id) {
+      const { data: dealVehicle } = await supabase
+        .from('deals')
+        .select('vehicle:vehicles(entity_code)')
+        .eq('id', agreement.deal_id)
+        .maybeSingle()
+      vehicleCode = (dealVehicle as any)?.vehicle?.entity_code || vehicleCode
+    }
+
+    const { storageFileName } = buildExecutedDocumentName({
+      vehicleCode,
+      documentLabel: 'INTRODUCER AGREEMENT',
+      counterpartyName: introducerName
+    })
+
+    let finalSignedPath = signedPdfPath
+    if (signedPdfPath && storageFileName) {
+      const signedBucket = process.env.SIGNATURES_BUCKET || 'signatures'
+      const targetBucket = 'deal-documents'
+
+      try {
+        const { data: signedPdfData } = await supabase.storage
+          .from(signedBucket)
+          .download(signedPdfPath)
+
+        if (signedPdfData) {
+          const signedBuffer = Buffer.from(await signedPdfData.arrayBuffer())
+          const copyPath = `introducer-agreements/${agreement.deal_id || agreementId}/${storageFileName}`
+
+          await supabase.storage
+            .from(targetBucket)
+            .upload(copyPath, signedBuffer, {
+              contentType: 'application/pdf',
+              upsert: true
+            })
+
+          finalSignedPath = copyPath
+        }
+      } catch (copyError) {
+        console.error('⚠️ [INTRODUCER AGREEMENT HANDLER] Failed to copy signed PDF to deal-documents:', copyError)
+      }
+    }
+
     const { error: updateError } = await supabase
       .from('introducer_agreements')
       .update({
         status: 'active',
         signed_date: new Date().toISOString().split('T')[0], // date type, not timestamptz
         introducer_signature_request_id: signatureRequest.id,
-        signed_pdf_url: signedPdfPath, // Store fully signed PDF path
+        signed_pdf_url: finalSignedPath, // Store fully signed PDF path
+        pdf_url: finalSignedPath,
         updated_at: new Date().toISOString()
       })
       .eq('id', agreementId)

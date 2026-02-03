@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { buildExecutedDocumentName, formatCounterpartyName } from '@/lib/documents/executed-document-name'
 import crypto from 'crypto'
 
 /**
@@ -755,6 +756,10 @@ async function handleIntroducerAgreementCompletion(
       introducer:introducer_id (
         id,
         legal_name,
+        display_name,
+        first_name,
+        last_name,
+        type,
         email
       ),
       arranger:arranger_id (
@@ -764,7 +769,8 @@ async function handleIntroducerAgreementCompletion(
       deal:deal_id (
         id,
         name,
-        company_name
+        company_name,
+        vehicle_id
       )
     `)
     .eq('id', agreementId)
@@ -944,13 +950,66 @@ async function handleIntroducerAgreementCompletion(
     // Introducer signed - agreement is now active!
     console.log('🎉 [INTRODUCER AGREEMENT] Introducer signed - activating agreement:', agreementId)
 
+    const introducerCounterpartyName = formatCounterpartyName({
+      type: (agreement.introducer as any)?.type,
+      firstName: (agreement.introducer as any)?.first_name,
+      lastName: (agreement.introducer as any)?.last_name,
+      legalName: (agreement.introducer as any)?.legal_name,
+      displayName: (agreement.introducer as any)?.display_name
+    })
+
+    let vehicleCode = 'VCXXX'
+    if ((agreement.deal as any)?.vehicle_id) {
+      const { data: vehicle } = await supabase
+        .from('vehicles')
+        .select('entity_code')
+        .eq('id', (agreement.deal as any)?.vehicle_id)
+        .maybeSingle()
+      vehicleCode = vehicle?.entity_code || vehicleCode
+    }
+
+    const { storageFileName } = buildExecutedDocumentName({
+      vehicleCode,
+      documentLabel: 'INTRODUCER AGREEMENT',
+      counterpartyName: introducerCounterpartyName
+    })
+
+    let finalSignedPath = sigRequest.signed_pdf_path
+    try {
+      if (sigRequest.signed_pdf_path) {
+        const signedBucket = process.env.SIGNATURES_BUCKET || 'signatures'
+        const targetBucket = 'deal-documents'
+
+        const { data: signedPdfData } = await supabase.storage
+          .from(signedBucket)
+          .download(sigRequest.signed_pdf_path)
+
+        if (signedPdfData) {
+          const signedBuffer = Buffer.from(await signedPdfData.arrayBuffer())
+          const copyPath = `introducer-agreements/${agreement.deal_id || agreement.id}/${storageFileName}`
+
+          await supabase.storage
+            .from(targetBucket)
+            .upload(copyPath, signedBuffer, {
+              contentType: 'application/pdf',
+              upsert: true
+            })
+
+          finalSignedPath = copyPath
+        }
+      }
+    } catch (copyError) {
+      console.error('⚠️ [INTRODUCER AGREEMENT] Failed to copy signed PDF to deal-documents:', copyError)
+    }
+
     const { error: activateError } = await supabase
       .from('introducer_agreements')
       .update({
         status: 'active',
         introducer_signature_request_id: signatureRequestId,
         signed_date: now.split('T')[0], // date type
-        signed_pdf_url: sigRequest.signed_pdf_path,
+        signed_pdf_url: finalSignedPath,
+        pdf_url: finalSignedPath,
         updated_at: now
       })
       .eq('id', agreementId)
