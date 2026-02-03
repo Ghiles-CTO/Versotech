@@ -1230,6 +1230,11 @@ async function handleEntityApproval(
                 .single()
 
               if (investorData && vehicleData && feeStructure && user) {
+                // Get CEO signer dynamically (instead of hardcoded fallback)
+                const ceoSigner = await getCeoSigner(supabase)
+                const issuerName = ceoSigner?.displayName || feeStructure.issuer_signatory_name || ''
+                const issuerTitle = ceoSigner?.title || feeStructure.issuer_signatory_title || 'Authorized Signatory'
+
                 // Calculate subscription details
                 // Default to $1.00 per share if price_per_share_text is missing (makes certificate count = subscription amount)
                 const parsedPrice = parseFloat(feeStructure.price_per_share_text?.replace(/[^\d.]/g, '') || '0')
@@ -1284,8 +1289,8 @@ async function handleEntityApproval(
 <div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
     <p><strong>The Issuer, VERSO Capital 2 SCSP</strong>, duly represented by its general partner <strong>VERSO Capital 2 GP SARL</strong></p>
     <div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:party_b</span></div>
-    <p style="margin-top: 0.3cm;">Name: ${feeStructure.issuer_signatory_name || 'Alexandre Müller'}<br>
-    Title: ${feeStructure.issuer_signatory_title || 'Authorized Signatory'}</p>
+    <p style="margin-top: 0.3cm;">Name: ${issuerName}<br>
+    Title: ${issuerTitle}</p>
 </div>`
 
                 // Page 12 - Main Agreement: Arranger signature with anchor
@@ -1384,8 +1389,8 @@ async function handleEntityApproval(
                   issuer_gp_rcc_number: vehicleData.issuer_gp_rcc_number || '',
                   issuer_rcc_number: vehicleData.issuer_rcc_number || '',
                   issuer_website: vehicleData.issuer_website || 'www.verso.capital',
-                  issuer_name: feeStructure.issuer_signatory_name || 'Alexandre Müller',
-                  issuer_title: feeStructure.issuer_signatory_title || 'Authorized Signatory',
+                  issuer_name: issuerName,
+                  issuer_title: issuerTitle,
 
                   // Dates & deadlines
                   agreement_date: agreementDate,
@@ -1549,8 +1554,8 @@ async function handleEntityApproval(
 
                         // Create document record linked to both submission and subscription
                         // Store countersigner info so we don't have to ask again at signing time
-                        const countersignerName = feeStructure?.issuer_signatory_name || 'Alexandre Müller'
-                        const countersignerTitle = feeStructure?.issuer_signatory_title || 'Authorized Signatory'
+                        const countersignerName = issuerName
+                        const countersignerTitle = issuerTitle
 
                         const { data: docRecord, error: docError } = await supabase
                           .from('documents')

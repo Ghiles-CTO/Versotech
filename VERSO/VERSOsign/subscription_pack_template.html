@@ -103,6 +103,12 @@
             page-break-inside: avoid;
         }
 
+        /* Borderless tables (e.g., definitions in Schedule 1) */
+        table.no-border td,
+        table.no-border th {
+            border: none;
+        }
+
         .label-cell {
             font-weight: bold;
             width: 40%;
@@ -314,7 +320,7 @@
 
 <table class="compact" style="margin-top: 1cm;">
     <tr>
-        <td style="width: 50%;">
+        <td style="width: 50%; text-align: center;">
             <strong>VERSO Capital 2 SCSP Series {{ $json.series_number }}</strong><br>
             duly represented by its general partner<br>
             <strong>VERSO Capital 2 GP SARL</strong><br><br>
@@ -323,8 +329,8 @@
             Title: {{ $json.issuer_title }}
         </td>
         <td style="width: 50%; vertical-align: top;">
-            <strong>The Subscriber</strong>, represented by its<br>
-            Authorized Signatory (-ies)<br><br>
+            <strong>The Subscriber</strong><br>
+            Represented by<br><br>
 {{ $json.signatories_form_html }}
         </td>
     </tr>
@@ -593,7 +599,7 @@
 
 <h2>1. DEFINITIONS</h2>
 
-<table>
+<table class="no-border">
     <tr>
         <td style="width: 35%;" class="bold">"Acceding Holder"</td>
         <td>has the meaning ascribed to such term in Appendix.</td>
@@ -1243,7 +1249,7 @@ L-1653 Luxembourg Grand Duchy of Luxembourg</p>
 <strong>VERSO Management Ltd, as Agent</strong><br>
 Trident Chambers, Wickhams Cay, P.O. Box 146, Road Town,<br>
 Tortola VG1110 British Virgin Islands<br>
-c/o Julien MACHOT, Director</p>
+c/o {{ $json.arranger_name }}, Director</p>
 
 <div class="page-break"></div>
 
