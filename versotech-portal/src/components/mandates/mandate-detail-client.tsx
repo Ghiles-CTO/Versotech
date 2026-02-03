@@ -36,7 +36,7 @@ import {
 import { Input } from '@/components/ui/input'
 import Link from 'next/link'
 import { DealLogo } from '@/components/deals/deal-logo'
-import { formatDate } from '@/lib/format'
+import { formatDate, formatDateTime } from '@/lib/format'
 
 const statusColors: Record<string, string> = {
   draft: 'bg-white/10 text-foreground border border-white/20',
@@ -565,54 +565,70 @@ export function MandateDetailClient({
                         </div>
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          {sheet.transaction_type && (
                           <div>
                             <label className="text-muted-foreground">Transaction Type</label>
-                            <p className="text-foreground font-medium">{sheet.transaction_type || '—'}</p>
+                            <p className="text-foreground font-medium">{sheet.transaction_type}</p>
                           </div>
+                          )}
+                          {sheet.minimum_ticket && (
                           <div>
                             <label className="text-muted-foreground">Min Ticket</label>
                             <p className="text-foreground font-medium">
-                              {sheet.minimum_ticket ? `${deal.currency} ${Number(sheet.minimum_ticket).toLocaleString()}` : '—'}
+                              {deal.currency} {Number(sheet.minimum_ticket).toLocaleString()}
                             </p>
                           </div>
+                          )}
+                          {sheet.maximum_ticket && (
                           <div>
                             <label className="text-muted-foreground">Max Ticket</label>
                             <p className="text-foreground font-medium">
-                              {sheet.maximum_ticket ? `${deal.currency} ${Number(sheet.maximum_ticket).toLocaleString()}` : '—'}
+                              {deal.currency} {Number(sheet.maximum_ticket).toLocaleString()}
                             </p>
                           </div>
+                          )}
+                          {sheet.interest_confirmation_deadline && (
                           <div>
                             <label className="text-muted-foreground">Interest Deadline</label>
                             <p className="text-foreground font-medium">
-                              {sheet.interest_confirmation_deadline ? formatDate(sheet.interest_confirmation_deadline) : '—'}
+                              {formatDateTime(sheet.interest_confirmation_deadline)}
                             </p>
                           </div>
+                          )}
                         </div>
 
-                        {/* Fee Structure */}
+                        {/* Fee Structure - only show if at least one fee is defined */}
+                        {(sheet.subscription_fee_percent != null || sheet.management_fee_percent != null || sheet.carried_interest_percent != null) && (
                         <div className="mt-4 pt-4 border-t border-white/10">
                           <label className="text-sm text-muted-foreground mb-2 block">Fee Structure</label>
                           <div className="grid grid-cols-3 gap-4 text-sm">
+                            {sheet.subscription_fee_percent != null && (
                             <div className="bg-white/5 rounded-lg p-3 text-center">
                               <p className="text-lg font-semibold text-foreground">
-                                {sheet.subscription_fee_percent != null ? `${sheet.subscription_fee_percent}%` : '—'}
+                                {sheet.subscription_fee_percent === 0 ? 'Waived' : `${sheet.subscription_fee_percent}%`}
                               </p>
                               <p className="text-xs text-muted-foreground">Subscription Fee</p>
                             </div>
+                            )}
+                            {sheet.management_fee_percent != null && (
                             <div className="bg-white/5 rounded-lg p-3 text-center">
                               <p className="text-lg font-semibold text-foreground">
-                                {sheet.management_fee_percent != null ? `${sheet.management_fee_percent}%` : '—'}
+                                {sheet.management_fee_percent === 0 ? 'Waived' : `${sheet.management_fee_percent}%`}
                               </p>
                               <p className="text-xs text-muted-foreground">Management Fee</p>
                             </div>
+                            )}
+                            {sheet.carried_interest_percent != null && (
                             <div className="bg-white/5 rounded-lg p-3 text-center">
                               <p className="text-lg font-semibold text-foreground">
-                                {sheet.carried_interest_percent != null ? `${sheet.carried_interest_percent}%` : '—'}
+                                {sheet.carried_interest_percent === 0 ? 'Waived' : `${sheet.carried_interest_percent}%`}
                               </p>
                               <p className="text-xs text-muted-foreground">Carried Interest</p>
                             </div>
+                            )}
                           </div>
                         </div>
+                        )}
 
                         {/* Summary if available */}
                         {sheet.opportunity_summary && (

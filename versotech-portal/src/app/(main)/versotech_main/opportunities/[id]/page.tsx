@@ -288,6 +288,22 @@ function formatDate(dateString: string | null): string {
   })
 }
 
+function formatDateTime(dateString: string | null): string {
+  if (!dateString) return '-'
+  const date = new Date(dateString)
+  const datePart = date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  })
+  const timePart = date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  })
+  return `${datePart} ${timePart}`
+}
+
 // Format with identifier like PDF does - e.g., "ABC Company" → 'ABC Company ("Issuer")'
 function withIdentifier(text: string | null | undefined, identifier: string): string {
   if (!text) return ''
@@ -1137,7 +1153,7 @@ export default function OpportunityDetailPage() {
                         {termSheet.interest_confirmation_deadline && (
                           <tr>
                             <td className="px-4 py-3 bg-muted/50 font-semibold">Interest Confirmation</td>
-                            <td className="px-4 py-3">By {formatDate(termSheet.interest_confirmation_deadline)} {termSheet.interest_confirmation_text || 'COB for firm commitments only'}</td>
+                            <td className="px-4 py-3">By {formatDateTime(termSheet.interest_confirmation_deadline)} {termSheet.interest_confirmation_text || 'COB for firm commitments only'}</td>
                           </tr>
                         )}
                         {/* Capital Call */}

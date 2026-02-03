@@ -223,10 +223,7 @@
       <td class="label-cell">Purchaser</td>
       <td class="value-cell">{{ $json.purchaser }}</td>
     </tr>
-    <tr>
-      <td class="label-cell">Seller</td>
-      <td class="value-cell">{{ $json.seller }}</td>
-    </tr>
+    {{ $json.seller ? '<tr><td class="label-cell">Seller</td><td class="value-cell">' + $json.seller + '</td></tr>' : '' }}
     <tr>
       <td class="label-cell">Structure</td>
       <td class="value-cell">{{ $json.structure }}</td>
@@ -243,26 +240,11 @@
       <td class="label-cell">Minimum Ticket</td>
       <td class="value-cell">{{ $json.currency }} {{ $json.minimum_ticket }}</td>
     </tr>
-    <tr>
-      <td class="label-cell">Subscription Fee</td>
-      <td class="value-cell">{{ $json.subscription_fee_text }}</td>
-    </tr>
-    <tr>
-      <td class="label-cell">Management Fee</td>
-      <td class="value-cell">{{ $json.management_fee_text }}</td>
-    </tr>
-    <tr>
-      <td class="label-cell">Carried Interest</td>
-      <td class="value-cell">{{ $json.carried_interest_text }}</td>
-    </tr>
-    <tr>
-      <td class="label-cell">Legal Counsel</td>
-      <td class="value-cell">{{ $json.legal_counsel }}</td>
-    </tr>
-    <tr>
-      <td class="label-cell">Interest Confirmation</td>
-      <td class="value-cell">{{ $json.interest_confirmation_text }}</td>
-    </tr>
+    {{ $json.subscription_fee_text ? '<tr><td class="label-cell">Subscription Fee</td><td class="value-cell">' + $json.subscription_fee_text + '</td></tr>' : '' }}
+    {{ $json.management_fee_text ? '<tr><td class="label-cell">Management Fee</td><td class="value-cell">' + $json.management_fee_text + '</td></tr>' : '' }}
+    {{ $json.carried_interest_text ? '<tr><td class="label-cell">Carried Interest</td><td class="value-cell">' + $json.carried_interest_text + '</td></tr>' : '' }}
+    {{ $json.legal_counsel ? '<tr><td class="label-cell">Legal Counsel</td><td class="value-cell">' + $json.legal_counsel + '</td></tr>' : '' }}
+    {{ $json.interest_confirmation_text ? '<tr><td class="label-cell">Interest Confirmation</td><td class="value-cell">' + $json.interest_confirmation_text + '</td></tr>' : '' }}
     <tr>
       <td class="label-cell">Capital Call</td>
       <td class="value-cell">{{ $json.capital_call_timeline }}</td>
@@ -287,10 +269,7 @@
       <td class="label-cell">Subject to Change</td>
       <td class="value-cell">{{ $json.subject_to_change_note }}</td>
     </tr>
-    <tr>
-      <td class="label-cell">Validity Date</td>
-      <td class="value-cell">This indicative term sheet expires on {{ $json.validity_date }}</td>
-    </tr>
+    {{ $json.validity_date ? '<tr><td class="label-cell">Validity Date</td><td class="value-cell">This indicative term sheet expires on ' + $json.validity_date + '</td></tr>' : '' }}
   </table>
 
   <!-- Footer -->

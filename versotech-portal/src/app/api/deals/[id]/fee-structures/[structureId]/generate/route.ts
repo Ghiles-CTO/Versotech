@@ -106,27 +106,43 @@ function formatDateTimeWithTimezone(dateStr: string | null): string {
 
 /**
  * Format subscription fee percentage with appropriate text
+ * Returns empty string for null (row will be hidden)
  * Returns "Waived (instead of 2.00%)" for 0%, percentage for other values
  */
 function formatSubscriptionFeeText(percent: number | null): string {
-  if (percent === null || percent === undefined) return 'N/A'
+  if (percent === null || percent === undefined) return ''
   if (percent === 0) return 'Waived (instead of 2.00%)'
   return `${percent.toFixed(2)}%`
 }
 
 /**
- * Format interest confirmation combining date and text
- * Returns format like "By June 13, 2025 COB for firm commitments only"
+ * Format interest confirmation combining date with time and text
+ * Returns format like "By June 13, 2025 5:00 PM COB for firm commitments only"
  */
 function formatInterestConfirmation(
   deadline: string | null,
   text: string | null
 ): string {
   if (!deadline) return ''
-  const formattedDate = formatDate(deadline)
-  if (!formattedDate) return ''
+  const date = new Date(deadline)
+  if (isNaN(date.getTime())) return ''
+
+  // Format date portion
+  const dateFormatted = date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  })
+
+  // Format time portion
+  const timeFormatted = date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  })
+
   const suffix = text || 'COB for firm commitments only'
-  return `By ${formattedDate} ${suffix}`
+  return `By ${dateFormatted} ${timeFormatted} ${suffix}`
 }
 
 /**
@@ -155,13 +171,14 @@ function appendIdentifier(text: string | null, identifier: string): string {
 /**
  * Format fee percentage with appropriate text
  * Database stores fees as actual percentages (2 = 2%, 25 = 25%)
+ * Returns empty string for null (row will be hidden)
  * When fee is 0%, displays fixed "Waived (instead of X%)" text
  */
 function formatFeeText(
   percent: number | null,
   feeType: 'management' | 'carry'
 ): string {
-  if (percent === null || percent === undefined) return 'N/A'
+  if (percent === null || percent === undefined) return ''
   if (percent === 0) {
     return feeType === 'management'
       ? 'Waived (instead of 2.00% per annum)'

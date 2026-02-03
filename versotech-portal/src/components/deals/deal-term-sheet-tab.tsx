@@ -46,14 +46,17 @@ function deriveIssuerAndVehicle(vehicle?: VehicleMeta | null) {
   }
 
   const seriesMatch = rawName.match(/\bseries\s+(.+)$/i)
-  const seriesToken = seriesMatch?.[1]?.trim() || ''
   const baseName = seriesMatch ? rawName.slice(0, seriesMatch.index).trim() : rawName
-  const entitySeries = vehicle?.entity_code?.match(/\d+/)?.[0] || ''
+  const entityCode = (vehicle?.entity_code || '').trim()
 
-  const vehicleLabel = seriesToken
-    ? `Series ${seriesToken}`
-    : (entitySeries ? `Series ${entitySeries}` : '')
+  // Vehicle: full name + short code in parentheses
+  // e.g., "VERSO Capital 1 SCSP Series 125 ("VC125")"
+  const vehicleLabel = entityCode
+    ? `${rawName} ("${entityCode}")`
+    : rawName
 
+  // Issuer: base name (without series) + legal suffix
+  // e.g., "VERSO Capital 1 SCSP S.à r.l."
   const hasSarL = /s\.à\s?r\.l\.?/i.test(baseName)
   const issuer = baseName
     ? (hasSarL ? baseName : `${baseName} S.à r.l.`)
@@ -838,10 +841,12 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   <span className="text-muted-foreground block text-xs">Purchaser</span>
                   <span className="text-foreground font-medium">{published.purchaser || '—'}</span>
                 </div>
+                {published.seller && (
                 <div>
                   <span className="text-muted-foreground block text-xs">Seller</span>
-                  <span className="text-foreground font-medium">{published.seller || '—'}</span>
+                  <span className="text-foreground font-medium">{published.seller}</span>
                 </div>
+                )}
               </div>
             </div>
 
@@ -876,34 +881,42 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
             <div>
               <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide mb-3">Fee Structure</h4>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                {published.subscription_fee_percent != null && (
                 <div>
                   <span className="text-muted-foreground block text-xs">Subscription Fee</span>
                   <span className="text-foreground font-medium">
-                    {published.subscription_fee_percent != null
-                      ? `${published.subscription_fee_percent}%`
-                      : '—'}
+                    {published.subscription_fee_percent === 0
+                      ? 'Waived (instead of 2.00%)'
+                      : `${published.subscription_fee_percent}%`}
                   </span>
                 </div>
+                )}
+                {published.management_fee_percent != null && (
                 <div>
                   <span className="text-muted-foreground block text-xs">Management Fee</span>
                   <span className="text-foreground font-medium">
-                    {published.management_fee_percent != null
-                      ? `${published.management_fee_percent}% p.a.`
-                      : '—'}
+                    {published.management_fee_percent === 0
+                      ? 'Waived (instead of 2.00% p.a.)'
+                      : `${published.management_fee_percent}% p.a.`}
                   </span>
                 </div>
+                )}
+                {published.carried_interest_percent != null && (
                 <div>
                   <span className="text-muted-foreground block text-xs">Carried Interest</span>
                   <span className="text-foreground font-medium">
-                    {published.carried_interest_percent != null
-                      ? `${published.carried_interest_percent}%`
-                      : '—'}
+                    {published.carried_interest_percent === 0
+                      ? 'Waived (instead of 20.00%)'
+                      : `${published.carried_interest_percent}% (no hurdle rate)`}
                   </span>
                 </div>
+                )}
+                {published.legal_counsel && (
                 <div>
                   <span className="text-muted-foreground block text-xs">Legal Counsel</span>
-                  <span className="text-foreground font-medium">{published.legal_counsel || '—'}</span>
+                  <span className="text-foreground font-medium">{published.legal_counsel}</span>
                 </div>
+                )}
               </div>
             </div>
 
@@ -913,14 +926,14 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
             <div>
               <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide mb-3">Timeline & Deadlines</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                {published.interest_confirmation_deadline && (
                 <div>
                   <span className="text-muted-foreground block text-xs">Interest Deadline</span>
                   <span className="text-foreground font-medium">
-                    {published.interest_confirmation_deadline
-                      ? format(new Date(published.interest_confirmation_deadline), 'dd MMM yyyy HH:mm')
-                      : '—'}
+                    {format(new Date(published.interest_confirmation_deadline), 'dd MMM yyyy HH:mm')}
                   </span>
                 </div>
+                )}
                 <div>
                   <span className="text-muted-foreground block text-xs">Completion Date</span>
                   <span className="text-foreground font-medium">
@@ -929,12 +942,14 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                       : published.completion_date_text || '—'}
                   </span>
                 </div>
+                {published.validity_date && (
                 <div>
                   <span className="text-muted-foreground block text-xs">Validity Date</span>
                   <span className="text-foreground font-medium">
-                    {published.validity_date ? format(new Date(published.validity_date), 'dd MMM yyyy HH:mm') : '—'}
+                    {format(new Date(published.validity_date), 'dd MMM yyyy HH:mm')}
                   </span>
                 </div>
+                )}
               </div>
             </div>
 
@@ -1084,14 +1099,18 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                     <span className="text-muted-foreground block text-xs">Purchaser</span>
                     <span className="text-foreground font-medium">{termSheet.purchaser || '—'}</span>
                   </div>
+                  {termSheet.seller && (
                   <div>
                     <span className="text-muted-foreground block text-xs">Seller</span>
-                    <span className="text-foreground font-medium">{termSheet.seller || '—'}</span>
+                    <span className="text-foreground font-medium">{termSheet.seller}</span>
                   </div>
+                  )}
+                  {termSheet.legal_counsel && (
                   <div>
                     <span className="text-muted-foreground block text-xs">Legal Counsel</span>
-                    <span className="text-foreground font-medium">{termSheet.legal_counsel || '—'}</span>
+                    <span className="text-foreground font-medium">{termSheet.legal_counsel}</span>
                   </div>
+                  )}
                 </div>
               </div>
 
@@ -1126,30 +1145,36 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
               <div className="space-y-2">
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fee Structure</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {termSheet.subscription_fee_percent != null && (
                   <div>
                     <span className="text-muted-foreground block text-xs">Subscription Fee</span>
                     <span className="text-foreground font-medium">
-                      {termSheet.subscription_fee_percent != null
-                        ? `${termSheet.subscription_fee_percent}%`
-                        : '—'}
+                      {termSheet.subscription_fee_percent === 0
+                        ? 'Waived (instead of 2.00%)'
+                        : `${termSheet.subscription_fee_percent}%`}
                     </span>
                   </div>
+                  )}
+                  {termSheet.management_fee_percent != null && (
                   <div>
                     <span className="text-muted-foreground block text-xs">Management Fee</span>
                     <span className="text-foreground font-medium">
-                      {termSheet.management_fee_percent != null
-                        ? `${termSheet.management_fee_percent}% p.a.`
-                        : '—'}
+                      {termSheet.management_fee_percent === 0
+                        ? 'Waived (instead of 2.00% p.a.)'
+                        : `${termSheet.management_fee_percent}% p.a.`}
                     </span>
                   </div>
+                  )}
+                  {termSheet.carried_interest_percent != null && (
                   <div>
                     <span className="text-muted-foreground block text-xs">Carried Interest</span>
                     <span className="text-foreground font-medium">
-                      {termSheet.carried_interest_percent != null
-                        ? `${termSheet.carried_interest_percent}%`
-                        : '—'}
+                      {termSheet.carried_interest_percent === 0
+                        ? 'Waived (instead of 20.00%)'
+                        : `${termSheet.carried_interest_percent}% (no hurdle rate)`}
                     </span>
                   </div>
+                  )}
                 </div>
               </div>
 
@@ -1159,20 +1184,22 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
               <div className="space-y-2">
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Timeline</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {termSheet.interest_confirmation_deadline && (
                   <div>
                     <span className="text-muted-foreground block text-xs">Interest Deadline</span>
                     <span className="text-foreground font-medium">
-                      {termSheet.interest_confirmation_deadline
-                        ? format(new Date(termSheet.interest_confirmation_deadline), 'dd MMM yyyy HH:mm')
-                        : '—'}
+                      {format(new Date(termSheet.interest_confirmation_deadline), 'dd MMM yyyy HH:mm')}
                     </span>
                   </div>
+                  )}
+                  {termSheet.validity_date && (
                   <div>
                     <span className="text-muted-foreground block text-xs">Validity</span>
                     <span className="text-foreground font-medium">
-                      {termSheet.validity_date ? format(new Date(termSheet.validity_date), 'dd MMM yyyy HH:mm') : '—'}
+                      {format(new Date(termSheet.validity_date), 'dd MMM yyyy HH:mm')}
                     </span>
                   </div>
+                  )}
                   <div>
                     <span className="text-muted-foreground block text-xs">Completion Date</span>
                     <span className="text-foreground font-medium">

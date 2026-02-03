@@ -29,6 +29,24 @@ export const formatDate = (value: string | Date | null | undefined) => {
   })
 }
 
+export const formatDateTime = (value: string | Date | null | undefined) => {
+  if (!value) return '—'
+  const date = typeof value === 'string' ? new Date(value) : value
+  if (Number.isNaN(date?.getTime?.())) return '—'
+  // Use explicit locale to prevent hydration mismatch between server/client
+  const datePart = date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+  const timePart = date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  })
+  return `${datePart} ${timePart}`
+}
+
 
 
 
