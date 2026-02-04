@@ -28,10 +28,12 @@ export function InlinePdfViewer({ pdfUrl, documentName }: InlinePdfViewerProps) 
       </CardHeader>
       <CardContent>
         <div className="border rounded-lg bg-gray-50 overflow-hidden" style={{ height: '600px' }}>
+          {/* Use Google Docs viewer as proxy to bypass cross-origin iframe restrictions */}
           <iframe
-            src={pdfUrl}
+            src={`https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`}
             className="w-full h-full"
             title={documentName}
+            frameBorder="0"
           />
         </div>
       </CardContent>
