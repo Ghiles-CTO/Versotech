@@ -27,10 +27,10 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Task ID is required' }, { status: 400 })
     }
 
-    // Verify task belongs to user (either directly or via investor association)
+    // Verify task belongs to user (via various ownership methods)
     const { data: task, error: fetchError } = await supabase
       .from('tasks')
-      .select('id, owner_user_id, owner_investor_id')
+      .select('id, owner_user_id, owner_investor_id, owner_ceo_entity_id, related_deal_id')
       .eq('id', id)
       .single()
 
@@ -38,10 +38,10 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 })
     }
 
-    // Check authorization: user owns task directly OR is linked to the owner investor
+    // Check authorization through multiple ownership paths
     let hasPermission = task.owner_user_id === user.id
 
-    // If task has owner_investor_id, check if user is linked to that investor
+    // Check if user is linked to owner_investor_id
     if (!hasPermission && task.owner_investor_id) {
       const { data: investorLink } = await supabase
         .from('investor_users')
@@ -51,6 +51,37 @@ export async function PATCH(request: Request) {
         .single()
 
       hasPermission = !!investorLink
+    }
+
+    // Check if user is a CEO user (for tasks owned by CEO entity)
+    if (!hasPermission && task.owner_ceo_entity_id) {
+      const { data: ceoUser } = await supabase
+        .from('ceo_users')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      hasPermission = !!ceoUser
+    }
+
+    // Check if user is arranger for the related deal (arranger tasks have no owner, use related_deal_id)
+    if (!hasPermission && task.related_deal_id) {
+      const { data: arrangerLink } = await supabase
+        .from('arranger_users')
+        .select('arranger_id')
+        .eq('user_id', user.id)
+
+      if (arrangerLink && arrangerLink.length > 0) {
+        // Check if any of user's arranger entities is the arranger for this deal
+        const arrangerIds = arrangerLink.map(a => a.arranger_id)
+        const { data: deal } = await supabase
+          .from('deals')
+          .select('arranger_entity_id')
+          .eq('id', task.related_deal_id)
+          .single()
+
+        hasPermission = deal && arrangerIds.includes(deal.arranger_entity_id)
+      }
     }
 
     if (!hasPermission) {
