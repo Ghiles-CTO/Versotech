@@ -36,6 +36,70 @@ import {
   NavigationHistoryEntry,
 } from './types'
 
+const PARTICIPANT_DOC_FOLDERS: Record<ParticipantEntityType, string[]> = {
+  investor: ['KYC', 'NDA', 'Subscription Pack', 'Certificate'],
+  introducer: ['KYC', 'Introducer Agreement'],
+  partner: ['KYC'],
+  commercial_partner: ['KYC'],
+}
+
+const normalizeDocTypeKey = (value: string): string =>
+  value.toLowerCase().replace(/[\s_-]+/g, '')
+
+const isKycDocument = (doc: StaffDocument): boolean => {
+  const typeKey = normalizeDocTypeKey(doc.type || '')
+  if (typeKey.includes('kyc')) return true
+
+  const folderKey = normalizeDocTypeKey(doc.folder?.name || '')
+  if (folderKey.includes('kyc')) return true
+
+  const tagKeys = (doc.tags || []).map((tag) => normalizeDocTypeKey(tag))
+  return tagKeys.some((tag) => tag.includes('kyc'))
+}
+
+const getParticipantFolderLabel = (
+  doc: StaffDocument,
+  participantType: ParticipantEntityType
+): string => {
+  const rawType = doc.type || ''
+  const normalizedType = normalizeDocTypeKey(rawType)
+  const isAccountLevel = !doc.deal_id
+
+  if (participantType === 'introducer') {
+    if (normalizedType.includes('introduceragreement')) {
+      return 'Introducer Agreement'
+    }
+    if (normalizedType.includes('kyc') || isAccountLevel) {
+      return 'KYC'
+    }
+    return 'Other'
+  }
+
+  if (normalizedType.includes('nda')) {
+    return 'NDA'
+  }
+  if (normalizedType.includes('subscription')) {
+    return 'Subscription Pack'
+  }
+  if (normalizedType.includes('certificate')) {
+    return 'Certificate'
+  }
+  if (normalizedType.includes('kyc') || isAccountLevel) {
+    return 'KYC'
+  }
+
+  return 'Other'
+}
+
+const getParticipantFolderList = (
+  participantType: ParticipantEntityType,
+  docs: StaffDocument[]
+): string[] => {
+  const base = PARTICIPANT_DOC_FOLDERS[participantType] || ['KYC']
+  const hasOther = docs.some((doc) => doc.type === 'Other')
+  return hasOther ? [...base, 'Other'] : base
+}
+
 // =============================================================================
 // Initial State
 // =============================================================================
@@ -61,6 +125,7 @@ const initialState: StaffDocumentsState = {
     expandedDealsNodes: new Set(),
     expandedDealDataRooms: new Set(),
     expandedDealInvestors: new Set(),
+    expandedDealIntroducers: new Set(),
     expandedAccountGroups: new Set(['investor']),
     expandedAccounts: new Set(),
     treeSearchQuery: '',
@@ -757,6 +822,19 @@ function staffDocumentsReducer(
       }
     }
 
+    case 'TOGGLE_DEAL_INTRODUCERS_EXPANDED': {
+      const newExpanded = new Set(state.tree.expandedDealIntroducers)
+      if (newExpanded.has(action.dealId)) {
+        newExpanded.delete(action.dealId)
+      } else {
+        newExpanded.add(action.dealId)
+      }
+      return {
+        ...state,
+        tree: { ...state.tree, expandedDealIntroducers: newExpanded },
+      }
+    }
+
     case 'TOGGLE_ACCOUNT_GROUP_EXPANDED': {
       const newExpanded = new Set(state.tree.expandedAccountGroups)
       if (newExpanded.has(action.entityType)) {
@@ -1189,15 +1267,26 @@ function staffDocumentsReducer(
         },
       }
 
-    case 'OPEN_CREATE_FOLDER_DIALOG':
+    case 'OPEN_CREATE_FOLDER_DIALOG': {
+      let parentId = action.parentId
+      if (!parentId && state.navigation.selectedVehicleId) {
+        const vehicleRoot = state.data.folders.find(
+          (folder) =>
+            folder.vehicle_id === state.navigation.selectedVehicleId &&
+            folder.folder_type === 'vehicle_root' &&
+            folder.parent_folder_id === null
+        )
+        parentId = vehicleRoot?.id || null
+      }
       return {
         ...state,
         dialogs: {
           ...state.dialogs,
           createFolderDialogOpen: true,
-          createFolderParentId: action.parentId,
+          createFolderParentId: parentId,
         },
       }
+    }
 
     case 'CLOSE_CREATE_FOLDER_DIALOG':
       return {
@@ -1633,30 +1722,89 @@ export function StaffDocumentsProvider({
     dispatch({ type: 'SET_LOADING', loading: true })
 
     try {
-      const params = new URLSearchParams({
+      const baseParams = new URLSearchParams({
         participant_id: investorId,
         participant_type: investorType,
       })
-      if (dealId) params.set('deal_id', dealId)
-      const response = await fetch(`/api/staff/documents?${params.toString()}`)
-      if (response.ok) {
-        const data = await response.json()
-        dispatch({ type: 'SET_DOCUMENTS', documents: data.documents || [] })
+      if (dealId) baseParams.set('deal_id', dealId)
 
-        const docTypes = Array.from(
-          new Set<string>(
-            (data.documents || [])
-              .map((doc: StaffDocument) => doc.type)
-              .filter((type: string) => type && type.trim())
-          )
+      const accountParams = new URLSearchParams({
+        participant_id: investorId,
+        participant_type: investorType,
+      })
+
+      const [dealResponse, accountResponse, agreementsResponse] = await Promise.all([
+        fetch(`/api/staff/documents?${baseParams.toString()}`),
+        dealId ? fetch(`/api/staff/documents?${accountParams.toString()}`) : Promise.resolve(null),
+        investorType === 'introducer'
+          ? fetch(`/api/introducer-agreements?introducer_id=${investorId}`)
+          : Promise.resolve(null),
+      ])
+
+      const dealData = dealResponse?.ok ? await dealResponse.json() : null
+      const accountData = accountResponse?.ok ? await accountResponse.json() : null
+
+      const dealDocs: StaffDocument[] = dealData?.documents || []
+      const accountDocsRaw: StaffDocument[] = (accountData?.documents || []).filter(
+        (doc: StaffDocument) => !doc.deal_id
+      )
+
+      const accountDocs: StaffDocument[] = dealId
+        ? accountDocsRaw.filter((doc) => isKycDocument(doc))
+        : accountDocsRaw
+
+      const agreementDocs: StaffDocument[] = []
+      if (agreementsResponse?.ok) {
+        const agreementsData = await agreementsResponse.json()
+        const agreements = (agreementsData?.data || []) as Array<any>
+        const filteredAgreements = dealId
+          ? agreements.filter((agreement) => agreement.deal_id === dealId)
+          : agreements
+
+        const existingKeys = new Set(
+          [...dealDocs, ...accountDocs]
+            .map((doc) => doc.file_key)
+            .filter(Boolean) as string[]
         )
-        if (!docTypes.includes('KYC')) {
-          docTypes.unshift('KYC')
-        }
 
-        const key = `${investorType}:${investorId}:${dealId || 'all'}`
-        dispatch({ type: 'SET_PARTICIPANT_DOC_TYPES', key, docTypes })
+        filteredAgreements.forEach((agreement) => {
+          const fileKey = agreement.signed_pdf_url || agreement.pdf_url
+          if (!fileKey || existingKeys.has(fileKey)) return
+
+          const filename = fileKey.split('/').pop() || 'Introducer Agreement.pdf'
+          agreementDocs.push({
+            id: `introducer_agreement:${agreement.id}`,
+            name: filename,
+            type: 'introducer_agreement',
+            status: agreement.status || 'published',
+            file_size_bytes: 0,
+            is_published: true,
+            created_at: agreement.updated_at || agreement.created_at || new Date().toISOString(),
+            mime_type: 'application/pdf',
+            file_key: fileKey,
+            deal_id: agreement.deal_id || null,
+          })
+        })
       }
+
+      const mergedMap = new Map<string, StaffDocument>()
+      ;[dealDocs, accountDocs, agreementDocs].forEach((list) => {
+        list.forEach((doc) => {
+          if (!doc?.id) return
+          mergedMap.set(doc.id, doc)
+        })
+      })
+
+      const mergedDocs = Array.from(mergedMap.values()).map((doc) => ({
+        ...doc,
+        type: getParticipantFolderLabel(doc, investorType),
+      }))
+
+      dispatch({ type: 'SET_DOCUMENTS', documents: mergedDocs })
+
+      const docTypes = getParticipantFolderList(investorType, mergedDocs)
+      const key = `${investorType}:${investorId}:${dealId || 'all'}`
+      dispatch({ type: 'SET_PARTICIPANT_DOC_TYPES', key, docTypes })
     } catch (error) {
       console.error('Error fetching investor documents:', error)
       toast.error('Failed to load investor documents')

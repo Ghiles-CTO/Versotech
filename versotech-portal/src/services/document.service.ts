@@ -6,6 +6,11 @@
 import { DocumentError, DocumentUrlResponse } from '@/types/document-viewer.types'
 
 export class DocumentService {
+  private static getIntroducerAgreementId(documentId: string): string | null {
+    if (!documentId.startsWith('introducer_agreement:')) return null
+    return documentId.replace('introducer_agreement:', '').trim() || null
+  }
+
   /**
    * Validate that a URL is a valid storage URL from Supabase
    */
@@ -78,6 +83,21 @@ export class DocumentService {
    */
   static async getPreviewUrl(documentId: string): Promise<DocumentUrlResponse> {
     try {
+      const introducerAgreementId = this.getIntroducerAgreementId(documentId)
+      if (introducerAgreementId) {
+        const response = await fetch(
+          `/api/introducer-agreements/${introducerAgreementId}/download?mode=preview`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        )
+
+        return await this.parseResponse(response)
+      }
+
       const response = await fetch(
         `/api/documents/${documentId}/download?mode=preview`,
         {
@@ -107,6 +127,21 @@ export class DocumentService {
    */
   static async getDownloadUrl(documentId: string): Promise<DocumentUrlResponse> {
     try {
+      const introducerAgreementId = this.getIntroducerAgreementId(documentId)
+      if (introducerAgreementId) {
+        const response = await fetch(
+          `/api/introducer-agreements/${introducerAgreementId}/download?mode=download`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        )
+
+        return await this.parseResponse(response)
+      }
+
       const response = await fetch(
         `/api/documents/${documentId}/download?mode=download`,
         {

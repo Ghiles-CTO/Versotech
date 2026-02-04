@@ -31,6 +31,7 @@ export interface StaffDocument {
   type: string
   status: string
   file_size_bytes: number
+  deal_id?: string | null
   file_key?: string | null
   file_name?: string | null
   original_file_name?: string | null
@@ -151,6 +152,7 @@ export interface TreeState {
   expandedDealsNodes: Set<string>
   expandedDealDataRooms: Set<string>
   expandedDealInvestors: Set<string>
+  expandedDealIntroducers: Set<string>
   expandedAccountGroups: Set<ParticipantEntityType>
   expandedAccounts: Set<string>
   treeSearchQuery: string
@@ -272,6 +274,7 @@ export type TreeAction =
   | { type: 'TOGGLE_DEALS_NODE_EXPANDED'; vehicleId: string }
   | { type: 'TOGGLE_DEAL_DATA_ROOM_EXPANDED'; dealId: string }
   | { type: 'TOGGLE_DEAL_INVESTORS_EXPANDED'; dealId: string }
+  | { type: 'TOGGLE_DEAL_INTRODUCERS_EXPANDED'; dealId: string }
   | { type: 'TOGGLE_ACCOUNT_GROUP_EXPANDED'; entityType: ParticipantEntityType }
   | { type: 'TOGGLE_ACCOUNT_EXPANDED'; key: string }
   | { type: 'SET_EXPANDED_VEHICLES'; vehicleIds: Set<string> }

@@ -21,6 +21,23 @@ interface VehicleTreeProps {
   className?: string
 }
 
+const getDefaultParticipantDocTypes = (
+  entityType: ParticipantEntityType
+): string[] => {
+  if (entityType === 'introducer') {
+    return ['KYC', 'Introducer Agreement']
+  }
+  if (entityType === 'investor') {
+    return ['KYC', 'NDA', 'Subscription Pack', 'Certificate']
+  }
+  return ['KYC']
+}
+
+const isDealsFolderName = (name: string): boolean => {
+  const normalized = name.trim().toLowerCase()
+  return normalized === 'deals' || normalized === 'deal rooms'
+}
+
 export function VehicleTree({ className }: VehicleTreeProps) {
   const {
     state,
@@ -61,6 +78,55 @@ export function VehicleTree({ className }: VehicleTreeProps) {
       )
     },
     [data.folders]
+  )
+
+  const getVehicleRootFolderId = useCallback(
+    (vehicleId: string): string | null => {
+      const rootFolder = data.folders.find(
+        (folder) =>
+          folder.vehicle_id === vehicleId &&
+          folder.folder_type === 'vehicle_root' &&
+          folder.parent_folder_id === null
+      )
+      return rootFolder?.id || null
+    },
+    [data.folders]
+  )
+
+  const getDealDocumentsFolder = useCallback(
+    (dealName: string, vehicleId: string): DocumentFolder | null => {
+      const rootFolderId = getVehicleRootFolderId(vehicleId)
+      const dealsFolder =
+        data.folders.find(
+          (folder) =>
+            folder.vehicle_id === vehicleId &&
+            folder.parent_folder_id === rootFolderId &&
+            isDealsFolderName(folder.name)
+        ) ||
+        data.folders.find(
+          (folder) =>
+            folder.vehicle_id === vehicleId && isDealsFolderName(folder.name)
+        )
+
+      if (!dealsFolder) return null
+
+      const dealFolder =
+        data.folders.find(
+          (folder) =>
+            folder.vehicle_id === vehicleId &&
+            folder.parent_folder_id === dealsFolder.id &&
+            folder.name === dealName
+        ) ||
+        data.folders.find(
+          (folder) =>
+            folder.vehicle_id === vehicleId &&
+            folder.name === dealName &&
+            folder.path.includes('/Deals/')
+        )
+
+      return dealFolder || null
+    },
+    [data.folders, getVehicleRootFolderId]
   )
 
   // ---------------------------------------------------------------------------
@@ -172,6 +238,16 @@ export function VehicleTree({ className }: VehicleTreeProps) {
     [dispatch, tree.expandedDealInvestors, fetchInvestorsForDeal]
   )
 
+  const handleIntroducersNodeToggle = useCallback(
+    (dealId: string) => {
+      dispatch({ type: 'TOGGLE_DEAL_INTRODUCERS_EXPANDED', dealId })
+      if (!tree.expandedDealIntroducers.has(dealId)) {
+        fetchInvestorsForDeal(dealId)
+      }
+    },
+    [dispatch, tree.expandedDealIntroducers, fetchInvestorsForDeal]
+  )
+
   const handleInvestorClick = useCallback(
     (
       investorId: string,
@@ -259,9 +335,12 @@ export function VehicleTree({ className }: VehicleTreeProps) {
       const matchesFilter = filterMatches(node.name)
 
       // For real (non-virtual) vehicles, get their folders
+      const rootFolderId = node.isVirtual ? null : getVehicleRootFolderId(node.id)
       const rootFolders = node.isVirtual
         ? []
-        : getChildFolders(null, node.id)
+        : getChildFolders(rootFolderId ?? null, node.id).filter(
+            (folder) => !isDealsFolderName(folder.name)
+          )
       const deals = data.vehicleDeals.get(node.id) || []
       const isLoadingDeals = data.loadingDeals.has(node.id)
       const dealsExpanded = isDealsNodeExpanded(node.id)
@@ -303,7 +382,7 @@ export function VehicleTree({ className }: VehicleTreeProps) {
                   key={`deals-${node.id}`}
                   type="deals-group"
                   id={`deals-${node.id}`}
-                  name="Deal Rooms"
+                  name="Deals"
                   depth={depth + 1}
                   isExpanded={dealsExpanded}
                   onToggle={() => handleDealsNodeToggle(node.id)}
@@ -323,8 +402,12 @@ export function VehicleTree({ className }: VehicleTreeProps) {
                         deals.map((deal) => {
                           const dealExpanded = tree.expandedDealDataRooms.has(deal.id)
                           const investorsExpanded = tree.expandedDealInvestors.has(deal.id)
-                          const investors = data.dealInvestors.get(deal.id) || []
+                          const introducersExpanded = tree.expandedDealIntroducers.has(deal.id)
+                          const participants = data.dealInvestors.get(deal.id) || []
+                          const dealDocumentsFolder = getDealDocumentsFolder(deal.name, node.id)
                           const isLoadingDealInvestors = data.loadingInvestors.has(deal.id)
+                          const investors = participants.filter(p => p.entity_type === 'investor')
+                          const introducers = participants.filter(p => p.entity_type === 'introducer')
 
                           return (
                             <TreeNode
@@ -362,12 +445,19 @@ export function VehicleTree({ className }: VehicleTreeProps) {
                                     onClick={() => handleDealClick(deal.id, deal.name, node.id)}
                                   />
 
+                                  {dealDocumentsFolder &&
+                                    renderFolder(
+                                      { ...dealDocumentsFolder, name: 'Documents' },
+                                      depth + 3,
+                                      node.id
+                                    )}
+
                                   {/* Participants virtual folder */}
                                   <TreeNode
                                     key={`investors-${deal.id}`}
                                     type="investors-group"
                                     id={`investors-${deal.id}`}
-                                    name="Participants"
+                                    name="INVESTORS"
                                     depth={depth + 3}
                                     isExpanded={investorsExpanded}
                                     onToggle={() => handleInvestorsNodeToggle(deal.id)}
@@ -381,7 +471,7 @@ export function VehicleTree({ className }: VehicleTreeProps) {
                                           </div>
                                         ) : investors.length === 0 ? (
                                           <div className="py-1.5 px-3 text-sm text-muted-foreground italic">
-                                            No participants
+                                            No investors
                                           </div>
                                         ) : (
                                           investors.map((investor) => {
@@ -392,7 +482,9 @@ export function VehicleTree({ className }: VehicleTreeProps) {
                                             const docTypes =
                                               data.participantDocumentTypes.get(docTypeKey) || []
                                             const docTypesToShow =
-                                              docTypes.length > 0 ? docTypes : ['KYC']
+                                              docTypes.length > 0
+                                                ? docTypes
+                                                : getDefaultParticipantDocTypes(investor.entity_type)
 
                                             return (
                                               <TreeNode
@@ -444,6 +536,90 @@ export function VehicleTree({ className }: VehicleTreeProps) {
                                       </div>
                                     )}
                                   </TreeNode>
+
+                                  <TreeNode
+                                    key={`introducers-${deal.id}`}
+                                    type="investors-group"
+                                    id={`introducers-${deal.id}`}
+                                    name="INTRODUCERS"
+                                    depth={depth + 3}
+                                    isExpanded={introducersExpanded}
+                                    onToggle={() => handleIntroducersNodeToggle(deal.id)}
+                                  >
+                                    {introducersExpanded && (
+                                      <div className="ml-0">
+                                        {isLoadingDealInvestors ? (
+                                          <div className="flex items-center gap-2 py-1.5 px-3 text-sm text-muted-foreground">
+                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                            Loading...
+                                          </div>
+                                        ) : introducers.length === 0 ? (
+                                          <div className="py-1.5 px-3 text-sm text-muted-foreground italic">
+                                            No introducers
+                                          </div>
+                                        ) : (
+                                          introducers.map((introducer) => {
+                                            const introducerSelected =
+                                              navigation.selectedInvestorId === introducer.id &&
+                                              navigation.selectedInvestorType === introducer.entity_type
+                                            const docTypeKey = `${introducer.entity_type}:${introducer.id}:${deal.id}`
+                                            const docTypes =
+                                              data.participantDocumentTypes.get(docTypeKey) || []
+                                            const docTypesToShow =
+                                              docTypes.length > 0
+                                                ? docTypes
+                                                : getDefaultParticipantDocTypes(introducer.entity_type)
+
+                                            return (
+                                              <TreeNode
+                                                key={`${introducer.entity_type}-${introducer.id}`}
+                                                type="investor"
+                                                id={`${introducer.entity_type}-${introducer.id}`}
+                                                name={introducer.display_name}
+                                                depth={depth + 4}
+                                                isSelected={introducerSelected}
+                                                isExpanded={introducerSelected}
+                                                onClick={() =>
+                                                  handleInvestorClick(
+                                                    introducer.id,
+                                                    introducer.display_name,
+                                                    introducer.entity_type,
+                                                    deal.id,
+                                                    node.id
+                                                  )
+                                                }
+                                              >
+                                                {introducerSelected && (
+                                                  <div className="ml-0">
+                                                    <TreeNode
+                                                      key={`all-${introducer.entity_type}-${introducer.id}`}
+                                                      type="doc-type"
+                                                      id={`all-${introducer.entity_type}-${introducer.id}`}
+                                                      name="All Documents"
+                                                      depth={depth + 5}
+                                                      isSelected={!navigation.selectedInvestorDocType}
+                                                      onClick={() => handleInvestorDocTypeClick(null)}
+                                                    />
+                                                    {docTypesToShow.map((docType) => (
+                                                      <TreeNode
+                                                        key={`${introducer.entity_type}-${introducer.id}-${docType}`}
+                                                        type="doc-type"
+                                                        id={`${introducer.entity_type}-${introducer.id}-${docType}`}
+                                                        name={docType}
+                                                        depth={depth + 5}
+                                                        isSelected={navigation.selectedInvestorDocType === docType}
+                                                        onClick={() => handleInvestorDocTypeClick(docType)}
+                                                      />
+                                                    ))}
+                                                  </div>
+                                                )}
+                                              </TreeNode>
+                                            )
+                                          })
+                                        )}
+                                      </div>
+                                    )}
+                                  </TreeNode>
                                 </>
                               )}
                             </TreeNode>
@@ -469,7 +645,9 @@ export function VehicleTree({ className }: VehicleTreeProps) {
       navigation.selectedInvestorType,
       navigation.selectedInvestorDocType,
       filterMatches,
+      getVehicleRootFolderId,
       getChildFolders,
+      getDealDocumentsFolder,
       data.vehicleDeals,
       data.dealInvestors,
       data.participantDocumentTypes,
@@ -479,11 +657,13 @@ export function VehicleTree({ className }: VehicleTreeProps) {
       tree.debouncedTreeSearch,
       tree.expandedDealDataRooms,
       tree.expandedDealInvestors,
+      tree.expandedDealIntroducers,
       handleVehicleToggle,
       handleVehicleClick,
       handleDealsNodeToggle,
       handleDealClick,
       handleInvestorsNodeToggle,
+      handleIntroducersNodeToggle,
       handleInvestorClick,
       handleInvestorDocTypeClick,
       renderFolder,

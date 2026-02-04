@@ -84,7 +84,7 @@ export function StaffDocumentsBreadcrumb({
       iterations++
     }
 
-    return path
+    return path.filter((folder) => folder.folder_type !== 'vehicle_root')
   }, [navigation.currentFolderId, data.folders])
 
   /**

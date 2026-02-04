@@ -17,6 +17,18 @@ interface AccountsTreeProps {
   className?: string
 }
 
+const getDefaultParticipantDocTypes = (
+  entityType: ParticipantEntityType
+): string[] => {
+  if (entityType === 'introducer') {
+    return ['KYC', 'Introducer Agreement']
+  }
+  if (entityType === 'investor') {
+    return ['KYC', 'NDA', 'Subscription Pack', 'Certificate']
+  }
+  return ['KYC']
+}
+
 const accountGroups: { type: ParticipantEntityType; label: string }[] = [
   { type: 'investor', label: 'Investors' },
   { type: 'partner', label: 'Partners' },
@@ -161,7 +173,9 @@ export function AccountsTree({ className }: AccountsTreeProps) {
                     const docTypes =
                       data.participantDocumentTypes.get(docTypeKey) || []
                     const docTypesToShow =
-                      docTypes.length > 0 ? docTypes : ['KYC']
+                      docTypes.length > 0
+                        ? docTypes
+                        : getDefaultParticipantDocTypes(account.entity_type)
 
                     return (
                       <TreeNode

@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('vehicle_id', vehicleId)
     }
 
-    if (dealId && !hasParticipantFilter) {
+    if (dealId) {
       query = query.eq('deal_id', dealId)
     }
 
