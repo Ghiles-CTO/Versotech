@@ -57,12 +57,12 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 **Description:** As a developer, I need to store agent definitions so they can be assigned to tasks and used for branded communications.
 
 **Acceptance Criteria:**
-- [ ] Create `ai_agents` table with: id, name, role, avatar_url, email_identity, is_active, created_at
+- [x] Create `ai_agents` table with: id, name, role, avatar_url, email_identity, is_active, created_at
 - [ ] Extract avatar photos from PDF and store in Supabase storage
-- [ ] Seed 3 Compliance Team agents (Uma, Valerie, Wayne) with roles and actual avatars from PDF
-- [ ] Create `agent_task_assignments` table linking agents to task types
-- [ ] Default assignments match PDF specification (Uma→U001-U003, Valerie→V001-V003, Wayne→W001-W003)
-- [ ] RLS policies restrict UI access to CEO persona; backend jobs use service role and are fully audited
+- [x] Seed 3 Compliance Team agents (Uma, Valerie, Wayne) with names + roles (avatars pending)
+- [x] Create `agent_task_assignments` table linking agents to task types
+- [x] Default assignments match PDF specification (Uma→U001-U003, Valerie→V001-V003, Wayne→W001-W003)
+- [x] RLS policies restrict UI access to CEO persona; backend jobs use service role and are fully audited
 - [ ] Typecheck passes
 
 ---
@@ -333,13 +333,13 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 **Description:** As a user, I need notifications and messaging to be easy to find and reliable so compliance workflows don't get blocked by UI friction.
 
 **Acceptance Criteria:**
-- [ ] Bell dropdown includes a clear "Open notifications" button (no duplicate links)
-- [ ] Notification previews wrap to 2 lines (no chopped text)
-- [ ] Notifications page supports persona filtering and shows compliance items for staff/CEO
-- [ ] No new sidebar navigation entries for notifications
+- [x] Bell dropdown includes a clear "Open notifications" button (no duplicate links)
+- [x] Notification previews wrap to 2 lines (no chopped text)
+- [x] Notifications page supports persona filtering and shows compliance items for staff/CEO
+- [x] No new sidebar navigation entries for notifications
 - [ ] Unread count uses existing `/api/notifications/counts` data (no schema changes)
-- [ ] Messaging scroll: conversation list and chat window scroll independently; composer always visible without page scroll
-- [ ] Auto-scroll only if user is near the bottom; never yank them while reading history
+- [x] Messaging scroll: conversation list and chat window scroll independently; composer always visible without page scroll
+- [x] Auto-scroll only if user is near the bottom; never yank them while reading history
 - [ ] Do not change existing routes, access control, or chat stack; reuse current messaging tables/components
 - [ ] Typecheck passes
 
