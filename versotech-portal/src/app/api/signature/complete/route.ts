@@ -557,6 +557,20 @@ async function checkAndPublishSubscriptionDocument(
     console.error('❌ [PUBLISH CHECK] Failed to publish document:', updateError)
   } else {
     console.log('✅ [PUBLISH CHECK] Document published! Investors can now see the signed subscription pack:', documentId)
+
+    // Safety net: Ensure signed_at is set when ALL parties have signed
+    // This handles cases where the investor-only flow didn't set it
+    const { error: signedAtError } = await supabase
+      .from('subscriptions')
+      .update({ signed_at: new Date().toISOString() })
+      .eq('id', subscriptionId)
+      .is('signed_at', null)  // Only update if not already set
+
+    if (signedAtError) {
+      console.error('❌ [PUBLISH CHECK] Failed to set signed_at:', signedAtError)
+    } else {
+      console.log('✅ [PUBLISH CHECK] Subscription signed_at ensured for:', subscriptionId)
+    }
   }
 }
 

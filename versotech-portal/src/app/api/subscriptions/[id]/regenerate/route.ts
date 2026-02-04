@@ -732,6 +732,15 @@ export async function POST(
           console.error('❌ Failed to create document record:', docError)
         } else {
           console.log('✅ Regenerated document record created:', docRecord.id)
+
+          // Mark workflow as completed only if document was created successfully
+          if (result?.workflow_run_id) {
+            await serviceSupabase.from('workflow_runs').update({
+              status: 'completed',
+              completed_at: new Date().toISOString(),
+              result_doc_id: docRecord.id
+            }).eq('id', result.workflow_run_id)
+          }
         }
 
         // Update subscription pack_generated_at (use service client to bypass RLS)

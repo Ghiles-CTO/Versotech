@@ -451,6 +451,16 @@ export async function triggerCertificateGeneration({
               } else {
                 console.log('✅ Document record created:', document.id)
 
+                // Mark workflow as completed now that document is stored
+                if (result?.workflow_run_id) {
+                  await supabase.from('workflow_runs').update({
+                    status: 'completed',
+                    completed_at: new Date().toISOString(),
+                    result_doc_id: document.id
+                  }).eq('id', result.workflow_run_id)
+                  console.log('✅ Workflow run marked as completed')
+                }
+
                 // Update subscription with certificate path and document ID
                 await supabase
                   .from('subscriptions')

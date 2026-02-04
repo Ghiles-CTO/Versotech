@@ -1593,10 +1593,13 @@ async function handleEntityApproval(
                             .eq('id', subscriptionId)
                             .is('pack_generated_at', null)
 
-                          // Update workflow_run with document_id in output_data
+                          // Update workflow_run with status completed and document reference
                           await supabase
                             .from('workflow_runs')
                             .update({
+                              status: 'completed',
+                              completed_at: new Date().toISOString(),
+                              result_doc_id: docRecord.id,
                               output_data: {
                                 ...result.n8n_response,
                                 document_id: docRecord.id,
@@ -1604,6 +1607,39 @@ async function handleEntityApproval(
                               }
                             })
                             .eq('id', result.workflow_run_id)
+
+                          // Notify all CEO users that subscription pack is ready for signature
+                          try {
+                            const { data: ceoUsers } = await supabase
+                              .from('ceo_users')
+                              .select('user_id')
+
+                            if (ceoUsers && ceoUsers.length > 0) {
+                              const formattedAmount = new Intl.NumberFormat('en-US', {
+                                style: 'currency',
+                                currency: submission.deal.currency || 'USD',
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0
+                              }).format(amount)
+
+                              const notifications = ceoUsers.map((ceoUser: { user_id: string }) => ({
+                                user_id: ceoUser.user_id,
+                                investor_id: null,
+                                title: 'Subscription Pack Ready',
+                                message: `${investorName} - ${submission.deal.name} (${formattedAmount}) - Ready to send for signature`,
+                                link: `/versotech_main/subscriptions/${subscriptionId}`,
+                                type: 'subscription_pack_ready',
+                                deal_id: submission.deal_id,
+                                created_by: user.id
+                              }))
+
+                              await supabase.from('investor_notifications').insert(notifications)
+                              console.log(`📧 Notified ${ceoUsers.length} CEO user(s) about subscription pack ready`)
+                            }
+                          } catch (notifyError) {
+                            // Don't fail the approval if notification fails
+                            console.error('Failed to notify CEO users:', notifyError)
+                          }
                         }
                       }
                     } catch (docError) {
