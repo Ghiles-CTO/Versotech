@@ -108,7 +108,7 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
   }, [filters])
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex h-[calc(100vh-4rem)] min-h-0 overflow-hidden">
       <InvestorContacts
         conversations={conversations}
         filters={filters}
@@ -118,7 +118,7 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
         activeConversationId={activeConversationId}
         isLoading={isLoading}
       />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         {activeConversation ? (
           <ConversationView
             key={activeConversation.id}

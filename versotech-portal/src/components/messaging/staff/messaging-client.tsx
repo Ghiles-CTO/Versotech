@@ -34,6 +34,8 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
   const [staffDirectory, setStaffDirectory] = useState<StaffDirectoryEntry[]>([])
   const [investorDirectory, setInvestorDirectory] = useState<InvestorDirectoryEntry[]>([])
   const [isCreatingConversation, setIsCreatingConversation] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerHeight, setContainerHeight] = useState<number | null>(null)
 
   // Ref to track active conversation without recreating subscriptions
   const activeConversationIdRef = useRef(activeConversationId)
@@ -44,6 +46,75 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
   console.log('[MessagingClient] Filters:', filters)
 
   const activeConversation = conversations.find(conv => conv.id === activeConversationId) || null
+
+  useEffect(() => {
+    const element = containerRef.current
+    if (!element) return
+
+    const updateHeight = () => {
+      const target = containerRef.current
+      if (!target) return
+      const rect = target.getBoundingClientRect()
+      const baseHeight = window.innerHeight - rect.top
+      const mainElement = target.closest('main')
+      const overflow = mainElement ? Math.max(0, mainElement.scrollHeight - mainElement.clientHeight) : 0
+      const nextHeight = Math.max(320, baseHeight - overflow)
+      setContainerHeight(nextHeight)
+      if (mainElement) {
+        mainElement.scrollTop = 0
+      }
+    }
+
+    updateHeight()
+    const handleResize = () => requestAnimationFrame(updateHeight)
+    window.addEventListener('resize', handleResize)
+
+    const resizeObserver = typeof ResizeObserver === 'undefined'
+      ? null
+      : new ResizeObserver(() => requestAnimationFrame(updateHeight))
+
+    if (resizeObserver && element.parentElement) {
+      resizeObserver.observe(element.parentElement)
+    }
+
+    const mainElement = element.closest('main')
+    const previousOverflowY = mainElement?.style.overflowY
+    const previousOverflow = mainElement?.style.overflow
+
+    if (mainElement) {
+      mainElement.style.overflowY = 'hidden'
+      mainElement.scrollTop = 0
+    }
+    const mutationObserver = typeof MutationObserver === 'undefined' || !mainElement
+      ? null
+      : new MutationObserver(() => requestAnimationFrame(updateHeight))
+
+    if (mutationObserver && mainElement) {
+      mutationObserver.observe(mainElement, {
+        attributes: true,
+        childList: true,
+        subtree: false,
+      })
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      resizeObserver?.disconnect()
+      mutationObserver?.disconnect()
+      if (mainElement) {
+        if (previousOverflowY) {
+          mainElement.style.overflowY = previousOverflowY
+        } else {
+          mainElement.style.removeProperty('overflow-y')
+        }
+        if (previousOverflow) {
+          mainElement.style.overflow = previousOverflow
+        } else {
+          mainElement.style.removeProperty('overflow')
+        }
+      }
+    }
+  }, [])
 
   const loadConversations = useCallback(async (nextFilters?: ConversationFilters, silent = false) => {
     console.log('[MessagingClient] loadConversations called with filters:', nextFilters || filters, 'silent:', silent)
@@ -246,7 +317,11 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+    <div
+      ref={containerRef}
+      className="flex min-h-0 overflow-hidden"
+      style={containerHeight ? { height: `${containerHeight}px` } : undefined}
+    >
       <ConversationsSidebar
         conversations={conversations}
         filters={filters}
@@ -262,7 +337,7 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
         errorMessage={errorMessage}
         canCreateConversation={canCreateConversation}
       />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         {activeConversation ? (
           <ConversationView
             key={activeConversation.id}

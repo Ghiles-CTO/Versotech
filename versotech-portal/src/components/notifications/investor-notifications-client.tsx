@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -33,6 +33,8 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { usePersona } from '@/contexts/persona-context'
+import { ComplianceAlerts } from '@/components/audit/compliance-alerts'
 
 interface Notification {
   id: string
@@ -44,6 +46,28 @@ interface Notification {
   type?: string | null
   created_by?: string | null
   deal_id?: string | null
+  investor_id?: string | null
+}
+
+interface ComplianceAlert {
+  id: string
+  alert_type: string
+  severity: string
+  description: string | null
+  status: string
+  assigned_to: string | null
+  created_at: string
+}
+
+interface ComplianceTask {
+  id: string
+  title: string
+  description: string | null
+  status: string
+  priority: string | null
+  due_at: string | null
+  action_url: string | null
+  owner_user_id: string | null
 }
 
 // Notification type labels and icons
@@ -61,6 +85,74 @@ const NOTIFICATION_TYPE_CONFIG: Record<string, { label: string; icon: React.Comp
   general: { label: 'General', icon: Bell, color: 'bg-gray-100 text-gray-800' },
 }
 
+const PERSONA_ROUTE_PREFIXES: Record<string, string[]> = {
+  investor: [
+    '/versotech_main/opportunities',
+    '/versotech_main/portfolio',
+    '/versotech_main/documents',
+    '/versotech_main/inbox',
+    '/versotech_main/profile',
+    '/versotech_main/versosign',
+    '/versotech_main/subscription-packs',
+    '/versotech_main/deals',
+  ],
+  arranger: [
+    '/versotech_main/my-mandates',
+    '/versotech_main/subscription-packs',
+    '/versotech_main/escrow',
+    '/versotech_main/arranger-reconciliation',
+    '/versotech_main/fee-plans',
+    '/versotech_main/payment-requests',
+    '/versotech_main/my-partners',
+    '/versotech_main/my-introducers',
+    '/versotech_main/my-commercial-partners',
+    '/versotech_main/my-lawyers',
+    '/versotech_main/versosign',
+    '/versotech_main/arranger-profile',
+  ],
+  introducer: [
+    '/versotech_main/introductions',
+    '/versotech_main/introducer-agreements',
+    '/versotech_main/my-commissions',
+    '/versotech_main/versosign',
+    '/versotech_main/introducer-profile',
+  ],
+  partner: [
+    '/versotech_main/opportunities',
+    '/versotech_main/partner-transactions',
+    '/versotech_main/my-commissions',
+    '/versotech_main/shared-transactions',
+    '/versotech_main/versosign',
+    '/versotech_main/partner-profile',
+  ],
+  commercial_partner: [
+    '/versotech_main/opportunities',
+    '/versotech_main/client-transactions',
+    '/versotech_main/my-commissions',
+    '/versotech_main/portfolio',
+    '/versotech_main/placement-agreements',
+    '/versotech_main/commercial-partner-profile',
+    '/versotech_main/notifications',
+    '/versotech_main/messages',
+  ],
+  lawyer: [
+    '/versotech_main/assigned-deals',
+    '/versotech_main/escrow',
+    '/versotech_main/subscription-packs',
+    '/versotech_main/versosign',
+    '/versotech_main/lawyer-reconciliation',
+    '/versotech_main/lawyer-profile',
+  ],
+}
+
+const SHARED_ROUTE_PREFIXES = [
+  '/versotech_main/notifications',
+  '/versotech_main/versosign',
+  '/versotech_main/documents',
+  '/versotech_main/inbox',
+  '/versotech_main/messages',
+]
+
 function formatTimeAgo(dateString: string): string {
   const date = new Date(dateString)
   const now = new Date()
@@ -76,14 +168,34 @@ function formatTimeAgo(dateString: string): string {
   return date.toLocaleDateString()
 }
 
-export default function InvestorNotificationsClient() {
+interface InvestorNotificationsClientProps {
+  isStaff?: boolean
+  currentUserId?: string
+  complianceAlerts?: ComplianceAlert[]
+  complianceTasks?: ComplianceTask[]
+}
+
+export default function InvestorNotificationsClient({
+  isStaff = false,
+  currentUserId,
+  complianceAlerts = [],
+  complianceTasks = [],
+}: InvestorNotificationsClientProps) {
+  const { activePersona, personas, hasMultiplePersonas } = usePersona()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [availableTypes, setAvailableTypes] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [marking, setMarking] = useState(false)
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
-  const [viewMode, setViewMode] = useState<'inbox' | 'sent'>('inbox')
+  const [viewMode, setViewMode] = useState<'inbox' | 'sent' | 'compliance'>('inbox')
+  const [personaFilter, setPersonaFilter] = useState<string>('all')
+
+  useEffect(() => {
+    if (hasMultiplePersonas && activePersona?.entity_id) {
+      setPersonaFilter(activePersona.entity_id)
+    }
+  }, [hasMultiplePersonas, activePersona?.entity_id])
 
   const fetchNotifications = async () => {
     setLoading(true)
@@ -125,12 +237,43 @@ export default function InvestorNotificationsClient() {
     )
   })
 
-  const unreadNotifications = filteredNotifications.filter(n => !n.read_at)
-  const readNotifications = filteredNotifications.filter(n => n.read_at)
+  const selectedPersona = useMemo(() => {
+    if (personaFilter === 'all') return null
+    return personas.find(p => p.entity_id === personaFilter) || activePersona || null
+  }, [personaFilter, personas, activePersona])
+
+  const personaFilteredNotifications = useMemo(() => {
+    if (!selectedPersona) return filteredNotifications
+
+    const personaType = selectedPersona.persona_type
+    if (personaType === 'ceo' || personaType === 'staff') {
+      return filteredNotifications
+    }
+
+    const allowedPrefixes = PERSONA_ROUTE_PREFIXES[personaType] || []
+
+    return filteredNotifications.filter((notification) => {
+      if (notification.investor_id) {
+        if (personaType !== 'investor') return false
+        return notification.investor_id === selectedPersona.entity_id
+      }
+
+      if (!notification.link) return true
+
+      if (SHARED_ROUTE_PREFIXES.some(prefix => notification.link!.startsWith(prefix))) {
+        return true
+      }
+
+      return allowedPrefixes.some(prefix => notification.link!.startsWith(prefix))
+    })
+  }, [filteredNotifications, selectedPersona])
+
+  const unreadNotifications = personaFilteredNotifications.filter(n => !n.read_at)
+  const readNotifications = personaFilteredNotifications.filter(n => n.read_at)
   const unreadIds = unreadNotifications.map(n => n.id)
 
   const markAllRead = async () => {
-    if (unreadIds.length === 0 || marking) return
+    if (unreadIds.length === 0 || marking || viewMode !== 'inbox') return
     setMarking(true)
     try {
       const response = await fetch('/api/notifications', {
@@ -243,7 +386,7 @@ export default function InvestorNotificationsClient() {
         </div>
         <Button
           variant="outline"
-          disabled={unreadIds.length === 0 || marking || viewMode === 'sent'}
+          disabled={unreadIds.length === 0 || marking || viewMode !== 'inbox'}
           onClick={markAllRead}
           className="gap-2"
         >
@@ -253,7 +396,7 @@ export default function InvestorNotificationsClient() {
       </div>
 
       {/* Tabs for Inbox/Sent */}
-      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'inbox' | 'sent')}>
+      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'inbox' | 'sent' | 'compliance')}>
         <div className="flex flex-col md:flex-row gap-4 justify-between">
           <TabsList>
             <TabsTrigger value="inbox" className="gap-2">
@@ -264,6 +407,12 @@ export default function InvestorNotificationsClient() {
               <Send className="h-4 w-4" />
               Sent by Me
             </TabsTrigger>
+            {isStaff && (
+              <TabsTrigger value="compliance" className="gap-2">
+                <AlertCircle className="h-4 w-4" />
+                Compliance
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Filters */}
@@ -277,6 +426,23 @@ export default function InvestorNotificationsClient() {
                 className="pl-10"
               />
             </div>
+            {hasMultiplePersonas && (
+              <Select value={personaFilter} onValueChange={setPersonaFilter}>
+                <SelectTrigger className="w-[220px]">
+                  <Users className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Persona" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Personas</SelectItem>
+                  {personas.map((persona) => (
+                    <SelectItem key={persona.entity_id} value={persona.entity_id}>
+                      {persona.entity_name} ({persona.persona_type})
+                      {activePersona?.entity_id === persona.entity_id ? ' • Current' : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-[180px]">
                 <Filter className="h-4 w-4 mr-2" />
@@ -303,7 +469,7 @@ export default function InvestorNotificationsClient() {
               <Loader2 className="h-5 w-5 animate-spin" />
               Loading notifications...
             </div>
-          ) : filteredNotifications.length === 0 ? (
+          ) : personaFilteredNotifications.length === 0 ? (
             <Card className="border border-gray-200 bg-white">
               <CardContent className="py-12 text-center">
                 <BellOff className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -351,7 +517,7 @@ export default function InvestorNotificationsClient() {
               <Loader2 className="h-5 w-5 animate-spin" />
               Loading sent notifications...
             </div>
-          ) : filteredNotifications.length === 0 ? (
+          ) : personaFilteredNotifications.length === 0 ? (
             <Card className="border border-gray-200 bg-white">
               <CardContent className="py-12 text-center">
                 <Send className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -364,10 +530,68 @@ export default function InvestorNotificationsClient() {
             </Card>
           ) : (
             <div className="space-y-3">
-              {filteredNotifications.map(renderNotification)}
+              {personaFilteredNotifications.map(renderNotification)}
             </div>
           )}
         </TabsContent>
+
+        {isStaff && (
+          <TabsContent value="compliance" className="mt-6 space-y-6">
+            <ComplianceAlerts alerts={complianceAlerts} />
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Compliance Tasks</CardTitle>
+                <CardDescription>Open tasks that need compliance review</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {complianceTasks.length === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground text-sm">
+                    No open compliance tasks
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {complianceTasks.map((task) => (
+                      <div
+                        key={task.id}
+                        className="flex items-start justify-between gap-4 p-3 border rounded-lg"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-foreground">{task.title}</span>
+                            {task.priority && (
+                              <Badge variant="secondary" className="capitalize">
+                                {task.priority}
+                              </Badge>
+                            )}
+                            {task.owner_user_id && task.owner_user_id === currentUserId && (
+                              <Badge variant="outline">Assigned to you</Badge>
+                            )}
+                          </div>
+                          {task.description && (
+                            <p className="text-sm text-muted-foreground">
+                              {task.description}
+                            </p>
+                          )}
+                          {task.due_at && (
+                            <p className="text-xs text-muted-foreground">
+                              Due {new Date(task.due_at).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                        {task.action_url ? (
+                          <Button asChild size="sm" variant="outline">
+                            <Link href={task.action_url}>Open</Link>
+                          </Button>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   )

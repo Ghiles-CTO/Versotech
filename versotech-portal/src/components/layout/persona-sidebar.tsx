@@ -166,7 +166,6 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Portfolio', href: '/versotech_main/portfolio', icon: Briefcase, description: 'My investments' },
     { name: 'Agreements', href: '/versotech_main/placement-agreements', icon: FileText, description: 'Placement agreements' },
     { name: 'Profile', href: '/versotech_main/commercial-partner-profile', icon: FileSignature, description: 'Signature & settings' },
-    { name: 'Notifications', href: '/versotech_main/notifications', icon: Bell, description: 'Alerts & updates' },
     { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, description: 'Communications' },
   ],
 

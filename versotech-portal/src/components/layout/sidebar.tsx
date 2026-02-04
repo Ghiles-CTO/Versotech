@@ -142,6 +142,13 @@ const staffNavItems: SidebarItem[] = [
     description: 'Inbox'
   },
   {
+    name: 'Notifications',
+    href: '/versotech_main/notifications',
+    icon: Bell,
+    notificationKey: 'notifications',
+    description: 'Alerts'
+  },
+  {
     name: 'Approvals',
     href: '/versotech_main/approvals',
     icon: UserCheck,

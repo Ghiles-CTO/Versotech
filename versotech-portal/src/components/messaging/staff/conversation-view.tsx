@@ -48,6 +48,8 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const didInitialScrollRef = useRef(false)
+  const isNearBottomRef = useRef(true)
 
   console.log('[ConversationView] Rendering with', messages.length, 'messages for conversation:', conversation.id)
   
@@ -108,11 +110,45 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
     return groupMessages(messages)
   }, [messages])
 
-  // Auto-scroll to bottom when messages change
+  const getViewport = () => {
+    const root = scrollAreaRef.current
+    if (!root) return null
+    return root.querySelector<HTMLElement>('[data-radix-scroll-area-viewport]')
+  }
+
+  // Track whether user is near the bottom to avoid jumpy scrolls while reading history
   useEffect(() => {
-    console.log('[ConversationView] Auto-scroll triggered, messages:', messages.length)
-    if (messages.length > 0 && messagesEndRef.current) {
-      console.log('[ConversationView] Scrolling to bottom')
+    const viewport = getViewport()
+    if (!viewport) return
+
+    const handleScroll = () => {
+      const distanceFromBottom = viewport.scrollHeight - (viewport.scrollTop + viewport.clientHeight)
+      isNearBottomRef.current = distanceFromBottom < 120
+    }
+
+    handleScroll()
+    viewport.addEventListener('scroll', handleScroll, { passive: true })
+    return () => {
+      viewport.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
+  // Reset auto-scroll state when switching conversations
+  useEffect(() => {
+    didInitialScrollRef.current = false
+  }, [conversation.id])
+
+  // Auto-scroll to bottom on initial load, and only when user is near bottom afterward
+  useEffect(() => {
+    if (messages.length === 0 || !messagesEndRef.current) return
+
+    if (!didInitialScrollRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'auto' })
+      didInitialScrollRef.current = true
+      return
+    }
+
+    if (isNearBottomRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
   }, [messages])
@@ -290,7 +326,7 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
         </div>
       </header>
 
-      <ScrollArea className="flex-1 min-h-0 bg-muted/20">
+      <ScrollArea ref={scrollAreaRef} className="flex-1 min-h-0 bg-muted/20">
         <div className="px-4 py-6 md:px-8">
           {isLoading ? (
             <MessageSkeleton count={3} />
@@ -477,5 +513,4 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
     </div>
   )
 }
-
 
