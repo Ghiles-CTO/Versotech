@@ -156,6 +156,7 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 - [ ] Log all matches to `blacklist_matches` table
 - [ ] Generate compliance alert (from Uma) when match found
 - [ ] Typecheck passes
+  - Status: hooks are live and logging matches on insert; blocking + alerts still pending.
 
 ---
 
