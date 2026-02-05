@@ -190,14 +190,15 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 **Description:** As CEO, I want to view all investor and deal risk profiles so I can assess compliance exposure.
 
 **Acceptance Criteria:**
-- [ ] Table showing: Investor/Deal Name, Country, Risk Grade (with color badge), Last Calculated, View Details
-- [ ] Filter by risk grade (A1, A2, A3, A4, B, C, D, E)
-- [ ] Filter by entity type (investor/deal)
-- [ ] Sort by risk grade (highest first by default)
+- [x] Table showing: Investor/Deal Name, Country, Risk Grade (with color badge), Last Calculated, View Details
+- [x] Filter by risk grade (A1, A2, A3, A4, B, C, D, E)
+- [x] Filter by entity type (investor/deal)
+- [x] Sort by risk grade (highest first by default)
 - [ ] Click row to see calculation breakdown
-- [ ] Manual "Recalculate" button to refresh score
-- [ ] Typecheck passes
-- [ ] Verify in browser using agent-browser skill
+- [x] Manual "Recalculate" button to refresh score
+- [x] Typecheck passes
+- [x] Verify in browser using agent-browser skill
+  - Progress: Risk Profiles section now live on `/versotech_admin/agents`, sorted by highest risk points first. Includes filters + recalc action; breakdown drill-down still pending.
 
 ---
 

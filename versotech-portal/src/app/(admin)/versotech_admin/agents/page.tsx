@@ -127,10 +127,64 @@ type KycRow = {
   user_id: string | null
 }
 
+type RiskGradeRow = {
+  code: string
+  label: string | null
+  points: number | null
+  color: string | null
+  sort_order: number | null
+}
+
+type InvestorRiskProfileRow = {
+  investor_id: string
+  country_risk_grade: string | null
+  country_points: number | null
+  pep_risk_points: number | null
+  sanctions_risk_points: number | null
+  total_risk_points: number | null
+  composite_risk_grade: string | null
+  calculated_at: string | null
+  calculation_inputs: Record<string, any> | null
+}
+
+type DealRiskProfileRow = {
+  deal_id: string
+  country_risk_grade: string | null
+  industry_risk_grade: string | null
+  investment_type_risk_grade: string | null
+  total_risk_points: number | null
+  composite_risk_grade: string | null
+  calculated_at: string | null
+}
+
+type RiskRow = {
+  id: string
+  risk_type: 'investor' | 'deal'
+  name: string
+  country: string | null
+  sector: string | null
+  investment_type: string | null
+  grade_code: string | null
+  grade_label: string | null
+  points: number | null
+  calculated_at: string | null
+}
+
 const severityStyles: Record<BlacklistEntry['severity'], string> = {
   warning: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-300',
   blocked: 'bg-orange-500/10 text-orange-700 dark:text-orange-300',
   banned: 'bg-red-500/10 text-red-700 dark:text-red-300',
+}
+
+const riskGradeStyles: Record<string, string> = {
+  A1: 'bg-emerald-700/15 text-emerald-800 dark:text-emerald-300',
+  A2: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+  A3: 'bg-green-500/10 text-green-700 dark:text-green-300',
+  A4: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-300',
+  B: 'bg-orange-500/10 text-orange-700 dark:text-orange-300',
+  C: 'bg-red-500/10 text-red-700 dark:text-red-300',
+  D: 'bg-rose-700/15 text-rose-800 dark:text-rose-300',
+  E: 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900',
 }
 
 const matchTypeLabels: Record<string, string> = {
@@ -192,6 +246,15 @@ function pickFirst(...values: Array<string | null | undefined>) {
     if (value && value.trim().length) return value
   }
   return null
+}
+
+function resolveInvestorCountry(record: Record<string, any> | null | undefined) {
+  if (!record) return null
+  const type = typeof record.type === 'string' ? record.type.toLowerCase() : ''
+  if (type === 'individual') {
+    return pickFirst(record.residential_country, record.tax_residency, record.country)
+  }
+  return pickFirst(record.country_of_incorporation, record.registered_country, record.country)
 }
 
 function daysUntil(dateValue?: string | null) {
@@ -276,6 +339,9 @@ export default async function AgentsPage({
     { data: blacklistMatchesData },
     { data: blacklistAllMatchesData },
     { data: selectedEntryMatchesData },
+    { data: riskGradesData },
+    { data: investorRiskProfilesData },
+    { data: dealRiskProfilesData },
   ] = await Promise.all([
     supabase
       .from('ai_agents')
@@ -309,6 +375,24 @@ export default async function AgentsPage({
           .order('matched_at', { ascending: false })
           .limit(50)
       : Promise.resolve({ data: [] }),
+    supabase
+      .from('risk_grades')
+      .select('code, label, points, color, sort_order')
+      .order('sort_order', { ascending: true }),
+    supabase
+      .from('investor_risk_profiles_current')
+      .select(
+        'investor_id, country_risk_grade, country_points, pep_risk_points, sanctions_risk_points, total_risk_points, composite_risk_grade, calculated_at, calculation_inputs'
+      )
+      .order('calculated_at', { ascending: false })
+      .limit(500),
+    supabase
+      .from('deal_risk_profiles')
+      .select(
+        'deal_id, country_risk_grade, industry_risk_grade, investment_type_risk_grade, total_risk_points, composite_risk_grade, calculated_at'
+      )
+      .order('calculated_at', { ascending: false })
+      .limit(500),
   ])
 
   const agents: AgentRow[] = agentsData ?? []
@@ -317,6 +401,9 @@ export default async function AgentsPage({
   const blacklistMatches: BlacklistMatch[] = blacklistMatchesData ?? []
   const allBlacklistMatches = blacklistAllMatchesData ?? []
   const selectedEntryMatches = selectedEntryMatchesData ?? []
+  const riskGrades: RiskGradeRow[] = riskGradesData ?? []
+  const investorRiskProfiles: InvestorRiskProfileRow[] = investorRiskProfilesData ?? []
+  const dealRiskProfilesRaw: DealRiskProfileRow[] = dealRiskProfilesData ?? []
 
   const { data: kycSubmissionsData } = await supabase
     .from('kyc_submissions')
@@ -494,6 +581,60 @@ export default async function AgentsPage({
       .order('created_at', { ascending: false })
       .limit(500),
   ])
+
+  const riskGradeMap = new Map<string, RiskGradeRow>()
+  riskGrades.forEach((grade) => {
+    if (grade.code) {
+      riskGradeMap.set(grade.code, grade)
+    }
+  })
+
+  const latestDealRiskMap = new Map<string, DealRiskProfileRow>()
+  dealRiskProfilesRaw.forEach((profile) => {
+    if (!profile.deal_id) return
+    if (!latestDealRiskMap.has(profile.deal_id)) {
+      latestDealRiskMap.set(profile.deal_id, profile)
+    }
+  })
+
+  const dealRiskProfiles = Array.from(latestDealRiskMap.values())
+
+  const riskInvestorIds = new Set<string>()
+  investorRiskProfiles.forEach((profile) => {
+    if (profile.investor_id) riskInvestorIds.add(profile.investor_id)
+  })
+
+  const riskDealIds = new Set<string>()
+  dealRiskProfiles.forEach((profile) => {
+    if (profile.deal_id) riskDealIds.add(profile.deal_id)
+  })
+
+  const [
+    { data: riskInvestorsData },
+    { data: riskDealsData },
+  ] = await Promise.all([
+    fetchByIds(
+      'investors',
+      'id, legal_name, display_name, representative_name, first_name, middle_name, last_name, name_suffix, type, residential_country, tax_residency, country, country_of_incorporation, registered_country',
+      riskInvestorIds
+    ),
+    fetchByIds(
+      'deals',
+      'id, name, location, sector, stock_type, deal_type, vehicle_id',
+      riskDealIds
+    ),
+  ])
+
+  const riskVehicleIds = new Set<string>()
+  ;(riskDealsData ?? []).forEach((deal) => {
+    if (deal.vehicle_id) riskVehicleIds.add(deal.vehicle_id as string)
+  })
+
+  const { data: riskVehiclesData } = await fetchByIds(
+    'vehicles',
+    'id, type',
+    riskVehicleIds
+  )
 
   const tasksByAgent = assignments.reduce<Record<string, TaskRow[]>>((acc, task) => {
     if (!acc[task.agent_id]) acc[task.agent_id] = []
@@ -890,6 +1031,95 @@ export default async function AgentsPage({
     arranger_member: 'Arranger Member',
   }
 
+  const riskInvestorMap = new Map<string, Record<string, any>>()
+  ;(riskInvestorsData ?? []).forEach((record) => {
+    if (record?.id) {
+      riskInvestorMap.set(record.id as string, record as Record<string, any>)
+    }
+  })
+
+  const riskDealMap = new Map<string, Record<string, any>>()
+  ;(riskDealsData ?? []).forEach((record) => {
+    if (record?.id) {
+      riskDealMap.set(record.id as string, record as Record<string, any>)
+    }
+  })
+
+  const vehicleTypeMap = new Map<string, string>()
+  ;(riskVehiclesData ?? []).forEach((record) => {
+    if (record?.id && record?.type) {
+      vehicleTypeMap.set(record.id as string, record.type as string)
+    }
+  })
+
+  const riskRows: RiskRow[] = []
+
+  investorRiskProfiles.forEach((profile) => {
+    if (!profile.investor_id) return
+    const investor = riskInvestorMap.get(profile.investor_id)
+    const name = pickFirst(
+      investor?.legal_name,
+      investor?.display_name,
+      investor?.representative_name,
+      formatPersonName(investor || {})
+    )
+    const gradeInfo = profile.composite_risk_grade
+      ? riskGradeMap.get(profile.composite_risk_grade)
+      : null
+    riskRows.push({
+      id: profile.investor_id,
+      risk_type: 'investor',
+      name: name || 'Unknown Investor',
+      country: resolveInvestorCountry(investor),
+      sector: null,
+      investment_type: null,
+      grade_code: profile.composite_risk_grade,
+      grade_label: gradeInfo?.label ?? null,
+      points: profile.total_risk_points ?? null,
+      calculated_at: profile.calculated_at ?? null,
+    })
+  })
+
+  dealRiskProfiles.forEach((profile) => {
+    if (!profile.deal_id) return
+    const deal = riskDealMap.get(profile.deal_id)
+    const vehicleType = deal?.vehicle_id ? vehicleTypeMap.get(deal.vehicle_id as string) : null
+    const investmentType = pickFirst(vehicleType, deal?.stock_type, deal?.deal_type)
+    const gradeInfo = profile.composite_risk_grade
+      ? riskGradeMap.get(profile.composite_risk_grade)
+      : null
+    riskRows.push({
+      id: profile.deal_id,
+      risk_type: 'deal',
+      name: (deal?.name as string | undefined) || 'Unknown Deal',
+      country: (deal?.location as string | undefined) || null,
+      sector: (deal?.sector as string | undefined) || null,
+      investment_type: investmentType,
+      grade_code: profile.composite_risk_grade,
+      grade_label: gradeInfo?.label ?? null,
+      points: profile.total_risk_points ?? null,
+      calculated_at: profile.calculated_at ?? null,
+    })
+  })
+
+  const riskCounts = riskRows.reduce(
+    (acc, row) => {
+      acc.total += 1
+      const grade = row.grade_code
+      if (!grade) {
+        acc.pending += 1
+      } else if (['C', 'D', 'E'].includes(grade)) {
+        acc.high += 1
+      } else if (['B', 'A4'].includes(grade)) {
+        acc.elevated += 1
+      } else {
+        acc.low += 1
+      }
+      return acc
+    },
+    { total: 0, high: 0, elevated: 0, low: 0, pending: 0 }
+  )
+
   type SeverityKey = 'warning' | 'blocked' | 'banned'
   type BlacklistCounts = { total: number } & Record<SeverityKey, number>
 
@@ -929,6 +1159,12 @@ export default async function AgentsPage({
     typeof resolvedSearchParams.kyc_status === 'string' ? resolvedSearchParams.kyc_status : 'all'
   const kycPersonaFilter =
     typeof resolvedSearchParams.kyc_persona === 'string' ? resolvedSearchParams.kyc_persona : 'all'
+  const riskQuery =
+    typeof resolvedSearchParams.risk_query === 'string' ? normalizeQuery(resolvedSearchParams.risk_query) : ''
+  const riskTypeFilter =
+    typeof resolvedSearchParams.risk_type === 'string' ? resolvedSearchParams.risk_type : 'all'
+  const riskGradeFilter =
+    typeof resolvedSearchParams.risk_grade === 'string' ? resolvedSearchParams.risk_grade : 'all'
   const baseParams = new URLSearchParams()
   if (query) baseParams.set('query', query)
   if (severityFilter !== 'all') baseParams.set('severity', severityFilter)
@@ -936,6 +1172,9 @@ export default async function AgentsPage({
   if (kycQuery) baseParams.set('kyc_query', kycQuery)
   if (kycStatusFilter !== 'all') baseParams.set('kyc_status', kycStatusFilter)
   if (kycPersonaFilter !== 'all') baseParams.set('kyc_persona', kycPersonaFilter)
+  if (riskQuery) baseParams.set('risk_query', riskQuery)
+  if (riskTypeFilter !== 'all') baseParams.set('risk_type', riskTypeFilter)
+  if (riskGradeFilter !== 'all') baseParams.set('risk_grade', riskGradeFilter)
   const baseQueryString = baseParams.toString()
   const baseHref = baseQueryString ? `/versotech_admin/agents?${baseQueryString}` : '/versotech_admin/agents'
   const modalHref = `${baseHref}${baseQueryString ? '&' : '?'}mode=new`
@@ -945,6 +1184,34 @@ export default async function AgentsPage({
     if (statusFilter !== 'all' && entry.status !== statusFilter) return false
     if (!matchQuery(entry, query)) return false
     return true
+  })
+
+  const riskGradeOptions = riskGrades.filter((grade) => Boolean(grade.code))
+  const filteredRiskRows = riskRows.filter((row) => {
+    if (riskTypeFilter !== 'all' && row.risk_type !== riskTypeFilter) return false
+    if (riskGradeFilter !== 'all' && row.grade_code !== riskGradeFilter) return false
+    if (riskQuery) {
+      const haystack = [
+        row.name,
+        row.country,
+        row.sector,
+        row.investment_type,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      if (!haystack.includes(riskQuery)) return false
+    }
+    return true
+  })
+
+  const sortedRiskRows = [...filteredRiskRows].sort((a, b) => {
+    const aPoints = typeof a.points === 'number' ? a.points : -1
+    const bPoints = typeof b.points === 'number' ? b.points : -1
+    if (aPoints !== bPoints) return bPoints - aPoints
+    const aTime = a.calculated_at ? new Date(a.calculated_at).getTime() : 0
+    const bTime = b.calculated_at ? new Date(b.calculated_at).getTime() : 0
+    return bTime - aTime
   })
 
   const filteredKycRows = kycRows.filter((row) => {
@@ -1054,6 +1321,46 @@ export default async function AgentsPage({
     }
 
     redirect('/versotech_admin/agents?success=Blacklist%20entry%20updated')
+  }
+
+  const recalculateRiskProfile = async (formData: FormData) => {
+    'use server'
+    const currentUser = await getCurrentUser()
+    if (!currentUser) {
+      redirect('/versotech_main/login')
+    }
+    const isAllowed = currentUser.role === 'ceo' || currentUser.permissions?.includes('super_admin')
+    if (!isAllowed) {
+      redirect('/versotech_admin/agents?error=Not%20authorized')
+    }
+
+    const riskType = formData.get('risk_type')
+    const targetId = formData.get('target_id')
+    const returnTo = formData.get('return_to')
+
+    if (typeof riskType !== 'string' || typeof targetId !== 'string' || !targetId) {
+      redirect('/versotech_admin/agents?error=Invalid%20risk%20target')
+    }
+
+    const supabase = createServiceClient()
+    const rpcName = riskType === 'deal' ? 'calculate_deal_risk' : 'calculate_investor_risk'
+    const rpcArgs =
+      riskType === 'deal' ? { p_deal_id: targetId } : { p_investor_id: targetId }
+
+    const { error } = (await supabase.rpc(rpcName, rpcArgs)) as unknown as { error?: { message?: string } }
+    const redirectTarget =
+      typeof returnTo === 'string' && returnTo.length ? returnTo : '/versotech_admin/agents'
+    const separator = redirectTarget.includes('?') ? '&' : '?'
+
+    if (error) {
+      redirect(
+        `${redirectTarget}${separator}error=${encodeURIComponent(
+          error.message || 'Failed to recalculate risk'
+        )}`
+      )
+    }
+
+    redirect(`${redirectTarget}${separator}success=Risk%20recalculated`)
   }
 
   const sendKycReminders = async (formData: FormData) => {
@@ -1360,6 +1667,202 @@ export default async function AgentsPage({
 
       <section className="space-y-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <AlertTriangle className="h-4 w-4" />
+          <span>Risk Profiles</span>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Risk Profiles</CardTitle>
+            <CardDescription>
+              Investor and deal risk scores from the risk matrix. Scores do not block workflows.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-3 md:grid-cols-5">
+              <div className="rounded-lg border border-muted/60 p-3 text-sm">
+                <div className="text-muted-foreground">Total profiles</div>
+                <div className="text-lg font-semibold">{riskCounts.total}</div>
+              </div>
+              <div className="rounded-lg border border-muted/60 p-3 text-sm">
+                <div className="text-muted-foreground">High risk</div>
+                <div className="text-lg font-semibold">{riskCounts.high}</div>
+              </div>
+              <div className="rounded-lg border border-muted/60 p-3 text-sm">
+                <div className="text-muted-foreground">Elevated</div>
+                <div className="text-lg font-semibold">{riskCounts.elevated}</div>
+              </div>
+              <div className="rounded-lg border border-muted/60 p-3 text-sm">
+                <div className="text-muted-foreground">Low risk</div>
+                <div className="text-lg font-semibold">{riskCounts.low}</div>
+              </div>
+              <div className="rounded-lg border border-muted/60 p-3 text-sm">
+                <div className="text-muted-foreground">Pending</div>
+                <div className="text-lg font-semibold">{riskCounts.pending}</div>
+              </div>
+            </div>
+
+            <form className="grid gap-3 lg:grid-cols-[1.2fr_0.6fr_0.6fr_auto]">
+              <input type="hidden" name="query" value={query} />
+              <input type="hidden" name="severity" value={severityFilter} />
+              <input type="hidden" name="status" value={statusFilter} />
+              <input type="hidden" name="kyc_query" value={kycQuery} />
+              <input type="hidden" name="kyc_status" value={kycStatusFilter} />
+              <input type="hidden" name="kyc_persona" value={kycPersonaFilter} />
+              <div>
+                <label className="text-xs text-muted-foreground">Search</label>
+                <input
+                  type="text"
+                  name="risk_query"
+                  defaultValue={riskQuery}
+                  placeholder="Name, country, sector..."
+                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Type</label>
+                <select
+                  name="risk_type"
+                  defaultValue={riskTypeFilter}
+                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="all">All</option>
+                  <option value="investor">Investors</option>
+                  <option value="deal">Deals</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Grade</label>
+                <select
+                  name="risk_grade"
+                  defaultValue={riskGradeFilter}
+                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="all">All</option>
+                  {riskGradeOptions.map((grade) => (
+                    <option key={grade.code} value={grade.code}>
+                      {grade.code} {grade.label ? `- ${grade.label}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-end">
+                <button
+                  type="submit"
+                  className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </form>
+
+            <div className="overflow-x-auto rounded-lg border border-muted/60">
+              <table className="min-w-full text-sm">
+                <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
+                  <tr>
+                    <th className="px-3 py-2 text-left">Type</th>
+                    <th className="px-3 py-2 text-left">Name</th>
+                    <th className="px-3 py-2 text-left">Country / Location</th>
+                    <th className="px-3 py-2 text-left">Sector</th>
+                    <th className="px-3 py-2 text-left">Investment Type</th>
+                    <th className="px-3 py-2 text-left">Risk Grade</th>
+                    <th className="px-3 py-2 text-left">Points</th>
+                    <th className="px-3 py-2 text-left">Last Calculated</th>
+                    <th className="px-3 py-2 text-left">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedRiskRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="px-4 py-6 text-center text-sm text-muted-foreground">
+                        No risk profiles match your filters.
+                      </td>
+                    </tr>
+                  ) : (
+                    sortedRiskRows.map((row) => {
+                      const detailHref =
+                        row.risk_type === 'investor'
+                          ? `/versotech_main/investors/${row.id}`
+                          : `/versotech_main/deals/${row.id}`
+                      const gradeStyle = row.grade_code ? riskGradeStyles[row.grade_code] : ''
+                      return (
+                        <tr key={`${row.risk_type}-${row.id}`} className="border-t">
+                          <td className="px-3 py-3">
+                            <Badge variant="outline" className="text-xs capitalize">
+                              {row.risk_type}
+                            </Badge>
+                          </td>
+                          <td className="px-3 py-3">
+                            <div className="font-medium text-foreground">{row.name}</div>
+                          </td>
+                          <td className="px-3 py-3 text-muted-foreground">
+                            {row.country || '—'}
+                          </td>
+                          <td className="px-3 py-3 text-muted-foreground">
+                            {row.sector || '—'}
+                          </td>
+                          <td className="px-3 py-3 text-muted-foreground">
+                            {row.investment_type || '—'}
+                          </td>
+                          <td className="px-3 py-3">
+                            {row.grade_code ? (
+                              <span
+                                className={cn(
+                                  'rounded-md px-2 py-0.5 text-xs font-medium',
+                                  gradeStyle || 'bg-muted text-muted-foreground'
+                                )}
+                              >
+                                {row.grade_code}
+                              </span>
+                            ) : (
+                              <span className="rounded-md border border-input px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                                Pending
+                              </span>
+                            )}
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {row.grade_label || 'Not yet calculated'}
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 text-muted-foreground">
+                            {row.points ?? '—'}
+                          </td>
+                          <td className="px-3 py-3 text-muted-foreground">
+                            {formatDate(row.calculated_at)}
+                          </td>
+                          <td className="px-3 py-3">
+                            <div className="flex flex-wrap gap-2">
+                              <a
+                                href={detailHref}
+                                className="rounded-md border border-input px-2 py-1 text-xs font-medium"
+                              >
+                                View
+                              </a>
+                              <form action={recalculateRiskProfile}>
+                                <input type="hidden" name="risk_type" value={row.risk_type} />
+                                <input type="hidden" name="target_id" value={row.id} />
+                                <input type="hidden" name="return_to" value={baseHref} />
+                                <button
+                                  type="submit"
+                                  className="rounded-md border border-input px-2 py-1 text-xs font-medium"
+                                >
+                                  Recalculate
+                                </button>
+                              </form>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <ShieldAlert className="h-4 w-4" />
           <span>Blacklist Alerts</span>
         </div>
@@ -1469,6 +1972,12 @@ export default async function AgentsPage({
             )}
 
             <form className="grid gap-3 lg:grid-cols-[1.2fr_0.6fr_0.6fr_auto]">
+              <input type="hidden" name="kyc_query" value={kycQuery} />
+              <input type="hidden" name="kyc_status" value={kycStatusFilter} />
+              <input type="hidden" name="kyc_persona" value={kycPersonaFilter} />
+              <input type="hidden" name="risk_query" value={riskQuery} />
+              <input type="hidden" name="risk_type" value={riskTypeFilter} />
+              <input type="hidden" name="risk_grade" value={riskGradeFilter} />
               <div>
                 <label className="text-xs text-muted-foreground">Search</label>
                 <input
@@ -1671,6 +2180,9 @@ export default async function AgentsPage({
               <input type="hidden" name="query" value={query} />
               <input type="hidden" name="severity" value={severityFilter} />
               <input type="hidden" name="status" value={statusFilter} />
+              <input type="hidden" name="risk_query" value={riskQuery} />
+              <input type="hidden" name="risk_type" value={riskTypeFilter} />
+              <input type="hidden" name="risk_grade" value={riskGradeFilter} />
               <div>
                 <label className="text-xs text-muted-foreground">Search</label>
                 <input
