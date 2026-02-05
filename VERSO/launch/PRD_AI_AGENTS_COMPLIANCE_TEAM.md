@@ -134,14 +134,15 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 **Description:** As Uma (CCO), I want to maintain a blacklist of bad actors so they are blocked from using VERSOTech.
 
 **Acceptance Criteria:**
-- [ ] Create `compliance_blacklist` table: id, email, phone, full_name, entity_name, tax_id, reason, severity (warning/blocked/banned), source, reported_by, reported_at, reviewed_by, reviewed_at, status (active/resolved/false_positive), notes
-- [ ] Create `blacklist_matches` table: blacklist_entry_id, matched_user_id, matched_investor_id, match_type, match_confidence, matched_at, action_taken
-- [ ] Create `screen_against_blacklist(email, name, tax_id)` function that returns matches with confidence scores
+- [x] Create `compliance_blacklist` table: id, email, phone, full_name, entity_name, tax_id, reason, severity (warning/blocked/banned), source, reported_by, reported_at, reviewed_by, reviewed_at, status (active/resolved/false_positive), notes
+- [x] Create `blacklist_matches` table: blacklist_entry_id, matched_user_id, matched_investor_id, match_type, match_confidence, matched_at, action_taken
+- [x] Create `screen_against_blacklist(email, name, tax_id)` function that returns matches with confidence scores
   - Exact match precedence for email/phone/tax_id (highest priority)
   - Exact normalized full_name/entity_name match (secondary)
   - Fuzzy name matching using trigram similarity on normalized names (lowercase, strip punctuation, collapse whitespace) with 0.90 threshold
-- [ ] RLS policies allow CEO to create/edit blacklist entries
+- [x] RLS policies allow CEO to create/edit blacklist entries
 - [ ] Typecheck passes
+  - Note: normalization currently lowercases + strips non-alphanumerics (no accent folding).
 
 ---
 
