@@ -179,10 +179,11 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 **Acceptance Criteria:**
 - [ ] Create route `/versotech_admin/agents/compliance/page.tsx`
 - [x] Display 3 agent cards (Uma, Valerie, Wayne) with their assigned tasks (now on `/versotech_admin/agents`)
-- [ ] Show KPI cards: High Risk Investors, Expiring Documents, Blacklist Alerts, Pending Reviews
-- [ ] Tabbed interface: Risk Profiles | Blacklist | KYC Monitor | Activity Log
+- [x] Show KPI cards: High Risk Investors, Expiring Documents, Blacklist Alerts, Pending Reviews
+- [x] Tabbed interface: Risk Profiles | Blacklist | KYC Monitor | Activity Log
 - [ ] Typecheck passes
-- [x] Verify in browser using agent-browser skill
+- [ ] Verify in browser using agent-browser skill
+  - Blocked: agent-browser daemon failed to start in this environment.
 
 ---
 
@@ -194,11 +195,12 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 - [x] Filter by risk grade (A1, A2, A3, A4, B, C, D, E)
 - [x] Filter by entity type (investor/deal)
 - [x] Sort by risk grade (highest first by default)
-- [ ] Click row to see calculation breakdown
+- [x] Click row to see calculation breakdown
 - [x] Manual "Recalculate" button to refresh score
 - [x] Typecheck passes
-- [x] Verify in browser using agent-browser skill
-  - Progress: Risk Profiles section now live on `/versotech_admin/agents`, sorted by highest risk points first. Includes filters + recalc action; breakdown drill-down still pending.
+- [ ] Verify in browser using agent-browser skill
+  - Progress: Risk Profiles section now live on `/versotech_admin/agents`, sorted by highest risk points first. Includes filters + recalc action; row/name click opens breakdown panel.
+  - Blocked: agent-browser daemon failed to start in this environment.
 
 ---
 
