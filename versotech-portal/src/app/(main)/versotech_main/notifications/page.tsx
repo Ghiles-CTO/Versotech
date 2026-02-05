@@ -59,7 +59,7 @@ export default async function NotificationsPage() {
   const complianceAlerts = hasStaffAccess
     ? await serviceSupabase
         .from('compliance_alerts')
-        .select('id, alert_type, severity, description, status, assigned_to, created_at')
+        .select('id, audit_log_id, alert_type, severity, description, status, assigned_to, created_at')
         .eq('status', 'open')
         .order('created_at', { ascending: false })
         .limit(20)
@@ -72,7 +72,7 @@ export default async function NotificationsPage() {
         .select('id, title, description, status, priority, due_at, action_url, owner_user_id')
         .eq('category', 'compliance')
         .in('status', ['pending', 'in_progress'])
-        .order('due_at', { ascending: true, nullsLast: true })
+        .order('due_at', { ascending: true, nullsFirst: false })
         .limit(30)
         .then(({ data }) => data || [])
     : []

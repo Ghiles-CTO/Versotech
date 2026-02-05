@@ -80,7 +80,7 @@ export async function PATCH(request: Request) {
           .eq('id', task.related_deal_id)
           .single()
 
-        hasPermission = deal && arrangerIds.includes(deal.arranger_entity_id)
+        hasPermission = !!(deal && arrangerIds.includes(deal.arranger_entity_id))
       }
     }
 

@@ -51,6 +51,7 @@ interface Notification {
 
 interface ComplianceAlert {
   id: string
+  audit_log_id: string | null
   alert_type: string
   severity: string
   description: string | null
