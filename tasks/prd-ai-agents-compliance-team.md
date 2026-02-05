@@ -16,7 +16,7 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 ## Goals
 
 - Implement all 9 Compliance Team agent tasks as defined in the "VERSOTECH - AI AGENTS" PDF
-- Import and operationalize the Risk Profile System from Excel (159 countries, 11 industries, 64 investment types)
+- Import and operationalize the Risk Profile System from Excel (159 countries, 11 industries, 53 investment types)
 - Create a dedicated "Agents" section in the admin portal for CEO visibility
 - Allow CEO to configure which agent handles which task type
 - Replace generic system notifications with agent-branded communications
@@ -71,16 +71,17 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 **Description:** As a compliance system, I need the risk scoring data so I can calculate investor and deal risk grades.
 
 **Acceptance Criteria:**
-- [ ] Create `risk_grades` table: code (A1-E), label, points (0-20), color, sort_order
-- [ ] Create `country_risks` table: country_code (ISO-3166-1 alpha-2), country_name, country_risk_grade, business_climate_grade
-- [ ] Create `industry_risks` table: sector_code, sector_name, risk_grade
-- [ ] Create `investment_type_risks` table: investment_type, category, key_risk_drivers, risk_grade
-- [ ] Seed all 8 risk grades from Excel
-- [ ] Seed all countries listed in Excel (159) with their risk ratings
-- [ ] Map Excel country names to ISO-3166-1 alpha-2 codes; store name even if code is missing and flag for manual review
-- [ ] Seed all 11 GICS sectors with their risk ratings from Excel
-- [ ] Seed all 64 investment types with their risk ratings from Excel
-- [ ] Do not add new fields to existing profiles; store normalized country_code inside risk profile records
+- [x] Create `risk_grades` table: code (A1-E), label, points (0-20), color, sort_order
+- [x] Create `country_risks` table: country_code (ISO-3166-1 alpha-2), country_name, country_risk_grade, business_climate_grade
+- [x] Create `industry_risks` table: sector_code, sector_name, risk_grade
+- [x] Create `investment_type_risks` table: investment_type, category, key_risk_drivers, risk_grade
+- [x] Seed all 8 risk grades from Excel
+- [x] Seed all countries listed in Excel (159) with their risk ratings
+- [x] Map Excel country names to ISO-3166-1 alpha-2 codes; store name even if code is missing and flag for manual review
+- [x] Seed all 11 GICS sectors with their risk ratings from Excel
+- [x] Seed all 53 investment types with their risk ratings from Excel
+- [x] If a risk grade is a range (e.g., A1–A2), store the original range and normalize to the higher risk grade for scoring
+- [x] Do not add new fields to existing profiles; store normalized country_code inside risk profile records
 - [ ] Typecheck passes
 
 ---
@@ -367,7 +368,7 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 - FR-4b: If an assigned agent is inactive, route to a fallback agent (default: Uma) or mark unassigned and alert CEO
 
 ### Risk Profile System
-- FR-5: System must store risk scoring matrices for countries (159), industries (11), and investment types (64)
+- FR-5: System must store risk scoring matrices for countries (159), industries (11), and investment types (53)
 - FR-6: System must calculate composite risk grade for each investor based on country + PEP status + sanctions status
 - FR-7: System must calculate composite risk grade for each deal based on country + industry + investment type
 - FR-8: Risk profiles must auto-recalculate when underlying data changes
@@ -546,8 +547,8 @@ composite_grade = (same mapping as above)
 | United Kingdom | A3 | A1 |
 | Germany | A3 | A1 |
 
-### Investment Types (64 total)
-Stored as Investment Type + Key Risk Drivers + Risk Grade from Excel.
+### Investment Types (53 total)
+Stored as Investment Type + Key Risk Drivers + Risk Grade from Excel. Risk ranges are preserved and normalized to the higher risk grade for scoring.
 | France | A3 | A1 |
 | UAE | A2 | A2 |
 | Brazil | B | A4 |
