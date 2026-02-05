@@ -207,11 +207,11 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 **Acceptance Criteria:**
 - [ ] Table showing: Name/Email, Severity, Reason, Reported By, Date, Status, Actions
 - [ ] "Add to Blacklist" button opens modal with fields: name, email, entity, reason, severity
-- [ ] Edit existing entry (change severity, add notes, change status)
-- [ ] View match history for each entry
+- [x] Edit existing entry (change severity, add notes, change status)
+- [x] View match history for each entry
 - [x] Filter by status (active/resolved/false_positive) and severity
 - [ ] Typecheck passes
-  - Progress: read-only blacklist entries list is live in `/versotech_admin/agents` with filters + match counts (no add/edit yet).
+  - Progress: add/edit forms + match history are live on `/versotech_admin/agents`; “Add to Blacklist” still uses inline form (modal pending).
 - [ ] Verify in browser using agent-browser skill
 
 ---

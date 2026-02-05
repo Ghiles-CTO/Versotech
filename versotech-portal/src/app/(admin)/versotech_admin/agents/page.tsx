@@ -41,6 +41,7 @@ type BlacklistEntry = {
   status: 'active' | 'resolved' | 'false_positive'
   reported_at: string | null
   reported_by: string | null
+  notes?: string | null
 }
 
 type BlacklistMatchEntry = {
@@ -137,6 +138,17 @@ export default async function AgentsPage({
 }: {
   searchParams?: Record<string, string | string[] | undefined>
 }) {
+  const getParam = (key: string) => {
+    const value = searchParams?.[key]
+    return typeof value === 'string' ? value : ''
+  }
+
+  const mode = getParam('mode')
+  const editId = getParam('edit')
+  const selectedEntryId = getParam('entry')
+  const errorMessage = getParam('error')
+  const successMessage = getParam('success')
+
   const user = await getCurrentUser()
   if (!user) {
     redirect('/versotech_main/login')
@@ -166,6 +178,7 @@ export default async function AgentsPage({
     { data: blacklistEntriesData },
     { data: blacklistMatchesData },
     { data: blacklistAllMatchesData },
+    { data: selectedEntryMatchesData },
   ] = await Promise.all([
     supabase
       .from('ai_agents')
@@ -177,7 +190,7 @@ export default async function AgentsPage({
       .order('task_code', { ascending: true }),
     supabase
       .from('compliance_blacklist')
-      .select('id, severity, status, reason, full_name, entity_name, email, phone, tax_id, reported_at, reported_by')
+      .select('id, severity, status, reason, full_name, entity_name, email, phone, tax_id, reported_at, reported_by, notes')
       .order('reported_at', { ascending: false }),
     supabase
       .from('blacklist_matches')
@@ -191,6 +204,14 @@ export default async function AgentsPage({
       .select('id, blacklist_entry_id, matched_at')
       .order('matched_at', { ascending: false })
       .limit(500),
+    selectedEntryId
+      ? supabase
+          .from('blacklist_matches')
+          .select('id, match_type, match_confidence, matched_at')
+          .eq('blacklist_entry_id', selectedEntryId)
+          .order('matched_at', { ascending: false })
+          .limit(50)
+      : Promise.resolve({ data: [] }),
   ])
 
   const agents: AgentRow[] = agentsData ?? []
@@ -198,6 +219,7 @@ export default async function AgentsPage({
   const blacklistEntries: BlacklistEntry[] = blacklistEntriesData ?? []
   const blacklistMatches: BlacklistMatch[] = blacklistMatchesData ?? []
   const allBlacklistMatches = blacklistAllMatchesData ?? []
+  const selectedEntryMatches = selectedEntryMatchesData ?? []
 
   const tasksByAgent = assignments.reduce<Record<string, TaskRow[]>>((acc, task) => {
     if (!acc[task.agent_id]) acc[task.agent_id] = []
@@ -245,6 +267,104 @@ export default async function AgentsPage({
     if (!matchQuery(entry, query)) return false
     return true
   })
+
+  const editEntry = editId ? blacklistEntries.find((entry) => entry.id === editId) : null
+  const entryToShowMatches = selectedEntryId
+    ? blacklistEntries.find((entry) => entry.id === selectedEntryId)
+    : null
+
+  const createBlacklistEntry = async (formData: FormData) => {
+    'use server'
+    const currentUser = await getCurrentUser()
+    if (!currentUser) {
+      redirect('/versotech_main/login')
+    }
+    const isAllowed = currentUser.role === 'ceo' || currentUser.permissions?.includes('super_admin')
+    if (!isAllowed) {
+      redirect('/versotech_admin/agents?error=Not%20authorized')
+    }
+
+    const readText = (key: string) => {
+      const value = formData.get(key)
+      if (typeof value !== 'string') return null
+      const trimmed = value.trim()
+      return trimmed.length ? trimmed : null
+    }
+
+    const severity = (readText('severity') || 'warning') as BlacklistEntry['severity']
+    const status = (readText('status') || 'active') as BlacklistEntry['status']
+
+    const { error } = await createServiceClient()
+      .from('compliance_blacklist')
+      .insert({
+        full_name: readText('full_name'),
+        entity_name: readText('entity_name'),
+        email: readText('email'),
+        phone: readText('phone'),
+        tax_id: readText('tax_id'),
+        reason: readText('reason'),
+        notes: readText('notes'),
+        severity,
+        status,
+        reported_by: currentUser.id,
+      })
+
+    if (error) {
+      redirect(`/versotech_admin/agents?error=${encodeURIComponent('Failed to create blacklist entry')}`)
+    }
+
+    redirect('/versotech_admin/agents?success=Blacklist%20entry%20created')
+  }
+
+  const updateBlacklistEntry = async (formData: FormData) => {
+    'use server'
+    const currentUser = await getCurrentUser()
+    if (!currentUser) {
+      redirect('/versotech_main/login')
+    }
+    const isAllowed = currentUser.role === 'ceo' || currentUser.permissions?.includes('super_admin')
+    if (!isAllowed) {
+      redirect('/versotech_admin/agents?error=Not%20authorized')
+    }
+
+    const entryId = formData.get('entry_id')
+    if (typeof entryId !== 'string' || !entryId) {
+      redirect('/versotech_admin/agents?error=Invalid%20entry')
+    }
+
+    const readText = (key: string) => {
+      const value = formData.get(key)
+      if (typeof value !== 'string') return null
+      const trimmed = value.trim()
+      return trimmed.length ? trimmed : null
+    }
+
+    const severity = (readText('severity') || 'warning') as BlacklistEntry['severity']
+    const status = (readText('status') || 'active') as BlacklistEntry['status']
+
+    const { error } = await createServiceClient()
+      .from('compliance_blacklist')
+      .update({
+        full_name: readText('full_name'),
+        entity_name: readText('entity_name'),
+        email: readText('email'),
+        phone: readText('phone'),
+        tax_id: readText('tax_id'),
+        reason: readText('reason'),
+        notes: readText('notes'),
+        severity,
+        status,
+        reviewed_by: currentUser.id,
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq('id', entryId)
+
+    if (error) {
+      redirect(`/versotech_admin/agents?error=${encodeURIComponent('Failed to update blacklist entry')}`)
+    }
+
+    redirect('/versotech_admin/agents?success=Blacklist%20entry%20updated')
+  }
 
   return (
     <div className="p-6 space-y-8">
@@ -452,6 +572,132 @@ export default async function AgentsPage({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {(errorMessage || successMessage) && (
+              <div
+                className={cn(
+                  'rounded-lg border px-4 py-3 text-sm',
+                  errorMessage ? 'border-destructive/40 bg-destructive/5 text-destructive' : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700'
+                )}
+              >
+                {errorMessage || successMessage}
+              </div>
+            )}
+
+            {(mode === 'new' || editEntry) && (
+              <Card className="border border-dashed">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">
+                    {editEntry ? 'Edit Blacklist Entry' : 'Add to Blacklist'}
+                  </CardTitle>
+                  <CardDescription>
+                    {editEntry
+                      ? 'Update severity, status, or details.'
+                      : 'Create a new blacklist entry for compliance review.'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form action={editEntry ? updateBlacklistEntry : createBlacklistEntry} className="grid gap-3 md:grid-cols-2">
+                    {editEntry && <input type="hidden" name="entry_id" value={editEntry.id} />}
+                    <div>
+                      <label className="text-xs text-muted-foreground">Full name</label>
+                      <input
+                        name="full_name"
+                        defaultValue={editEntry?.full_name || ''}
+                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">Entity name</label>
+                      <input
+                        name="entity_name"
+                        defaultValue={editEntry?.entity_name || ''}
+                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">Email</label>
+                      <input
+                        name="email"
+                        defaultValue={editEntry?.email || ''}
+                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">Phone</label>
+                      <input
+                        name="phone"
+                        defaultValue={editEntry?.phone || ''}
+                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">Tax ID</label>
+                      <input
+                        name="tax_id"
+                        defaultValue={editEntry?.tax_id || ''}
+                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">Severity</label>
+                      <select
+                        name="severity"
+                        defaultValue={editEntry?.severity || 'warning'}
+                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="warning">Warning</option>
+                        <option value="blocked">Blocked</option>
+                        <option value="banned">Banned</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">Status</label>
+                      <select
+                        name="status"
+                        defaultValue={editEntry?.status || 'active'}
+                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="active">Active</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="false_positive">False Positive</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">Reason</label>
+                      <input
+                        name="reason"
+                        defaultValue={editEntry?.reason || ''}
+                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="text-xs text-muted-foreground">Notes</label>
+                      <textarea
+                        name="notes"
+                        defaultValue={editEntry?.notes || ''}
+                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        rows={3}
+                      />
+                    </div>
+                    <div className="md:col-span-2 flex items-center gap-3">
+                      <button
+                        type="submit"
+                        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+                      >
+                        {editEntry ? 'Save changes' : 'Create entry'}
+                      </button>
+                      <a
+                        href="/versotech_admin/agents"
+                        className="text-sm text-muted-foreground hover:text-foreground"
+                      >
+                        Cancel
+                      </a>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            )}
+
             <form className="grid gap-3 lg:grid-cols-[1.2fr_0.6fr_0.6fr_auto]">
               <div>
                 <label className="text-xs text-muted-foreground">Search</label>
@@ -490,12 +736,20 @@ export default async function AgentsPage({
                 </select>
               </div>
               <div className="flex items-end">
-                <button
-                  type="submit"
-                  className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-                >
-                  Apply Filters
-                </button>
+                <div className="flex w-full gap-2">
+                  <button
+                    type="submit"
+                    className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+                  >
+                    Apply Filters
+                  </button>
+                  <a
+                    href="/versotech_admin/agents?mode=new"
+                    className="w-full rounded-md border border-input px-4 py-2 text-center text-sm font-medium"
+                  >
+                    Add to Blacklist
+                  </a>
+                </div>
               </div>
             </form>
 
@@ -544,11 +798,66 @@ export default async function AgentsPage({
                           </div>
                           <div>Last match: {matchInfo?.lastMatched ? formatDate(matchInfo.lastMatched) : '—'}</div>
                           <div>Reported: {entry.reported_at ? formatDate(entry.reported_at) : '—'}</div>
+                          <div className="flex flex-wrap gap-2 pt-2">
+                            <a
+                              href={`/versotech_admin/agents?edit=${entry.id}`}
+                              className="rounded-md border border-input px-2 py-1 text-xs font-medium"
+                            >
+                              Edit
+                            </a>
+                            <a
+                              href={`/versotech_admin/agents?entry=${entry.id}`}
+                              className="rounded-md border border-input px-2 py-1 text-xs font-medium"
+                            >
+                              View matches
+                            </a>
+                          </div>
                         </div>
                       </div>
                     </div>
                   )
                 })}
+              </div>
+            )}
+
+            {entryToShowMatches && (
+              <div className="rounded-lg border border-muted/60 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-semibold">Match history</p>
+                    <p className="text-xs text-muted-foreground">
+                      {entryToShowMatches.full_name ||
+                        entryToShowMatches.entity_name ||
+                        entryToShowMatches.email ||
+                        entryToShowMatches.phone ||
+                        entryToShowMatches.tax_id ||
+                        'Unknown'}
+                    </p>
+                  </div>
+                  <a
+                    href="/versotech_admin/agents"
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Clear
+                  </a>
+                </div>
+                <div className="mt-3 space-y-2">
+                  {selectedEntryMatches.length === 0 ? (
+                    <div className="text-xs text-muted-foreground">No matches logged for this entry.</div>
+                  ) : (
+                    selectedEntryMatches.map((match) => (
+                      <div key={match.id} className="rounded-md border border-muted/60 p-3 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span>{matchTypeLabels[match.match_type] || match.match_type}</span>
+                          <span className="text-muted-foreground">{formatDate(match.matched_at)}</span>
+                        </div>
+                        <div className="text-muted-foreground mt-1">
+                          Confidence: {formatConfidence(match.match_confidence) || '—'}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             )}
           </CardContent>
