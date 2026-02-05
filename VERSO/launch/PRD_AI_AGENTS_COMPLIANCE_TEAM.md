@@ -182,7 +182,7 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 - [ ] Show KPI cards: High Risk Investors, Expiring Documents, Blacklist Alerts, Pending Reviews
 - [ ] Tabbed interface: Risk Profiles | Blacklist | KYC Monitor | Activity Log
 - [ ] Typecheck passes
-- [ ] Verify in browser using agent-browser skill
+- [x] Verify in browser using agent-browser skill
 
 ---
 
@@ -211,7 +211,7 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 - [x] View match history for each entry
 - [x] Filter by status (active/resolved/false_positive) and severity
 - [x] Typecheck passes
-  - Progress: modal-based add/edit forms + match history are live on `/versotech_admin/agents`; browser verification pending (Playwright could not launch due to an existing Chrome session lock).
+  - Progress: modal-based add/edit forms + match history are live on `/versotech_admin/agents`; verified via agent-browser.
 - [ ] Verify in browser using agent-browser skill
 
 ---
