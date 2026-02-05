@@ -84,6 +84,18 @@ type EscrowDeal = {
   funded_amount: number
 }
 
+type BankEvidence = {
+  id: string
+  matched_amount: number
+  status: 'pending' | 'verified' | 'discrepancy' | 'ignored'
+  matched_at: string
+  matched_by_email: string | null
+  bank_amount: number
+  bank_counterparty: string | null
+  bank_date: string | null
+  bank_reference: string | null
+}
+
 type PendingSettlement = {
   id: string
   investor_name: string
@@ -97,6 +109,7 @@ type PendingSettlement = {
   funding_due_at: string | null
   status: string
   days_overdue: number
+  bank_evidence?: BankEvidence[]
 }
 
 type FeeEvent = {
@@ -491,6 +504,67 @@ export default function EscrowPage() {
 
       setEscrowDeals(deals)
 
+      // Fetch bank evidence (verification records) for these subscriptions
+      const subscriptionIds = (subscriptions || []).map((s: any) => s.id).filter(Boolean)
+      let bankEvidenceBySubscription: Map<string, BankEvidence[]> = new Map()
+
+      if (subscriptionIds.length > 0) {
+        const { data: verifications, error: verificationsError } = await supabase
+          .from('reconciliation_verifications')
+          .select(`
+            id,
+            subscription_id,
+            matched_amount,
+            status,
+            matched_at,
+            matched_by,
+            bank_transactions (
+              amount,
+              counterparty,
+              value_date,
+              bank_reference
+            )
+          `)
+          .in('subscription_id', subscriptionIds)
+
+        if (!verificationsError && verifications) {
+          // Fetch profiles for matched_by users (profiles.id = auth.users.id by convention, no FK)
+          const matchedByIds = verifications.map((v: any) => v.matched_by).filter(Boolean)
+          let profileEmailMap = new Map<string, string | null>()
+
+          if (matchedByIds.length > 0) {
+            const { data: matchedByProfiles } = await supabase
+              .from('profiles')
+              .select('id, email')
+              .in('id', [...new Set(matchedByIds)])
+
+            profileEmailMap = new Map(
+              (matchedByProfiles || []).map((p: { id: string; email: string | null }) => [p.id, p.email])
+            )
+          }
+
+          // Group verifications by subscription_id
+          verifications.forEach((v: any) => {
+            if (!v.subscription_id) return
+            const bankTx = v.bank_transactions
+            const evidence: BankEvidence = {
+              id: v.id,
+              matched_amount: Number(v.matched_amount) || 0,
+              status: v.status,
+              matched_at: v.matched_at,
+              matched_by_email: v.matched_by ? profileEmailMap.get(v.matched_by) || null : null,
+              bank_amount: Number(bankTx?.amount) || 0,
+              bank_counterparty: bankTx?.counterparty || null,
+              bank_date: bankTx?.value_date || null,
+              bank_reference: bankTx?.bank_reference || null
+            }
+            const existing = bankEvidenceBySubscription.get(v.subscription_id) || []
+            existing.push(evidence)
+            bankEvidenceBySubscription.set(v.subscription_id, existing)
+          })
+        }
+      }
+
       // Process pending settlements
       const today = new Date()
       const settlements: PendingSettlement[] = (subscriptions || [])
@@ -518,6 +592,7 @@ export default function EscrowPage() {
             funding_due_at: s.funding_due_at,
             status,
             days_overdue: Math.max(0, daysOverdue),
+            bank_evidence: bankEvidenceBySubscription.get(s.id) || []
           }
         })
 
@@ -1035,6 +1110,7 @@ export default function EscrowPage() {
                         <TableHead>Outstanding</TableHead>
                         <TableHead>Due Date</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Bank Evidence</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -1098,6 +1174,55 @@ export default function EscrowPage() {
                             >
                               {settlement.status.replace('_', ' ')}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {settlement.bank_evidence && settlement.bank_evidence.length > 0 ? (
+                              <div className="space-y-2">
+                                {settlement.bank_evidence.map((evidence) => (
+                                  <div
+                                    key={evidence.id}
+                                    className={cn(
+                                      'text-xs p-2 rounded border',
+                                      evidence.status === 'verified' && 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800',
+                                      evidence.status === 'pending' && 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800',
+                                      evidence.status === 'discrepancy' && 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800',
+                                      evidence.status === 'ignored' && 'bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700'
+                                    )}
+                                  >
+                                    <div className="flex items-center gap-1 mb-1">
+                                      {evidence.status === 'verified' && <CheckCircle2 className="h-3 w-3 text-green-600" />}
+                                      {evidence.status === 'pending' && <Clock className="h-3 w-3 text-yellow-600" />}
+                                      {evidence.status === 'discrepancy' && <AlertTriangle className="h-3 w-3 text-red-600" />}
+                                      <span className="font-medium capitalize">{evidence.status}</span>
+                                    </div>
+                                    <div className="text-muted-foreground">
+                                      <span className="font-medium">{formatCurrency(evidence.bank_amount, settlement.currency)}</span>
+                                      {evidence.bank_counterparty && (
+                                        <span> from {evidence.bank_counterparty}</span>
+                                      )}
+                                    </div>
+                                    {evidence.bank_date && (
+                                      <div className="text-muted-foreground">
+                                        {formatDate(evidence.bank_date)}
+                                      </div>
+                                    )}
+                                    {evidence.bank_reference && (
+                                      <div className="text-muted-foreground font-mono truncate max-w-[150px]" title={evidence.bank_reference}>
+                                        Ref: {evidence.bank_reference}
+                                      </div>
+                                    )}
+                                    <div className="text-muted-foreground mt-1 pt-1 border-t border-dashed">
+                                      Matched by: {evidence.matched_by_email || 'Staff'}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                <AlertCircle className="h-3 w-3" />
+                                No bank match yet
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell className="text-right">
                             {settlement.status !== 'funded' && lawyerInfo && (

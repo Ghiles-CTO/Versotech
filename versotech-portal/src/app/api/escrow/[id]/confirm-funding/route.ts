@@ -155,6 +155,43 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to confirm funding' }, { status: 500 })
     }
 
+    // === UPDATE VERIFICATION RECORDS ===
+    // Mark any pending verifications as verified or discrepancy based on amount match
+    const { data: pendingVerifications } = await supabase
+      .from('reconciliation_verifications')
+      .select('id, matched_amount')
+      .eq('subscription_id', subscriptionId)
+      .eq('status', 'pending')
+
+    if (pendingVerifications && pendingVerifications.length > 0) {
+      for (const verification of pendingVerifications) {
+        const matchedAmount = Number(verification.matched_amount || 0)
+        const amountDiff = Math.abs(matchedAmount - amount)
+        const isDiscrepancy = amountDiff > 1 // More than €1 difference
+
+        const { error: verificationUpdateError } = await supabase
+          .from('reconciliation_verifications')
+          .update({
+            status: isDiscrepancy ? 'discrepancy' : 'verified',
+            discrepancy_type: isDiscrepancy ? 'amount_mismatch' : null,
+            discrepancy_notes: isDiscrepancy
+              ? `Bank shows ${matchedAmount.toLocaleString()}, lawyer confirmed ${amount.toLocaleString()}`
+              : null,
+            verified_by: user.id,
+            verified_at: new Date().toISOString(),
+            lawyer_confirmation_id: user.id
+          })
+          .eq('id', verification.id)
+
+        if (verificationUpdateError) {
+          console.warn(`Failed to update verification ${verification.id}:`, verificationUpdateError)
+          // Non-critical - continue with funding confirmation
+        } else {
+          console.log(`✅ Verification ${verification.id} marked as ${isDiscrepancy ? 'discrepancy' : 'verified'}`)
+        }
+      }
+    }
+
     // Get deal name for notification
     const dealName = (subscription.deals as any)?.name || 'Unknown Deal'
 
