@@ -90,20 +90,20 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 **Description:** As Uma (CCO), I want to automatically calculate investor risk scores based on their KYC data so I can identify high-risk clients.
 
 **Acceptance Criteria:**
-- [ ] Create `investor_risk_profiles` table: id, investor_id, country_risk_grade, country_points, pep_risk_points, sanctions_risk_points, total_risk_points, composite_risk_grade, calculated_at, calculation_inputs (NO unique constraint on investor_id - keep full history)
-- [ ] Create `calculate_investor_risk(investor_id)` function that:
+- [x] Create `investor_risk_profiles` table: id, investor_id, country_risk_grade, country_points, pep_risk_points, sanctions_risk_points, total_risk_points, composite_risk_grade, calculated_at, calculation_inputs (NO unique constraint on investor_id - keep full history)
+- [x] Create `calculate_investor_risk(investor_id)` function that:
   - Looks up investor country using: 
-    - If `investors.type = 'individual'`: `residential_country` → fallback `country_of_tax_residency` → fallback `country`
+    - If `investors.type = 'individual'`: `residential_country` → fallback `tax_residency` → fallback `country`
     - Else (entity): `country_of_incorporation` → fallback `registered_country` → fallback `country`
   - Maps country to `country_risks` → gets points
   - Adds +10 points if is_pep = true
   - Adds +20 points if is_sanctioned = true
   - Sums total points → maps to composite risk grade
   - INSERTS new row (preserves history, doesn't update)
-- [ ] Trigger recalculation when investor profile changes (country, is_pep, is_sanctioned)
-- [ ] Create cron job for daily batch recalculation of all investor profiles at midnight
-- [ ] Store calculation inputs snapshot in JSONB for audit trail
-- [ ] Create view `investor_risk_profiles_current` showing only latest profile per investor
+- [x] Trigger recalculation when investor profile changes (country, is_pep, is_sanctioned)
+- [x] Create cron job for daily batch recalculation of all investor profiles at midnight
+- [x] Store calculation inputs snapshot in JSONB for audit trail
+- [x] Create view `investor_risk_profiles_current` showing only latest profile per investor
 - [ ] Typecheck passes
 
 ---
