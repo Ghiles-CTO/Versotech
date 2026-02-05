@@ -136,10 +136,12 @@ function matchQuery(entry: BlacklistEntry, query: string) {
 export default async function AgentsPage({
   searchParams,
 }: {
-  searchParams?: Record<string, string | string[] | undefined>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }) {
+  const resolvedSearchParams = (await Promise.resolve(searchParams)) ?? {}
+
   const getParam = (key: string) => {
-    const value = searchParams?.[key]
+    const value = resolvedSearchParams[key]
     return typeof value === 'string' ? value : ''
   }
 
@@ -257,9 +259,9 @@ export default async function AgentsPage({
     {}
   )
 
-  const query = typeof searchParams?.query === 'string' ? normalizeQuery(searchParams.query) : ''
-  const severityFilter = typeof searchParams?.severity === 'string' ? searchParams.severity : 'all'
-  const statusFilter = typeof searchParams?.status === 'string' ? searchParams.status : 'all'
+  const query = typeof resolvedSearchParams.query === 'string' ? normalizeQuery(resolvedSearchParams.query) : ''
+  const severityFilter = typeof resolvedSearchParams.severity === 'string' ? resolvedSearchParams.severity : 'all'
+  const statusFilter = typeof resolvedSearchParams.status === 'string' ? resolvedSearchParams.status : 'all'
   const baseParams = new URLSearchParams()
   if (query) baseParams.set('query', query)
   if (severityFilter !== 'all') baseParams.set('severity', severityFilter)
