@@ -260,6 +260,13 @@ export default async function AgentsPage({
   const query = typeof searchParams?.query === 'string' ? normalizeQuery(searchParams.query) : ''
   const severityFilter = typeof searchParams?.severity === 'string' ? searchParams.severity : 'all'
   const statusFilter = typeof searchParams?.status === 'string' ? searchParams.status : 'all'
+  const baseParams = new URLSearchParams()
+  if (query) baseParams.set('query', query)
+  if (severityFilter !== 'all') baseParams.set('severity', severityFilter)
+  if (statusFilter !== 'all') baseParams.set('status', statusFilter)
+  const baseQueryString = baseParams.toString()
+  const baseHref = baseQueryString ? `/versotech_admin/agents?${baseQueryString}` : '/versotech_admin/agents'
+  const modalHref = `${baseHref}${baseQueryString ? '&' : '?'}mode=new`
 
   const filteredEntries = blacklistEntries.filter((entry) => {
     if (severityFilter !== 'all' && entry.severity !== severityFilter) return false
@@ -272,6 +279,7 @@ export default async function AgentsPage({
   const entryToShowMatches = selectedEntryId
     ? blacklistEntries.find((entry) => entry.id === selectedEntryId)
     : null
+  const showModal = mode === 'new' || Boolean(editEntry)
 
   const createBlacklistEntry = async (formData: FormData) => {
     'use server'
@@ -368,6 +376,135 @@ export default async function AgentsPage({
 
   return (
     <div className="p-6 space-y-8">
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="blacklist-modal-title"
+            className="w-full max-w-3xl rounded-xl bg-background shadow-xl"
+          >
+            <div className="border-b px-6 py-4 flex items-center justify-between">
+              <div>
+                <p id="blacklist-modal-title" className="text-base font-semibold">
+                  {editEntry ? 'Edit Blacklist Entry' : 'Add to Blacklist'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {editEntry
+                    ? 'Update severity, status, or details.'
+                    : 'Create a new blacklist entry for compliance review.'}
+                </p>
+              </div>
+              <a
+                href={baseHref}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Close
+              </a>
+            </div>
+            <div className="px-6 py-5">
+              <form action={editEntry ? updateBlacklistEntry : createBlacklistEntry} className="grid gap-3 md:grid-cols-2">
+                {editEntry && <input type="hidden" name="entry_id" value={editEntry.id} />}
+                <div>
+                  <label className="text-xs text-muted-foreground">Full name</label>
+                  <input
+                    name="full_name"
+                    defaultValue={editEntry?.full_name || ''}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Entity name</label>
+                  <input
+                    name="entity_name"
+                    defaultValue={editEntry?.entity_name || ''}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Email</label>
+                  <input
+                    name="email"
+                    defaultValue={editEntry?.email || ''}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Phone</label>
+                  <input
+                    name="phone"
+                    defaultValue={editEntry?.phone || ''}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Tax ID</label>
+                  <input
+                    name="tax_id"
+                    defaultValue={editEntry?.tax_id || ''}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Severity</label>
+                  <select
+                    name="severity"
+                    defaultValue={editEntry?.severity || 'warning'}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="warning">Warning</option>
+                    <option value="blocked">Blocked</option>
+                    <option value="banned">Banned</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Status</label>
+                  <select
+                    name="status"
+                    defaultValue={editEntry?.status || 'active'}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="active">Active</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="false_positive">False Positive</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Reason</label>
+                  <input
+                    name="reason"
+                    defaultValue={editEntry?.reason || ''}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-xs text-muted-foreground">Notes</label>
+                  <textarea
+                    name="notes"
+                    defaultValue={editEntry?.notes || ''}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    rows={3}
+                  />
+                </div>
+                <div className="md:col-span-2 flex items-center gap-3">
+                  <button
+                    type="submit"
+                    className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+                  >
+                    {editEntry ? 'Save changes' : 'Create entry'}
+                  </button>
+                  <a
+                    href={baseHref}
+                    className="text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    Cancel
+                  </a>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="space-y-1">
         <h1 className="text-2xl font-bold">Compliance Agents</h1>
         <p className="text-muted-foreground">
@@ -583,121 +720,6 @@ export default async function AgentsPage({
               </div>
             )}
 
-            {(mode === 'new' || editEntry) && (
-              <Card className="border border-dashed">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">
-                    {editEntry ? 'Edit Blacklist Entry' : 'Add to Blacklist'}
-                  </CardTitle>
-                  <CardDescription>
-                    {editEntry
-                      ? 'Update severity, status, or details.'
-                      : 'Create a new blacklist entry for compliance review.'}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form action={editEntry ? updateBlacklistEntry : createBlacklistEntry} className="grid gap-3 md:grid-cols-2">
-                    {editEntry && <input type="hidden" name="entry_id" value={editEntry.id} />}
-                    <div>
-                      <label className="text-xs text-muted-foreground">Full name</label>
-                      <input
-                        name="full_name"
-                        defaultValue={editEntry?.full_name || ''}
-                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground">Entity name</label>
-                      <input
-                        name="entity_name"
-                        defaultValue={editEntry?.entity_name || ''}
-                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground">Email</label>
-                      <input
-                        name="email"
-                        defaultValue={editEntry?.email || ''}
-                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground">Phone</label>
-                      <input
-                        name="phone"
-                        defaultValue={editEntry?.phone || ''}
-                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground">Tax ID</label>
-                      <input
-                        name="tax_id"
-                        defaultValue={editEntry?.tax_id || ''}
-                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground">Severity</label>
-                      <select
-                        name="severity"
-                        defaultValue={editEntry?.severity || 'warning'}
-                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      >
-                        <option value="warning">Warning</option>
-                        <option value="blocked">Blocked</option>
-                        <option value="banned">Banned</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground">Status</label>
-                      <select
-                        name="status"
-                        defaultValue={editEntry?.status || 'active'}
-                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      >
-                        <option value="active">Active</option>
-                        <option value="resolved">Resolved</option>
-                        <option value="false_positive">False Positive</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground">Reason</label>
-                      <input
-                        name="reason"
-                        defaultValue={editEntry?.reason || ''}
-                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="text-xs text-muted-foreground">Notes</label>
-                      <textarea
-                        name="notes"
-                        defaultValue={editEntry?.notes || ''}
-                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        rows={3}
-                      />
-                    </div>
-                    <div className="md:col-span-2 flex items-center gap-3">
-                      <button
-                        type="submit"
-                        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-                      >
-                        {editEntry ? 'Save changes' : 'Create entry'}
-                      </button>
-                      <a
-                        href="/versotech_admin/agents"
-                        className="text-sm text-muted-foreground hover:text-foreground"
-                      >
-                        Cancel
-                      </a>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
-            )}
-
             <form className="grid gap-3 lg:grid-cols-[1.2fr_0.6fr_0.6fr_auto]">
               <div>
                 <label className="text-xs text-muted-foreground">Search</label>
@@ -744,7 +766,7 @@ export default async function AgentsPage({
                     Apply Filters
                   </button>
                   <a
-                    href="/versotech_admin/agents?mode=new"
+                    href={modalHref}
                     className="w-full rounded-md border border-input px-4 py-2 text-center text-sm font-medium"
                   >
                     Add to Blacklist
@@ -800,13 +822,13 @@ export default async function AgentsPage({
                           <div>Reported: {entry.reported_at ? formatDate(entry.reported_at) : '—'}</div>
                           <div className="flex flex-wrap gap-2 pt-2">
                             <a
-                              href={`/versotech_admin/agents?edit=${entry.id}`}
+                              href={`${baseHref}${baseQueryString ? '&' : '?'}edit=${entry.id}`}
                               className="rounded-md border border-input px-2 py-1 text-xs font-medium"
                             >
                               Edit
                             </a>
                             <a
-                              href={`/versotech_admin/agents?entry=${entry.id}`}
+                              href={`${baseHref}${baseQueryString ? '&' : '?'}entry=${entry.id}`}
                               className="rounded-md border border-input px-2 py-1 text-xs font-medium"
                             >
                               View matches
@@ -822,10 +844,10 @@ export default async function AgentsPage({
 
             {entryToShowMatches && (
               <div className="rounded-lg border border-muted/60 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p className="text-sm font-semibold">Match history</p>
-                    <p className="text-xs text-muted-foreground">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-semibold">Match history</p>
+                      <p className="text-xs text-muted-foreground">
                       {entryToShowMatches.full_name ||
                         entryToShowMatches.entity_name ||
                         entryToShowMatches.email ||
@@ -835,7 +857,7 @@ export default async function AgentsPage({
                     </p>
                   </div>
                   <a
-                    href="/versotech_admin/agents"
+                    href={baseHref}
                     className="text-xs text-muted-foreground hover:text-foreground"
                   >
                     Clear
