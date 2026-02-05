@@ -212,7 +212,7 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 - [x] Filter by status (active/resolved/false_positive) and severity
 - [x] Typecheck passes
   - Progress: modal-based add/edit forms + match history are live on `/versotech_admin/agents`; verified via agent-browser.
-- [ ] Verify in browser using agent-browser skill
+- [x] Verify in browser using agent-browser skill
 
 ---
 
@@ -220,16 +220,17 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 **Description:** As Valerie, I want to monitor KYC document status so I can follow up on expired or missing documents.
 
 **Acceptance Criteria:**
-- [ ] Includes all persona entities and member-level KYC submissions (investors + counterparty entities, partners, introducers, lawyers, commercial partners, arrangers)
-- [ ] Source tables for coverage: `kyc_submissions` plus entity/member tables (investors, investor_members, partners, partner_members, introducers, introducer_members, commercial_partners, commercial_partner_members, lawyers, lawyer_members, arranger_entities, arranger_members, investor_counterparty, counterparty_entity_members)
-- [ ] Table showing: Investor Name, Document Type, Status, Expiry Date, Days Until Expiry, Last Reminder Sent
-- [ ] Filter by: Expiring Soon (30 days), Expired, Missing Required
-- [ ] Highlight overdue documents in red
-- [ ] "Send Reminder" action button (creates notification from Valerie)
-- [ ] Bulk select and send reminders
+- [x] Includes all persona entities and member-level KYC submissions (investors + counterparty entities, partners, introducers, lawyers, commercial partners, arrangers)
+- [x] Source tables for coverage: `kyc_submissions` plus entity/member tables (investors, investor_members, partners, partner_members, introducers, introducer_members, commercial_partners, commercial_partner_members, lawyers, lawyer_members, arranger_entities, arranger_members, investor_counterparty, counterparty_entity_members)
+- [x] Table showing: Investor Name, Document Type, Status, Expiry Date, Days Until Expiry, Last Reminder Sent
+- [x] Filter by: Expiring Soon (30 days), Expired, Missing Required
+- [x] Highlight overdue documents in red
+- [x] "Send Reminder" action button (creates notification from Valerie)
+- [x] Bulk select and send reminders
 - [ ] Optional AI assist: OCR reads document, suggests expiry date with confidence; staff must confirm before saving
 - [ ] Typecheck passes
-- [ ] Verify in browser using agent-browser skill
+  - Progress: KYC Monitor section is live on `/versotech_admin/agents` with persona-aware rows, filters, and reminder actions. “Missing” currently reflects submission status, not personas with zero submissions. Reminders insert `notifications` rows (type `kyc_reminder`).
+- [x] Verify in browser using agent-browser skill
 
 ---
 
