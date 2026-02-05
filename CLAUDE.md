@@ -144,6 +144,7 @@ export async function POST(request: Request) {
 5. **Do not add sidebar navigation items unless explicitly requested.** If the user wants a feature surfaced, confirm where they want it (header, sidebar, or page link) before adding nav entries.
 6. **After plan approval, proceed immediately without extra confirmation.** Do not ask for a second go-ahead once the user has approved the plan.
 7. **When removing UI duplication, keep a single primary action in the location the user requested.** Do not leave redundant links behind.
+8. **Run `npm run build` before pushing to `dev` for frontend changes.** Fix build errors first, then push.
 
 ## Commands
 
