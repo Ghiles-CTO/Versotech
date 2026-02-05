@@ -112,8 +112,8 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 **Description:** As Uma (CCO), I want to automatically calculate deal risk scores so I can assess investment risk exposure.
 
 **Acceptance Criteria:**
-- [ ] Create `deal_risk_profiles` table: deal_id, country_risk_grade, industry_risk_grade, investment_type_risk_grade, total_risk_points, composite_risk_grade, calculated_at
-- [ ] Create `calculate_deal_risk(deal_id)` function that:
+- [x] Create `deal_risk_profiles` table: deal_id, country_risk_grade, industry_risk_grade, investment_type_risk_grade, total_risk_points, composite_risk_grade, calculated_at
+- [x] Create `calculate_deal_risk(deal_id)` function that:
   - Looks up deal's target country → country risk points
     - Use existing `deals.location` (free text) and map to country name in the risk matrix
     - If location is missing or unmapped, mark country risk as `Unknown` and flag for manual review
@@ -124,8 +124,9 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
     - Map these values to the closest investment type in the risk matrix via a defined mapping table
     - Do not add new fields; use existing values only
   - Sums total → maps to composite grade
-- [ ] Trigger recalculation when deal is updated
+- [x] Trigger recalculation when deal is updated
 - [ ] Typecheck passes
+  - Note: mapping table exists but needs seed data; unmapped inputs result in null composite grade until mappings are defined.
 
 ---
 
