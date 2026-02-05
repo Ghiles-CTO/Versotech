@@ -38,14 +38,29 @@ type BlacklistEntry = {
   email: string | null
   phone: string | null
   tax_id: string | null
+  status: 'active' | 'resolved' | 'false_positive'
+  reported_at: string | null
+  reported_by: string | null
+}
+
+type BlacklistMatchEntry = {
+  id: string
+  severity: 'warning' | 'blocked' | 'banned'
+  reason: string | null
+  full_name: string | null
+  entity_name: string | null
+  email: string | null
+  phone: string | null
+  tax_id: string | null
 }
 
 type BlacklistMatch = {
   id: string
+  blacklist_entry_id?: string | null
   match_type: string
   match_confidence: number | string
   matched_at: string
-  compliance_blacklist?: BlacklistEntry | BlacklistEntry[] | null
+  compliance_blacklist?: BlacklistMatchEntry | BlacklistMatchEntry[] | null
 }
 
 const severityStyles: Record<BlacklistEntry['severity'], string> = {
@@ -91,12 +106,37 @@ function formatConfidence(value: number | string) {
   return `~${numeric.toFixed(2)}`
 }
 
-function unwrapEntry(entry?: BlacklistEntry | BlacklistEntry[] | null) {
+function unwrapEntry(entry?: BlacklistMatchEntry | BlacklistMatchEntry[] | null) {
   if (!entry) return null
   return Array.isArray(entry) ? entry[0] : entry
 }
 
-export default async function AgentsPage() {
+function normalizeQuery(value: string) {
+  return value.trim().toLowerCase()
+}
+
+function matchQuery(entry: BlacklistEntry, query: string) {
+  if (!query) return true
+  const haystack = [
+    entry.full_name,
+    entry.entity_name,
+    entry.email,
+    entry.phone,
+    entry.tax_id,
+    entry.reason,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+
+  return haystack.includes(query)
+}
+
+export default async function AgentsPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>
+}) {
   const user = await getCurrentUser()
   if (!user) {
     redirect('/versotech_main/login')
@@ -125,6 +165,7 @@ export default async function AgentsPage() {
     { data: assignmentsData },
     { data: blacklistEntriesData },
     { data: blacklistMatchesData },
+    { data: blacklistAllMatchesData },
   ] = await Promise.all([
     supabase
       .from('ai_agents')
@@ -136,8 +177,8 @@ export default async function AgentsPage() {
       .order('task_code', { ascending: true }),
     supabase
       .from('compliance_blacklist')
-      .select('id, severity')
-      .eq('status', 'active'),
+      .select('id, severity, status, reason, full_name, entity_name, email, phone, tax_id, reported_at, reported_by')
+      .order('reported_at', { ascending: false }),
     supabase
       .from('blacklist_matches')
       .select(
@@ -145,12 +186,18 @@ export default async function AgentsPage() {
       )
       .order('matched_at', { ascending: false })
       .limit(20),
+    supabase
+      .from('blacklist_matches')
+      .select('id, blacklist_entry_id, matched_at')
+      .order('matched_at', { ascending: false })
+      .limit(500),
   ])
 
   const agents: AgentRow[] = agentsData ?? []
   const assignments: TaskRow[] = assignmentsData ?? []
-  const blacklistEntries = blacklistEntriesData ?? []
+  const blacklistEntries: BlacklistEntry[] = blacklistEntriesData ?? []
   const blacklistMatches: BlacklistMatch[] = blacklistMatchesData ?? []
+  const allBlacklistMatches = blacklistAllMatchesData ?? []
 
   const tasksByAgent = assignments.reduce<Record<string, TaskRow[]>>((acc, task) => {
     if (!acc[task.agent_id]) acc[task.agent_id] = []
@@ -172,6 +219,32 @@ export default async function AgentsPage() {
     },
     { total: 0, warning: 0, blocked: 0, banned: 0 }
   )
+
+  const matchCounts = allBlacklistMatches.reduce<Record<string, { count: number; lastMatched?: string }>>(
+    (acc, match) => {
+      if (!match.blacklist_entry_id) return acc
+      if (!acc[match.blacklist_entry_id]) {
+        acc[match.blacklist_entry_id] = { count: 0 }
+      }
+      acc[match.blacklist_entry_id].count += 1
+      if (!acc[match.blacklist_entry_id].lastMatched) {
+        acc[match.blacklist_entry_id].lastMatched = match.matched_at
+      }
+      return acc
+    },
+    {}
+  )
+
+  const query = typeof searchParams?.query === 'string' ? normalizeQuery(searchParams.query) : ''
+  const severityFilter = typeof searchParams?.severity === 'string' ? searchParams.severity : 'all'
+  const statusFilter = typeof searchParams?.status === 'string' ? searchParams.status : 'all'
+
+  const filteredEntries = blacklistEntries.filter((entry) => {
+    if (severityFilter !== 'all' && entry.severity !== severityFilter) return false
+    if (statusFilter !== 'all' && entry.status !== statusFilter) return false
+    if (!matchQuery(entry, query)) return false
+    return true
+  })
 
   return (
     <div className="p-6 space-y-8">
@@ -370,6 +443,116 @@ export default async function AgentsPage() {
             </CardContent>
           </Card>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Blacklist Entries</CardTitle>
+            <CardDescription>
+              Review active and resolved blacklist entries. Filters work across severity, status, and search.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <form className="grid gap-3 lg:grid-cols-[1.2fr_0.6fr_0.6fr_auto]">
+              <div>
+                <label className="text-xs text-muted-foreground">Search</label>
+                <input
+                  type="text"
+                  name="query"
+                  defaultValue={query}
+                  placeholder="Name, email, phone, tax id..."
+                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Severity</label>
+                <select
+                  name="severity"
+                  defaultValue={severityFilter}
+                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="all">All</option>
+                  <option value="warning">Warning</option>
+                  <option value="blocked">Blocked</option>
+                  <option value="banned">Banned</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Status</label>
+                <select
+                  name="status"
+                  defaultValue={statusFilter}
+                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="all">All</option>
+                  <option value="active">Active</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="false_positive">False Positive</option>
+                </select>
+              </div>
+              <div className="flex items-end">
+                <button
+                  type="submit"
+                  className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </form>
+
+            {filteredEntries.length === 0 ? (
+              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                No blacklist entries match your filters.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredEntries.map((entry) => {
+                  const displayName =
+                    entry.full_name ||
+                    entry.entity_name ||
+                    entry.email ||
+                    entry.phone ||
+                    entry.tax_id ||
+                    'Unknown'
+                  const matchInfo = matchCounts[entry.id]
+                  return (
+                    <div key={entry.id} className="rounded-lg border border-muted/60 p-4">
+                      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={cn('px-2 py-0.5 rounded-md text-xs font-medium', severityStyles[entry.severity])}>
+                              {entry.severity}
+                            </span>
+                            <Badge variant="outline" className="text-xs capitalize">
+                              {entry.status.replace('_', ' ')}
+                            </Badge>
+                            <span className="text-sm font-semibold">{displayName}</span>
+                          </div>
+                          {entry.reason && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Reason: {entry.reason}
+                            </p>
+                          )}
+                          <div className="text-xs text-muted-foreground mt-2 space-y-1">
+                            <div>Email: {entry.email || '—'}</div>
+                            <div>Phone: {entry.phone || '—'}</div>
+                            <div>Tax ID: {entry.tax_id || '—'}</div>
+                          </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground space-y-1">
+                          <div>
+                            Matches logged: <span className="font-medium text-foreground">{matchInfo?.count ?? 0}</span>
+                          </div>
+                          <div>Last match: {matchInfo?.lastMatched ? formatDate(matchInfo.lastMatched) : '—'}</div>
+                          <div>Reported: {entry.reported_at ? formatDate(entry.reported_at) : '—'}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </section>
     </div>
   )
