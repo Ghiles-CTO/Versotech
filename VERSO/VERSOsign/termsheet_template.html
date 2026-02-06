@@ -8,7 +8,7 @@
   <style>
     @page {
       size: A4;
-      margin: 1.5cm 1.5cm 2cm 1.5cm;
+      margin: 1.5cm 1.5cm 2.8cm 1.5cm;
     }
 
     * {
@@ -29,7 +29,7 @@
       width: 100%;
       max-width: 21cm;
       margin: 0 auto;
-      padding: 0.5cm;
+      padding: 0.5cm 0.5cm 2.2cm;
     }
 
     /* VERSO Logo Header */
@@ -83,7 +83,7 @@
     table.terms-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 0.5cm;
+      margin-bottom: 1.4cm;
       page-break-inside: auto;
     }
 
@@ -161,12 +161,18 @@
         page-break-inside: avoid;
       }
 
-      .page-footer {
-        position: fixed;
-        bottom: 0.5cm;
-        left: 1.5cm;
-        right: 1.5cm;
-      }
+    .final-block {
+      page-break-inside: avoid;
+    }
+
+    .terms-table-final {
+      margin-bottom: 0;
+    }
+
+    .page-footer {
+      margin-top: 0.6cm;
+      font-size: 8pt;
+    }
     }
   </style>
 </head>
@@ -257,24 +263,29 @@
       <td class="label-cell">In-Principle Approval</td>
       <td class="value-cell">{{ $json.in_principle_approval_text }}</td>
     </tr>
-    <tr>
-      <td class="label-cell">Subscription Pack</td>
-      <td class="value-cell">{{ $json.subscription_pack_note }}</td>
-    </tr>
-    <tr>
-      <td class="label-cell">Share Certificates</td>
-      <td class="value-cell">{{ $json.share_certificates_note }}</td>
-    </tr>
-    <tr>
-      <td class="label-cell">Subject to Change</td>
-      <td class="value-cell">{{ $json.subject_to_change_note }}</td>
-    </tr>
-    {{ $json.validity_date ? '<tr><td class="label-cell">Validity Date</td><td class="value-cell">This indicative term sheet expires on ' + $json.validity_date + '</td></tr>' : '' }}
   </table>
 
-  <!-- Footer -->
-  <div class="page-footer">
-    <span class="footer-logo">VERSO</span> Management &bull; {{ $json.term_sheet_title }} &bull; {{ $json.footer_date }}
+  <div class="final-block">
+    <table class="terms-table terms-table-final">
+      <tr>
+        <td class="label-cell">Subscription Pack</td>
+        <td class="value-cell">{{ $json.subscription_pack_note }}</td>
+      </tr>
+      <tr>
+        <td class="label-cell">Share Certificates</td>
+        <td class="value-cell">{{ $json.share_certificates_note }}</td>
+      </tr>
+      <tr>
+        <td class="label-cell">Subject to Change</td>
+        <td class="value-cell">{{ $json.subject_to_change_note }}</td>
+      </tr>
+      {{ $json.validity_date ? '<tr><td class="label-cell">Validity Date</td><td class="value-cell">This indicative term sheet expires on ' + $json.validity_date + '</td></tr>' : '' }}
+    </table>
+
+    <!-- Footer -->
+    <div class="page-footer">
+      <span class="footer-logo">VERSO</span> Management &bull; {{ $json.term_sheet_title }} &bull; {{ $json.footer_date }}
+    </div>
   </div>
 </div>
 
