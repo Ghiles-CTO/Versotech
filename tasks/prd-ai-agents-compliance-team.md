@@ -156,7 +156,7 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 - [x] Log all matches to `blacklist_matches` table
 - [x] Generate compliance alert (from Uma) when match found (CEO notifications)
 - [x] Typecheck passes
-  - Status: hooks are live for signup, entity create, and subscription create; blocking remains pending by design.
+  - Status: hooks are live for signup, investor create, entity create, and subscription create; blocking remains pending by design.
 
 ---
 

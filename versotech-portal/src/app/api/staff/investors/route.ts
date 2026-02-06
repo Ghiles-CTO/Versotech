@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { revalidatePath } from 'next/cache'
+import { logBlacklistMatches, screenAgainstBlacklist } from '@/lib/compliance/blacklist'
 
 const INVESTOR_TYPES = ['individual', 'institutional', 'entity', 'family_office', 'fund'] as const
 
@@ -176,6 +177,38 @@ export async function POST(request: NextRequest) {
     if (insertError || !investor) {
       console.error('Error creating investor:', insertError)
       return NextResponse.json({ error: 'Failed to create investor' }, { status: 500 })
+    }
+
+    // Screen investor against blacklist (alert only, do not block)
+    try {
+      const isEntityType = investor.type && investor.type !== 'individual'
+      const fullName = isEntityType ? null : (investor.display_name || investor.legal_name)
+      const entityName = isEntityType ? investor.legal_name : null
+      const matches = await screenAgainstBlacklist(serviceClient, {
+        email: investor.email,
+        fullName,
+        entityName,
+        phone: investor.phone
+      })
+
+      await logBlacklistMatches({
+        supabase: serviceClient,
+        matches,
+        context: 'investor_create',
+        input: {
+          email: investor.email,
+          fullName,
+          entityName,
+          phone: investor.phone
+        },
+        subjectLabel: investor.display_name || investor.legal_name,
+        matchedInvestorId: investor.id,
+        relatedInvestorId: investor.id,
+        actorId: user.id,
+        actionLabel: 'alerted_on_investor_create'
+      })
+    } catch (error) {
+      console.error('[investor blacklist] Screening failed:', error)
     }
 
     await auditLogger.log({
