@@ -216,6 +216,7 @@ export async function createInvestorNotificationForAll(params: Omit<CreateNotifi
 
 /**
  * Generate HTML email for notification
+ * Uses the unified V E R S O clean design matching all other email templates.
  */
 function generateNotificationEmail(params: {
   recipientName: string
@@ -224,121 +225,69 @@ function generateNotificationEmail(params: {
   link: string
   type: NotificationType
 }): string {
-  const typeColors: Partial<Record<NotificationType, string>> = {
-    // Core types
-    certificate_issued: '#10b981', // green
-    subscription: '#6366f1', // indigo
-    capital_call: '#f59e0b', // amber
-    escrow_confirmed: '#10b981', // green
-    deal_invite: '#8b5cf6', // purple
-    kyc_status: '#3b82f6', // blue
-    deal_access: '#6366f1',
-    document: '#6366f1',
-    task: '#f59e0b',
-    approval: '#10b981',
-    nda_complete: '#10b981',
-    system: '#6b7280',
-  // Introducer types (PRD Section 6.6)
-  introducer_agreement_signed: '#10b981',
-  introducer_agreement_rejected: '#ef4444',
-  introducer_agreement_pending: '#f59e0b',
-  introducer_pack_sent: '#6366f1',
-  introducer_pack_approved: '#10b981',
-  introducer_pack_signed: '#10b981',
-  introducer_escrow_funded: '#10b981',
-  introducer_invoice_requested: '#6366f1',
-  introducer_invoice_sent: '#6366f1',
-  introducer_payment_sent: '#10b981',
-  introducer_commission_accrued: '#8b5cf6',
-  introducer_invoice_approved: '#10b981',
-  introducer_invoice_rejected: '#ef4444',
-  introducer_payment_confirmed: '#10b981',
-  // Partner types (PRD Section 5.6)
-  partner_commission_accrued: '#8b5cf6',
-  partner_invoice_requested: '#6366f1',
-  partner_invoice_submitted: '#6366f1',
-  partner_invoiced: '#10b981',
-  partner_paid: '#10b981',
-  partner_rejected: '#ef4444',
-  // Commercial partner types
-  cp_commission_accrued: '#8b5cf6',
-  cp_invoice_requested: '#6366f1',
-  cp_invoice_submitted: '#6366f1',
-  cp_invoice_approved: '#10b981',
-  cp_invoice_rejected: '#ef4444',
-  cp_payment_confirmed: '#10b981',
-    // Deal share types
-    deal_shared: '#3b82f6',
-    partner_deal_share: '#3b82f6'
-  }
+  // Determine button text based on notification type
+  const dealTypes: NotificationType[] = ['deal_invite', 'deal_access', 'deal_shared', 'partner_deal_share']
+  const buttonText = dealTypes.includes(params.type) ? 'View Deal' : 'View in Verso'
 
-  const accentColor = typeColors[params.type] || '#6366f1'
+  // Hide title in body for deal_invite (it's redundant with the notification itself)
+  const showTitle = params.type !== 'deal_invite'
 
-  // All styles are inline for email client compatibility (Gmail, Outlook strip <style> tags)
   return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
-    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333333; margin: 0; padding: 0; background-color: #f4f4f4;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f4;">
-        <tr>
-          <td align="center" style="padding: 20px 0;">
-            <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
-              <!-- Header -->
-              <tr>
-                <td style="background-color: #1a1a2e; color: #ffffff; padding: 30px; text-align: center;">
-                  <h1 style="margin: 0; font-size: 24px; font-weight: bold; color: #ffffff;">VERSO</h1>
-                </td>
-              </tr>
-              <!-- Accent Bar -->
-              <tr>
-                <td style="height: 4px; background-color: ${accentColor};"></td>
-              </tr>
-              <!-- Content -->
-              <tr>
-                <td style="background-color: #ffffff; padding: 30px;">
-                  <h2 style="color: #1a1a2e; margin-top: 0; margin-bottom: 16px; font-size: 20px;">${params.title}</h2>
-                  <p style="margin: 0 0 16px 0; color: #333333;">Hi ${params.recipientName},</p>
-
-                  <!-- Message Box -->
-                  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 20px 0;">
-                    <tr>
-                      <td style="background-color: #f8fafc; border-left: 4px solid ${accentColor}; padding: 20px;">
-                        <p style="margin: 0; color: #333333;">${params.message}</p>
-                      </td>
-                    </tr>
-                  </table>
-
-                  <!-- Button -->
-                  <table cellpadding="0" cellspacing="0" border="0" style="margin: 20px 0;">
-                    <tr>
-                      <td style="background-color: ${accentColor}; border-radius: 6px;">
-                        <a href="${params.link}" style="display: inline-block; padding: 14px 28px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px;">View in Portal</a>
-                      </td>
-                    </tr>
-                  </table>
-
-                  <p style="color: #666666; font-size: 14px; margin-top: 30px; margin-bottom: 0;">
-                    If you have any questions, please contact our team through the platform.
-                  </p>
-                </td>
-              </tr>
-              <!-- Footer -->
-              <tr>
-                <td style="background-color: #f8fafc; text-align: center; padding: 20px;">
-                  <p style="margin: 0 0 8px 0; color: #666666; font-size: 12px;">&copy; ${new Date().getFullYear()} VERSO. All rights reserved.</p>
-                  <p style="margin: 0; color: #666666; font-size: 12px;">This is an automated notification. Please do not reply to this email.</p>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
-    </body>
-    </html>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--[if mso]>
+  <style type="text/css">
+    body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
+  </style>
+  <![endif]-->
+  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@700;800&display=swap" rel="stylesheet">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.7; color: #1a1a1a; background-color: #ffffff; margin: 0; padding: 0;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff;">
+    <tr>
+      <td align="center" style="padding: 50px 40px;">
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; margin: 0 auto;">
+          <!-- Logo -->
+          <tr>
+            <td style="text-align: center; padding-bottom: 30px; border-bottom: 1px solid #f0f0f0;">
+              <p style="font-family: 'League Spartan', Arial, Helvetica, sans-serif; font-size: 48px; font-weight: 800; letter-spacing: 8px; color: #000000; text-transform: uppercase; margin: 0;">V E R S O</p>
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td style="padding: 50px 0 0 0;">
+              ${showTitle ? `<p style="font-size: 18px; font-weight: 600; color: #1a1a1a; margin: 0 0 20px 0;">${params.title}</p>` : ''}
+              <p style="font-size: 15px; color: #333333; margin: 0 0 20px 0;">Hi ${params.recipientName},</p>
+              <p style="font-size: 15px; color: #333333; margin: 0 0 20px 0;">${params.message}</p>
+            </td>
+          </tr>
+          <!-- Button -->
+          <tr>
+            <td align="center" style="padding: 25px 0 45px 0;">
+              <table cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="background-color: #0077ac; border-radius: 4px;">
+                    <a href="${params.link}" style="display: inline-block; padding: 16px 40px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; letter-spacing: 1px; text-transform: uppercase;">${buttonText}</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="border-top: 1px solid #f0f0f0; padding-top: 30px; text-align: center;">
+              <p style="margin: 0; color: #999999; font-size: 12px;">&copy; ${new Date().getFullYear()} V E R S O. All rights reserved.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
   `
 }
 
