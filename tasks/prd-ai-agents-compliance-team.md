@@ -246,6 +246,18 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 - [x] Typecheck passes
 - [x] Verify in browser using agent-browser skill
 
+### US-012A: AI Compliance Assistant in Chat (W001-AI)
+**Description:** As Wayne, I want an AI assistant in chat that drafts compliance responses from approved knowledge so users get fast and consistent guidance.
+
+**Acceptance Criteria:**
+- [ ] AI replies are enabled inside existing chat (no new provider-specific chat UI)
+- [ ] Use agent `system_prompt` + compliance knowledge context for answer generation
+- [ ] Every AI reply is labeled as AI-generated and logged with trace metadata
+- [ ] High-risk topics trigger escalation and route to human review before send
+- [ ] Persona/RLS boundaries are enforced for all retrieved context
+- [ ] Typecheck passes
+- [ ] Verify in browser using agent-browser skill
+
 ---
 
 ### US-013: Compliance Activity Log (W002)
@@ -412,7 +424,6 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 ## Non-Goals (Out of Scope)
 
 - **OFAC API Integration** - MVP uses manual screening; automated API integration is future phase
-- **AI Auto-Responses in Chat** - Wayne uses existing messaging inbox; no chatbot or auto-reply engine
 - **Email Communications from Agents** - In-app notifications only; email integration is future
 - **Machine Learning Risk Scoring** - Risk uses static matrices from Excel, not ML models
 - **User Wealth Profiling** - Not part of Compliance Team scope in this PRD
