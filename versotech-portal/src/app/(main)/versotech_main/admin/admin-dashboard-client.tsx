@@ -225,7 +225,7 @@ export function AdminDashboardClient() {
         {/* Footer */}
         <div className={`text-center py-6 border-t ${isDark ? 'border-zinc-800' : 'border-gray-200'}`}>
           <p className={`text-sm ${isDark ? 'text-zinc-500' : 'text-gray-500'}`}>
-            VERSO Holdings Super Admin Dashboard • Last updated:{' '}
+            <span style={{ fontFamily: 'var(--font-spartan), sans-serif', letterSpacing: '0.2em' }}>V E R S O</span> Super Admin Dashboard • Last updated:{' '}
             {new Date().toLocaleString()}
           </p>
         </div>

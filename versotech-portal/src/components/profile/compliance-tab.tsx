@@ -356,7 +356,7 @@ export function ComplianceTab() {
       <Card className="bg-muted/50">
         <CardContent className="pt-6">
           <p className="text-sm text-muted-foreground">
-            Compliance status is managed by VERSO Holdings. If you believe any information is incorrect
+            Compliance status is managed by V E R S O. If you believe any information is incorrect
             or needs updating, please contact your relationship manager or email{' '}
             <a href="mailto:compliance@versoholdings.com" className="text-primary hover:underline">
               compliance@versoholdings.com

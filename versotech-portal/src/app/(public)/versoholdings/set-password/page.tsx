@@ -131,16 +131,13 @@ function SetPasswordContent() {
       <div className="w-full max-w-md space-y-8 animate-in fade-in zoom-in-95 duration-500">
 
         <div className="text-center space-y-2">
-          <div className="flex justify-center mb-6">
-             <div className="relative w-48 h-16">
-                <Image
-                  src="/versotech-logo.png"
-                  alt="VERSOTECH"
-                  fill
-                  className="object-contain"
-                  priority
-                />
-             </div>
+          <div className="flex justify-center items-center gap-3 mb-6">
+            <div className="relative w-10 h-10 flex-shrink-0">
+              <Image src="/versotech-icon.png" alt="" fill className="object-contain" priority />
+            </div>
+            <span style={{ fontFamily: 'var(--font-spartan), sans-serif' }} className="text-2xl font-extrabold tracking-wide text-slate-900">
+              VERSOTECH
+            </span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">Set Your Password</h1>
           <p className="text-slate-500">Complete your account setup</p>
@@ -232,7 +229,7 @@ function SetPasswordContent() {
               <Shield className="h-3 w-3" />
               <span>Bank-Level 256-bit Encryption</span>
            </div>
-           <p className="text-xs text-slate-300">© 2024 VERSO Holdings. All rights reserved.</p>
+           <p className="text-xs text-slate-300">© {new Date().getFullYear()} <span style={{ fontFamily: 'var(--font-spartan), sans-serif', letterSpacing: '0.2em' }}>V E R S O</span>. All rights reserved.</p>
         </div>
 
       </div>

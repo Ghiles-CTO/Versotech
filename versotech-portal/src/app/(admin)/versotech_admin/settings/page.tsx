@@ -37,7 +37,7 @@ import { cn } from '@/lib/utils'
 // Mock configuration data (in real implementation, this would come from API/environment)
 const platformConfig = {
   general: {
-    platformName: 'VERSO Holdings',
+    platformName: 'V E R S O',
     timezone: 'Europe/London',
     defaultCurrency: 'GBP'
   },

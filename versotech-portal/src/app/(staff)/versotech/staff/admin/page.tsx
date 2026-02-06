@@ -216,7 +216,7 @@ export default function SuperAdminDashboard() {
         {/* Footer */}
         <div className="text-center py-6 border-t border-zinc-800">
           <p className="text-sm text-zinc-500">
-            VERSO Holdings Super Admin Dashboard • Last updated:{' '}
+            V E R S O Super Admin Dashboard • Last updated:{' '}
             {new Date().toLocaleString()}
           </p>
         </div>

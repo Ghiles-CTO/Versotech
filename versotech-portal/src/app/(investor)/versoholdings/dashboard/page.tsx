@@ -536,7 +536,7 @@ function WelcomePanel() {
               Investor onboarding
             </p>
             <h2 className="text-3xl font-semibold text-slate-900">
-              Welcome to VERSO Holdings
+              Welcome to <span style={{ fontFamily: 'var(--font-spartan), sans-serif', letterSpacing: '0.3em' }}>V E R S O</span>
             </h2>
             <p className="text-sm text-slate-600">
               Complete your onboarding steps to unlock performance analytics, live deal access, and bespoke reporting matched to your mandate.
@@ -756,7 +756,7 @@ export default async function InvestorDashboard() {
                         : 'Welcome'}
                     </h1>
                     <p className="text-sm text-slate-600">
-                      VERSO Holdings • Merchant Banking Group • Since 1958
+                      <span style={{ fontFamily: 'var(--font-spartan), sans-serif', letterSpacing: '0.3em' }}>V E R S O</span> • Merchant Banking Group • Since 1958
                     </p>
                   </div>
                 </div>

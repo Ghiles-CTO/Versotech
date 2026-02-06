@@ -19,8 +19,8 @@ interface EmailResult {
 }
 
 // Use Resend's shared domain for testing until client verifies versoholdings.com
-// Change to 'VERSO <noreply@versoholdings.com>' after domain verification
-const DEFAULT_FROM = process.env.EMAIL_FROM || 'VERSO <onboarding@resend.dev>'
+// Change to 'V E R S O <noreply@versoholdings.com>' after domain verification
+const DEFAULT_FROM = process.env.EMAIL_FROM || 'V E R S O <onboarding@resend.dev>'
 const RESEND_API_KEY = process.env.RESEND_API_KEY
 
 // Validate API key at module load time in production
@@ -129,11 +129,11 @@ export async function sendStaffInvitation(params: {
     <body>
       <div class="container">
         <div class="header">
-          <h1>Welcome to VERSO</h1>
+          <h1>Welcome to <span style="font-family: 'League Spartan', Arial, sans-serif; letter-spacing: 0.3em; font-weight: 700;">V E R S O</span></h1>
         </div>
         <div class="content">
           <h2>Hi ${params.displayName},</h2>
-          <p>You've been invited to join VERSO as a <strong>${params.title}</strong>.</p>
+          <p>You've been invited to join <span style="font-family: 'League Spartan', Arial, sans-serif; letter-spacing: 0.2em; font-weight: 700;">V E R S O</span> as a <strong>${params.title}</strong>.</p>
 
           <div class="credentials">
             <h3>Your Login Credentials</h3>
@@ -143,12 +143,12 @@ export async function sendStaffInvitation(params: {
 
           <p><strong>Important:</strong> Please change your password immediately after your first login for security purposes.</p>
 
-          <a href="${params.loginUrl}" class="button">Login to VERSO</a>
+          <a href="${params.loginUrl}" class="button">Login to V E R S O</a>
 
           <p>If you have any questions, please contact your administrator.</p>
         </div>
         <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} VERSO. All rights reserved.</p>
+          <p>&copy; ${new Date().getFullYear()} <span style="font-family: 'League Spartan', Arial, sans-serif; letter-spacing: 0.2em; font-weight: 700;">V E R S O</span>. All rights reserved.</p>
           <p>This is an automated message, please do not reply.</p>
         </div>
       </div>
@@ -158,14 +158,14 @@ export async function sendStaffInvitation(params: {
 
   return sendEmail({
     to: params.email,
-    subject: 'Welcome to VERSO - Your Account Details',
+    subject: 'Welcome to V E R S O - Your Account Details',
     html,
   })
 }
 
 /**
  * Send password reset email
- * Uses clean, minimal design matching VERSO brand
+ * Uses clean, minimal design matching V E R S O brand
  */
 export async function sendPasswordResetEmail(params: {
   email: string
@@ -263,13 +263,13 @@ export async function sendPasswordResetEmail(params: {
 <body>
   <div class="container">
     <div class="logo-container">
-      <div class="logo">VERSO</div>
+      <div class="logo">V E R S O</div>
     </div>
 
     <div class="greeting">Dear ${displayName},</div>
 
     <div class="content">
-      <p>We received a request to reset the password for your VERSO account.</p>
+      <p>We received a request to reset the password for your V E R S O account.</p>
       <p>Click the button below to create a new password. For security reasons, this link will expire in 1 hour.</p>
     </div>
 
@@ -287,7 +287,7 @@ export async function sendPasswordResetEmail(params: {
     </div>
 
     <div class="footer">
-      &copy; ${new Date().getFullYear()} VERSO. All rights reserved.
+      &copy; ${new Date().getFullYear()} V E R S O. All rights reserved.
     </div>
   </div>
 </body>
@@ -296,7 +296,7 @@ export async function sendPasswordResetEmail(params: {
 
   return sendEmail({
     to: params.email,
-    subject: 'Reset Your Password - VERSO',
+    subject: 'Reset Your Password - V E R S O',
     html,
   })
 }
@@ -347,7 +347,7 @@ export async function sendSecurityAlertEmail(params: {
           <p><strong>Action taken:</strong> ${new Date().toLocaleString()}</p>
         </div>
         <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} VERSO. All rights reserved.</p>
+          <p>&copy; ${new Date().getFullYear()} <span style="font-family: 'League Spartan', Arial, sans-serif; letter-spacing: 0.2em; font-weight: 700;">V E R S O</span>. All rights reserved.</p>
           <p>This is an automated security alert, please do not reply.</p>
         </div>
       </div>
@@ -357,14 +357,14 @@ export async function sendSecurityAlertEmail(params: {
 
   return sendEmail({
     to: params.email,
-    subject: `Security Alert: ${alertTitles[params.alertType]} - VERSO`,
+    subject: `Security Alert: ${alertTitles[params.alertType]} - V E R S O`,
     html,
   })
 }
 
 /**
  * Send invitation email to join the platform
- * Uses clean, minimal design matching VERSO brand
+ * Uses clean, minimal design matching V E R S O brand
  * Note: Does not include invitee name for privacy - just a simple invite to join
  */
 export async function sendInvitationEmail(params: {
@@ -396,21 +396,21 @@ export async function sendInvitationEmail(params: {
 
   // Investor-specific content
   const investorContent = `
-    <p>You have been invited to join <strong>${params.entityName}</strong> on the VERSO Investment Platform.</p>
+    <p>You have been invited to join <strong>${params.entityName}</strong> on the <span style="font-family: 'League Spartan', Arial, sans-serif; letter-spacing: 0.2em; font-weight: 700;">V E R S O</span> Investment Platform.</p>
     <p>This secure platform provides you with comprehensive access to your investment portfolio, performance analytics, and exclusive deal opportunities.</p>
     <p>Click the button below to set up your account and access the platform.</p>
   `
 
   // Staff-specific content
   const staffContent = `
-    <p>You have been invited to join <strong>VERSO</strong> as a <strong>${displayRole}</strong>.</p>
-    <p>As a member of the VERSO team, you'll have access to investor management, deal operations, and administrative tools.</p>
+    <p>You have been invited to join <strong style="font-family: 'League Spartan', Arial, sans-serif; letter-spacing: 0.2em;">V E R S O</strong> as a <strong>${displayRole}</strong>.</p>
+    <p>As a member of the <span style="font-family: 'League Spartan', Arial, sans-serif; letter-spacing: 0.2em; font-weight: 700;">V E R S O</span> team, you'll have access to investor management, deal operations, and administrative tools.</p>
     <p>Click the button below to set up your password and access your dashboard.</p>
   `
 
   // Other professionals (lawyer, arranger, partner, etc.)
   const professionalContent = `
-    <p>You have been invited to join <strong>${params.entityName}</strong> on the VERSO Platform.</p>
+    <p>You have been invited to join <strong>${params.entityName}</strong> on the <span style="font-family: 'League Spartan', Arial, sans-serif; letter-spacing: 0.2em; font-weight: 700;">V E R S O</span> Platform.</p>
     <p>This platform provides access to deal management, document processing, and collaboration tools for your organization.</p>
     <p>Click the button below to set up your account and get started.</p>
   `
@@ -496,7 +496,7 @@ export async function sendInvitationEmail(params: {
 <body>
   <div class="container">
     <div class="logo-container">
-      <div class="logo">VERSO</div>
+      <div class="logo">V E R S O</div>
     </div>
 
     <div class="content">
@@ -508,7 +508,7 @@ export async function sendInvitationEmail(params: {
     </div>
 
     <div class="footer">
-      &copy; ${new Date().getFullYear()} VERSO. All rights reserved.
+      &copy; ${new Date().getFullYear()} V E R S O. All rights reserved.
     </div>
   </div>
 </body>
@@ -517,10 +517,10 @@ export async function sendInvitationEmail(params: {
 
   // Subject line varies by type
   const subject = isStaff
-    ? `Welcome to VERSO - You've been invited as ${displayRole}`
+    ? `Welcome to V E R S O - You've been invited as ${displayRole}`
     : isInvestor
-      ? `You've been invited to join ${params.entityName} on VERSO`
-      : `You've been invited to join ${params.entityName} on VERSO`
+      ? `You've been invited to join ${params.entityName} on V E R S O`
+      : `You've been invited to join ${params.entityName} on V E R S O`
 
   return sendEmail({
     to: params.email,
@@ -591,11 +591,11 @@ export async function sendSignatureRequestEmail(params: {
           </p>
 
           <p style="font-size: 13px; color: #666; margin-top: 20px;">
-            If you have any questions, please contact VERSO support.
+            If you have any questions, please contact V E R S O support.
           </p>
         </div>
         <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} VERSO. All rights reserved.</p>
+          <p>&copy; ${new Date().getFullYear()} <span style="font-family: 'League Spartan', Arial, sans-serif; letter-spacing: 0.2em; font-weight: 700;">V E R S O</span>. All rights reserved.</p>
           <p>This is an automated message, please do not reply.</p>
         </div>
       </div>
@@ -605,7 +605,7 @@ export async function sendSignatureRequestEmail(params: {
 
   return sendEmail({
     to: params.email,
-    subject: `${documentLabel} Ready for Your Signature - VERSO`,
+    subject: `${documentLabel} Ready for Your Signature - V E R S O`,
     html,
   })
 }

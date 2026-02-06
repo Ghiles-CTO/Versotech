@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
           uploaded_by: 'Staff User',
           uploaded_at: new Date().toISOString(),
           document_classification: 'CONFIDENTIAL',
-          verso_holdings_notice: 'Property of VERSO Holdings',
+          verso_holdings_notice: 'Property of V E R S O',
           original_filename: file.name,
           file_hash: crypto.createHash('sha256').update(fileBuffer).digest('hex')
         }

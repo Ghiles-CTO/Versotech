@@ -196,7 +196,7 @@ function VersoServicesCard() {
         <CardTitle className={cn(
           "text-base font-semibold",
           isDark ? "text-white" : "text-slate-900"
-        )}>VERSO concierge</CardTitle>
+        )}><span style={{ fontFamily: 'var(--font-spartan), sans-serif', letterSpacing: '0.2em' }}>V E R S O</span> concierge</CardTitle>
         <CardDescription className={cn(
           "text-sm",
           isDark ? "text-gray-400" : "text-slate-600"
@@ -303,7 +303,7 @@ function WelcomePanel() {
               "text-3xl font-semibold",
               isDark ? "text-white" : "text-slate-900"
             )}>
-              Welcome to VERSO Holdings
+              Welcome to <span style={{ fontFamily: 'var(--font-spartan), sans-serif', letterSpacing: '0.3em' }}>V E R S O</span>
             </h2>
             <p className={cn(
               "text-sm",
@@ -695,7 +695,7 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
                     "text-sm",
                     isDark ? "text-gray-400" : "text-slate-600"
                   )}>
-                    VERSO Holdings • Merchant Banking Group • Since 1958
+                    <span style={{ fontFamily: 'var(--font-spartan), sans-serif', letterSpacing: '0.3em' }}>V E R S O</span> • Merchant Banking Group • Since 1958
                   </p>
                 </div>
               </div>
