@@ -112,6 +112,8 @@ export interface CreateReportResponse {
   message?: string
 }
 
+export type CustomRequestType = 'nda_modification'
+
 export interface CreateCustomRequest {
   category: RequestCategory
   subject: string
@@ -119,6 +121,7 @@ export interface CreateCustomRequest {
   priority?: RequestPriority
   vehicleId?: string | null
   dealId?: string | null
+  requestType?: CustomRequestType
   dueDate?: string
   preferredFormat?: 'pdf' | 'excel' | 'both'
   dataFocus?: string[]

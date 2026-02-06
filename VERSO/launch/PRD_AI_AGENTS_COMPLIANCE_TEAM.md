@@ -312,7 +312,7 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 **Acceptance Criteria:**
  - [x] Update existing NDA notifications to include agent_id (Valerie)
  - [x] Notifications display Valerie's name and avatar at each stage (sent, viewed, signed, fully_executed)
-- [ ] Log NDA modification requests with investor comments (if not already implemented)
+- [x] Log NDA modification requests with investor comments (if not already implemented)
 - [ ] Verify dataroom access is auto-granted on full NDA execution (existing behavior)
 - [x] Typecheck passes
 

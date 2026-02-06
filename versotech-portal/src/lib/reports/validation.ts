@@ -151,6 +151,13 @@ export function validateCustomRequest(data: CreateCustomRequest): ValidationResu
     })
   }
 
+  if (data.requestType && data.requestType !== 'nda_modification') {
+    errors.push({
+      field: 'requestType',
+      message: 'Invalid request type'
+    })
+  }
+
   return {
     isValid: errors.length === 0,
     errors
@@ -305,6 +312,7 @@ export function sanitizeCustomRequestData(data: CreateCustomRequest): CreateCust
     priority: data.priority || 'normal',
     vehicleId: data.vehicleId,
     dealId: data.dealId,
+    requestType: data.requestType,
     dueDate: data.dueDate,
     preferredFormat: data.preferredFormat || 'pdf',
     dataFocus: data.dataFocus || [],
