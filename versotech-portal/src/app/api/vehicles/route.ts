@@ -1,4 +1,5 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { logBlacklistMatches, screenAgainstBlacklist } from '@/lib/compliance/blacklist'
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
@@ -65,6 +66,30 @@ export async function POST(request: NextRequest) {
         { error: 'Failed to create vehicle', details: insertError.message },
         { status: 500 }
       )
+    }
+
+    // Screen entity against blacklist (alert only, do not block)
+    try {
+      const matches = await screenAgainstBlacklist(serviceSupabase, {
+        entityName: vehicle.name,
+        taxId: vehicle.registration_number
+      })
+
+      await logBlacklistMatches({
+        supabase: serviceSupabase,
+        matches,
+        context: 'entity_create',
+        input: {
+          entityName: vehicle.name,
+          taxId: vehicle.registration_number
+        },
+        subjectLabel: vehicle.name,
+        matchedUserId: user.id,
+        actorId: user.id,
+        actionLabel: 'alerted_on_entity_create'
+      })
+    } catch (error) {
+      console.error('[entity blacklist] Screening failed:', error)
     }
 
     return NextResponse.json({ vehicle }, { status: 201 })

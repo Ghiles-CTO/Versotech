@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { logBlacklistMatches, screenAgainstBlacklist } from '@/lib/compliance/blacklist'
 import { z } from 'zod'
 
 // User-entity junction table mapping
@@ -274,6 +275,34 @@ export async function POST(
         console.error('Error creating membership:', junctionError)
         // Continue - user can still login and may be linked manually
       }
+    }
+
+    // Screen new user against compliance blacklist (alert only, do not block)
+    try {
+      const matches = await screenAgainstBlacklist(serviceSupabase, {
+        email: invitation.email,
+        fullName: display_name,
+        entityName: invitation.entity_name || null
+      })
+
+      await logBlacklistMatches({
+        supabase: serviceSupabase,
+        matches,
+        context: 'signup',
+        input: {
+          email: invitation.email,
+          fullName: display_name,
+          entityName: invitation.entity_name || null
+        },
+        subjectLabel: display_name || invitation.email,
+        matchedUserId: authData.user.id,
+        matchedInvestorId: invitation.entity_type === 'investor' ? invitation.entity_id : null,
+        relatedInvestorId: invitation.entity_type === 'investor' ? invitation.entity_id : null,
+        actorId: invitation.invited_by || authData.user.id,
+        actionLabel: 'alerted_on_signup'
+      })
+    } catch (error) {
+      console.error('[signup blacklist] Screening failed:', error)
     }
 
     // Update invitation status
