@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useMemo, useRef, useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import type { ConversationSummary, ConversationFilters } from '@/types/messaging'
 import { fetchConversationsClient, markConversationRead } from '@/lib/messaging'
 import { ConversationsSidebar } from './sidebar'
@@ -20,11 +21,17 @@ interface MessagingClientProps {
 const INITIAL_FILTERS: ConversationFilters = {
   visibility: 'all',
   type: 'all',
+  complianceOnly: false,
 }
 
 export function MessagingClient({ initialConversations, currentUserId, canCreateConversation = true }: MessagingClientProps) {
   const supabase = useMemo(() => createClient(), [])
-  const [filters, setFilters] = useState<ConversationFilters>(INITIAL_FILTERS)
+  const searchParams = useSearchParams()
+  const initialCompliance = searchParams?.get('compliance') === 'true'
+  const [filters, setFilters] = useState<ConversationFilters>({
+    ...INITIAL_FILTERS,
+    complianceOnly: initialCompliance,
+  })
   const [conversations, setConversations] = useState<ConversationSummary[]>(initialConversations)
   const [isLoading, setIsLoading] = useState(false)
   const [activeConversationId, setActiveConversationId] = useState<string | null>(initialConversations[0]?.id || null)
@@ -54,15 +61,13 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
     const updateHeight = () => {
       const target = containerRef.current
       if (!target) return
-      const rect = target.getBoundingClientRect()
-      const baseHeight = window.innerHeight - rect.top
       const mainElement = target.closest('main')
-      const overflow = mainElement ? Math.max(0, mainElement.scrollHeight - mainElement.clientHeight) : 0
-      const nextHeight = Math.max(320, baseHeight - overflow)
-      setContainerHeight(nextHeight)
-      if (mainElement) {
-        mainElement.scrollTop = 0
-      }
+      if (!mainElement) return
+      const mainRect = mainElement.getBoundingClientRect()
+      const targetRect = target.getBoundingClientRect()
+      const offsetWithinMain = targetRect.top - mainRect.top
+      const available = Math.max(320, mainRect.height - offsetWithinMain)
+      setContainerHeight(available)
     }
 
     updateHeight()
@@ -73,44 +78,25 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
       ? null
       : new ResizeObserver(() => requestAnimationFrame(updateHeight))
 
-    if (resizeObserver && element.parentElement) {
-      resizeObserver.observe(element.parentElement)
+    const mainElement = element.closest('main')
+    if (resizeObserver && mainElement) {
+      resizeObserver.observe(mainElement)
     }
 
-    const mainElement = element.closest('main')
     const previousOverflowY = mainElement?.style.overflowY
-    const previousOverflow = mainElement?.style.overflow
 
     if (mainElement) {
       mainElement.style.overflowY = 'hidden'
-      mainElement.scrollTop = 0
-    }
-    const mutationObserver = typeof MutationObserver === 'undefined' || !mainElement
-      ? null
-      : new MutationObserver(() => requestAnimationFrame(updateHeight))
-
-    if (mutationObserver && mainElement) {
-      mutationObserver.observe(mainElement, {
-        attributes: true,
-        childList: true,
-        subtree: false,
-      })
     }
 
     return () => {
       window.removeEventListener('resize', handleResize)
       resizeObserver?.disconnect()
-      mutationObserver?.disconnect()
       if (mainElement) {
         if (previousOverflowY) {
           mainElement.style.overflowY = previousOverflowY
         } else {
           mainElement.style.removeProperty('overflow-y')
-        }
-        if (previousOverflow) {
-          mainElement.style.overflow = previousOverflow
-        } else {
-          mainElement.style.removeProperty('overflow')
         }
       }
     }
@@ -139,6 +125,16 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
     }
   }, [filters, activeConversationId])
 
+  useEffect(() => {
+    if (initialCompliance) {
+      const nextFilters: ConversationFilters = {
+        ...filters,
+        complianceOnly: true,
+      }
+      loadConversations(nextFilters, true)
+    }
+  }, [initialCompliance, loadConversations])
+
   const handleFiltersChange = useCallback((nextFilters: ConversationFilters) => {
     setFilters(nextFilters)
     loadConversations(nextFilters)
@@ -146,6 +142,10 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
 
   const handleRefresh = useCallback(() => {
     loadConversations(filters)
+  }, [loadConversations, filters])
+
+  const handleConversationRefresh = useCallback(() => {
+    loadConversations(filters, true)
   }, [loadConversations, filters])
 
   const handleSelectConversation = useCallback((conversationId: string) => {
@@ -346,6 +346,7 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
             onRead={() => markConversationRead(activeConversation.id)}
             onError={handleComposerError}
             onDelete={handleDeleteConversation}
+            onRefresh={handleConversationRefresh}
           />
         ) : (
           <div className="flex items-center justify-center h-full text-muted-foreground">

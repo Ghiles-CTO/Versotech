@@ -23,6 +23,8 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
   const [activeConversationId, setActiveConversationId] = useState<string | null>(initialConversations[0]?.id || null)
   const [filters, setFilters] = useState<ConversationFilters>(INITIAL_FILTERS)
   const [isLoading, setIsLoading] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerHeight, setContainerHeight] = useState<number | null>(null)
 
   // Ref to track active conversation without recreating subscriptions
   const activeConversationIdRef = useRef(activeConversationId)
@@ -54,6 +56,54 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
       conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv
     ))
     markConversationRead(conversationId).catch(console.error)
+  }, [])
+
+  useEffect(() => {
+    const element = containerRef.current
+    if (!element) return
+
+    const updateHeight = () => {
+      const target = containerRef.current
+      if (!target) return
+      const mainElement = target.closest('main')
+      if (!mainElement) return
+      const mainRect = mainElement.getBoundingClientRect()
+      const targetRect = target.getBoundingClientRect()
+      const offsetWithinMain = targetRect.top - mainRect.top
+      const available = Math.max(320, mainRect.height - offsetWithinMain)
+      setContainerHeight(available)
+    }
+
+    updateHeight()
+    const handleResize = () => requestAnimationFrame(updateHeight)
+    window.addEventListener('resize', handleResize)
+
+    const resizeObserver = typeof ResizeObserver === 'undefined'
+      ? null
+      : new ResizeObserver(() => requestAnimationFrame(updateHeight))
+
+    const mainElement = element.closest('main')
+    if (resizeObserver && mainElement) {
+      resizeObserver.observe(mainElement)
+    }
+
+    const previousOverflowY = mainElement?.style.overflowY
+
+    if (mainElement) {
+      mainElement.style.overflowY = 'hidden'
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      resizeObserver?.disconnect()
+      if (mainElement) {
+        if (previousOverflowY) {
+          mainElement.style.overflowY = previousOverflowY
+        } else {
+          mainElement.style.removeProperty('overflow-y')
+        }
+      }
+    }
   }, [])
 
   // Load initial conversations
@@ -108,7 +158,11 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
   }, [filters])
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] min-h-0 overflow-hidden">
+    <div
+      ref={containerRef}
+      className="flex min-h-0 overflow-hidden"
+      style={containerHeight ? { height: `${containerHeight}px` } : undefined}
+    >
       <InvestorContacts
         conversations={conversations}
         filters={filters}

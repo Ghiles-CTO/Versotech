@@ -177,7 +177,7 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 **Description:** As CEO, I want a Compliance Team dashboard so I can see all compliance agent activity in one place.
 
 **Acceptance Criteria:**
-- [ ] Create route `/versotech_admin/agents/compliance/page.tsx`
+- [x] Create route `/versotech_admin/agents/compliance/page.tsx`
 - [x] Display 3 agent cards (Uma, Valerie, Wayne) with their assigned tasks (now on `/versotech_admin/agents`)
 - [x] Show KPI cards: High Risk Investors, Expiring Documents, Blacklist Alerts, Pending Reviews
 - [x] Tabbed interface: Risk Profiles | Blacklist | KYC Monitor | Activity Log

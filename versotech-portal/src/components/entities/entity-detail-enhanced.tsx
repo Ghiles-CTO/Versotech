@@ -1160,6 +1160,15 @@ export function EntityDetailEnhanced({
   }, [entity, stakeholders])
   const logoUrl = entity.logo_url || ''
   const [imageError, setImageError] = useState(false)
+  const ofacHref = useMemo(() => {
+    const params = new URLSearchParams({
+      mode: 'ofac',
+      ofac_entity_type: 'counterparty_entity',
+      ofac_entity_id: entity.id,
+      ofac_name: entity.name
+    })
+    return `/versotech_admin/agents?${params.toString()}`
+  }, [entity.id, entity.name])
 
   // Reset image error when entity changes
   useEffect(() => {
@@ -1269,6 +1278,14 @@ export function EntityDetailEnhanced({
             >
               <Edit className="h-4 w-4" />
               Edit Metadata
+            </Button>
+            <Button
+              onClick={() => window.location.assign(ofacHref)}
+              variant="outline"
+              className="gap-2 rounded-full border-amber-400/60 text-amber-200 hover:bg-amber-400/10"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              Screen OFAC
             </Button>
             <Button
               onClick={() => setDeleteEntityDialogOpen(true)}

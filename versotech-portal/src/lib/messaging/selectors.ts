@@ -9,6 +9,10 @@ export function applyConversationFilters(
     if (filters.visibility !== 'all' && conversation.visibility !== filters.visibility) return false
     if (filters.dealId && conversation.dealId !== filters.dealId) return false
     if (filters.unreadOnly && (!conversation.unreadCount || conversation.unreadCount === 0)) return false
+    if (filters.complianceOnly) {
+      const compliance = (conversation.metadata as Record<string, any>)?.compliance
+      if (!compliance?.flagged) return false
+    }
 
     if (filters.search) {
       const query = filters.search.toLowerCase()
@@ -38,6 +42,5 @@ export function sortConversations(conversations: ConversationSummary[]) {
     return bTime - aTime
   })
 }
-
 
 

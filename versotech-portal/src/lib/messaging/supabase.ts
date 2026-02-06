@@ -35,6 +35,7 @@ export async function fetchConversationsClient(
   if (filters.unreadOnly) params.set('unread', 'true')
   if (filters.search) params.set('search', filters.search)
   if (filters.dealId) params.set('dealId', filters.dealId)
+  if (filters.complianceOnly) params.set('compliance', 'true')
   if (typeof filters.limit === 'number') params.set('limit', String(filters.limit))
   if (typeof filters.offset === 'number') params.set('offset', String(filters.offset))
   if (filters.includeMessages === false) params.set('includeMessages', 'false')
@@ -205,5 +206,4 @@ export function normalizeMessage(raw: any): ConversationMessage {
     readBy: Array.isArray(raw.read_by) ? raw.read_by : [],
   }
 }
-
 

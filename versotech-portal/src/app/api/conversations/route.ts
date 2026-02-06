@@ -27,6 +27,7 @@ function parseFilters(url: URL): {
   const typeParam = (url.searchParams.get('type') || 'all').toLowerCase()
   const searchTermRaw = url.searchParams.get('search') || ''
   const unreadOnly = url.searchParams.get('unread') === 'true'
+  const complianceOnly = url.searchParams.get('compliance') === 'true'
   const includeMessages = url.searchParams.get('includeMessages') !== 'false'
   const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '50', 10) || 50, 1), 100)
   const offset = Math.max(parseInt(url.searchParams.get('offset') || '0', 10) || 0, 0)
@@ -47,6 +48,7 @@ function parseFilters(url: URL): {
       search: searchTermRaw.trim().toLowerCase() || undefined,
       dealId,
       unreadOnly,
+      complianceOnly,
     },
     unreadOnly,
     includeMessages,
@@ -241,6 +243,13 @@ export async function GET(request: NextRequest) {
 
     if (filters.unreadOnly) {
       filtered = filtered.filter((conv: NormalizedConversation) => conv.unreadCount > 0)
+    }
+
+    if (filters.complianceOnly) {
+      filtered = filtered.filter((conv: NormalizedConversation) => {
+        const compliance = (conv.metadata as Record<string, any>)?.compliance
+        return Boolean(compliance?.flagged)
+      })
     }
 
     if (filters.search) {

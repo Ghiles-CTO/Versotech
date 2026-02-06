@@ -12,7 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { Send, Paperclip, MoreVertical, Users, Smile, Trash2, MessageSquare } from 'lucide-react'
+import { Send, Paperclip, MoreVertical, Users, Smile, Trash2, MessageSquare, ShieldAlert } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +20,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +38,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { toast } from 'sonner'
 
 interface ConversationViewProps {
   conversation: ConversationSummary
@@ -37,9 +46,10 @@ interface ConversationViewProps {
   onRead?: () => void
   onError?: (message: string) => void
   onDelete?: (conversationId: string) => void
+  onRefresh?: () => void
 }
 
-export function ConversationView({ conversation, currentUserId, onRead, onError, onDelete }: ConversationViewProps) {
+export function ConversationView({ conversation, currentUserId, onRead, onError, onDelete, onRefresh }: ConversationViewProps) {
   const [messages, setMessages] = useState<ConversationMessage[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [composerMessage, setComposerMessage] = useState('')
@@ -50,6 +60,10 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const didInitialScrollRef = useRef(false)
   const isNearBottomRef = useRef(true)
+  const [showComplianceDialog, setShowComplianceDialog] = useState(false)
+  const [complianceReason, setComplianceReason] = useState('')
+  const [complianceUrgency, setComplianceUrgency] = useState<'low' | 'medium' | 'high'>('medium')
+  const [complianceSubmitting, setComplianceSubmitting] = useState(false)
 
   console.log('[ConversationView] Rendering with', messages.length, 'messages for conversation:', conversation.id)
   
@@ -85,6 +99,47 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
       setMessageToDelete(null)
     } catch (error: any) {
       onError?.(error.message || 'Failed to delete message')
+    }
+  }
+
+  const complianceMeta = useMemo(() => {
+    const metadata = (conversation.metadata as Record<string, any>) || {}
+    return metadata.compliance || {}
+  }, [conversation.metadata])
+
+  const complianceStatus = complianceMeta?.status || (complianceMeta?.flagged ? 'open' : null)
+
+  const submitComplianceAction = async (action: 'flag' | 'resolve') => {
+    setComplianceSubmitting(true)
+    try {
+      const response = await fetch(`/api/conversations/${conversation.id}/compliance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          reason: action === 'flag' ? complianceReason : undefined,
+          urgency: action === 'flag' ? complianceUrgency : undefined,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null)
+        throw new Error(error?.error || 'Failed to update compliance flag')
+      }
+
+      toast.success(
+        action === 'flag' ? 'Compliance flag added' : 'Compliance flag resolved'
+      )
+      setShowComplianceDialog(false)
+      if (action === 'flag') {
+        setComplianceReason('')
+      }
+      onRefresh?.()
+    } catch (error: any) {
+      console.error('[ConversationView] Compliance action error:', error)
+      toast.error(error?.message || 'Failed to update compliance status')
+    } finally {
+      setComplianceSubmitting(false)
     }
   }
 
@@ -157,17 +212,21 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
   useEffect(() => {
     let isMounted = true
     setIsLoading(true)
-    setMessages([])
+    const seedMessages = conversation.latestMessage ? [conversation.latestMessage] : []
+    setMessages(seedMessages)
     
     fetchConversationMessages(conversation.id, { limit: 200 })
       .then(data => {
         if (!isMounted) return
-        setMessages(data)
+        setMessages(data.length > 0 ? data : seedMessages)
         onRead?.()
         markConversationRead(conversation.id).catch(console.error)
       })
       .catch(error => {
         console.error('Load messages error', error)
+        if (isMounted && seedMessages.length > 0) {
+          setMessages(seedMessages)
+        }
       })
       .finally(() => {
         if (isMounted) setIsLoading(false)
@@ -298,6 +357,12 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
             <Badge variant="outline" className="capitalize border-border text-foreground">
               {conversation.type.replace('_', ' ')}
             </Badge>
+            {complianceMeta?.flagged && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <ShieldAlert className="h-3 w-3" />
+                Compliance
+              </Badge>
+            )}
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -312,6 +377,21 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
                 <DropdownMenuItem className="cursor-pointer">
                   Mute Notifications
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => setShowComplianceDialog(true)}
+                >
+                  Flag for Compliance
+                </DropdownMenuItem>
+                {complianceMeta?.flagged && complianceStatus !== 'resolved' && (
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={() => submitComplianceAction('resolve')}
+                  >
+                    Mark Compliance Resolved
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   className="cursor-pointer text-red-600 focus:text-red-600"
@@ -469,6 +549,58 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
         )}
       </div>
       
+      <Dialog open={showComplianceDialog} onOpenChange={setShowComplianceDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Flag for Compliance</DialogTitle>
+            <DialogDescription>
+              Tag this conversation for Wayne to review and follow up.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-muted-foreground">Urgency</label>
+              <select
+                value={complianceUrgency}
+                onChange={(event) => setComplianceUrgency(event.target.value as 'low' | 'medium' | 'high')}
+                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Reason</label>
+              <textarea
+                value={complianceReason}
+                onChange={(event) => setComplianceReason(event.target.value)}
+                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                rows={3}
+                placeholder="Summarize the compliance concern or question."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowComplianceDialog(false)}
+              disabled={complianceSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => submitComplianceAction('flag')}
+              disabled={complianceSubmitting || !complianceReason.trim()}
+            >
+              {complianceSubmitting ? 'Saving...' : 'Flag conversation'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Conversation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
@@ -513,4 +645,3 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
     </div>
   )
 }
-

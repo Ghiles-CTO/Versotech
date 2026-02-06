@@ -73,6 +73,10 @@ export function ConversationsSidebar({
     onFiltersChange({ ...filters, unreadOnly: !filters.unreadOnly })
   }
 
+  const toggleCompliance = () => {
+    onFiltersChange({ ...filters, complianceOnly: !filters.complianceOnly })
+  }
+
   const handleSearchChange = (value: string) => {
     setSearchValue(value)
     onFiltersChange({ ...filters, search: value || undefined })
@@ -92,6 +96,13 @@ export function ConversationsSidebar({
     }
 
     return totals
+  }, [conversations])
+
+  const complianceCount = useMemo(() => {
+    return conversations.filter((conversation) => {
+      const compliance = (conversation.metadata as Record<string, any>)?.compliance
+      return Boolean(compliance?.flagged)
+    }).length
   }, [conversations])
 
   return (
@@ -155,6 +166,14 @@ export function ConversationsSidebar({
           >
             Unread {filters.unreadOnly ? '' : `(${unreadTotals.all})`}
           </Button>
+          <Button
+            variant={filters.complianceOnly ? 'default' : 'outline'}
+            size="sm"
+            className="w-full text-popover-foreground"
+            onClick={toggleCompliance}
+          >
+            Compliance {filters.complianceOnly ? '' : `(${complianceCount})`}
+          </Button>
 
           {canCreateConversation && (
             <div className="grid grid-cols-2 gap-2">
@@ -205,6 +224,7 @@ export function ConversationsSidebar({
               const isActive = conversation.id === activeConversationId
               const firstParticipant = conversation.participants[0]
               const timestamp = conversation.lastMessageAt || conversation.createdAt
+              const compliance = (conversation.metadata as Record<string, any>)?.compliance
               
               return (
                 <li key={conversation.id}>
@@ -264,6 +284,11 @@ export function ConversationsSidebar({
                           <Badge variant="outline" className="text-[10px] capitalize border-border text-muted-foreground px-1.5 py-0">
                             {conversation.type.replace('_', ' ')}
                           </Badge>
+                          {compliance?.flagged && (
+                            <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
+                              Compliance
+                            </Badge>
+                          )}
                           {conversation.participants.length > 1 && (
                             <span className="text-[10px] text-muted-foreground">
                               {conversation.participants.length} participants
@@ -282,4 +307,3 @@ export function ConversationsSidebar({
     </aside>
   )
 }
-

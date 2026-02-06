@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const maxFetch = offset + limit
     let notificationsQuery = serviceSupabase
       .from('notifications')
-      .select('id, user_id, title, message, link, read, created_at, type')
+      .select('id, user_id, title, message, link, read, created_at, type, agent_id, agent:agent_id (id, name, avatar_url)')
       .eq('user_id', user.id)
 
     if (type && type !== 'all') {
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     let investorQuery = serviceSupabase
       .from('investor_notifications')
-      .select('id, user_id, investor_id, title, message, link, read_at, created_at, type, created_by, deal_id')
+      .select('id, user_id, investor_id, title, message, link, read_at, created_at, type, created_by, deal_id, agent_id, agent:agent_id (id, name, avatar_url)')
 
     if (createdByMe) {
       investorQuery = investorQuery.eq('created_by', user.id)
@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
     // Non-lawyers use 'investor_notifications' table
     let query = serviceSupabase
       .from('investor_notifications')
-      .select('id, user_id, investor_id, title, message, link, read_at, created_at, type, created_by, deal_id')
+      .select('id, user_id, investor_id, title, message, link, read_at, created_at, type, created_by, deal_id, agent_id, agent:agent_id (id, name, avatar_url)')
 
     if (createdByMe) {
       // Show notifications I created for others

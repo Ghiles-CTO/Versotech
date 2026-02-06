@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { getCurrentUser } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
+import { resolveAgentIdForTask } from '@/lib/agents'
 
 type AgentRow = {
   id: string
@@ -18,6 +19,8 @@ type AgentRow = {
   role: string
   avatar_url: string | null
   email_identity: string | null
+  description?: string | null
+  system_prompt?: string | null
   is_active: boolean
   created_at: string
 }
@@ -41,6 +44,11 @@ type BlacklistEntry = {
   status: 'active' | 'resolved' | 'false_positive'
   reported_at: string | null
   reported_by: string | null
+  reporter?: {
+    id: string
+    display_name: string | null
+    email: string | null
+  } | { id: string; display_name: string | null; email: string | null }[] | null
   notes?: string | null
 }
 
@@ -170,26 +178,62 @@ type RiskRow = {
   calculated_at: string | null
 }
 
-type AuditLogRow = {
+type ComplianceActivityRow = {
   id: string
-  created_at: string | null
-  timestamp: string | null
   event_type: string | null
-  action: string | null
-  actor_name: string | null
-  actor_email: string | null
-  actor_role: string | null
-  entity_type: string | null
-  entity_name: string | null
-  compliance_flag: boolean | null
-  compliance_review_status: string | null
-  risk_level: string | null
+  description: string | null
+  related_investor_id: string | null
+  related_deal_id: string | null
+  agent_id: string | null
+  created_by: string | null
+  created_at: string | null
+  metadata: Record<string, any> | null
+}
+
+type OfacScreeningRow = {
+  id: string
+  screened_entity_type: string
+  screened_entity_id: string | null
+  screened_name: string
+  screening_date: string | null
+  result: 'clear' | 'potential_match' | 'match'
+  match_details: string | null
+  report_url: string | null
+  created_by: string | null
+  created_at: string | null
+}
+
+type ComplianceConversationRow = {
+  id: string
+  subject: string | null
+  preview: string | null
+  last_message_at: string | null
+  created_at: string
+  metadata: Record<string, any> | null
+  conversation_participants?: Array<{
+    user_id: string
+    profiles?: {
+      id?: string
+      display_name?: string | null
+      email?: string | null
+    } | Array<{
+      id?: string
+      display_name?: string | null
+      email?: string | null
+    }> | null
+  }>
 }
 
 const severityStyles: Record<BlacklistEntry['severity'], string> = {
   warning: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-300',
   blocked: 'bg-orange-500/10 text-orange-700 dark:text-orange-300',
   banned: 'bg-red-500/10 text-red-700 dark:text-red-300',
+}
+
+const ofacResultStyles: Record<OfacScreeningRow['result'], string> = {
+  clear: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+  potential_match: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-300',
+  match: 'bg-red-500/10 text-red-700 dark:text-red-300',
 }
 
 const riskGradeStyles: Record<string, string> = {
@@ -212,6 +256,32 @@ const matchTypeLabels: Record<string, string> = {
   name_fuzzy: 'Name similar',
   entity_name_fuzzy: 'Entity similar',
 }
+
+const complianceEventOptions = [
+  { value: 'risk_calculated', label: 'Risk calculated' },
+  { value: 'blacklist_added', label: 'Blacklist entry added' },
+  { value: 'blacklist_match', label: 'Blacklist match' },
+  { value: 'document_expired', label: 'Document expired' },
+  { value: 'reminder_sent', label: 'Reminder sent' },
+  { value: 'nda_sent', label: 'NDA sent' },
+  { value: 'nda_signed', label: 'NDA signed' },
+  { value: 'ofac_screening', label: 'OFAC screening' },
+  { value: 'agent_assignment_change', label: 'Agent assignment change' },
+  { value: 'compliance_question', label: 'Compliance question' },
+  { value: 'survey_sent', label: 'Survey sent' },
+  { value: 'tax_update', label: 'Tax update' },
+  { value: 'voting_event', label: 'Voting event' },
+  { value: 'litigation_event', label: 'Litigation event' },
+  { value: 'compliance_enquiry', label: 'Compliance enquiry' },
+]
+
+const complianceEventLabels = complianceEventOptions.reduce<Record<string, string>>(
+  (acc, option) => {
+    acc[option.value] = option.label
+    return acc
+  },
+  {}
+)
 
 function getInitials(name: string) {
   return name
@@ -319,6 +389,13 @@ export default async function AgentsPage({
     return typeof value === 'string' ? value : ''
   }
 
+  const activityTypeFilter =
+    typeof resolvedSearchParams.activity_type === 'string' ? resolvedSearchParams.activity_type : 'all'
+  const activityFromFilter =
+    typeof resolvedSearchParams.activity_from === 'string' ? resolvedSearchParams.activity_from : ''
+  const activityToFilter =
+    typeof resolvedSearchParams.activity_to === 'string' ? resolvedSearchParams.activity_to : ''
+
   const mode = getParam('mode')
   const editId = getParam('edit')
   const selectedEntryId = getParam('entry')
@@ -348,6 +425,32 @@ export default async function AgentsPage({
 
   const supabase = createServiceClient()
 
+  let activityQuery = supabase
+    .from('compliance_activity_log')
+    .select(
+      'id, event_type, description, related_investor_id, related_deal_id, agent_id, created_by, created_at, metadata'
+    )
+    .order('created_at', { ascending: false })
+    .limit(200)
+
+  if (activityTypeFilter !== 'all') {
+    activityQuery = activityQuery.eq('event_type', activityTypeFilter)
+  }
+
+  if (activityFromFilter) {
+    const fromDate = new Date(`${activityFromFilter}T00:00:00Z`)
+    if (!Number.isNaN(fromDate.getTime())) {
+      activityQuery = activityQuery.gte('created_at', fromDate.toISOString())
+    }
+  }
+
+  if (activityToFilter) {
+    const toDate = new Date(`${activityToFilter}T23:59:59Z`)
+    if (!Number.isNaN(toDate.getTime())) {
+      activityQuery = activityQuery.lte('created_at', toDate.toISOString())
+    }
+  }
+
   const [
     { data: agentsData, error: agentsError },
     { data: assignmentsData },
@@ -358,11 +461,13 @@ export default async function AgentsPage({
     { data: riskGradesData },
     { data: investorRiskProfilesData },
     { data: dealRiskProfilesData },
-    { data: auditLogsData },
+    { data: activityLogsData },
+    { data: ofacScreeningsData },
+    { data: complianceConversationsData },
   ] = await Promise.all([
     supabase
       .from('ai_agents')
-      .select('id, name, role, avatar_url, email_identity, is_active, created_at')
+      .select('id, name, role, avatar_url, email_identity, description, system_prompt, is_active, created_at')
       .order('created_at', { ascending: true }),
     supabase
       .from('agent_task_assignments')
@@ -370,7 +475,7 @@ export default async function AgentsPage({
       .order('task_code', { ascending: true }),
     supabase
       .from('compliance_blacklist')
-      .select('id, severity, status, reason, full_name, entity_name, email, phone, tax_id, reported_at, reported_by, notes')
+      .select('id, severity, status, reason, full_name, entity_name, email, phone, tax_id, reported_at, reported_by, notes, reporter:reported_by (id, display_name, email)')
       .order('reported_at', { ascending: false }),
     supabase
       .from('blacklist_matches')
@@ -410,13 +515,21 @@ export default async function AgentsPage({
       )
       .order('calculated_at', { ascending: false })
       .limit(500),
+    activityQuery,
     supabase
-      .from('audit_logs')
+      .from('ofac_screenings')
       .select(
-        'id, created_at, timestamp, event_type, action, actor_name, actor_email, actor_role, entity_type, entity_name, compliance_flag, compliance_review_status, risk_level'
+        'id, screened_entity_type, screened_entity_id, screened_name, screening_date, result, match_details, report_url, created_by, created_at'
       )
-      .eq('compliance_flag', true)
-      .order('created_at', { ascending: false })
+      .order('screening_date', { ascending: false })
+      .limit(50),
+    supabase
+      .from('conversations')
+      .select(
+        'id, subject, preview, last_message_at, created_at, metadata, conversation_participants (user_id, profiles:user_id (id, display_name, email))'
+      )
+      .contains('metadata', { compliance: { flagged: true } })
+      .order('last_message_at', { ascending: false, nullsFirst: false })
       .limit(50),
   ])
 
@@ -429,7 +542,9 @@ export default async function AgentsPage({
   const riskGrades: RiskGradeRow[] = riskGradesData ?? []
   const investorRiskProfiles: InvestorRiskProfileRow[] = investorRiskProfilesData ?? []
   const dealRiskProfilesRaw: DealRiskProfileRow[] = dealRiskProfilesData ?? []
-  const auditLogs: AuditLogRow[] = auditLogsData ?? []
+  const activityLogs: ComplianceActivityRow[] = activityLogsData ?? []
+  const ofacScreenings: OfacScreeningRow[] = ofacScreeningsData ?? []
+  const complianceConversations: ComplianceConversationRow[] = complianceConversationsData ?? []
 
   const { data: kycSubmissionsData } = await supabase
     .from('kyc_submissions')
@@ -601,9 +716,9 @@ export default async function AgentsPage({
     fetchByForeignIds('commercial_partner_users', 'commercial_partner_id, user_id, is_primary', 'commercial_partner_id', commercialPartnerIds),
     fetchByForeignIds('arranger_users', 'arranger_id, user_id, is_primary', 'arranger_id', arrangerEntityIds),
     supabase
-      .from('notifications')
+      .from('investor_notifications')
       .select('id, user_id, created_at, data')
-      .eq('type', 'kyc_reminder')
+      .eq('type', 'kyc')
       .order('created_at', { ascending: false })
       .limit(500),
   ])
@@ -665,6 +780,11 @@ export default async function AgentsPage({
   const tasksByAgent = assignments.reduce<Record<string, TaskRow[]>>((acc, task) => {
     if (!acc[task.agent_id]) acc[task.agent_id] = []
     acc[task.agent_id].push(task)
+    return acc
+  }, {})
+
+  const agentsById = agents.reduce<Record<string, AgentRow>>((acc, agent) => {
+    acc[agent.id] = agent
     return acc
   }, {})
 
@@ -1156,17 +1276,68 @@ export default async function AgentsPage({
     ['pending', 'under_review', 'draft', 'missing'].includes(row.derived_status)
   ).length
   const pendingReviewCount = pendingKycCount + activeBlacklistCount
+  const todayKey = new Date().toDateString()
+  const alertsRaisedToday = activityLogs.filter((log) => {
+    const createdAt = log.created_at ? new Date(log.created_at) : null
+    return createdAt && createdAt.toDateString() === todayKey
+  }).length
+  const automationEventTypes = new Set(['risk_calculated', 'reminder_sent', 'nda_signed', 'ofac_screening'])
+  const automationsCompleted = activityLogs.filter((log) => {
+    if (!log.event_type || !automationEventTypes.has(log.event_type)) return false
+    const createdAt = log.created_at ? new Date(log.created_at) : null
+    return createdAt && createdAt.toDateString() === todayKey
+  }).length
+  const pendingTasksCount = pendingReviewCount
 
-  const activityRows = auditLogs.map((log) => ({
-    id: log.id,
-    time: log.created_at || log.timestamp,
-    action: log.action || log.event_type || 'Activity',
-    actor: log.actor_name || log.actor_email || 'System',
-    role: log.actor_role || '—',
-    entity: log.entity_name || log.entity_type || '—',
-    risk: log.risk_level || '—',
-    review: log.compliance_review_status || (log.compliance_flag ? 'flagged' : '—'),
-  }))
+  const investorNameMap = new Map<string, string>()
+  const dealNameMap = new Map<string, string>()
+  riskRows.forEach((row) => {
+    if (row.risk_type === 'investor') {
+      investorNameMap.set(row.id, row.name)
+    } else {
+      dealNameMap.set(row.id, row.name)
+    }
+  })
+
+  const agentNameMap = new Map<string, string>()
+  agents.forEach((agent) => {
+    agentNameMap.set(agent.id, agent.name)
+  })
+
+  const investorOptions = Array.from(investorNameMap.entries()).sort((a, b) =>
+    a[1].localeCompare(b[1])
+  )
+  const dealOptions = Array.from(dealNameMap.entries()).sort((a, b) =>
+    a[1].localeCompare(b[1])
+  )
+
+  const activityRows = activityLogs.map((log) => {
+    const metadata = log.metadata ?? {}
+    const eventLabel = log.event_type ? complianceEventLabels[log.event_type] : null
+    const actorLabel =
+      metadata.actor_name ||
+      metadata.actor_email ||
+      (log.created_by ? `User ${log.created_by.slice(0, 6)}` : 'System')
+    const agentLabel =
+      (log.agent_id ? agentNameMap.get(log.agent_id) : null) ||
+      metadata.agent_name ||
+      '—'
+    const entityLabel =
+      (log.related_investor_id ? investorNameMap.get(log.related_investor_id) : null) ||
+      (log.related_deal_id ? dealNameMap.get(log.related_deal_id) : null) ||
+      metadata.entity_name ||
+      '—'
+
+    return {
+      id: log.id,
+      time: log.created_at,
+      event: eventLabel || log.event_type || 'Activity',
+      description: log.description || metadata.description || '—',
+      actor: actorLabel,
+      agent: agentLabel,
+      entity: entityLabel,
+    }
+  })
 
   const investorRiskProfileMap = new Map<string, InvestorRiskProfileRow>()
   investorRiskProfiles.forEach((profile) => {
@@ -1181,19 +1352,6 @@ export default async function AgentsPage({
       dealRiskProfileMap.set(profile.deal_id, profile)
     }
   })
-
-  const [riskDetailType, riskDetailId] = riskDetailKey.split(':')
-  const selectedRiskRow = riskDetailType && riskDetailId
-    ? riskRows.find(
-        (row) => row.risk_type === riskDetailType && row.id === riskDetailId
-      )
-    : null
-  const selectedInvestorProfile = selectedRiskRow?.risk_type === 'investor'
-    ? investorRiskProfileMap.get(selectedRiskRow.id)
-    : null
-  const selectedDealProfile = selectedRiskRow?.risk_type === 'deal'
-    ? dealRiskProfileMap.get(selectedRiskRow.id)
-    : null
 
   type SeverityKey = 'warning' | 'blocked' | 'banned'
   type BlacklistCounts = { total: number } & Record<SeverityKey, number>
@@ -1234,6 +1392,12 @@ export default async function AgentsPage({
     typeof resolvedSearchParams.kyc_status === 'string' ? resolvedSearchParams.kyc_status : 'all'
   const kycPersonaFilter =
     typeof resolvedSearchParams.kyc_persona === 'string' ? resolvedSearchParams.kyc_persona : 'all'
+  const ofacDefaultName =
+    typeof resolvedSearchParams.ofac_name === 'string' ? resolvedSearchParams.ofac_name : ''
+  const ofacDefaultEntityType =
+    typeof resolvedSearchParams.ofac_entity_type === 'string' ? resolvedSearchParams.ofac_entity_type : ''
+  const ofacDefaultEntityId =
+    typeof resolvedSearchParams.ofac_entity_id === 'string' ? resolvedSearchParams.ofac_entity_id : ''
   const tabParam = getParam('tab')
   const activeTab = ['risk', 'blacklist', 'kyc', 'activity'].includes(tabParam)
     ? tabParam
@@ -1244,8 +1408,21 @@ export default async function AgentsPage({
     typeof resolvedSearchParams.risk_type === 'string' ? resolvedSearchParams.risk_type : 'all'
   const riskGradeFilter =
     typeof resolvedSearchParams.risk_grade === 'string' ? resolvedSearchParams.risk_grade : 'all'
-  const riskDetailKey =
-    typeof resolvedSearchParams.risk === 'string' ? resolvedSearchParams.risk : ''
+  const [riskDetailType, riskDetailId] =
+    typeof resolvedSearchParams.risk === 'string' && resolvedSearchParams.risk.includes(':')
+      ? resolvedSearchParams.risk.split(':')
+      : ['', '']
+  const selectedRiskRow = riskDetailType && riskDetailId
+    ? riskRows.find(
+        (row) => row.risk_type === riskDetailType && row.id === riskDetailId
+      )
+    : null
+  const selectedInvestorProfile = selectedRiskRow?.risk_type === 'investor'
+    ? investorRiskProfileMap.get(selectedRiskRow.id)
+    : null
+  const selectedDealProfile = selectedRiskRow?.risk_type === 'deal'
+    ? dealRiskProfileMap.get(selectedRiskRow.id)
+    : null
   const baseParams = new URLSearchParams()
   if (query) baseParams.set('query', query)
   if (severityFilter !== 'all') baseParams.set('severity', severityFilter)
@@ -1256,10 +1433,17 @@ export default async function AgentsPage({
   if (riskQuery) baseParams.set('risk_query', riskQuery)
   if (riskTypeFilter !== 'all') baseParams.set('risk_type', riskTypeFilter)
   if (riskGradeFilter !== 'all') baseParams.set('risk_grade', riskGradeFilter)
+  if (activityTypeFilter !== 'all') baseParams.set('activity_type', activityTypeFilter)
+  if (activityFromFilter) baseParams.set('activity_from', activityFromFilter)
+  if (activityToFilter) baseParams.set('activity_to', activityToFilter)
   if (activeTab !== 'risk') baseParams.set('tab', activeTab)
   const baseQueryString = baseParams.toString()
   const baseHref = baseQueryString ? `/versotech_admin/agents?${baseQueryString}` : '/versotech_admin/agents'
-  const modalHref = `${baseHref}${baseQueryString ? '&' : '?'}mode=new`
+  const activityParams = new URLSearchParams(baseParams)
+  activityParams.set('tab', 'activity')
+  const activityBaseHref = `/versotech_admin/agents?${activityParams.toString()}`
+  const blacklistModalHref = `${baseHref}${baseQueryString ? '&' : '?'}mode=new`
+  const ofacModalHref = `${baseHref}${baseQueryString ? '&' : '?'}mode=ofac`
   const tabHref = (tabKey: string) => {
     const params = new URLSearchParams(baseParams)
     if (tabKey === 'risk') {
@@ -1320,7 +1504,8 @@ export default async function AgentsPage({
   const entryToShowMatches = selectedEntryId
     ? blacklistEntries.find((entry) => entry.id === selectedEntryId)
     : null
-  const showModal = mode === 'new' || Boolean(editEntry)
+  const showBlacklistModal = mode === 'new' || Boolean(editEntry)
+  const showOfacModal = mode === 'ofac'
 
   const createBlacklistEntry = async (formData: FormData) => {
     'use server'
@@ -1343,20 +1528,23 @@ export default async function AgentsPage({
     const severity = (readText('severity') || 'warning') as BlacklistEntry['severity']
     const status = (readText('status') || 'active') as BlacklistEntry['status']
 
-    const { error } = await createServiceClient()
+    const supabase = createServiceClient()
+    const entryPayload = {
+      full_name: readText('full_name'),
+      entity_name: readText('entity_name'),
+      email: readText('email'),
+      phone: readText('phone'),
+      tax_id: readText('tax_id'),
+      reason: readText('reason'),
+      notes: readText('notes'),
+      severity,
+      status,
+      reported_by: currentUser.id,
+    }
+
+    const { error } = await supabase
       .from('compliance_blacklist')
-      .insert({
-        full_name: readText('full_name'),
-        entity_name: readText('entity_name'),
-        email: readText('email'),
-        phone: readText('phone'),
-        tax_id: readText('tax_id'),
-        reason: readText('reason'),
-        notes: readText('notes'),
-        severity,
-        status,
-        reported_by: currentUser.id,
-      })
+      .insert(entryPayload)
 
     const returnTo = formData.get('return_to')
     const redirectTarget =
@@ -1365,6 +1553,27 @@ export default async function AgentsPage({
 
     if (error) {
       redirect(`${redirectTarget}${separator}error=${encodeURIComponent('Failed to create blacklist entry')}`)
+    }
+
+    try {
+      const agentId = await resolveAgentIdForTask(supabase, 'U003')
+      await supabase.from('compliance_activity_log').insert({
+        event_type: 'blacklist_added',
+        description: entryPayload.reason || 'Blacklist entry created',
+        agent_id: agentId,
+        created_by: currentUser.id,
+        metadata: {
+          severity,
+          status,
+          full_name: entryPayload.full_name,
+          entity_name: entryPayload.entity_name,
+          email: entryPayload.email,
+          phone: entryPayload.phone,
+          tax_id: entryPayload.tax_id,
+        },
+      })
+    } catch (logError) {
+      console.error('[compliance] Failed to log blacklist entry:', logError)
     }
 
     redirect(`${redirectTarget}${separator}success=Blacklist%20entry%20created`)
@@ -1462,6 +1671,65 @@ export default async function AgentsPage({
       )
     }
 
+    try {
+      const agentId = await resolveAgentIdForTask(supabase, 'U002')
+      await supabase.from('compliance_activity_log').insert({
+        event_type: 'risk_calculated',
+        description: `Risk recalculated (${riskType})`,
+        related_investor_id: riskType === 'deal' ? null : targetId,
+        related_deal_id: riskType === 'deal' ? targetId : null,
+        agent_id: agentId,
+        created_by: currentUser.id,
+        metadata: {
+          risk_type: riskType,
+          target_id: targetId,
+          action: 'manual_recalculate',
+        },
+      })
+
+      let riskGrade: string | null = null
+      if (riskType === 'deal') {
+        const { data: dealRisk } = await supabase
+          .from('deal_risk_profiles')
+          .select('composite_risk_grade')
+          .eq('deal_id', targetId)
+          .order('calculated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        riskGrade = dealRisk?.composite_risk_grade ?? null
+      } else {
+        const { data: investorRisk } = await supabase
+          .from('investor_risk_profiles_current')
+          .select('composite_risk_grade')
+          .eq('investor_id', targetId)
+          .maybeSingle()
+        riskGrade = investorRisk?.composite_risk_grade ?? null
+      }
+
+      if (riskGrade && ['C', 'D', 'E'].includes(riskGrade)) {
+        const { data: ceoUsers } = await supabase.from('ceo_users').select('user_id')
+        const notifications = (ceoUsers ?? []).map((ceo) => ({
+          user_id: ceo.user_id,
+          title: `High risk ${riskType} detected`,
+          message: `A ${riskType} was recalculated at grade ${riskGrade}. Review the risk profile for next steps.`,
+          link: `/versotech_admin/agents?tab=risk&risk=${riskType}:${targetId}`,
+          agent_id: agentId,
+          type: 'risk_alert',
+          metadata: {
+            risk_type: riskType,
+            target_id: targetId,
+            grade: riskGrade,
+          },
+        }))
+
+        if (notifications.length) {
+          await supabase.from('investor_notifications').insert(notifications)
+        }
+      }
+    } catch (logError) {
+      console.error('[compliance] Failed to log risk recalculation:', logError)
+    }
+
     redirect(`${redirectTarget}${separator}success=Risk%20recalculated`)
   }
 
@@ -1507,11 +1775,12 @@ export default async function AgentsPage({
 
     const payload = parsedTargets.map((target) => ({
       user_id: target.userId,
-      type: 'kyc_reminder',
+      investor_id: null,
+      type: 'kyc',
       title: 'KYC reminder',
       message: 'Please upload or renew your KYC documents.',
       link: '/versotech_main/kyc-compliance',
-      read: false,
+      created_by: currentUser.id,
       data: {
         kyc_subject_type: target.subjectType,
         kyc_subject_id: target.subjectId,
@@ -1520,9 +1789,16 @@ export default async function AgentsPage({
       },
     }))
 
-    const { error } = await createServiceClient()
-      .from('notifications')
-      .insert(payload)
+    const supabase = createServiceClient()
+    const agentId = await resolveAgentIdForTask(supabase, 'V002')
+    const { error } = await supabase
+      .from('investor_notifications')
+      .insert(
+        payload.map((entry) => ({
+          ...entry,
+          agent_id: agentId,
+        }))
+      )
 
     const returnTo = formData.get('return_to')
     const redirectTarget =
@@ -1533,12 +1809,324 @@ export default async function AgentsPage({
       redirect(`${redirectTarget}${separator}error=Failed%20to%20send%20reminders`)
     }
 
+    try {
+      const subjectTypes = Array.from(new Set(parsedTargets.map((target) => target.subjectType)))
+      await supabase.from('compliance_activity_log').insert({
+        event_type: 'reminder_sent',
+        description: `KYC reminders sent (${parsedTargets.length})`,
+        agent_id: agentId,
+        created_by: currentUser.id,
+        metadata: {
+          reminder_count: parsedTargets.length,
+          subject_types: subjectTypes,
+        },
+      })
+    } catch (logError) {
+      console.error('[compliance] Failed to log KYC reminders:', logError)
+    }
+
     redirect(`${redirectTarget}${separator}success=KYC%20reminders%20sent`)
+  }
+
+  const createComplianceEvent = async (formData: FormData) => {
+    'use server'
+    const currentUser = await getCurrentUser()
+    if (!currentUser) {
+      redirect('/versotech_main/login')
+    }
+    const isAllowed = currentUser.role === 'ceo' || currentUser.permissions?.includes('super_admin')
+    if (!isAllowed) {
+      redirect('/versotech_admin/agents?error=Not%20authorized')
+    }
+
+    const readText = (key: string) => {
+      const value = formData.get(key)
+      if (typeof value !== 'string') return null
+      const trimmed = value.trim()
+      return trimmed.length ? trimmed : null
+    }
+
+    const eventType = readText('event_type')
+    if (!eventType) {
+      redirect('/versotech_admin/agents?tab=activity&error=Missing%20event%20type')
+    }
+
+    const description = readText('description')
+    const relatedInvestorId = readText('related_investor_id')
+    const relatedDealId = readText('related_deal_id')
+    const agentOverride = readText('agent_id')
+    const requestedChange = readText('requested_change')
+    const urgency = readText('urgency')
+    const requesterPersona = readText('requester_persona')
+
+    const taskMap: Record<string, string> = {
+      risk_calculated: 'U002',
+      blacklist_added: 'U003',
+      blacklist_match: 'U003',
+      document_expired: 'V002',
+      reminder_sent: 'V002',
+      nda_sent: 'V001',
+      nda_signed: 'V001',
+      ofac_screening: 'U001',
+      compliance_question: 'W001',
+      compliance_enquiry: 'W003',
+      survey_sent: 'V003',
+      tax_update: 'W002',
+      voting_event: 'W002',
+      litigation_event: 'W002',
+    }
+
+    const supabase = createServiceClient()
+    let agentId = agentOverride
+    if (!agentId) {
+      agentId = await resolveAgentIdForTask(supabase, taskMap[eventType])
+    }
+
+    const metadata = {
+      actor_name: currentUser.displayName || currentUser.email,
+      actor_email: currentUser.email,
+      actor_role: currentUser.role,
+      requested_change: requestedChange,
+      urgency,
+      requester_persona: requesterPersona,
+    }
+
+    const { data: newEvent, error } = await supabase
+      .from('compliance_activity_log')
+      .insert({
+        event_type: eventType,
+        description: description || complianceEventLabels[eventType] || 'Compliance event',
+        related_investor_id: relatedInvestorId,
+        related_deal_id: relatedDealId,
+        agent_id: agentId,
+        created_by: currentUser.id,
+        metadata,
+      })
+      .select('id')
+      .single()
+
+    const returnTo = formData.get('return_to')
+    const redirectTarget =
+      typeof returnTo === 'string' && returnTo.length ? returnTo : '/versotech_admin/agents?tab=activity'
+    const separator = redirectTarget.includes('?') ? '&' : '?'
+
+    if (error) {
+      redirect(`${redirectTarget}${separator}error=Failed%20to%20log%20event`)
+    }
+
+    if (eventType === 'compliance_enquiry') {
+      const { data: ceoUsers } = await supabase.from('ceo_users').select('user_id')
+      const notifications = (ceoUsers ?? []).map((ceo) => ({
+        user_id: ceo.user_id,
+        investor_id: null,
+        title: 'Compliance enquiry logged',
+        message: description || 'A new compliance enquiry was submitted.',
+        link: '/versotech_admin/agents?tab=activity',
+        type: 'general',
+        agent_id: agentId,
+        data: {
+          compliance_event_id: newEvent?.id ?? null,
+          event_type: eventType,
+          urgency,
+        },
+      }))
+
+      if (notifications.length) {
+        await supabase.from('investor_notifications').insert(notifications)
+      }
+    }
+
+    redirect(`${redirectTarget}${separator}success=Compliance%20event%20logged`)
+  }
+
+  const createOfacScreening = async (formData: FormData) => {
+    'use server'
+    const currentUser = await getCurrentUser()
+    if (!currentUser) {
+      redirect('/versotech_main/login')
+    }
+    const isAllowed = currentUser.role === 'ceo' || currentUser.permissions?.includes('super_admin')
+    if (!isAllowed) {
+      redirect('/versotech_admin/agents?error=Not%20authorized')
+    }
+
+    const readText = (key: string) => {
+      const value = formData.get(key)
+      if (typeof value !== 'string') return null
+      const trimmed = value.trim()
+      return trimmed.length ? trimmed : null
+    }
+
+    const screenedName = readText('screened_name')
+    if (!screenedName) {
+      redirect('/versotech_admin/agents?tab=blacklist&error=Missing%20screened%20name')
+    }
+
+    const screenedEntityType = readText('screened_entity_type') || 'investor'
+    const screenedEntityId = readText('screened_entity_id')
+    const result = (readText('result') || 'clear') as OfacScreeningRow['result']
+    const matchDetails = readText('match_details')
+    const reportUrl = readText('report_url')
+
+    const supabase = createServiceClient()
+
+    const { data: newScreening, error } = await supabase
+      .from('ofac_screenings')
+      .insert({
+        screened_entity_type: screenedEntityType,
+        screened_entity_id: screenedEntityId,
+        screened_name: screenedName,
+        result,
+        match_details: matchDetails,
+        report_url: reportUrl,
+        created_by: currentUser.id,
+      })
+      .select('id')
+      .single()
+
+    const returnTo = formData.get('return_to')
+    const redirectTarget =
+      typeof returnTo === 'string' && returnTo.length ? returnTo : '/versotech_admin/agents?tab=blacklist'
+    const separator = redirectTarget.includes('?') ? '&' : '?'
+
+    if (error) {
+      redirect(`${redirectTarget}${separator}error=Failed%20to%20log%20OFAC%20screening`)
+    }
+
+    try {
+      const agentId = await resolveAgentIdForTask(supabase, 'U001')
+      await supabase.from('compliance_activity_log').insert({
+        event_type: 'ofac_screening',
+        description: `OFAC screening (${result}) - ${screenedName}`,
+        agent_id: agentId,
+        created_by: currentUser.id,
+        metadata: {
+          ofac_screening_id: newScreening?.id ?? null,
+          screened_entity_type: screenedEntityType,
+          screened_entity_id: screenedEntityId,
+          result,
+        },
+      })
+
+      if (result === 'match') {
+        const isEntity = screenedEntityType.includes('entity')
+        const { data: blacklistEntry } = await supabase
+          .from('compliance_blacklist')
+          .insert({
+            full_name: isEntity ? null : screenedName,
+            entity_name: isEntity ? screenedName : null,
+            reason: 'OFAC screening match',
+            severity: 'blocked',
+            source: 'ofac',
+            status: 'active',
+            reported_by: currentUser.id,
+          })
+          .select('id')
+          .single()
+
+        await supabase.from('compliance_activity_log').insert({
+          event_type: 'blacklist_added',
+          description: `Auto-blocked from OFAC match: ${screenedName}`,
+          agent_id: agentId,
+          created_by: currentUser.id,
+          metadata: {
+            ofac_screening_id: newScreening?.id ?? null,
+            blacklist_entry_id: blacklistEntry?.id ?? null,
+          },
+        })
+
+        const { data: ceoUsers } = await supabase.from('ceo_users').select('user_id')
+        const notifications = (ceoUsers ?? []).map((ceo) => ({
+          user_id: ceo.user_id,
+          investor_id: null,
+          title: 'OFAC match detected',
+          message: `${screenedName} matched the OFAC list and was added to the blacklist.`,
+          link: '/versotech_admin/agents?tab=blacklist',
+          type: 'general',
+          agent_id: agentId,
+          data: {
+            ofac_screening_id: newScreening?.id ?? null,
+            blacklist_entry_id: blacklistEntry?.id ?? null,
+          },
+        }))
+
+        if (notifications.length) {
+          await supabase.from('investor_notifications').insert(notifications)
+        }
+      }
+    } catch (logError) {
+      console.error('[compliance] Failed to log OFAC screening:', logError)
+    }
+
+    redirect(`${redirectTarget}${separator}success=OFAC%20screening%20logged`)
+  }
+
+  const updateTaskAssignment = async (formData: FormData) => {
+    'use server'
+    const currentUser = await getCurrentUser()
+    if (!currentUser) {
+      redirect('/versotech_main/login')
+    }
+    const isAllowed = currentUser.role === 'ceo' || currentUser.permissions?.includes('super_admin')
+    if (!isAllowed) {
+      redirect('/versotech_admin/agents?error=Not%20authorized')
+    }
+
+    const taskCode = formData.get('task_code')
+    const agentId = formData.get('agent_id')
+    if (typeof taskCode !== 'string' || !taskCode) {
+      redirect('/versotech_admin/agents?error=Invalid%20task')
+    }
+    if (typeof agentId !== 'string' || !agentId) {
+      redirect('/versotech_admin/agents?error=Invalid%20agent')
+    }
+
+    const supabase = createServiceClient()
+    const { data: existingAssignment } = await supabase
+      .from('agent_task_assignments')
+      .select('agent_id, task_name')
+      .eq('task_code', taskCode)
+      .maybeSingle()
+
+    const { error } = await supabase
+      .from('agent_task_assignments')
+      .update({ agent_id: agentId })
+      .eq('task_code', taskCode)
+
+    if (error) {
+      redirect('/versotech_admin/agents?error=Failed%20to%20update%20assignment')
+    }
+
+    if (existingAssignment?.agent_id !== agentId) {
+      try {
+        await supabase.from('compliance_activity_log').insert({
+          event_type: 'agent_assignment_change',
+          description: `Assignment updated for ${existingAssignment?.task_name || taskCode}`,
+          agent_id: agentId,
+          created_by: currentUser.id,
+          metadata: {
+            task_code: taskCode,
+            task_name: existingAssignment?.task_name ?? null,
+            from_agent_id: existingAssignment?.agent_id ?? null,
+            to_agent_id: agentId,
+          },
+        })
+      } catch (logError) {
+        console.error('[compliance] Failed to log assignment change:', logError)
+      }
+    }
+
+    const returnTo = formData.get('return_to')
+    const redirectTarget =
+      typeof returnTo === 'string' && returnTo.length ? returnTo : '/versotech_admin/agents'
+    const separator = redirectTarget.includes('?') ? '&' : '?'
+
+    redirect(`${redirectTarget}${separator}success=Assignment%20updated`)
   }
 
   return (
     <div className="p-6 space-y-8">
-      {showModal && (
+      {showBlacklistModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div
             role="dialog"
@@ -1668,6 +2256,120 @@ export default async function AgentsPage({
           </div>
         </div>
       )}
+      {showOfacModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ofac-modal-title"
+            className="w-full max-w-3xl rounded-xl bg-background shadow-xl"
+          >
+            <div className="border-b px-6 py-4 flex items-center justify-between">
+              <div>
+                <p id="ofac-modal-title" className="text-base font-semibold">
+                  Log OFAC Screening
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Record a manual OFAC check and upload report details.
+                </p>
+              </div>
+              <a
+                href={tabHref('blacklist')}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Close
+              </a>
+            </div>
+            <div className="px-6 py-5">
+              <form action={createOfacScreening} className="grid gap-3 md:grid-cols-2">
+                <input type="hidden" name="return_to" value={tabHref('blacklist')} />
+                <div>
+                  <label className="text-xs text-muted-foreground">Screened name</label>
+                  <input
+                    name="screened_name"
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    defaultValue={ofacDefaultName}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Entity type</label>
+                  <select
+                    name="screened_entity_type"
+                    defaultValue={ofacDefaultEntityType || 'investor'}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="investor">Investor</option>
+                    <option value="investor_member">Investor member</option>
+                    <option value="counterparty_entity">Counterparty entity</option>
+                    <option value="counterparty_member">Counterparty member</option>
+                    <option value="partner">Partner</option>
+                    <option value="partner_member">Partner member</option>
+                    <option value="introducer">Introducer</option>
+                    <option value="introducer_member">Introducer member</option>
+                    <option value="lawyer">Lawyer</option>
+                    <option value="lawyer_member">Lawyer member</option>
+                    <option value="commercial_partner">Commercial partner</option>
+                    <option value="commercial_partner_member">Commercial partner member</option>
+                    <option value="arranger_entity">Arranger entity</option>
+                    <option value="arranger_member">Arranger member</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Entity ID (optional)</label>
+                  <input
+                    name="screened_entity_id"
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    defaultValue={ofacDefaultEntityId}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Result</label>
+                  <select
+                    name="result"
+                    defaultValue="clear"
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="clear">Clear</option>
+                    <option value="potential_match">Potential match</option>
+                    <option value="match">Match</option>
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-xs text-muted-foreground">Report URL (optional)</label>
+                  <input
+                    name="report_url"
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    placeholder="https://..."
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-xs text-muted-foreground">Match details</label>
+                  <textarea
+                    name="match_details"
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    rows={3}
+                  />
+                </div>
+                <div className="md:col-span-2 flex items-center gap-3">
+                  <button
+                    type="submit"
+                    className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+                  >
+                    Log screening
+                  </button>
+                  <a
+                    href={tabHref('blacklist')}
+                    className="text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    Cancel
+                  </a>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="space-y-1">
         <h1 className="text-2xl font-bold">Compliance Agents</h1>
         <p className="text-muted-foreground">
@@ -1732,6 +2434,9 @@ export default async function AgentsPage({
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
+                    {agent.description && (
+                      <p className="text-xs text-muted-foreground">{agent.description}</p>
+                    )}
                     <div className="grid gap-2 text-sm">
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">Email identity</span>
@@ -1774,6 +2479,77 @@ export default async function AgentsPage({
       </section>
 
       <section className="space-y-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Bot className="h-4 w-4" />
+          <span>Task Assignments</span>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Agent Task Routing</CardTitle>
+            <CardDescription>
+              Assign each compliance task to the agent responsible for it.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {assignments.length === 0 ? (
+              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                No task assignments found.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {assignments.map((task) => (
+                  <form
+                    key={task.task_code}
+                    action={updateTaskAssignment}
+                    className="grid gap-3 md:grid-cols-[1fr_240px_auto] items-center rounded-lg border border-muted/60 p-3"
+                  >
+                    <input type="hidden" name="return_to" value={baseHref} />
+                    <input type="hidden" name="task_code" value={task.task_code} />
+                    <div>
+                      <div className="text-sm font-semibold text-foreground">{task.task_code}</div>
+                      <div className="text-xs text-muted-foreground">{task.task_name}</div>
+                    </div>
+                    <select
+                      name="agent_id"
+                      defaultValue={task.agent_id}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      {agents.map((agent) => (
+                        <option key={agent.id} value={agent.id}>
+                          {agent.name} {agent.is_active ? '' : '(Inactive)'}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="submit"
+                      className="rounded-md border border-input px-3 py-2 text-sm font-medium"
+                    >
+                      Update
+                    </button>
+                  </form>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="space-y-4">
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="rounded-lg border border-muted/60 p-4 text-sm">
+            <div className="text-muted-foreground">Pending tasks</div>
+            <div className="text-2xl font-semibold">{pendingTasksCount}</div>
+          </div>
+          <div className="rounded-lg border border-muted/60 p-4 text-sm">
+            <div className="text-muted-foreground">Alerts raised today</div>
+            <div className="text-2xl font-semibold">{alertsRaisedToday}</div>
+          </div>
+          <div className="rounded-lg border border-muted/60 p-4 text-sm">
+            <div className="text-muted-foreground">Automations completed</div>
+            <div className="text-2xl font-semibold">{automationsCompleted}</div>
+          </div>
+        </div>
+
         <div className="grid gap-3 md:grid-cols-4">
           <div className="rounded-lg border border-muted/60 p-4 text-sm">
             <div className="text-muted-foreground">High risk investors</div>
@@ -2138,6 +2914,82 @@ export default async function AgentsPage({
             </div>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>OFAC Screenings</CardTitle>
+            <CardDescription>
+              Manual OFAC checks recorded by the compliance team.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {ofacScreenings.length === 0 ? (
+              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                No OFAC screenings logged yet.
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-lg border border-muted/60">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
+                    <tr>
+                      <th className="px-3 py-2 text-left">Name</th>
+                      <th className="px-3 py-2 text-left">Entity Type</th>
+                      <th className="px-3 py-2 text-left">Result</th>
+                      <th className="px-3 py-2 text-left">Screened</th>
+                      <th className="px-3 py-2 text-left">Report</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ofacScreenings.map((screening) => (
+                      <tr key={screening.id} className="border-t">
+                        <td className="px-3 py-3">
+                          <div className="font-medium text-foreground">
+                            {screening.screened_name}
+                          </div>
+                          {screening.match_details && (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {screening.match_details}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-muted-foreground">
+                          {screening.screened_entity_type.replace('_', ' ')}
+                        </td>
+                        <td className="px-3 py-3">
+                          <span
+                            className={cn(
+                              'rounded-md px-2 py-0.5 text-xs font-medium',
+                              ofacResultStyles[screening.result]
+                            )}
+                          >
+                            {screening.result.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 text-muted-foreground">
+                          {formatDate(screening.screening_date)}
+                        </td>
+                        <td className="px-3 py-3">
+                          {screening.report_url ? (
+                            <a
+                              href={screening.report_url}
+                              className="text-xs font-medium text-primary hover:underline"
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              View report
+                            </a>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </section>
       )}
 
@@ -2297,7 +3149,7 @@ export default async function AgentsPage({
                 </select>
               </div>
               <div className="flex items-end">
-                <div className="flex w-full gap-2">
+                <div className="flex w-full flex-col gap-2 md:flex-row">
                   <button
                     type="submit"
                     className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
@@ -2305,10 +3157,16 @@ export default async function AgentsPage({
                     Apply Filters
                   </button>
                   <a
-                    href={modalHref}
+                    href={blacklistModalHref}
                     className="w-full rounded-md border border-input px-4 py-2 text-center text-sm font-medium"
                   >
                     Add to Blacklist
+                  </a>
+                  <a
+                    href={ofacModalHref}
+                    className="w-full rounded-md border border-input px-4 py-2 text-center text-sm font-medium"
+                  >
+                    Log OFAC Screening
                   </a>
                 </div>
               </div>
@@ -2319,65 +3177,87 @@ export default async function AgentsPage({
                 No blacklist entries match your filters.
               </div>
             ) : (
-              <div className="space-y-3">
-                {filteredEntries.map((entry) => {
-                  const displayName =
-                    entry.full_name ||
-                    entry.entity_name ||
-                    entry.email ||
-                    entry.phone ||
-                    entry.tax_id ||
-                    'Unknown'
-                  const matchInfo = matchCounts[entry.id]
-                  return (
-                    <div key={entry.id} className="rounded-lg border border-muted/60 p-4">
-                      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
+              <div className="rounded-lg border border-muted/60 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/30 text-muted-foreground">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-medium">Name / Email</th>
+                      <th className="px-3 py-2 text-left font-medium">Severity</th>
+                      <th className="px-3 py-2 text-left font-medium">Reason</th>
+                      <th className="px-3 py-2 text-left font-medium">Reported By</th>
+                      <th className="px-3 py-2 text-left font-medium">Date</th>
+                      <th className="px-3 py-2 text-left font-medium">Status</th>
+                      <th className="px-3 py-2 text-right font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {filteredEntries.map((entry) => {
+                      const displayName =
+                        entry.full_name ||
+                        entry.entity_name ||
+                        entry.email ||
+                        entry.phone ||
+                        entry.tax_id ||
+                        'Unknown'
+                      const matchInfo = matchCounts[entry.id]
+                      const reporterRecord = Array.isArray(entry.reporter)
+                        ? entry.reporter[0]
+                        : entry.reporter
+                      const reporterLabel =
+                        reporterRecord?.display_name ||
+                        reporterRecord?.email ||
+                        (entry.reported_by ? 'Unknown' : 'System')
+                      return (
+                        <tr key={entry.id} className="bg-background">
+                          <td className="px-3 py-3">
+                            <div className="font-medium text-foreground">{displayName}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {entry.email || '—'}
+                            </div>
+                            <div className="text-[11px] text-muted-foreground mt-1">
+                              Matches: {matchInfo?.count ?? 0}
+                            </div>
+                          </td>
+                          <td className="px-3 py-3">
                             <span className={cn('px-2 py-0.5 rounded-md text-xs font-medium', severityStyles[entry.severity])}>
                               {entry.severity}
                             </span>
+                          </td>
+                          <td className="px-3 py-3 text-xs text-muted-foreground">
+                            {entry.reason || '—'}
+                          </td>
+                          <td className="px-3 py-3 text-xs text-muted-foreground">
+                            {reporterLabel}
+                          </td>
+                          <td className="px-3 py-3 text-xs text-muted-foreground">
+                            {entry.reported_at ? formatDate(entry.reported_at) : '—'}
+                          </td>
+                          <td className="px-3 py-3">
                             <Badge variant="outline" className="text-xs capitalize">
                               {entry.status.replace('_', ' ')}
                             </Badge>
-                            <span className="text-sm font-semibold">{displayName}</span>
-                          </div>
-                          {entry.reason && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Reason: {entry.reason}
-                            </p>
-                          )}
-                          <div className="text-xs text-muted-foreground mt-2 space-y-1">
-                            <div>Email: {entry.email || '—'}</div>
-                            <div>Phone: {entry.phone || '—'}</div>
-                            <div>Tax ID: {entry.tax_id || '—'}</div>
-                          </div>
-                        </div>
-                        <div className="text-xs text-muted-foreground space-y-1">
-                          <div>
-                            Matches logged: <span className="font-medium text-foreground">{matchInfo?.count ?? 0}</span>
-                          </div>
-                          <div>Last match: {matchInfo?.lastMatched ? formatDate(matchInfo.lastMatched) : '—'}</div>
-                          <div>Reported: {entry.reported_at ? formatDate(entry.reported_at) : '—'}</div>
-                          <div className="flex flex-wrap gap-2 pt-2">
-                            <a
-                              href={`${baseHref}${baseQueryString ? '&' : '?'}edit=${entry.id}`}
-                              className="rounded-md border border-input px-2 py-1 text-xs font-medium"
-                            >
-                              Edit
-                            </a>
-                            <a
-                              href={`${baseHref}${baseQueryString ? '&' : '?'}entry=${entry.id}`}
-                              className="rounded-md border border-input px-2 py-1 text-xs font-medium"
-                            >
-                              View matches
-                            </a>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
+                          </td>
+                          <td className="px-3 py-3">
+                            <div className="flex items-center justify-end gap-2 text-xs">
+                              <a
+                                href={`${baseHref}${baseQueryString ? '&' : '?'}edit=${entry.id}`}
+                                className="rounded-md border border-input px-2 py-1 font-medium"
+                              >
+                                Edit
+                              </a>
+                              <a
+                                href={`${baseHref}${baseQueryString ? '&' : '?'}entry=${entry.id}`}
+                                className="rounded-md border border-input px-2 py-1 font-medium"
+                              >
+                                Matches
+                              </a>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
 
@@ -2624,12 +3504,267 @@ export default async function AgentsPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Compliance Activity</CardTitle>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <CardTitle>Compliance Q&A</CardTitle>
+                  <CardDescription>
+                    Conversations tagged for compliance review and follow-up.
+                  </CardDescription>
+                </div>
+                <a
+                  href="/versotech_main/messages?compliance=true"
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  Open chat
+                </a>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {complianceConversations.length === 0 ? (
+                <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                  No compliance conversations flagged yet.
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-lg border border-muted/60">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
+                      <tr>
+                        <th className="px-3 py-2 text-left">Conversation</th>
+                        <th className="px-3 py-2 text-left">Participants</th>
+                        <th className="px-3 py-2 text-left">Urgency</th>
+                        <th className="px-3 py-2 text-left">Status</th>
+                        <th className="px-3 py-2 text-left">Assigned agent</th>
+                        <th className="px-3 py-2 text-left">Flagged</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {complianceConversations.map((conversation) => {
+                        const compliance = (conversation.metadata as Record<string, any>)?.compliance || {}
+                        const status = compliance.status || (compliance.flagged ? 'open' : 'unknown')
+                        const urgency = compliance.urgency || 'medium'
+                        const assignedAgent = compliance.assigned_agent_id
+                          ? agentsById[compliance.assigned_agent_id]
+                          : null
+                        const participants = (conversation.conversation_participants || [])
+                          .map((participant) => {
+                            const profile = Array.isArray(participant.profiles)
+                              ? participant.profiles[0]
+                              : participant.profiles
+                            return profile?.display_name || profile?.email
+                          })
+                          .filter(Boolean)
+                          .slice(0, 3)
+                          .join(', ')
+                        return (
+                          <tr key={conversation.id} className="border-t">
+                            <td className="px-3 py-3">
+                              <div className="font-medium text-foreground">
+                                {conversation.subject || 'Untitled conversation'}
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {conversation.preview || '—'}
+                              </div>
+                            </td>
+                            <td className="px-3 py-3 text-muted-foreground">
+                              {participants || '—'}
+                            </td>
+                            <td className="px-3 py-3">
+                              <Badge variant="secondary" className="capitalize">
+                                {urgency}
+                              </Badge>
+                            </td>
+                            <td className="px-3 py-3">
+                              <Badge variant="outline" className="capitalize">
+                                {status}
+                              </Badge>
+                            </td>
+                            <td className="px-3 py-3 text-muted-foreground">
+                              {assignedAgent?.name || 'Auto (Wayne)'}
+                            </td>
+                            <td className="px-3 py-3 text-muted-foreground">
+                              {formatDate(compliance.flagged_at || conversation.last_message_at || conversation.created_at)}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Log Compliance Event</CardTitle>
               <CardDescription>
-                Latest compliance-related actions captured in the audit log.
+                Capture compliance actions, enquiries, and updates that are not auto-recorded.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent>
+              <form action={createComplianceEvent} className="grid gap-3 md:grid-cols-2">
+                <input type="hidden" name="return_to" value={activityBaseHref} />
+                <div>
+                  <label className="text-xs text-muted-foreground">Event type</label>
+                  <select
+                    name="event_type"
+                    defaultValue=""
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    required
+                  >
+                    <option value="" disabled>
+                      Select event
+                    </option>
+                    {complianceEventOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Assigned agent</label>
+                  <select
+                    name="agent_id"
+                    defaultValue=""
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">Auto-assign (based on task)</option>
+                    {agents.map((agent) => (
+                      <option key={agent.id} value={agent.id}>
+                        {agent.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-xs text-muted-foreground">Description</label>
+                  <textarea
+                    name="description"
+                    rows={2}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    placeholder="Add context for the compliance log..."
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Related investor</label>
+                  <select
+                    name="related_investor_id"
+                    defaultValue=""
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">None</option>
+                    {investorOptions.map(([id, name]) => (
+                      <option key={id} value={id}>
+                        {name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Related deal</label>
+                  <select
+                    name="related_deal_id"
+                    defaultValue=""
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">None</option>
+                    {dealOptions.map(([id, name]) => (
+                      <option key={id} value={id}>
+                        {name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Requester persona</label>
+                  <input
+                    name="requester_persona"
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    placeholder="Investor, staff, introducer..."
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Urgency</label>
+                  <select
+                    name="urgency"
+                    defaultValue=""
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">Not set</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-xs text-muted-foreground">Requested change</label>
+                  <input
+                    name="requested_change"
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    placeholder="Module, form, process..."
+                  />
+                </div>
+                <div className="md:col-span-2 flex justify-end">
+                  <button className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
+                    Log event
+                  </button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Compliance Activity</CardTitle>
+              <CardDescription>
+                Latest compliance-related actions captured in the activity log.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <form
+                action="/versotech_admin/agents"
+                method="get"
+                className="flex flex-wrap items-end gap-3 rounded-lg border border-muted/60 bg-muted/20 p-3 text-sm"
+              >
+                <input type="hidden" name="tab" value="activity" />
+                <div>
+                  <label className="text-xs text-muted-foreground">Event type</label>
+                  <select
+                    name="activity_type"
+                    defaultValue={activityTypeFilter}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                  >
+                    <option value="all">All events</option>
+                    {complianceEventOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">From</label>
+                  <input
+                    type="date"
+                    name="activity_from"
+                    defaultValue={activityFromFilter}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">To</label>
+                  <input
+                    type="date"
+                    name="activity_to"
+                    defaultValue={activityToFilter}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                  />
+                </div>
+                <button className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground">
+                  Apply filters
+                </button>
+              </form>
               {activityRows.length === 0 ? (
                 <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
                   No compliance activity logged yet.
@@ -2640,11 +3775,11 @@ export default async function AgentsPage({
                     <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
                       <tr>
                         <th className="px-3 py-2 text-left">When</th>
-                        <th className="px-3 py-2 text-left">Action</th>
-                        <th className="px-3 py-2 text-left">Actor</th>
+                        <th className="px-3 py-2 text-left">Event</th>
+                        <th className="px-3 py-2 text-left">Description</th>
                         <th className="px-3 py-2 text-left">Entity</th>
-                        <th className="px-3 py-2 text-left">Risk</th>
-                        <th className="px-3 py-2 text-left">Review</th>
+                        <th className="px-3 py-2 text-left">Agent</th>
+                        <th className="px-3 py-2 text-left">Actor</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2654,13 +3789,12 @@ export default async function AgentsPage({
                             {formatDate(row.time)}
                           </td>
                           <td className="px-3 py-3">
-                            <div className="font-medium text-foreground">{row.action}</div>
-                            <div className="text-xs text-muted-foreground">{row.role}</div>
+                            <div className="font-medium text-foreground">{row.event}</div>
                           </td>
-                          <td className="px-3 py-3 text-muted-foreground">{row.actor}</td>
+                          <td className="px-3 py-3 text-muted-foreground">{row.description}</td>
                           <td className="px-3 py-3 text-muted-foreground">{row.entity}</td>
-                          <td className="px-3 py-3 text-muted-foreground">{row.risk}</td>
-                          <td className="px-3 py-3 text-muted-foreground">{row.review}</td>
+                          <td className="px-3 py-3 text-muted-foreground">{row.agent}</td>
+                          <td className="px-3 py-3 text-muted-foreground">{row.actor}</td>
                         </tr>
                       ))}
                     </tbody>

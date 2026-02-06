@@ -2,6 +2,7 @@ import { MessagingClient } from '@/components/messaging/staff/messaging-client'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { normalizeConversation } from '@/lib/messaging/supabase'
 import { AlertCircle } from 'lucide-react'
+import { ComplianceQuestionCard } from '@/components/notifications/compliance-question-card'
 import { checkStaffAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
@@ -47,8 +48,8 @@ export default async function MessagesPage() {
   // Per user stories: Arrangers need notifications, not messaging
   if (isArranger && !isStaff) {
     return (
-      <div className="p-6">
-        <div className="text-center py-16">
+      <div className="p-6 space-y-8">
+        <div className="text-center py-10">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
             Messages Not Available
@@ -58,6 +59,9 @@ export default async function MessagesPage() {
             Check the notification bell for alerts about agreements, payments, and signatures.
           </p>
         </div>
+        <div className="max-w-2xl mx-auto">
+          <ComplianceQuestionCard />
+        </div>
       </div>
     )
   }
@@ -66,8 +70,8 @@ export default async function MessagesPage() {
   // Per PRD: Introducers have zero messaging user stories - passive notification recipients only
   if (isIntroducer && !isStaff) {
     return (
-      <div className="p-6">
-        <div className="text-center py-16">
+      <div className="p-6 space-y-8">
+        <div className="text-center py-10">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
             Messages Not Available
@@ -76,6 +80,9 @@ export default async function MessagesPage() {
             As an introducer, you&apos;ll receive important updates via the notification system.
             Check the notification bell for alerts about introduction progress and commission updates.
           </p>
+        </div>
+        <div className="max-w-2xl mx-auto">
+          <ComplianceQuestionCard />
         </div>
       </div>
     )

@@ -1,5 +1,6 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { sendEmail } from '@/lib/email/resend-service'
+import { resolveAgentIdForTask } from '@/lib/agents'
 
 /**
  * Notification types for categorizing investor notifications.
@@ -71,6 +72,13 @@ export interface CreateNotificationParams {
   createdBy?: string
   /** Related deal ID for deal-specific notifications */
   dealId?: string
+  /** Optional agent ID for branded notifications */
+  agentId?: string
+}
+
+const DEFAULT_AGENT_TASK_BY_TYPE: Partial<Record<NotificationType, string>> = {
+  kyc_status: 'V002',
+  nda_complete: 'V001',
 }
 
 // Notification types that should trigger email notifications
@@ -115,6 +123,15 @@ const EMAIL_NOTIFICATION_TYPES: NotificationType[] = [
  */
 export async function createInvestorNotification(params: CreateNotificationParams): Promise<void> {
   const supabase = createServiceClient()
+  let agentId = params.agentId ?? null
+  const taskCode = DEFAULT_AGENT_TASK_BY_TYPE[params.type]
+  if (!agentId && taskCode) {
+    try {
+      agentId = await resolveAgentIdForTask(supabase, taskCode)
+    } catch (error) {
+      console.warn('[notifications] Failed to resolve agent for', taskCode, error)
+    }
+  }
 
   // Create database notification with all fields including new columns
   const { error } = await supabase.from('investor_notifications').insert({
@@ -125,7 +142,8 @@ export async function createInvestorNotification(params: CreateNotificationParam
     link: params.link ?? null,
     type: params.type,
     created_by: params.createdBy ?? null,
-    deal_id: params.dealId ?? null
+    deal_id: params.dealId ?? null,
+    agent_id: agentId
   })
 
   if (error) {

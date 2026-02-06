@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
@@ -47,6 +48,12 @@ interface Notification {
   created_by?: string | null
   deal_id?: string | null
   investor_id?: string | null
+  agent_id?: string | null
+  agent?: {
+    id: string
+    name: string
+    avatar_url: string | null
+  } | null
 }
 
 interface ComplianceAlert {
@@ -167,6 +174,17 @@ function formatTimeAgo(dateString: string): string {
   if (diffHours < 24) return `${diffHours}h ago`
   if (diffDays < 7) return `${diffDays}d ago`
   return date.toLocaleDateString()
+}
+
+function getInitials(name?: string | null) {
+  if (!name) return 'A'
+  return name
+    .split(' ')
+    .map((part) => part[0])
+    .filter(Boolean)
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
 }
 
 interface InvestorNotificationsClientProps {
@@ -344,6 +362,19 @@ export default function InvestorNotificationsClient({
                 <CardDescription className="mt-1">
                   {formatTimeAgo(notification.created_at)}
                 </CardDescription>
+                {notification.agent?.name && (
+                  <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                    <Avatar className="h-6 w-6">
+                      {notification.agent.avatar_url && (
+                        <AvatarImage src={notification.agent.avatar_url} alt={notification.agent.name} />
+                      )}
+                      <AvatarFallback className="text-[10px]">
+                        {getInitials(notification.agent.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span>From {notification.agent.name}</span>
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
