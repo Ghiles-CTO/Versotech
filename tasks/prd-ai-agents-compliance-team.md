@@ -324,7 +324,7 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 **Acceptance Criteria:**
 - [x] Create `ofac_screenings` table: id, screened_entity_type, screened_entity_id, screened_name, screening_date, result (clear/match/potential_match), match_details, report_url
 - [x] Manual "Screen Now" button on investor/entity detail pages
-- [ ] Manual process: staff searches official OFAC list, downloads/exports the PDF, and uploads it to the screening record
+- [x] Manual process: staff searches official OFAC list, downloads/exports the PDF, and uploads it to the screening record
 - [x] Results logged and viewable in Compliance Activity Log
 - [x] If match found, auto-add to blacklist with severity='blocked' and source='ofac'
 - [x] Notification (from Uma) to CEO when OFAC match found
@@ -357,9 +357,9 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 
 **Acceptance Criteria:**
 - [ ] Archive all signed legal documents per user/entity (reuse existing Documents module)
-- [ ] Annual suitability questionnaire is in-app only (no email); delivered via notification + dashboard reminder
-- [ ] Track questionnaire status per persona/entity (sent, in_progress, completed)
-- [ ] Reminders are branded from Valerie
+- [x] Annual suitability questionnaire is in-app only (no email); delivered via notification + dashboard reminder
+- [x] Track questionnaire status per persona/entity (sent, in_progress, completed)
+- [x] Reminders are branded from Valerie
 - [x] Typecheck passes
 
 ---

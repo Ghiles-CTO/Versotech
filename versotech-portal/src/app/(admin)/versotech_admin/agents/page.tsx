@@ -96,6 +96,7 @@ type KycSubmissionRow = {
   expiry_date: string | null
   submitted_at: string | null
   reviewed_at: string | null
+  created_at: string | null
   investor_id: string | null
   investor_member_id: string | null
   counterparty_entity_id: string | null
@@ -133,6 +134,9 @@ type KycRow = {
   submitted_at: string | null
   last_reminder_at: string | null
   user_id: string | null
+  survey_status: 'not_sent' | 'sent' | 'in_progress' | 'completed'
+  survey_sent_at: string | null
+  survey_completed_at: string | null
 }
 
 type RiskGradeRow = {
@@ -549,7 +553,7 @@ export default async function AgentsPage({
   const { data: kycSubmissionsData } = await supabase
     .from('kyc_submissions')
     .select(
-      'id, status, document_type, custom_label, expiry_date, submitted_at, reviewed_at, investor_id, investor_member_id, counterparty_entity_id, counterparty_member_id, partner_id, partner_member_id, introducer_id, introducer_member_id, lawyer_id, lawyer_member_id, commercial_partner_id, commercial_partner_member_id, arranger_entity_id, arranger_member_id'
+      'id, status, document_type, custom_label, expiry_date, submitted_at, reviewed_at, created_at, investor_id, investor_member_id, counterparty_entity_id, counterparty_member_id, partner_id, partner_member_id, introducer_id, introducer_member_id, lawyer_id, lawyer_member_id, commercial_partner_id, commercial_partner_member_id, arranger_entity_id, arranger_member_id'
     )
     .order('submitted_at', { ascending: false })
     .limit(200)
@@ -1045,6 +1049,26 @@ export default async function AgentsPage({
     }
   })
 
+  const surveySentMap = new Map<string, { sentAt: string; year: number | null }>()
+  activityLogs
+    .filter((log) => log.event_type === 'survey_sent')
+    .forEach((log) => {
+      const metadata = log.metadata ?? {}
+      const key =
+        (metadata.survey_subject_key as string | undefined) ||
+        (metadata.survey_subject_type && metadata.survey_subject_id
+          ? `${metadata.survey_subject_type}:${metadata.survey_subject_id}`
+          : null)
+      if (!key || !log.created_at) return
+      const existing = surveySentMap.get(key)
+      if (!existing || new Date(log.created_at).getTime() > new Date(existing.sentAt).getTime()) {
+        surveySentMap.set(key, {
+          sentAt: log.created_at,
+          year: typeof metadata.survey_year === 'number' ? metadata.survey_year : null,
+        })
+      }
+    })
+
   const resolveSubject = (submission: KycSubmissionRow) => {
     if (submission.investor_member_id) {
       return { type: 'investor_member' as const, id: submission.investor_member_id }
@@ -1091,12 +1115,81 @@ export default async function AgentsPage({
     return null
   }
 
+  const questionnaireMap = new Map<
+    string,
+    { status: string | null; submitted_at: string | null; created_at: string | null }
+  >()
+  kycSubmissions.forEach((submission) => {
+    if (submission.document_type !== 'questionnaire') return
+    const subjectInfo = resolveSubject(submission)
+    if (!subjectInfo) return
+    const key = `${subjectInfo.type}:${subjectInfo.id}`
+    const existing = questionnaireMap.get(key)
+    const nextTimestamp = submission.submitted_at || submission.created_at
+    const existingTimestamp = existing?.submitted_at || existing?.created_at
+    if (!existingTimestamp || (nextTimestamp && new Date(nextTimestamp).getTime() > new Date(existingTimestamp).getTime())) {
+      questionnaireMap.set(key, {
+        status: submission.status ?? null,
+        submitted_at: submission.submitted_at ?? null,
+        created_at: submission.created_at ?? null,
+      })
+    }
+  })
+
+  const nowMs = Date.now()
+  const oneYearAgoMs = nowMs - 365 * 24 * 60 * 60 * 1000
+  const toMs = (value: string | null | undefined) => {
+    if (!value) return null
+    const time = new Date(value).getTime()
+    return Number.isNaN(time) ? null : time
+  }
+
+  const deriveSurveyStatus = (
+    key: string
+  ): { status: KycRow['survey_status']; sentAt: string | null; completedAt: string | null } => {
+    const surveySent = surveySentMap.get(key)
+    const sentAt = surveySent?.sentAt ?? null
+    const sentMs = toMs(sentAt)
+    const questionnaire = questionnaireMap.get(key)
+    const questionnaireMs = toMs(questionnaire?.submitted_at || questionnaire?.created_at)
+    const questionnaireStatus = (questionnaire?.status || '').toLowerCase()
+    const inProgressStatuses = new Set(['draft', 'pending', 'under_review'])
+    const isInProgress = inProgressStatuses.has(questionnaireStatus)
+    const completedAt = questionnaireMs && !isInProgress ? new Date(questionnaireMs).toISOString() : null
+
+    if (questionnaireMs && questionnaireMs >= oneYearAgoMs && (!sentMs || questionnaireMs >= sentMs)) {
+      return {
+        status: isInProgress ? 'in_progress' : 'completed',
+        sentAt,
+        completedAt,
+      }
+    }
+
+    if (sentMs) {
+      if (questionnaireMs && questionnaireMs >= sentMs && isInProgress) {
+        return { status: 'in_progress', sentAt, completedAt: null }
+      }
+      return { status: 'sent', sentAt, completedAt: null }
+    }
+
+    if (questionnaireMs && questionnaireMs >= oneYearAgoMs) {
+      return {
+        status: isInProgress ? 'in_progress' : 'completed',
+        sentAt: null,
+        completedAt,
+      }
+    }
+
+    return { status: 'not_sent', sentAt: null, completedAt: null }
+  }
+
   const kycRows: KycRow[] = kycSubmissions
     .map((submission) => {
       const subjectInfo = resolveSubject(submission)
       if (!subjectInfo) return null
       const key = `${subjectInfo.type}:${subjectInfo.id}`
       const subject = subjectDirectory.get(key)
+      const surveyInfo = deriveSurveyStatus(key)
       const expiryDate = submission.expiry_date ?? subject?.kyc_expiry ?? null
       const status = submission.status ?? subject?.kyc_status ?? null
       const daysToExpiry = daysUntil(expiryDate)
@@ -1125,6 +1218,9 @@ export default async function AgentsPage({
         submitted_at: submission.submitted_at,
         last_reminder_at: kycReminderMap.get(key) ?? null,
         user_id: subject?.user_id ?? null,
+        survey_status: surveyInfo.status,
+        survey_sent_at: surveyInfo.sentAt,
+        survey_completed_at: surveyInfo.completedAt,
       }
     })
     .filter(Boolean) as KycRow[]
@@ -1158,6 +1254,20 @@ export default async function AgentsPage({
     expired: 'bg-red-500/10 text-red-700 dark:text-red-300',
     expiring_soon: 'bg-orange-500/10 text-orange-700 dark:text-orange-300',
     missing: 'bg-slate-200/70 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300',
+  }
+
+  const surveyStatusLabels: Record<KycRow['survey_status'], string> = {
+    not_sent: 'Not sent',
+    sent: 'Sent',
+    in_progress: 'In progress',
+    completed: 'Completed',
+  }
+
+  const surveyStatusStyles: Record<KycRow['survey_status'], string> = {
+    not_sent: 'bg-slate-200/70 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300',
+    sent: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-300',
+    in_progress: 'bg-blue-500/10 text-blue-700 dark:text-blue-300',
+    completed: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
   }
 
   const kycPersonaLabels: Record<KycSubjectType, string> = {
@@ -1828,6 +1938,106 @@ export default async function AgentsPage({
     redirect(`${redirectTarget}${separator}success=KYC%20reminders%20sent`)
   }
 
+  const sendAnnualSurvey = async (formData: FormData) => {
+    'use server'
+    const currentUser = await getCurrentUser()
+    if (!currentUser) {
+      redirect('/versotech_main/login')
+    }
+    const isAllowed = currentUser.role === 'ceo' || currentUser.permissions?.includes('super_admin')
+    if (!isAllowed) {
+      redirect('/versotech_admin/agents?error=Not%20authorized')
+    }
+
+    const singleTarget = formData.get('single_target')
+    const rawTargets = singleTarget
+      ? [singleTarget]
+      : formData.getAll('targets')
+
+    const parsedTargets = rawTargets
+      .map((value) => (typeof value === 'string' ? value : ''))
+      .filter(Boolean)
+      .map((value) => {
+        const [userId, subjectType, subjectId, submissionId] = value.split('|')
+        if (!userId || !subjectType || !subjectId) return null
+        return {
+          userId,
+          subjectType,
+          subjectId,
+          submissionId: submissionId || null,
+        }
+      })
+      .filter(Boolean) as Array<{
+        userId: string
+        subjectType: string
+        subjectId: string
+        submissionId: string | null
+      }>
+
+    if (!parsedTargets.length) {
+      redirect('/versotech_admin/agents?error=No%20valid%20survey%20targets')
+    }
+
+    const surveyYear = new Date().getUTCFullYear()
+    const notificationPayload = parsedTargets.map((target) => ({
+      user_id: target.userId,
+      investor_id: null,
+      type: 'reminder',
+      title: 'Annual suitability questionnaire',
+      message: 'Please complete your annual compliance questionnaire.',
+      link: '/versotech_main/profile?tab=compliance',
+      created_by: currentUser.id,
+      data: {
+        survey_subject_type: target.subjectType,
+        survey_subject_id: target.subjectId,
+        survey_subject_key: `${target.subjectType}:${target.subjectId}`,
+        survey_year: surveyYear,
+        kyc_submission_id: target.submissionId,
+      },
+    }))
+
+    const supabase = createServiceClient()
+    const agentId = await resolveAgentIdForTask(supabase, 'V003')
+    const { error } = await supabase
+      .from('investor_notifications')
+      .insert(
+        notificationPayload.map((entry) => ({
+          ...entry,
+          agent_id: agentId,
+        }))
+      )
+
+    const returnTo = formData.get('return_to')
+    const redirectTarget =
+      typeof returnTo === 'string' && returnTo.length ? returnTo : '/versotech_admin/agents'
+    const separator = redirectTarget.includes('?') ? '&' : '?'
+
+    if (error) {
+      redirect(`${redirectTarget}${separator}error=Failed%20to%20send%20survey%20requests`)
+    }
+
+    try {
+      const activityPayload = parsedTargets.map((target) => ({
+        event_type: 'survey_sent',
+        description: 'Annual suitability questionnaire sent',
+        agent_id: agentId,
+        created_by: currentUser.id,
+        metadata: {
+          survey_subject_type: target.subjectType,
+          survey_subject_id: target.subjectId,
+          survey_subject_key: `${target.subjectType}:${target.subjectId}`,
+          survey_year: surveyYear,
+          user_id: target.userId,
+        },
+      }))
+      await supabase.from('compliance_activity_log').insert(activityPayload)
+    } catch (logError) {
+      console.error('[compliance] Failed to log survey notifications:', logError)
+    }
+
+    redirect(`${redirectTarget}${separator}success=Annual%20survey%20sent`)
+  }
+
   const createComplianceEvent = async (formData: FormData) => {
     'use server'
     const currentUser = await getCurrentUser()
@@ -1967,6 +2177,8 @@ export default async function AgentsPage({
     const result = (readText('result') || 'clear') as OfacScreeningRow['result']
     const matchDetails = readText('match_details')
     const reportUrl = readText('report_url')
+    const reportFile = formData.get('report_file')
+    const reportBlob = reportFile instanceof File && reportFile.size > 0 ? reportFile : null
 
     const supabase = createServiceClient()
 
@@ -1991,6 +2203,48 @@ export default async function AgentsPage({
 
     if (error) {
       redirect(`${redirectTarget}${separator}error=Failed%20to%20log%20OFAC%20screening`)
+    }
+
+    if (newScreening?.id && reportBlob) {
+      try {
+        const storageBucket = process.env.NEXT_PUBLIC_STORAGE_BUCKET_NAME || 'documents'
+        const safeName = reportBlob.name.replace(/[^a-zA-Z0-9._-]/g, '_') || 'ofac-report.pdf'
+        const timestamp = Date.now()
+        const storagePath = `compliance/ofac/${newScreening.id}/${timestamp}-${safeName}`
+        const buffer = Buffer.from(await reportBlob.arrayBuffer())
+        const { error: uploadError } = await supabase.storage
+          .from(storageBucket)
+          .upload(storagePath, buffer, {
+            contentType: reportBlob.type || 'application/pdf',
+            upsert: true,
+          })
+
+        if (!uploadError) {
+          const { data: signedUrlData } = await supabase.storage
+            .from(storageBucket)
+            .createSignedUrl(storagePath, 60 * 60 * 24 * 365)
+          const signedUrl = signedUrlData?.signedUrl
+          const publicUrl = supabase.storage.from(storageBucket).getPublicUrl(storagePath).data.publicUrl
+          const finalReportUrl = signedUrl || publicUrl || reportUrl
+
+          await supabase
+            .from('ofac_screenings')
+            .update({
+              report_url: finalReportUrl,
+              metadata: {
+                report_storage_path: storagePath,
+                report_bucket: storageBucket,
+                report_file_name: reportBlob.name,
+                report_url_manual: reportUrl,
+              },
+            })
+            .eq('id', newScreening.id)
+        } else {
+          console.error('[compliance] Failed to upload OFAC report:', uploadError)
+        }
+      } catch (uploadError) {
+        console.error('[compliance] Failed to store OFAC report:', uploadError)
+      }
     }
 
     try {
@@ -2334,6 +2588,18 @@ export default async function AgentsPage({
                     <option value="potential_match">Potential match</option>
                     <option value="match">Match</option>
                   </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-xs text-muted-foreground">Upload report (PDF)</label>
+                  <input
+                    type="file"
+                    name="report_file"
+                    accept="application/pdf"
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  />
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Optional. Upload the PDF you downloaded from the OFAC screening.
+                  </p>
                 </div>
                 <div className="md:col-span-2">
                   <label className="text-xs text-muted-foreground">Report URL (optional)</label>
@@ -3404,12 +3670,21 @@ export default async function AgentsPage({
               <input type="hidden" name="return_to" value={baseHref} />
               <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
                 <span>Select rows to send reminders.</span>
-                <button
-                  type="submit"
-                  className="rounded-md border border-input px-3 py-1 text-xs font-medium text-foreground"
-                >
-                  Send reminders
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="submit"
+                    className="rounded-md border border-input px-3 py-1 text-xs font-medium text-foreground"
+                  >
+                    Send reminders
+                  </button>
+                  <button
+                    type="submit"
+                    formAction={sendAnnualSurvey}
+                    className="rounded-md border border-input px-3 py-1 text-xs font-medium text-foreground"
+                  >
+                    Send annual survey
+                  </button>
+                </div>
               </div>
               <div className="overflow-x-auto rounded-lg border border-muted/60">
                 <table className="min-w-full text-sm">
@@ -3422,13 +3697,14 @@ export default async function AgentsPage({
                       <th className="px-3 py-2 text-left">Expiry</th>
                       <th className="px-3 py-2 text-left">Days</th>
                       <th className="px-3 py-2 text-left">Last reminder</th>
+                      <th className="px-3 py-2 text-left">Annual survey</th>
                       <th className="px-3 py-2 text-left">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredKycRows.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="px-4 py-6 text-center text-sm text-muted-foreground">
+                        <td colSpan={9} className="px-4 py-6 text-center text-sm text-muted-foreground">
                           No KYC submissions match your filters.
                         </td>
                       </tr>
@@ -3442,6 +3718,9 @@ export default async function AgentsPage({
                           ? `${row.user_id}|${row.subject_type}|${row.subject_id}|${row.submission_id}`
                           : ''
                         const expiryDays = daysUntil(row.expiry_date)
+                        const surveyLabel = surveyStatusLabels[row.survey_status]
+                        const surveyStyle = surveyStatusStyles[row.survey_status]
+                        const surveyNote = row.survey_completed_at || row.survey_sent_at
                         return (
                           <tr key={row.submission_id} className="border-t">
                             <td className="px-3 py-3">
@@ -3469,6 +3748,19 @@ export default async function AgentsPage({
                             </td>
                             <td className="px-3 py-3 text-muted-foreground">{formatDate(row.last_reminder_at)}</td>
                             <td className="px-3 py-3">
+                              <div className="space-y-1">
+                                <span className={cn('rounded-md px-2 py-0.5 text-xs font-medium', surveyStyle)}>
+                                  {surveyLabel}
+                                </span>
+                                {surveyNote && (
+                                  <div className="text-[11px] text-muted-foreground">
+                                    {formatDate(surveyNote)}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-3 py-3">
+                              <div className="flex flex-wrap items-center gap-2">
                               <button
                                 type="submit"
                                 name="single_target"
@@ -3481,6 +3773,20 @@ export default async function AgentsPage({
                               >
                                 Send reminder
                               </button>
+                              <button
+                                type="submit"
+                                formAction={sendAnnualSurvey}
+                                name="single_target"
+                                value={targetValue}
+                                disabled={!row.user_id}
+                                className={cn(
+                                  'rounded-md border border-input px-2 py-1 text-xs font-medium',
+                                  !row.user_id && 'cursor-not-allowed opacity-50'
+                                )}
+                              >
+                                Send survey
+                              </button>
+                              </div>
                             </td>
                           </tr>
                         )
