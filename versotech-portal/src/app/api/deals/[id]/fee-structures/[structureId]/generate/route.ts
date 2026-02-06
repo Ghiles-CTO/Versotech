@@ -7,20 +7,23 @@ const STAFF_ROLES = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo']
 
 /**
  * Generate termsheet filename with standardized format:
- * {VEHICLE_CODE} - TERMSHEET {COMPANY_NAME} {MMM YYYY}.pdf
- * Example: VC215 - TERMSHEET ANTHROPIC JAN 2026.pdf
+ * {VEHICLE_CODE} - INDICATIVE TERM SHEET - {COMPANY_NAME} - {MMM YYYY}.pdf
+ * Example: VC215 - INDICATIVE TERM SHEET - ANTHROPIC - JAN 2026.pdf
  */
 function generateTermsheetFilename(
   vehicleCode: string,
   companyName: string,
-  date: Date
+  termSheetDate: string | null,
+  fallbackDate: Date
 ): string {
-  const monthYear = date
+  const effectiveDate = termSheetDate ? new Date(termSheetDate) : fallbackDate
+  const dateForFormat = isNaN(effectiveDate.getTime()) ? fallbackDate : effectiveDate
+  const monthYear = dateForFormat
     .toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     .toUpperCase()
   const cleanVehicleCode = (vehicleCode?.trim() || 'VCXXX').toUpperCase()
   const cleanCompanyName = (companyName?.trim().replace(/\s+/g, ' ') || 'INVESTMENT').toUpperCase()
-  return `${cleanVehicleCode} - TERMSHEET ${cleanCompanyName} ${monthYear}.pdf`
+  return `${cleanVehicleCode} - INDICATIVE TERM SHEET - ${cleanCompanyName} - ${monthYear}.pdf`
 }
 
 /**
@@ -437,6 +440,7 @@ export async function POST(
         const fileName = generateTermsheetFilename(
           vehicleCode,
           companyName,
+          feeStructure.term_sheet_date,
           new Date()
         )
 
@@ -449,7 +453,7 @@ export async function POST(
         }
 
         // Upload to Supabase Storage (use service client to bypass RLS)
-        const fileKey = `term-sheets/${dealId}/${structureId}/${Date.now()}-${fileName}`
+        const fileKey = `term-sheets/${dealId}/${structureId}/${fileName}`
         const { error: uploadError } = await serviceSupabase.storage
           .from('deal-documents')
           .upload(fileKey, pdfBuffer, {

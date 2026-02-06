@@ -281,9 +281,8 @@ export async function POST(
 
   // Term sheets are stored in 'deal-documents' bucket
   const bucket = 'deal-documents'
-  const timestamp = Date.now()
   const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-  const fileKey = `term-sheets/${dealId}/${structureId}/${timestamp}-${sanitizedName}`
+  const fileKey = `term-sheets/${dealId}/${structureId}/${sanitizedName}`
 
   try {
     const arrayBuffer = await file.arrayBuffer()
