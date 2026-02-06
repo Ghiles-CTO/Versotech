@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { updateFeePlanSchema } from '@/lib/fees/validation';
 import { syncFeePlanToTermSheet } from '@/lib/fees/term-sheet-sync';
+import { normalizeFeeComponentsForInsert } from '@/lib/fees/normalize-fee-components';
 
 /**
  * GET /api/staff/fees/plans/[id]
@@ -116,10 +117,7 @@ export async function PUT(
       await supabase.from('fee_components').delete().eq('fee_plan_id', id);
 
       // Insert new components
-      const componentInserts = components.map((component) => ({
-        ...component,
-        fee_plan_id: id,
-      }));
+      const componentInserts = normalizeFeeComponentsForInsert(components, id);
 
       const { data: newComponents, error: componentsError } = await supabase
         .from('fee_components')
