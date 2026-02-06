@@ -147,16 +147,8 @@ function UnifiedAppLayoutInner({ children, profile }: UnifiedAppLayoutProps) {
             <Menu className="h-5 w-5" />
           </Button>
 
-          {/* Left spacer for centering - hidden on mobile */}
-          <div className="hidden md:block w-32" />
-
-          {/* Center - Brand name */}
-          <h1
-            style={{ fontFamily: 'var(--font-spartan), sans-serif' }}
-            className="text-xl font-extrabold tracking-wide uppercase app-header-text"
-          >
-            VERSOTECH
-          </h1>
+          {/* Center spacer */}
+          <div className="flex-1" />
 
           {/* Right side - Utilities */}
           <div className="flex items-center space-x-2">

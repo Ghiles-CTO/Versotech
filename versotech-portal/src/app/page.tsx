@@ -41,15 +41,13 @@ const NavBar = () => {
         : "bg-transparent border-transparent py-6"
     )}>
       <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="relative w-40 h-10">
-             <Image
-               src="/versotech-logo-dark.png"
-               alt="VERSOTECH"
-               fill
-               className="object-contain object-left"
-             />
+        <div className="flex items-center gap-2.5">
+          <div className="relative w-8 h-8 flex-shrink-0">
+            <Image src="/versotech-icon.png" alt="" fill className="object-contain" />
           </div>
+          <span style={{ fontFamily: 'var(--font-spartan), sans-serif' }} className="text-lg font-extrabold tracking-wide text-white">
+            VERSOTECH
+          </span>
         </div>
         
         <div className="hidden md:flex items-center gap-8">
