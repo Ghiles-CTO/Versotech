@@ -313,7 +313,7 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
  - [x] Update existing NDA notifications to include agent_id (Valerie)
  - [x] Notifications display Valerie's name and avatar at each stage (sent, viewed, signed, fully_executed)
 - [x] Log NDA modification requests with investor comments (if not already implemented)
-- [ ] Verify dataroom access is auto-granted on full NDA execution (existing behavior)
+- [x] Verify dataroom access is auto-granted on full NDA execution (existing behavior)
 - [x] Typecheck passes
 
 ---
@@ -356,7 +356,7 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 **Description:** As Valerie, I want to archive compliance documentation and run the annual suitability questionnaire so records stay current.
 
 **Acceptance Criteria:**
-- [ ] Archive all signed legal documents per user/entity (reuse existing Documents module)
+- [x] Archive all signed legal documents per user/entity (reuse existing Documents module)
 - [x] Annual suitability questionnaire is in-app only (no email); delivered via notification + dashboard reminder
 - [x] Track questionnaire status per persona/entity (sent, in_progress, completed)
 - [x] Reminders are branded from Valerie
