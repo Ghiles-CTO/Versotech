@@ -58,7 +58,7 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 
 **Acceptance Criteria:**
 - [x] Create `ai_agents` table with: id, name, role, avatar_url, email_identity, is_active, created_at
-- [ ] Extract avatar photos from PDF and store in Supabase storage
+- [x] Extract avatar photos from PDF and store in Supabase storage
 - [x] Seed 3 Compliance Team agents (Uma, Valerie, Wayne) with names + roles (avatars pending)
 - [x] Create `agent_task_assignments` table linking agents to task types
 - [x] Default assignments match PDF specification (Uma→U001-U003, Valerie→V001-V003, Wayne→W001-W003)
