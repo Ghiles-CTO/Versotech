@@ -45,6 +45,14 @@ const DEFAULT_JSON_SCHEMA_HINT = [
   '}',
 ].join('\n')
 
+function summarizeError(error: unknown): string {
+  if (!(error instanceof Error)) return 'Unknown error'
+  const message = error.message || 'Unknown error'
+  const collapsed = message.replace(/\s+/g, ' ').trim()
+  if (collapsed.length <= 600) return collapsed
+  return `${collapsed.slice(0, 600)}…`
+}
+
 function resolveProvider(): KycExpiryAiProvider {
   const value = (process.env.KYC_EXPIRY_AI_PROVIDER || process.env.COMPLIANCE_AI_PROVIDER || '')
     .trim()
@@ -369,8 +377,7 @@ export async function suggestKycExpiryDate(
       confidence: null,
       evidence: null,
       rawResponse: null,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: summarizeError(error),
     }
   }
 }
-
