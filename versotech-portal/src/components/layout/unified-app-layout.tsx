@@ -172,7 +172,7 @@ function UnifiedAppLayoutInner({ children, profile }: UnifiedAppLayoutProps) {
 
         {/* Content Area - uses app-content CSS class for SSR-safe theming */}
         <main className="flex-1 overflow-y-auto scrollbar-hide app-content">
-          <div className="min-h-full app-content-inner">
+          <div className="min-h-full app-content-inner px-4 md:px-6 pt-4 pb-8">
             {children}
           </div>
         </main>

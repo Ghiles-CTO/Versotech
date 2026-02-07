@@ -115,7 +115,7 @@ export function ArrangersDashboard({ summary, arrangers, deals = [], vehicles = 
   }, [arrangers, statusFilter, kycFilter, search])
 
   return (
-    <div className="p-6 space-y-6 text-foreground">
+    <div className="space-y-6 text-foreground">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Arrangers & Advisors</h1>

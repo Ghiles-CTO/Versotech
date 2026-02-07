@@ -237,7 +237,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
   }).format(units)
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="space-y-8">
         {/* Enhanced Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-4">

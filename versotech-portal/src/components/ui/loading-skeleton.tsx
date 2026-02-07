@@ -50,7 +50,7 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
 
 export function DashboardSkeleton() {
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="space-y-2">
         <Skeleton className="h-8 w-64" />

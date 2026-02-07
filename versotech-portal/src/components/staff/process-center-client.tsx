@@ -62,7 +62,7 @@ export function ProcessCenterClient({ profile }: ProcessCenterClientProps) {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="border-b border-white/20 pb-6">
         <div className="flex items-center justify-between">

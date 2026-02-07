@@ -41,7 +41,7 @@ export default async function VersoSignPage() {
 
   if (!user || userError) {
     return (
-      <div className="p-6">
+      <div>
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
@@ -415,7 +415,7 @@ export default async function VersoSignPage() {
 
   if (!hasTasks && !hasAgreementsToSign && !hasRelevantPersona) {
     return (
-      <div className="p-6">
+      <div>
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
@@ -512,7 +512,7 @@ export default async function VersoSignPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Placement Agreement Signing Section - Staff and Arrangers */}
       {(isStaff || isArranger) && placementAgreementsForSigning.length > 0 && (
         <PlacementAgreementSigningSection

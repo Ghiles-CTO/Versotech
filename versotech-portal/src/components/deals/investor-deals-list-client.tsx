@@ -805,7 +805,7 @@ export function InvestorDealsListClient({
   // This must come AFTER all hooks (useState, useEffect, useMemo) to comply with Rules of Hooks
   if (!mounted) {
     return (
-      <div className="p-6 space-y-8">
+      <div className="space-y-8">
         <div className="h-24 bg-muted animate-pulse rounded-lg" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
@@ -818,7 +818,7 @@ export function InvestorDealsListClient({
   }
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="space-y-8">
       <header className="flex flex-col gap-4">
         <div>
           <h1 className="text-3xl font-semibold text-foreground">Investment Opportunities</h1>

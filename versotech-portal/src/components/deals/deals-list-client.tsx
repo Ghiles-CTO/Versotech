@@ -121,7 +121,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
   const paginatedDeals = filteredDeals.slice(startIndex, startIndex + ITEMS_PER_PAGE)
 
   return (
-    <div className="p-6 space-y-6 text-foreground">
+    <div className="space-y-6 text-foreground">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

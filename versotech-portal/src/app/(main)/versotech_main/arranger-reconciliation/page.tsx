@@ -27,7 +27,7 @@ export default async function ArrangerReconciliationPage({
 
   if (!user || userError) {
     return (
-      <div className="p-6">
+      <div>
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
@@ -51,7 +51,7 @@ export default async function ArrangerReconciliationPage({
   if (personaError) {
     console.error('[arranger-reconciliation] Error fetching personas:', personaError)
     return (
-      <div className="p-6">
+      <div>
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
@@ -76,7 +76,7 @@ export default async function ArrangerReconciliationPage({
   // Must be an arranger to access this page
   if (!isArranger) {
     return (
-      <div className="p-6">
+      <div>
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
@@ -100,7 +100,7 @@ export default async function ArrangerReconciliationPage({
   if (arrangerUserError || !arrangerUser?.arranger_id) {
     console.error('[arranger-reconciliation] Error fetching arranger:', arrangerUserError)
     return (
-      <div className="p-6">
+      <div>
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">

@@ -129,7 +129,7 @@ export default async function TransactionDetailPage({ params }: PageProps) {
     .order('due_date', { ascending: true })
 
   return (
-    <div className="p-6">
+    <div>
       <TransactionDetailClient
         transaction={transaction}
         openInvoices={openInvoices || []}

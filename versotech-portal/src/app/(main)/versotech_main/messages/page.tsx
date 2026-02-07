@@ -20,7 +20,7 @@ export default async function MessagesPage() {
 
   if (!user || userError) {
     return (
-      <div className="p-6">
+      <div>
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
@@ -48,7 +48,7 @@ export default async function MessagesPage() {
   // Per user stories: Arrangers need notifications, not messaging
   if (isArranger && !isStaff) {
     return (
-      <div className="p-6 space-y-8">
+      <div className="space-y-8">
         <div className="text-center py-10">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
@@ -70,7 +70,7 @@ export default async function MessagesPage() {
   // Per PRD: Introducers have zero messaging user stories - passive notification recipients only
   if (isIntroducer && !isStaff) {
     return (
-      <div className="p-6 space-y-8">
+      <div className="space-y-8">
         <div className="text-center py-10">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">

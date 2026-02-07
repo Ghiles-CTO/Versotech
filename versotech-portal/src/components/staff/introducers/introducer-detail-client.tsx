@@ -337,9 +337,22 @@ export function IntroducerDetailClient({
     subscription: 'Subscription Fee',
     management: 'Management Fee',
     performance: 'Performance Fee',
-    spread_markup: 'Spread Markup',
+    spread_markup: 'BI Fee PPS',
     flat: 'Flat Fee',
     other: 'Other'
+  }
+
+  const formatFeeComponentValue = (component: FeeComponent) => {
+    if (component.calc_method === 'per_unit_spread') {
+      return component.flat_amount != null ? `$${Number(component.flat_amount).toLocaleString()} / share` : '—'
+    }
+    if (component.rate_bps != null) {
+      return `${Number(component.rate_bps) / 100}%`
+    }
+    if (component.flat_amount != null) {
+      return `$${Number(component.flat_amount).toLocaleString()}`
+    }
+    return '—'
   }
 
   // Fetch fee plans for this introducer
@@ -509,7 +522,7 @@ export function IntroducerDetailClient({
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -918,8 +931,7 @@ export function IntroducerDetailClient({
                                           {feeKindLabels[component.kind] || component.kind}
                                         </span>
                                         <Badge variant="outline" className="border-white/20 text-muted-foreground">
-                                          {component.rate_bps ? `${component.rate_bps / 100}%` :
-                                           component.flat_amount ? `$${component.flat_amount.toLocaleString()}` : '—'}
+                                          {formatFeeComponentValue(component)}
                                         </Badge>
                                       </div>
                                     ))}

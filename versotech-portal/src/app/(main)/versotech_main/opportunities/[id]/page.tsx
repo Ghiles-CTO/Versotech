@@ -609,7 +609,7 @@ export default function OpportunityDetailPage() {
   // Show loading while persona context is initializing
   if (personaLoading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="space-y-6">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-24 w-full" />
         <Skeleton className="h-64 w-full" />
@@ -619,7 +619,7 @@ export default function OpportunityDetailPage() {
 
   if (!hasAnyPersona) {
     return (
-      <div className="p-6">
+      <div>
         <Card className="max-w-lg mx-auto">
           <CardHeader>
             <CardTitle>Access Required</CardTitle>
@@ -634,7 +634,7 @@ export default function OpportunityDetailPage() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="space-y-6">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-24 w-full" />
         <Skeleton className="h-64 w-full" />
@@ -644,7 +644,7 @@ export default function OpportunityDetailPage() {
 
   if (error || !opportunity) {
     return (
-      <div className="p-6">
+      <div>
         <Card className="max-w-lg mx-auto">
           <CardHeader>
             <CardTitle>Error</CardTitle>
@@ -701,7 +701,7 @@ export default function OpportunityDetailPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Back button - context-aware navigation */}
       <Button
         variant="ghost"

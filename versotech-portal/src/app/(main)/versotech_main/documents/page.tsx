@@ -21,7 +21,7 @@ export default async function DocumentsPage() {
 
   if (!user || userError) {
     return (
-      <div className="p-6">
+      <div>
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
@@ -81,7 +81,7 @@ export default async function DocumentsPage() {
   // If no documents available, show empty state
   if (documentsData.documents.length === 0) {
     return (
-      <div className="p-6">
+      <div>
         <div className="text-center py-16">
           <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
@@ -97,7 +97,7 @@ export default async function DocumentsPage() {
 
   // Render full categorized document experience
   return (
-    <div className="p-6">
+    <div>
       <CategorizedDocumentsClient
         initialDocuments={documentsData.documents}
         vehicles={documentsData.vehicles}

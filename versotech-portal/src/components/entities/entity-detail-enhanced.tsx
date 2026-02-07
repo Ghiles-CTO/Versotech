@@ -1176,7 +1176,7 @@ export function EntityDetailEnhanced({
   }, [entity.id, entity.logo_url])
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
         <div className="space-y-4 max-w-3xl">
           <Link href="/versotech_main/entities" className="inline-flex">

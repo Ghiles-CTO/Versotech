@@ -254,113 +254,6 @@ function VersoServicesCard() {
   )
 }
 
-function WelcomePanel() {
-  const { theme } = useTheme()
-  const isDark = theme === 'staff-dark'
-
-  const highlights = [
-    {
-      id: 'fund',
-      title: 'VERSO FUND',
-      description: 'BVI professional mutual fund access',
-      icon: <Building2 className="h-6 w-6" />
-    },
-    {
-      id: 'real-estate',
-      title: 'REAL Empire',
-      description: 'Institutional real estate securitisation',
-      icon: <Target className="h-6 w-6" />
-    },
-    {
-      id: 'lux',
-      title: 'Luxembourg Platforms',
-      description: 'European investment infrastructure',
-      icon: <MapPin className="h-6 w-6" />
-    }
-  ]
-
-  return (
-    <section className={cn(
-      "rounded-3xl border px-8 py-10 shadow-sm",
-      isDark ? "border-white/10 bg-card" : "border-slate-200/80 bg-white"
-    )}>
-      <div className="mx-auto flex max-w-4xl flex-col gap-8">
-        <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:items-start sm:text-left">
-          <div className={cn(
-            "flex h-16 w-16 items-center justify-center rounded-2xl shadow-sm",
-            isDark ? "bg-white/10 text-white" : "bg-slate-900 text-white"
-          )}>
-            <Building2 className="h-7 w-7" />
-          </div>
-          <div className="space-y-3">
-            <p className={cn(
-              "text-[11px] font-semibold uppercase tracking-wider",
-              isDark ? "text-gray-400" : "text-slate-500"
-            )}>
-              Investor onboarding
-            </p>
-            <h2 className={cn(
-              "text-3xl font-semibold",
-              isDark ? "text-white" : "text-slate-900"
-            )}>
-              Welcome to <span style={{ fontFamily: 'var(--font-spartan), sans-serif', letterSpacing: '0.3em' }}>V E R S O</span>
-            </h2>
-            <p className={cn(
-              "text-sm",
-              isDark ? "text-gray-400" : "text-slate-600"
-            )}>
-              Complete your onboarding steps to unlock performance analytics, live deal access, and bespoke reporting matched to your mandate.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-3">
-          {highlights.map((highlight) => (
-            <Card
-              key={highlight.id}
-              className={cn(
-                "rounded-2xl border p-6 text-left shadow-sm",
-                isDark
-                  ? "border-white/10 bg-white/5"
-                  : "border-slate-200/80 bg-slate-50/60"
-              )}
-            >
-              <div className={cn(
-                "flex h-12 w-12 items-center justify-center rounded-xl shadow-sm",
-                isDark
-                  ? "bg-white/10 text-white"
-                  : "bg-white text-slate-900"
-              )}>
-                {highlight.icon}
-              </div>
-              <h3 className={cn(
-                "mt-4 text-sm font-semibold",
-                isDark ? "text-white" : "text-slate-900"
-              )}>{highlight.title}</h3>
-              <p className={cn(
-                "mt-1 text-xs",
-                isDark ? "text-gray-400" : "text-slate-600"
-              )}>{highlight.description}</p>
-            </Card>
-          ))}
-        </div>
-
-        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-end">
-          <Link href="/versotech_main/tasks" className="w-full sm:w-auto">
-            <Button size="lg" className="w-full sm:w-auto">
-              Complete onboarding
-            </Button>
-          </Link>
-          <Link href="/versotech_main/inbox" className="w-full sm:w-auto">
-            <Button variant="outline" size="lg" className="w-full sm:w-auto">
-              Contact VERSO team
-            </Button>
-          </Link>
-        </div>
-      </div>
-    </section>
-  )
-}
 
 export function InvestorDashboard({ investorId, userId, persona }: InvestorDashboardProps) {
   const { theme } = useTheme()
@@ -629,7 +522,7 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
   ]
 
   return (
-    <div className="space-y-12 px-0 pb-16 pt-2">
+    <div className="space-y-12">
       {/* Video Intro Modal - shown for first-time users */}
       <VideoIntroModal
         open={showVideoModal}
@@ -823,17 +716,13 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
         recentActivity={data.recentActivity}
       />
 
-      {/* Holdings or Welcome Panel */}
-      {data.hasPortfolioData ? (
+      {/* Holdings + Services */}
+      {data.hasPortfolioData && (
         <div className="grid gap-4 lg:grid-cols-2">
           <HoldingsSnapshot vehicles={data.vehicles} />
           <VersoServicesCard />
         </div>
-      ) : (
-        <WelcomePanel />
       )}
-
-      {data.hasPortfolioData && <VersoServicesCard />}
     </div>
   )
 }

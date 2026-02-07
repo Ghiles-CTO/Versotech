@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
  */
 export default function ArrangerReconciliationLoading() {
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="space-y-2">
         <Skeleton className="h-8 w-64" />

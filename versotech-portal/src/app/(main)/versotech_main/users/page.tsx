@@ -36,7 +36,7 @@ function LoadingState() {
  */
 export default function UsersPage() {
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Users</h1>

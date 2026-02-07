@@ -402,7 +402,7 @@ export function SubscriptionPacksClient({ entityInfo, subscriptions }: Subscript
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Dynamic header based on entity type */}
       <div className="flex items-center justify-between">
         <div>

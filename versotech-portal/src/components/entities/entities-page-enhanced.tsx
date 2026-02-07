@@ -156,7 +156,7 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
   }
 
   return (
-    <div className="p-6 space-y-6 text-foreground">
+    <div className="space-y-6 text-foreground">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Vehicles</h1>

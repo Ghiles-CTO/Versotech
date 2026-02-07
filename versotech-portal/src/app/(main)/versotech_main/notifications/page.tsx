@@ -18,7 +18,7 @@ export default async function NotificationsPage() {
 
   if (!user || userError) {
     return (
-      <div className="p-6">
+      <div>
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
@@ -40,7 +40,7 @@ export default async function NotificationsPage() {
 
   if (!personas || personas.length === 0) {
     return (
-      <div className="p-6">
+      <div>
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
@@ -78,7 +78,7 @@ export default async function NotificationsPage() {
     : []
 
   return (
-    <div className="p-6">
+    <div>
       <InvestorNotificationsClient
         isStaff={hasStaffAccess}
         currentUserId={user.id}
