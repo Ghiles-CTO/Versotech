@@ -45,6 +45,56 @@ const DEFAULT_JSON_SCHEMA_HINT = [
   '}',
 ].join('\n')
 
+const DEFAULT_SUPPORTED_KYC_DOCUMENT_TYPES = [
+  'passport',
+  'national_id',
+  'id_card',
+  'residence_permit',
+  'visa',
+  'driving_license',
+  'drivers_license',
+  'proof_of_address',
+]
+
+const DEFAULT_SUPPORTED_KYC_MIME_TYPES = [
+  'application/pdf',
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'image/tiff',
+  'image/heic',
+  'image/heif',
+]
+
+function normalizeToken(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+}
+
+function resolveSupportedDocumentTypes(): Set<string> {
+  const fromEnv = (process.env.KYC_EXPIRY_AI_DOCUMENT_TYPES || '')
+    .split(',')
+    .map(normalizeToken)
+    .filter(Boolean)
+  const source = fromEnv.length ? fromEnv : DEFAULT_SUPPORTED_KYC_DOCUMENT_TYPES
+  return new Set(source.map(normalizeToken))
+}
+
+function isSupportedDocumentType(documentType: string | null): boolean {
+  if (!documentType) return false
+  return resolveSupportedDocumentTypes().has(normalizeToken(documentType))
+}
+
+function isSupportedMimeType(mimeType: string | null): boolean {
+  if (!mimeType) return true
+  const normalized = mimeType.trim().toLowerCase()
+  return DEFAULT_SUPPORTED_KYC_MIME_TYPES.includes(normalized)
+}
+
 function summarizeError(error: unknown): string {
   if (!(error instanceof Error)) return 'Unknown error'
   const message = error.message || 'Unknown error'
@@ -239,7 +289,7 @@ async function runOpenAi(input: SuggestKycExpiryInput): Promise<{ text: string; 
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) throw new Error('OPENAI_API_KEY is missing')
 
-  const model = process.env.KYC_EXPIRY_AI_OPENAI_MODEL || 'gpt-4.1'
+  const model = process.env.KYC_EXPIRY_AI_OPENAI_MODEL || 'gpt-4.1-mini'
   const fileResponse = await fetch(input.signedUrl)
   if (!fileResponse.ok) {
     throw new Error(`Failed to fetch signed document (${fileResponse.status})`)
@@ -339,6 +389,29 @@ export async function suggestKycExpiryDate(
   input: SuggestKycExpiryInput
 ): Promise<KycExpirySuggestionResult> {
   const provider = resolveProvider()
+  if (!isSupportedDocumentType(input.documentType)) {
+    return {
+      provider,
+      model: 'skipped',
+      suggestedExpiryDate: null,
+      confidence: null,
+      evidence: null,
+      rawResponse: null,
+      error:
+        'AI expiry is only enabled for identity/address documents (passport, ID card, residence permit, driving license, proof of address).',
+    }
+  }
+  if (!isSupportedMimeType(input.mimeType)) {
+    return {
+      provider,
+      model: 'skipped',
+      suggestedExpiryDate: null,
+      confidence: null,
+      evidence: null,
+      rawResponse: null,
+      error: `Unsupported document MIME type for AI expiry suggestion: ${input.mimeType}`,
+    }
+  }
   if (provider === 'disabled') {
     return {
       provider,
