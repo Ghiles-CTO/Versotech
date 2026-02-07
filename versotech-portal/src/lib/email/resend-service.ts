@@ -26,6 +26,8 @@ interface EmailResult {
 
 const DEFAULT_FROM = process.env.EMAIL_FROM || 'V E R S O <noreply@mail.versotech.com>'
 const RESEND_API_KEY = process.env.RESEND_API_KEY
+const VERSO_BLUE = '#0077ac'
+const INVITATION_FOOTER_COPY = '&copy; 2026 VERSOTECH. All rights reserved.'
 
 // Validate API key at module load time in production
 if (process.env.NODE_ENV === 'production') {
@@ -42,7 +44,14 @@ if (process.env.NODE_ENV === 'production') {
  * Shared email shell used by all templates.
  * Produces the V E R S O header + separator + content slot + footer.
  */
-function emailShell(bodyContent: string): string {
+function emailShell(
+  bodyContent: string,
+  options?: {
+    footerCopy?: string
+  }
+): string {
+  const footerCopy = options?.footerCopy || `&copy; ${new Date().getFullYear()} V E R S O. All rights reserved.`
+
   return `
 <!DOCTYPE html>
 <html>
@@ -98,7 +107,7 @@ function emailShell(bodyContent: string): string {
     }
     .button {
       display: inline-block;
-      background: #0077ac;
+      background: ${VERSO_BLUE};
       color: #ffffff !important;
       padding: 16px 40px;
       text-decoration: none;
@@ -146,7 +155,7 @@ function emailShell(bodyContent: string): string {
     ${bodyContent}
 
     <div class="footer">
-      &copy; ${new Date().getFullYear()} V E R S O. All rights reserved.
+      ${footerCopy}
     </div>
   </div>
 </body>
@@ -345,60 +354,65 @@ export async function sendInvitationEmail(params: {
   acceptUrl: string
   expiresAt: string
 }): Promise<EmailResult> {
-  const isInvestor = params.entityType === 'investor'
   const isStaff = params.entityType === 'staff' || ['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(params.role)
 
-  const roleDisplayNames: Record<string, string> = {
-    staff_admin: 'Staff Administrator',
-    staff_ops: 'Operations Staff',
-    staff_rm: 'Relationship Manager',
-    ceo: 'Chief Executive Officer',
-    member: 'Member',
-    admin: 'Administrator',
-    owner: 'Owner',
-    signatory: 'Authorized Signatory',
-  }
+  const displayName = (params.inviteeName || params.email.split('@')[0] || 'Member').trim()
+  const nameParts = displayName.split(/\s+/).filter(Boolean)
+  const firstName = nameParts[0] || displayName
+  const fullName = nameParts.length > 1 ? `${nameParts[0]} ${nameParts.slice(1).join(' ')}` : firstName
+  const inviterName = (params.inviterName || 'A VERSO team member').trim()
 
-  const displayRole = roleDisplayNames[params.role] || params.role
-
-  const investorContent = `
-    <p>You have been invited to join <strong>${params.entityName}</strong> on the <span style="font-family: 'League Spartan', Arial, sans-serif; letter-spacing: 0.2em; font-weight: 700;">V E R S O</span> Investment Platform.</p>
-    <p>This secure platform provides you with comprehensive access to your investment portfolio, performance analytics, and exclusive deal opportunities.</p>
-    <p>Click the button below to set up your account and access the platform.</p>
-  `
-
-  const staffContent = `
-    <p>You have been invited to join <strong style="font-family: 'League Spartan', Arial, sans-serif; letter-spacing: 0.2em;">V E R S O</strong> as a <strong>${displayRole}</strong>.</p>
-    <p>As a member of the <span style="font-family: 'League Spartan', Arial, sans-serif; letter-spacing: 0.2em; font-weight: 700;">V E R S O</span> team, you'll have access to investor management, deal operations, and administrative tools.</p>
-    <p>Click the button below to set up your password and access your dashboard.</p>
-  `
-
-  const professionalContent = `
-    <p>You have been invited to join <strong>${params.entityName}</strong> on the <span style="font-family: 'League Spartan', Arial, sans-serif; letter-spacing: 0.2em; font-weight: 700;">V E R S O</span> Platform.</p>
-    <p>This platform provides access to deal management, document processing, and collaboration tools for your organization.</p>
-    <p>Click the button below to set up your account and get started.</p>
-  `
-
-  const emailContent = isInvestor ? investorContent : (isStaff ? staffContent : professionalContent)
-
-  const body = `
+  const passwordSetupBody = `
     <div class="content">
-      ${emailContent}
+      <p>Hi ${firstName},</p>
+      <p>You've been invited to join <strong>VERSOTECH</strong> - your gateway to exclusive investment opportunities.</p>
+      <p>You have been invited by <strong>${inviterName}</strong> to join the <strong>VERSO Portal</strong>.</p>
+      <p>You're almost signed up for VERSOTECH. To change your password immediately, please click the button below:</p>
     </div>
 
     <div class="button-container">
-      <a href="${params.acceptUrl}" class="button">Accept Invitation</a>
+      <a href="${params.acceptUrl}" class="button">Change Your Password</a>
+    </div>
+
+    <div class="content">
+      <p>If you have any questions, please contact <a href="mailto:support@versotech.com">support@versotech.com</a>.</p>
+      <p>Sincerely,<br>The VERSO team</p>
     </div>
   `
 
-  const subject = isStaff
-    ? `Welcome to V E R S O - You've been invited as ${displayRole}`
-    : `You've been invited to join ${params.entityName} on V E R S O`
+  const accountSetupBody = `
+    <div class="content">
+      <p>Dear ${fullName},</p>
+      <p>Thank you for creating your account.</p>
+      <p>VERSO TECH is a secure platform that provides you with comprehensive access to your investment portfolio, performance analytics, and exclusive deal opportunities.</p>
+      <p>Through your personalized dashboard, you'll be able to:</p>
+      <ul style="margin: 0 0 20px 20px; padding: 0; color: #333333;">
+        <li style="margin-bottom: 8px;">Monitor your portfolio performance in real-time</li>
+        <li style="margin-bottom: 8px;">Access quarterly statements and K-1 documents</li>
+        <li style="margin-bottom: 8px;">Review and participate in new investment opportunities</li>
+        <li style="margin-bottom: 8px;">Communicate directly with your relationship manager</li>
+        <li style="margin-bottom: 8px;">Complete required compliance documentation</li>
+      </ul>
+      <p>Click the button below to set up your account and access VERSO portal.</p>
+    </div>
+
+    <div class="button-container">
+      <a href="${params.acceptUrl}" class="button">Access VERSO Portal</a>
+    </div>
+
+    <div class="content">
+      <p>Sincerely,<br>The VERSO team</p>
+    </div>
+  `
+
+  const body = isStaff ? passwordSetupBody : accountSetupBody
 
   return sendEmail({
     to: params.email,
-    subject,
-    html: emailShell(body),
+    subject: 'Welcome to VERSOTECH',
+    html: emailShell(body, {
+      footerCopy: INVITATION_FOOTER_COPY,
+    }),
   })
 }
 
