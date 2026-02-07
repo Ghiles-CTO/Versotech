@@ -3,6 +3,8 @@ import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { normalizeMessage } from '@/lib/messaging'
+import { generateComplianceReply } from '@/lib/compliance/chat-assistant'
+import { resolveAgentIdForTask } from '@/lib/agents'
 
 // Get messages for a conversation
 export async function GET(
@@ -79,7 +81,7 @@ export async function POST(
     const userId = user.id
 
     const { id: conversationId } = await params
-    const { body, file_key, reply_to_message_id, metadata } = await request.json()
+    const { body, file_key, reply_to_message_id, metadata: messageMetadata } = await request.json()
 
     if (!body && !file_key) {
       return NextResponse.json({ error: 'Message body or file is required' }, { status: 400 })
@@ -90,7 +92,7 @@ export async function POST(
 
     const { data: conversation, error: convError } = await serviceSupabase
       .from('conversations')
-      .select('id')
+      .select('id, metadata')
       .eq('id', conversationId)
       .single()
 
@@ -127,7 +129,7 @@ export async function POST(
         body,
         file_key,
         reply_to_message_id,
-        metadata: metadata ?? {}
+        metadata: messageMetadata ?? {}
       })
       .select(`
         *,
@@ -168,6 +170,148 @@ export async function POST(
         message_length: body?.length || 0
       }
     })
+
+    // Compliance AI assistant:
+    // Reuses current conversation/message tables and only runs for compliance-flagged threads.
+    const conversationMetadata = ((conversation as { metadata?: unknown })?.metadata || {}) as Record<string, any>
+    const complianceMetadata = (conversationMetadata.compliance || {}) as Record<string, any>
+    const isComplianceThread = complianceMetadata.flagged === true
+    const isComplianceOpen = (complianceMetadata.status || 'open') !== 'resolved'
+    const bodyText = typeof body === 'string' ? body.trim() : ''
+    const isAiAuthoredInput = (messageMetadata as Record<string, any> | undefined)?.ai_generated === true
+
+    if (isComplianceThread && isComplianceOpen && bodyText && !isStaff && !isAiAuthoredInput) {
+      try {
+        const wayneAgentId = await resolveAgentIdForTask(serviceSupabase, 'W001')
+        const { data: wayneAgent } = wayneAgentId
+          ? await serviceSupabase
+              .from('ai_agents')
+              .select('id, name, system_prompt')
+              .eq('id', wayneAgentId)
+              .maybeSingle()
+          : { data: null }
+
+        const assistantName = wayneAgent?.name || "Wayne O'Connor"
+        const assistantPrompt = wayneAgent?.system_prompt || null
+
+        const { data: recentMessages } = await serviceSupabase
+          .from('messages')
+          .select('id, body, created_at, metadata, sender:sender_id(display_name, email)')
+          .eq('conversation_id', conversationId)
+          .order('created_at', { ascending: false })
+          .limit(12)
+
+        const conversationContext = (recentMessages || [])
+          .slice()
+          .reverse()
+          .map((item: any) => {
+            const sender = Array.isArray(item.sender) ? item.sender[0] : item.sender
+            const meta = (item.metadata || {}) as Record<string, any>
+            return {
+              createdAt: item.created_at,
+              senderName: sender?.display_name || sender?.email || null,
+              body: typeof item.body === 'string' ? item.body : '',
+              isAi: meta.ai_generated === true,
+            }
+          })
+          .filter((item: { body: string }) => item.body.length > 0)
+
+        const aiResult = await generateComplianceReply({
+          latestUserMessage: bodyText,
+          conversationContext,
+          systemPrompt: assistantPrompt,
+        })
+
+        if (aiResult.error) {
+          console.error('[compliance-ai] Generation failed:', aiResult.error)
+        }
+
+        if (aiResult.reply) {
+          await serviceSupabase.from('messages').insert({
+            conversation_id: conversationId,
+            sender_id: null,
+            message_type: 'system',
+            body: aiResult.reply,
+            metadata: {
+              ai_generated: true,
+              assistant_name: assistantName,
+              assistant_agent_id: wayneAgentId,
+              provider: aiResult.provider,
+              model: aiResult.model,
+              source: 'compliance_assistant',
+              escalated: aiResult.escalated,
+              escalation_reason: aiResult.escalationReason,
+              reply_to_message_id: message.id,
+            },
+          })
+        }
+
+        if (aiResult.escalated) {
+          const now = new Date().toISOString()
+          const updatedCompliance: Record<string, any> = {
+            ...complianceMetadata,
+            flagged: true,
+            status: 'open',
+            urgency: 'high',
+            updated_at: now,
+            escalated_by_ai: true,
+            escalation_reason: aiResult.escalationReason,
+          }
+
+          if (!updatedCompliance.flagged_at) updatedCompliance.flagged_at = now
+          if (!updatedCompliance.flagged_by) updatedCompliance.flagged_by = userId
+          if (!updatedCompliance.reason && aiResult.escalationReason) {
+            updatedCompliance.reason = aiResult.escalationReason
+          }
+
+          await serviceSupabase
+            .from('conversations')
+            .update({
+              metadata: {
+                ...conversationMetadata,
+                compliance: updatedCompliance,
+              },
+            })
+            .eq('id', conversationId)
+
+          await serviceSupabase.from('compliance_activity_log').insert({
+            event_type: 'compliance_question',
+            description: `AI escalation: ${aiResult.escalationReason || 'High-risk compliance topic'}`,
+            agent_id: wayneAgentId,
+            created_by: userId,
+            metadata: {
+              conversation_id: conversationId,
+              message_id: message.id,
+              escalated_by_ai: true,
+              provider: aiResult.provider,
+              model: aiResult.model,
+            },
+          })
+
+          const { data: ceoUsers } = await serviceSupabase.from('ceo_users').select('user_id')
+          const notifications = (ceoUsers || []).map((ceo) => ({
+            user_id: ceo.user_id,
+            title: 'AI escalated compliance conversation',
+            message: `High-risk topic detected: ${aiResult.escalationReason || 'Compliance review required'}`,
+            link: '/versotech_main/messages?compliance=true',
+            type: 'compliance_question',
+            created_by: userId,
+            agent_id: wayneAgentId,
+            data: {
+              conversation_id: conversationId,
+              message_id: message.id,
+              escalated_by_ai: true,
+            },
+          }))
+
+          if (notifications.length > 0) {
+            await serviceSupabase.from('investor_notifications').insert(notifications)
+          }
+        }
+      } catch (assistantError) {
+        console.error('[compliance-ai] Assistant pipeline failed:', assistantError)
+      }
+    }
 
     return NextResponse.json({
       success: true,

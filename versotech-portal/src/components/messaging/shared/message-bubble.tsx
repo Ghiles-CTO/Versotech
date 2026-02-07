@@ -11,6 +11,7 @@ import { motion } from 'framer-motion'
 interface MessageBubbleProps {
   message: ConversationMessage
   senderName: string
+  assistantName?: string | null
   senderEmail?: string | null
   senderAvatarUrl?: string | null
   isSelf: boolean
@@ -24,6 +25,7 @@ interface MessageBubbleProps {
 export function MessageBubble({
   message,
   senderName,
+  assistantName,
   senderEmail,
   senderAvatarUrl,
   isSelf,
@@ -89,9 +91,16 @@ export function MessageBubble({
         
         {/* Sender Name (only at group start) */}
         {isGroupStart && !isSelf && (
-          <span className="text-xs font-semibold text-foreground/80 px-2 mb-0.5">
-            {senderName}
-          </span>
+          <div className="flex items-center gap-2 px-2 mb-0.5">
+            <span className="text-xs font-semibold text-foreground/80">
+              {senderName}
+            </span>
+            {assistantName && (
+              <span className="rounded-full border border-blue-300 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
+                AI
+              </span>
+            )}
+          </div>
         )}
 
         {/* Message Bubble (WhatsApp style) */}
@@ -143,4 +152,3 @@ export function MessageBubble({
     </motion.div>
   )
 }
-

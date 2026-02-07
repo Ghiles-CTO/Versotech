@@ -433,10 +433,14 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
             <div className="space-y-0">
               {groupedMessages.map((message, index) => {
                 const isSelf = message.senderId === currentUserId
+                const metadata = (message.metadata || {}) as Record<string, unknown>
+                const isAssistantMessage = metadata.ai_generated === true
+                const assistantName =
+                  typeof metadata.assistant_name === 'string' ? metadata.assistant_name : null
                 const senderInfo = message.sender?.displayName 
                   ? { name: message.sender.displayName, email: message.sender.email }
                   : participantsLookup.get(message.senderId || '')
-                const displayName = senderInfo?.name || 'Unknown User'
+                const displayName = senderInfo?.name || assistantName || (isAssistantMessage ? 'Compliance Assistant' : 'Unknown User')
                 
                 // Check if we need a date divider
                 const previousMessage = index > 0 ? groupedMessages[index - 1] : undefined
@@ -458,6 +462,7 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
                     <MessageBubble
                       message={message}
                       senderName={displayName}
+                      assistantName={isAssistantMessage ? assistantName || 'Compliance Assistant' : null}
                       senderEmail={senderInfo?.email}
                       senderAvatarUrl={message.sender?.avatarUrl ?? null}
                       isSelf={isSelf}
