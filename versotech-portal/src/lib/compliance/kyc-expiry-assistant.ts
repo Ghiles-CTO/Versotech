@@ -289,7 +289,7 @@ async function runOpenAi(input: SuggestKycExpiryInput): Promise<{ text: string; 
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) throw new Error('OPENAI_API_KEY is missing')
 
-  const model = process.env.KYC_EXPIRY_AI_OPENAI_MODEL || 'gpt-4.1-mini'
+  const model = process.env.KYC_EXPIRY_AI_OPENAI_MODEL || 'gpt-5.2'
   const fileResponse = await fetch(input.signedUrl)
   if (!fileResponse.ok) {
     throw new Error(`Failed to fetch signed document (${fileResponse.status})`)

@@ -144,7 +144,7 @@ async function runOpenAi(systemPrompt: string, userPrompt: string): Promise<{ te
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) throw new Error('OPENAI_API_KEY is missing')
 
-  const model = process.env.COMPLIANCE_AI_OPENAI_MODEL || 'gpt-4.1-mini'
+  const model = process.env.COMPLIANCE_AI_OPENAI_MODEL || 'gpt-5.2'
   const response = await fetch('https://api.openai.com/v1/responses', {
     method: 'POST',
     headers: {
