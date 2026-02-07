@@ -406,6 +406,8 @@ function isKycAiSupportedDocumentType(value: string | null | undefined) {
   return KYC_AI_SUPPORTED_DOCUMENT_TYPES.has(normalized)
 }
 
+const LOOKUP_CHUNK_SIZE = 100
+
 function matchQuery(entry: BlacklistEntry, query: string) {
   if (!query) return true
   const haystack = [
@@ -674,10 +676,26 @@ export default async function AgentsPage({
     if (!ids.size) {
       return Promise.resolve({ data: [] })
     }
-    return supabase
-      .from(table)
-      .select(columns)
-      .in('id', Array.from(ids)) as unknown as Promise<{ data: any[] }>
+    const allIds = Array.from(ids)
+    return (async () => {
+      const collected: any[] = []
+      for (let index = 0; index < allIds.length; index += LOOKUP_CHUNK_SIZE) {
+        const chunk = allIds.slice(index, index + LOOKUP_CHUNK_SIZE)
+        const { data, error } = await supabase.from(table).select(columns).in('id', chunk)
+        if (error) {
+          console.error('[agents] fetchByIds failed', {
+            table,
+            chunkSize: chunk.length,
+            error: error.message,
+          })
+          continue
+        }
+        if (data?.length) {
+          collected.push(...data)
+        }
+      }
+      return { data: collected }
+    })()
   }
 
   const fetchByForeignIds = (
@@ -689,10 +707,27 @@ export default async function AgentsPage({
     if (!ids.size) {
       return Promise.resolve({ data: [] })
     }
-    return supabase
-      .from(table)
-      .select(columns)
-      .in(foreignKey, Array.from(ids)) as unknown as Promise<{ data: any[] }>
+    const allIds = Array.from(ids)
+    return (async () => {
+      const collected: any[] = []
+      for (let index = 0; index < allIds.length; index += LOOKUP_CHUNK_SIZE) {
+        const chunk = allIds.slice(index, index + LOOKUP_CHUNK_SIZE)
+        const { data, error } = await supabase.from(table).select(columns).in(foreignKey, chunk)
+        if (error) {
+          console.error('[agents] fetchByForeignIds failed', {
+            table,
+            foreignKey,
+            chunkSize: chunk.length,
+            error: error.message,
+          })
+          continue
+        }
+        if (data?.length) {
+          collected.push(...data)
+        }
+      }
+      return { data: collected }
+    })()
   }
 
   const [
@@ -1428,13 +1463,14 @@ export default async function AgentsPage({
       investor?.representative_name,
       formatPersonName(investor || {})
     )
+    const fallbackName = `Investor ${profile.investor_id.slice(0, 8)}`
     const gradeInfo = profile.composite_risk_grade
       ? riskGradeMap.get(profile.composite_risk_grade)
       : null
     riskRows.push({
       id: profile.investor_id,
       risk_type: 'investor',
-      name: name || 'Unknown Investor',
+      name: name || fallbackName,
       country: resolveInvestorCountry(investor),
       sector: null,
       investment_type: null,
@@ -1450,13 +1486,14 @@ export default async function AgentsPage({
     const deal = riskDealMap.get(profile.deal_id)
     const vehicleType = deal?.vehicle_id ? vehicleTypeMap.get(deal.vehicle_id as string) : null
     const investmentType = pickFirst(vehicleType, deal?.stock_type, deal?.deal_type)
+    const fallbackName = `Deal ${profile.deal_id.slice(0, 8)}`
     const gradeInfo = profile.composite_risk_grade
       ? riskGradeMap.get(profile.composite_risk_grade)
       : null
     riskRows.push({
       id: profile.deal_id,
       risk_type: 'deal',
-      name: (deal?.name as string | undefined) || 'Unknown Deal',
+      name: (deal?.name as string | undefined) || fallbackName,
       country: (deal?.location as string | undefined) || null,
       sector: (deal?.sector as string | undefined) || null,
       investment_type: investmentType,
