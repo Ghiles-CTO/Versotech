@@ -6,6 +6,13 @@ import { normalizeMessage } from '@/lib/messaging'
 import { generateComplianceReply } from '@/lib/compliance/chat-assistant'
 import { resolveAgentIdForTask } from '@/lib/agents'
 
+const DEFAULT_COMPLIANCE_KNOWLEDGE = [
+  'KYC/AML reminders are managed in-platform and tracked in compliance logs.',
+  'Blacklist matches require compliance review; do not state automatic legal conclusions.',
+  'OFAC checks are manual and require supporting screening evidence upload.',
+  'High-risk or uncertain topics must be escalated to a human compliance officer.',
+]
+
 // Get messages for a conversation
 export async function GET(
   request: NextRequest,
@@ -216,9 +223,26 @@ export async function POST(
           })
           .filter((item: { body: string }) => item.body.length > 0)
 
+        const { data: recentComplianceEvents } = await serviceSupabase
+          .from('compliance_activity_log')
+          .select('event_type, description, created_at')
+          .order('created_at', { ascending: false })
+          .limit(8)
+
+        const knowledgeContext = [
+          ...DEFAULT_COMPLIANCE_KNOWLEDGE,
+          ...(recentComplianceEvents || []).map((item) => {
+            const description = typeof item.description === 'string' ? item.description.trim() : ''
+            const eventType = typeof item.event_type === 'string' ? item.event_type : 'event'
+            if (!description) return `Recent ${eventType} event recorded.`
+            return `Recent ${eventType}: ${description}`
+          }),
+        ]
+
         const aiResult = await generateComplianceReply({
           latestUserMessage: bodyText,
           conversationContext,
+          knowledgeContext,
           systemPrompt: assistantPrompt,
         })
 
@@ -242,6 +266,7 @@ export async function POST(
               escalated: aiResult.escalated,
               escalation_reason: aiResult.escalationReason,
               reply_to_message_id: message.id,
+              knowledge_context_count: knowledgeContext.length,
             },
           })
         }

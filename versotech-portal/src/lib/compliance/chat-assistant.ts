@@ -23,6 +23,7 @@ type ConversationContextItem = {
 type GenerateComplianceReplyInput = {
   latestUserMessage: string
   conversationContext: ConversationContextItem[]
+  knowledgeContext?: string[]
   systemPrompt?: string | null
 }
 
@@ -84,9 +85,18 @@ function buildUserPrompt(input: GenerateComplianceReplyInput): string {
     })
     .join('\n')
 
+  const knowledge = (input.knowledgeContext || [])
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0)
+    .slice(0, 12)
+    .join('\n- ')
+
   return [
     'Conversation history:',
     history || '(no prior context)',
+    '',
+    'Approved compliance reference notes:',
+    knowledge ? `- ${knowledge}` : '- (none provided)',
     '',
     'Latest user message:',
     input.latestUserMessage,
