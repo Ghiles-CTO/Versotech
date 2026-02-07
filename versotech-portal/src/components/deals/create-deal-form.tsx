@@ -69,6 +69,7 @@ export function CreateDealForm({ entities, basePath = '/versotech/staff' }: Crea
   const [logoError, setLogoError] = useState<string | null>(null)
   const [companyLogoUrl, setCompanyLogoUrl] = useState<string>('')
   const [logoSource, setLogoSource] = useState<'entity' | 'manual' | 'none'>('none')
+  const [currencySource, setCurrencySource] = useState<'vehicle' | 'manual'>('manual')
   const isSavingDraft = loading && submitMode === 'draft'
   const isCreating = loading && submitMode !== 'draft'
 
@@ -118,8 +119,14 @@ export function CreateDealForm({ entities, basePath = '/versotech/staff' }: Crea
       } else {
         updateField('arranger_entity_id', '')
       }
+      // Auto-set currency from vehicle
+      if (vehicle?.currency) {
+        updateField('currency', vehicle.currency)
+        setCurrencySource('vehicle')
+      }
     } else {
       updateField('arranger_entity_id', '')
+      setCurrencySource('manual')
     }
   }
 
@@ -462,7 +469,10 @@ export function CreateDealForm({ entities, basePath = '/versotech/staff' }: Crea
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="currency" className="text-foreground">Currency *</Label>
-                  <Select value={formData.currency} onValueChange={(v) => updateField('currency', v)}>
+                  <Select value={formData.currency} onValueChange={(v) => {
+                    updateField('currency', v)
+                    setCurrencySource('manual')
+                  }}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -474,6 +484,11 @@ export function CreateDealForm({ entities, basePath = '/versotech/staff' }: Crea
                       <SelectItem value="AED">AED</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {currencySource === 'vehicle' && selectedEntity
+                      ? `Inherited from ${selectedEntity.name}. You can change it if needed.`
+                      : 'Select the currency for this deal.'}
+                  </p>
                 </div>
 
                 <div className="space-y-2">

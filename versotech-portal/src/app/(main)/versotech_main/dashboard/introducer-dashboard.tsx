@@ -25,10 +25,11 @@ import {
   X,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { formatCurrency, formatDate } from '@/lib/format'
+import { formatDate } from '@/lib/format'
 import { useTheme } from '@/components/theme-provider'
 import type { DateRange } from 'react-day-picker'
 import { format } from 'date-fns'
+import { type CurrencyTotals, formatCurrencyTotals, sumByCurrency } from '@/lib/currency-totals'
 
 type Persona = {
   persona_type: string
@@ -78,7 +79,9 @@ type IntroducerMetrics = {
   fundedIntroductions: number
   passedIntroductions: number
   totalCommissionEarned: number
+  totalCommissionEarnedByCurrency: CurrencyTotals
   pendingCommission: number
+  pendingCommissionByCurrency: CurrencyTotals
   conversionRate: number
 }
 
@@ -86,7 +89,7 @@ type PerformanceMetrics = {
   thisMonthIntroductions: number
   lastMonthIntroductions: number
   introductionGrowth: number
-  avgCommissionPerIntro: number
+  avgCommissionPerIntroByCurrency: CurrencyTotals
 }
 
 type Agreement = {
@@ -159,7 +162,7 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
         // Fetch commissions (using created_at as the date column)
         const { data: commissions } = await supabase
           .from('introducer_commissions')
-          .select('id, accrual_amount, status, created_at, introduction_id')
+          .select('id, accrual_amount, currency, status, created_at, introduction_id')
           .eq('introducer_id', introducerId)
 
         const allComms = commissions || []
@@ -204,9 +207,19 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
         const totalEarned = comms
           .filter(c => c.status === 'paid')
           .reduce((sum, c) => sum + (c.accrual_amount || 0), 0)
+        const totalEarnedByCurrency = sumByCurrency(
+          comms.filter(c => c.status === 'paid'),
+          (c: any) => c.accrual_amount,
+          (c: any) => c.currency
+        )
         const pendingComm = comms
           .filter(c => ['accrued', 'invoice_requested', 'invoice_submitted', 'invoiced'].includes(c.status))
           .reduce((sum, c) => sum + (c.accrual_amount || 0), 0)
+        const pendingCommissionByCurrency = sumByCurrency(
+          comms.filter(c => ['accrued', 'invoice_requested', 'invoice_submitted', 'invoiced'].includes(c.status)),
+          (c: any) => c.accrual_amount,
+          (c: any) => c.currency
+        )
 
         setMetrics({
           totalIntroductions: intros.length,
@@ -216,7 +229,9 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
           fundedIntroductions: funded,
           passedIntroductions: passed,
           totalCommissionEarned: totalEarned,
+          totalCommissionEarnedByCurrency: totalEarnedByCurrency,
           pendingCommission: pendingComm,
+          pendingCommissionByCurrency,
           conversionRate: intros.length > 0 ? (funded / intros.length) * 100 : 0,
         })
 
@@ -239,15 +254,26 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
           ? Math.round(((thisMonthIntroductions - lastMonthIntroductions) / lastMonthIntroductions) * 100)
           : thisMonthIntroductions > 0 ? 100 : 0
 
-        const avgCommissionPerIntro = funded > 0
-          ? Math.round(totalEarned / funded)
-          : 0
+        const paidCommissions = comms.filter(c => c.status === 'paid')
+        const paidCountsByCurrency = paidCommissions.reduce<Record<string, number>>((acc, commission: any) => {
+          const currency = typeof commission.currency === 'string'
+            ? commission.currency.trim().toUpperCase()
+            : ''
+          if (!currency) return acc
+          acc[currency] = (acc[currency] || 0) + 1
+          return acc
+        }, {})
+        const avgCommissionPerIntroByCurrency = Object.entries(totalEarnedByCurrency).reduce<CurrencyTotals>((acc, [currency, amount]) => {
+          const count = paidCountsByCurrency[currency] || 0
+          acc[currency] = count > 0 ? amount / count : 0
+          return acc
+        }, {})
 
         setPerformance({
           thisMonthIntroductions,
           lastMonthIntroductions,
           introductionGrowth,
-          avgCommissionPerIntro
+          avgCommissionPerIntroByCurrency
         })
 
         // Map introductions to match expected type (deal is single object, not array)
@@ -470,7 +496,7 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold text-green-500`}>
-              {formatCurrency(metrics?.totalCommissionEarned || 0)}
+              {formatCurrencyTotals(metrics?.totalCommissionEarnedByCurrency || {})}
             </div>
             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
               Total paid to date
@@ -487,7 +513,7 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold text-amber-500`}>
-              {formatCurrency(metrics?.pendingCommission || 0)}
+              {formatCurrencyTotals(metrics?.pendingCommissionByCurrency || {})}
             </div>
             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
               Accrued or awaiting approval
@@ -547,7 +573,7 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
                   Avg Commission
                 </div>
                 <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {formatCurrency(performance.avgCommissionPerIntro)}
+                  {formatCurrencyTotals(performance.avgCommissionPerIntroByCurrency)}
                 </div>
                 <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-muted-foreground'}`}>
                   Per successful introduction

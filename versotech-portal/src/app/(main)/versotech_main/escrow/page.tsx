@@ -46,6 +46,7 @@ import {
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
+import { type CurrencyTotals, formatCurrencyTotals } from '@/lib/currency-totals'
 import { EscrowConfirmModal } from '@/components/lawyer/escrow-confirm-modal'
 import { DateRangePicker } from '@/components/ui/date-range-picker'
 import type { DateRange } from 'react-day-picker'
@@ -78,7 +79,7 @@ type EscrowDeal = {
   wire_bic: string | null
   escrow_fee_text: string | null
   target_amount: number
-  currency: string
+  currency: string | null
   subscriptions_count: number
   pending_funding: number
   funded_amount: number
@@ -105,7 +106,7 @@ type PendingSettlement = {
   commitment_amount: number
   funded_amount: number
   outstanding_amount: number
-  currency: string
+  currency: string | null
   funding_due_at: string | null
   status: string
   days_overdue: number
@@ -121,7 +122,7 @@ type FeeEvent = {
   fee_type: string | null
   base_amount: number | null
   computed_amount: number
-  currency: string
+  currency: string | null
   status: string
   event_date: string
   invoice_id: string | null
@@ -136,6 +137,7 @@ type Summary = {
   totalDeals: number
   pendingSettlements: number
   totalPendingValue: number
+  totalPendingValueByCurrency: CurrencyTotals
   overdueSettlements: number
 }
 
@@ -165,6 +167,30 @@ const STATUS_FILTERS = [
   { label: 'Overdue', value: 'overdue' },
 ]
 
+const isValidCurrencyCode = (currency?: string | null): currency is string =>
+  typeof currency === 'string' && currency.trim().length === 3
+
+const formatAmountWithCurrency = (amount: number | null | undefined, currency?: string | null) => {
+  const numericAmount = Number(amount) || 0
+  if (isValidCurrencyCode(currency)) return formatCurrency(numericAmount, currency.toUpperCase())
+  return numericAmount.toLocaleString('en-US')
+}
+
+const sumByCurrencyStrict = <T,>(
+  items: T[],
+  amountGetter: (item: T) => number | null | undefined,
+  currencyGetter: (item: T) => string | null | undefined
+): CurrencyTotals => {
+  return items.reduce<CurrencyTotals>((totals, item) => {
+    const currency = currencyGetter(item)
+    if (!isValidCurrencyCode(currency)) return totals
+    const amount = Number(amountGetter(item)) || 0
+    const code = currency.toUpperCase()
+    totals[code] = (totals[code] || 0) + amount
+    return totals
+  }, {})
+}
+
 export default function EscrowPage() {
   const [lawyerInfo, setLawyerInfo] = useState<LawyerInfo | null>(null)
   const [arrangerInfo, setArrangerInfo] = useState<ArrangerInfo | null>(null)
@@ -175,6 +201,7 @@ export default function EscrowPage() {
     totalDeals: 0,
     pendingSettlements: 0,
     totalPendingValue: 0,
+    totalPendingValueByCurrency: {},
     overdueSettlements: 0,
   })
   const [loading, setLoading] = useState(true)
@@ -439,6 +466,7 @@ export default function EscrowPage() {
           totalDeals: 0,
           pendingSettlements: 0,
           totalPendingValue: 0,
+          totalPendingValueByCurrency: {},
           overdueSettlements: 0,
         })
         return
@@ -495,7 +523,7 @@ export default function EscrowPage() {
           wire_bic: fs.wire_bic,
           escrow_fee_text: fs.escrow_fee_text,
           target_amount: Number(fs.deal?.target_amount) || 0,
-          currency: fs.deal?.currency || 'USD',
+          currency: fs.deal?.currency ? String(fs.deal.currency).toUpperCase() : null,
           subscriptions_count: dealSubs.length,
           pending_funding: pendingFunding,
           funded_amount: fundedAmount,
@@ -588,7 +616,7 @@ export default function EscrowPage() {
             commitment_amount: Number(s.commitment) || 0,
             funded_amount: Number(s.funded_amount) || 0,
             outstanding_amount: Number(s.outstanding_amount) || 0,
-            currency: deal?.deal?.currency || 'USD',
+            currency: deal?.deal?.currency ? String(deal.deal.currency).toUpperCase() : null,
             funding_due_at: s.funding_due_at,
             status,
             days_overdue: Math.max(0, daysOverdue),
@@ -611,11 +639,17 @@ export default function EscrowPage() {
       // Calculate summary
       const overdueCount = settlements.filter(s => s.days_overdue > 0).length
       const totalPending = settlements.reduce((sum, s) => sum + s.outstanding_amount, 0)
+      const totalPendingValueByCurrency = sumByCurrencyStrict(
+        settlements,
+        (settlement) => settlement.outstanding_amount,
+        (settlement) => settlement.currency
+      )
 
       setSummary({
         totalDeals: deals.length,
         pendingSettlements: settlements.length,
         totalPendingValue: totalPending,
+        totalPendingValueByCurrency,
         overdueSettlements: overdueCount,
       })
 
@@ -682,7 +716,7 @@ export default function EscrowPage() {
             fee_type: event.fee_type || null,
             base_amount: event.base_amount ?? null,
             computed_amount: Number(event.computed_amount || 0),
-            currency: event.currency || 'USD',
+            currency: event.currency ? String(event.currency).toUpperCase() : null,
             status: event.status || 'accrued',
             event_date: event.event_date,
             invoice_id: event.invoice_id || null,
@@ -893,7 +927,7 @@ export default function EscrowPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {formatCurrency(summary.totalPendingValue, 'USD')}
+              {formatCurrencyTotals(summary.totalPendingValueByCurrency)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Total outstanding
@@ -1055,11 +1089,11 @@ export default function EscrowPage() {
                           <TableCell>
                             <div className="space-y-1">
                               <div className="text-sm font-medium text-green-600">
-                                {formatCurrency(deal.funded_amount, deal.currency)} funded
+                                {formatAmountWithCurrency(deal.funded_amount, deal.currency)} funded
                               </div>
                               {deal.pending_funding > 0 && (
                                 <div className="text-xs text-yellow-600">
-                                  {formatCurrency(deal.pending_funding, deal.currency)} pending
+                                  {formatAmountWithCurrency(deal.pending_funding, deal.currency)} pending
                                 </div>
                               )}
                             </div>
@@ -1137,17 +1171,17 @@ export default function EscrowPage() {
                           </TableCell>
                           <TableCell>
                             <div className="font-medium">
-                              {formatCurrency(settlement.commitment_amount, settlement.currency)}
+                              {formatAmountWithCurrency(settlement.commitment_amount, settlement.currency)}
                             </div>
                             {settlement.funded_amount > 0 && (
                               <div className="text-xs text-green-600">
-                                {formatCurrency(settlement.funded_amount, settlement.currency)} received
+                                {formatAmountWithCurrency(settlement.funded_amount, settlement.currency)} received
                               </div>
                             )}
                           </TableCell>
                           <TableCell>
                             <div className="font-medium text-yellow-600">
-                              {formatCurrency(settlement.outstanding_amount, settlement.currency)}
+                              {formatAmountWithCurrency(settlement.outstanding_amount, settlement.currency)}
                             </div>
                           </TableCell>
                           <TableCell>
@@ -1196,7 +1230,7 @@ export default function EscrowPage() {
                                       <span className="font-medium capitalize">{evidence.status}</span>
                                     </div>
                                     <div className="text-muted-foreground">
-                                      <span className="font-medium">{formatCurrency(evidence.bank_amount, settlement.currency)}</span>
+                                      <span className="font-medium">{formatAmountWithCurrency(evidence.bank_amount, settlement.currency)}</span>
                                       {evidence.bank_counterparty && (
                                         <span> from {evidence.bank_counterparty}</span>
                                       )}
@@ -1291,11 +1325,11 @@ export default function EscrowPage() {
                           </TableCell>
                           <TableCell>
                             <div className="font-medium">
-                              {formatCurrency(event.computed_amount, event.currency)}
+                              {formatAmountWithCurrency(event.computed_amount, event.currency)}
                             </div>
                             {event.base_amount != null && (
                               <div className="text-xs text-muted-foreground">
-                                Base: {formatCurrency(event.base_amount, event.currency)}
+                                Base: {formatAmountWithCurrency(event.base_amount, event.currency)}
                               </div>
                             )}
                           </TableCell>
@@ -1365,7 +1399,7 @@ export default function EscrowPage() {
           dealName={selectedSettlement?.deal_name || selectedFeeEvent?.deal_name || 'Deal'}
           commitment={selectedSettlement?.commitment_amount || 0}
           fundedAmount={selectedSettlement?.funded_amount || 0}
-          currency={selectedSettlement?.currency || selectedFeeEvent?.currency || 'USD'}
+          currency={selectedSettlement?.currency || selectedFeeEvent?.currency || ''}
           feeEventId={selectedFeeEvent?.id || null}
           defaultAmount={selectedFeeEvent?.computed_amount || null}
           defaultPaymentType={selectedFeeEvent?.default_payment_type}

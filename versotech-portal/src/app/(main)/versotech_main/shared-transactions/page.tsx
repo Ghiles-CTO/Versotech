@@ -36,6 +36,7 @@ import {
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
+import { type CurrencyTotals, formatCurrencyTotals } from '@/lib/currency-totals'
 
 type SharedTransaction = {
   id: string // Synthetic ID from deal_id + investor_id
@@ -45,7 +46,7 @@ type SharedTransaction = {
   investor_id: string | null
   investor_name: string
   commitment_amount: number
-  currency: string
+  currency: string | null
   dispatched_at: string | null
   partner_share: number // Percentage share
   co_referrer_name: string | null
@@ -64,6 +65,7 @@ type Summary = {
   totalShared: number
   activeDeals: number
   totalValue: number
+  totalValueByCurrency: CurrencyTotals
   coPartners: number
 }
 
@@ -81,6 +83,29 @@ const STATUS_FILTERS = [
   { label: 'Pending', value: 'pending' },
 ]
 
+const isValidCurrencyCode = (currency?: string | null): currency is string =>
+  typeof currency === 'string' && currency.trim().length === 3
+
+const formatAmountWithCurrency = (amount: number, currency?: string | null) => {
+  if (isValidCurrencyCode(currency)) return formatCurrency(amount, currency.toUpperCase())
+  return amount.toLocaleString('en-US')
+}
+
+const sumByCurrencyStrict = <T,>(
+  items: T[],
+  amountGetter: (item: T) => number | null | undefined,
+  currencyGetter: (item: T) => string | null | undefined
+): CurrencyTotals => {
+  return items.reduce<CurrencyTotals>((totals, item) => {
+    const currency = currencyGetter(item)
+    if (!isValidCurrencyCode(currency)) return totals
+    const amount = Number(amountGetter(item)) || 0
+    const code = currency.toUpperCase()
+    totals[code] = (totals[code] || 0) + amount
+    return totals
+  }, {})
+}
+
 export default function SharedTransactionsPage() {
   const [partnerInfo, setPartnerInfo] = useState<PartnerInfo | null>(null)
   const [transactions, setTransactions] = useState<SharedTransaction[]>([])
@@ -88,6 +113,7 @@ export default function SharedTransactionsPage() {
     totalShared: 0,
     activeDeals: 0,
     totalValue: 0,
+    totalValueByCurrency: {},
     coPartners: 0,
   })
   const [loading, setLoading] = useState(true)
@@ -285,7 +311,7 @@ export default function SharedTransactionsPage() {
           investor_id: investor?.id || null,
           investor_name: investor?.legal_name || 'Unknown',
           commitment_amount: subscription?.commitment || 0,
-          currency: deal?.currency || 'USD',
+          currency: deal?.currency ? String(deal.currency).toUpperCase() : null,
           dispatched_at: membership.dispatched_at,
           partner_share: hasCoReferrer ? 50 : 100, // Simplified share calculation
           co_referrer_name: hasCoReferrer ? `Co-referrer (${coReferrer.referred_by_entity_type})` : null,
@@ -301,11 +327,17 @@ export default function SharedTransactionsPage() {
       const uniqueDeals = new Set(processed.map(t => t.deal_id))
       const uniqueCoPartners = new Set(processed.filter(t => t.co_referrer_name).map(t => t.co_referrer_name))
       const totalValue = processed.reduce((sum, t) => sum + t.commitment_amount, 0)
+      const totalValueByCurrency = sumByCurrencyStrict(
+        processed,
+        (transaction) => transaction.commitment_amount,
+        (transaction) => transaction.currency
+      )
 
       setSummary({
         totalShared: sharedOnly.length,
         activeDeals: uniqueDeals.size,
         totalValue,
+        totalValueByCurrency,
         coPartners: uniqueCoPartners.size,
       })
     }
@@ -410,7 +442,7 @@ export default function SharedTransactionsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-emerald-600">
-              {formatCurrency(summary.totalValue, 'USD')}
+              {formatCurrencyTotals(summary.totalValueByCurrency)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Commitment value
@@ -535,7 +567,7 @@ export default function SharedTransactionsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">
-                          {formatCurrency(tx.commitment_amount, tx.currency)}
+                          {formatAmountWithCurrency(tx.commitment_amount, tx.currency)}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {tx.dispatched_at ? formatDate(tx.dispatched_at) : '—'}

@@ -280,14 +280,26 @@ const getFlagStatusColor = (status: string) => {
   }
 }
 
-const formatCurrencyValue = (amount?: number | null, currency?: string | null) => {
+const formatCurrencyValue = (
+  amount?: number | null,
+  currency?: string | null,
+  minimumFractionDigits = 0,
+  maximumFractionDigits = 0
+) => {
   if (amount == null) return null
-  const currencyCode = (currency || 'USD').toUpperCase()
+  const currencyCode = currency ? String(currency).toUpperCase() : null
+  if (!currencyCode) {
+    return amount.toLocaleString('en-US', {
+      minimumFractionDigits,
+      maximumFractionDigits,
+    })
+  }
   try {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currencyCode,
-      maximumFractionDigits: 0
+      minimumFractionDigits,
+      maximumFractionDigits,
     }).format(amount)
   } catch {
     return `${currencyCode} ${amount.toLocaleString()}`
@@ -352,7 +364,7 @@ const AcknowledgementNotes = ({ notes }: { notes: string }) => {
                 item.currency_converted ??
                 item.currency_original ??
                 parsed?.currency ??
-                'USD'
+                null
               const comment = item.comments ? String(item.comments) : null
               const orderDate = formatWorkbookDate(item.order_date as string | number | null)
               const settlementDate = formatWorkbookDate(
@@ -2514,18 +2526,12 @@ export function EntityDetailEnhanced({
                           </td>
                           <td className="py-3 px-4 text-sm text-right font-mono">
                             {valuation.nav_total
-                              ? `$${valuation.nav_total.toLocaleString('en-US', {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                              })}`
+                              ? formatCurrencyValue(valuation.nav_total, entity.currency, 2, 2)
                               : '-'}
                           </td>
                           <td className="py-3 px-4 text-sm text-right font-mono">
                             {valuation.nav_per_unit
-                              ? `$${valuation.nav_per_unit.toLocaleString('en-US', {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 6
-                              })}`
+                              ? formatCurrencyValue(valuation.nav_per_unit, entity.currency, 2, 6)
                               : '-'}
                           </td>
                           <td className="py-3 px-4 text-right">
@@ -2647,18 +2653,12 @@ export function EntityDetailEnhanced({
                             </td>
                             <td className="py-3 px-4 text-sm text-right font-mono">
                               {position.cost_basis != null
-                                ? `$${position.cost_basis.toLocaleString('en-US', {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2
-                                })}`
+                                ? formatCurrencyValue(position.cost_basis, entity.currency, 2, 2)
                                 : '-'}
                             </td>
                             <td className="py-3 px-4 text-sm text-right font-mono">
                               {position.last_nav != null
-                                ? `$${position.last_nav.toLocaleString('en-US', {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 6
-                                })}`
+                                ? formatCurrencyValue(position.last_nav, entity.currency, 2, 6)
                                 : '-'}
                             </td>
                             <td className="py-3 px-4 text-sm">

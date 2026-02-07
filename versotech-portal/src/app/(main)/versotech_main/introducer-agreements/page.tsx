@@ -38,7 +38,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { formatDate } from '@/lib/format'
+import { formatCurrency, formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -50,6 +50,7 @@ type Agreement = {
   expiry_date: string | null
   default_commission_bps: number
   commission_cap_amount: number | null
+  currency?: string | null
   payment_terms: string | null
   territory: string | null
   deal_types: string[] | null
@@ -319,6 +320,14 @@ export default function IntroducerAgreementsPage() {
   // Format commission as percentage
   function formatCommission(bps: number): string {
     return `${(bps / 100).toFixed(2)}%`
+  }
+
+  function formatAmountWithCurrency(amount: number | null | undefined, currency?: string | null): string {
+    const numeric = Number(amount)
+    if (!Number.isFinite(numeric)) return '—'
+    const code = (currency || '').trim().toUpperCase()
+    if (!code) return numeric.toLocaleString()
+    return formatCurrency(numeric, code)
   }
 
   // Filter agreements
@@ -618,7 +627,7 @@ export default function IntroducerAgreementsPage() {
                         </div>
                         {agreement.commission_cap_amount && (
                           <div className="text-xs text-muted-foreground">
-                            Cap: ${agreement.commission_cap_amount.toLocaleString()}
+                            Cap: {formatAmountWithCurrency(agreement.commission_cap_amount, agreement.currency)}
                           </div>
                         )}
                       </TableCell>

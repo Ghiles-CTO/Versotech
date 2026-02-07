@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { formatCurrency } from '@/lib/fees/calculations';
+import { formatCurrencyTotals, sumByCurrency } from '@/lib/currency-totals';
 import { Calendar, DollarSign, Clock, Users, Building2, ChevronDown, ChevronRight, UserCheck, Handshake, Briefcase, X, Filter, Check, ChevronsUpDown } from 'lucide-react';
 import {
   Collapsible,
@@ -49,6 +50,7 @@ interface UpcomingFee {
   fee_type: string;
   fee_name: string;
   amount: number;
+  currency?: string;
   frequency: string;
   next_due_date: string;
   status: string;
@@ -58,6 +60,7 @@ interface InvestorFeeEvent {
   id: string;
   fee_type: string;
   computed_amount: number;
+  currency?: string;
   period_start_date: string | null;
   period_end_date: string | null;
   status: string;
@@ -83,6 +86,7 @@ interface IntroducerCommission {
   investor_id: string | null;
   investor_name?: string;
   accrual_amount: number;
+  currency?: string;
   status: string;
   created_at: string;
 }
@@ -97,6 +101,7 @@ interface PartnerCommission {
   investor_id: string | null;
   investor_name?: string;
   accrual_amount: number;
+  currency?: string;
   status: string;
   created_at: string;
 }
@@ -111,6 +116,7 @@ interface CommercialPartnerCommission {
   investor_id: string | null;
   investor_name?: string;
   accrual_amount: number;
+  currency?: string;
   status: string;
   created_at: string;
 }
@@ -120,6 +126,7 @@ interface ScheduleData {
   summary: {
     total_scheduled: number;
     total_amount: number;
+    total_amount_by_currency?: Record<string, number>;
     date_range: {
       from: string;
       to: string;
@@ -128,6 +135,7 @@ interface ScheduleData {
   by_month: Record<string, {
     fees: UpcomingFee[];
     total: number;
+    total_by_currency?: Record<string, number>;
   }>;
 }
 
@@ -596,10 +604,6 @@ export default function ScheduleTab() {
     return byDeal;
   }, [investorFees]);
 
-  const investorFeesTotal = useMemo(() => {
-    return investorFees.reduce((sum, fee) => sum + fee.computed_amount, 0);
-  }, [investorFees]);
-
   // Group introducer commissions by introducer, then by deal
   const groupedIntroducerCommissions = useMemo(() => {
     const byIntroducer: Record<string, {
@@ -649,10 +653,6 @@ export default function ScheduleTab() {
     });
 
     return byIntroducer;
-  }, [introducerCommissions]);
-
-  const introducerCommissionsTotal = useMemo(() => {
-    return introducerCommissions.reduce((sum, c) => sum + Number(c.accrual_amount), 0);
   }, [introducerCommissions]);
 
   // Group partner commissions by partner, then by deal
@@ -706,10 +706,6 @@ export default function ScheduleTab() {
     return byPartner;
   }, [partnerCommissions]);
 
-  const partnerCommissionsTotal = useMemo(() => {
-    return partnerCommissions.reduce((sum, c) => sum + Number(c.accrual_amount), 0);
-  }, [partnerCommissions]);
-
   // Group commercial partner commissions by commercial partner, then by deal
   const groupedCommercialPartnerCommissions = useMemo(() => {
     const byCommercialPartner: Record<string, {
@@ -761,10 +757,6 @@ export default function ScheduleTab() {
     return byCommercialPartner;
   }, [commercialPartnerCommissions]);
 
-  const commercialPartnerCommissionsTotal = useMemo(() => {
-    return commercialPartnerCommissions.reduce((sum, c) => sum + Number(c.accrual_amount), 0);
-  }, [commercialPartnerCommissions]);
-
   if (loading) {
     return <div className="text-white">Loading fee schedules...</div>;
   }
@@ -777,6 +769,18 @@ export default function ScheduleTab() {
     management: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
     subscription: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
     performance: 'bg-green-500/20 text-green-400 border-green-500/30',
+  };
+
+  const formatTotalsByCurrency = <T,>(
+    items: T[],
+    amountGetter: (item: T) => number | null | undefined,
+    currencyGetter: (item: T) => string | null | undefined
+  ) => formatCurrencyTotals(sumByCurrency(items, amountGetter, currencyGetter));
+
+  const formatAmount = (amount: number, currency?: string | null) => {
+    const code = (currency || '').trim().toUpperCase();
+    if (!code) return amount.toLocaleString();
+    return formatCurrency(amount, code);
   };
 
   return (
@@ -811,7 +815,9 @@ export default function ScheduleTab() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {formatCurrency(data.summary.total_amount)}
+              {data.summary.total_amount_by_currency
+                ? formatCurrencyTotals(data.summary.total_amount_by_currency)
+                : formatTotalsByCurrency(data.data, (fee) => fee.amount, (fee) => fee.currency)}
             </div>
             <p className="text-xs text-gray-400">
               Total amount scheduled
@@ -1022,7 +1028,7 @@ export default function ScheduleTab() {
                       {investorFees.length} fee{investorFees.length !== 1 ? 's' : ''}
                     </div>
                     <div className="text-sm text-gray-400">
-                      {formatCurrency(investorFeesTotal)}
+                      {formatTotalsByCurrency(investorFees, (fee) => fee.computed_amount, (fee) => fee.currency)}
                     </div>
                   </div>
                   {investorFeesExpanded ? (
@@ -1049,7 +1055,11 @@ export default function ScheduleTab() {
                         <Building2 className="h-4 w-4 text-purple-400" />
                         <h4 className="font-semibold text-white">{dealGroup.deal.name}</h4>
                         <span className="text-sm text-gray-400 ml-auto">
-                          {formatCurrency(dealGroup.total)}
+                          {formatTotalsByCurrency(
+                            Object.values(dealGroup.byInvestor).flatMap((group) => group.fees),
+                            (fee) => fee.computed_amount,
+                            (fee) => fee.currency
+                          )}
                         </span>
                       </div>
 
@@ -1061,7 +1071,7 @@ export default function ScheduleTab() {
                             <Users className="h-3.5 w-3.5 text-gray-500" />
                             <h5 className="font-medium text-gray-200">{investorGroup.investor.name}</h5>
                             <span className="text-sm text-gray-400 ml-auto">
-                              {formatCurrency(investorGroup.total)}
+                              {formatTotalsByCurrency(investorGroup.fees, (fee) => fee.computed_amount, (fee) => fee.currency)}
                             </span>
                           </div>
 
@@ -1085,7 +1095,7 @@ export default function ScheduleTab() {
                                       </Badge>
                                     </td>
                                     <td className="py-2 px-2 text-right text-white font-medium">
-                                      {formatCurrency(fee.computed_amount)}
+                                      {formatAmount(fee.computed_amount, fee.currency)}
                                     </td>
                                     <td className="py-2 px-2 text-gray-300">
                                       {fee.period_start_date
@@ -1142,7 +1152,7 @@ export default function ScheduleTab() {
                       {introducerCommissions.length} commission{introducerCommissions.length !== 1 ? 's' : ''}
                     </div>
                     <div className="text-sm text-gray-400">
-                      {formatCurrency(introducerCommissionsTotal)}
+                      {formatTotalsByCurrency(introducerCommissions, (commission) => commission.accrual_amount, (commission) => commission.currency)}
                     </div>
                   </div>
                   {introducerCommissionsExpanded ? (
@@ -1169,7 +1179,11 @@ export default function ScheduleTab() {
                         <UserCheck className="h-4 w-4 text-blue-400" />
                         <h4 className="font-semibold text-white">{introducerGroup.introducer.name}</h4>
                         <span className="text-sm text-gray-400 ml-auto">
-                          {formatCurrency(introducerGroup.total)}
+                          {formatTotalsByCurrency(
+                            Object.values(introducerGroup.byDeal).flatMap((group) => group.commissions),
+                            (commission) => commission.accrual_amount,
+                            (commission) => commission.currency
+                          )}
                         </span>
                       </div>
 
@@ -1181,7 +1195,7 @@ export default function ScheduleTab() {
                             <Building2 className="h-3.5 w-3.5 text-purple-400" />
                             <h5 className="font-medium text-gray-200">{dealGroup.deal.name}</h5>
                             <span className="text-sm text-gray-400 ml-auto">
-                              {formatCurrency(dealGroup.total)}
+                              {formatTotalsByCurrency(dealGroup.commissions, (commission) => commission.accrual_amount, (commission) => commission.currency)}
                             </span>
                           </div>
 
@@ -1203,7 +1217,7 @@ export default function ScheduleTab() {
                                       {commission.investor_name || '-'}
                                     </td>
                                     <td className="py-2 px-2 text-right text-white font-medium">
-                                      {formatCurrency(Number(commission.accrual_amount))}
+                                      {formatAmount(Number(commission.accrual_amount), commission.currency)}
                                     </td>
                                     <td className="py-2 px-2">
                                       <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
@@ -1254,7 +1268,7 @@ export default function ScheduleTab() {
                       {partnerCommissions.length} commission{partnerCommissions.length !== 1 ? 's' : ''}
                     </div>
                     <div className="text-sm text-gray-400">
-                      {formatCurrency(partnerCommissionsTotal)}
+                      {formatTotalsByCurrency(partnerCommissions, (commission) => commission.accrual_amount, (commission) => commission.currency)}
                     </div>
                   </div>
                   {partnerCommissionsExpanded ? (
@@ -1281,7 +1295,11 @@ export default function ScheduleTab() {
                         <Handshake className="h-4 w-4 text-green-400" />
                         <h4 className="font-semibold text-white">{partnerGroup.partner.name}</h4>
                         <span className="text-sm text-gray-400 ml-auto">
-                          {formatCurrency(partnerGroup.total)}
+                          {formatTotalsByCurrency(
+                            Object.values(partnerGroup.byDeal).flatMap((group) => group.commissions),
+                            (commission) => commission.accrual_amount,
+                            (commission) => commission.currency
+                          )}
                         </span>
                       </div>
 
@@ -1293,7 +1311,7 @@ export default function ScheduleTab() {
                             <Building2 className="h-3.5 w-3.5 text-purple-400" />
                             <h5 className="font-medium text-gray-200">{dealGroup.deal.name}</h5>
                             <span className="text-sm text-gray-400 ml-auto">
-                              {formatCurrency(dealGroup.total)}
+                              {formatTotalsByCurrency(dealGroup.commissions, (commission) => commission.accrual_amount, (commission) => commission.currency)}
                             </span>
                           </div>
 
@@ -1315,7 +1333,7 @@ export default function ScheduleTab() {
                                       {commission.investor_name || '-'}
                                     </td>
                                     <td className="py-2 px-2 text-right text-white font-medium">
-                                      {formatCurrency(Number(commission.accrual_amount))}
+                                      {formatAmount(Number(commission.accrual_amount), commission.currency)}
                                     </td>
                                     <td className="py-2 px-2">
                                       <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
@@ -1366,7 +1384,11 @@ export default function ScheduleTab() {
                       {commercialPartnerCommissions.length} commission{commercialPartnerCommissions.length !== 1 ? 's' : ''}
                     </div>
                     <div className="text-sm text-gray-400">
-                      {formatCurrency(commercialPartnerCommissionsTotal)}
+                      {formatTotalsByCurrency(
+                        commercialPartnerCommissions,
+                        (commission) => commission.accrual_amount,
+                        (commission) => commission.currency
+                      )}
                     </div>
                   </div>
                   {commercialPartnerCommissionsExpanded ? (
@@ -1393,7 +1415,11 @@ export default function ScheduleTab() {
                         <Briefcase className="h-4 w-4 text-purple-400" />
                         <h4 className="font-semibold text-white">{commercialPartnerGroup.commercialPartner.name}</h4>
                         <span className="text-sm text-gray-400 ml-auto">
-                          {formatCurrency(commercialPartnerGroup.total)}
+                          {formatTotalsByCurrency(
+                            Object.values(commercialPartnerGroup.byDeal).flatMap((group) => group.commissions),
+                            (commission) => commission.accrual_amount,
+                            (commission) => commission.currency
+                          )}
                         </span>
                       </div>
 
@@ -1405,7 +1431,7 @@ export default function ScheduleTab() {
                             <Building2 className="h-3.5 w-3.5 text-purple-400" />
                             <h5 className="font-medium text-gray-200">{dealGroup.deal.name}</h5>
                             <span className="text-sm text-gray-400 ml-auto">
-                              {formatCurrency(dealGroup.total)}
+                              {formatTotalsByCurrency(dealGroup.commissions, (commission) => commission.accrual_amount, (commission) => commission.currency)}
                             </span>
                           </div>
 
@@ -1427,7 +1453,7 @@ export default function ScheduleTab() {
                                       {commission.investor_name || '-'}
                                     </td>
                                     <td className="py-2 px-2 text-right text-white font-medium">
-                                      {formatCurrency(Number(commission.accrual_amount))}
+                                      {formatAmount(Number(commission.accrual_amount), commission.currency)}
                                     </td>
                                     <td className="py-2 px-2">
                                       <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
@@ -1474,7 +1500,9 @@ export default function ScheduleTab() {
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-semibold text-white">{month}</h3>
                 <div className="text-sm text-gray-400">
-                  {monthData.fees.length} fee{monthData.fees.length !== 1 ? 's' : ''} • {formatCurrency(monthData.total)}
+                  {monthData.fees.length} fee{monthData.fees.length !== 1 ? 's' : ''} • {monthData.total_by_currency
+                    ? formatCurrencyTotals(monthData.total_by_currency)
+                    : formatTotalsByCurrency(monthData.fees, (fee) => fee.amount, (fee) => fee.currency)}
                 </div>
               </div>
 
@@ -1516,7 +1544,7 @@ export default function ScheduleTab() {
 
                         <div className="text-right ml-4">
                           <div className="text-xl font-bold text-white">
-                            {formatCurrency(fee.amount)}
+                            {formatAmount(fee.amount, fee.currency)}
                           </div>
                           <Badge variant="secondary" className="mt-2">
                             {fee.status}

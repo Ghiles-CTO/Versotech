@@ -20,13 +20,13 @@ import {
   MessageSquare,
   Plus,
   Building2,
-  MapPin,
   Target,
   Clock,
   ChevronRight,
   ArrowUpRight
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { formatCurrency } from '@/lib/format'
 
 interface DashboardData {
   kpis: {
@@ -78,6 +78,22 @@ export function RealtimeDashboard({ initialData, investorIds, userId }: Realtime
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null)
   const [originalData, setOriginalData] = useState<DashboardData>(initialData)
   const [dealDetails, setDealDetails] = useState<Record<string, { vehicle_id: string | null }>>({})
+
+  const vehicleCurrencies = Array.from(
+    new Set(
+      (data.vehicles || [])
+        .map((vehicle: any) => (typeof vehicle?.currency === 'string' ? vehicle.currency.trim().toUpperCase() : ''))
+        .filter((currency: string) => currency.length > 0)
+    )
+  )
+  const activeCurrency = vehicleCurrencies[0] || ''
+  const isMixedCurrency = vehicleCurrencies.length > 1
+
+  const formatDashboardAmount = (value: number) => {
+    if (!selectedDealId && isMixedCurrency) return 'Multi-currency'
+    if (!activeCurrency) return Number(value || 0).toLocaleString()
+    return formatCurrency(value, activeCurrency)
+  }
 
   useEffect(() => {
     setOriginalData(initialData)
@@ -191,8 +207,8 @@ export function RealtimeDashboard({ initialData, investorIds, userId }: Realtime
             'Diversification strategy yielding consistent returns'
           ],
           relatedMetrics: [
-            { name: 'Cost Basis', value: '$950K', change: '0.0%' },
-            { name: 'Unrealized Gain', value: `$${Math.round(data.kpis.unrealizedGain / 1000)}K`, change: `${data.kpis.unrealizedGainPct > 0 ? '+' : ''}${data.kpis.unrealizedGainPct.toFixed(1)}%` },
+            { name: 'Cost Basis', value: formatDashboardAmount(data.kpis.currentNAV - data.kpis.unrealizedGain), change: '0.0%' },
+            { name: 'Unrealized Gain', value: formatDashboardAmount(data.kpis.unrealizedGain), change: `${data.kpis.unrealizedGainPct > 0 ? '+' : ''}${data.kpis.unrealizedGainPct.toFixed(1)}%` },
             { name: 'Beta vs Market', value: '0.85', change: 'Low Risk' }
           ]
         }
@@ -449,12 +465,7 @@ export function RealtimeDashboard({ initialData, investorIds, userId }: Realtime
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-6">
         <KPICard
           title="Net Asset Value"
-          value={new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-          }).format(data.kpis.currentNAV)}
+          value={formatDashboardAmount(data.kpis.currentNAV)}
           icon={DollarSign}
           trend={data.kpis.unrealizedGainPct > 0 ? 'up' : data.kpis.unrealizedGainPct < 0 ? 'down' : 'neutral'}
           trendValue={`${data.kpis.unrealizedGainPct > 0 ? '+' : ''}${data.kpis.unrealizedGainPct.toFixed(1)}%`}
@@ -472,36 +483,21 @@ export function RealtimeDashboard({ initialData, investorIds, userId }: Realtime
 
         <KPICard
           title="Capital Contributed"
-          value={new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-          }).format(data.kpis.totalContributed)}
+          value={formatDashboardAmount(data.kpis.totalContributed)}
           icon={PiggyBank}
           description="Total capital called"
         />
 
         <KPICard
           title="Distributions Received"
-          value={new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-          }).format(data.kpis.totalDistributions)}
+          value={formatDashboardAmount(data.kpis.totalDistributions)}
           icon={TrendingUp}
           description="Cash returned to date"
         />
 
         <KPICard
           title="Unfunded Commitment"
-          value={new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-          }).format(data.kpis.unfundedCommitment)}
+          value={formatDashboardAmount(data.kpis.unfundedCommitment)}
           icon={Calendar}
           description="Remaining obligation"
         />

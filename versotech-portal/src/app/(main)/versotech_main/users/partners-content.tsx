@@ -119,7 +119,7 @@ function getKycStatusIcon(status: string | null) {
 
 function formatCurrency(min: number | null, max: number | null): string {
   if (!min && !max) return 'Not specified'
-  const format = (n: number) => `$${(n / 1000000).toFixed(1)}M`
+  const format = (n: number) => `${(n / 1000000).toFixed(1)}M`
   if (min && max) return `${format(min)} - ${format(max)}`
   if (min) return `${format(min)}+`
   if (max) return `Up to ${format(max)}`

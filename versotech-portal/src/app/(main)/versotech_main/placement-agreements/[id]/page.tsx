@@ -23,6 +23,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { formatCurrency } from '@/lib/format'
 import Link from 'next/link'
 
 type Agreement = {
@@ -33,6 +34,7 @@ type Agreement = {
   expiry_date: string | null
   default_commission_bps: number
   commission_cap_amount: number | null
+  currency?: string | null
   payment_terms: string | null
   territory: string | null
   deal_types: string[] | null
@@ -88,6 +90,14 @@ function formatDate(dateString: string | null): string {
 
 function formatBps(bps: number): string {
   return `${(bps / 100).toFixed(2)}%`
+}
+
+function formatAmountWithCurrency(amount: number | null | undefined, currency?: string | null): string {
+  const numeric = Number(amount)
+  if (!Number.isFinite(numeric)) return '—'
+  const code = (currency || '').trim().toUpperCase()
+  if (!code) return numeric.toLocaleString()
+  return formatCurrency(numeric, code)
 }
 
 export default function PlacementAgreementDetailPage() {
@@ -255,7 +265,7 @@ export default function PlacementAgreementDetailPage() {
               {agreement.commission_cap_amount && (
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Commission Cap</p>
-                  <p className="font-medium">${agreement.commission_cap_amount.toLocaleString()}</p>
+                  <p className="font-medium">{formatAmountWithCurrency(agreement.commission_cap_amount, agreement.currency)}</p>
                 </div>
               )}
 

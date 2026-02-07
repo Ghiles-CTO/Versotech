@@ -49,6 +49,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate } from '@/lib/format'
+import { type CurrencyTotals, formatCurrencyTotals, sumByCurrency } from '@/lib/currency-totals'
 
 type ClientTransaction = {
   id: string
@@ -63,6 +64,7 @@ type ClientTransaction = {
   investor_id: string | null
   subscription_id: string | null
   subscription_amount: number | null
+  currency: string | null
   subscription_status: string | null
   subscription_date: string | null
   // Journey stage for bucket view
@@ -94,7 +96,9 @@ type Summary = {
   activeClients: number
   totalTransactions: number
   totalValue: number
+  totalValueByCurrency: CurrencyTotals
   estimatedCommission: number
+  estimatedCommissionByCurrency: CurrencyTotals
 }
 
 // Journey stage definitions for bucket view
@@ -140,7 +144,9 @@ export default function ClientTransactionsPage() {
     activeClients: 0,
     totalTransactions: 0,
     totalValue: 0,
+    totalValueByCurrency: {},
     estimatedCommission: 0,
+    estimatedCommissionByCurrency: {},
   })
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
@@ -168,7 +174,9 @@ export default function ClientTransactionsPage() {
           activeClients: 0,
           totalTransactions: 0,
           totalValue: 0,
+          totalValueByCurrency: {},
           estimatedCommission: 0,
+          estimatedCommissionByCurrency: {},
         })
         setError(null)
       } catch (err) {
@@ -229,6 +237,14 @@ export default function ClientTransactionsPage() {
     acc[stage.key] = filteredClients.filter(c => c.journey_stage === stage.key)
     return acc
   }, {} as Record<string, ClientTransaction[]>)
+
+  const formatClientAmount = (amount: number | null | undefined, currency: string | null | undefined) => {
+    const numeric = Number(amount)
+    if (!Number.isFinite(numeric)) return '—'
+    const code = (currency || '').trim().toUpperCase()
+    if (!code) return numeric.toLocaleString()
+    return formatCurrency(numeric, code)
+  }
 
   if (loading) {
     return (
@@ -357,7 +373,7 @@ export default function ClientTransactionsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-              {formatCurrency(summary.totalValue, 'USD')}
+              {formatCurrencyTotals(summary.totalValueByCurrency)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Total commitment
@@ -374,7 +390,7 @@ export default function ClientTransactionsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-              {formatCurrency(summary.estimatedCommission, 'USD')}
+              {formatCurrencyTotals(summary.estimatedCommissionByCurrency)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               On funded deals
@@ -506,7 +522,7 @@ export default function ClientTransactionsPage() {
                           {client.subscription_amount ? (
                             <div>
                               <div className="font-medium">
-                                {formatCurrency(client.subscription_amount, 'USD')}
+                                {formatClientAmount(client.subscription_amount, client.currency)}
                               </div>
                               {client.subscription_status && (
                                 <Badge
@@ -539,7 +555,7 @@ export default function ClientTransactionsPage() {
                         <TableCell>
                           {client.estimated_commission ? (
                             <div className="text-sm font-medium text-purple-600">
-                              {formatCurrency(client.estimated_commission, 'USD')}
+                              {formatClientAmount(client.estimated_commission, client.currency)}
                               <span className="text-xs text-muted-foreground ml-1">
                                 ({(client.commission_rate_bps || 0) / 100}%)
                               </span>
@@ -583,6 +599,11 @@ export default function ClientTransactionsPage() {
             const StageIcon = stage.icon
             const stageClients = clientsByStage[stage.key] || []
             const stageValue = stageClients.reduce((sum, c) => sum + (c.subscription_amount || 0), 0)
+            const stageValueByCurrency = sumByCurrency(
+              stageClients,
+              (client) => client.subscription_amount,
+              (client) => client.currency
+            )
 
             return (
               <Card key={stage.key} className="flex flex-col">
@@ -598,7 +619,7 @@ export default function ClientTransactionsPage() {
                   </div>
                   {stageValue > 0 && (
                     <p className="text-xs text-white/80 mt-1">
-                      {formatCurrency(stageValue, 'USD')}
+                      {formatCurrencyTotals(stageValueByCurrency)}
                     </p>
                   )}
                 </CardHeader>
@@ -625,7 +646,7 @@ export default function ClientTransactionsPage() {
                         {client.subscription_amount ? (
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-medium">
-                              {formatCurrency(client.subscription_amount, 'USD')}
+                              {formatClientAmount(client.subscription_amount, client.currency)}
                             </span>
                             <Badge
                               variant="outline"

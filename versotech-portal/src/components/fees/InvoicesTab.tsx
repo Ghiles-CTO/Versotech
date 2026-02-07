@@ -12,6 +12,7 @@ import { Plus, Send, DollarSign, X, FileText, AlertCircle, AlertTriangle, Refres
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import type { InvoiceWithLines } from '@/lib/fees/types';
 import { formatCurrency } from '@/lib/fees/calculations';
+import { formatCurrencyTotals, sumByCurrency } from '@/lib/currency-totals';
 import { GenerateInvoiceModal } from './GenerateInvoiceModal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -29,6 +30,7 @@ interface FeeEvent {
   id: string;
   fee_type: string;
   computed_amount: number;
+  currency?: string;
   event_date: string;
   status: string;
   allocation_id?: string;
@@ -45,6 +47,7 @@ interface FeeEvent {
     id: string;
     subscription_number: string;
     commitment: number;
+    currency?: string;
     vehicle?: {
       id: string;
       name: string;
@@ -169,6 +172,20 @@ export default function InvoicesTab() {
     return <div>Loading...</div>;
   }
 
+  const formatAmount = (amount: number | null | undefined, currency?: string | null) => {
+    const numeric = Number(amount) || 0;
+    const code = (currency || '').trim().toUpperCase();
+    if (!code) return numeric.toLocaleString();
+    return formatCurrency(numeric, code);
+  };
+
+  const getInvoiceCurrency = (invoice: InvoiceWithLines): string | null => {
+    const code = (invoice as any).currency;
+    if (typeof code !== 'string') return null;
+    const normalized = code.trim().toUpperCase();
+    return normalized || null;
+  };
+
   // Group fee events by investor and then by subscription
   const feeEventsByInvestor = feeEvents.reduce((acc, event) => {
     const investorId = event.investor?.id || 'unknown';
@@ -176,7 +193,7 @@ export default function InvoicesTab() {
       acc[investorId] = {
         investor: event.investor,
         subscriptions: {},
-        total: 0,
+        totalByCurrency: {},
       };
     }
 
@@ -191,13 +208,21 @@ export default function InvoicesTab() {
         subscription: event.subscription,
         name: subscriptionName,
         events: [],
-        total: 0,
+        totalByCurrency: {},
       };
     }
 
     acc[investorId].subscriptions[subscriptionId].events.push(event);
-    acc[investorId].subscriptions[subscriptionId].total += Number(event.computed_amount);
-    acc[investorId].total += Number(event.computed_amount);
+    acc[investorId].subscriptions[subscriptionId].totalByCurrency = sumByCurrency(
+      acc[investorId].subscriptions[subscriptionId].events,
+      (fee) => Number(fee.computed_amount),
+      (fee) => fee.currency || fee.subscription?.currency
+    );
+    acc[investorId].totalByCurrency = sumByCurrency(
+      Object.values(acc[investorId].subscriptions).flatMap((subscription) => subscription.events),
+      (fee) => Number(fee.computed_amount),
+      (fee) => fee.currency || fee.subscription?.currency
+    );
 
     return acc;
   }, {} as Record<string, {
@@ -206,12 +231,16 @@ export default function InvoicesTab() {
       subscription: any;
       name: string;
       events: FeeEvent[];
-      total: number;
+      totalByCurrency: Record<string, number>;
     }>;
-    total: number;
+    totalByCurrency: Record<string, number>;
   }>);
 
-  const totalUninvoiced = feeEvents.reduce((sum, e) => sum + Number(e.computed_amount), 0);
+  const totalUninvoicedByCurrency = sumByCurrency(
+    feeEvents,
+    (fee) => Number(fee.computed_amount),
+    (fee) => fee.currency || fee.subscription?.currency
+  );
 
   return (
     <>
@@ -276,7 +305,7 @@ export default function InvoicesTab() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-muted-foreground">Total Uninvoiced</p>
-                        <p className="text-2xl font-bold">{formatCurrency(totalUninvoiced)}</p>
+                        <p className="text-2xl font-bold">{formatCurrencyTotals(totalUninvoicedByCurrency)}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-muted-foreground">Fee Events</p>
@@ -293,7 +322,7 @@ export default function InvoicesTab() {
                 </Card>
 
                 {/* Fee Events Grouped by Investor and Subscription */}
-                {Object.values(feeEventsByInvestor).map(({ investor, subscriptions, total }) => (
+                {Object.values(feeEventsByInvestor).map(({ investor, subscriptions, totalByCurrency }) => (
                   <Card key={investor?.id || 'unknown'}>
                     <CardHeader>
                       <div className="flex items-start justify-between">
@@ -302,7 +331,7 @@ export default function InvoicesTab() {
                             {investor?.legal_name || investor?.display_name || 'Unknown Investor'}
                           </CardTitle>
                           <p className="text-sm text-muted-foreground mt-1">
-                            {Object.keys(subscriptions).length} subscription(s) • {formatCurrency(total)}
+                            {Object.keys(subscriptions).length} subscription(s) • {formatCurrencyTotals(totalByCurrency)}
                           </p>
                         </div>
                         <Button
@@ -337,7 +366,7 @@ export default function InvoicesTab() {
                                 {subGroup.name}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                {subGroup.events.length} fee(s) • {formatCurrency(subGroup.total)}
+                                {subGroup.events.length} fee(s) • {formatCurrencyTotals(subGroup.totalByCurrency)}
                               </p>
                             </div>
                             <div className="space-y-2">
@@ -351,7 +380,7 @@ export default function InvoicesTab() {
                                       <Badge variant="outline" className="mr-2 text-xs">
                                         {event.fee_type === 'flat' ? 'Investment' : event.fee_type.replace('_', ' ')}
                                       </Badge>
-                                      {formatCurrency(event.computed_amount)}
+                                      {formatAmount(event.computed_amount, event.currency || subGroup.subscription?.currency)}
                                     </div>
                                     <div className="text-xs text-muted-foreground">
                                       {new Date(event.event_date).toLocaleDateString()}
@@ -431,19 +460,19 @@ export default function InvoicesTab() {
                                   <div className="space-y-2 p-3 bg-muted/50 rounded-md">
                                     <div className="flex justify-between text-sm">
                                       <span className="text-muted-foreground">Invoice Total:</span>
-                                      <span className="font-medium">{formatCurrency(invoice.total)}</span>
+                                      <span className="font-medium">{formatAmount(invoice.total, getInvoiceCurrency(invoice))}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
                                       <span className="text-muted-foreground">Expected Total:</span>
                                       <span className="font-medium">
-                                        {formatCurrency(invoice.total - (invoice.discrepancy_amount || 0))}
+                                        {formatAmount(invoice.total - (invoice.discrepancy_amount || 0), getInvoiceCurrency(invoice))}
                                       </span>
                                     </div>
                                     <div className="border-t border-border pt-2 mt-2">
                                       <div className="flex justify-between text-sm">
                                         <span className="text-amber-600 dark:text-amber-400 font-medium">Discrepancy:</span>
                                         <span className="text-amber-600 dark:text-amber-400 font-medium">
-                                          {(invoice.discrepancy_amount || 0) > 0 ? '+' : ''}{formatCurrency(invoice.discrepancy_amount || 0)}
+                                          {(invoice.discrepancy_amount || 0) > 0 ? '+' : ''}{formatAmount(invoice.discrepancy_amount || 0, getInvoiceCurrency(invoice))}
                                         </span>
                                       </div>
                                     </div>
@@ -465,13 +494,13 @@ export default function InvoicesTab() {
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <div className="text-2xl font-bold">
-                            {formatCurrency(invoice.total)}
+                            {formatAmount(invoice.total, getInvoiceCurrency(invoice))}
                           </div>
                           <div className="text-sm text-muted-foreground">
                             Due: {new Date(invoice.due_date).toLocaleDateString()}
                             {invoice.balance_due && invoice.balance_due > 0 && (
                               <span className="ml-2">
-                                • Balance: {formatCurrency(invoice.balance_due)}
+                                • Balance: {formatAmount(invoice.balance_due, getInvoiceCurrency(invoice))}
                               </span>
                             )}
                           </div>

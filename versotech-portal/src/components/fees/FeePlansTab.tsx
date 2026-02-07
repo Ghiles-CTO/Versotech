@@ -91,6 +91,31 @@ const componentToTermSheetField: Record<string, 'subscription_fee_percent' | 'ma
   carried_interest: 'carried_interest_percent',
 };
 
+const FEE_KIND_LABELS: Record<string, string> = {
+  subscription: 'Subscription Fee',
+  management: 'Management Fee',
+  performance: 'Performance Fee',
+  spread_markup: 'BI Fee PPS',
+  flat: 'Flat Fee',
+  bd_fee: 'BD Fee',
+  finra_fee: 'FINRA Fee',
+  other: 'Other',
+};
+
+const formatFeeComponentValue = (comp: any) => {
+  if (!comp) return 'N/A';
+  const currencyCode = comp.currency ? String(comp.currency).toUpperCase() : '';
+  const flatAmountDisplay = comp.flat_amount != null
+    ? `${currencyCode ? `${currencyCode} ` : ''}${Number(comp.flat_amount).toLocaleString()}`
+    : 'N/A';
+  if (comp.calc_method === 'per_unit_spread') {
+    return comp.flat_amount != null ? `${flatAmountDisplay} / share` : 'N/A';
+  }
+  if (comp.rate_bps != null) return formatBps(comp.rate_bps);
+  if (comp.flat_amount != null) return flatAmountDisplay;
+  return 'N/A';
+};
+
 // Check if a fee component exceeds term sheet limits
 function getComponentValidation(
   component: { kind: string; rate_bps?: number | null },
@@ -778,12 +803,8 @@ export default function FeePlansTab(_props: FeePlansTabProps) {
                                                   {!validation.isValid && (
                                                     <AlertTriangle className="h-3 w-3 mr-1 text-red-400" />
                                                   )}
-                                                  {comp.kind}:{' '}
-                                                  {comp.rate_bps
-                                                    ? formatBps(comp.rate_bps)
-                                                    : comp.flat_amount
-                                                    ? `$${comp.flat_amount}`
-                                                    : 'N/A'}
+                                                  {FEE_KIND_LABELS[comp.kind] ?? comp.kind}:{' '}
+                                                  {formatFeeComponentValue(comp)}
                                                 </Badge>
                                               </TooltipTrigger>
                                               {!validation.isValid && (
@@ -987,14 +1008,10 @@ export default function FeePlansTab(_props: FeePlansTabProps) {
                                                   </TooltipContent>
                                                 </Tooltip>
                                               )}
-                                              {comp.kind}
+                                              {FEE_KIND_LABELS[comp.kind] ?? comp.kind}
                                             </span>
                                             <span className="font-medium">
-                                              {comp.rate_bps
-                                                ? formatBps(comp.rate_bps)
-                                                : comp.flat_amount
-                                                ? `$${comp.flat_amount}`
-                                                : 'N/A'}
+                                              {formatFeeComponentValue(comp)}
                                             </span>
                                           </div>
                                         );

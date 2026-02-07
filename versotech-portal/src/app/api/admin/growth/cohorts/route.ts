@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
+import { addCurrencyAmount, normalizeCurrencyCode } from '@/lib/currency-totals'
 
 type GroupBy = 'signup_week' | 'signup_month' | 'first_investment_month'
 
@@ -18,6 +19,7 @@ interface InvestorUser {
 interface Subscription {
   investor_id: string
   commitment: number | null
+  currency: string | null
   created_at: string
 }
 
@@ -32,6 +34,7 @@ interface Cohort {
   activationRate: number
   investmentRate: number
   avgInvestment: number
+  avgInvestmentByCurrency: Record<string, number>
   avgTimeToFirstInvestment: number | null
   retention30d: number
   retention60d: number
@@ -93,12 +96,13 @@ export async function GET(request: NextRequest) {
     // 3. Fetch all subscriptions for investment data
     const { data: subscriptions } = await supabase
       .from('subscriptions')
-      .select('investor_id, commitment, created_at')
+      .select('investor_id, commitment, currency, created_at')
       .order('created_at', { ascending: true }) as { data: Subscription[] | null }
 
     // Map investor to their first subscription and total investment
     const investorFirstSubscription: Record<string, Date> = {}
     const investorTotalInvestment: Record<string, number> = {}
+    const investorTotalInvestmentByCurrency: Record<string, Record<string, number>> = {}
 
     subscriptions?.forEach((sub) => {
       const subDate = new Date(sub.created_at)
@@ -111,6 +115,14 @@ export async function GET(request: NextRequest) {
       // Sum up total investment
       const amount = Number(sub.commitment) || 0
       investorTotalInvestment[sub.investor_id] = (investorTotalInvestment[sub.investor_id] || 0) + amount
+      if (!investorTotalInvestmentByCurrency[sub.investor_id]) {
+        investorTotalInvestmentByCurrency[sub.investor_id] = {}
+      }
+      addCurrencyAmount(
+        investorTotalInvestmentByCurrency[sub.investor_id],
+        amount,
+        normalizeCurrencyCode(sub.currency)
+      )
     })
 
     // 4. Fetch audit logs for retention calculations (last 120 days)
@@ -196,6 +208,7 @@ export async function GET(request: NextRequest) {
       // 2. Investment Rate: users who have made any subscription
       let investorsCount = 0
       let totalInvestment = 0
+      const totalInvestmentByCurrency: Record<string, number> = {}
       let totalTimeToFirstInvestment = 0
       let usersWithInvestment = 0
 
@@ -209,6 +222,11 @@ export async function GET(request: NextRequest) {
           // Calculate total investment for this user
           investorIds.forEach((investorId) => {
             totalInvestment += investorTotalInvestment[investorId] || 0
+            const byCurrency = investorTotalInvestmentByCurrency[investorId] || {}
+            Object.entries(byCurrency).forEach(([currency, amount]) => {
+              totalInvestmentByCurrency[currency] =
+                (totalInvestmentByCurrency[currency] || 0) + (Number(amount) || 0)
+            })
           })
 
           // Calculate time to first investment
@@ -235,6 +253,15 @@ export async function GET(request: NextRequest) {
       const avgInvestment = investorsCount > 0
         ? Math.round(totalInvestment / investorsCount)
         : 0
+      const avgInvestmentByCurrency =
+        investorsCount > 0
+          ? Object.fromEntries(
+              Object.entries(totalInvestmentByCurrency).map(([currency, amount]) => [
+                currency,
+                Math.round((Number(amount) || 0) / investorsCount),
+              ])
+            )
+          : {}
       const avgTimeToFirstInvestment = usersWithInvestment > 0
         ? Math.round(totalTimeToFirstInvestment / usersWithInvestment)
         : null
@@ -286,6 +313,7 @@ export async function GET(request: NextRequest) {
         activationRate,
         investmentRate,
         avgInvestment,
+        avgInvestmentByCurrency,
         avgTimeToFirstInvestment,
         retention30d,
         retention60d,

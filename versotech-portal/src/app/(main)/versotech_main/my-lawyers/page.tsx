@@ -37,8 +37,8 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatCurrency, formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
+import { addCurrencyAmount, type CurrencyTotals, formatCurrencyTotals, mergeCurrencyTotals } from '@/lib/currency-totals'
 
 type ArrangerInfo = {
   id: string
@@ -61,11 +61,14 @@ type Lawyer = {
   is_active: boolean
   deals_count: number
   total_deal_value: number
+  total_deal_value_by_currency: CurrencyTotals
   // Escrow/funding status
   total_subscriptions: number
   funded_subscriptions: number
   total_funded_amount: number
+  total_funded_amount_by_currency: CurrencyTotals
   total_commitment: number
+  total_commitment_by_currency: CurrencyTotals
 }
 
 type Summary = {
@@ -73,6 +76,7 @@ type Summary = {
   activeLawyers: number
   totalDeals: number
   totalDealValue: number
+  totalDealValueByCurrency: CurrencyTotals
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -101,6 +105,7 @@ export default function MyLawyersPage() {
     activeLawyers: 0,
     totalDeals: 0,
     totalDealValue: 0,
+    totalDealValueByCurrency: {},
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -149,7 +154,7 @@ export default function MyLawyersPage() {
 
         if (!deals || deals.length === 0) {
           setLawyers([])
-          setSummary({ totalLawyers: 0, activeLawyers: 0, totalDeals: 0, totalDealValue: 0 })
+          setSummary({ totalLawyers: 0, activeLawyers: 0, totalDeals: 0, totalDealValue: 0, totalDealValueByCurrency: {} })
           return
         }
 
@@ -170,7 +175,7 @@ export default function MyLawyersPage() {
 
         if (lawyerNames.length === 0) {
           setLawyers([])
-          setSummary({ totalLawyers: 0, activeLawyers: 0, totalDeals: 0, totalDealValue: 0 })
+          setSummary({ totalLawyers: 0, activeLawyers: 0, totalDeals: 0, totalDealValue: 0, totalDealValueByCurrency: {} })
           return
         }
 
@@ -183,8 +188,13 @@ export default function MyLawyersPage() {
 
         if (lawyersError) throw lawyersError
 
-        const dealValueMap = new Map<string, number>()
-        deals.forEach(d => dealValueMap.set(d.id, Number(d.target_amount) || 0))
+        const dealMetaMap = new Map<string, { value: number; currency: string | null }>()
+        deals.forEach(d => {
+          dealMetaMap.set(d.id, {
+            value: Number(d.target_amount) || 0,
+            currency: d.currency ? String(d.currency).toUpperCase() : null,
+          })
+        })
 
         // Fetch subscriptions for escrow status
         const { data: subscriptions } = await supabase
@@ -207,22 +217,35 @@ export default function MyLawyersPage() {
                    counsel.includes(l.display_name?.toLowerCase() || '')
           })
           const dealsInvolved = [...new Set(lawyerDeals.map(fs => fs.deal_id))]
-          const totalValue = dealsInvolved.reduce((sum, dealId) => sum + (dealValueMap.get(dealId) || 0), 0)
+          const totalValue = dealsInvolved.reduce((sum, dealId) => sum + (dealMetaMap.get(dealId)?.value || 0), 0)
+          const totalDealValueByCurrency: CurrencyTotals = {}
+          dealsInvolved.forEach((dealId) => {
+            const dealMeta = dealMetaMap.get(dealId)
+            if (!dealMeta?.currency) return
+            addCurrencyAmount(totalDealValueByCurrency, dealMeta.value, dealMeta.currency)
+          })
 
           // Calculate escrow/funding status for this lawyer's deals
           let totalSubscriptions = 0
           let fundedSubscriptions = 0
           let totalFundedAmount = 0
           let totalCommitment = 0
+          const totalFundedAmountByCurrency: CurrencyTotals = {}
+          const totalCommitmentByCurrency: CurrencyTotals = {}
 
           dealsInvolved.forEach(dealId => {
             const dealSubs = subscriptionsByDeal.get(dealId) || []
+            const dealCurrency = dealMetaMap.get(dealId)?.currency
             dealSubs.forEach(sub => {
               totalSubscriptions++
               const commitment = Number(sub.commitment) || 0
               const funded = Number(sub.funded_amount) || 0
               totalCommitment += commitment
               totalFundedAmount += funded
+              if (dealCurrency) {
+                addCurrencyAmount(totalCommitmentByCurrency, commitment, dealCurrency)
+                addCurrencyAmount(totalFundedAmountByCurrency, funded, dealCurrency)
+              }
               if (commitment > 0 && funded >= commitment) {
                 fundedSubscriptions++
               }
@@ -244,12 +267,19 @@ export default function MyLawyersPage() {
             is_active: l.is_active,
             deals_count: dealsInvolved.length,
             total_deal_value: totalValue,
+            total_deal_value_by_currency: totalDealValueByCurrency,
             total_subscriptions: totalSubscriptions,
             funded_subscriptions: fundedSubscriptions,
             total_funded_amount: totalFundedAmount,
+            total_funded_amount_by_currency: totalFundedAmountByCurrency,
             total_commitment: totalCommitment,
+            total_commitment_by_currency: totalCommitmentByCurrency,
           }
         })
+
+        const totalDealValueByCurrency = processedLawyers.reduce<CurrencyTotals>((acc, lawyer) => {
+          return mergeCurrencyTotals(acc, lawyer.total_deal_value_by_currency)
+        }, {})
 
         setLawyers(processedLawyers)
         setSummary({
@@ -257,6 +287,7 @@ export default function MyLawyersPage() {
           activeLawyers: processedLawyers.filter(l => l.is_active).length,
           totalDeals: processedLawyers.reduce((sum, l) => sum + l.deals_count, 0),
           totalDealValue: processedLawyers.reduce((sum, l) => sum + l.total_deal_value, 0),
+          totalDealValueByCurrency,
         })
         setError(null)
       } catch (err) {
@@ -291,10 +322,13 @@ export default function MyLawyersPage() {
         is_active: l.is_active,
         deals_count: 0,
         total_deal_value: 0,
+        total_deal_value_by_currency: {},
         total_subscriptions: 0,
         funded_subscriptions: 0,
         total_funded_amount: 0,
+        total_funded_amount_by_currency: {},
         total_commitment: 0,
+        total_commitment_by_currency: {},
       }))
 
       setLawyers(processedLawyers)
@@ -303,6 +337,7 @@ export default function MyLawyersPage() {
         activeLawyers: processedLawyers.filter(l => l.is_active).length,
         totalDeals: 0,
         totalDealValue: 0,
+        totalDealValueByCurrency: {},
       })
     }
 
@@ -392,7 +427,7 @@ export default function MyLawyersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">{formatCurrency(summary.totalDealValue, 'USD')}</div>
+            <div className="text-2xl font-bold text-purple-600">{formatCurrencyTotals(summary.totalDealValueByCurrency)}</div>
             <p className="text-xs text-muted-foreground mt-1">Total handled</p>
           </CardContent>
         </Card>
@@ -498,7 +533,7 @@ export default function MyLawyersPage() {
                               </Badge>
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {formatCurrency(lawyer.total_funded_amount, 'USD')} / {formatCurrency(lawyer.total_commitment, 'USD')}
+                              {formatCurrencyTotals(lawyer.total_funded_amount_by_currency)} / {formatCurrencyTotals(lawyer.total_commitment_by_currency)}
                             </div>
                           </div>
                         ) : (
@@ -506,7 +541,7 @@ export default function MyLawyersPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <div className="font-medium">{formatCurrency(lawyer.total_deal_value, 'USD')}</div>
+                        <div className="font-medium">{formatCurrencyTotals(lawyer.total_deal_value_by_currency)}</div>
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">

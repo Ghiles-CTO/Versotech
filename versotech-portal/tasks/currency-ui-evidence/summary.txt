@@ -1,0 +1,17 @@
+Total routes: 91
+PASS: 82
+FAIL: 9
+SKIP: 0
+
+Failures:
+- /versotech_main/commercial-partners/[id] -> FAIL_PAGE (http://localhost:3000/versotech_main/commercial-partners)
+- /versotech_main/deals/[id] -> FAIL_PAGE (http://localhost:3000/versotech_main/deals/versotech_main/deals/d52d0d1c-e2e0-438c-9798-b9eb3a847638)
+- /versotech_main/introducers/[id] -> FAIL_PAGE (http://localhost:3000/versotech_main/introducers/versotech_main/introducers/3a2dc66e-4e4f-42a0-a29b-ed80010e4e6c)
+- /versotech_main/lawyer-deal/[id] -> FAIL_PAGE (http://localhost:3000/versotech_main/lawyer-deal/versotech_main/deals/d52d0d1c-e2e0-438c-9798-b9eb3a847638)
+- /versotech_main/lawyers/[id] -> FAIL_PAGE (http://localhost:3000/versotech_main/lawyers)
+- /versotech_main/my-mandates/[mandateId] -> FAIL_PAGE (http://localhost:3000/versotech_main/my-mandates/versotech_main/my-mandates/d52d0d1c-e2e0-438c-9798-b9eb3a847638)
+- /versotech_main/partners/[id] -> FAIL_PAGE (http://localhost:3000/versotech_main/partners)
+- /versotech_main/subscriptions/[id] -> FAIL_PAGE (http://localhost:3000/versotech_main/subscriptions/versotech_main/subscriptions/9693e081-93d7-4c4c-8cee-4c63e466894b)
+- /versotech_admin/users/[id] -> FAIL_PAGE (http://localhost:3000/versotech_admin/users/versotech_admin/users/6030ceab-1513-4ca1-be3c-caf58953612c)
+
+Skipped dynamic routes:

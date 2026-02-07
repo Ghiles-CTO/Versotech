@@ -14,12 +14,18 @@ interface DashboardMetrics {
       funding_rate: number
       change_mtd: number | null
       trend: 'up' | 'down' | null
+      default_currency?: string
+      currency_mode?: 'single' | 'mixed'
+      by_currency?: Record<string, { value: number; commitment: number; funded: number; funding_rate: number }>
     }
     revenue: {
       total: number
       spread_fees: number
       subscription_fees: number
       management_fees: number
+      default_currency?: string
+      currency_mode?: 'single' | 'mixed'
+      by_currency?: Record<string, { total: number; spread_fees: number; subscription_fees: number; management_fees: number }>
     }
     investors: {
       active: number
@@ -45,35 +51,29 @@ interface DashboardKPICardsProps {
 
 /**
  * Formats a number for display:
- * - Currency: $1.2M, $45.2M, $123.5K
+ * - Currency: compact localized format
  * - Counts: 1,247
  */
-function formatNumber(value: number, isCurrency = false): string {
-  if (isCurrency) {
-    if (value >= 1_000_000_000) {
-      return `$${(value / 1_000_000_000).toFixed(1)}B`
-    }
-    if (value >= 1_000_000) {
-      return `$${(value / 1_000_000).toFixed(1)}M`
-    }
-    if (value >= 1_000) {
-      return `$${(value / 1_000).toFixed(1)}K`
-    }
-    return `$${value.toLocaleString()}`
-  }
+function formatNumber(value: number): string {
   return value.toLocaleString()
 }
 
-/**
- * Calculates percentage change between current and previous values
- */
-function calculateChange(current: number, previous: number): { value: number; isPositive: boolean } | null {
-  if (previous === 0) return null
-  const change = ((current - previous) / previous) * 100
-  return {
-    value: Math.abs(Math.round(change * 10) / 10),
-    isPositive: change >= 0
-  }
+function formatCompactCurrency(value: number, currency: string): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 1,
+    notation: 'compact',
+    compactDisplay: 'short',
+  }).format(value || 0)
+}
+
+function formatCompactNumber(value: number): string {
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 1,
+    notation: 'compact',
+    compactDisplay: 'short',
+  }).format(value || 0)
 }
 
 function KPICardSkeleton() {
@@ -144,6 +144,19 @@ export function DashboardKPICards({ days }: DashboardKPICardsProps) {
   }
 
   const { kpis } = metrics
+  const aumByCurrency = kpis.aum.by_currency || {}
+  const aumEntries = Object.entries(aumByCurrency).filter(([, data]) => (data?.value || 0) !== 0)
+  const isAumMixed = (kpis.aum.currency_mode === 'mixed') || aumEntries.length > 1
+  const activeAumCurrency =
+    kpis.aum.default_currency ||
+    aumEntries[0]?.[0] ||
+    null
+  const activeAum = (activeAumCurrency ? aumByCurrency[activeAumCurrency] : null) || {
+    value: kpis.aum.value,
+    commitment: kpis.aum.commitment,
+    funded: kpis.aum.funded,
+    funding_rate: kpis.aum.funding_rate,
+  }
 
   // Calculate trends for display
   // Since the API doesn't provide historical data for comparisons,
@@ -175,15 +188,34 @@ export function DashboardKPICards({ days }: DashboardKPICardsProps) {
       {/* Total AUM */}
       <KPICard
         title="Total AUM"
-        value={formatNumber(kpis.aum.value, true)}
+        value={activeAumCurrency ? formatCompactCurrency(activeAum.value, activeAumCurrency) : formatCompactNumber(activeAum.value)}
         icon={DollarSign}
-        subtitle={`${kpis.aum.funding_rate}% funding rate`}
+        subtitle={
+          isAumMixed
+            ? `Mixed currencies (${aumEntries.map(([currency]) => currency).join(', ')})`
+            : `${activeAum.funding_rate}% funding rate`
+        }
         trend={kpis.aum.change_mtd !== null ? { value: kpis.aum.change_mtd, isPositive: kpis.aum.change_mtd >= 0 } : undefined}
         additionalInfo={{
-          breakdown: [
-            { label: 'Committed', value: formatNumber(kpis.aum.commitment, true) },
-            { label: 'Funded', value: formatNumber(kpis.aum.funded, true) }
-          ]
+          breakdown: isAumMixed
+            ? aumEntries.map(([currency, data]) => ({
+                label: currency,
+                value: formatCompactCurrency(data.value, currency)
+              }))
+            : [
+                {
+                  label: 'Committed',
+                  value: activeAumCurrency
+                    ? formatCompactCurrency(activeAum.commitment, activeAumCurrency)
+                    : formatCompactNumber(activeAum.commitment)
+                },
+                {
+                  label: 'Funded',
+                  value: activeAumCurrency
+                    ? formatCompactCurrency(activeAum.funded, activeAumCurrency)
+                    : formatCompactNumber(activeAum.funded)
+                }
+              ]
         }}
         interactive
         hasDetails

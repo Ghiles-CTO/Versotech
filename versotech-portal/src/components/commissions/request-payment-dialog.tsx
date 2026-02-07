@@ -28,7 +28,7 @@ export type CommissionType = 'partner' | 'introducer' | 'commercial-partner'
 interface Commission {
   id: string
   accrual_amount: number
-  currency: string
+  currency: string | null
   entity_name: string
   deal_id?: string
   deal?: {
@@ -176,10 +176,10 @@ export function RequestPaymentDialog({
   if (!commission) return null
 
   const entityLabel = ENTITY_LABELS[commissionType]
-  const formattedAmount = formatCurrency(
-    commission.accrual_amount,
-    commission.currency || 'USD'
-  )
+  const currencyCode = (commission.currency || '').trim().toUpperCase()
+  const formattedAmount = currencyCode
+    ? formatCurrency(commission.accrual_amount, currencyCode)
+    : Number(commission.accrual_amount || 0).toLocaleString()
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

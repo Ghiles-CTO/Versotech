@@ -28,6 +28,7 @@ import { createClient } from '@/lib/supabase/client'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { useTheme } from '@/components/theme-provider'
 import { ArrangerOnboardingChecklist } from '@/components/arranger/arranger-onboarding-checklist'
+import { type CurrencyTotals, formatCurrencyTotals, mergeCurrencyTotals, sumByCurrency } from '@/lib/currency-totals'
 
 type Persona = {
   persona_type: string
@@ -54,6 +55,7 @@ type ArrangerMetrics = {
   totalLawyers: number
   pendingAgreements: number
   totalCommitmentValue: number
+  totalCommitmentByCurrency: CurrencyTotals
 }
 
 type RecentMandate = {
@@ -61,7 +63,7 @@ type RecentMandate = {
   name: string
   status: string
   target_amount: number | null
-  currency: string
+  currency: string | null
   created_at: string
 }
 
@@ -78,6 +80,9 @@ type EscrowMetrics = {
   totalExpected: number      // SUM(commitment) for committed subscriptions
   totalFunded: number        // SUM(funded_amount)
   totalOutstanding: number   // SUM(outstanding_amount)
+  totalExpectedByCurrency: CurrencyTotals
+  totalFundedByCurrency: CurrencyTotals
+  totalOutstandingByCurrency: CurrencyTotals
   fundingRate: number        // percentage
   pendingInvestors: number   // COUNT where funded_amount < commitment
 }
@@ -95,6 +100,10 @@ type FeeMetrics = {
   totalInvoiced: number      // status = 'invoiced'
   totalPaid: number          // status = 'paid'
   feePipeline: number        // accrued + invoiced (not yet paid)
+  totalAccruedByCurrency: CurrencyTotals
+  totalInvoicedByCurrency: CurrencyTotals
+  totalPaidByCurrency: CurrencyTotals
+  feePipelineByCurrency: CurrencyTotals
 }
 
 export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashboardProps) {
@@ -114,6 +123,11 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
   const [escrowMetrics, setEscrowMetrics] = useState<EscrowMetrics | null>(null)
   const [subPackMetrics, setSubPackMetrics] = useState<SubscriptionPackMetrics | null>(null)
   const [feeMetrics, setFeeMetrics] = useState<FeeMetrics | null>(null)
+
+  const formatAmountWithCurrency = (amount: number, currency?: string | null) => {
+    if (currency) return formatCurrency(amount, currency)
+    return amount.toLocaleString('en-US')
+  }
 
   useEffect(() => {
     async function fetchData() {
@@ -164,24 +178,30 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
           name: d.name,
           status: d.status,
           target_amount: d.target_amount,
-          currency: d.currency || 'USD',
+          currency: d.currency ? String(d.currency).toUpperCase() : null,
           created_at: d.created_at,
         })))
 
         // Get total commitment value from subscriptions on arranger's deals
         const dealIds = mandates.map((d: any) => d.id)
         let totalCommitment = 0
+        let totalCommitmentByCurrency: CurrencyTotals = {}
 
         if (dealIds.length > 0) {
           const { data: subscriptions } = await supabase
             .from('subscriptions')
-            .select('commitment')
+            .select('commitment, currency')
             .in('deal_id', dealIds)
             .in('status', ['committed', 'active', 'signed', 'funded'])
 
           totalCommitment = (subscriptions || []).reduce(
             (sum: number, s: any) => sum + (s.commitment || 0),
             0
+          )
+          totalCommitmentByCurrency = sumByCurrency(
+            subscriptions || [],
+            (s: any) => s.commitment,
+            (s: any) => s.currency
           )
         }
 
@@ -299,19 +319,37 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
         if (dealIds.length > 0) {
           const { data: fundingData } = await supabase
             .from('subscriptions')
-            .select('commitment, funded_amount, outstanding_amount, status, investor_id')
+            .select('commitment, funded_amount, outstanding_amount, currency, status, investor_id')
             .in('deal_id', dealIds)
             .in('status', ['committed', 'partially_funded', 'funded', 'active', 'signed'])
 
           const totalExpected = (fundingData || []).reduce((sum: number, s: any) => sum + (s.commitment || 0), 0)
           const totalFunded = (fundingData || []).reduce((sum: number, s: any) => sum + (s.funded_amount || 0), 0)
           const totalOutstanding = (fundingData || []).reduce((sum: number, s: any) => sum + (s.outstanding_amount || 0), 0)
+          const totalExpectedByCurrency = sumByCurrency(
+            fundingData || [],
+            (s: any) => s.commitment,
+            (s: any) => s.currency
+          )
+          const totalFundedByCurrency = sumByCurrency(
+            fundingData || [],
+            (s: any) => s.funded_amount,
+            (s: any) => s.currency
+          )
+          const totalOutstandingByCurrency = sumByCurrency(
+            fundingData || [],
+            (s: any) => s.outstanding_amount,
+            (s: any) => s.currency
+          )
           const pendingInvestors = (fundingData || []).filter((s: any) => (s.funded_amount || 0) < (s.commitment || 0)).length
 
           setEscrowMetrics({
             totalExpected,
             totalFunded,
             totalOutstanding,
+            totalExpectedByCurrency,
+            totalFundedByCurrency,
+            totalOutstandingByCurrency,
             fundingRate: totalExpected > 0 ? (totalFunded / totalExpected) * 100 : 0,
             pendingInvestors,
           })
@@ -383,6 +421,9 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
             totalExpected: 0,
             totalFunded: 0,
             totalOutstanding: 0,
+            totalExpectedByCurrency: {},
+            totalFundedByCurrency: {},
+            totalOutstandingByCurrency: {},
             fundingRate: 0,
             pendingInvestors: 0,
           })
@@ -398,19 +439,29 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
         // 3. FEE METRICS (User Story 2.2.4, 2.3.4, 2.4.4)
         const { data: feeData } = await supabase
           .from('fee_events')
-          .select('computed_amount, status')
+          .select('computed_amount, status, currency')
           .eq('payee_arranger_id', arrangerId)
 
         const validFees = (feeData || []).filter((f: any) => f.status !== 'voided' && f.status !== 'cancelled')
-        const totalAccrued = validFees.filter((f: any) => f.status === 'accrued').reduce((s: number, f: any) => s + (f.computed_amount || 0), 0)
-        const totalInvoiced = validFees.filter((f: any) => f.status === 'invoiced').reduce((s: number, f: any) => s + (f.computed_amount || 0), 0)
-        const totalPaid = validFees.filter((f: any) => f.status === 'paid').reduce((s: number, f: any) => s + (f.computed_amount || 0), 0)
+        const accruedFees = validFees.filter((f: any) => f.status === 'accrued')
+        const invoicedFees = validFees.filter((f: any) => f.status === 'invoiced')
+        const paidFees = validFees.filter((f: any) => f.status === 'paid')
+        const totalAccrued = accruedFees.reduce((s: number, f: any) => s + (f.computed_amount || 0), 0)
+        const totalInvoiced = invoicedFees.reduce((s: number, f: any) => s + (f.computed_amount || 0), 0)
+        const totalPaid = paidFees.reduce((s: number, f: any) => s + (f.computed_amount || 0), 0)
+        const totalAccruedByCurrency = sumByCurrency(accruedFees, (f: any) => f.computed_amount, (f: any) => f.currency)
+        const totalInvoicedByCurrency = sumByCurrency(invoicedFees, (f: any) => f.computed_amount, (f: any) => f.currency)
+        const totalPaidByCurrency = sumByCurrency(paidFees, (f: any) => f.computed_amount, (f: any) => f.currency)
 
         setFeeMetrics({
           totalAccrued,
           totalInvoiced,
           totalPaid,
           feePipeline: totalAccrued + totalInvoiced,
+          totalAccruedByCurrency,
+          totalInvoicedByCurrency,
+          totalPaidByCurrency,
+          feePipelineByCurrency: mergeCurrencyTotals(totalAccruedByCurrency, totalInvoicedByCurrency),
         })
 
         // ========== END NEW METRICS ==========
@@ -425,6 +476,7 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
           totalLawyers: lawyersCount,
           pendingAgreements: allPendingAgreements.length,
           totalCommitmentValue: totalCommitment,
+          totalCommitmentByCurrency,
         })
       } catch (error) {
         console.error('Error fetching arranger data:', error)
@@ -602,7 +654,7 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold text-green-500`}>
-              {formatCurrency(metrics?.totalCommitmentValue || 0)}
+              {formatCurrencyTotals(metrics?.totalCommitmentByCurrency || {})}
             </div>
             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
               Across all mandates
@@ -643,7 +695,7 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
               {(escrowMetrics?.fundingRate || 0).toFixed(0)}% Funded
             </div>
             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-              {formatCurrency(escrowMetrics?.totalFunded || 0)} of {formatCurrency(escrowMetrics?.totalExpected || 0)}
+              {formatCurrencyTotals(escrowMetrics?.totalFundedByCurrency || {})} of {formatCurrencyTotals(escrowMetrics?.totalExpectedByCurrency || {})}
             </p>
             {/* Progress bar */}
             <div className={`mt-2 h-2 ${isDark ? 'bg-gray-700' : 'bg-gray-200'} rounded-full overflow-hidden`}>
@@ -659,7 +711,7 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
             )}
             <div className="mt-3 pt-3 border-t border-gray-700/50 flex justify-between text-xs">
               <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Outstanding:</span>
-              <span className="text-amber-400 font-medium">{formatCurrency(escrowMetrics?.totalOutstanding || 0)}</span>
+              <span className="text-amber-400 font-medium">{formatCurrencyTotals(escrowMetrics?.totalOutstandingByCurrency || {})}</span>
             </div>
           </CardContent>
         </Card>
@@ -674,7 +726,7 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-500">
-              {formatCurrency(feeMetrics?.feePipeline || 0)}
+              {formatCurrencyTotals(feeMetrics?.feePipelineByCurrency || {})}
             </div>
             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
               Pending collection
@@ -682,15 +734,15 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
             <div className="mt-3 space-y-2 text-xs">
               <div className="flex justify-between items-center">
                 <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Accrued:</span>
-                <span className="text-amber-400 font-medium">{formatCurrency(feeMetrics?.totalAccrued || 0)}</span>
+                <span className="text-amber-400 font-medium">{formatCurrencyTotals(feeMetrics?.totalAccruedByCurrency || {})}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Invoiced:</span>
-                <span className="text-blue-400 font-medium">{formatCurrency(feeMetrics?.totalInvoiced || 0)}</span>
+                <span className="text-blue-400 font-medium">{formatCurrencyTotals(feeMetrics?.totalInvoicedByCurrency || {})}</span>
               </div>
               <div className="flex justify-between items-center pt-2 border-t border-gray-700/50">
                 <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Total Paid:</span>
-                <span className="text-green-400 font-medium">{formatCurrency(feeMetrics?.totalPaid || 0)}</span>
+                <span className="text-green-400 font-medium">{formatCurrencyTotals(feeMetrics?.totalPaidByCurrency || {})}</span>
               </div>
             </div>
           </CardContent>
@@ -829,11 +881,11 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
                       <p className={`font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
                         {mandate.name}
                       </p>
-                      <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {mandate.target_amount
-                          ? `${formatCurrency(mandate.target_amount, mandate.currency)} target`
+                        <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                          {mandate.target_amount
+                          ? `${formatAmountWithCurrency(mandate.target_amount, mandate.currency)} target`
                           : 'No target set'}
-                      </p>
+                        </p>
                     </div>
                     <Badge className={dealStatusStyles[mandate.status] || 'bg-gray-500/20 text-gray-400'}>
                       {mandate.status}

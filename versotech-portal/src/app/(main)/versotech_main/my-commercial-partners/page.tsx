@@ -35,8 +35,8 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatCurrency, formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
+import { addCurrencyAmount, type CurrencyTotals, formatCurrencyTotals, mergeCurrencyTotals, sumByCurrency } from '@/lib/currency-totals'
 import Link from 'next/link'
 import { CommercialPartnerDetailDrawer } from '@/components/commercial-partners/commercial-partner-detail-drawer'
 import {
@@ -80,6 +80,7 @@ type CommercialPartner = {
   deals_count: number
   clients_count: number
   total_placement_value: number
+  total_placement_value_by_currency: CurrencyTotals
   fee_plans: FeePlan[]
   commission_summary: CommissionSummary
   deal_ids: string[] // Added for deal filtering
@@ -90,8 +91,11 @@ type Summary = {
   activeCPs: number
   totalClients: number
   totalPlacementValue: number
+  totalPlacementValueByCurrency: CurrencyTotals
   totalOwed: number
+  totalOwedByCurrency: CurrencyTotals
   totalPaid: number
+  totalPaidByCurrency: CurrencyTotals
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -125,8 +129,11 @@ export default function MyCommercialPartnersPage() {
     activeCPs: 0,
     totalClients: 0,
     totalPlacementValue: 0,
+    totalPlacementValueByCurrency: {},
     totalOwed: 0,
+    totalOwedByCurrency: {},
     totalPaid: 0,
+    totalPaidByCurrency: {},
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -189,7 +196,17 @@ export default function MyCommercialPartnersPage() {
 
         if (!arrangerDeals || arrangerDeals.length === 0) {
           setCommercialPartners([])
-          setSummary({ totalCPs: 0, activeCPs: 0, totalClients: 0, totalPlacementValue: 0, totalOwed: 0, totalPaid: 0 })
+          setSummary({
+            totalCPs: 0,
+            activeCPs: 0,
+            totalClients: 0,
+            totalPlacementValue: 0,
+            totalPlacementValueByCurrency: {},
+            totalOwed: 0,
+            totalOwedByCurrency: {},
+            totalPaid: 0,
+            totalPaidByCurrency: {},
+          })
           return
         }
 
@@ -208,7 +225,17 @@ export default function MyCommercialPartnersPage() {
 
         if (cpIds.length === 0) {
           setCommercialPartners([])
-          setSummary({ totalCPs: 0, activeCPs: 0, totalClients: 0, totalPlacementValue: 0, totalOwed: 0, totalPaid: 0 })
+          setSummary({
+            totalCPs: 0,
+            activeCPs: 0,
+            totalClients: 0,
+            totalPlacementValue: 0,
+            totalPlacementValueByCurrency: {},
+            totalOwed: 0,
+            totalOwedByCurrency: {},
+            totalPaid: 0,
+            totalPaidByCurrency: {},
+          })
           return
         }
 
@@ -235,13 +262,14 @@ export default function MyCommercialPartnersPage() {
         const investorIds = [...new Set((referrals || []).filter(r => r.investor_id).map(r => r.investor_id))]
         const { data: subs } = await supabase
           .from('subscriptions')
-          .select('investor_id, commitment')
+          .select('investor_id, commitment, currency')
           .in('investor_id', investorIds)
 
-        const subsByInvestor = new Map<string, number>()
+        const subsByInvestor = new Map<string, CurrencyTotals>()
         ;(subs || []).forEach((s: any) => {
-          const current = subsByInvestor.get(s.investor_id) || 0
-          subsByInvestor.set(s.investor_id, current + (Number(s.commitment) || 0))
+          const current = subsByInvestor.get(s.investor_id) || {}
+          addCurrencyAmount(current, s.commitment, s.currency)
+          subsByInvestor.set(s.investor_id, current)
         })
 
         // Get fee plans for these CPs (created by this arranger)
@@ -275,7 +303,7 @@ export default function MyCommercialPartnersPage() {
             paid: 0,
             cancelled: 0,
             total_owed: 0,
-            currency: 'USD',
+            currency: '',
           })
         })
 
@@ -291,7 +319,7 @@ export default function MyCommercialPartnersPage() {
           if (['accrued', 'invoice_requested', 'invoiced'].includes(c.status)) {
             summary.total_owed += amount
           }
-          if (c.currency) summary.currency = c.currency
+          if (c.currency) summary.currency = String(c.currency).toUpperCase()
         })
 
         const processedCPs: CommercialPartner[] = (cpsData || []).map((cp: any) => {
@@ -300,10 +328,11 @@ export default function MyCommercialPartnersPage() {
             const deal = Array.isArray(r.deal) ? r.deal[0] : r.deal
             return deal?.id
           }).filter(Boolean))]
-          const totalValue = cpRefs.reduce((sum, r) => {
-            if (r.investor_id) return sum + (subsByInvestor.get(r.investor_id) || 0)
-            return sum
-          }, 0)
+          const totalPlacementValueByCurrency = cpRefs.reduce<CurrencyTotals>((totals, referral) => {
+            if (!referral.investor_id) return totals
+            return mergeCurrencyTotals(totals, subsByInvestor.get(referral.investor_id) || {})
+          }, {})
+          const totalValue = Object.values(totalPlacementValueByCurrency).reduce((sum, value) => sum + value, 0)
 
           return {
             id: cp.id,
@@ -323,6 +352,7 @@ export default function MyCommercialPartnersPage() {
             deals_count: dealsInvolved.length,
             clients_count: clientCountsByCP.get(cp.id) || 0,
             total_placement_value: totalValue,
+            total_placement_value_by_currency: totalPlacementValueByCurrency,
             fee_plans: feePlansByCP.get(cp.id) || [],
             commission_summary: commissionsByCP.get(cp.id) || {
               accrued: 0,
@@ -331,7 +361,7 @@ export default function MyCommercialPartnersPage() {
               paid: 0,
               cancelled: 0,
               total_owed: 0,
-              currency: 'USD',
+              currency: '',
             },
             deal_ids: dealsInvolved as string[],
           }
@@ -344,14 +374,30 @@ export default function MyCommercialPartnersPage() {
         const totalVal = processedCPs.reduce((sum, cp) => sum + cp.total_placement_value, 0)
         const totalOwed = processedCPs.reduce((sum, cp) => sum + cp.commission_summary.total_owed, 0)
         const totalPaid = processedCPs.reduce((sum, cp) => sum + cp.commission_summary.paid, 0)
+        const totalPlacementValueByCurrency = processedCPs.reduce<CurrencyTotals>((totals, cp) => {
+          return mergeCurrencyTotals(totals, cp.total_placement_value_by_currency)
+        }, {})
+        const totalOwedByCurrency = sumByCurrency(
+          (commissions || []).filter((commission: any) => ['accrued', 'invoice_requested', 'invoiced'].includes(commission.status)),
+          (commission: any) => commission.accrual_amount,
+          (commission: any) => commission.currency
+        )
+        const totalPaidByCurrency = sumByCurrency(
+          (commissions || []).filter((commission: any) => commission.status === 'paid'),
+          (commission: any) => commission.accrual_amount,
+          (commission: any) => commission.currency
+        )
 
         setSummary({
           totalCPs: processedCPs.length,
           activeCPs: active,
           totalClients,
           totalPlacementValue: totalVal,
+          totalPlacementValueByCurrency,
           totalOwed,
+          totalOwedByCurrency,
           totalPaid,
+          totalPaidByCurrency,
         })
         setError(null)
       } catch (err) {
@@ -378,7 +424,7 @@ export default function MyCommercialPartnersPage() {
         paid: 0,
         cancelled: 0,
         total_owed: 0,
-        currency: 'USD',
+        currency: '',
       }
 
       const processedCPs: CommercialPartner[] = (cpsData || []).map((cp: any) => ({
@@ -399,6 +445,7 @@ export default function MyCommercialPartnersPage() {
         deals_count: 0,
         clients_count: 0,
         total_placement_value: 0,
+        total_placement_value_by_currency: {},
         fee_plans: [],
         commission_summary: emptyCommission,
         deal_ids: [],
@@ -410,8 +457,11 @@ export default function MyCommercialPartnersPage() {
         activeCPs: processedCPs.filter(cp => cp.status === 'active').length,
         totalClients: 0,
         totalPlacementValue: 0,
+        totalPlacementValueByCurrency: {},
         totalOwed: 0,
+        totalOwedByCurrency: {},
         totalPaid: 0,
+        totalPaidByCurrency: {},
       })
     }
 
@@ -510,7 +560,7 @@ export default function MyCommercialPartnersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{formatCurrency(summary.totalPlacementValue, 'USD')}</div>
+            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{formatCurrencyTotals(summary.totalPlacementValueByCurrency)}</div>
             <p className="text-xs text-muted-foreground mt-1">Total placed</p>
           </CardContent>
         </Card>
@@ -521,7 +571,7 @@ export default function MyCommercialPartnersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{formatCurrency(summary.totalOwed, 'USD')}</div>
+            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{formatCurrencyTotals(summary.totalOwedByCurrency)}</div>
             <p className="text-xs text-muted-foreground mt-1">Pending payment</p>
           </CardContent>
         </Card>
@@ -532,7 +582,7 @@ export default function MyCommercialPartnersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(summary.totalPaid, 'USD')}</div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrencyTotals(summary.totalPaidByCurrency)}</div>
             <p className="text-xs text-muted-foreground mt-1">Total paid out</p>
           </CardContent>
         </Card>
@@ -659,7 +709,7 @@ export default function MyCommercialPartnersPage() {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <div className="font-medium">{formatCurrency(cp.total_placement_value, 'USD')}</div>
+                            <div className="font-medium">{formatCurrencyTotals(cp.total_placement_value_by_currency)}</div>
                             <div className="text-xs text-muted-foreground">{cp.deals_count} deal{cp.deals_count !== 1 ? 's' : ''} • {cp.clients_count} client{cp.clients_count !== 1 ? 's' : ''}</div>
                           </div>
                         </TableCell>

@@ -28,14 +28,15 @@ const createFeeComponentSchema = z.object({
   (data) => {
     // Validate that appropriate fields are provided based on calc_method
     if (data.calc_method) {
-      return data.rate_bps !== undefined
+      const usesFlatAmount = ['fixed', 'fixed_amount', 'per_unit_spread'].includes(data.calc_method)
+      return usesFlatAmount ? data.flat_amount !== undefined : data.rate_bps !== undefined
     }
     if (data.kind === 'flat') {
       return data.flat_amount !== undefined
     }
     return true
   },
-  { message: 'Must provide rate_bps for percentage methods or flat_amount for flat fees' }
+  { message: 'Must provide rate_bps for percentage methods or flat_amount for flat/per-unit fees' }
 )
 
 export async function POST(

@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
       .select(`
         id,
         invoice_number,
+        currency,
         investor_id,
         deal_id,
         status,
@@ -145,7 +146,7 @@ export async function POST(request: NextRequest) {
     // Verify all fee events belong to this arranger and are not already invoiced
     const { data: feeEvents, error: eventsError } = await serviceSupabase
       .from('fee_events')
-      .select('id, computed_amount, fee_type, deal_id, investor_id, status, invoice_id, payee_arranger_id')
+      .select('id, computed_amount, fee_type, deal_id, investor_id, status, invoice_id, payee_arranger_id, currency')
       .in('id', fee_event_ids)
 
     if (eventsError || !feeEvents) {
@@ -168,6 +169,15 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: `Fee event ${event.id} is not in accrued status` }, { status: 400 })
       }
     }
+
+    const currencies = [...new Set(feeEvents.map((event) => (event.currency || 'USD').toUpperCase()))]
+    if (currencies.length > 1) {
+      return NextResponse.json(
+        { error: 'Cannot create one payment request from fee events in multiple currencies' },
+        { status: 400 }
+      )
+    }
+    const invoiceCurrency = currencies[0] || 'USD'
 
     // Calculate totals
     const total = feeEvents.reduce((sum, event) => sum + Number(event.computed_amount), 0)
@@ -192,6 +202,7 @@ export async function POST(request: NextRequest) {
         investor_id: primaryInvestorId,
         subtotal: total,
         total: total,
+        currency: invoiceCurrency,
         paid_amount: 0,
         due_date: dueDate.toISOString().split('T')[0],
         status: 'pending',

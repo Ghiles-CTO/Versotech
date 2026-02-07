@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { DollarSign, CheckCircle, Clock, AlertCircle, ExternalLink, FileText, Users, Briefcase, Building2, Send } from 'lucide-react';
 import { formatCurrency } from '@/lib/fees/calculations';
 import Link from 'next/link';
+import { formatCurrencyTotals, sumByCurrency } from '@/lib/currency-totals';
 
 type EntityType = 'introducer' | 'partner' | 'commercial_partner';
 
@@ -208,6 +209,32 @@ export default function CommissionsTab() {
     return new Date(commission.payment_due_date) < new Date();
   };
 
+  const owedStatuses: Array<Commission['status']> = ['accrued', 'invoice_requested', 'invoice_submitted', 'invoiced'];
+  const totalOwedByCurrency = sumByCurrency(
+    data.data.filter((commission) => owedStatuses.includes(commission.status)),
+    (commission) => commission.accrual_amount,
+    (commission) => commission.currency
+  );
+  const totalAccruedByCurrency = sumByCurrency(
+    data.data.filter((commission) => commission.status === 'accrued'),
+    (commission) => commission.accrual_amount,
+    (commission) => commission.currency
+  );
+  const totalPaidByCurrency = sumByCurrency(
+    data.data.filter((commission) => commission.status === 'paid'),
+    (commission) => commission.accrual_amount,
+    (commission) => commission.currency
+  );
+  const totalOverdueByCurrency = sumByCurrency(
+    data.data.filter((commission) =>
+      !['paid', 'cancelled', 'rejected'].includes(commission.status) &&
+      Boolean(commission.payment_due_date) &&
+      new Date(commission.payment_due_date as string) < new Date()
+    ),
+    (commission) => commission.accrual_amount,
+    (commission) => commission.currency
+  );
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -225,7 +252,7 @@ export default function CommissionsTab() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {formatCurrency(data.summary.total_owed)}
+              {formatCurrencyTotals(totalOwedByCurrency)}
             </div>
             <p className="text-xs text-gray-400">
               Accrued + Invoiced
@@ -240,7 +267,7 @@ export default function CommissionsTab() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {formatCurrency(data.summary.total_accrued)}
+              {formatCurrencyTotals(totalAccruedByCurrency)}
             </div>
             <p className="text-xs text-gray-400">
               Not yet invoiced
@@ -255,7 +282,7 @@ export default function CommissionsTab() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {formatCurrency(data.summary.total_paid)}
+              {formatCurrencyTotals(totalPaidByCurrency)}
             </div>
             <p className="text-xs text-gray-400">
               Settled commissions
@@ -270,7 +297,7 @@ export default function CommissionsTab() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">
-              {formatCurrency(data.summary.total_overdue)}
+              {formatCurrencyTotals(totalOverdueByCurrency)}
             </div>
             <p className="text-xs text-gray-400">
               Past due date
@@ -341,6 +368,11 @@ export default function CommissionsTab() {
           {data.by_entity.map((group) => {
             const config = getEntityConfig(group.entity_type);
             const EntityIcon = config.icon;
+            const groupTotalsByCurrency = sumByCurrency(
+              group.commissions,
+              (commission) => commission.accrual_amount,
+              (commission) => commission.currency
+            );
 
             return (
               <Card key={`${group.entity_type}:${group.entity.id}`}>
@@ -369,7 +401,7 @@ export default function CommissionsTab() {
                     </div>
                     <div className="text-right">
                       <p className="text-2xl font-bold text-white">
-                        {formatCurrency(group.totals.total)}
+                        {formatCurrencyTotals(groupTotalsByCurrency)}
                       </p>
                       <p className="text-xs text-gray-400">
                         {group.commissions.length} commission{group.commissions.length !== 1 ? 's' : ''}
@@ -424,7 +456,7 @@ export default function CommissionsTab() {
                                 </p>
                               )}
                               <p className="text-sm text-gray-400 mt-1">
-                                {(commission.rate_bps / 100).toFixed(2)}% of {formatCurrency(commission.base_amount)}
+                                {(commission.rate_bps / 100).toFixed(2)}% of {formatCurrency(commission.base_amount, commission.currency)}
                                 {commission.payment_due_date && (
                                   <span className="ml-2">
                                     • Due: {new Date(commission.payment_due_date).toLocaleDateString()}
@@ -443,7 +475,7 @@ export default function CommissionsTab() {
                             <div className="flex items-center gap-2 ml-4">
                               <div className="text-right mr-4">
                                 <p className="text-xl font-bold text-white">
-                                  {formatCurrency(commission.accrual_amount)}
+                                  {formatCurrency(commission.accrual_amount, commission.currency)}
                                 </p>
                               </div>
                               <div className="flex flex-col gap-2">

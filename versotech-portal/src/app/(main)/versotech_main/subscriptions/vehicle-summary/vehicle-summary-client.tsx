@@ -15,6 +15,7 @@ import {
   Download
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { formatCurrencyTotals } from '@/lib/currency-totals'
 
 export function VehicleSummaryPageClient() {
   const router = useRouter()
@@ -44,18 +45,22 @@ export function VehicleSummaryPageClient() {
     }
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount)
-  }
-
   const handleExport = () => {
     toast.info('Export functionality coming soon')
   }
+
+  const getCurrencyTotals = (key: string): Record<string, number> => {
+    return data?.grand_totals_by_currency?.[key] || {}
+  }
+
+  const totalCommitmentByCurrency = getCurrencyTotals('total_commitment')
+  const totalFundedByCurrency = getCurrencyTotals('total_funded')
+  const totalOutstandingByCurrency = getCurrencyTotals('total_outstanding')
+  const totalCapitalCallsByCurrency = getCurrencyTotals('total_capital_calls')
+  const totalDistributionsByCurrency = getCurrencyTotals('total_distributions')
+  const totalNavByCurrency = getCurrencyTotals('total_nav')
+  const totalFeesByCurrency = getCurrencyTotals('total_fees')
+  const hasSingleCommitmentCurrency = Object.keys(totalCommitmentByCurrency).length === 1
 
   if (loading) {
     return (
@@ -155,10 +160,10 @@ export function VehicleSummaryPageClient() {
                 <div>
                   <p className="text-sm text-green-200 mb-1">Total Commitment</p>
                   <p className="text-3xl font-bold text-white">
-                    {formatCurrency(data.grand_totals.total_commitment)}
+                    {formatCurrencyTotals(totalCommitmentByCurrency)}
                   </p>
                   <p className="text-xs text-green-300 mt-1">
-                    Outstanding: {formatCurrency(data.grand_totals.total_outstanding)}
+                    Outstanding: {formatCurrencyTotals(totalOutstandingByCurrency)}
                   </p>
                 </div>
                 <div className="h-12 w-12 rounded-full bg-green-500/20 flex items-center justify-center">
@@ -174,10 +179,12 @@ export function VehicleSummaryPageClient() {
                 <div>
                   <p className="text-sm text-purple-200 mb-1">Total Funded</p>
                   <p className="text-3xl font-bold text-white">
-                    {formatCurrency(data.grand_totals.total_funded)}
+                    {formatCurrencyTotals(totalFundedByCurrency)}
                   </p>
                   <p className="text-xs text-purple-300 mt-1">
-                    {((data.grand_totals.total_funded / data.grand_totals.total_commitment) * 100).toFixed(1)}% funded
+                    {hasSingleCommitmentCurrency
+                      ? `${((data.grand_totals.total_funded / data.grand_totals.total_commitment) * 100).toFixed(1)}% funded`
+                      : 'Multi-currency'}
                   </p>
                 </div>
                 <div className="h-12 w-12 rounded-full bg-purple-500/20 flex items-center justify-center">
@@ -193,12 +200,7 @@ export function VehicleSummaryPageClient() {
                 <div>
                   <p className="text-sm text-orange-200 mb-1">Total Fees</p>
                   <p className="text-3xl font-bold text-white">
-                    {formatCurrency(
-                      (data.grand_totals.total_subscription_fees || 0) +
-                      (data.grand_totals.total_bd_fees || 0) +
-                      (data.grand_totals.total_finra_fees || 0) +
-                      (data.grand_totals.total_spread_fees || 0)
-                    )}
+                    {formatCurrencyTotals(totalFeesByCurrency)}
                   </p>
                   <p className="text-xs text-orange-300 mt-1">
                     All subscription fees
@@ -220,7 +222,7 @@ export function VehicleSummaryPageClient() {
                 <div>
                   <p className="text-sm text-red-200 mb-1">Capital Calls</p>
                   <p className="text-3xl font-bold text-white">
-                    {formatCurrency(data.grand_totals.total_capital_calls || 0)}
+                    {formatCurrencyTotals(totalCapitalCallsByCurrency)}
                   </p>
                   <p className="text-xs text-red-300 mt-1">
                     Total called
@@ -239,7 +241,7 @@ export function VehicleSummaryPageClient() {
                 <div>
                   <p className="text-sm text-emerald-200 mb-1">Distributions</p>
                   <p className="text-3xl font-bold text-white">
-                    {formatCurrency(data.grand_totals.total_distributions || 0)}
+                    {formatCurrencyTotals(totalDistributionsByCurrency)}
                   </p>
                   <p className="text-xs text-emerald-300 mt-1">
                     Total distributed
@@ -258,7 +260,7 @@ export function VehicleSummaryPageClient() {
                 <div>
                   <p className="text-sm text-cyan-200 mb-1">Total NAV</p>
                   <p className="text-3xl font-bold text-white">
-                    {formatCurrency(data.grand_totals.total_nav || 0)}
+                    {formatCurrencyTotals(totalNavByCurrency)}
                   </p>
                   <p className="text-xs text-cyan-300 mt-1">
                     Current net asset value

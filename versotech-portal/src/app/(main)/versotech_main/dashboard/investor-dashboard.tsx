@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { formatCurrency } from '@/lib/format'
 import {
   ArrowUpRight,
   Building2,
@@ -409,11 +410,15 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
           const mapping = eventTypeMap[event.event_type] || { title: event.event_type, activity_type: 'deal' }
           const dealName = event.deals?.name || 'Deal'
           const amount = (event.payload?.commitment || event.payload?.indicative_amount) as number | undefined
+          const currency = event.payload?.currency || event.payload?.indicative_currency || null
+          const amountLabel = amount
+            ? (currency ? formatCurrency(amount, currency) : amount.toLocaleString('en-US'))
+            : null
 
           return {
             id: event.id,
             title: mapping.title,
-            description: amount ? `${dealName} - $${amount.toLocaleString()}` : dealName,
+            description: amountLabel ? `${dealName} - ${amountLabel}` : dealName,
             activity_type: mapping.activity_type,
             created_at: event.occurred_at,
             importance: 'normal',

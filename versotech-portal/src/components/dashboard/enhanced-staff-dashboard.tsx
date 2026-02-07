@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { formatCurrency } from '@/lib/format'
 import {
     Users,
     Workflow,
@@ -67,6 +68,7 @@ interface DashboardData {
         activityType: 'fee' | 'subscription' | 'investor' | 'other'
         createdAt: string
         amount?: number
+        currency?: string
         status?: string
     }>
     charts: {
@@ -74,14 +76,41 @@ interface DashboardData {
             date: string
             amount: number
             type: string
+            currency?: string | null
         }>
         subscriptions: Array<{
             date: string
             amount: number
             status: string
+            currency?: string | null
         }>
     }
     errors?: MetricError[]
+}
+
+function resolveSingleCurrency(values: Array<string | null | undefined>): string | null {
+    const unique = [...new Set(
+        values
+            .map(value => (typeof value === 'string' ? value.trim().toUpperCase() : ''))
+            .filter(value => value.length === 3)
+    )]
+    return unique.length === 1 ? unique[0] : null
+}
+
+function formatCompactAmount(value: number, currencyCode: string | null): string {
+    const numericValue = Number(value || 0)
+    if (currencyCode) {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: currencyCode,
+            notation: 'compact',
+            maximumFractionDigits: 1
+        }).format(numericValue)
+    }
+    return new Intl.NumberFormat('en-US', {
+        notation: 'compact',
+        maximumFractionDigits: 1
+    }).format(numericValue)
 }
 
 // --- Sub-Components (Memoized) ---
@@ -129,7 +158,9 @@ const KPICard = React.memo(({ kpi, glassCardStyle, labelStyle, valueStyle }: { k
 })
 KPICard.displayName = 'KPICard'
 
-const FeesChart = React.memo(({ data, glassCardStyle }: { data: any[], glassCardStyle: string }) => (
+const FeesChart = React.memo(({ data, glassCardStyle }: { data: any[], glassCardStyle: string }) => {
+    const chartCurrency = resolveSingleCurrency(data.map(item => item?.currency))
+    return (
     <Card className={glassCardStyle + " border-0 rounded-2xl"}>
         <CardHeader className="pb-2 pt-6 px-6">
             <div className="flex items-center justify-between">
@@ -169,7 +200,7 @@ const FeesChart = React.memo(({ data, glassCardStyle }: { data: any[], glassCard
                             fontSize={11}
                             tickLine={false}
                             axisLine={false}
-                            tickFormatter={(value) => `$${(value/1000).toFixed(0)}k`}
+                            tickFormatter={(value) => formatCompactAmount(Number(value), chartCurrency)}
                             dx={-5}
                             width={60}
                         />
@@ -183,7 +214,7 @@ const FeesChart = React.memo(({ data, glassCardStyle }: { data: any[], glassCard
                             }}
                             itemStyle={{ color: '#10b981', fontSize: '14px', fontWeight: '600', fontFamily: 'system-ui' }}
                             labelStyle={{ color: '#d4d4d8', fontSize: '12px', marginBottom: '6px', fontWeight: '500' }}
-                            formatter={(value: number) => [`$${value.toLocaleString()}`, 'Fee Revenue']}
+                            formatter={(value: number) => [chartCurrency ? formatCurrency(value, chartCurrency) : Number(value).toLocaleString(), 'Fee Revenue']}
                         />
                         <Area
                             type="monotone"
@@ -201,10 +232,13 @@ const FeesChart = React.memo(({ data, glassCardStyle }: { data: any[], glassCard
             </div>
         </CardContent>
     </Card>
-))
+    )
+})
 FeesChart.displayName = 'FeesChart'
 
-const SubscriptionsChart = React.memo(({ data, glassCardStyle }: { data: any[], glassCardStyle: string }) => (
+const SubscriptionsChart = React.memo(({ data, glassCardStyle }: { data: any[], glassCardStyle: string }) => {
+    const chartCurrency = resolveSingleCurrency(data.map(item => item?.currency))
+    return (
     <Card className={glassCardStyle + " border-0 rounded-2xl"}>
         <CardHeader className="pb-2 pt-6 px-6">
             <div className="flex items-center justify-between">
@@ -243,7 +277,7 @@ const SubscriptionsChart = React.memo(({ data, glassCardStyle }: { data: any[], 
                             fontSize={11}
                             tickLine={false}
                             axisLine={false}
-                            tickFormatter={(value) => `$${(value/1000000).toFixed(1)}M`}
+                            tickFormatter={(value) => formatCompactAmount(Number(value), chartCurrency)}
                             dx={-5}
                             width={60}
                         />
@@ -258,7 +292,7 @@ const SubscriptionsChart = React.memo(({ data, glassCardStyle }: { data: any[], 
                             cursor={{ fill: '#ffffff08', radius: 4 }}
                             itemStyle={{ color: '#38bdf8', fontSize: '14px', fontWeight: '600', fontFamily: 'system-ui' }}
                             labelStyle={{ color: '#d4d4d8', fontSize: '12px', marginBottom: '6px', fontWeight: '500' }}
-                            formatter={(value: number) => [`$${value.toLocaleString()}`, 'Capital']}
+                            formatter={(value: number) => [chartCurrency ? formatCurrency(value, chartCurrency) : Number(value).toLocaleString(), 'Capital']}
                         />
                         <Bar
                             dataKey="amount"
@@ -272,7 +306,8 @@ const SubscriptionsChart = React.memo(({ data, glassCardStyle }: { data: any[], 
             </div>
         </CardContent>
     </Card>
-))
+    )
+})
 SubscriptionsChart.displayName = 'SubscriptionsChart'
 
 const ErrorBanner = React.memo(({ errors }: { errors: MetricError[] }) => {
@@ -327,6 +362,10 @@ const LedgerItem = React.memo(({ activity }: { activity: any }) => {
     }
     const Icon = getActivityIcon(activity.activityType)
     const isFee = activity.activityType === 'fee'
+    const currencyCode = typeof activity.currency === 'string' ? activity.currency.trim().toUpperCase() : ''
+    const formattedAmount = currencyCode
+      ? formatCurrency(activity.amount, currencyCode)
+      : Number(activity.amount || 0).toLocaleString()
 
     return (
         <div className="group relative bg-gray-100 dark:bg-zinc-900/30 border border-gray-200 dark:border-white/5 rounded-lg p-4 hover:bg-gray-200 dark:hover:bg-zinc-800/50 transition-colors duration-200">
@@ -353,9 +392,13 @@ const LedgerItem = React.memo(({ activity }: { activity: any }) => {
                             "text-sm font-mono font-medium block",
                             isFee ? "text-emerald-600 dark:text-emerald-400" : "text-gray-600 dark:text-zinc-300"
                         )}>
-                            {isFee ? '+' : ''}${activity.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            {isFee ? '+' : ''}{formattedAmount}
                         </span>
-                        <span className="text-[10px] text-gray-400 dark:text-zinc-300 uppercase">USD</span>
+                        {currencyCode && (
+                            <span className="text-[10px] text-gray-400 dark:text-zinc-300 uppercase">
+                                {currencyCode}
+                            </span>
+                        )}
                     </div>
                 )}
             </div>

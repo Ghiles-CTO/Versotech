@@ -19,6 +19,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { format } from 'date-fns'
+import { formatCurrency } from '@/lib/format'
 
 interface DealInterestTabProps {
   dealId: string
@@ -39,6 +40,16 @@ const subscriptionStatusStyles: Record<string, string> = {
   approved: 'bg-emerald-500/20 text-emerald-100',
   rejected: 'bg-rose-500/20 text-rose-100',
   cancelled: 'bg-muted text-muted-foreground'
+}
+
+function formatAmountWithCurrency(amount: number | null | undefined, currency?: string | null): string {
+  const numeric = Number(amount)
+  if (!Number.isFinite(numeric)) return '—'
+  const code = (currency || '').trim().toUpperCase()
+  if (code.length === 3) {
+    return formatCurrency(numeric, code)
+  }
+  return numeric.toLocaleString()
 }
 
 export function DealInterestTab({ dealId, interests, subscriptions }: DealInterestTabProps) {
@@ -111,10 +122,10 @@ export function DealInterestTab({ dealId, interests, subscriptions }: DealIntere
                   const rawAmount = subscription.payload_json?.amount ??
                     subscription.payload_json?.subscription_amount ??
                     subscription.payload_json?.commitment_amount
+                  const currencyCode =
+                    (subscription.payload_json?.currency || subscription.currency || '').toString().toUpperCase()
                   const numericAmount = typeof rawAmount === 'number' ? rawAmount : parseFloat(rawAmount ?? '')
-                  const formattedAmount = Number.isFinite(numericAmount)
-                    ? numericAmount.toLocaleString()
-                    : undefined
+                  const formattedAmount = formatAmountWithCurrency(numericAmount, currencyCode)
                   return (
                     <TableRow key={subscription.id}>
                       <TableCell>{subscription.investors?.legal_name || 'Unknown investor'}</TableCell>
@@ -128,7 +139,7 @@ export function DealInterestTab({ dealId, interests, subscriptions }: DealIntere
                           ? format(new Date(subscription.submitted_at), 'dd MMM yyyy HH:mm')
                           : '—'}
                       </TableCell>
-                      <TableCell>{formattedAmount ?? '—'}</TableCell>
+                      <TableCell>{formattedAmount}</TableCell>
                     </TableRow>
                   )
                 })
@@ -196,9 +207,7 @@ function InterestTable({ title, interests, emptyLabel }: InterestTableProps) {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {interest.indicative_amount
-                      ? `${interest.indicative_currency ?? ''} ${interest.indicative_amount.toLocaleString()}`
-                      : '—'}
+                    {formatAmountWithCurrency(interest.indicative_amount, interest.indicative_currency)}
                   </TableCell>
                   <TableCell>
                     {interest.submitted_at

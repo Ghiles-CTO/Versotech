@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
+import { formatCurrency } from '@/lib/format'
 
 interface DataPoint {
   date: string
@@ -120,11 +121,13 @@ function Sparkline({
 function TrendChart({
   data,
   color,
-  format = 'number'
+  format = 'number',
+  currencyCode = ''
 }: {
   data: DataPoint[]
   color: string
   format?: 'number' | 'percent' | 'currency'
+  currencyCode?: string
 }) {
   if (!data || data.length === 0) return null
 
@@ -149,7 +152,10 @@ function TrendChart({
 
   const formatValue = (value: number) => {
     if (format === 'percent') return `${value}%`
-    if (format === 'currency') return `$${value.toLocaleString()}`
+    if (format === 'currency') {
+      if (!currencyCode) return value.toLocaleString()
+      return formatCurrency(value, currencyCode)
+    }
     return value.toLocaleString()
   }
 
@@ -240,14 +246,26 @@ function TrendChart({
 
 export function KPITrendCharts({
   className,
-  onRefresh
+  onRefresh,
+  currencyCode = ''
 }: {
   className?: string
   onRefresh?: () => void
+  currencyCode?: string
 }) {
   const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d'>('30d')
   const [selectedMetric, setSelectedMetric] = useState<string>('all')
   const [isLoading, setIsLoading] = useState(false)
+
+  const formatMetricValue = (value: number | string, format?: 'number' | 'percent' | 'currency') => {
+    if (typeof value !== 'number') return value
+    if (format === 'percent') return `${value}%`
+    if (format === 'currency') {
+      if (!currencyCode) return value.toLocaleString()
+      return formatCurrency(value, currencyCode)
+    }
+    return value.toLocaleString()
+  }
 
   // Generate sample data (in real app, this would come from API)
   const generateTrendData = (baseValue: number, variance: number, points: number): DataPoint[] => {
@@ -438,11 +456,7 @@ export function KPITrendCharts({
                   <div className="flex items-end justify-between">
                     <div>
                       <div className="text-2xl font-bold text-white">
-                        {metric.format === 'percent'
-                          ? `${metric.currentValue}%`
-                          : metric.format === 'currency'
-                          ? `$${metric.currentValue}`
-                          : metric.currentValue.toLocaleString()}
+                        {formatMetricValue(metric.currentValue, metric.format)}
                       </div>
                       <div className="text-xs text-slate-500 mt-1">
                         vs {metric.previousValue} last period
@@ -473,11 +487,7 @@ export function KPITrendCharts({
                       </div>
                       <div>
                         <div className="text-3xl font-bold text-white">
-                          {metric.format === 'percent'
-                            ? `${metric.currentValue}%`
-                            : metric.format === 'currency'
-                            ? `$${metric.currentValue}`
-                            : metric.currentValue.toLocaleString()}
+                          {formatMetricValue(metric.currentValue, metric.format)}
                         </div>
                         <div className="text-sm text-slate-400">
                           {metric.label}
@@ -532,6 +542,7 @@ export function KPITrendCharts({
                       data={metric.data[selectedPeriod]}
                       color={metric.color}
                       format={metric.format}
+                      currencyCode={currencyCode}
                     />
                   </div>
 

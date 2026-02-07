@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
+import { addCurrencyAmount, mergeCurrencyTotals, normalizeCurrencyCode } from '@/lib/currency-totals'
 
 interface ActivityLog {
   actor_id: string
@@ -22,6 +23,7 @@ interface InvestorUser {
 interface Subscription {
   investor_id: string
   commitment: number | null
+  currency?: string | null
 }
 
 export async function GET() {
@@ -285,10 +287,11 @@ export async function GET() {
     // Get total investments per investor
     const allInvestorIds = [...new Set(Object.values(userInvestorMap).flat())]
     let investorTotals: Record<string, number> = {}
+    let investorTotalsByCurrency: Record<string, Record<string, number>> = {}
     if (allInvestorIds.length > 0) {
       const { data: subscriptions } = await supabase
         .from('subscriptions')
-        .select('investor_id, commitment')
+        .select('investor_id, commitment, currency')
         .in('investor_id', allInvestorIds)
         .in('status', ['active', 'funded', 'completed']) as { data: Subscription[] | null }
 
@@ -297,6 +300,11 @@ export async function GET() {
           const amount = Number(sub.commitment) || 0
           investorTotals[sub.investor_id] =
             (investorTotals[sub.investor_id] || 0) + amount
+
+          if (!investorTotalsByCurrency[sub.investor_id]) {
+            investorTotalsByCurrency[sub.investor_id] = {}
+          }
+          addCurrencyAmount(investorTotalsByCurrency[sub.investor_id], amount, normalizeCurrencyCode(sub.currency))
         })
       }
     }
@@ -312,6 +320,9 @@ export async function GET() {
           (sum, invId) => sum + (investorTotals[invId] || 0),
           0
         )
+        const totalInvestedByCurrency = investorIds.reduce<Record<string, number>>((acc, invId) => {
+          return mergeCurrencyTotals(acc, investorTotalsByCurrency[invId] || {})
+        }, {})
 
         return {
           id: userId,
@@ -319,6 +330,7 @@ export async function GET() {
           email: profile.email,
           lastActive: activity.last.toISOString(),
           totalInvested,
+          totalInvestedByCurrency,
         }
       })
       .sort((a, b) => b.totalInvested - a.totalInvested) // Sort by investment amount descending

@@ -22,11 +22,13 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/fees/calculations';
+import { formatCurrencyTotals, sumByCurrency } from '@/lib/currency-totals';
 
 interface FeeEvent {
   id: string;
   fee_type: string;
   computed_amount: number;
+  currency?: string;
   event_date: string;
   investor?: {
     id: string;
@@ -49,6 +51,7 @@ interface Subscription {
   id: string;
   subscription_number: string;
   commitment: number;
+  currency?: string;
   vehicle?: {
     id: string;
     name: string;
@@ -371,6 +374,27 @@ export function GenerateInvoiceModal({ open, onClose, onSuccess, preselectedInve
   };
 
   const total = calculateTotal();
+  const selectedSubscription = subscriptions.find((subscription) => subscription.id === subscriptionId);
+  const selectedEventTotalsByCurrency = sumByCurrency(
+    feeEvents.filter((event) => selectedEventIds.has(event.id)),
+    (event) => Number(event.computed_amount),
+    (event) => event.currency || selectedSubscription?.currency
+  );
+  const customLineItemsTotal = customLineItems.reduce(
+    (sum, item) => sum + (Number(item.amount) || 0) * (Number(item.quantity) || 0),
+    0
+  );
+  const totalByCurrency = { ...selectedEventTotalsByCurrency };
+  const selectedCurrencyCode = (selectedSubscription?.currency || '').trim().toUpperCase();
+  if (customLineItemsTotal !== 0 && selectedCurrencyCode) {
+    totalByCurrency[selectedCurrencyCode] = (totalByCurrency[selectedCurrencyCode] || 0) + customLineItemsTotal;
+  }
+
+  const formatAmount = (amount: number, currency?: string | null) => {
+    const code = (currency || '').trim().toUpperCase();
+    if (!code) return amount.toLocaleString();
+    return formatCurrency(amount, code);
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -440,7 +464,7 @@ export function GenerateInvoiceModal({ open, onClose, onSuccess, preselectedInve
                     {subscriptions.map((subscription) => (
                       <SelectItem key={subscription.id} value={subscription.id}>
                         {subscription.subscription_number} - {subscription.vehicle?.name || 'Unknown Vehicle'}
-                        ({formatCurrency(subscription.commitment)})
+                        ({formatAmount(subscription.commitment, subscription.currency)})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -509,7 +533,7 @@ export function GenerateInvoiceModal({ open, onClose, onSuccess, preselectedInve
                             <Badge variant="outline" className="mr-2 text-white border-white/20">
                               {event.fee_type === 'flat' ? 'Investment' : event.fee_type.replace('_', ' ')}
                             </Badge>
-                            <span className="text-white">{formatCurrency(event.computed_amount)}</span>
+                            <span className="text-white">{formatAmount(event.computed_amount, event.currency || selectedSubscription?.currency)}</span>
                           </div>
                           <div className="text-sm text-gray-400">
                             {new Date(event.event_date).toLocaleDateString()}
@@ -595,7 +619,12 @@ export function GenerateInvoiceModal({ open, onClose, onSuccess, preselectedInve
             <div className="bg-accent p-4 rounded-lg">
               <div className="flex items-center justify-between text-lg font-bold">
                 <span>Total Amount:</span>
-                <span>{formatCurrency(total)}</span>
+                <span>
+                  {Object.keys(totalByCurrency).length > 0
+                    ? formatCurrencyTotals(totalByCurrency)
+                    : total.toLocaleString()}
+                  {customLineItemsTotal !== 0 && !selectedCurrencyCode ? ` + ${customLineItemsTotal.toLocaleString()} custom` : ''}
+                </span>
               </div>
               <div className="text-sm text-muted-foreground mt-1">
                 {selectedEventIds.size} fee event(s)
