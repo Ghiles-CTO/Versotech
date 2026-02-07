@@ -150,7 +150,9 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
     const statusFilter = searchParams.get('status') || ''
     const statusFilters = statusFilter ? statusFilter.split(',').filter(Boolean) : []
     const kycStatusFilter = searchParams.get('kycStatus') || ''
-    const hasEntitiesFilter = searchParams.get('hasEntities')
+    const kycStatusFilters = kycStatusFilter ? kycStatusFilter.split(',').filter(Boolean) : []
+    const hasEntitiesFilter = searchParams.get('hasEntities') || ''
+    const hasEntitiesFilters = hasEntitiesFilter ? hasEntitiesFilter.split(',').filter(Boolean) : []
     const sortBy = searchParams.get('sortBy') || 'createdAt'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
     const includeDeleted = searchParams.get('includeDeleted') === 'true'
@@ -438,13 +440,21 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
       })
     }
 
-    if (kycStatusFilter && kycStatusFilter !== 'all') {
-      userRows = userRows.filter(u => u.kyc?.status === kycStatusFilter)
+    if (kycStatusFilters.length > 0 && !kycStatusFilters.includes('all')) {
+      userRows = userRows.filter(u => {
+        const status = u.kyc?.status
+        return status ? kycStatusFilters.includes(status) : false
+      })
     }
 
-    if (hasEntitiesFilter !== null && hasEntitiesFilter !== undefined) {
-      const hasEntities = hasEntitiesFilter === 'true'
-      userRows = userRows.filter(u => hasEntities ? u.entityCount > 0 : u.entityCount === 0)
+    if (hasEntitiesFilters.length > 0) {
+      const includeWithEntities = hasEntitiesFilters.includes('yes') || hasEntitiesFilters.includes('true')
+      const includeWithoutEntities = hasEntitiesFilters.includes('no') || hasEntitiesFilters.includes('false')
+      if (includeWithEntities && !includeWithoutEntities) {
+        userRows = userRows.filter(u => u.entityCount > 0)
+      } else if (includeWithoutEntities && !includeWithEntities) {
+        userRows = userRows.filter(u => u.entityCount === 0)
+      }
     }
 
     // 6. Calculate stats (before pagination)
