@@ -256,7 +256,7 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 - [x] High-risk topics trigger escalation and route to human review before send
 - [x] Persona/RLS boundaries are enforced for all retrieved context
 - [x] Typecheck passes
-- [ ] Verify in browser using agent-browser skill
+- [x] Verify in browser using agent-browser skill
   - Progress: AI response generation is now wired into `/api/conversations/[id]/messages` for compliance-flagged open threads. It uses agent `system_prompt`, conversation context, local CLI mode (`codex`/`claude`) or API mode, writes AI message metadata (`ai_generated`, provider/model, assistant id/name), and escalates high-risk topics to compliance + CEO notifications.
 
 ---

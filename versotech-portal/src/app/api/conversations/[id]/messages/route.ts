@@ -187,7 +187,7 @@ export async function POST(
     const bodyText = typeof body === 'string' ? body.trim() : ''
     const isAiAuthoredInput = (messageMetadata as Record<string, any> | undefined)?.ai_generated === true
 
-    if (isComplianceThread && isComplianceOpen && bodyText && !isStaff && !isAiAuthoredInput) {
+    if (isComplianceThread && isComplianceOpen && bodyText && !isAiAuthoredInput) {
       try {
         const wayneAgentId = await resolveAgentIdForTask(serviceSupabase, 'W001')
         const { data: wayneAgent } = wayneAgentId
@@ -251,7 +251,7 @@ export async function POST(
         }
 
         if (aiResult.reply) {
-          await serviceSupabase.from('messages').insert({
+          const { error: aiMessageInsertError } = await serviceSupabase.from('messages').insert({
             conversation_id: conversationId,
             sender_id: null,
             message_type: 'system',
@@ -269,6 +269,9 @@ export async function POST(
               knowledge_context_count: knowledgeContext.length,
             },
           })
+          if (aiMessageInsertError) {
+            throw new Error(`[compliance-ai] Failed to persist AI message: ${aiMessageInsertError.message}`)
+          }
         }
 
         if (aiResult.escalated) {
@@ -289,7 +292,7 @@ export async function POST(
             updatedCompliance.reason = aiResult.escalationReason
           }
 
-          await serviceSupabase
+          const { error: conversationUpdateError } = await serviceSupabase
             .from('conversations')
             .update({
               metadata: {
@@ -298,8 +301,11 @@ export async function POST(
               },
             })
             .eq('id', conversationId)
+          if (conversationUpdateError) {
+            throw new Error(`[compliance-ai] Failed to update compliance metadata: ${conversationUpdateError.message}`)
+          }
 
-          await serviceSupabase.from('compliance_activity_log').insert({
+          const { error: complianceLogError } = await serviceSupabase.from('compliance_activity_log').insert({
             event_type: 'compliance_question',
             description: `AI escalation: ${aiResult.escalationReason || 'High-risk compliance topic'}`,
             agent_id: wayneAgentId,
@@ -312,6 +318,9 @@ export async function POST(
               model: aiResult.model,
             },
           })
+          if (complianceLogError) {
+            throw new Error(`[compliance-ai] Failed to log escalation activity: ${complianceLogError.message}`)
+          }
 
           const { data: ceoUsers } = await serviceSupabase.from('ceo_users').select('user_id')
           const notifications = (ceoUsers || []).map((ceo) => ({
@@ -330,7 +339,12 @@ export async function POST(
           }))
 
           if (notifications.length > 0) {
-            await serviceSupabase.from('investor_notifications').insert(notifications)
+            const { error: notificationInsertError } = await serviceSupabase
+              .from('investor_notifications')
+              .insert(notifications)
+            if (notificationInsertError) {
+              throw new Error(`[compliance-ai] Failed to insert escalation notifications: ${notificationInsertError.message}`)
+            }
           }
         }
       } catch (assistantError) {
