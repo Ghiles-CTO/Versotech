@@ -227,9 +227,9 @@ The Risk Profile System (from the Excel specification) serves as the scoring eng
 - [x] Highlight overdue documents in red
 - [x] "Send Reminder" action button (creates notification from Valerie)
 - [x] Bulk select and send reminders
-- [ ] Optional AI assist: OCR reads document, suggests expiry date with confidence; staff must confirm before saving
+- [x] Optional AI assist: OCR reads document, suggests expiry date with confidence; staff must confirm before saving
 - [x] Typecheck passes
-  - Progress: KYC Monitor section is live on `/versotech_admin/agents` with persona-aware rows, filters, and reminder actions. “Missing” currently reflects submission status, not personas with zero submissions. Reminders insert `notifications` rows (type `kyc_reminder`).
+  - Progress: KYC Monitor section is live on `/versotech_admin/agents` with persona-aware rows, filters, and reminder actions. “Missing” currently reflects submission status, not personas with zero submissions. Reminders insert `notifications` rows (type `kyc_reminder`). AI expiry assistant now runs per row (OCR suggestion + confidence) and writes to metadata; staff confirms before `expiry_date` is updated.
 - [x] Verify in browser using agent-browser skill
 
 ---

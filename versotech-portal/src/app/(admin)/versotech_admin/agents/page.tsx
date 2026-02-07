@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 import { getCurrentUser } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolveAgentIdForTask } from '@/lib/agents'
+import { suggestKycExpiryDate } from '@/lib/compliance/kyc-expiry-assistant'
 
 type AgentRow = {
   id: string
@@ -90,10 +91,12 @@ type KycSubjectType =
 
 type KycSubmissionRow = {
   id: string
+  document_id: string | null
   status: string | null
   document_type: string | null
   custom_label: string | null
   expiry_date: string | null
+  metadata: Record<string, any> | null
   submitted_at: string | null
   reviewed_at: string | null
   created_at: string | null
@@ -124,6 +127,7 @@ type KycSubjectRecord = {
 
 type KycRow = {
   submission_id: string
+  document_id: string | null
   subject_type: KycSubjectType
   subject_id: string
   subject_name: string
@@ -137,6 +141,10 @@ type KycRow = {
   survey_status: 'not_sent' | 'sent' | 'in_progress' | 'completed'
   survey_sent_at: string | null
   survey_completed_at: string | null
+  ai_suggested_expiry_date: string | null
+  ai_suggestion_confidence: number | null
+  ai_suggestion_status: string | null
+  ai_suggestion_generated_at: string | null
 }
 
 type RiskGradeRow = {
@@ -267,6 +275,8 @@ const complianceEventOptions = [
   { value: 'blacklist_match', label: 'Blacklist match' },
   { value: 'document_expired', label: 'Document expired' },
   { value: 'reminder_sent', label: 'Reminder sent' },
+  { value: 'kyc_expiry_ai_suggested', label: 'KYC expiry AI suggested' },
+  { value: 'kyc_expiry_confirmed', label: 'KYC expiry confirmed' },
   { value: 'nda_sent', label: 'NDA sent' },
   { value: 'nda_signed', label: 'NDA signed' },
   { value: 'nda_modification_request', label: 'NDA modification request' },
@@ -313,6 +323,12 @@ function formatConfidence(value: number | string) {
   if (Number.isNaN(numeric)) return null
   if (numeric >= 0.999) return 'Exact'
   return `~${numeric.toFixed(2)}`
+}
+
+function formatPercent(value: number | null) {
+  if (typeof value !== 'number' || Number.isNaN(value)) return null
+  const clamped = Math.max(0, Math.min(1, value))
+  return `${Math.round(clamped * 100)}%`
 }
 
 function formatPersonName(record: {
@@ -554,7 +570,7 @@ export default async function AgentsPage({
   const { data: kycSubmissionsData } = await supabase
     .from('kyc_submissions')
     .select(
-      'id, status, document_type, custom_label, expiry_date, submitted_at, reviewed_at, created_at, investor_id, investor_member_id, counterparty_entity_id, counterparty_member_id, partner_id, partner_member_id, introducer_id, introducer_member_id, lawyer_id, lawyer_member_id, commercial_partner_id, commercial_partner_member_id, arranger_entity_id, arranger_member_id'
+      'id, document_id, status, document_type, custom_label, expiry_date, metadata, submitted_at, reviewed_at, created_at, investor_id, investor_member_id, counterparty_entity_id, counterparty_member_id, partner_id, partner_member_id, introducer_id, introducer_member_id, lawyer_id, lawyer_member_id, commercial_partner_id, commercial_partner_member_id, arranger_entity_id, arranger_member_id'
     )
     .order('submitted_at', { ascending: false })
     .limit(200)
@@ -1191,6 +1207,34 @@ export default async function AgentsPage({
       const key = `${subjectInfo.type}:${subjectInfo.id}`
       const subject = subjectDirectory.get(key)
       const surveyInfo = deriveSurveyStatus(key)
+      const metadata =
+        submission.metadata && typeof submission.metadata === 'object'
+          ? submission.metadata
+          : null
+      const aiSuggestion =
+        metadata && typeof metadata.ai_expiry_suggestion === 'object'
+          ? (metadata.ai_expiry_suggestion as Record<string, any>)
+          : null
+      const aiSuggestedExpiryDate =
+        typeof aiSuggestion?.suggested_expiry_date === 'string' &&
+        /^\d{4}-\d{2}-\d{2}$/.test(aiSuggestion.suggested_expiry_date)
+          ? aiSuggestion.suggested_expiry_date
+          : null
+      const aiConfidenceRaw =
+        typeof aiSuggestion?.confidence === 'number'
+          ? aiSuggestion.confidence
+          : typeof aiSuggestion?.confidence === 'string'
+            ? Number(aiSuggestion.confidence)
+            : Number.NaN
+      const aiConfidence =
+        Number.isFinite(aiConfidenceRaw) && aiConfidenceRaw >= 0 && aiConfidenceRaw <= 1
+          ? aiConfidenceRaw
+          : null
+      const aiSuggestionStatus =
+        typeof aiSuggestion?.status === 'string' ? aiSuggestion.status : null
+      const aiSuggestionGeneratedAt =
+        typeof aiSuggestion?.generated_at === 'string' ? aiSuggestion.generated_at : null
+
       const expiryDate = submission.expiry_date ?? subject?.kyc_expiry ?? null
       const status = submission.status ?? subject?.kyc_status ?? null
       const daysToExpiry = daysUntil(expiryDate)
@@ -1209,6 +1253,7 @@ export default async function AgentsPage({
       ) as string
       return {
         submission_id: submission.id,
+        document_id: submission.document_id,
         subject_type: subjectInfo.type,
         subject_id: subjectInfo.id,
         subject_name: subject?.name ?? 'Unknown',
@@ -1222,6 +1267,10 @@ export default async function AgentsPage({
         survey_status: surveyInfo.status,
         survey_sent_at: surveyInfo.sentAt,
         survey_completed_at: surveyInfo.completedAt,
+        ai_suggested_expiry_date: aiSuggestedExpiryDate,
+        ai_suggestion_confidence: aiConfidence,
+        ai_suggestion_status: aiSuggestionStatus,
+        ai_suggestion_generated_at: aiSuggestionGeneratedAt,
       }
     })
     .filter(Boolean) as KycRow[]
@@ -2039,6 +2088,235 @@ export default async function AgentsPage({
     redirect(`${redirectTarget}${separator}success=Annual%20survey%20sent`)
   }
 
+  const suggestKycExpiryWithAi = async (formData: FormData) => {
+    'use server'
+    const currentUser = await getCurrentUser()
+    if (!currentUser) {
+      redirect('/versotech_main/login')
+    }
+    const isAllowed = currentUser.role === 'ceo' || currentUser.permissions?.includes('super_admin')
+    if (!isAllowed) {
+      redirect('/versotech_admin/agents?error=Not%20authorized')
+    }
+
+    const submissionId = formData.get('ocr_submission_id')
+    const returnTo = formData.get('return_to')
+    const redirectTarget =
+      typeof returnTo === 'string' && returnTo.length ? returnTo : '/versotech_admin/agents?tab=kyc'
+    const separator = redirectTarget.includes('?') ? '&' : '?'
+
+    if (typeof submissionId !== 'string' || !submissionId) {
+      redirect(`${redirectTarget}${separator}error=Invalid%20KYC%20submission`)
+    }
+
+    const supabase = createServiceClient()
+    const { data: submission, error: submissionError } = await supabase
+      .from('kyc_submissions')
+      .select('id, document_id, document_type, custom_label, metadata, expiry_date')
+      .eq('id', submissionId)
+      .single()
+
+    if (submissionError || !submission) {
+      redirect(`${redirectTarget}${separator}error=KYC%20submission%20not%20found`)
+    }
+
+    if (!submission.document_id) {
+      redirect(`${redirectTarget}${separator}error=No%20document%20linked%20to%20submission`)
+    }
+
+    const { data: document, error: documentError } = await supabase
+      .from('documents')
+      .select('id, name, file_key, mime_type, type, subscription_id')
+      .eq('id', submission.document_id)
+      .single()
+
+    if (documentError || !document || !document.file_key) {
+      redirect(`${redirectTarget}${separator}error=Unable%20to%20load%20document`)
+    }
+
+    const dealDocumentTypes = ['subscription_draft', 'subscription_pack', 'subscription_final', 'deal_document']
+    const bucket = dealDocumentTypes.includes(document.type) || document.subscription_id
+      ? 'deal-documents'
+      : (process.env.STORAGE_BUCKET_NAME || 'documents')
+
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(document.file_key, 60 * 10)
+
+    if (signedUrlError || !signedUrlData?.signedUrl) {
+      redirect(`${redirectTarget}${separator}error=Unable%20to%20read%20document%20file`)
+    }
+
+    const suggestion = await suggestKycExpiryDate({
+      signedUrl: signedUrlData.signedUrl,
+      fileName: document.name || submission.custom_label || submission.document_type || 'kyc-document',
+      mimeType: document.mime_type || null,
+      documentType: submission.document_type || null,
+    })
+
+    const currentMetadata =
+      submission.metadata && typeof submission.metadata === 'object'
+        ? submission.metadata
+        : {}
+
+    const aiSuggestionPayload = {
+      suggested_expiry_date: suggestion.suggestedExpiryDate,
+      confidence: suggestion.confidence,
+      evidence: suggestion.evidence,
+      provider: suggestion.provider,
+      model: suggestion.model,
+      generated_at: new Date().toISOString(),
+      status: suggestion.suggestedExpiryDate ? 'pending' : 'error',
+      error: suggestion.error,
+      submission_expiry_before_ai: submission.expiry_date || null,
+      source_document_id: submission.document_id,
+      source_document_name: document.name || null,
+    }
+
+    const mergedMetadata = {
+      ...currentMetadata,
+      ai_expiry_suggestion: aiSuggestionPayload,
+    }
+
+    const { error: updateError } = await supabase
+      .from('kyc_submissions')
+      .update({ metadata: mergedMetadata })
+      .eq('id', submissionId)
+
+    if (updateError) {
+      redirect(`${redirectTarget}${separator}error=Failed%20to%20store%20AI%20suggestion`)
+    }
+
+    try {
+      const agentId = await resolveAgentIdForTask(supabase, 'V002')
+      await supabase.from('compliance_activity_log').insert({
+        event_type: 'kyc_expiry_ai_suggested',
+        description: suggestion.suggestedExpiryDate
+          ? `AI suggested expiry ${suggestion.suggestedExpiryDate}`
+          : 'AI could not determine expiry date',
+        agent_id: agentId,
+        created_by: currentUser.id,
+        metadata: {
+          kyc_submission_id: submissionId,
+          suggested_expiry_date: suggestion.suggestedExpiryDate,
+          confidence: suggestion.confidence,
+          provider: suggestion.provider,
+          model: suggestion.model,
+          error: suggestion.error,
+        },
+      })
+    } catch (logError) {
+      console.error('[compliance] Failed to log KYC AI suggestion:', logError)
+    }
+
+    if (suggestion.suggestedExpiryDate) {
+      redirect(`${redirectTarget}${separator}success=AI%20suggested%20an%20expiry%20date`)
+    }
+    redirect(`${redirectTarget}${separator}error=${encodeURIComponent(suggestion.error || 'AI could not find an expiry date')}`)
+  }
+
+  const confirmKycAiExpiry = async (formData: FormData) => {
+    'use server'
+    const currentUser = await getCurrentUser()
+    if (!currentUser) {
+      redirect('/versotech_main/login')
+    }
+    const isAllowed = currentUser.role === 'ceo' || currentUser.permissions?.includes('super_admin')
+    if (!isAllowed) {
+      redirect('/versotech_admin/agents?error=Not%20authorized')
+    }
+
+    const submissionId = formData.get('confirm_submission_id')
+    const returnTo = formData.get('return_to')
+    const redirectTarget =
+      typeof returnTo === 'string' && returnTo.length ? returnTo : '/versotech_admin/agents?tab=kyc'
+    const separator = redirectTarget.includes('?') ? '&' : '?'
+
+    if (typeof submissionId !== 'string' || !submissionId) {
+      redirect(`${redirectTarget}${separator}error=Invalid%20KYC%20submission`)
+    }
+
+    const supabase = createServiceClient()
+    const { data: submission, error: submissionError } = await supabase
+      .from('kyc_submissions')
+      .select('id, document_id, metadata')
+      .eq('id', submissionId)
+      .single()
+
+    if (submissionError || !submission) {
+      redirect(`${redirectTarget}${separator}error=KYC%20submission%20not%20found`)
+    }
+
+    const currentMetadata =
+      submission.metadata && typeof submission.metadata === 'object'
+        ? submission.metadata
+        : {}
+    const aiSuggestion =
+      currentMetadata.ai_expiry_suggestion &&
+      typeof currentMetadata.ai_expiry_suggestion === 'object'
+        ? (currentMetadata.ai_expiry_suggestion as Record<string, any>)
+        : null
+    const suggestedExpiryDate =
+      typeof aiSuggestion?.suggested_expiry_date === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(aiSuggestion.suggested_expiry_date)
+        ? aiSuggestion.suggested_expiry_date
+        : null
+
+    if (!suggestedExpiryDate) {
+      redirect(`${redirectTarget}${separator}error=No%20AI%20suggested%20date%20to%20confirm`)
+    }
+
+    const nextSuggestion = {
+      ...(aiSuggestion || {}),
+      status: 'confirmed',
+      confirmed_at: new Date().toISOString(),
+      confirmed_by: currentUser.id,
+    }
+
+    const { error: updateError } = await supabase
+      .from('kyc_submissions')
+      .update({
+        expiry_date: suggestedExpiryDate,
+        document_valid_to: suggestedExpiryDate,
+        metadata: {
+          ...currentMetadata,
+          ai_expiry_suggestion: nextSuggestion,
+        },
+      })
+      .eq('id', submissionId)
+
+    if (updateError) {
+      redirect(`${redirectTarget}${separator}error=Failed%20to%20confirm%20expiry%20date`)
+    }
+
+    if (submission.document_id) {
+      await supabase
+        .from('documents')
+        .update({ document_expiry_date: suggestedExpiryDate })
+        .eq('id', submission.document_id)
+    }
+
+    try {
+      const agentId = await resolveAgentIdForTask(supabase, 'V002')
+      await supabase.from('compliance_activity_log').insert({
+        event_type: 'kyc_expiry_confirmed',
+        description: `KYC expiry confirmed at ${suggestedExpiryDate}`,
+        agent_id: agentId,
+        created_by: currentUser.id,
+        metadata: {
+          kyc_submission_id: submissionId,
+          expiry_date: suggestedExpiryDate,
+          ai_provider: aiSuggestion?.provider || null,
+          ai_model: aiSuggestion?.model || null,
+        },
+      })
+    } catch (logError) {
+      console.error('[compliance] Failed to log KYC expiry confirmation:', logError)
+    }
+
+    redirect(`${redirectTarget}${separator}success=KYC%20expiry%20date%20updated`)
+  }
+
   const createComplianceEvent = async (formData: FormData) => {
     'use server'
     const currentUser = await getCurrentUser()
@@ -2076,6 +2354,8 @@ export default async function AgentsPage({
       blacklist_match: 'U003',
       document_expired: 'V002',
       reminder_sent: 'V002',
+      kyc_expiry_ai_suggested: 'V002',
+      kyc_expiry_confirmed: 'V002',
       nda_sent: 'V001',
       nda_signed: 'V001',
       nda_modification_request: 'V001',
@@ -2378,6 +2658,38 @@ export default async function AgentsPage({
     const separator = redirectTarget.includes('?') ? '&' : '?'
 
     redirect(`${redirectTarget}${separator}success=Assignment%20updated`)
+  }
+
+  const sendSingleKycReminder = async (targetValue: string) => {
+    'use server'
+    const formData = new FormData()
+    formData.set('single_target', targetValue)
+    formData.set('return_to', baseHref)
+    await sendKycReminders(formData)
+  }
+
+  const sendSingleAnnualSurvey = async (targetValue: string) => {
+    'use server'
+    const formData = new FormData()
+    formData.set('single_target', targetValue)
+    formData.set('return_to', baseHref)
+    await sendAnnualSurvey(formData)
+  }
+
+  const runKycAiSuggestion = async (submissionId: string) => {
+    'use server'
+    const formData = new FormData()
+    formData.set('ocr_submission_id', submissionId)
+    formData.set('return_to', baseHref)
+    await suggestKycExpiryWithAi(formData)
+  }
+
+  const confirmSingleKycAiExpiry = async (submissionId: string) => {
+    'use server'
+    const formData = new FormData()
+    formData.set('confirm_submission_id', submissionId)
+    formData.set('return_to', baseHref)
+    await confirmKycAiExpiry(formData)
   }
 
   return (
@@ -3723,6 +4035,9 @@ export default async function AgentsPage({
                         const surveyLabel = surveyStatusLabels[row.survey_status]
                         const surveyStyle = surveyStatusStyles[row.survey_status]
                         const surveyNote = row.survey_completed_at || row.survey_sent_at
+                        const aiConfidenceLabel = formatPercent(row.ai_suggestion_confidence)
+                        const showPendingAiSuggestion =
+                          row.ai_suggestion_status === 'pending' && Boolean(row.ai_suggested_expiry_date)
                         return (
                           <tr key={row.submission_id} className="border-t">
                             <td className="px-3 py-3">
@@ -3744,7 +4059,17 @@ export default async function AgentsPage({
                                 {statusLabel}
                               </span>
                             </td>
-                            <td className="px-3 py-3 text-muted-foreground">{formatDate(row.expiry_date)}</td>
+                            <td className="px-3 py-3 text-muted-foreground">
+                              <div className="space-y-1">
+                                <div>{formatDate(row.expiry_date)}</div>
+                                {showPendingAiSuggestion && (
+                                  <div className="text-[11px] text-blue-700 dark:text-blue-300">
+                                    AI suggests {formatDate(row.ai_suggested_expiry_date)}
+                                    {aiConfidenceLabel ? ` (${aiConfidenceLabel})` : ''}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
                             <td className="px-3 py-3 text-muted-foreground">
                               {expiryDays === null ? '—' : `${expiryDays}d`}
                             </td>
@@ -3765,8 +4090,7 @@ export default async function AgentsPage({
                               <div className="flex flex-wrap items-center gap-2">
                               <button
                                 type="submit"
-                                name="single_target"
-                                value={targetValue}
+                                formAction={sendSingleKycReminder.bind(null, targetValue)}
                                 disabled={!row.user_id}
                                 className={cn(
                                   'rounded-md border border-input px-2 py-1 text-xs font-medium',
@@ -3777,9 +4101,7 @@ export default async function AgentsPage({
                               </button>
                               <button
                                 type="submit"
-                                formAction={sendAnnualSurvey}
-                                name="single_target"
-                                value={targetValue}
+                                formAction={sendSingleAnnualSurvey.bind(null, targetValue)}
                                 disabled={!row.user_id}
                                 className={cn(
                                   'rounded-md border border-input px-2 py-1 text-xs font-medium',
@@ -3788,6 +4110,26 @@ export default async function AgentsPage({
                               >
                                 Send survey
                               </button>
+                              <button
+                                type="submit"
+                                formAction={runKycAiSuggestion.bind(null, row.submission_id)}
+                                disabled={!row.document_id}
+                                className={cn(
+                                  'rounded-md border border-input px-2 py-1 text-xs font-medium',
+                                  !row.document_id && 'cursor-not-allowed opacity-50'
+                                )}
+                              >
+                                AI expiry
+                              </button>
+                              {showPendingAiSuggestion && (
+                                <button
+                                  type="submit"
+                                  formAction={confirmSingleKycAiExpiry.bind(null, row.submission_id)}
+                                  className="rounded-md border border-emerald-500/60 bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-800 dark:text-emerald-300"
+                                >
+                                  Confirm AI date
+                                </button>
+                              )}
                               </div>
                             </td>
                           </tr>
