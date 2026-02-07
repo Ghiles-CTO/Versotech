@@ -423,6 +423,39 @@ function matchQuery(entry: BlacklistEntry, query: string) {
   return haystack.includes(query)
 }
 
+type PaginatedRows<T> = {
+  rows: T[]
+  page: number
+  pageSize: number
+  totalRows: number
+  totalPages: number
+  startRow: number
+  endRow: number
+}
+
+function parsePageNumber(value: string | undefined) {
+  const parsed = Number.parseInt(value ?? '', 10)
+  if (!Number.isFinite(parsed) || parsed < 1) return 1
+  return parsed
+}
+
+function paginateRows<T>(rows: T[], requestedPage: number, pageSize: number): PaginatedRows<T> {
+  const totalRows = rows.length
+  const totalPages = Math.max(1, Math.ceil(totalRows / pageSize))
+  const page = Math.min(Math.max(requestedPage, 1), totalPages)
+  const startIndex = (page - 1) * pageSize
+  const endIndex = Math.min(startIndex + pageSize, totalRows)
+  return {
+    rows: rows.slice(startIndex, endIndex),
+    page,
+    pageSize,
+    totalRows,
+    totalPages,
+    startRow: totalRows === 0 ? 0 : startIndex + 1,
+    endRow: endIndex,
+  }
+}
+
 export default async function AgentsPage({
   searchParams,
 }: {
@@ -1584,6 +1617,18 @@ export default async function AgentsPage({
     typeof resolvedSearchParams.ofac_entity_type === 'string' ? resolvedSearchParams.ofac_entity_type : ''
   const ofacDefaultEntityId =
     typeof resolvedSearchParams.ofac_entity_id === 'string' ? resolvedSearchParams.ofac_entity_id : ''
+  const riskPageParam = parsePageNumber(
+    typeof resolvedSearchParams.risk_page === 'string' ? resolvedSearchParams.risk_page : undefined
+  )
+  const blacklistPageParam = parsePageNumber(
+    typeof resolvedSearchParams.blacklist_page === 'string' ? resolvedSearchParams.blacklist_page : undefined
+  )
+  const kycPageParam = parsePageNumber(
+    typeof resolvedSearchParams.kyc_page === 'string' ? resolvedSearchParams.kyc_page : undefined
+  )
+  const activityPageParam = parsePageNumber(
+    typeof resolvedSearchParams.activity_page === 'string' ? resolvedSearchParams.activity_page : undefined
+  )
   const tabParam = getParam('tab')
   const activeTab = ['risk', 'blacklist', 'kyc', 'activity'].includes(tabParam)
     ? tabParam
@@ -1622,6 +1667,10 @@ export default async function AgentsPage({
   if (activityTypeFilter !== 'all') baseParams.set('activity_type', activityTypeFilter)
   if (activityFromFilter) baseParams.set('activity_from', activityFromFilter)
   if (activityToFilter) baseParams.set('activity_to', activityToFilter)
+  if (riskPageParam > 1) baseParams.set('risk_page', String(riskPageParam))
+  if (blacklistPageParam > 1) baseParams.set('blacklist_page', String(blacklistPageParam))
+  if (kycPageParam > 1) baseParams.set('kyc_page', String(kycPageParam))
+  if (activityPageParam > 1) baseParams.set('activity_page', String(activityPageParam))
   if (activeTab !== 'risk') baseParams.set('tab', activeTab)
   const baseQueryString = baseParams.toString()
   const baseHref = baseQueryString ? `/versotech_admin/agents?${baseQueryString}` : '/versotech_admin/agents'
@@ -1639,6 +1688,64 @@ export default async function AgentsPage({
     }
     const queryString = params.toString()
     return queryString ? `/versotech_admin/agents?${queryString}` : '/versotech_admin/agents'
+  }
+  const paginationHref = (
+    tabKey: 'risk' | 'blacklist' | 'kyc' | 'activity',
+    pageKey: 'risk_page' | 'blacklist_page' | 'kyc_page' | 'activity_page',
+    page: number
+  ) => {
+    const params = new URLSearchParams(baseParams)
+    if (tabKey === 'risk') {
+      params.delete('tab')
+    } else {
+      params.set('tab', tabKey)
+    }
+    if (page > 1) {
+      params.set(pageKey, String(page))
+    } else {
+      params.delete(pageKey)
+    }
+    const queryString = params.toString()
+    return queryString ? `/versotech_admin/agents?${queryString}` : '/versotech_admin/agents'
+  }
+  const renderPagination = (
+    tabKey: 'risk' | 'blacklist' | 'kyc' | 'activity',
+    pageKey: 'risk_page' | 'blacklist_page' | 'kyc_page' | 'activity_page',
+    pagination: PaginatedRows<unknown>
+  ) => {
+    if (pagination.totalRows === 0) return null
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+        <span>
+          Showing {pagination.startRow}-{pagination.endRow} of {pagination.totalRows}
+        </span>
+        <div className="flex items-center gap-2">
+          {pagination.page > 1 ? (
+            <a
+              href={paginationHref(tabKey, pageKey, pagination.page - 1)}
+              className="rounded-md border border-input px-2 py-1 text-foreground"
+            >
+              Previous
+            </a>
+          ) : (
+            <span className="rounded-md border border-input px-2 py-1 opacity-50">Previous</span>
+          )}
+          <span>
+            Page {pagination.page} of {pagination.totalPages}
+          </span>
+          {pagination.page < pagination.totalPages ? (
+            <a
+              href={paginationHref(tabKey, pageKey, pagination.page + 1)}
+              className="rounded-md border border-input px-2 py-1 text-foreground"
+            >
+              Next
+            </a>
+          ) : (
+            <span className="rounded-md border border-input px-2 py-1 opacity-50">Next</span>
+          )}
+        </div>
+      </div>
+    )
   }
 
   const filteredEntries = blacklistEntries.filter((entry) => {
@@ -1685,6 +1792,10 @@ export default async function AgentsPage({
     }
     return true
   })
+  const paginatedRiskRows = paginateRows(sortedRiskRows, riskPageParam, 20)
+  const paginatedBlacklistEntries = paginateRows(filteredEntries, blacklistPageParam, 20)
+  const paginatedKycRows = paginateRows(filteredKycRows, kycPageParam, 20)
+  const paginatedActivityRows = paginateRows(activityRows, activityPageParam, 25)
 
   const editEntry = editId ? blacklistEntries.find((entry) => entry.id === editId) : null
   const entryToShowMatches = selectedEntryId
@@ -3424,14 +3535,14 @@ export default async function AgentsPage({
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedRiskRows.length === 0 ? (
+                  {paginatedRiskRows.totalRows === 0 ? (
                     <tr>
                       <td colSpan={9} className="px-4 py-6 text-center text-sm text-muted-foreground">
                         No risk profiles match your filters.
                       </td>
                     </tr>
                   ) : (
-                    sortedRiskRows.map((row) => {
+                    paginatedRiskRows.rows.map((row) => {
                       const detailHref =
                         row.risk_type === 'investor'
                           ? `/versotech_main/investors/${row.id}`
@@ -3518,6 +3629,7 @@ export default async function AgentsPage({
                 </tbody>
               </table>
             </div>
+            {renderPagination('risk', 'risk_page', paginatedRiskRows)}
           </CardContent>
         </Card>
 
@@ -3778,7 +3890,7 @@ export default async function AgentsPage({
               </div>
             </form>
 
-            {filteredEntries.length === 0 ? (
+            {paginatedBlacklistEntries.totalRows === 0 ? (
               <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
                 No blacklist entries match your filters.
               </div>
@@ -3797,7 +3909,7 @@ export default async function AgentsPage({
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {filteredEntries.map((entry) => {
+                    {paginatedBlacklistEntries.rows.map((entry) => {
                       const displayName =
                         entry.full_name ||
                         entry.entity_name ||
@@ -3866,6 +3978,7 @@ export default async function AgentsPage({
                 </table>
               </div>
             )}
+            {renderPagination('blacklist', 'blacklist_page', paginatedBlacklistEntries)}
 
             {entryToShowMatches && (
               <div className="rounded-lg border border-muted/60 p-4">
@@ -4042,14 +4155,14 @@ export default async function AgentsPage({
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredKycRows.length === 0 ? (
+                    {paginatedKycRows.totalRows === 0 ? (
                       <tr>
                         <td colSpan={9} className="px-4 py-6 text-center text-sm text-muted-foreground">
                           No KYC submissions match your filters.
                         </td>
                       </tr>
                     ) : (
-                      filteredKycRows.map((row) => {
+                      paginatedKycRows.rows.map((row) => {
                         const statusLabel =
                           kycStatusLabels[row.derived_status] ||
                           row.derived_status.replace('_', ' ')
@@ -4178,8 +4291,9 @@ export default async function AgentsPage({
                 </table>
               </div>
             </form>
+            {renderPagination('kyc', 'kyc_page', paginatedKycRows)}
             <div className="hidden">
-              {filteredKycRows.map((row) => {
+              {paginatedKycRows.rows.map((row) => {
                 const targetValue = row.user_id
                   ? `${row.user_id}|${row.subject_type}|${row.subject_id}|${row.submission_id}`
                   : ''
@@ -4488,7 +4602,7 @@ export default async function AgentsPage({
                   Apply filters
                 </button>
               </form>
-              {activityRows.length === 0 ? (
+              {paginatedActivityRows.totalRows === 0 ? (
                 <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
                   No compliance activity logged yet.
                 </div>
@@ -4506,7 +4620,7 @@ export default async function AgentsPage({
                       </tr>
                     </thead>
                     <tbody>
-                      {activityRows.map((row) => (
+                      {paginatedActivityRows.rows.map((row) => (
                         <tr key={row.id} className="border-t">
                           <td className="px-3 py-3 text-muted-foreground">
                             {formatDate(row.time)}
@@ -4524,6 +4638,7 @@ export default async function AgentsPage({
                   </table>
                 </div>
               )}
+              {renderPagination('activity', 'activity_page', paginatedActivityRows)}
             </CardContent>
           </Card>
         </section>
