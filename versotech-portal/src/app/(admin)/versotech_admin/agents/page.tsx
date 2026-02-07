@@ -392,6 +392,29 @@ function normalizeQuery(value: string) {
   return value.trim().toLowerCase()
 }
 
+function normalizeExternalUrl(value: string | null | undefined) {
+  if (!value) return null
+  const trimmed = value.trim()
+  if (!trimmed) return null
+
+  try {
+    const parsed = new URL(trimmed)
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      return parsed.toString()
+    }
+    return null
+  } catch {
+    if (/^[a-z0-9.-]+\.[a-z]{2,}(\/.*)?$/i.test(trimmed)) {
+      try {
+        return new URL(`https://${trimmed}`).toString()
+      } catch {
+        return null
+      }
+    }
+    return null
+  }
+}
+
 function normalizeKycDocumentType(value: string | null | undefined) {
   if (!value) return null
   const normalized = value.trim().toLowerCase().replace(/[\s-]+/g, '_')
@@ -2635,11 +2658,20 @@ export default async function AgentsPage({
     const screenedEntityId = readText('screened_entity_id')
     const result = (readText('result') || 'clear') as OfacScreeningRow['result']
     const matchDetails = readText('match_details')
-    const reportUrl = readText('report_url')
+    const reportUrlInput = readText('report_url')
+    const reportUrl = normalizeExternalUrl(reportUrlInput)
     const reportFile = formData.get('report_file')
     const reportBlob = reportFile instanceof File && reportFile.size > 0 ? reportFile : null
 
     const supabase = createServiceClient()
+    const returnTo = formData.get('return_to')
+    const redirectTarget =
+      typeof returnTo === 'string' && returnTo.length ? returnTo : '/versotech_admin/agents?tab=blacklist'
+    const separator = redirectTarget.includes('?') ? '&' : '?'
+
+    if (reportUrlInput && !reportUrl && !reportBlob) {
+      redirect(`${redirectTarget}${separator}error=Invalid%20report%20URL.%20Use%20https://...`)
+    }
 
     const { data: newScreening, error } = await supabase
       .from('ofac_screenings')
@@ -2654,11 +2686,6 @@ export default async function AgentsPage({
       })
       .select('id')
       .single()
-
-    const returnTo = formData.get('return_to')
-    const redirectTarget =
-      typeof returnTo === 'string' && returnTo.length ? returnTo : '/versotech_admin/agents?tab=blacklist'
-    const separator = redirectTarget.includes('?') ? '&' : '?'
 
     if (error) {
       redirect(`${redirectTarget}${separator}error=Failed%20to%20log%20OFAC%20screening`)
@@ -2695,6 +2722,7 @@ export default async function AgentsPage({
                 report_bucket: storageBucket,
                 report_file_name: reportBlob.name,
                 report_url_manual: reportUrl,
+                report_url_raw_input: reportUrlInput,
               },
             })
             .eq('id', newScreening.id)
@@ -3698,7 +3726,9 @@ export default async function AgentsPage({
                     </tr>
                   </thead>
                   <tbody>
-                    {ofacScreenings.map((screening) => (
+                    {ofacScreenings.map((screening) => {
+                      const reportLink = normalizeExternalUrl(screening.report_url)
+                      return (
                       <tr key={screening.id} className="border-t">
                         <td className="px-3 py-3">
                           <div className="font-medium text-foreground">
@@ -3727,9 +3757,9 @@ export default async function AgentsPage({
                           {formatDate(screening.screening_date)}
                         </td>
                         <td className="px-3 py-3">
-                          {screening.report_url ? (
+                          {reportLink ? (
                             <a
-                              href={screening.report_url}
+                              href={reportLink}
                               className="text-xs font-medium text-primary hover:underline"
                               target="_blank"
                               rel="noreferrer"
@@ -3741,7 +3771,7 @@ export default async function AgentsPage({
                           )}
                         </td>
                       </tr>
-                    ))}
+                    )})}
                   </tbody>
                 </table>
               </div>
