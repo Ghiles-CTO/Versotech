@@ -1672,6 +1672,7 @@ export default async function AgentsPage({
   if (kycPageParam > 1) baseParams.set('kyc_page', String(kycPageParam))
   if (activityPageParam > 1) baseParams.set('activity_page', String(activityPageParam))
   if (activeTab !== 'risk') baseParams.set('tab', activeTab)
+  const pageParamKeys = ['risk_page', 'blacklist_page', 'kyc_page', 'activity_page'] as const
   const baseQueryString = baseParams.toString()
   const baseHref = baseQueryString ? `/versotech_admin/agents?${baseQueryString}` : '/versotech_admin/agents'
   const activityParams = new URLSearchParams(baseParams)
@@ -1681,6 +1682,7 @@ export default async function AgentsPage({
   const ofacModalHref = `${baseHref}${baseQueryString ? '&' : '?'}mode=ofac`
   const tabHref = (tabKey: string) => {
     const params = new URLSearchParams(baseParams)
+    pageParamKeys.forEach((key) => params.delete(key))
     if (tabKey === 'risk') {
       params.delete('tab')
     } else {
@@ -1695,6 +1697,7 @@ export default async function AgentsPage({
     page: number
   ) => {
     const params = new URLSearchParams(baseParams)
+    pageParamKeys.forEach((key) => params.delete(key))
     if (tabKey === 'risk') {
       params.delete('tab')
     } else {
