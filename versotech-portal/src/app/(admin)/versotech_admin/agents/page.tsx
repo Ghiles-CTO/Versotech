@@ -128,6 +128,7 @@ type KycSubjectRecord = {
 type KycRow = {
   submission_id: string
   document_id: string | null
+  document_type: string | null
   subject_type: KycSubjectType
   subject_id: string
   subject_name: string
@@ -298,6 +299,16 @@ const complianceEventLabels = complianceEventOptions.reduce<Record<string, strin
   {}
 )
 
+const KYC_AI_SUPPORTED_DOCUMENT_TYPES = new Set([
+  'passport',
+  'national_id',
+  'id_card',
+  'residence_permit',
+  'visa',
+  'driving_license',
+  'proof_of_address',
+])
+
 function getInitials(name: string) {
   return name
     .split(' ')
@@ -379,6 +390,20 @@ function unwrapEntry(entry?: BlacklistMatchEntry | BlacklistMatchEntry[] | null)
 
 function normalizeQuery(value: string) {
   return value.trim().toLowerCase()
+}
+
+function normalizeKycDocumentType(value: string | null | undefined) {
+  if (!value) return null
+  const normalized = value.trim().toLowerCase().replace(/[\s-]+/g, '_')
+  if (!normalized) return null
+  if (normalized === 'drivers_license') return 'driving_license'
+  return normalized
+}
+
+function isKycAiSupportedDocumentType(value: string | null | undefined) {
+  const normalized = normalizeKycDocumentType(value)
+  if (!normalized) return false
+  return KYC_AI_SUPPORTED_DOCUMENT_TYPES.has(normalized)
 }
 
 function matchQuery(entry: BlacklistEntry, query: string) {
@@ -1254,6 +1279,7 @@ export default async function AgentsPage({
       return {
         submission_id: submission.id,
         document_id: submission.document_id,
+        document_type: submission.document_type,
         subject_type: subjectInfo.type,
         subject_id: subjectInfo.id,
         subject_name: subject?.name ?? 'Unknown',
@@ -4038,6 +4064,17 @@ export default async function AgentsPage({
                         const aiConfidenceLabel = formatPercent(row.ai_suggestion_confidence)
                         const showPendingAiSuggestion =
                           row.ai_suggestion_status === 'pending' && Boolean(row.ai_suggested_expiry_date)
+                        const reminderFormId = `kyc-reminder-${row.submission_id}`
+                        const surveyFormId = `kyc-survey-${row.submission_id}`
+                        const aiSuggestFormId = `kyc-ai-suggest-${row.submission_id}`
+                        const aiConfirmFormId = `kyc-ai-confirm-${row.submission_id}`
+                        const aiDocumentTypeSupported = isKycAiSupportedDocumentType(row.document_type)
+                        const canRunAiSuggestion = Boolean(row.document_id) && aiDocumentTypeSupported
+                        const aiSuggestDisabledReason = !row.document_id
+                          ? 'No document file is linked to this submission.'
+                          : !aiDocumentTypeSupported
+                            ? 'AI expiry is only available for passport, ID card, residence permit, visa, driving license, and proof of address.'
+                            : null
                         return (
                           <tr key={row.submission_id} className="border-t">
                             <td className="px-3 py-3">
@@ -4090,7 +4127,7 @@ export default async function AgentsPage({
                               <div className="flex flex-wrap items-center gap-2">
                               <button
                                 type="submit"
-                                formAction={sendSingleKycReminder.bind(null, targetValue)}
+                                form={reminderFormId}
                                 disabled={!row.user_id}
                                 className={cn(
                                   'rounded-md border border-input px-2 py-1 text-xs font-medium',
@@ -4101,7 +4138,7 @@ export default async function AgentsPage({
                               </button>
                               <button
                                 type="submit"
-                                formAction={sendSingleAnnualSurvey.bind(null, targetValue)}
+                                form={surveyFormId}
                                 disabled={!row.user_id}
                                 className={cn(
                                   'rounded-md border border-input px-2 py-1 text-xs font-medium',
@@ -4112,11 +4149,12 @@ export default async function AgentsPage({
                               </button>
                               <button
                                 type="submit"
-                                formAction={runKycAiSuggestion.bind(null, row.submission_id)}
-                                disabled={!row.document_id}
+                                form={aiSuggestFormId}
+                                disabled={!canRunAiSuggestion}
+                                title={aiSuggestDisabledReason ?? undefined}
                                 className={cn(
                                   'rounded-md border border-input px-2 py-1 text-xs font-medium',
-                                  !row.document_id && 'cursor-not-allowed opacity-50'
+                                  !canRunAiSuggestion && 'cursor-not-allowed opacity-50'
                                 )}
                               >
                                 AI expiry
@@ -4124,7 +4162,7 @@ export default async function AgentsPage({
                               {showPendingAiSuggestion && (
                                 <button
                                   type="submit"
-                                  formAction={confirmSingleKycAiExpiry.bind(null, row.submission_id)}
+                                  form={aiConfirmFormId}
                                   className="rounded-md border border-emerald-500/60 bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-800 dark:text-emerald-300"
                                 >
                                   Confirm AI date
@@ -4140,6 +4178,41 @@ export default async function AgentsPage({
                 </table>
               </div>
             </form>
+            <div className="hidden">
+              {filteredKycRows.map((row) => {
+                const targetValue = row.user_id
+                  ? `${row.user_id}|${row.subject_type}|${row.subject_id}|${row.submission_id}`
+                  : ''
+                const reminderFormId = `kyc-reminder-${row.submission_id}`
+                const surveyFormId = `kyc-survey-${row.submission_id}`
+                const aiSuggestFormId = `kyc-ai-suggest-${row.submission_id}`
+                const aiConfirmFormId = `kyc-ai-confirm-${row.submission_id}`
+                const showPendingAiSuggestion =
+                  row.ai_suggestion_status === 'pending' && Boolean(row.ai_suggested_expiry_date)
+                return (
+                  <div key={`kyc-action-forms-${row.submission_id}`}>
+                    <form
+                      id={reminderFormId}
+                      action={sendSingleKycReminder.bind(null, targetValue)}
+                    />
+                    <form
+                      id={surveyFormId}
+                      action={sendSingleAnnualSurvey.bind(null, targetValue)}
+                    />
+                    <form
+                      id={aiSuggestFormId}
+                      action={runKycAiSuggestion.bind(null, row.submission_id)}
+                    />
+                    {showPendingAiSuggestion && (
+                      <form
+                        id={aiConfirmFormId}
+                        action={confirmSingleKycAiExpiry.bind(null, row.submission_id)}
+                      />
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           </CardContent>
         </Card>
       </section>
