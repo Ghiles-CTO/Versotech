@@ -110,9 +110,6 @@ const KPICard = React.memo(({ kpi, glassCardStyle, labelStyle, valueStyle }: { k
     const Icon = kpi.icon
     return (
         <div className={glassCardStyle + " p-6 rounded-xl relative overflow-hidden group"}>
-            <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none">
-                <Icon className="w-16 h-16 text-gray-900 dark:text-white transform rotate-12 translate-x-4 -translate-y-4" />
-            </div>
             <div className="relative z-10">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className={labelStyle}>{kpi.label}</h3>
