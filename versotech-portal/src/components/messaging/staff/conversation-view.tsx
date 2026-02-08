@@ -43,13 +43,24 @@ import { toast } from 'sonner'
 interface ConversationViewProps {
   conversation: ConversationSummary
   currentUserId: string
+  showAssistantBadge?: boolean
+  showComplianceControls?: boolean
   onRead?: () => void
   onError?: (message: string) => void
   onDelete?: (conversationId: string) => void
   onRefresh?: () => void
 }
 
-export function ConversationView({ conversation, currentUserId, onRead, onError, onDelete, onRefresh }: ConversationViewProps) {
+export function ConversationView({
+  conversation,
+  currentUserId,
+  showAssistantBadge = true,
+  showComplianceControls = true,
+  onRead,
+  onError,
+  onDelete,
+  onRefresh,
+}: ConversationViewProps) {
   const [messages, setMessages] = useState<ConversationMessage[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [composerMessage, setComposerMessage] = useState('')
@@ -64,8 +75,6 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
   const [complianceReason, setComplianceReason] = useState('')
   const [complianceUrgency, setComplianceUrgency] = useState<'low' | 'medium' | 'high'>('medium')
   const [complianceSubmitting, setComplianceSubmitting] = useState(false)
-
-  console.log('[ConversationView] Rendering with', messages.length, 'messages for conversation:', conversation.id)
   
   const handleDeleteConversation = async () => {
     try {
@@ -106,6 +115,37 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
     const metadata = (conversation.metadata as Record<string, any>) || {}
     return metadata.compliance || {}
   }, [conversation.metadata])
+
+  const agentChatMeta = useMemo(() => {
+    const metadata = (conversation.metadata as Record<string, any>) || {}
+    const agentChat = metadata.agent_chat || {}
+    return {
+      agentName: typeof agentChat.agent_name === 'string' ? agentChat.agent_name : null,
+      agentAvatarUrl: typeof agentChat.agent_avatar_url === 'string' ? agentChat.agent_avatar_url : null,
+    }
+  }, [conversation.metadata])
+
+  const displayParticipants = useMemo(() => {
+    const nonSelfParticipants = conversation.participants.filter((participant) => participant.id !== currentUserId)
+    if (nonSelfParticipants.length > 0) return nonSelfParticipants
+    if (!agentChatMeta.agentName) return conversation.participants
+
+    return [
+      {
+        id: `agent:${agentChatMeta.agentName}`,
+        displayName: agentChatMeta.agentName,
+        email: null,
+        role: 'staff_compliance',
+        avatarUrl: agentChatMeta.agentAvatarUrl,
+        participantRole: 'member',
+        joinedAt: conversation.createdAt,
+        lastReadAt: null,
+        lastNotifiedAt: null,
+        isMuted: false,
+        isPinned: false,
+      },
+    ]
+  }, [agentChatMeta.agentAvatarUrl, agentChatMeta.agentName, conversation.createdAt, conversation.participants, currentUserId])
 
   const complianceStatus = complianceMeta?.status || (complianceMeta?.flagged ? 'open' : null)
 
@@ -240,8 +280,7 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
   // Handle message sending with optimistic update
   const handleSend = async () => {
     if (!composerMessage.trim()) return
-    
-    console.log('[ConversationView] Sending message:', composerMessage)
+
     setIsSending(true)
 
     try {
@@ -257,13 +296,22 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
       }
 
       const result = await response.json()
-      console.log('[ConversationView] Message sent, adding optimistically:', result.message)
       
       // Add message optimistically
       if (result.message) {
         setMessages(prev => {
           if (prev.some(m => m.id === result.message.id)) return prev
           return [...prev, result.message]
+        })
+      }
+
+      if (result?.agentReplyEligible && result?.message?.id) {
+        void fetch(`/api/conversations/${conversation.id}/agent-reply`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message_id: result.message.id }),
+        }).catch((error) => {
+          console.error('[ConversationView] Failed to trigger agent reply', error)
         })
       }
       
@@ -285,22 +333,14 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
 
   // Subscribe to new messages in realtime (for messages from OTHER users)
   useEffect(() => {
-    console.log('[ConversationView] Setting up realtime for conversation:', conversation.id)
-    
     const cleanup = subscribeToConversationUpdates(conversation.id, {
       onMessage: (newMessage) => {
-        console.log('[ConversationView] Received new message from realtime:', newMessage)
         setMessages(prev => {
-          console.log('[ConversationView] Current messages before add:', prev.length)
           // Avoid duplicates
           if (prev.some(m => m.id === newMessage.id)) {
-            console.log('[ConversationView] Message already exists, skipping')
             return prev
           }
-          console.log('[ConversationView] Adding realtime message to list')
-          const updated = [...prev, newMessage]
-          console.log('[ConversationView] Messages after add:', updated.length)
-          return updated
+          return [...prev, newMessage]
         })
         // Mark as read if we&apos;re viewing
         markConversationRead(conversation.id).catch(console.error)
@@ -308,7 +348,6 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
     })
 
     return () => {
-      console.log('[ConversationView] Cleaning up realtime for conversation:', conversation.id)
       cleanup()
     }
   }, [conversation.id])
@@ -321,7 +360,7 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
           <div className="flex items-center gap-3">
             {/* Participant Avatars */}
             <div className="flex -space-x-2">
-              {conversation.participants.slice(0, 3).map((participant, idx) => (
+              {displayParticipants.slice(0, 3).map((participant) => (
                 <Avatar key={participant.id} className="h-9 w-9 border-2 border-background">
                   {participant.avatarUrl && (
                     <AvatarImage src={participant.avatarUrl} alt={participant.displayName || participant.email || 'User'} />
@@ -331,10 +370,10 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
                   </AvatarFallback>
                 </Avatar>
               ))}
-              {conversation.participants.length > 3 && (
+              {displayParticipants.length > 3 && (
                 <Avatar className="h-9 w-9 border-2 border-background">
                   <AvatarFallback className="text-xs bg-muted text-foreground">
-                    +{conversation.participants.length - 3}
+                    +{displayParticipants.length - 3}
                   </AvatarFallback>
                 </Avatar>
               )}
@@ -347,7 +386,7 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
               </h3>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Users className="h-3 w-3" />
-                <span>{conversation.participants.length} participant{conversation.participants.length !== 1 ? 's' : ''}</span>
+                <span>{displayParticipants.length} participant{displayParticipants.length !== 1 ? 's' : ''}</span>
               </div>
             </div>
           </div>
@@ -378,21 +417,25 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
                   Mute Notifications
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => setShowComplianceDialog(true)}
-                >
-                  Flag for Compliance
-                </DropdownMenuItem>
-                {complianceMeta?.flagged && complianceStatus !== 'resolved' && (
-                  <DropdownMenuItem
-                    className="cursor-pointer"
-                    onClick={() => submitComplianceAction('resolve')}
-                  >
-                    Mark Compliance Resolved
-                  </DropdownMenuItem>
+                {showComplianceControls && (
+                  <>
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => setShowComplianceDialog(true)}
+                    >
+                      Flag for Compliance
+                    </DropdownMenuItem>
+                    {complianceMeta?.flagged && complianceStatus !== 'resolved' && (
+                      <DropdownMenuItem
+                        className="cursor-pointer"
+                        onClick={() => submitComplianceAction('resolve')}
+                      >
+                        Mark Compliance Resolved
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                  </>
                 )}
-                <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   className="cursor-pointer text-red-600 focus:text-red-600"
                   onClick={() => setShowDeleteDialog(true)}
@@ -424,7 +467,7 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
               <p className="text-sm text-muted-foreground max-w-md leading-relaxed">
                 No messages yet. Break the ice and send the first message to{' '}
                 <span className="font-medium text-foreground">
-                  {conversation.participants.filter(p => p.id !== currentUserId)[0]?.displayName || 'your team'}
+                  {displayParticipants[0]?.displayName || 'your team'}
                 </span>
                 .
               </p>
@@ -437,6 +480,8 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
                 const isAssistantMessage = metadata.ai_generated === true
                 const assistantName =
                   typeof metadata.assistant_name === 'string' ? metadata.assistant_name : null
+                const assistantAvatarUrl =
+                  typeof metadata.assistant_avatar_url === 'string' ? metadata.assistant_avatar_url : null
                 const senderInfo = message.sender?.displayName 
                   ? { name: message.sender.displayName, email: message.sender.email }
                   : participantsLookup.get(message.senderId || '')
@@ -464,12 +509,13 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
                       senderName={displayName}
                       assistantName={isAssistantMessage ? assistantName || 'Compliance Assistant' : null}
                       senderEmail={senderInfo?.email}
-                      senderAvatarUrl={message.sender?.avatarUrl ?? null}
+                      senderAvatarUrl={message.sender?.avatarUrl ?? assistantAvatarUrl ?? null}
                       isSelf={isSelf}
                       isGroupStart={message.isGroupStart}
                       isGroupEnd={message.isGroupEnd}
                       showAvatar={message.showAvatar}
                       showTimestamp={message.showTimestamp}
+                      showAssistantBadge={showAssistantBadge}
                       onDelete={setMessageToDelete}
                     />
                   </div>
@@ -554,7 +600,7 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
         )}
       </div>
       
-      <Dialog open={showComplianceDialog} onOpenChange={setShowComplianceDialog}>
+      <Dialog open={showComplianceControls && showComplianceDialog} onOpenChange={setShowComplianceDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Flag for Compliance</DialogTitle>

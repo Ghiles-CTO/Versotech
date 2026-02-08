@@ -75,8 +75,6 @@ export function NewConversationDialog({
   const [selectedInvestorIds, setSelectedInvestorIds] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState('')
 
-  console.log('[NewConversationDialog] Mode:', mode, 'Staff:', staffDirectory.length, 'Investors:', investorDirectory.length)
-
   const isDM = mode === 'dm'
   const isGroup = mode === 'group'
 
@@ -224,15 +222,6 @@ export function NewConversationDialog({
     
     const effectiveVisibility: ConversationFilters['visibility'] = hasInvestors ? 'investor' : 'internal'
     const conversationType: ConversationFilters['type'] = isDM ? 'dm' : 'group'
-
-    console.log('[NewConversationDialog] Submitting:', {
-      mode,
-      subject: finalSubject,
-      participantIds,
-      totalParticipants: participantIds.length,
-      visibility: effectiveVisibility,
-      type: conversationType,
-    })
 
     onCreate({
       subject: finalSubject,

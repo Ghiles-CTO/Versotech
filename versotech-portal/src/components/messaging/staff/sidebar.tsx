@@ -166,14 +166,16 @@ export function ConversationsSidebar({
           >
             Unread {filters.unreadOnly ? '' : `(${unreadTotals.all})`}
           </Button>
-          <Button
-            variant={filters.complianceOnly ? 'default' : 'outline'}
-            size="sm"
-            className="w-full text-popover-foreground"
-            onClick={toggleCompliance}
-          >
-            Compliance {filters.complianceOnly ? '' : `(${complianceCount})`}
-          </Button>
+          {canCreateConversation && (
+            <Button
+              variant={filters.complianceOnly ? 'default' : 'outline'}
+              size="sm"
+              className="w-full text-popover-foreground"
+              onClick={toggleCompliance}
+            >
+              Compliance {filters.complianceOnly ? '' : `(${complianceCount})`}
+            </Button>
+          )}
 
           {canCreateConversation && (
             <div className="grid grid-cols-2 gap-2">
@@ -225,6 +227,17 @@ export function ConversationsSidebar({
               const firstParticipant = conversation.participants[0]
               const timestamp = conversation.lastMessageAt || conversation.createdAt
               const compliance = (conversation.metadata as Record<string, any>)?.compliance
+              const agentChat = (conversation.metadata as Record<string, any>)?.agent_chat as Record<string, any> | undefined
+              const agentName = typeof agentChat?.agent_name === 'string' ? agentChat.agent_name : null
+              const agentAvatar = typeof agentChat?.agent_avatar_url === 'string' ? agentChat.agent_avatar_url : null
+              const displayName =
+                (!canCreateConversation && (agentName || conversation.subject))
+                  ? (agentName || conversation.subject || 'Compliance Team')
+                  : (conversation.subject || 'Untitled Conversation')
+              const displayAvatarUrl = (!canCreateConversation && agentAvatar) ? agentAvatar : firstParticipant?.avatarUrl
+              const displayAvatarName = (!canCreateConversation && agentName)
+                ? agentName
+                : (firstParticipant?.displayName || firstParticipant?.email || displayName)
               
               return (
                 <li key={conversation.id}>
@@ -243,11 +256,11 @@ export function ConversationsSidebar({
                       {/* Avatar */}
                       <div className="relative">
                         <Avatar className="h-11 w-11 transition-transform duration-200 group-hover:scale-110">
-                          {firstParticipant?.avatarUrl && (
-                            <AvatarImage src={firstParticipant.avatarUrl} alt={firstParticipant.displayName || firstParticipant.email || 'User'} />
+                          {displayAvatarUrl && (
+                            <AvatarImage src={displayAvatarUrl} alt={displayAvatarName || 'User'} />
                           )}
                           <AvatarFallback className="bg-secondary text-foreground text-sm font-medium">
-                            {getInitials(firstParticipant?.displayName || firstParticipant?.email)}
+                            {getInitials(displayAvatarName)}
                           </AvatarFallback>
                         </Avatar>
                         {conversation.unreadCount > 0 && (
@@ -266,7 +279,7 @@ export function ConversationsSidebar({
                             "font-semibold truncate text-sm",
                             conversation.unreadCount > 0 ? "text-gray-900 dark:text-white" : "text-foreground"
                           )}>
-                            {conversation.subject || 'Untitled Conversation'}
+                            {displayName}
                           </span>
                           <span className="text-[10px] text-muted-foreground shrink-0" suppressHydrationWarning>
                             {formatRelativeTime(timestamp)}

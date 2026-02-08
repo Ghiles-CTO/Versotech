@@ -25,42 +25,18 @@ const INITIAL_FILTERS: ConversationFilters = {
 }
 
 function resolveAvailableMessagingHeight(target: HTMLElement): number {
-  const top = Math.max(0, target.getBoundingClientRect().top)
-  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 800
-  const bottomPadding = 16
-  return Math.max(320, viewportHeight - top - bottomPadding)
+  const mainElement = target.closest('main')
+  if (!mainElement) return 720
+  const mainRect = mainElement.getBoundingClientRect()
+  const targetRect = target.getBoundingClientRect()
+  const offsetWithinMain = targetRect.top - mainRect.top
+  return Math.max(320, mainRect.height - offsetWithinMain)
 }
 
-function resetMessagingViewportScroll(target: HTMLElement) {
-  window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-  document.documentElement.scrollTop = 0
-  document.body.scrollTop = 0
-
-  let ancestor: HTMLElement | null = target
-  while (ancestor) {
-    if (ancestor.scrollHeight > ancestor.clientHeight + 1) {
-      ancestor.scrollTop = 0
-    }
-    ancestor = ancestor.parentElement
-  }
-
-  const contentWrapper = target.closest('.app-content-inner') as HTMLElement | null
-  if (contentWrapper) {
-    contentWrapper.scrollTop = 0
-  }
-
-  const contentContainer = target.closest('.app-content') as HTMLElement | null
-  if (contentContainer) {
-    contentContainer.scrollTop = 0
-  }
-
-  // Clear preserved scroll inside nested panes on first mount.
-  const nestedScrollContainers = target.querySelectorAll<HTMLElement>(
-    '.overflow-y-auto, [data-radix-scroll-area-viewport]'
-  )
-  nestedScrollContainers.forEach((element) => {
-    element.scrollTop = 0
-  })
+function resetMainScrollPosition(target: HTMLElement) {
+  const mainElement = target.closest('main')
+  if (!mainElement) return
+  mainElement.scrollTo({ top: 0, behavior: 'auto' })
 }
 
 export function MessagingClient({ initialConversations, currentUserId, canCreateConversation = true }: MessagingClientProps) {
@@ -87,15 +63,13 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
   const activeConversationIdRef = useRef(activeConversationId)
   activeConversationIdRef.current = activeConversationId
 
-  console.log('[MessagingClient] Initial conversations:', initialConversations.length)
-  console.log('[MessagingClient] Current conversations state:', conversations.length)
-  console.log('[MessagingClient] Filters:', filters)
-
   const activeConversation = conversations.find(conv => conv.id === activeConversationId) || null
 
   useEffect(() => {
     const element = containerRef.current
     if (!element) return
+
+    resetMainScrollPosition(element)
 
     const updateHeight = () => {
       const target = containerRef.current
@@ -104,20 +78,8 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
       setContainerHeight(available)
     }
 
-    const forceScrollReset = () => {
-      const target = containerRef.current
-      if (!target) return
-      resetMessagingViewportScroll(target)
-    }
-
     updateHeight()
-    forceScrollReset()
-    requestAnimationFrame(() => {
-      forceScrollReset()
-      requestAnimationFrame(forceScrollReset)
-    })
-    const resetDelays = [100, 240, 500, 900]
-    const resetTimers = resetDelays.map((delay) => window.setTimeout(forceScrollReset, delay))
+    requestAnimationFrame(updateHeight)
     const handleResize = () => requestAnimationFrame(updateHeight)
     window.addEventListener('resize', handleResize)
 
@@ -132,19 +94,16 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
 
     return () => {
       window.removeEventListener('resize', handleResize)
-      resetTimers.forEach((timerId) => window.clearTimeout(timerId))
       resizeObserver?.disconnect()
     }
   }, [])
 
   const loadConversations = useCallback(async (nextFilters?: ConversationFilters, silent = false) => {
-    console.log('[MessagingClient] loadConversations called with filters:', nextFilters || filters, 'silent:', silent)
     if (!silent) setIsLoading(true)
     setErrorMessage(null)
     try {
       const filtersToUse = nextFilters || filters
       const { conversations: data } = await fetchConversationsClient({ ...filtersToUse, includeMessages: true, limit: 50 })
-      console.log('[MessagingClient] Fetched conversations:', data.length)
       setConversations(data)
 
       // If no conversations found and we have an active one, keep it
@@ -194,8 +153,6 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
 
   // Global realtime subscription for conversations and messages
   useEffect(() => {
-    console.log('[Staff Messages] Setting up realtime subscription')
-
     const channel = supabase
       .channel('staff_conversations_all')
       .on('postgres_changes', {
@@ -203,7 +160,6 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
         schema: 'public',
         table: 'conversations'
       }, () => {
-        console.log('[Realtime] New conversation created, refreshing list')
         void fetchConversationsClient({ ...filters, includeMessages: true, limit: 50 })
           .then(({ conversations: data }) => {
             setConversations(data)
@@ -219,7 +175,6 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
         // This updates preview text, timestamps, and unread counts
         const messageConvId = (payload.new as { conversation_id?: string })?.conversation_id
         if (messageConvId && messageConvId !== activeConversationIdRef.current) {
-          console.log('[Realtime] New message in background conversation, refreshing list')
           void fetchConversationsClient({ ...filters, includeMessages: true, limit: 50 })
             .then(({ conversations: data }) => {
               setConversations(data)
@@ -227,12 +182,9 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
             .catch(console.error)
         }
       })
-      .subscribe((status) => {
-        console.log('[Realtime] Subscription status:', status)
-      })
+      .subscribe()
 
     return () => {
-      console.log('[Staff Messages] Cleaning up realtime subscription')
       supabase.removeChannel(channel)
     }
   }, [supabase, filters])
@@ -242,7 +194,6 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
   }, [])
   
   const handleDeleteConversation = useCallback((conversationId: string) => {
-    console.log('[MessagingClient] Deleting conversation:', conversationId)
     // Remove from local state
     setConversations(prev => prev.filter(c => c.id !== conversationId))
     setActiveConversationId(null)
@@ -252,13 +203,11 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
   useEffect(() => {
     // Only load directories if user can create conversations (staff only)
     if (!canCreateConversation) {
-      console.log('[MessagingClient] Skipping directory load - user cannot create conversations')
       return
     }
 
     const loadDirectories = async () => {
       try {
-        console.log('[MessagingClient] Loading staff and investor directories...')
         const [staffResponse, investorResponse] = await Promise.all([
           fetch('/api/staff/available'),
           fetch('/api/investors/available'),
@@ -266,7 +215,6 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
 
         if (staffResponse.ok) {
           const data = await staffResponse.json()
-          console.log('[MessagingClient] Staff directory loaded:', data.staff?.length || 0, 'members')
           setStaffDirectory(data.staff || [])
         } else {
           console.error('[MessagingClient] Staff fetch failed:', staffResponse.status)
@@ -274,8 +222,6 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
 
         if (investorResponse.ok) {
           const data = await investorResponse.json()
-          console.log('[MessagingClient] Investor directory loaded:', data.investors?.length || 0, 'investors')
-          console.log('[MessagingClient] Sample investor:', data.investors?.[0])
           setInvestorDirectory(data.investors || [])
         } else {
           console.error('[MessagingClient] Investor fetch failed:', investorResponse.status)
@@ -297,13 +243,6 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
   }) => {
     const uniqueParticipants = Array.from(new Set(payload.participantIds))
 
-    console.log('[MessagingClient] Creating conversation:', {
-      subject: payload.subject,
-      participants: uniqueParticipants.length,
-      type: payload.type,
-      visibility: payload.visibility
-    })
-
     if (!uniqueParticipants.length) {
       toast.error('Select at least one participant')
       return
@@ -319,8 +258,6 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
         initial_message: payload.initialMessage,
       }
       
-      console.log('[MessagingClient] Request payload:', requestBody)
-
       const response = await fetch('/api/conversations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -334,7 +271,6 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
       }
 
       const result = await response.json()
-      console.log('[MessagingClient] Conversation created:', result)
 
       toast.success('Conversation created successfully!')
       setIsNewConversationOpen(false)
@@ -378,6 +314,8 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
             key={activeConversation.id}
             conversation={activeConversation}
             currentUserId={currentUserId}
+            showAssistantBadge={canCreateConversation}
+            showComplianceControls={canCreateConversation}
             onRead={() => markConversationRead(activeConversation.id)}
             onError={handleComposerError}
             onDelete={handleDeleteConversation}

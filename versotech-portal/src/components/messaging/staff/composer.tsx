@@ -19,8 +19,7 @@ export function ConversationComposer({ conversationId, currentUserId, onError, o
 
   const handleSend = async () => {
     if (!conversationId || !message.trim()) return
-    
-    console.log('[Composer] Sending message to conversation:', conversationId)
+
     setIsSending(true)
 
     try {
@@ -32,12 +31,10 @@ export function ConversationComposer({ conversationId, currentUserId, onError, o
 
       if (!response.ok) {
         const error = await response.json().catch(() => null)
-        console.error('[Composer] Error response:', error)
         throw new Error(error?.error || 'Failed to send message')
       }
 
       const result = await response.json()
-      console.log('[Composer] Message sent successfully:', result)
       
       setMessage('')
       
@@ -82,6 +79,5 @@ export function ConversationComposer({ conversationId, currentUserId, onError, o
     </div>
   )
 }
-
 
 

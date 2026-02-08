@@ -506,7 +506,7 @@ export default async function AgentsPage({
   const errorMessage = getParam('error')
   const successMessage = getParam('success')
   const tabParam = getParam('tab')
-  const activeTab = ['risk', 'blacklist', 'kyc', 'activity'].includes(tabParam)
+  const activeTab = ['risk', 'blacklist', 'kyc', 'activity', 'chat'].includes(tabParam)
     ? tabParam
     : 'risk'
 
@@ -571,6 +571,7 @@ export default async function AgentsPage({
     { data: dealRiskProfilesData },
     { data: activityLogsData },
     { data: ofacScreeningsData },
+    { data: agentChatConversationsData },
     { data: complianceConversationsData },
   ] = await Promise.all([
     supabase
@@ -636,9 +637,17 @@ export default async function AgentsPage({
       .select(
         'id, subject, preview, last_message_at, created_at, metadata, conversation_participants (user_id, profiles:user_id (id, display_name, email))'
       )
-      .contains('metadata', { compliance: { flagged: true } })
+      .contains('metadata', { agent_chat: { default_thread: true } })
       .order('last_message_at', { ascending: false, nullsFirst: false })
       .limit(50),
+    supabase
+      .from('conversations')
+      .select(
+        'id, subject, preview, last_message_at, created_at, metadata, conversation_participants (user_id, profiles:user_id (id, display_name, email))'
+      )
+      .contains('metadata', { compliance: { flagged: true } })
+      .order('last_message_at', { ascending: false, nullsFirst: false })
+      .limit(100),
   ])
 
   const agents: AgentRow[] = agentsData ?? []
@@ -652,6 +661,7 @@ export default async function AgentsPage({
   const dealRiskProfilesRaw: DealRiskProfileRow[] = dealRiskProfilesData ?? []
   const activityLogs: ComplianceActivityRow[] = activityLogsData ?? []
   const ofacScreenings: OfacScreeningRow[] = ofacScreeningsData ?? []
+  const agentChatConversations: ComplianceConversationRow[] = agentChatConversationsData ?? []
   const complianceConversations: ComplianceConversationRow[] = complianceConversationsData ?? []
 
   const { data: kycSubmissionsData } = await supabase
@@ -1667,6 +1677,45 @@ export default async function AgentsPage({
     }
   })
 
+  const chatRows = agentChatConversations
+    .map((conversation) => {
+    const metadata = (conversation.metadata as Record<string, any>) || {}
+    const compliance = (metadata.compliance as Record<string, any>) || {}
+    const agentChat = (metadata.agent_chat as Record<string, any>) || {}
+    const status = compliance.status || (compliance.flagged ? 'open' : 'open')
+    const firstContactAt =
+      typeof agentChat.first_contact_at === 'string' ? agentChat.first_contact_at : null
+    const assignedAgent =
+      (typeof agentChat.agent_id === 'string' ? agentsById[agentChat.agent_id] : null) ||
+      (typeof compliance.assigned_agent_id === 'string' ? agentsById[compliance.assigned_agent_id] : null) ||
+      null
+    const participants = (conversation.conversation_participants || [])
+      .map((participant) => {
+        const profile = Array.isArray(participant.profiles)
+          ? participant.profiles[0]
+          : participant.profiles
+        return profile?.display_name || profile?.email || participant.user_id
+      })
+      .filter(Boolean)
+
+    return {
+      id: conversation.id,
+      subject: conversation.subject || assignedAgent?.name || 'Compliance Chat',
+      preview: conversation.preview || '—',
+      participants: participants.length ? participants.join(', ') : '—',
+      status,
+      assignedAgent: assignedAgent?.name || 'Wayne O\'Connor',
+      firstContactAt,
+      firstContactState: firstContactAt ? 'Started' : 'Awaiting investor first message',
+      lastMessageAt: conversation.last_message_at || conversation.created_at,
+    }
+    })
+    .sort((a, b) => {
+      const aTime = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0
+      const bTime = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0
+      return bTime - aTime
+    })
+
   const investorRiskProfileMap = new Map<string, InvestorRiskProfileRow>()
   investorRiskProfiles.forEach((profile) => {
     if (profile.investor_id) {
@@ -1738,6 +1787,9 @@ export default async function AgentsPage({
   const activityPageParam = parsePageNumber(
     typeof resolvedSearchParams.activity_page === 'string' ? resolvedSearchParams.activity_page : undefined
   )
+  const chatPageParam = parsePageNumber(
+    typeof resolvedSearchParams.chat_page === 'string' ? resolvedSearchParams.chat_page : undefined
+  )
   const ofacPageParam = parsePageNumber(
     typeof resolvedSearchParams.ofac_page === 'string' ? resolvedSearchParams.ofac_page : undefined
   )
@@ -1779,9 +1831,10 @@ export default async function AgentsPage({
   if (blacklistPageParam > 1) baseParams.set('blacklist_page', String(blacklistPageParam))
   if (kycPageParam > 1) baseParams.set('kyc_page', String(kycPageParam))
   if (activityPageParam > 1) baseParams.set('activity_page', String(activityPageParam))
+  if (chatPageParam > 1) baseParams.set('chat_page', String(chatPageParam))
   if (ofacPageParam > 1) baseParams.set('ofac_page', String(ofacPageParam))
   if (activeTab !== 'risk') baseParams.set('tab', activeTab)
-  const pageParamKeys = ['risk_page', 'blacklist_page', 'kyc_page', 'activity_page', 'ofac_page'] as const
+  const pageParamKeys = ['risk_page', 'blacklist_page', 'kyc_page', 'activity_page', 'chat_page', 'ofac_page'] as const
   const baseQueryString = baseParams.toString()
   const baseHref = baseQueryString ? `/versotech_admin/agents?${baseQueryString}` : '/versotech_admin/agents'
   const activityParams = new URLSearchParams(baseParams)
@@ -1801,8 +1854,8 @@ export default async function AgentsPage({
     return queryString ? `/versotech_admin/agents?${queryString}` : '/versotech_admin/agents'
   }
   const paginationHref = (
-    tabKey: 'risk' | 'blacklist' | 'kyc' | 'activity',
-    pageKey: 'risk_page' | 'blacklist_page' | 'kyc_page' | 'activity_page' | 'ofac_page',
+    tabKey: 'risk' | 'blacklist' | 'kyc' | 'activity' | 'chat',
+    pageKey: 'risk_page' | 'blacklist_page' | 'kyc_page' | 'activity_page' | 'chat_page' | 'ofac_page',
     page: number
   ) => {
     const params = new URLSearchParams(baseParams)
@@ -1821,8 +1874,8 @@ export default async function AgentsPage({
     return queryString ? `/versotech_admin/agents?${queryString}` : '/versotech_admin/agents'
   }
   const renderPagination = (
-    tabKey: 'risk' | 'blacklist' | 'kyc' | 'activity',
-    pageKey: 'risk_page' | 'blacklist_page' | 'kyc_page' | 'activity_page' | 'ofac_page',
+    tabKey: 'risk' | 'blacklist' | 'kyc' | 'activity' | 'chat',
+    pageKey: 'risk_page' | 'blacklist_page' | 'kyc_page' | 'activity_page' | 'chat_page' | 'ofac_page',
     pagination: PaginatedRows<unknown>
   ) => {
     if (pagination.totalRows === 0) return null
@@ -1909,6 +1962,7 @@ export default async function AgentsPage({
   const paginatedBlacklistEntries = paginateRows(filteredEntries, blacklistPageParam, 20)
   const paginatedKycRows = paginateRows(filteredKycRows, kycPageParam, 20)
   const paginatedActivityRows = paginateRows(activityRows, activityPageParam, 25)
+  const paginatedChatRows = paginateRows(chatRows, chatPageParam, 25)
 
   const editEntry = editId ? blacklistEntries.find((entry) => entry.id === editId) : null
   const entryToShowMatches = selectedEntryId
@@ -2915,6 +2969,71 @@ export default async function AgentsPage({
     redirect(`${redirectTarget}${separator}success=Assignment%20updated`)
   }
 
+  const updateAgentStatus = async (formData: FormData) => {
+    'use server'
+    const currentUser = await getCurrentUser()
+    if (!currentUser) {
+      redirect('/versotech_main/login')
+    }
+    const isAllowed = currentUser.role === 'ceo' || currentUser.permissions?.includes('super_admin')
+    if (!isAllowed) {
+      redirect('/versotech_admin/agents?error=Not%20authorized')
+    }
+
+    const agentId = formData.get('agent_id')
+    const nextStatus = formData.get('next_status')
+    if (typeof agentId !== 'string' || !agentId) {
+      redirect('/versotech_admin/agents?error=Invalid%20agent')
+    }
+    if (nextStatus !== 'active' && nextStatus !== 'inactive') {
+      redirect('/versotech_admin/agents?error=Invalid%20status')
+    }
+
+    const supabase = createServiceClient()
+    const { data: existingAgent } = await supabase
+      .from('ai_agents')
+      .select('id, name, is_active')
+      .eq('id', agentId)
+      .maybeSingle()
+
+    if (!existingAgent) {
+      redirect('/versotech_admin/agents?error=Agent%20not%20found')
+    }
+
+    const isActive = nextStatus === 'active'
+    const { error } = await supabase
+      .from('ai_agents')
+      .update({ is_active: isActive })
+      .eq('id', agentId)
+
+    const returnTo = formData.get('return_to')
+    const redirectTarget =
+      typeof returnTo === 'string' && returnTo.length ? returnTo : '/versotech_admin/agents'
+    const separator = redirectTarget.includes('?') ? '&' : '?'
+
+    if (error) {
+      redirect(`${redirectTarget}${separator}error=${encodeURIComponent('Failed to update agent status')}`)
+    }
+
+    try {
+      await supabase.from('compliance_activity_log').insert({
+        event_type: 'agent_assignment_change',
+        description: `${existingAgent.name} ${isActive ? 'activated' : 'deactivated'}`,
+        agent_id: agentId,
+        created_by: currentUser.id,
+        metadata: {
+          action: 'agent_status_change',
+          from_status: existingAgent.is_active ? 'active' : 'inactive',
+          to_status: isActive ? 'active' : 'inactive',
+        },
+      })
+    } catch (logError) {
+      console.error('[compliance] Failed to log agent status change:', logError)
+    }
+
+    redirect(`${redirectTarget}${separator}success=${encodeURIComponent(`${existingAgent.name} ${isActive ? 'activated' : 'deactivated'}`)}`)
+  }
+
   const sendSingleKycReminder = async (targetValue: string) => {
     'use server'
     const formData = new FormData()
@@ -3291,6 +3410,27 @@ export default async function AgentsPage({
                       </div>
                     </div>
 
+                    <form action={updateAgentStatus}>
+                      <input type="hidden" name="return_to" value={baseHref} />
+                      <input type="hidden" name="agent_id" value={agent.id} />
+                      <input
+                        type="hidden"
+                        name="next_status"
+                        value={agent.is_active ? 'inactive' : 'active'}
+                      />
+                      <button
+                        type="submit"
+                        className={cn(
+                          'w-full rounded-md border px-3 py-2 text-sm font-medium',
+                          agent.is_active
+                            ? 'border-red-300 text-red-700 hover:bg-red-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/30'
+                            : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-900 dark:text-emerald-300 dark:hover:bg-emerald-950/30'
+                        )}
+                      >
+                        {agent.is_active ? 'Deactivate agent' : 'Activate agent'}
+                      </button>
+                    </form>
+
                     <div className="space-y-2">
                       {tasks.length === 0 ? (
                         <p className="text-xs text-muted-foreground">No tasks assigned yet.</p>
@@ -3409,6 +3549,7 @@ export default async function AgentsPage({
             { key: 'risk', label: 'Risk Profiles' },
             { key: 'blacklist', label: 'Blacklist' },
             { key: 'kyc', label: 'KYC Monitor' },
+            { key: 'chat', label: 'Chat Logs' },
             { key: 'activity', label: 'Activity Log' },
           ].map((tab) => (
             <a
@@ -4453,6 +4594,83 @@ export default async function AgentsPage({
           </CardContent>
         </Card>
       </section>
+      )}
+
+      {activeTab === 'chat' && (
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Bot className="h-4 w-4" />
+            <span>Agent Chat Logs</span>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <CardTitle>Investor Chat Directory</CardTitle>
+                  <CardDescription>
+                    All Wayne default chats, with first-contact state and latest conversation activity.
+                  </CardDescription>
+                </div>
+                <a
+                  href="/versotech_main/messages"
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  Open inbox
+                </a>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {paginatedChatRows.totalRows === 0 ? (
+                <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                  No agent chat threads found yet.
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-lg border border-muted/60">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
+                      <tr>
+                        <th className="px-3 py-2 text-left">Conversation</th>
+                        <th className="px-3 py-2 text-left">Investor</th>
+                        <th className="px-3 py-2 text-left">Assigned agent</th>
+                        <th className="px-3 py-2 text-left">Status</th>
+                        <th className="px-3 py-2 text-left">First contact</th>
+                        <th className="px-3 py-2 text-left">Last message</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedChatRows.rows.map((row: any) => (
+                        <tr key={row.id} className="border-t">
+                          <td className="px-3 py-3">
+                            <div className="font-medium text-foreground">{row.subject}</div>
+                            <div className="mt-1 text-xs text-muted-foreground">{row.preview}</div>
+                          </td>
+                          <td className="px-3 py-3 text-muted-foreground">{row.participants}</td>
+                          <td className="px-3 py-3 text-muted-foreground">{row.assignedAgent}</td>
+                          <td className="px-3 py-3">
+                            <Badge variant="outline" className="capitalize">
+                              {row.status}
+                            </Badge>
+                          </td>
+                          <td className="px-3 py-3">
+                            <div className="text-foreground">{row.firstContactState}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {row.firstContactAt ? formatDate(row.firstContactAt) : '—'}
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 text-muted-foreground">
+                            {formatDate(row.lastMessageAt)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {renderPagination('chat', 'chat_page', paginatedChatRows)}
+            </CardContent>
+          </Card>
+        </section>
       )}
 
       {activeTab === 'activity' && (

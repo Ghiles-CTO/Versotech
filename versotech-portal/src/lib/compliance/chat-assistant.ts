@@ -64,6 +64,10 @@ function resolveProvider(): ComplianceAiProvider {
     return value
   }
 
+  // Prefer hosted APIs automatically when keys are present.
+  if (process.env.OPENAI_API_KEY) return 'api_openai'
+  if (process.env.ANTHROPIC_API_KEY) return 'api_anthropic'
+
   // Dev default uses local CLI to avoid API spend during build-out.
   if (process.env.NODE_ENV !== 'production') return 'local_codex'
   return 'disabled'

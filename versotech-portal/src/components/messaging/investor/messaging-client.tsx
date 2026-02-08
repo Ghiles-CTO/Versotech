@@ -19,41 +19,18 @@ const INITIAL_FILTERS: ConversationFilters = {
 }
 
 function resolveAvailableMessagingHeight(target: HTMLElement): number {
-  const top = Math.max(0, target.getBoundingClientRect().top)
-  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 800
-  const bottomPadding = 16
-  return Math.max(320, viewportHeight - top - bottomPadding)
+  const mainElement = target.closest('main')
+  if (!mainElement) return 720
+  const mainRect = mainElement.getBoundingClientRect()
+  const targetRect = target.getBoundingClientRect()
+  const offsetWithinMain = targetRect.top - mainRect.top
+  return Math.max(320, mainRect.height - offsetWithinMain)
 }
 
-function resetMessagingViewportScroll(target: HTMLElement) {
-  window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-  document.documentElement.scrollTop = 0
-  document.body.scrollTop = 0
-
-  let ancestor: HTMLElement | null = target
-  while (ancestor) {
-    if (ancestor.scrollHeight > ancestor.clientHeight + 1) {
-      ancestor.scrollTop = 0
-    }
-    ancestor = ancestor.parentElement
-  }
-
-  const contentWrapper = target.closest('.app-content-inner') as HTMLElement | null
-  if (contentWrapper) {
-    contentWrapper.scrollTop = 0
-  }
-
-  const contentContainer = target.closest('.app-content') as HTMLElement | null
-  if (contentContainer) {
-    contentContainer.scrollTop = 0
-  }
-
-  const nestedScrollContainers = target.querySelectorAll<HTMLElement>(
-    '.overflow-y-auto, [data-radix-scroll-area-viewport]'
-  )
-  nestedScrollContainers.forEach((element) => {
-    element.scrollTop = 0
-  })
+function resetMainScrollPosition(target: HTMLElement) {
+  const mainElement = target.closest('main')
+  if (!mainElement) return
+  mainElement.scrollTo({ top: 0, behavior: 'auto' })
 }
 
 export function InvestorMessagingClient({ currentUserId, initialConversations }: InvestorMessagingClientProps) {
@@ -100,6 +77,8 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
     const element = containerRef.current
     if (!element) return
 
+    resetMainScrollPosition(element)
+
     const updateHeight = () => {
       const target = containerRef.current
       if (!target) return
@@ -107,20 +86,8 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
       setContainerHeight(available)
     }
 
-    const forceScrollReset = () => {
-      const target = containerRef.current
-      if (!target) return
-      resetMessagingViewportScroll(target)
-    }
-
     updateHeight()
-    forceScrollReset()
-    requestAnimationFrame(() => {
-      forceScrollReset()
-      requestAnimationFrame(forceScrollReset)
-    })
-    const resetDelays = [100, 240, 500, 900]
-    const resetTimers = resetDelays.map((delay) => window.setTimeout(forceScrollReset, delay))
+    requestAnimationFrame(updateHeight)
     const handleResize = () => requestAnimationFrame(updateHeight)
     window.addEventListener('resize', handleResize)
 
@@ -135,7 +102,6 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
 
     return () => {
       window.removeEventListener('resize', handleResize)
-      resetTimers.forEach((timerId) => window.clearTimeout(timerId))
       resizeObserver?.disconnect()
     }
   }, [])
@@ -147,8 +113,6 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
 
   // Global realtime subscription for conversations and messages
   useEffect(() => {
-    console.log('[Investor Messages] Setting up realtime subscription')
-
     const supabase = createClient()
     const channel = supabase
       .channel('investor_conversations_all')
@@ -157,7 +121,6 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
         schema: 'public',
         table: 'conversations'
       }, () => {
-        console.log('[Realtime] New conversation created, refreshing list')
         void fetchConversationsClient({ ...filters, includeMessages: true, limit: 50 })
           .then(({ conversations: data }) => {
             setConversations(data)
@@ -173,7 +136,6 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
         // This updates preview text, timestamps, and unread counts
         const messageConvId = (payload.new as { conversation_id?: string })?.conversation_id
         if (messageConvId && messageConvId !== activeConversationIdRef.current) {
-          console.log('[Realtime] New message in background conversation, refreshing list')
           void fetchConversationsClient({ ...filters, includeMessages: true, limit: 50 })
             .then(({ conversations: data }) => {
               setConversations(data)
@@ -181,12 +143,9 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
             .catch(console.error)
         }
       })
-      .subscribe((status) => {
-        console.log('[Realtime] Subscription status:', status)
-      })
+      .subscribe()
 
     return () => {
-      console.log('[Investor Messages] Cleaning up realtime subscription')
       supabase.removeChannel(channel)
     }
   }, [filters])
@@ -212,6 +171,8 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
             key={activeConversation.id}
             conversation={activeConversation}
             currentUserId={currentUserId}
+            showAssistantBadge={false}
+            showComplianceControls={false}
             onRead={() => markConversationRead(activeConversation.id)}
             onError={message => toast.error(message)}
             onDelete={(id) => {
