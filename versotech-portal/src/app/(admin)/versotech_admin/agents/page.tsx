@@ -505,6 +505,10 @@ export default async function AgentsPage({
   const selectedEntryId = getParam('entry')
   const errorMessage = getParam('error')
   const successMessage = getParam('success')
+  const tabParam = getParam('tab')
+  const activeTab = ['risk', 'blacklist', 'kyc', 'activity'].includes(tabParam)
+    ? tabParam
+    : 'risk'
 
   const user = await getCurrentUser()
   if (!user) {
@@ -753,6 +757,9 @@ export default async function AgentsPage({
     })()
   }
 
+  const shouldLoadKycDirectory = activeTab === 'kyc'
+  const emptyLookup = Promise.resolve({ data: [] as any[] })
+
   const [
     { data: investorsData },
     { data: investorMembersData },
@@ -776,88 +783,130 @@ export default async function AgentsPage({
     { data: arrangerUsersData },
     { data: kycRemindersData },
   ] = await Promise.all([
-    fetchByIds(
+    shouldLoadKycDirectory
+      ? fetchByIds(
       'investors',
       'id, legal_name, display_name, representative_name, first_name, middle_name, last_name, name_suffix, kyc_status, kyc_expiry_date',
       investorIds
-    ),
-    fetchByIds(
+      )
+      : emptyLookup,
+    shouldLoadKycDirectory
+      ? fetchByIds(
       'investor_members',
       'id, full_name, first_name, middle_name, last_name, name_suffix, kyc_status, kyc_expiry_date, linked_user_id',
       investorMemberIds
-    ),
-    fetchByIds(
+      )
+      : emptyLookup,
+    shouldLoadKycDirectory
+      ? fetchByIds(
       'investor_counterparty',
       'id, legal_name, representative_name, kyc_status, kyc_expiry_date',
       counterpartyEntityIds
-    ),
-    fetchByIds(
+      )
+      : emptyLookup,
+    shouldLoadKycDirectory
+      ? fetchByIds(
       'counterparty_entity_members',
       'id, full_name, first_name, middle_name, last_name, name_suffix, kyc_status, kyc_expiry_date',
       counterpartyMemberIds
-    ),
-    fetchByIds(
+      )
+      : emptyLookup,
+    shouldLoadKycDirectory
+      ? fetchByIds(
       'partners',
       'id, legal_name, name, contact_name, first_name, middle_name, last_name, name_suffix, kyc_status, kyc_expires_at',
       partnerIds
-    ),
-    fetchByIds(
+      )
+      : emptyLookup,
+    shouldLoadKycDirectory
+      ? fetchByIds(
       'partner_members',
       'id, full_name, first_name, middle_name, last_name, name_suffix, kyc_status, kyc_expiry_date, linked_user_id',
       partnerMemberIds
-    ),
-    fetchByIds(
+      )
+      : emptyLookup,
+    shouldLoadKycDirectory
+      ? fetchByIds(
       'introducers',
       'id, legal_name, display_name, contact_name, first_name, middle_name, last_name, name_suffix, kyc_status, kyc_expires_at',
       introducerIds
-    ),
-    fetchByIds(
+      )
+      : emptyLookup,
+    shouldLoadKycDirectory
+      ? fetchByIds(
       'introducer_members',
       'id, full_name, first_name, middle_name, last_name, name_suffix, kyc_status, kyc_expiry_date, linked_user_id',
       introducerMemberIds
-    ),
-    fetchByIds(
+      )
+      : emptyLookup,
+    shouldLoadKycDirectory
+      ? fetchByIds(
       'lawyers',
       'id, firm_name, display_name, primary_contact_name, first_name, middle_name, last_name, name_suffix, kyc_status, kyc_expires_at',
       lawyerIds
-    ),
-    fetchByIds(
+      )
+      : emptyLookup,
+    shouldLoadKycDirectory
+      ? fetchByIds(
       'lawyer_members',
       'id, full_name, first_name, middle_name, last_name, name_suffix, kyc_status, kyc_expiry_date, linked_user_id',
       lawyerMemberIds
-    ),
-    fetchByIds(
+      )
+      : emptyLookup,
+    shouldLoadKycDirectory
+      ? fetchByIds(
       'commercial_partners',
       'id, legal_name, name, contact_name, first_name, middle_name, last_name, name_suffix, kyc_status, kyc_expires_at',
       commercialPartnerIds
-    ),
-    fetchByIds(
+      )
+      : emptyLookup,
+    shouldLoadKycDirectory
+      ? fetchByIds(
       'commercial_partner_members',
       'id, full_name, first_name, middle_name, last_name, name_suffix, kyc_status, kyc_expiry_date, linked_user_id',
       commercialPartnerMemberIds
-    ),
-    fetchByIds(
+      )
+      : emptyLookup,
+    shouldLoadKycDirectory
+      ? fetchByIds(
       'arranger_entities',
       'id, legal_name, first_name, middle_name, last_name, name_suffix, kyc_status, kyc_expires_at',
       arrangerEntityIds
-    ),
-    fetchByIds(
+      )
+      : emptyLookup,
+    shouldLoadKycDirectory
+      ? fetchByIds(
       'arranger_members',
       'id, full_name, first_name, middle_name, last_name, name_suffix, kyc_status, kyc_expiry_date, linked_user_id',
       arrangerMemberIds
-    ),
-    fetchByForeignIds('investor_users', 'investor_id, user_id, is_primary', 'investor_id', investorIds),
-    fetchByForeignIds('partner_users', 'partner_id, user_id, is_primary', 'partner_id', partnerIds),
-    fetchByForeignIds('introducer_users', 'introducer_id, user_id, is_primary', 'introducer_id', introducerIds),
-    fetchByForeignIds('lawyer_users', 'lawyer_id, user_id, is_primary', 'lawyer_id', lawyerIds),
-    fetchByForeignIds('commercial_partner_users', 'commercial_partner_id, user_id, is_primary', 'commercial_partner_id', commercialPartnerIds),
-    fetchByForeignIds('arranger_users', 'arranger_id, user_id, is_primary', 'arranger_id', arrangerEntityIds),
-    supabase
-      .from('investor_notifications')
-      .select('id, user_id, created_at, data')
-      .eq('type', 'kyc')
-      .order('created_at', { ascending: false })
-      .limit(500),
+      )
+      : emptyLookup,
+    shouldLoadKycDirectory
+      ? fetchByForeignIds('investor_users', 'investor_id, user_id, is_primary', 'investor_id', investorIds)
+      : emptyLookup,
+    shouldLoadKycDirectory
+      ? fetchByForeignIds('partner_users', 'partner_id, user_id, is_primary', 'partner_id', partnerIds)
+      : emptyLookup,
+    shouldLoadKycDirectory
+      ? fetchByForeignIds('introducer_users', 'introducer_id, user_id, is_primary', 'introducer_id', introducerIds)
+      : emptyLookup,
+    shouldLoadKycDirectory
+      ? fetchByForeignIds('lawyer_users', 'lawyer_id, user_id, is_primary', 'lawyer_id', lawyerIds)
+      : emptyLookup,
+    shouldLoadKycDirectory
+      ? fetchByForeignIds('commercial_partner_users', 'commercial_partner_id, user_id, is_primary', 'commercial_partner_id', commercialPartnerIds)
+      : emptyLookup,
+    shouldLoadKycDirectory
+      ? fetchByForeignIds('arranger_users', 'arranger_id, user_id, is_primary', 'arranger_id', arrangerEntityIds)
+      : emptyLookup,
+    shouldLoadKycDirectory
+      ? supabase
+          .from('investor_notifications')
+          .select('id, user_id, created_at, data')
+          .eq('type', 'kyc')
+          .order('created_at', { ascending: false })
+          .limit(500)
+      : emptyLookup,
   ])
 
   const riskGradeMap = new Map<string, RiskGradeRow>()
@@ -1689,10 +1738,9 @@ export default async function AgentsPage({
   const activityPageParam = parsePageNumber(
     typeof resolvedSearchParams.activity_page === 'string' ? resolvedSearchParams.activity_page : undefined
   )
-  const tabParam = getParam('tab')
-  const activeTab = ['risk', 'blacklist', 'kyc', 'activity'].includes(tabParam)
-    ? tabParam
-    : 'risk'
+  const ofacPageParam = parsePageNumber(
+    typeof resolvedSearchParams.ofac_page === 'string' ? resolvedSearchParams.ofac_page : undefined
+  )
   const riskQuery =
     typeof resolvedSearchParams.risk_query === 'string' ? normalizeQuery(resolvedSearchParams.risk_query) : ''
   const riskTypeFilter =
@@ -1731,8 +1779,9 @@ export default async function AgentsPage({
   if (blacklistPageParam > 1) baseParams.set('blacklist_page', String(blacklistPageParam))
   if (kycPageParam > 1) baseParams.set('kyc_page', String(kycPageParam))
   if (activityPageParam > 1) baseParams.set('activity_page', String(activityPageParam))
+  if (ofacPageParam > 1) baseParams.set('ofac_page', String(ofacPageParam))
   if (activeTab !== 'risk') baseParams.set('tab', activeTab)
-  const pageParamKeys = ['risk_page', 'blacklist_page', 'kyc_page', 'activity_page'] as const
+  const pageParamKeys = ['risk_page', 'blacklist_page', 'kyc_page', 'activity_page', 'ofac_page'] as const
   const baseQueryString = baseParams.toString()
   const baseHref = baseQueryString ? `/versotech_admin/agents?${baseQueryString}` : '/versotech_admin/agents'
   const activityParams = new URLSearchParams(baseParams)
@@ -1753,7 +1802,7 @@ export default async function AgentsPage({
   }
   const paginationHref = (
     tabKey: 'risk' | 'blacklist' | 'kyc' | 'activity',
-    pageKey: 'risk_page' | 'blacklist_page' | 'kyc_page' | 'activity_page',
+    pageKey: 'risk_page' | 'blacklist_page' | 'kyc_page' | 'activity_page' | 'ofac_page',
     page: number
   ) => {
     const params = new URLSearchParams(baseParams)
@@ -1773,7 +1822,7 @@ export default async function AgentsPage({
   }
   const renderPagination = (
     tabKey: 'risk' | 'blacklist' | 'kyc' | 'activity',
-    pageKey: 'risk_page' | 'blacklist_page' | 'kyc_page' | 'activity_page',
+    pageKey: 'risk_page' | 'blacklist_page' | 'kyc_page' | 'activity_page' | 'ofac_page',
     pagination: PaginatedRows<unknown>
   ) => {
     if (pagination.totalRows === 0) return null
@@ -1856,6 +1905,7 @@ export default async function AgentsPage({
     return true
   })
   const paginatedRiskRows = paginateRows(sortedRiskRows, riskPageParam, 20)
+  const paginatedOfacRows = paginateRows(ofacScreenings, ofacPageParam, 20)
   const paginatedBlacklistEntries = paginateRows(filteredEntries, blacklistPageParam, 20)
   const paginatedKycRows = paginateRows(filteredKycRows, kycPageParam, 20)
   const paginatedActivityRows = paginateRows(activityRows, activityPageParam, 25)
@@ -3709,71 +3759,74 @@ export default async function AgentsPage({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {ofacScreenings.length === 0 ? (
+            {paginatedOfacRows.totalRows === 0 ? (
               <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
                 No OFAC screenings logged yet.
               </div>
             ) : (
-              <div className="overflow-x-auto rounded-lg border border-muted/60">
-                <table className="min-w-full text-sm">
-                  <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
-                    <tr>
-                      <th className="px-3 py-2 text-left">Name</th>
-                      <th className="px-3 py-2 text-left">Entity Type</th>
-                      <th className="px-3 py-2 text-left">Result</th>
-                      <th className="px-3 py-2 text-left">Screened</th>
-                      <th className="px-3 py-2 text-left">Report</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {ofacScreenings.map((screening) => {
-                      const reportLink = normalizeExternalUrl(screening.report_url)
-                      return (
-                      <tr key={screening.id} className="border-t">
-                        <td className="px-3 py-3">
-                          <div className="font-medium text-foreground">
-                            {screening.screened_name}
-                          </div>
-                          {screening.match_details && (
-                            <div className="text-xs text-muted-foreground mt-1">
-                              {screening.match_details}
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-3 py-3 text-muted-foreground">
-                          {screening.screened_entity_type.replace('_', ' ')}
-                        </td>
-                        <td className="px-3 py-3">
-                          <span
-                            className={cn(
-                              'rounded-md px-2 py-0.5 text-xs font-medium',
-                              ofacResultStyles[screening.result]
-                            )}
-                          >
-                            {screening.result.replace('_', ' ')}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3 text-muted-foreground">
-                          {formatDate(screening.screening_date)}
-                        </td>
-                        <td className="px-3 py-3">
-                          {reportLink ? (
-                            <a
-                              href={reportLink}
-                              className="text-xs font-medium text-primary hover:underline"
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              View report
-                            </a>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                        </td>
+              <div className="space-y-3">
+                <div className="overflow-x-auto rounded-lg border border-muted/60">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
+                      <tr>
+                        <th className="px-3 py-2 text-left">Name</th>
+                        <th className="px-3 py-2 text-left">Entity Type</th>
+                        <th className="px-3 py-2 text-left">Result</th>
+                        <th className="px-3 py-2 text-left">Screened</th>
+                        <th className="px-3 py-2 text-left">Report</th>
                       </tr>
-                    )})}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {paginatedOfacRows.rows.map((screening) => {
+                        const reportLink = normalizeExternalUrl(screening.report_url)
+                        return (
+                        <tr key={screening.id} className="border-t">
+                          <td className="px-3 py-3">
+                            <div className="font-medium text-foreground">
+                              {screening.screened_name}
+                            </div>
+                            {screening.match_details && (
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {screening.match_details}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-3 py-3 text-muted-foreground">
+                            {screening.screened_entity_type.replace('_', ' ')}
+                          </td>
+                          <td className="px-3 py-3">
+                            <span
+                              className={cn(
+                                'rounded-md px-2 py-0.5 text-xs font-medium',
+                                ofacResultStyles[screening.result]
+                              )}
+                            >
+                              {screening.result.replace('_', ' ')}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3 text-muted-foreground">
+                            {formatDate(screening.screening_date)}
+                          </td>
+                          <td className="px-3 py-3">
+                            {reportLink ? (
+                              <a
+                                href={reportLink}
+                                className="text-xs font-medium text-primary hover:underline"
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                View report
+                              </a>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      )})}
+                    </tbody>
+                  </table>
+                </div>
+                {renderPagination('risk', 'ofac_page', paginatedOfacRows)}
               </div>
             )}
           </CardContent>
