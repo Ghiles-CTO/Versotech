@@ -533,6 +533,60 @@ export default async function AgentsPage({
 
   const supabase = createServiceClient()
 
+  const now = new Date()
+  const todayStart = new Date(now)
+  todayStart.setHours(0, 0, 0, 0)
+  const tomorrowStart = new Date(todayStart)
+  tomorrowStart.setDate(todayStart.getDate() + 1)
+  const expiryCutoff = new Date(now)
+  expiryCutoff.setDate(expiryCutoff.getDate() + 30)
+  const expiryCutoffDate = expiryCutoff.toISOString().slice(0, 10)
+
+  const [
+    { count: highRiskInvestorCountSummary },
+    { count: activeBlacklistCountSummary },
+    { count: expiringDocsCountSummary },
+    { count: pendingKycCountSummary },
+    { count: alertsRaisedTodaySummary },
+    { count: automationsCompletedSummary },
+  ] = await Promise.all([
+    supabase
+      .from('investor_risk_profiles_current')
+      .select('*', { count: 'exact', head: true })
+      .in('composite_risk_grade', ['C', 'D', 'E']),
+    supabase
+      .from('compliance_blacklist')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'active'),
+    supabase
+      .from('kyc_submissions')
+      .select('*', { count: 'exact', head: true })
+      .not('expiry_date', 'is', null)
+      .lte('expiry_date', expiryCutoffDate),
+    supabase
+      .from('kyc_submissions')
+      .select('*', { count: 'exact', head: true })
+      .or('status.is.null,status.in.(pending,under_review,draft)'),
+    supabase
+      .from('compliance_activity_log')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', todayStart.toISOString())
+      .lt('created_at', tomorrowStart.toISOString()),
+    supabase
+      .from('compliance_activity_log')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', todayStart.toISOString())
+      .lt('created_at', tomorrowStart.toISOString())
+      .in('event_type', ['risk_calculated', 'reminder_sent', 'nda_signed', 'ofac_screening']),
+  ])
+
+  const shouldLoadRiskTab = activeTab === 'risk'
+  const shouldLoadBlacklistTab = activeTab === 'blacklist'
+  const shouldLoadKycTab = activeTab === 'kyc'
+  const shouldLoadChatTab = activeTab === 'chat'
+  const shouldLoadActivityTab = activeTab === 'activity'
+  const shouldLoadOfacScreenings = activeTab === 'risk' || mode === 'ofac'
+
   let activityQuery = supabase
     .from('compliance_activity_log')
     .select(
@@ -582,23 +636,29 @@ export default async function AgentsPage({
       .from('agent_task_assignments')
       .select('agent_id, task_code, task_name, is_active')
       .order('task_code', { ascending: true }),
-    supabase
-      .from('compliance_blacklist')
-      .select('id, severity, status, reason, full_name, entity_name, email, phone, tax_id, reported_at, reported_by, notes, reporter:reported_by (id, display_name, email)')
-      .order('reported_at', { ascending: false }),
-    supabase
-      .from('blacklist_matches')
-      .select(
-        'id, match_type, match_confidence, matched_at, compliance_blacklist:compliance_blacklist(id, severity, reason, full_name, entity_name, email, phone, tax_id)'
-      )
-      .order('matched_at', { ascending: false })
-      .limit(20),
-    supabase
-      .from('blacklist_matches')
-      .select('id, blacklist_entry_id, matched_at')
-      .order('matched_at', { ascending: false })
-      .limit(500),
-    selectedEntryId
+    shouldLoadBlacklistTab
+      ? supabase
+          .from('compliance_blacklist')
+          .select('id, severity, status, reason, full_name, entity_name, email, phone, tax_id, reported_at, reported_by, notes, reporter:reported_by (id, display_name, email)')
+          .order('reported_at', { ascending: false })
+      : Promise.resolve({ data: [] }),
+    shouldLoadBlacklistTab
+      ? supabase
+          .from('blacklist_matches')
+          .select(
+            'id, match_type, match_confidence, matched_at, compliance_blacklist:compliance_blacklist(id, severity, reason, full_name, entity_name, email, phone, tax_id)'
+          )
+          .order('matched_at', { ascending: false })
+          .limit(20)
+      : Promise.resolve({ data: [] }),
+    shouldLoadBlacklistTab
+      ? supabase
+          .from('blacklist_matches')
+          .select('id, blacklist_entry_id, matched_at')
+          .order('matched_at', { ascending: false })
+          .limit(500)
+      : Promise.resolve({ data: [] }),
+    shouldLoadBlacklistTab && selectedEntryId
       ? supabase
           .from('blacklist_matches')
           .select('id, match_type, match_confidence, matched_at')
@@ -606,48 +666,60 @@ export default async function AgentsPage({
           .order('matched_at', { ascending: false })
           .limit(50)
       : Promise.resolve({ data: [] }),
-    supabase
-      .from('risk_grades')
-      .select('code, label, points, color, sort_order')
-      .order('sort_order', { ascending: true }),
-    supabase
-      .from('investor_risk_profiles_current')
-      .select(
-        'investor_id, country_risk_grade, country_points, pep_risk_points, sanctions_risk_points, total_risk_points, composite_risk_grade, calculated_at, calculation_inputs'
-      )
-      .order('calculated_at', { ascending: false })
-      .limit(500),
-    supabase
-      .from('deal_risk_profiles')
-      .select(
-        'deal_id, country_risk_grade, industry_risk_grade, investment_type_risk_grade, total_risk_points, composite_risk_grade, calculated_at'
-      )
-      .order('calculated_at', { ascending: false })
-      .limit(500),
-    activityQuery,
-    supabase
-      .from('ofac_screenings')
-      .select(
-        'id, screened_entity_type, screened_entity_id, screened_name, screening_date, result, match_details, report_url, created_by, created_at'
-      )
-      .order('screening_date', { ascending: false })
-      .limit(50),
-    supabase
-      .from('conversations')
-      .select(
-        'id, subject, preview, last_message_at, created_at, metadata, conversation_participants (user_id, profiles:user_id (id, display_name, email))'
-      )
-      .contains('metadata', { agent_chat: { default_thread: true } })
-      .order('last_message_at', { ascending: false, nullsFirst: false })
-      .limit(50),
-    supabase
-      .from('conversations')
-      .select(
-        'id, subject, preview, last_message_at, created_at, metadata, conversation_participants (user_id, profiles:user_id (id, display_name, email))'
-      )
-      .contains('metadata', { compliance: { flagged: true } })
-      .order('last_message_at', { ascending: false, nullsFirst: false })
-      .limit(100),
+    shouldLoadRiskTab
+      ? supabase
+          .from('risk_grades')
+          .select('code, label, points, color, sort_order')
+          .order('sort_order', { ascending: true })
+      : Promise.resolve({ data: [] }),
+    shouldLoadRiskTab
+      ? supabase
+          .from('investor_risk_profiles_current')
+          .select(
+            'investor_id, country_risk_grade, country_points, pep_risk_points, sanctions_risk_points, total_risk_points, composite_risk_grade, calculated_at, calculation_inputs'
+          )
+          .order('calculated_at', { ascending: false })
+          .limit(500)
+      : Promise.resolve({ data: [] }),
+    shouldLoadRiskTab
+      ? supabase
+          .from('deal_risk_profiles')
+          .select(
+            'deal_id, country_risk_grade, industry_risk_grade, investment_type_risk_grade, total_risk_points, composite_risk_grade, calculated_at'
+          )
+          .order('calculated_at', { ascending: false })
+          .limit(500)
+      : Promise.resolve({ data: [] }),
+    shouldLoadActivityTab ? activityQuery : Promise.resolve({ data: [] }),
+    shouldLoadOfacScreenings
+      ? supabase
+          .from('ofac_screenings')
+          .select(
+            'id, screened_entity_type, screened_entity_id, screened_name, screening_date, result, match_details, report_url, created_by, created_at'
+          )
+          .order('screening_date', { ascending: false })
+          .limit(50)
+      : Promise.resolve({ data: [] }),
+    shouldLoadChatTab
+      ? supabase
+          .from('conversations')
+          .select(
+            'id, subject, preview, last_message_at, created_at, metadata, conversation_participants (user_id, profiles:user_id (id, display_name, email))'
+          )
+          .contains('metadata', { agent_chat: { default_thread: true } })
+          .order('last_message_at', { ascending: false, nullsFirst: false })
+          .limit(50)
+      : Promise.resolve({ data: [] }),
+    shouldLoadActivityTab
+      ? supabase
+          .from('conversations')
+          .select(
+            'id, subject, preview, last_message_at, created_at, metadata, conversation_participants (user_id, profiles:user_id (id, display_name, email))'
+          )
+          .contains('metadata', { compliance: { flagged: true } })
+          .order('last_message_at', { ascending: false, nullsFirst: false })
+          .limit(100)
+      : Promise.resolve({ data: [] }),
   ])
 
   const agents: AgentRow[] = agentsData ?? []
@@ -664,13 +736,15 @@ export default async function AgentsPage({
   const agentChatConversations: ComplianceConversationRow[] = agentChatConversationsData ?? []
   const complianceConversations: ComplianceConversationRow[] = complianceConversationsData ?? []
 
-  const { data: kycSubmissionsData } = await supabase
-    .from('kyc_submissions')
-    .select(
-      'id, document_id, status, document_type, custom_label, expiry_date, metadata, submitted_at, reviewed_at, created_at, investor_id, investor_member_id, counterparty_entity_id, counterparty_member_id, partner_id, partner_member_id, introducer_id, introducer_member_id, lawyer_id, lawyer_member_id, commercial_partner_id, commercial_partner_member_id, arranger_entity_id, arranger_member_id'
-    )
-    .order('submitted_at', { ascending: false })
-    .limit(200)
+  const { data: kycSubmissionsData } = shouldLoadKycTab
+    ? await supabase
+        .from('kyc_submissions')
+        .select(
+          'id, document_id, status, document_type, custom_label, expiry_date, metadata, submitted_at, reviewed_at, created_at, investor_id, investor_member_id, counterparty_entity_id, counterparty_member_id, partner_id, partner_member_id, introducer_id, introducer_member_id, lawyer_id, lawyer_member_id, commercial_partner_id, commercial_partner_member_id, arranger_entity_id, arranger_member_id'
+        )
+        .order('submitted_at', { ascending: false })
+        .limit(200)
+    : { data: [] }
 
   const kycSubmissions: KycSubmissionRow[] = kycSubmissionsData ?? []
   const investorIds = new Set<string>()
@@ -1604,27 +1678,13 @@ export default async function AgentsPage({
     { total: 0, high: 0, elevated: 0, low: 0, pending: 0 }
   )
 
-  const highRiskInvestorCount = riskRows.filter(
-    (row) => row.risk_type === 'investor' && ['C', 'D', 'E'].includes(row.grade_code ?? '')
-  ).length
-
-  const activeBlacklistCount = blacklistEntries.filter((entry) => entry.status === 'active').length
-  const expiringDocsCount = kycCounts.expiring + kycCounts.expired
-  const pendingKycCount = kycRows.filter((row) =>
-    ['pending', 'under_review', 'draft', 'missing'].includes(row.derived_status)
-  ).length
+  const highRiskInvestorCount = Number(highRiskInvestorCountSummary || 0)
+  const activeBlacklistCount = Number(activeBlacklistCountSummary || 0)
+  const expiringDocsCount = Number(expiringDocsCountSummary || 0)
+  const pendingKycCount = Number(pendingKycCountSummary || 0)
   const pendingReviewCount = pendingKycCount + activeBlacklistCount
-  const todayKey = new Date().toDateString()
-  const alertsRaisedToday = activityLogs.filter((log) => {
-    const createdAt = log.created_at ? new Date(log.created_at) : null
-    return createdAt && createdAt.toDateString() === todayKey
-  }).length
-  const automationEventTypes = new Set(['risk_calculated', 'reminder_sent', 'nda_signed', 'ofac_screening'])
-  const automationsCompleted = activityLogs.filter((log) => {
-    if (!log.event_type || !automationEventTypes.has(log.event_type)) return false
-    const createdAt = log.created_at ? new Date(log.created_at) : null
-    return createdAt && createdAt.toDateString() === todayKey
-  }).length
+  const alertsRaisedToday = Number(alertsRaisedTodaySummary || 0)
+  const automationsCompleted = Number(automationsCompletedSummary || 0)
   const pendingTasksCount = pendingReviewCount
 
   const investorNameMap = new Map<string, string>()
@@ -3775,13 +3835,15 @@ export default async function AgentsPage({
                     </div>
                   </div>
                 )}
-              </div>
-            )}
+	              </div>
+	            )}
 
-            <div className="overflow-x-auto rounded-lg border border-muted/60">
-              <table className="min-w-full text-sm">
-                <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
-                  <tr>
+	            {renderPagination('risk', 'risk_page', paginatedRiskRows)}
+
+	            <div className="overflow-x-auto rounded-lg border border-muted/60">
+	              <table className="min-w-full text-sm">
+	                <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
+	                  <tr>
                     <th className="px-3 py-2 text-left">Type</th>
                     <th className="px-3 py-2 text-left">Name</th>
                     <th className="px-3 py-2 text-left">Country / Location</th>
@@ -3904,12 +3966,13 @@ export default async function AgentsPage({
               <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
                 No OFAC screenings logged yet.
               </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="overflow-x-auto rounded-lg border border-muted/60">
-                  <table className="min-w-full text-sm">
-                    <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
-                      <tr>
+	            ) : (
+	              <div className="space-y-3">
+	                {renderPagination('risk', 'ofac_page', paginatedOfacRows)}
+	                <div className="overflow-x-auto rounded-lg border border-muted/60">
+	                  <table className="min-w-full text-sm">
+	                    <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
+	                      <tr>
                         <th className="px-3 py-2 text-left">Name</th>
                         <th className="px-3 py-2 text-left">Entity Type</th>
                         <th className="px-3 py-2 text-left">Result</th>
@@ -4152,12 +4215,14 @@ export default async function AgentsPage({
                   </a>
                 </div>
               </div>
-            </form>
+	            </form>
 
-            {paginatedBlacklistEntries.totalRows === 0 ? (
-              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                No blacklist entries match your filters.
-              </div>
+	            {renderPagination('blacklist', 'blacklist_page', paginatedBlacklistEntries)}
+
+	            {paginatedBlacklistEntries.totalRows === 0 ? (
+	              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+	                No blacklist entries match your filters.
+	              </div>
             ) : (
               <div className="rounded-lg border border-muted/60 overflow-hidden">
                 <table className="w-full text-sm">
@@ -4381,11 +4446,13 @@ export default async function AgentsPage({
                   Apply Filters
                 </button>
               </div>
-            </form>
+	            </form>
 
-            <form action={sendKycReminders} className="space-y-3">
-              <input type="hidden" name="return_to" value={baseHref} />
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+	            {renderPagination('kyc', 'kyc_page', paginatedKycRows)}
+
+	            <form action={sendKycReminders} className="space-y-3">
+	              <input type="hidden" name="return_to" value={baseHref} />
+	              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
                 <span>Select rows to send reminders.</span>
                 <div className="flex flex-wrap items-center gap-2">
                   <button
@@ -4619,28 +4686,31 @@ export default async function AgentsPage({
                   Open inbox
                 </a>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {paginatedChatRows.totalRows === 0 ? (
-                <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                  No agent chat threads found yet.
-                </div>
+	            </CardHeader>
+	            <CardContent className="space-y-3">
+	              {renderPagination('chat', 'chat_page', paginatedChatRows)}
+
+	              {paginatedChatRows.totalRows === 0 ? (
+	                <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+	                  No agent chat threads found yet.
+	                </div>
               ) : (
                 <div className="overflow-x-auto rounded-lg border border-muted/60">
                   <table className="min-w-full text-sm">
                     <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
-                      <tr>
-                        <th className="px-3 py-2 text-left">Conversation</th>
-                        <th className="px-3 py-2 text-left">Investor</th>
-                        <th className="px-3 py-2 text-left">Assigned agent</th>
-                        <th className="px-3 py-2 text-left">Status</th>
-                        <th className="px-3 py-2 text-left">First contact</th>
-                        <th className="px-3 py-2 text-left">Last message</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedChatRows.rows.map((row: any) => (
-                        <tr key={row.id} className="border-t">
+	                      <tr>
+	                        <th className="px-3 py-2 text-left">Conversation</th>
+	                        <th className="px-3 py-2 text-left">Investor</th>
+	                        <th className="px-3 py-2 text-left">Assigned agent</th>
+	                        <th className="px-3 py-2 text-left">Status</th>
+	                        <th className="px-3 py-2 text-left">First contact</th>
+	                        <th className="px-3 py-2 text-left">Last message</th>
+	                        <th className="px-3 py-2 text-left">Open</th>
+	                      </tr>
+	                    </thead>
+	                    <tbody>
+	                      {paginatedChatRows.rows.map((row: any) => (
+	                        <tr key={row.id} className="border-t">
                           <td className="px-3 py-3">
                             <div className="font-medium text-foreground">{row.subject}</div>
                             <div className="mt-1 text-xs text-muted-foreground">{row.preview}</div>
@@ -4658,14 +4728,22 @@ export default async function AgentsPage({
                               {row.firstContactAt ? formatDate(row.firstContactAt) : '—'}
                             </div>
                           </td>
-                          <td className="px-3 py-3 text-muted-foreground">
-                            {formatDate(row.lastMessageAt)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+	                          <td className="px-3 py-3 text-muted-foreground">
+	                            {formatDate(row.lastMessageAt)}
+	                          </td>
+	                          <td className="px-3 py-3">
+	                            <a
+	                              href={`/versotech_main/messages?conversation=${encodeURIComponent(row.id)}&compliance=true`}
+	                              className="text-xs font-medium text-primary hover:underline"
+	                            >
+	                              Open
+	                            </a>
+	                          </td>
+	                        </tr>
+	                      ))}
+	                    </tbody>
+	                  </table>
+	                </div>
               )}
               {renderPagination('chat', 'chat_page', paginatedChatRows)}
             </CardContent>

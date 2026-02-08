@@ -24,6 +24,34 @@ function safeTrim(value: unknown) {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+function normalizeAgentName(value: unknown) {
+  const source = safeTrim(value)
+  if (!source) return ''
+  return source
+    .normalize('NFKD')
+    .replace(/[’`]/g, "'")
+    .replace(/[^a-zA-Z0-9'\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+}
+
+function fallbackReplyMessage(latestMessage: string) {
+  const message = latestMessage.toLowerCase()
+
+  if (
+    /(kyc|passport|proof of address|poa|document|expiry|expire|id card|driver.?s license)/i.test(message)
+  ) {
+    return 'For KYC, start with one valid government ID and one recent proof of address, then check expiry and issue dates before upload. If any document is close to expiry or unclear, keep the case open for compliance review and we will confirm the exact next step.'
+  }
+
+  if (/(ofac|sanction|blacklist|watchlist|pep)/i.test(message)) {
+    return 'For sanctions or blacklist questions, pause transaction steps and route this case to human compliance review. Please upload any supporting screening evidence in the platform so the team can make the final determination.'
+  }
+
+  return 'Thanks for your message. Please continue with the details here and a compliance officer will review and provide the next required steps in-platform.'
+}
+
 export async function processAgentChatReply(
   supabase: ServiceClient,
   params: {
@@ -47,10 +75,9 @@ export async function processAgentChatReply(
     return { ok: true, status: 'not_agent_thread' as const }
   }
 
-  const agent = await resolveComplianceChatAgent(supabase, { requireActive: true })
-  if (!agent) {
-    return { ok: true, status: 'agent_inactive' as const }
-  }
+  const agentChatMeta = readAgentChatMetadata(metadataRoot)
+  const assignedAgentIdFromMetadata = agentChatMeta?.agent_id || null
+  const assignedAgentNameFromMetadata = normalizeAgentName(agentChatMeta?.agent_name)
 
   let sourceMessage: any = null
   if (params.triggerMessageId) {
@@ -101,6 +128,80 @@ export async function processAgentChatReply(
     return { ok: true, status: 'already_replied' as const }
   }
 
+  const agent = await resolveComplianceChatAgent(supabase, { requireActive: true })
+  if (!agent) {
+    const assistantName = agentChatMeta?.agent_name || "Wayne O'Connor"
+    const assistantAvatarUrl = agentChatMeta?.agent_avatar_url || null
+
+    const { error: unavailableInsertError } = await supabase.from('messages').insert({
+      conversation_id: params.conversationId,
+      sender_id: null,
+      message_type: 'system',
+      body:
+        "I'm currently unavailable due to a temporary issue. Please continue sharing your question here and a human compliance officer will follow up.",
+      metadata: {
+        ai_generated: true,
+        assistant_name: assistantName,
+        assistant_agent_id: assignedAgentIdFromMetadata,
+        assistant_avatar_url: assistantAvatarUrl,
+        provider: 'disabled',
+        model: 'agent_inactive',
+        source: 'compliance_assistant',
+        fallback: true,
+        error: 'Compliance agent is inactive',
+        reply_to_message_id: sourceMessage.id,
+      },
+    })
+
+    if (unavailableInsertError) {
+      console.error('[agent-chat] Failed to insert inactive-agent reply:', unavailableInsertError)
+      return { ok: false, status: 'reply_failed' as const, error: unavailableInsertError.message }
+    }
+
+    try {
+      await supabase.from('compliance_activity_log').insert({
+        event_type: 'compliance_question',
+        description: 'Compliance agent inactive: human follow-up required.',
+        agent_id: assignedAgentIdFromMetadata,
+        created_by: params.actorUserId,
+        metadata: {
+          conversation_id: params.conversationId,
+          message_id: sourceMessage.id,
+          agent_inactive: true,
+        },
+      })
+
+      const { data: ceoUsers } = await supabase.from('ceo_users').select('user_id')
+      const notifications = (ceoUsers || []).map((ceo: any) => ({
+        user_id: ceo.user_id,
+        title: 'Compliance agent unavailable',
+        message: 'An investor sent a compliance question, but the agent is inactive.',
+        link: '/versotech_admin/agents?tab=chat',
+        type: 'compliance_question',
+        created_by: params.actorUserId,
+        agent_id: assignedAgentIdFromMetadata,
+        data: {
+          conversation_id: params.conversationId,
+          message_id: sourceMessage.id,
+          agent_inactive: true,
+        },
+      }))
+
+      if (notifications.length > 0) {
+        const { error: notificationError } = await supabase
+          .from('investor_notifications')
+          .insert(notifications)
+        if (notificationError) {
+          console.error('[agent-chat] Failed to insert agent-inactive notifications:', notificationError)
+        }
+      }
+    } catch (logError) {
+      console.error('[agent-chat] Failed to log agent-inactive activity:', logError)
+    }
+
+    return { ok: true, status: 'agent_inactive_replied' as const }
+  }
+
   const { data: recentMessages } = await supabase
     .from('messages')
     .select('id, body, created_at, metadata, sender:sender_id(display_name, email)')
@@ -147,7 +248,46 @@ export async function processAgentChatReply(
   })
 
   if (aiResult.error || !aiResult.reply) {
-    return { ok: false, status: 'reply_failed' as const, error: aiResult.error || 'No reply generated' }
+    const fallbackReply = fallbackReplyMessage(safeTrim(sourceMessage.body))
+    const { error: fallbackInsertError } = await supabase.from('messages').insert({
+      conversation_id: params.conversationId,
+      sender_id: null,
+      message_type: 'system',
+      body: fallbackReply,
+      metadata: {
+        ai_generated: true,
+        assistant_name: agent.name,
+        assistant_agent_id: agent.id,
+        assistant_avatar_url: agent.avatar_url,
+        provider: aiResult.provider,
+        model: aiResult.model,
+        source: 'compliance_assistant',
+        fallback: true,
+        error: aiResult.error || 'No reply generated',
+        reply_to_message_id: sourceMessage.id,
+      },
+    })
+
+    if (fallbackInsertError) {
+      return {
+        ok: false,
+        status: 'reply_failed' as const,
+        error: aiResult.error || fallbackInsertError.message || 'No reply generated',
+      }
+    }
+
+    console.error(
+      '[agent-chat] AI reply fallback used:',
+      aiResult.error || 'No reply generated'
+    )
+
+    return {
+      ok: true,
+      status: 'fallback_replied' as const,
+      provider: aiResult.provider,
+      model: aiResult.model,
+      escalated: false,
+    }
   }
 
   const { error: aiInsertError } = await supabase.from('messages').insert({

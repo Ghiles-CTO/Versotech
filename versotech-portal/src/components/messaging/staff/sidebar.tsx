@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, RefreshCw, MessageSquarePlus, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { applyConversationFilters, sortConversations, formatRelativeTime, getInitials, truncateText } from '@/lib/messaging'
+import { isAgentChatConversation } from '@/lib/compliance/agent-chat'
 
 interface ConversationsSidebarProps {
   conversations: ConversationSummary[]
@@ -100,8 +101,9 @@ export function ConversationsSidebar({
 
   const complianceCount = useMemo(() => {
     return conversations.filter((conversation) => {
-      const compliance = (conversation.metadata as Record<string, any>)?.compliance
-      return Boolean(compliance?.flagged)
+      const metadata = (conversation.metadata as Record<string, any>) || {}
+      const compliance = metadata.compliance
+      return Boolean(compliance?.flagged || isAgentChatConversation(metadata))
     }).length
   }, [conversations])
 

@@ -49,6 +49,7 @@ export async function POST(
 
     if (action === 'flag') {
       compliance.flagged = true
+      compliance.auto_default = false
       compliance.status = compliance.status || 'open'
       if (reason) compliance.reason = reason
       compliance.urgency = urgency || compliance.urgency || 'medium'

@@ -148,36 +148,128 @@ async function runOpenAi(systemPrompt: string, userPrompt: string): Promise<{ te
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) throw new Error('OPENAI_API_KEY is missing')
 
-  const model = process.env.COMPLIANCE_AI_OPENAI_MODEL || 'gpt-5.2'
-  const response = await fetch('https://api.openai.com/v1/responses', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0.2,
-      max_output_tokens: 500,
-      input: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-    }),
-  })
+  const primaryModel = process.env.COMPLIANCE_AI_OPENAI_MODEL || 'gpt-5-mini'
+  // Avoid silently falling back to older models unless explicitly configured.
+  // Default fallback stays in the GPT-5 family.
+  const fallbackModels = (process.env.COMPLIANCE_AI_OPENAI_FALLBACK_MODELS || 'gpt-5-mini')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+  const modelCandidates = [primaryModel, ...fallbackModels].filter(
+    (item, index, array) => array.indexOf(item) === index
+  )
 
-  if (!response.ok) {
-    const body = await response.text()
-    throw new Error(`OpenAI request failed (${response.status}): ${body}`)
+  let lastError: string | null = null
+
+  function extractTextFromResponse(data: any): string {
+    const fragments: string[] = []
+    const seen = new Set<string>()
+
+    const collectText = (value: unknown) => {
+      if (!value) return
+
+      if (typeof value === 'string') {
+        const text = value.trim()
+        if (text && !seen.has(text)) {
+          seen.add(text)
+          fragments.push(text)
+        }
+        return
+      }
+
+      if (Array.isArray(value)) {
+        value.forEach((entry) => collectText(entry))
+        return
+      }
+
+      if (typeof value !== 'object') return
+
+      const record = value as Record<string, unknown>
+      collectText(record.text)
+      collectText(record.output_text)
+      collectText(record.content)
+      collectText(record.output)
+      collectText(record.message)
+    }
+
+    if (typeof data?.output_text === 'string' && data.output_text.trim()) {
+      return data.output_text.trim()
+    }
+
+    const output = Array.isArray(data?.output) ? data.output : []
+    for (const item of output) {
+      if (typeof item?.text === 'string' && item.text.trim()) {
+        collectText(item.text)
+      }
+      const content = Array.isArray(item?.content) ? item.content : []
+      for (const chunk of content) {
+        if (typeof chunk?.text === 'string' && chunk.text.trim()) {
+          collectText(chunk.text)
+        }
+      }
+      collectText(item)
+    }
+
+    return fragments.join('\n').trim()
   }
 
-  const data = await response.json()
-  const text =
-    typeof data?.output_text === 'string'
-      ? data.output_text.trim()
-      : ''
+  for (const model of modelCandidates) {
+    try {
+      const payload: Record<string, unknown> = {
+        model,
+        max_output_tokens: 500,
+        input: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+      }
 
-  return { text, model }
+      // GPT-5 supports these controls; older models (e.g. 4.1-mini) reject them.
+      if (/^gpt-5(\.|-|$)/i.test(model)) {
+        payload.text = { verbosity: 'low' }
+        payload.reasoning = { effort: 'minimal' }
+      }
+
+      const timeoutMs = Number(process.env.COMPLIANCE_AI_OPENAI_TIMEOUT_MS || 12_000)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
+      let response: Response
+      try {
+        response = await fetch('https://api.openai.com/v1/responses', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        })
+      } finally {
+        clearTimeout(timeoutId)
+      }
+
+      if (!response.ok) {
+        const body = await response.text()
+        throw new Error(`OpenAI request failed (${response.status}): ${body}`)
+      }
+
+      const data = await response.json()
+      const text = extractTextFromResponse(data)
+
+      if (!text) {
+        throw new Error(`OpenAI model ${model} returned empty text`)
+      }
+
+      return { text, model }
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : 'Unknown OpenAI error'
+    }
+  }
+
+  throw new Error(
+    `OpenAI request failed for models [${modelCandidates.join(', ')}]: ${lastError || 'Unknown error'}`
+  )
 }
 
 async function runAnthropic(systemPrompt: string, userPrompt: string): Promise<{ text: string; model: string }> {

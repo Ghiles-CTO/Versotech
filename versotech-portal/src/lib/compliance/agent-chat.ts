@@ -101,6 +101,13 @@ export async function resolveComplianceChatAgent(
     candidate = data ?? null
   }
 
+  // If the configured assignment points to an inactive agent, fall back to the
+  // default Wayne agent lookup. This keeps the investor experience stable even
+  // if assignments drift, while still allowing Wayne deactivation to stop the chat.
+  if (candidate && requireActive && !candidate.is_active) {
+    candidate = null
+  }
+
   if (!candidate) {
     const { data } = await supabase
       .from('ai_agents')
@@ -146,14 +153,11 @@ export async function ensureDefaultAgentConversationForInvestor(
   } else {
     const newMetadata = {
       compliance: {
-        flagged: true,
         status: 'open',
         urgency: 'medium',
         reason: 'Default compliance support channel',
-        flagged_at: now,
-        flagged_by: userId,
-        assigned_agent_id: agent.id,
         auto_default: true,
+        assigned_agent_id: agent.id,
         updated_at: now,
       },
       agent_chat: {
@@ -200,12 +204,19 @@ export async function ensureDefaultAgentConversationForInvestor(
   if (!conversationId) return null
 
   const nextAgentMetadata = buildAgentChatMetadata(conversationMetadata, agent)
+  const currentCompliance = asRecord(conversationMetadata.compliance)
+  const isAutoDefault =
+    currentCompliance.auto_default !== false &&
+    (!currentCompliance.reason || currentCompliance.reason === 'Default compliance support channel')
   const nextCompliance = {
-    ...asRecord(conversationMetadata.compliance),
-    flagged: true,
-    status: asRecord(conversationMetadata.compliance).status || 'open',
+    ...currentCompliance,
+    status: currentCompliance.status || 'open',
+    urgency: currentCompliance.urgency || 'medium',
+    reason: currentCompliance.reason || 'Default compliance support channel',
     assigned_agent_id: agent.id,
+    auto_default: currentCompliance.auto_default ?? true,
     updated_at: now,
+    flagged: isAutoDefault ? false : Boolean(currentCompliance.flagged),
   }
 
   const { data: existingMessages } = await supabase

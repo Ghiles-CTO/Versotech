@@ -173,13 +173,12 @@ export async function POST(
       }
     })
     const conversationMetadata = ((conversation as { metadata?: unknown })?.metadata || {}) as Record<string, any>
-    const complianceMetadata = (conversationMetadata.compliance || {}) as Record<string, any>
     const bodyText = typeof body === 'string' ? body.trim() : ''
     const isAiAuthoredInput = (messageMetadata as Record<string, any> | undefined)?.ai_generated === true
-    const isComplianceOpen = (complianceMetadata.status || 'open') !== 'resolved'
-    const isEligibleAgentThread =
-      isAgentChatConversation(conversationMetadata) || complianceMetadata.flagged === true
-    const agentReplyEligible = Boolean(isEligibleAgentThread && isComplianceOpen && bodyText && !isAiAuthoredInput)
+    const isEligibleAgentThread = isAgentChatConversation(conversationMetadata)
+    const agentReplyEligible = Boolean(
+      !isStaff && isEligibleAgentThread && bodyText && !isAiAuthoredInput
+    )
 
     if (!isStaff && isAgentChatConversation(conversationMetadata) && bodyText && !isAiAuthoredInput) {
       await markAgentChatFirstContact(serviceSupabase, {

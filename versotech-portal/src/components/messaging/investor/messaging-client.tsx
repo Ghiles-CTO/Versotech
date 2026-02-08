@@ -23,7 +23,7 @@ function resolveAvailableMessagingHeight(target: HTMLElement): number {
   if (!mainElement) return 720
   const mainRect = mainElement.getBoundingClientRect()
   const targetRect = target.getBoundingClientRect()
-  const offsetWithinMain = targetRect.top - mainRect.top
+  const offsetWithinMain = Math.max(0, targetRect.top - mainRect.top)
   return Math.max(320, mainRect.height - offsetWithinMain)
 }
 
@@ -164,6 +164,7 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
         onSelectConversation={handleSelectConversation}
         activeConversationId={activeConversationId}
         isLoading={isLoading}
+        currentUserId={currentUserId}
       />
       <div className="flex-1 flex flex-col min-h-0">
         {activeConversation ? (

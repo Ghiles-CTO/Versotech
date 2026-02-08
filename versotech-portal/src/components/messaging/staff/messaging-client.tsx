@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { NewConversationDialog } from './new-conversation-dialog'
 import type { StaffDirectoryEntry, InvestorDirectoryEntry } from './new-conversation-dialog'
+import { isAgentChatConversation } from '@/lib/compliance/agent-chat'
 
 interface MessagingClientProps {
   initialConversations: ConversationSummary[]
@@ -29,7 +30,7 @@ function resolveAvailableMessagingHeight(target: HTMLElement): number {
   if (!mainElement) return 720
   const mainRect = mainElement.getBoundingClientRect()
   const targetRect = target.getBoundingClientRect()
-  const offsetWithinMain = targetRect.top - mainRect.top
+  const offsetWithinMain = Math.max(0, targetRect.top - mainRect.top)
   return Math.max(320, mainRect.height - offsetWithinMain)
 }
 
@@ -43,13 +44,19 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
   const supabase = useMemo(() => createClient(), [])
   const searchParams = useSearchParams()
   const initialCompliance = searchParams?.get('compliance') === 'true'
+  const requestedConversationId = searchParams?.get('conversation') || null
   const [filters, setFilters] = useState<ConversationFilters>({
     ...INITIAL_FILTERS,
     complianceOnly: initialCompliance,
   })
   const [conversations, setConversations] = useState<ConversationSummary[]>(initialConversations)
   const [isLoading, setIsLoading] = useState(false)
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(initialConversations[0]?.id || null)
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(() => {
+    if (requestedConversationId && initialConversations.some((c) => c.id === requestedConversationId)) {
+      return requestedConversationId
+    }
+    return initialConversations[0]?.id || null
+  })
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isNewConversationOpen, setIsNewConversationOpen] = useState(false)
   const [conversationMode, setConversationMode] = useState<'dm' | 'group'>('dm')
@@ -64,6 +71,23 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
   activeConversationIdRef.current = activeConversationId
 
   const activeConversation = conversations.find(conv => conv.id === activeConversationId) || null
+  const hideAssistantBadge = activeConversation ? isAgentChatConversation(activeConversation.metadata) : false
+
+  useEffect(() => {
+    if (!requestedConversationId) return
+    if (requestedConversationId === activeConversationId) return
+    const exists = conversations.some((conversation) => conversation.id === requestedConversationId)
+    if (!exists) return
+    setActiveConversationId(requestedConversationId)
+    setConversations((prev) =>
+      prev.map((conversation) =>
+        conversation.id === requestedConversationId
+          ? { ...conversation, unreadCount: 0 }
+          : conversation
+      )
+    )
+    markConversationRead(requestedConversationId).catch(console.error)
+  }, [requestedConversationId, conversations, activeConversationId])
 
   useEffect(() => {
     const element = containerRef.current
@@ -309,17 +333,17 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
         canCreateConversation={canCreateConversation}
       />
       <div className="flex-1 flex flex-col min-h-0">
-        {activeConversation ? (
-          <ConversationView
-            key={activeConversation.id}
-            conversation={activeConversation}
-            currentUserId={currentUserId}
-            showAssistantBadge={canCreateConversation}
-            showComplianceControls={canCreateConversation}
-            onRead={() => markConversationRead(activeConversation.id)}
-            onError={handleComposerError}
-            onDelete={handleDeleteConversation}
-            onRefresh={handleConversationRefresh}
+	        {activeConversation ? (
+	          <ConversationView
+	            key={activeConversation.id}
+	            conversation={activeConversation}
+	            currentUserId={currentUserId}
+	            showAssistantBadge={canCreateConversation && !hideAssistantBadge}
+	            showComplianceControls={canCreateConversation}
+	            onRead={() => markConversationRead(activeConversation.id)}
+	            onError={handleComposerError}
+	            onDelete={handleDeleteConversation}
+	            onRefresh={handleConversationRefresh}
           />
         ) : (
           <div className="flex items-center justify-center h-full text-muted-foreground">

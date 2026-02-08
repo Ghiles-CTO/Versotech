@@ -3,12 +3,15 @@ import { InvestorMessagingClient } from '@/components/messaging/investor/messagi
 import { requireAuth } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 import { normalizeConversation } from '@/lib/messaging/supabase'
+import { ensureDefaultAgentConversationForInvestor } from '@/lib/compliance/agent-chat'
 
 export const dynamic = 'force-dynamic'
 
 export default async function MessagesPage() {
   const profile = await requireAuth(['investor'])
   const supabase = createServiceClient()
+
+  await ensureDefaultAgentConversationForInvestor(supabase, profile.id)
 
   const { data: participantRows, error: participantError } = await supabase
     .from('conversation_participants')
