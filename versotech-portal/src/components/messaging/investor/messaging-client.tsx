@@ -18,6 +18,44 @@ const INITIAL_FILTERS: ConversationFilters = {
   type: 'all',
 }
 
+function resolveAvailableMessagingHeight(target: HTMLElement): number {
+  const top = Math.max(0, target.getBoundingClientRect().top)
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 800
+  const bottomPadding = 16
+  return Math.max(320, viewportHeight - top - bottomPadding)
+}
+
+function resetMessagingViewportScroll(target: HTMLElement) {
+  window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  document.documentElement.scrollTop = 0
+  document.body.scrollTop = 0
+
+  let ancestor: HTMLElement | null = target
+  while (ancestor) {
+    if (ancestor.scrollHeight > ancestor.clientHeight + 1) {
+      ancestor.scrollTop = 0
+    }
+    ancestor = ancestor.parentElement
+  }
+
+  const contentWrapper = target.closest('.app-content-inner') as HTMLElement | null
+  if (contentWrapper) {
+    contentWrapper.scrollTop = 0
+  }
+
+  const contentContainer = target.closest('.app-content') as HTMLElement | null
+  if (contentContainer) {
+    contentContainer.scrollTop = 0
+  }
+
+  const nestedScrollContainers = target.querySelectorAll<HTMLElement>(
+    '.overflow-y-auto, [data-radix-scroll-area-viewport]'
+  )
+  nestedScrollContainers.forEach((element) => {
+    element.scrollTop = 0
+  })
+}
+
 export function InvestorMessagingClient({ currentUserId, initialConversations }: InvestorMessagingClientProps) {
   const [conversations, setConversations] = useState<ConversationSummary[]>(initialConversations)
   const [activeConversationId, setActiveConversationId] = useState<string | null>(initialConversations[0]?.id || null)
@@ -65,16 +103,24 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
     const updateHeight = () => {
       const target = containerRef.current
       if (!target) return
-      const mainElement = target.closest('main')
-      if (!mainElement) return
-      const mainRect = mainElement.getBoundingClientRect()
-      const targetRect = target.getBoundingClientRect()
-      const offsetWithinMain = targetRect.top - mainRect.top
-      const available = Math.max(320, mainRect.height - offsetWithinMain)
+      const available = resolveAvailableMessagingHeight(target)
       setContainerHeight(available)
     }
 
+    const forceScrollReset = () => {
+      const target = containerRef.current
+      if (!target) return
+      resetMessagingViewportScroll(target)
+    }
+
     updateHeight()
+    forceScrollReset()
+    requestAnimationFrame(() => {
+      forceScrollReset()
+      requestAnimationFrame(forceScrollReset)
+    })
+    const resetDelays = [100, 240, 500, 900]
+    const resetTimers = resetDelays.map((delay) => window.setTimeout(forceScrollReset, delay))
     const handleResize = () => requestAnimationFrame(updateHeight)
     window.addEventListener('resize', handleResize)
 
@@ -87,22 +133,10 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
       resizeObserver.observe(mainElement)
     }
 
-    const previousOverflowY = mainElement?.style.overflowY
-
-    if (mainElement) {
-      mainElement.style.overflowY = 'hidden'
-    }
-
     return () => {
       window.removeEventListener('resize', handleResize)
+      resetTimers.forEach((timerId) => window.clearTimeout(timerId))
       resizeObserver?.disconnect()
-      if (mainElement) {
-        if (previousOverflowY) {
-          mainElement.style.overflowY = previousOverflowY
-        } else {
-          mainElement.style.removeProperty('overflow-y')
-        }
-      }
     }
   }, [])
 
