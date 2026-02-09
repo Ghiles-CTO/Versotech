@@ -36,7 +36,9 @@ function asIsoDate(value?: string | null) {
 
 export function readAgentChatMetadata(metadata: unknown): AgentChatMetadata | null {
   const root = asRecord(metadata)
-  const raw = asRecord(root.agent_chat)
+  // Accept either the full conversation metadata object (with `.agent_chat`) or the
+  // agent_chat object itself. Some call sites pass `metadataRoot.agent_chat`.
+  const raw = root.agent_chat ? asRecord(root.agent_chat) : root
   if (!raw.default_thread && !raw.task_code && !raw.agent_id) return null
 
   return {

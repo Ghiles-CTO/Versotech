@@ -75,6 +75,13 @@ export function ConversationView({
   const [complianceReason, setComplianceReason] = useState('')
   const [complianceUrgency, setComplianceUrgency] = useState<'low' | 'medium' | 'high'>('medium')
   const [complianceSubmitting, setComplianceSubmitting] = useState(false)
+  const isMountedRef = useRef(true)
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
   
   const handleDeleteConversation = async () => {
     try {
@@ -306,13 +313,34 @@ export function ConversationView({
       }
 
       if (result?.agentReplyEligible && result?.message?.id) {
-        void fetch(`/api/conversations/${conversation.id}/agent-reply`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message_id: result.message.id }),
-        }).catch((error) => {
-          console.error('[ConversationView] Failed to trigger agent reply', error)
-        })
+        void (async () => {
+          // Realtime delivery can miss server-side assistant inserts (e.g. sender_id is null),
+          // so we always refetch once the agent-reply call completes.
+          try {
+            await fetch(`/api/conversations/${conversation.id}/agent-reply`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ message_id: result.message.id }),
+            })
+          } catch (error) {
+            console.error('[ConversationView] Failed to trigger agent reply', error)
+          }
+
+          // Give the server a tiny buffer, then refetch messages so the reply appears.
+          // We do a second pass to cover slow AI providers or transient delays.
+          for (const delayMs of [350, 2500]) {
+            await new Promise((resolve) => setTimeout(resolve, delayMs))
+            if (!isMountedRef.current) return
+
+            try {
+              const updated = await fetchConversationMessages(conversation.id, { limit: 200 })
+              if (!isMountedRef.current) return
+              setMessages(updated.length > 0 ? updated : (conversation.latestMessage ? [conversation.latestMessage] : []))
+            } catch (fetchError) {
+              console.error('[ConversationView] Failed to refresh after agent reply', fetchError)
+            }
+          }
+        })()
       }
       
       setComposerMessage('')
