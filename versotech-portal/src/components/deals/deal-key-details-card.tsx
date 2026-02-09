@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
-  Briefcase,
   DollarSign,
   Tag,
   Globe,
@@ -28,7 +27,7 @@ interface DealKeyDetailsCardProps {
 interface DetailItem {
   label: string
   value: string | null
-  icon: typeof Briefcase
+  icon: typeof DollarSign
   isBadge?: boolean
   badgeVariant?: 'default' | 'secondary' | 'outline' | 'destructive'
   badgeColor?: string
@@ -45,23 +44,21 @@ function DetailRow({ item }: { item: DetailItem }) {
   const displayValue = formatValue(item.value)
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-      <div className="p-2 rounded-md bg-card shadow-sm">
-        <Icon className="w-4 h-4 text-muted-foreground" />
-      </div>
-      <div className="flex-1 min-w-0">
+    <div className="px-3 py-2.5 rounded-lg bg-muted/50">
+      <div className="flex items-center gap-1.5 mb-1">
+        <Icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
         <p className="text-xs text-muted-foreground">{item.label}</p>
-        {item.isBadge && item.value ? (
-          <Badge
-            variant={item.badgeVariant || 'secondary'}
-            className={cn("mt-0.5", item.badgeColor)}
-          >
-            {displayValue}
-          </Badge>
-        ) : (
-          <p className="text-sm font-medium truncate">{displayValue}</p>
-        )}
       </div>
+      {item.isBadge && item.value ? (
+        <Badge
+          variant={item.badgeVariant || 'secondary'}
+          className={cn("mt-0.5 whitespace-normal", item.badgeColor)}
+        >
+          {displayValue}
+        </Badge>
+      ) : (
+        <p className="text-sm font-medium">{displayValue}</p>
+      )}
     </div>
   )
 }
@@ -133,7 +130,7 @@ export function DealKeyDetailsCard({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {visibleDetails.map((item) => (
             <DetailRow key={item.label} item={item} />
           ))}
