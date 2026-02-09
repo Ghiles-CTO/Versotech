@@ -103,7 +103,8 @@ export function ConversationsSidebar({
     return conversations.filter((conversation) => {
       const metadata = (conversation.metadata as Record<string, any>) || {}
       const compliance = metadata.compliance
-      return Boolean(compliance?.flagged || isAgentChatConversation(metadata))
+      const ownerTeam = (conversation.ownerTeam || '').toLowerCase()
+      return Boolean(ownerTeam === 'compliance' || compliance || isAgentChatConversation(metadata))
     }).length
   }, [conversations])
 
@@ -232,6 +233,11 @@ export function ConversationsSidebar({
               const agentChat = (conversation.metadata as Record<string, any>)?.agent_chat as Record<string, any> | undefined
               const agentName = typeof agentChat?.agent_name === 'string' ? agentChat.agent_name : null
               const agentAvatar = typeof agentChat?.agent_avatar_url === 'string' ? agentChat.agent_avatar_url : null
+              const isComplianceConversation = Boolean(
+                (conversation.ownerTeam || '').toLowerCase() === 'compliance' ||
+                  compliance ||
+                  isAgentChatConversation(conversation.metadata)
+              )
               const displayName =
                 (!canCreateConversation && (agentName || conversation.subject))
                   ? (agentName || conversation.subject || 'Compliance Team')
@@ -299,7 +305,7 @@ export function ConversationsSidebar({
                           <Badge variant="outline" className="text-[10px] capitalize border-border text-muted-foreground px-1.5 py-0">
                             {conversation.type.replace('_', ' ')}
                           </Badge>
-                          {compliance?.flagged && (
+                          {isComplianceConversation && (
                             <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
                               Compliance
                             </Badge>

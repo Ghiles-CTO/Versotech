@@ -247,8 +247,19 @@ export async function GET(request: NextRequest) {
 
     if (filters.complianceOnly) {
       filtered = filtered.filter((conv: NormalizedConversation) => {
-        const compliance = (conv.metadata as Record<string, any>)?.compliance
-        return Boolean(compliance?.flagged)
+        const metadata = (conv.metadata as Record<string, any>) || {}
+        const compliance = metadata.compliance as Record<string, any> | undefined
+        const agentChat = metadata.agent_chat as Record<string, any> | undefined
+        const ownerTeam = (conv.ownerTeam || '').toLowerCase()
+
+        // "Compliance" view should not depend on a manual flag. It should naturally include:
+        // - Any conversation owned by the compliance team
+        // - Any conversation with compliance metadata
+        // - Any agent-chat (Wayne) thread
+        if (ownerTeam === 'compliance') return true
+        if (agentChat && typeof agentChat === 'object') return true
+        if (compliance && typeof compliance === 'object') return true
+        return false
       })
     }
 

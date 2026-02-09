@@ -97,11 +97,6 @@ export function MessageBubble({
             <span className="text-xs font-semibold text-foreground/80">
               {senderName}
             </span>
-            {assistantName && showAssistantBadge && (
-              <span className="rounded-full border border-blue-300 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
-                AI
-              </span>
-            )}
           </div>
         )}
 
