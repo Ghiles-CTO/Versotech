@@ -34,12 +34,47 @@ function asIsoDate(value?: string | null) {
   return Number.isNaN(date.getTime()) ? null : date.toISOString()
 }
 
+function normalizeText(value: unknown) {
+  if (typeof value !== 'string') return ''
+  return value.trim().toLowerCase()
+}
+
+function isDefaultComplianceReason(value: unknown) {
+  return normalizeText(value) === 'default compliance support channel'
+}
+
+function isLikelyWayneComplianceThread(
+  conversation: Record<string, any>,
+  agent: ComplianceAgentIdentity
+) {
+  const metadata = asRecord(conversation.metadata)
+  const agentChat = asRecord(metadata.agent_chat)
+  const compliance = asRecord(metadata.compliance)
+
+  const subject = normalizeText(conversation.subject)
+  const agentName = normalizeText(agentChat.agent_name)
+  const ownerTeam = normalizeText(conversation.owner_team)
+  const type = normalizeText(conversation.type)
+  const assignedFromAgentChat = normalizeText(agentChat.agent_id)
+  const assignedFromCompliance = normalizeText(compliance.assigned_agent_id)
+
+  const mentionsWayne = subject.includes('wayne') || agentName.includes('wayne')
+  const matchesAssignedAgent =
+    (assignedFromAgentChat && assignedFromAgentChat === normalizeText(agent.id)) ||
+    (assignedFromCompliance && assignedFromCompliance === normalizeText(agent.id))
+  const autoDefault = compliance.auto_default === true || isDefaultComplianceReason(compliance.reason)
+  const complianceOwned = ownerTeam === 'compliance' || Object.keys(compliance).length > 0
+  const isDm = !type || type === 'dm'
+
+  return complianceOwned && isDm && (mentionsWayne || matchesAssignedAgent || autoDefault)
+}
+
 export function readAgentChatMetadata(metadata: unknown): AgentChatMetadata | null {
   const root = asRecord(metadata)
   // Accept either the full conversation metadata object (with `.agent_chat`) or the
   // agent_chat object itself. Some call sites pass `metadataRoot.agent_chat`.
   const raw = root.agent_chat ? asRecord(root.agent_chat) : root
-  if (!raw.default_thread && !raw.task_code && !raw.agent_id) return null
+  if (!raw.default_thread && !raw.task_code && !raw.agent_id && !raw.agent_name) return null
 
   return {
     default_thread: raw.default_thread === true,
@@ -115,9 +150,13 @@ export async function resolveComplianceChatAgent(
       .from('ai_agents')
       .select('id, name, role, avatar_url, system_prompt, is_active')
       .ilike('name', 'Wayne%')
-      .limit(1)
-      .maybeSingle()
-    candidate = data ?? null
+      .order('is_active', { ascending: false })
+      .limit(10)
+
+    const wayneAgents = (data ?? []) as ComplianceAgentIdentity[]
+    candidate = requireActive
+      ? wayneAgents.find((item) => item.is_active) ?? null
+      : wayneAgents[0] ?? null
   }
 
   if (!candidate) return null
@@ -153,6 +192,26 @@ export async function ensureDefaultAgentConversationForInvestor(
     conversationId = existingConversation.id
     conversationMetadata = asRecord(existingConversation.metadata)
   } else {
+    const { data: potentialConversations } = await supabase
+      .from('conversations')
+      .select(
+        'id, metadata, subject, owner_team, type, visibility, conversation_participants!inner(user_id)'
+      )
+      .eq('conversation_participants.user_id', userId)
+      .order('last_message_at', { ascending: false, nullsFirst: false })
+      .limit(100)
+
+    const legacyWayneConversation = (potentialConversations || []).find((item: any) =>
+      isLikelyWayneComplianceThread(asRecord(item), agent)
+    )
+
+    if (legacyWayneConversation?.id) {
+      conversationId = legacyWayneConversation.id
+      conversationMetadata = asRecord(legacyWayneConversation.metadata)
+    }
+  }
+
+  if (!conversationId) {
     const newMetadata = {
       compliance: {
         status: 'open',
