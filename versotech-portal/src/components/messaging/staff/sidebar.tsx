@@ -22,6 +22,8 @@ interface ConversationsSidebarProps {
   errorMessage: string | null
   /** If false, hides New Chat/Group buttons. Default: true */
   canCreateConversation?: boolean
+  /** Current user ID - used to filter out self from participant avatars */
+  currentUserId?: string
 }
 
 const VISIBILITY_FILTERS: Array<{ value: ConversationFilters['visibility']; label: string }> = [
@@ -50,6 +52,7 @@ export function ConversationsSidebar({
   isLoading,
   errorMessage,
   canCreateConversation = true,
+  currentUserId,
 }: ConversationsSidebarProps) {
   const [searchValue, setSearchValue] = useState(filters.search || '')
 
@@ -74,10 +77,6 @@ export function ConversationsSidebar({
     onFiltersChange({ ...filters, unreadOnly: !filters.unreadOnly })
   }
 
-  const toggleCompliance = () => {
-    onFiltersChange({ ...filters, complianceOnly: !filters.complianceOnly })
-  }
-
   const handleSearchChange = (value: string) => {
     setSearchValue(value)
     onFiltersChange({ ...filters, search: value || undefined })
@@ -97,15 +96,6 @@ export function ConversationsSidebar({
     }
 
     return totals
-  }, [conversations])
-
-  const complianceCount = useMemo(() => {
-    return conversations.filter((conversation) => {
-      const metadata = (conversation.metadata as Record<string, any>) || {}
-      const compliance = metadata.compliance
-      const ownerTeam = (conversation.ownerTeam || '').toLowerCase()
-      return Boolean(ownerTeam === 'compliance' || compliance || isAgentChatConversation(metadata))
-    }).length
   }, [conversations])
 
   return (
@@ -170,17 +160,6 @@ export function ConversationsSidebar({
             Unread {filters.unreadOnly ? '' : `(${unreadTotals.all})`}
           </Button>
           {canCreateConversation && (
-            <Button
-              variant={filters.complianceOnly ? 'default' : 'outline'}
-              size="sm"
-              className="w-full text-popover-foreground"
-              onClick={toggleCompliance}
-            >
-              Compliance {filters.complianceOnly ? '' : `(${complianceCount})`}
-            </Button>
-          )}
-
-          {canCreateConversation && (
             <div className="grid grid-cols-2 gap-2">
               <Button
                 size="sm"
@@ -227,25 +206,34 @@ export function ConversationsSidebar({
           <ul className="p-2 space-y-1">
             {filteredConversations.map(conversation => {
               const isActive = conversation.id === activeConversationId
-              const firstParticipant = conversation.participants[0]
               const timestamp = conversation.lastMessageAt || conversation.createdAt
-              const compliance = (conversation.metadata as Record<string, any>)?.compliance
               const agentChat = (conversation.metadata as Record<string, any>)?.agent_chat as Record<string, any> | undefined
               const agentName = typeof agentChat?.agent_name === 'string' ? agentChat.agent_name : null
               const agentAvatar = typeof agentChat?.agent_avatar_url === 'string' ? agentChat.agent_avatar_url : null
-              const isComplianceConversation = Boolean(
-                (conversation.ownerTeam || '').toLowerCase() === 'compliance' ||
-                  compliance ||
-                  isAgentChatConversation(conversation.metadata)
-              )
-              const displayName =
-                (!canCreateConversation && (agentName || conversation.subject))
+              const isAgentThread = isAgentChatConversation(conversation.metadata)
+
+              // Show the OTHER participant's avatar/name, not the current user's
+              const otherParticipants = currentUserId
+                ? conversation.participants.filter(p => p.id !== currentUserId)
+                : conversation.participants
+              const displayParticipant = otherParticipants[0] || conversation.participants[0]
+
+              // For agent threads, always show agent identity regardless of staff/investor view
+              const displayName = (isAgentThread && agentName)
+                ? agentName
+                : (!canCreateConversation && (agentName || conversation.subject))
                   ? (agentName || conversation.subject || 'Compliance Team')
                   : (conversation.subject || 'Untitled Conversation')
-              const displayAvatarUrl = (!canCreateConversation && agentAvatar) ? agentAvatar : firstParticipant?.avatarUrl
-              const displayAvatarName = (!canCreateConversation && agentName)
+              const displayAvatarUrl = (isAgentThread && agentAvatar)
+                ? agentAvatar
+                : displayParticipant?.avatarUrl
+              const displayAvatarName = (isAgentThread && agentName)
                 ? agentName
-                : (firstParticipant?.displayName || firstParticipant?.email || displayName)
+                : (displayParticipant?.displayName || displayParticipant?.email || displayName)
+              // For agent threads, count the virtual agent as a participant
+              const effectiveParticipantCount = isAgentThread
+                ? Math.max(conversation.participants.length + 1, 2)
+                : conversation.participants.length
               
               return (
                 <li key={conversation.id}>
@@ -305,14 +293,9 @@ export function ConversationsSidebar({
                           <Badge variant="outline" className="text-[10px] capitalize border-border text-muted-foreground px-1.5 py-0">
                             {conversation.type.replace('_', ' ')}
                           </Badge>
-                          {isComplianceConversation && (
-                            <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
-                              Compliance
-                            </Badge>
-                          )}
-                          {conversation.participants.length > 1 && (
+                          {effectiveParticipantCount > 1 && (
                             <span className="text-[10px] text-muted-foreground">
-                              {conversation.participants.length} participants
+                              {effectiveParticipantCount} participants
                             </span>
                           )}
                         </div>

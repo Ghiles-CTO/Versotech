@@ -31,7 +31,12 @@ function resolveAvailableMessagingHeight(target: HTMLElement): number {
   const mainRect = mainElement.getBoundingClientRect()
   const targetRect = target.getBoundingClientRect()
   const offsetWithinMain = Math.max(0, targetRect.top - mainRect.top)
-  return Math.max(320, mainRect.height - offsetWithinMain)
+  // Account for the wrapper's bottom padding (pb-8 = 32px) so the container
+  // doesn't extend beyond the viewport causing page-level scroll.
+  const wrapperPadding = target.closest('.app-content-inner')
+    ? parseFloat(getComputedStyle(target.closest('.app-content-inner')!).paddingBottom) || 0
+    : 0
+  return Math.max(320, mainRect.height - offsetWithinMain - wrapperPadding)
 }
 
 function resetMainScrollPosition(target: HTMLElement) {
@@ -127,7 +132,18 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
     setErrorMessage(null)
     try {
       const filtersToUse = nextFilters || filters
-      const { conversations: data } = await fetchConversationsClient({ ...filtersToUse, includeMessages: true, limit: 50 })
+      let { conversations: data } = await fetchConversationsClient({ ...filtersToUse, includeMessages: true, limit: 50 })
+
+      // Investor inbox reuses staff messaging UI. If an investor toggles "Unread" while
+      // there are 0 unread messages, the list looks empty and feels broken. Auto-fallback
+      // to "All" for non-staff users so Wayne and other threads stay visible.
+      if (!canCreateConversation && filtersToUse.unreadOnly === true && data.length === 0) {
+        const relaxedFilters: ConversationFilters = { ...filtersToUse, unreadOnly: false }
+        const relaxedResult = await fetchConversationsClient({ ...relaxedFilters, includeMessages: true, limit: 50 })
+        data = relaxedResult.conversations
+        setFilters(relaxedFilters)
+      }
+
       setConversations(data)
 
       // If no conversations found and we have an active one, keep it
@@ -141,7 +157,7 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
     } finally {
       if (!silent) setIsLoading(false)
     }
-  }, [filters, activeConversationId])
+  }, [filters, activeConversationId, canCreateConversation])
 
   useEffect(() => {
     if (initialCompliance) {
@@ -175,7 +191,14 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
     markConversationRead(conversationId).catch(console.error)
   }, [])
 
-  // Global realtime subscription for conversations and messages
+  // Ref to hold current filters so the realtime callback always sees the latest
+  // without recreating the subscription on every filter change.
+  const filtersRef = useRef(filters)
+  filtersRef.current = filters
+
+  // Global realtime subscription for conversations and messages.
+  // Uses optimistic local state updates instead of full API refetches so the
+  // sidebar never flashes or reloads when messages arrive.
   useEffect(() => {
     const channel = supabase
       .channel('staff_conversations_all')
@@ -184,10 +207,9 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
         schema: 'public',
         table: 'conversations'
       }, () => {
-        void fetchConversationsClient({ ...filters, includeMessages: true, limit: 50 })
-          .then(({ conversations: data }) => {
-            setConversations(data)
-          })
+        // New conversation created — do a background refetch (rare event)
+        void fetchConversationsClient({ ...filtersRef.current, includeMessages: true, limit: 50 })
+          .then(({ conversations: data }) => setConversations(data))
           .catch(console.error)
       })
       .on('postgres_changes', {
@@ -195,15 +217,48 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
         schema: 'public',
         table: 'messages'
       }, (payload) => {
-        // Refresh conversation list when new messages arrive in non-active conversations
-        // This updates preview text, timestamps, and unread counts
-        const messageConvId = (payload.new as { conversation_id?: string })?.conversation_id
-        if (messageConvId && messageConvId !== activeConversationIdRef.current) {
-          void fetchConversationsClient({ ...filters, includeMessages: true, limit: 50 })
-            .then(({ conversations: data }) => {
-              setConversations(data)
-            })
-            .catch(console.error)
+        const msg = payload.new as {
+          conversation_id?: string
+          body?: string | null
+          created_at?: string
+          sender_id?: string | null
+        }
+        const messageConvId = msg?.conversation_id
+        if (!messageConvId) return
+
+        const isActive = messageConvId === activeConversationIdRef.current
+
+        // Optimistic update: patch preview, timestamp, unread count locally
+        setConversations(prev => {
+          const idx = prev.findIndex(c => c.id === messageConvId)
+          if (idx === -1) {
+            // Message for a conversation not in our list — background refetch
+            void fetchConversationsClient({ ...filtersRef.current, includeMessages: true, limit: 50 })
+              .then(({ conversations: data }) => setConversations(data))
+              .catch(console.error)
+            return prev
+          }
+
+          const updated = [...prev]
+          const conv = updated[idx]
+          updated[idx] = {
+            ...conv,
+            preview: msg.body ?? conv.preview,
+            lastMessageAt: msg.created_at || conv.lastMessageAt,
+            unreadCount: isActive ? 0 : conv.unreadCount + 1,
+          }
+
+          // Bubble the updated conversation to the top so sort order stays fresh
+          if (idx > 0) {
+            const [moved] = updated.splice(idx, 1)
+            updated.unshift(moved)
+          }
+
+          return updated
+        })
+
+        if (isActive) {
+          markConversationRead(messageConvId).catch(console.error)
         }
       })
       .subscribe()
@@ -211,7 +266,7 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [supabase, filters])
+  }, [supabase])
 
   const handleComposerError = useCallback((message: string) => {
     toast.error(message)
@@ -331,6 +386,7 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
         isLoading={isLoading}
         errorMessage={errorMessage}
         canCreateConversation={canCreateConversation}
+        currentUserId={currentUserId}
       />
       <div className="flex-1 flex flex-col min-h-0">
 	        {activeConversation ? (
