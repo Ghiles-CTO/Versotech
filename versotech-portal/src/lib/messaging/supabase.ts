@@ -6,7 +6,7 @@ import type {
   MessageSender,
 } from '@/types/messaging'
 
-interface FetchConversationsOptions extends ConversationFilters {
+interface FetchConversationsOptions extends Partial<ConversationFilters> {
   limit?: number
   offset?: number
   includeMessages?: boolean
@@ -137,11 +137,10 @@ export function subscribeToConversationUpdates(
   callbacks: {
     onMessage?: (message: ConversationMessage) => void
     onUpdate?: () => void
+    onParticipantRead?: (userId: string, lastReadAt: string) => void
   }
 ) {
   const supabase = createClient()
-
-  
 
   const channel = supabase
     .channel(`conversation-${conversationId}`)
@@ -169,6 +168,10 @@ export function subscribeToConversationUpdates(
         filter: `conversation_id=eq.${conversationId}`,
       },
       (payload) => {
+        const row = payload.new as { user_id?: string; last_read_at?: string } | undefined
+        if (row?.user_id && row?.last_read_at) {
+          callbacks.onParticipantRead?.(row.user_id, row.last_read_at)
+        }
         callbacks.onUpdate?.()
       }
     )
