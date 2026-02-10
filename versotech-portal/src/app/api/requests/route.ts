@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { resolveAgentIdForTask } from '@/lib/agents'
 import { auditLogger, AuditActions } from '@/lib/audit'
 import { NextResponse } from 'next/server'
 import type {
@@ -104,6 +105,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
+    const serviceSupabase = createServiceClient()
     const body: CreateCustomRequest = await request.json()
 
     // Sanitize and validate request data
@@ -199,6 +201,50 @@ export async function POST(request: Request) {
         subject: sanitized.subject
       }
     })
+
+    if (sanitized.requestType === 'nda_modification') {
+      try {
+        const agentId = await resolveAgentIdForTask(serviceSupabase, 'V001')
+        const investorName = ticket.investor?.legal_name || 'Investor'
+
+        await serviceSupabase.from('compliance_activity_log').insert({
+          event_type: 'nda_modification_request',
+          description: sanitized.subject,
+          related_investor_id: investorId,
+          related_deal_id: sanitized.dealId || null,
+          agent_id: agentId,
+          created_by: user.id,
+          metadata: {
+            request_ticket_id: ticket.id,
+            subject: sanitized.subject,
+            details: sanitized.details || null,
+            investor_name: investorName
+          }
+        })
+
+        const { data: ceoUsers } = await serviceSupabase.from('ceo_users').select('user_id')
+        const ceoNotifications = (ceoUsers || []).map((ceo) => ({
+          user_id: ceo.user_id,
+          investor_id: investorId,
+          deal_id: sanitized.dealId || null,
+          title: 'NDA modification requested',
+          message: `${investorName} requested NDA modifications: ${sanitized.subject}`,
+          link: '/versotech_admin/agents?tab=activity',
+          type: 'nda_modification_request',
+          created_by: user.id,
+          agent_id: agentId,
+          metadata: {
+            request_ticket_id: ticket.id
+          }
+        }))
+
+        if (ceoNotifications.length) {
+          await serviceSupabase.from('investor_notifications').insert(ceoNotifications)
+        }
+      } catch (logError) {
+        console.error('Failed to log NDA modification request:', logError)
+      }
+    }
 
     return NextResponse.json({
       id: ticket.id,

@@ -25,6 +25,7 @@ import {
 import { TrendingUp, TrendingDown, Calendar, Target, DollarSign, BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useChartColors, useChartPalette } from '@/lib/theme-colors'
+import { normalizeCurrencyCode } from '@/lib/currency-totals'
 
 interface PerformanceData {
   period: string
@@ -47,6 +48,7 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
   const [data, setData] = useState<PerformanceData[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedPeriod, setSelectedPeriod] = useState<'12M' | '24M' | 'ALL'>('12M')
+  const [currencyCode, setCurrencyCode] = useState('')
   const chartColors = useChartColors()
   const palette = useChartPalette()
 
@@ -58,6 +60,7 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
       setLoading(true)
       try {
         const supabase = createClient()
+        let scopedCurrencyCode = ''
 
         // Calculate date range based on selected period
         const months = selectedPeriod === '12M' ? 12 : selectedPeriod === '24M' ? 24 : 36
@@ -75,7 +78,7 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
         if (selectedDealId) {
           const { data: dealRecord, error: dealLookupError } = await supabase
             .from('deals')
-            .select('vehicle_id')
+            .select('vehicle_id, currency')
             .eq('id', selectedDealId)
             .single()
 
@@ -84,6 +87,8 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
             setLoading(false)
             return
           }
+
+          scopedCurrencyCode = normalizeCurrencyCode(dealRecord.currency, '')
 
           snapshotQuery.eq('vehicle_id', dealRecord.vehicle_id)
         }
@@ -136,9 +141,11 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
           })
 
         setData(performanceData)
+        setCurrencyCode(scopedCurrencyCode)
       } catch (error) {
         console.error('Error in fetchPerformanceData:', error)
         setData([])
+        setCurrencyCode('')
       } finally {
         setLoading(false)
       }
@@ -147,13 +154,21 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
     fetchPerformanceData()
   }, [selectedPeriod, investorIds, selectedDealId])
 
-  const formatCurrency = (value: number) => {
-    if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(1)}M`
-    } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(0)}K`
+  const formatChartCurrency = (value: number) => {
+    if (!currencyCode) {
+      return Number(value || 0).toLocaleString('en-US', {
+        maximumFractionDigits: 1,
+        notation: Math.abs(value || 0) >= 1000 ? 'compact' : 'standard',
+        compactDisplay: 'short',
+      })
     }
-    return `$${value.toFixed(0)}`
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currencyCode,
+      maximumFractionDigits: 1,
+      notation: Math.abs(value || 0) >= 1000 ? 'compact' : 'standard',
+      compactDisplay: 'short',
+    }).format(value || 0)
   }
 
   const formatPercentage = (value: number) => `${value.toFixed(1)}%`
@@ -168,7 +183,7 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
             <p key={index} className="text-sm" style={{ color: entry.color }}>
               {entry.name}: {
                 entry.dataKey === 'nav' || entry.dataKey === 'contributions' || entry.dataKey === 'distributions'
-                  ? formatCurrency(entry.value)
+                  ? formatChartCurrency(entry.value)
                   : entry.dataKey === 'irr'
                   ? formatPercentage(entry.value)
                   : formatMultiple(entry.value)
@@ -244,7 +259,7 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
           <div className="text-center">
             <div className="text-2xl font-bold text-foreground">
-              {latestData ? formatCurrency(latestData.nav) : '$0'}
+              {latestData ? formatChartCurrency(latestData.nav) : formatChartCurrency(0)}
             </div>
             <div className="text-sm text-muted-foreground">Current NAV</div>
             {navChange !== 0 && (
@@ -306,7 +321,7 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
                     stroke={chartColors.axisLine}
                   />
                   <YAxis
-                    tickFormatter={formatCurrency}
+                    tickFormatter={formatChartCurrency}
                     tick={{ fontSize: 12, fill: chartColors.axis }}
                     tickLine={false}
                     stroke={chartColors.axisLine}
@@ -376,7 +391,7 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
                     stroke={chartColors.axisLine}
                   />
                   <YAxis
-                    tickFormatter={formatCurrency}
+                    tickFormatter={formatChartCurrency}
                     tick={{ fontSize: 12, fill: chartColors.axis }}
                     tickLine={false}
                     stroke={chartColors.axisLine}
@@ -418,7 +433,7 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value: any) => formatCurrency(value)}
+                      formatter={(value: any) => formatChartCurrency(value)}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -432,7 +447,7 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
                     />
                     <span className="text-sm font-medium">{item.name}</span>
                     <span className="text-sm text-muted-foreground">
-                      {formatCurrency(item.value)}
+                      {formatChartCurrency(item.value)}
                     </span>
                   </div>
                 ))}

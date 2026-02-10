@@ -121,24 +121,12 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       <div className="p-4 flex items-center justify-between h-16 border-b border-gray-100 dark:border-white/5">
         {!collapsed && (
           <div className="flex items-center gap-2 animate-in fade-in duration-200">
-            <div className="relative h-7 w-36 overflow-hidden">
-              {/* Light mode logo */}
-              <Image
-                src="/versotech-logo.png"
-                alt="VERSOTECH Admin"
-                fill
-                className="object-contain object-left dark:hidden"
-                priority
-              />
-              {/* Dark mode logo */}
-              <Image
-                src="/versotech-logo-dark.png"
-                alt="VERSOTECH Admin"
-                fill
-                className="object-contain object-left hidden dark:block"
-                priority
-              />
+            <div className="relative h-6 w-6 flex-shrink-0">
+              <Image src="/versotech-icon.png" alt="" fill className="object-contain" priority />
             </div>
+            <span style={{ fontFamily: 'var(--font-spartan), sans-serif' }} className="text-sm font-extrabold tracking-wide text-gray-900 dark:text-white">
+              VERSOTECH
+            </span>
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
               Admin
             </Badge>

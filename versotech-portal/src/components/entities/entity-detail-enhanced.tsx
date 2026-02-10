@@ -280,14 +280,26 @@ const getFlagStatusColor = (status: string) => {
   }
 }
 
-const formatCurrencyValue = (amount?: number | null, currency?: string | null) => {
+const formatCurrencyValue = (
+  amount?: number | null,
+  currency?: string | null,
+  minimumFractionDigits = 0,
+  maximumFractionDigits = 0
+) => {
   if (amount == null) return null
-  const currencyCode = (currency || 'USD').toUpperCase()
+  const currencyCode = currency ? String(currency).toUpperCase() : null
+  if (!currencyCode) {
+    return amount.toLocaleString('en-US', {
+      minimumFractionDigits,
+      maximumFractionDigits,
+    })
+  }
   try {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currencyCode,
-      maximumFractionDigits: 0
+      minimumFractionDigits,
+      maximumFractionDigits,
     }).format(amount)
   } catch {
     return `${currencyCode} ${amount.toLocaleString()}`
@@ -352,7 +364,7 @@ const AcknowledgementNotes = ({ notes }: { notes: string }) => {
                 item.currency_converted ??
                 item.currency_original ??
                 parsed?.currency ??
-                'USD'
+                null
               const comment = item.comments ? String(item.comments) : null
               const orderDate = formatWorkbookDate(item.order_date as string | number | null)
               const settlementDate = formatWorkbookDate(
@@ -1160,6 +1172,15 @@ export function EntityDetailEnhanced({
   }, [entity, stakeholders])
   const logoUrl = entity.logo_url || ''
   const [imageError, setImageError] = useState(false)
+  const ofacHref = useMemo(() => {
+    const params = new URLSearchParams({
+      mode: 'ofac',
+      ofac_entity_type: 'counterparty_entity',
+      ofac_entity_id: entity.id,
+      ofac_name: entity.name
+    })
+    return `/versotech_admin/agents?${params.toString()}`
+  }, [entity.id, entity.name])
 
   // Reset image error when entity changes
   useEffect(() => {
@@ -1167,7 +1188,7 @@ export function EntityDetailEnhanced({
   }, [entity.id, entity.logo_url])
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
         <div className="space-y-4 max-w-3xl">
           <Link href="/versotech_main/entities" className="inline-flex">
@@ -1269,6 +1290,14 @@ export function EntityDetailEnhanced({
             >
               <Edit className="h-4 w-4" />
               Edit Metadata
+            </Button>
+            <Button
+              onClick={() => window.location.assign(ofacHref)}
+              variant="outline"
+              className="gap-2 rounded-full border-amber-400/60 text-amber-200 hover:bg-amber-400/10"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              Screen OFAC
             </Button>
             <Button
               onClick={() => setDeleteEntityDialogOpen(true)}
@@ -2497,18 +2526,12 @@ export function EntityDetailEnhanced({
                           </td>
                           <td className="py-3 px-4 text-sm text-right font-mono">
                             {valuation.nav_total
-                              ? `$${valuation.nav_total.toLocaleString('en-US', {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                              })}`
+                              ? formatCurrencyValue(valuation.nav_total, entity.currency, 2, 2)
                               : '-'}
                           </td>
                           <td className="py-3 px-4 text-sm text-right font-mono">
                             {valuation.nav_per_unit
-                              ? `$${valuation.nav_per_unit.toLocaleString('en-US', {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 6
-                              })}`
+                              ? formatCurrencyValue(valuation.nav_per_unit, entity.currency, 2, 6)
                               : '-'}
                           </td>
                           <td className="py-3 px-4 text-right">
@@ -2630,18 +2653,12 @@ export function EntityDetailEnhanced({
                             </td>
                             <td className="py-3 px-4 text-sm text-right font-mono">
                               {position.cost_basis != null
-                                ? `$${position.cost_basis.toLocaleString('en-US', {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2
-                                })}`
+                                ? formatCurrencyValue(position.cost_basis, entity.currency, 2, 2)
                                 : '-'}
                             </td>
                             <td className="py-3 px-4 text-sm text-right font-mono">
                               {position.last_nav != null
-                                ? `$${position.last_nav.toLocaleString('en-US', {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 6
-                                })}`
+                                ? formatCurrencyValue(position.last_nav, entity.currency, 2, 6)
                                 : '-'}
                             </td>
                             <td className="py-3 px-4 text-sm">

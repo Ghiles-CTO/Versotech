@@ -9,28 +9,34 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, FileText, AlertCircle, TrendingUp, Users, UserCheck, Handshake, Briefcase, ExternalLink, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { formatCurrency } from '@/lib/fees/calculations';
+import { formatCurrencyTotals } from '@/lib/currency-totals';
 
 interface CommissionSummary {
   total_owed: number;
   total_accrued: number;
   total_invoiced: number;
   total_paid_ytd: number;
+  total_owed_by_currency?: Record<string, number>;
+  total_paid_ytd_by_currency?: Record<string, number>;
   by_entity_type: {
-    introducer: { owed: number; paid: number };
-    partner: { owed: number; paid: number };
-    commercial_partner: { owed: number; paid: number };
+    introducer: { owed: number; paid: number; owed_by_currency?: Record<string, number>; paid_by_currency?: Record<string, number> };
+    partner: { owed: number; paid: number; owed_by_currency?: Record<string, number>; paid_by_currency?: Record<string, number> };
+    commercial_partner: { owed: number; paid: number; owed_by_currency?: Record<string, number>; paid_by_currency?: Record<string, number> };
   };
 }
 
 interface DashboardData {
   total_fees_ytd: number;
+  total_fees_ytd_by_currency?: Record<string, number>;
   total_fees_mtd: number;
+  total_fees_mtd_by_currency?: Record<string, number>;
   total_fees_qtd: number;
   outstanding_invoices_count: number;
   outstanding_invoices_amount: number;
+  outstanding_invoices_amount_by_currency?: Record<string, number>;
   overdue_invoices_count: number;
   overdue_invoices_amount: number;
+  overdue_invoices_amount_by_currency?: Record<string, number>;
   upcoming_fees_30days: number;
   upcoming_fees_count: number;
   introducer_commissions_owed: number;
@@ -118,6 +124,23 @@ export default function OverviewTab() {
     return <div className="text-white">Failed to load dashboard data</div>;
   }
 
+  const hasTotals = (totals?: Record<string, number>) =>
+    !!totals && Object.values(totals).some((amount) => Number(amount) !== 0);
+
+  const formatTotalsOrFallback = (totals: Record<string, number> | undefined, fallback: number) => {
+    if (hasTotals(totals)) return formatCurrencyTotals(totals as Record<string, number>);
+    return fallback ? fallback.toLocaleString() : '—';
+  };
+
+  const formatNeutralAmount = (amount: number | null | undefined) => {
+    const numeric = Number(amount);
+    if (!Number.isFinite(numeric) || numeric === 0) return '—';
+    return numeric.toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* KPI Cards */}
@@ -128,9 +151,11 @@ export default function OverviewTab() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{formatCurrency(data.total_fees_ytd)}</div>
+            <div className="text-2xl font-bold text-white">
+              {formatTotalsOrFallback(data.total_fees_ytd_by_currency, data.total_fees_ytd)}
+            </div>
             <p className="text-xs text-gray-400">
-              MTD: {formatCurrency(data.total_fees_mtd)}
+              MTD: {formatTotalsOrFallback(data.total_fees_mtd_by_currency, data.total_fees_mtd)}
             </p>
           </CardContent>
         </Card>
@@ -144,7 +169,9 @@ export default function OverviewTab() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{formatCurrency(data.outstanding_invoices_amount)}</div>
+            <div className="text-2xl font-bold text-white">
+              {formatTotalsOrFallback(data.outstanding_invoices_amount_by_currency, data.outstanding_invoices_amount)}
+            </div>
             <div className="flex items-center justify-between mt-1">
               <p className="text-xs text-gray-400">
                 {data.outstanding_invoices_count} invoices
@@ -163,7 +190,7 @@ export default function OverviewTab() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">
-              {formatCurrency(data.overdue_invoices_amount)}
+              {formatTotalsOrFallback(data.overdue_invoices_amount_by_currency, data.overdue_invoices_amount)}
             </div>
             <p className="text-xs text-gray-400">
               {data.overdue_invoices_count} overdue invoices
@@ -177,7 +204,7 @@ export default function OverviewTab() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{formatCurrency(data.upcoming_fees_30days)}</div>
+            <div className="text-2xl font-bold text-white">{formatNeutralAmount(data.upcoming_fees_30days)}</div>
             <p className="text-xs text-gray-400">
               {data.upcoming_fees_count} scheduled fees
             </p>
@@ -215,7 +242,10 @@ export default function OverviewTab() {
                 <div className="p-4 bg-red-900/20 rounded border border-red-700">
                   <p className="text-xs text-red-300 mb-1">Total Commissions Owed</p>
                   <p className="text-2xl font-bold text-white">
-                    {formatCurrency(data.commission_summary.total_owed)}
+                    {formatTotalsOrFallback(
+                      data.commission_summary.total_owed_by_currency,
+                      data.commission_summary.total_owed
+                    )}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
                     Accrued + Invoiced
@@ -224,7 +254,10 @@ export default function OverviewTab() {
                 <div className="p-4 bg-green-900/20 rounded border border-green-700">
                   <p className="text-xs text-green-300 mb-1">Total Paid YTD</p>
                   <p className="text-2xl font-bold text-white">
-                    {formatCurrency(data.commission_summary.total_paid_ytd)}
+                    {formatTotalsOrFallback(
+                      data.commission_summary.total_paid_ytd_by_currency,
+                      data.commission_summary.total_paid_ytd
+                    )}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
                     Commissions paid this year
@@ -233,7 +266,7 @@ export default function OverviewTab() {
                 <div className="p-4 bg-amber-900/20 rounded border border-amber-700">
                   <p className="text-xs text-amber-300 mb-1">Pending Invoice</p>
                   <p className="text-2xl font-bold text-white">
-                    {formatCurrency(data.commission_summary.total_accrued)}
+                    {formatNeutralAmount(data.commission_summary.total_accrued)}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
                     Accrued, awaiting invoice
@@ -259,13 +292,19 @@ export default function OverviewTab() {
                         <div className="flex justify-between">
                           <span className="text-gray-400">Owed:</span>
                           <span className="text-white font-medium">
-                            {formatCurrency(data.commission_summary.by_entity_type.introducer.owed)}
+                            {formatTotalsOrFallback(
+                              data.commission_summary.by_entity_type.introducer.owed_by_currency,
+                              data.commission_summary.by_entity_type.introducer.owed
+                            )}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-400">Paid YTD:</span>
                           <span className="text-green-400 font-medium">
-                            {formatCurrency(data.commission_summary.by_entity_type.introducer.paid)}
+                            {formatTotalsOrFallback(
+                              data.commission_summary.by_entity_type.introducer.paid_by_currency,
+                              data.commission_summary.by_entity_type.introducer.paid
+                            )}
                           </span>
                         </div>
                       </div>
@@ -285,13 +324,19 @@ export default function OverviewTab() {
                         <div className="flex justify-between">
                           <span className="text-gray-400">Owed:</span>
                           <span className="text-white font-medium">
-                            {formatCurrency(data.commission_summary.by_entity_type.partner.owed)}
+                            {formatTotalsOrFallback(
+                              data.commission_summary.by_entity_type.partner.owed_by_currency,
+                              data.commission_summary.by_entity_type.partner.owed
+                            )}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-400">Paid YTD:</span>
                           <span className="text-green-400 font-medium">
-                            {formatCurrency(data.commission_summary.by_entity_type.partner.paid)}
+                            {formatTotalsOrFallback(
+                              data.commission_summary.by_entity_type.partner.paid_by_currency,
+                              data.commission_summary.by_entity_type.partner.paid
+                            )}
                           </span>
                         </div>
                       </div>
@@ -311,13 +356,19 @@ export default function OverviewTab() {
                         <div className="flex justify-between">
                           <span className="text-gray-400">Owed:</span>
                           <span className="text-white font-medium">
-                            {formatCurrency(data.commission_summary.by_entity_type.commercial_partner.owed)}
+                            {formatTotalsOrFallback(
+                              data.commission_summary.by_entity_type.commercial_partner.owed_by_currency,
+                              data.commission_summary.by_entity_type.commercial_partner.owed
+                            )}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-400">Paid YTD:</span>
                           <span className="text-green-400 font-medium">
-                            {formatCurrency(data.commission_summary.by_entity_type.commercial_partner.paid)}
+                            {formatTotalsOrFallback(
+                              data.commission_summary.by_entity_type.commercial_partner.paid_by_currency,
+                              data.commission_summary.by_entity_type.commercial_partner.paid
+                            )}
                           </span>
                         </div>
                       </div>
@@ -350,44 +401,44 @@ export default function OverviewTab() {
                   <div className="p-4 bg-blue-900/20 rounded border border-blue-700">
                     <p className="text-xs text-blue-300 mb-1">Subscription Fees</p>
                     <p className="text-xl font-bold text-white">
-                      {formatCurrency(projectedFees.totals.subscription_fees)}
+                      {formatNeutralAmount(projectedFees.totals.subscription_fees)}
                     </p>
                   </div>
                   <div className="p-4 bg-green-900/20 rounded border border-green-700">
                     <p className="text-xs text-green-300 mb-1">Spread Fees</p>
                     <p className="text-xl font-bold text-white">
-                      {formatCurrency(projectedFees.totals.spread_fees)}
+                      {formatNeutralAmount(projectedFees.totals.spread_fees)}
                     </p>
                   </div>
                   <div className="p-4 bg-purple-900/20 rounded border border-purple-700">
                     <p className="text-xs text-purple-300 mb-1">BD Fees</p>
                     <p className="text-xl font-bold text-white">
-                      {formatCurrency(projectedFees.totals.bd_fees)}
+                      {formatNeutralAmount(projectedFees.totals.bd_fees)}
                     </p>
                   </div>
                   <div className="p-4 bg-orange-900/20 rounded border border-orange-700">
                     <p className="text-xs text-orange-300 mb-1">FINRA Fees</p>
                     <p className="text-xl font-bold text-white">
-                      {formatCurrency(projectedFees.totals.finra_fees)}
+                      {formatNeutralAmount(projectedFees.totals.finra_fees)}
                     </p>
                   </div>
                   <div className="p-4 bg-pink-900/20 rounded border border-pink-700">
                     <p className="text-xs text-pink-300 mb-1">Performance Fees</p>
                     <p className="text-xl font-bold text-white">
-                      {formatCurrency(projectedFees.totals.performance_fees)}
+                      {formatNeutralAmount(projectedFees.totals.performance_fees)}
                     </p>
                   </div>
                   <div className="p-4 bg-cyan-900/20 rounded border border-cyan-700">
                     <p className="text-xs text-cyan-300 mb-1">Management Fees</p>
                     <p className="text-xl font-bold text-white">
-                      {formatCurrency(projectedFees.totals.management_fees)}
+                      {formatNeutralAmount(projectedFees.totals.management_fees)}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">(Annual)</p>
                   </div>
                   <div className="p-4 bg-gray-800 rounded border border-gray-600">
                     <p className="text-xs text-gray-300 mb-1 font-semibold">TOTAL ALL FEES</p>
                     <p className="text-xl font-bold text-white">
-                      {formatCurrency(projectedFees.totals.total_fees)}
+                      {formatNeutralAmount(projectedFees.totals.total_fees)}
                     </p>
                   </div>
                 </div>
@@ -411,7 +462,7 @@ export default function OverviewTab() {
                         ? 'text-emerald-400'
                         : 'text-red-400'
                     }`}>
-                      {formatCurrency(projectedFees.totals.unrealized_gains)}
+                      {formatNeutralAmount(projectedFees.totals.unrealized_gains)}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">
                       (Price per Share - Cost per Share) × Number of Shares
@@ -423,13 +474,13 @@ export default function OverviewTab() {
                   <div className="p-3 bg-gray-900 rounded border border-gray-700">
                     <p className="text-xs text-gray-400">Total Committed Capital</p>
                     <p className="text-lg font-bold text-white">
-                      {formatCurrency(projectedFees.totals.committed_capital)}
+                      {formatNeutralAmount(projectedFees.totals.committed_capital)}
                     </p>
                   </div>
                   <div className="p-3 bg-gray-900 rounded border border-gray-700">
                     <p className="text-xs text-gray-400">Total Current NAV</p>
                     <p className="text-lg font-bold text-white">
-                      {formatCurrency(projectedFees.totals.current_nav)}
+                      {formatNeutralAmount(projectedFees.totals.current_nav)}
                     </p>
                   </div>
                   <div className="p-3 bg-gray-900 rounded border border-gray-700">
@@ -458,38 +509,38 @@ export default function OverviewTab() {
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span className="text-gray-400">Subscription:</span>
-                            <span className="text-white font-medium">{formatCurrency(statusGroup.subscription_fees)}</span>
+                            <span className="text-white font-medium">{formatNeutralAmount(statusGroup.subscription_fees)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-400">Spread:</span>
-                            <span className="text-white font-medium">{formatCurrency(statusGroup.spread_fees)}</span>
+                            <span className="text-white font-medium">{formatNeutralAmount(statusGroup.spread_fees)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-400">BD:</span>
-                            <span className="text-white font-medium">{formatCurrency(statusGroup.bd_fees)}</span>
+                            <span className="text-white font-medium">{formatNeutralAmount(statusGroup.bd_fees)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-400">FINRA:</span>
-                            <span className="text-white font-medium">{formatCurrency(statusGroup.finra_fees)}</span>
+                            <span className="text-white font-medium">{formatNeutralAmount(statusGroup.finra_fees)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-400">Performance:</span>
-                            <span className="text-white font-medium">{formatCurrency(statusGroup.performance_fees)}</span>
+                            <span className="text-white font-medium">{formatNeutralAmount(statusGroup.performance_fees)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-cyan-400">Management:</span>
-                            <span className="text-white font-medium">{formatCurrency(statusGroup.management_fees)}</span>
+                            <span className="text-white font-medium">{formatNeutralAmount(statusGroup.management_fees)}</span>
                           </div>
                           <div className="flex justify-between pt-2 border-t border-gray-700">
                             <span className="text-white font-semibold">Total Fees:</span>
-                            <span className="text-white font-bold">{formatCurrency(statusGroup.total_fees)}</span>
+                            <span className="text-white font-bold">{formatNeutralAmount(statusGroup.total_fees)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className={statusGroup.unrealized_gains >= 0 ? 'text-emerald-400' : 'text-red-400'}>
                               Unrealized Gain:
                             </span>
                             <span className={`font-semibold ${statusGroup.unrealized_gains >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                              {formatCurrency(statusGroup.unrealized_gains)}
+                              {formatNeutralAmount(statusGroup.unrealized_gains)}
                             </span>
                           </div>
                         </div>
@@ -515,13 +566,13 @@ export default function OverviewTab() {
                             <h5 className="text-xl font-bold text-white mb-1">{vehicle.vehicle_name}</h5>
                             <p className="text-sm text-gray-400">
                               {vehicle.subscription_count} subscription{vehicle.subscription_count !== 1 ? 's' : ''} •
-                              Capital: {formatCurrency(vehicle.committed_capital)} •
-                              NAV: {formatCurrency(vehicle.current_nav)}
+                              Capital: {formatNeutralAmount(vehicle.committed_capital)} •
+                              NAV: {formatNeutralAmount(vehicle.current_nav)}
                             </p>
                           </div>
                           <div className="text-right">
                             <p className="text-2xl font-bold text-white">
-                              {formatCurrency(vehicle.fees.total_fees)}
+                              {formatNeutralAmount(vehicle.fees.total_fees)}
                             </p>
                             <p className="text-xs text-gray-400">total fees</p>
                           </div>
@@ -531,27 +582,27 @@ export default function OverviewTab() {
                         <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
                           <div className="p-2 bg-blue-900/10 rounded">
                             <p className="text-xs text-blue-300">Subscription</p>
-                            <p className="text-sm font-bold text-white">{formatCurrency(vehicle.fees.subscription_fees)}</p>
+                            <p className="text-sm font-bold text-white">{formatNeutralAmount(vehicle.fees.subscription_fees)}</p>
                           </div>
                           <div className="p-2 bg-green-900/10 rounded">
                             <p className="text-xs text-green-300">Spread</p>
-                            <p className="text-sm font-bold text-white">{formatCurrency(vehicle.fees.spread_fees)}</p>
+                            <p className="text-sm font-bold text-white">{formatNeutralAmount(vehicle.fees.spread_fees)}</p>
                           </div>
                           <div className="p-2 bg-purple-900/10 rounded">
                             <p className="text-xs text-purple-300">BD</p>
-                            <p className="text-sm font-bold text-white">{formatCurrency(vehicle.fees.bd_fees)}</p>
+                            <p className="text-sm font-bold text-white">{formatNeutralAmount(vehicle.fees.bd_fees)}</p>
                           </div>
                           <div className="p-2 bg-orange-900/10 rounded">
                             <p className="text-xs text-orange-300">FINRA</p>
-                            <p className="text-sm font-bold text-white">{formatCurrency(vehicle.fees.finra_fees)}</p>
+                            <p className="text-sm font-bold text-white">{formatNeutralAmount(vehicle.fees.finra_fees)}</p>
                           </div>
                           <div className="p-2 bg-pink-900/10 rounded">
                             <p className="text-xs text-pink-300">Performance</p>
-                            <p className="text-sm font-bold text-white">{formatCurrency(vehicle.fees.performance_fees)}</p>
+                            <p className="text-sm font-bold text-white">{formatNeutralAmount(vehicle.fees.performance_fees)}</p>
                           </div>
                           <div className="p-2 bg-cyan-900/10 rounded">
                             <p className="text-xs text-cyan-300">Management</p>
-                            <p className="text-sm font-bold text-white">{formatCurrency(vehicle.fees.management_fees)}</p>
+                            <p className="text-sm font-bold text-white">{formatNeutralAmount(vehicle.fees.management_fees)}</p>
                           </div>
                         </div>
 
@@ -570,7 +621,7 @@ export default function OverviewTab() {
                             <span className={`text-lg font-bold ${
                               vehicle.fees.unrealized_gains >= 0 ? 'text-emerald-400' : 'text-red-400'
                             }`}>
-                              {formatCurrency(vehicle.fees.unrealized_gains)}
+                              {formatNeutralAmount(vehicle.fees.unrealized_gains)}
                             </span>
                           </div>
                         </div>
@@ -589,22 +640,22 @@ export default function OverviewTab() {
                                   <div className="space-y-1 text-xs">
                                     <div className="flex justify-between">
                                       <span className="text-gray-400">Sub:</span>
-                                      <span className="text-white">{formatCurrency(status.subscription_fees)}</span>
+                                      <span className="text-white">{formatNeutralAmount(status.subscription_fees)}</span>
                                     </div>
                                     <div className="flex justify-between">
                                       <span className="text-cyan-400">Mgmt:</span>
-                                      <span className="text-white">{formatCurrency(status.management_fees)}</span>
+                                      <span className="text-white">{formatNeutralAmount(status.management_fees)}</span>
                                     </div>
                                     <div className="flex justify-between">
                                       <span className="text-gray-400">Total Fees:</span>
-                                      <span className="text-white font-semibold">{formatCurrency(status.total_fees)}</span>
+                                      <span className="text-white font-semibold">{formatNeutralAmount(status.total_fees)}</span>
                                     </div>
                                     <div className="flex justify-between">
                                       <span className={status.unrealized_gains >= 0 ? 'text-emerald-400' : 'text-red-400'}>
                                         Unrealized:
                                       </span>
                                       <span className={`font-semibold ${status.unrealized_gains >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                        {formatCurrency(status.unrealized_gains)}
+                                        {formatNeutralAmount(status.unrealized_gains)}
                                       </span>
                                     </div>
                                   </div>

@@ -452,7 +452,7 @@ export function PersonaDashboard() {
 
   // Generic dashboard for other persona types (arranger, commercial_partner, lawyer, etc.)
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Welcome Header */}
       <div className="flex items-center justify-between">
         <div>

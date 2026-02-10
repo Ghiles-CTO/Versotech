@@ -33,7 +33,7 @@ export default async function PartnerProfilePage() {
 
   if (!partnerUser) {
     return (
-      <div className="p-6">
+      <div>
         <div className="max-w-2xl mx-auto text-center py-12">
           <h1 className="text-2xl font-bold text-foreground mb-2">No Partner Association</h1>
           <p className="text-muted-foreground">
@@ -100,7 +100,7 @@ export default async function PartnerProfilePage() {
 
   if (!partner) {
     return (
-      <div className="p-6">
+      <div>
         <div className="max-w-2xl mx-auto text-center py-12">
           <h1 className="text-2xl font-bold text-foreground mb-2">Partner Not Found</h1>
           <p className="text-muted-foreground">

@@ -119,6 +119,18 @@ export async function POST(request: Request) {
 | Create fee plans without deal_id | Fee plans are deal-specific agreements, not templates |
 | Expect partial signatures to progress | Multi-signatory requires ALL signatures before proceeding |
 
+## Workflow Rules
+
+1. **Plan Before Coding**: Before writing any code, describe your approach and wait for approval. Always ask clarifying questions if requirements are ambiguous—don't assume.
+
+2. **Keep Changes Small**: If a task requires changes to more than 3 files, stop and break it into smaller tasks first. Propose the breakdown and get approval before proceeding.
+
+3. **Anticipate Breakage**: After writing code, list what could break and suggest tests to cover edge cases. Think about error states, null values, and boundary conditions.
+
+4. **Test-Driven Bug Fixes**: When there's a bug, start by writing a test that reproduces it, then fix it until the test passes. Never mark a bug as fixed without a failing-then-passing test.
+
+5. **Learn From Corrections**: Every time I correct you, add a new rule to this CLAUDE.md file so the mistake never happens again. Put it in the appropriate section (Gotchas, Critical Don'ts, or create a new one if needed).
+
 ## Gotchas
 
 1. **Supabase project ID is hardcoded** in middleware cookie names (`sb-kagzryotbbnusdcyvqei-*`). If using different project, auth breaks silently.
@@ -126,6 +138,13 @@ export async function POST(request: Request) {
 2. **Hash capture in auth/callback** must happen at MODULE LOAD, not in useEffect. Moving it breaks magic links.
 
 3. **Commission basis is always `funded_amount`** regardless of fee plan complexity. Fee tiers only affect investor fees, not partner commissions.
+
+4. **Messaging UI height is offset-sensitive**: avoid fixed `100vh` heights that ignore page headers/banners. The chat container must size to the remaining viewport so the sidebar/messages scroll independently and the composer stays visible without scrolling the main content.
+
+5. **Do not add sidebar navigation items unless explicitly requested.** If the user wants a feature surfaced, confirm where they want it (header, sidebar, or page link) before adding nav entries.
+6. **After plan approval, proceed immediately without extra confirmation.** Do not ask for a second go-ahead once the user has approved the plan.
+7. **When removing UI duplication, keep a single primary action in the location the user requested.** Do not leave redundant links behind.
+8. **Run `npm run build` before pushing to `dev` for frontend changes.** Fix build errors first, then push.
 
 ## Commands
 

@@ -101,10 +101,11 @@ interface FilterOption {
 
 // KYC status options (investor-specific)
 const kycStatusOptions: FilterOption[] = [
+  { value: 'approved', label: 'Approved' },
+  { value: 'submitted', label: 'Submitted' },
   { value: 'pending', label: 'Pending' },
-  { value: 'in_review', label: 'In Review' },
-  { value: 'completed', label: 'Completed' },
   { value: 'rejected', label: 'Rejected' },
+  { value: 'expired', label: 'Expired' },
 ]
 
 const statusOptions: FilterOption[] = [
@@ -699,7 +700,7 @@ export default function InvestorsPage() {
         pageSize: pagination.pageSize.toString(),
         sortBy: 'createdAt',
         sortOrder: 'desc',
-        role: 'investor', // Pre-filter for investors only
+        entityType: 'investor',
       })
 
       if (debouncedSearch) {
@@ -708,8 +709,12 @@ export default function InvestorsPage() {
       if (statusFilters.length > 0) {
         params.set('status', statusFilters.join(','))
       }
-      // Note: KYC status and hasEntities filters would need API support
-      // For now, they're UI-ready for when the API is extended
+      if (kycStatusFilters.length > 0) {
+        params.set('kycStatus', kycStatusFilters.join(','))
+      }
+      if (hasEntitiesFilter.length > 0) {
+        params.set('hasEntities', hasEntitiesFilter.join(','))
+      }
 
       const response = await fetch(`/api/admin/users?${params}`)
       const data: UsersResponse = await response.json()
@@ -718,15 +723,7 @@ export default function InvestorsPage() {
         throw new Error(data.error || 'Failed to fetch investors')
       }
 
-      // Apply client-side filtering for hasEntities (until API supports it)
-      let filteredUsers = data.data || []
-      if (hasEntitiesFilter.includes('yes') && !hasEntitiesFilter.includes('no')) {
-        filteredUsers = filteredUsers.filter(u => u.entityCount > 0)
-      } else if (hasEntitiesFilter.includes('no') && !hasEntitiesFilter.includes('yes')) {
-        filteredUsers = filteredUsers.filter(u => u.entityCount === 0)
-      }
-
-      setUsers(filteredUsers)
+      setUsers(data.data || [])
       if (data.pagination) {
         setPagination(data.pagination)
       }
@@ -735,7 +732,7 @@ export default function InvestorsPage() {
     } finally {
       setLoading(false)
     }
-  }, [pagination.pageSize, debouncedSearch, statusFilters, hasEntitiesFilter])
+  }, [pagination.pageSize, debouncedSearch, statusFilters, kycStatusFilters, hasEntitiesFilter])
 
   // Deactivate selected users
   const handleDeactivateUsers = useCallback(async () => {

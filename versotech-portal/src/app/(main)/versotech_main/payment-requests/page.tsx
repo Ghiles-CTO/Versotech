@@ -55,6 +55,7 @@ import { createClient } from '@/lib/supabase/client'
 import { RequestInvoiceDialog, type CommissionType } from '@/components/commissions/request-invoice-dialog'
 import { RequestPaymentDialog } from '@/components/commissions/request-payment-dialog'
 import { ViewInvoiceDialog } from '@/components/commissions/view-invoice-dialog'
+import { type CurrencyTotals, currencyTotalsEntries, mergeCurrencyTotals } from '@/lib/currency-totals'
 
 // ============================================================================
 // Types
@@ -72,7 +73,7 @@ type FeeEvent = {
   investor_name: string
   fee_type: string
   computed_amount: number
-  currency: string
+  currency: string | null
   status: string
   event_date: string
   invoice_id: string | null
@@ -81,6 +82,7 @@ type FeeEvent = {
 type PaymentRequest = {
   id: string
   invoice_number: string
+  currency: string | null
   deal_name: string
   investor_name: string
   total: number
@@ -93,10 +95,14 @@ type PaymentRequest = {
 type InboundSummary = {
   pendingFees: number
   pendingTotal: number
+  pendingByCurrency: CurrencyTotals
   invoicedCount: number
   invoicedTotal: number
+  invoicedByCurrency: CurrencyTotals
   paidCount: number
   paidTotal: number
+  paidByCurrency: CurrencyTotals
+  outstandingByCurrency: CurrencyTotals
 }
 
 // Outbound commission (fees I owe to partners/introducers/CPs)
@@ -109,7 +115,7 @@ type OutboundCommission = {
   deal_id: string | null
   deal_name: string | null
   accrual_amount: number
-  currency: string
+  currency: string | null
   status: 'accrued' | 'invoice_requested' | 'invoiced' | 'paid' | 'cancelled'
   invoice_id: string | null
   created_at: string
@@ -118,15 +124,20 @@ type OutboundCommission = {
 
 type OutboundSummary = {
   total_accrued: number
+  total_accrued_by_currency: CurrencyTotals
   total_invoice_requested: number
+  total_invoice_requested_by_currency: CurrencyTotals
   total_invoiced: number
+  total_invoiced_by_currency: CurrencyTotals
   total_paid: number
+  total_paid_by_currency: CurrencyTotals
   total_owed: number // accrued + invoice_requested + invoiced
+  total_owed_by_currency: CurrencyTotals
   count: number
   by_type: {
-    partner: { count: number; total: number }
-    introducer: { count: number; total: number }
-    commercial_partner: { count: number; total: number }
+    partner: { count: number; total: number; total_by_currency: CurrencyTotals }
+    introducer: { count: number; total: number; total_by_currency: CurrencyTotals }
+    commercial_partner: { count: number; total: number; total_by_currency: CurrencyTotals }
   }
 }
 
@@ -165,6 +176,38 @@ const ENTITY_TYPE_LABELS: Record<string, string> = {
   'commercial-partner': 'Commercial Partner',
 }
 
+function formatCurrencyTotals(totals: CurrencyTotals): string {
+  const entries = currencyTotalsEntries(totals)
+  if (entries.length === 0) return '—'
+  if (entries.length === 1) {
+    const [currency, amount] = entries[0]
+    return formatCurrency(amount, currency)
+  }
+  return entries.map(([currency, amount]) => `${currency} ${formatCurrency(amount, currency)}`).join(' / ')
+}
+
+function sumByCurrencyStrict<T>(
+  items: T[],
+  amountGetter: (item: T) => number | null | undefined,
+  currencyGetter: (item: T) => string | null | undefined
+): CurrencyTotals {
+  return items.reduce<CurrencyTotals>((acc, item) => {
+    const amount = Number(amountGetter(item)) || 0
+    const currency = (currencyGetter(item) || '').trim().toUpperCase()
+    if (!currency) return acc
+    acc[currency] = (acc[currency] || 0) + amount
+    return acc
+  }, {})
+}
+
+function formatAmountWithCurrency(amount: number | null | undefined, currency: string | null | undefined): string {
+  const numeric = Number(amount)
+  if (!Number.isFinite(numeric)) return '—'
+  const code = (currency || '').trim().toUpperCase()
+  if (!code) return numeric.toLocaleString()
+  return formatCurrency(numeric, code)
+}
+
 // ============================================================================
 // Main Component
 // ============================================================================
@@ -179,25 +222,34 @@ export default function PaymentRequestsPage() {
   const [inboundSummary, setInboundSummary] = useState<InboundSummary>({
     pendingFees: 0,
     pendingTotal: 0,
+    pendingByCurrency: {},
     invoicedCount: 0,
     invoicedTotal: 0,
+    invoicedByCurrency: {},
     paidCount: 0,
     paidTotal: 0,
+    paidByCurrency: {},
+    outstandingByCurrency: {},
   })
 
   // Outbound data (fees arranger must PAY)
   const [outboundCommissions, setOutboundCommissions] = useState<OutboundCommission[]>([])
   const [outboundSummary, setOutboundSummary] = useState<OutboundSummary>({
     total_accrued: 0,
+    total_accrued_by_currency: {},
     total_invoice_requested: 0,
+    total_invoice_requested_by_currency: {},
     total_invoiced: 0,
+    total_invoiced_by_currency: {},
     total_paid: 0,
+    total_paid_by_currency: {},
     total_owed: 0,
+    total_owed_by_currency: {},
     count: 0,
     by_type: {
-      partner: { count: 0, total: 0 },
-      introducer: { count: 0, total: 0 },
-      commercial_partner: { count: 0, total: 0 },
+      partner: { count: 0, total: 0, total_by_currency: {} },
+      introducer: { count: 0, total: 0, total_by_currency: {} },
+      commercial_partner: { count: 0, total: 0, total_by_currency: {} },
     },
   })
 
@@ -314,7 +366,7 @@ export default function PaymentRequestsPage() {
       investor_name: event.investor?.display_name || event.investor?.legal_name || 'Unknown',
       fee_type: event.fee_type || 'fee',
       computed_amount: Number(event.computed_amount) || 0,
-      currency: event.currency || 'USD',
+      currency: event.currency ? String(event.currency).toUpperCase() : null,
       status: event.status || 'accrued',
       event_date: event.event_date,
       invoice_id: event.invoice_id,
@@ -328,6 +380,7 @@ export default function PaymentRequestsPage() {
       paymentRequests = (payment_requests || []).map((req: any) => ({
         id: req.id,
         invoice_number: req.invoice_number,
+        currency: req.currency ? String(req.currency).toUpperCase() : null,
         deal_name: req.deal?.name || 'Multiple',
         investor_name: req.investor?.display_name || req.investor?.legal_name || 'Multiple',
         total: Number(req.total) || 0,
@@ -342,6 +395,9 @@ export default function PaymentRequestsPage() {
     const pendingEvents = feeEvents.filter(e => e.status === 'accrued')
     const invoicedEvents = feeEvents.filter(e => e.status === 'invoiced')
     const paidEvents = feeEvents.filter(e => e.status === 'paid')
+    const pendingByCurrency = sumByCurrencyStrict(pendingEvents, (e) => e.computed_amount, (e) => e.currency)
+    const invoicedByCurrency = sumByCurrencyStrict(invoicedEvents, (e) => e.computed_amount, (e) => e.currency)
+    const paidByCurrency = sumByCurrencyStrict(paidEvents, (e) => e.computed_amount, (e) => e.currency)
 
     return {
       feeEvents,
@@ -349,10 +405,14 @@ export default function PaymentRequestsPage() {
       summary: {
         pendingFees: pendingEvents.length,
         pendingTotal: pendingEvents.reduce((sum, e) => sum + e.computed_amount, 0),
+        pendingByCurrency,
         invoicedCount: invoicedEvents.length,
         invoicedTotal: invoicedEvents.reduce((sum, e) => sum + e.computed_amount, 0),
+        invoicedByCurrency,
         paidCount: paidEvents.length,
         paidTotal: paidEvents.reduce((sum, e) => sum + e.computed_amount, 0),
+        paidByCurrency,
+        outstandingByCurrency: mergeCurrencyTotals(pendingByCurrency, invoicedByCurrency),
       },
     }
   }
@@ -385,7 +445,7 @@ export default function PaymentRequestsPage() {
         deal_id: c.deal_id || c.deal?.id || null,
         deal_name: c.deal?.name || null,
         accrual_amount: Number(c.accrual_amount) || 0,
-        currency: c.currency || 'USD',
+        currency: c.currency ? String(c.currency).toUpperCase() : null,
         status: c.status || 'accrued',
         invoice_id: c.invoice_id || null,
         created_at: c.created_at,
@@ -404,7 +464,7 @@ export default function PaymentRequestsPage() {
         deal_id: c.deal_id || c.deal?.id || null,
         deal_name: c.deal?.name || null,
         accrual_amount: Number(c.accrual_amount) || 0,
-        currency: c.currency || 'USD',
+        currency: c.currency ? String(c.currency).toUpperCase() : null,
         status: c.status || 'accrued',
         invoice_id: c.invoice_id || null,
         created_at: c.created_at,
@@ -423,7 +483,7 @@ export default function PaymentRequestsPage() {
         deal_id: c.deal_id || c.deal?.id || null,
         deal_name: c.deal?.name || null,
         accrual_amount: Number(c.accrual_amount) || 0,
-        currency: c.currency || 'USD',
+        currency: c.currency ? String(c.currency).toUpperCase() : null,
         status: c.status || 'accrued',
         invoice_id: c.invoice_id || null,
         created_at: c.created_at,
@@ -440,32 +500,51 @@ export default function PaymentRequestsPage() {
     const invoiceRequested = activeCommissions.filter(c => c.status === 'invoice_requested')
     const invoiced = activeCommissions.filter(c => c.status === 'invoiced')
     const paid = activeCommissions.filter(c => c.status === 'paid')
+    const accruedByCurrency = sumByCurrencyStrict(accrued, (c) => c.accrual_amount, (c) => c.currency)
+    const invoiceRequestedByCurrency = sumByCurrencyStrict(invoiceRequested, (c) => c.accrual_amount, (c) => c.currency)
+    const invoicedByCurrency = sumByCurrencyStrict(invoiced, (c) => c.accrual_amount, (c) => c.currency)
+    const paidByCurrency = sumByCurrencyStrict(paid, (c) => c.accrual_amount, (c) => c.currency)
 
     const partnerCommissions = activeCommissions.filter(c => c.type === 'partner')
     const introducerCommissions = activeCommissions.filter(c => c.type === 'introducer')
     const cpCommissions = activeCommissions.filter(c => c.type === 'commercial-partner')
+    const partnerByCurrency = sumByCurrencyStrict(partnerCommissions, (c) => c.accrual_amount, (c) => c.currency)
+    const introducerByCurrency = sumByCurrencyStrict(introducerCommissions, (c) => c.accrual_amount, (c) => c.currency)
+    const cpByCurrency = sumByCurrencyStrict(cpCommissions, (c) => c.accrual_amount, (c) => c.currency)
 
     return {
       commissions,
       summary: {
         total_accrued: accrued.reduce((sum, c) => sum + c.accrual_amount, 0),
+        total_accrued_by_currency: accruedByCurrency,
         total_invoice_requested: invoiceRequested.reduce((sum, c) => sum + c.accrual_amount, 0),
+        total_invoice_requested_by_currency: invoiceRequestedByCurrency,
         total_invoiced: invoiced.reduce((sum, c) => sum + c.accrual_amount, 0),
+        total_invoiced_by_currency: invoicedByCurrency,
         total_paid: paid.reduce((sum, c) => sum + c.accrual_amount, 0),
+        total_paid_by_currency: paidByCurrency,
         total_owed: [...accrued, ...invoiceRequested, ...invoiced].reduce((sum, c) => sum + c.accrual_amount, 0),
+        total_owed_by_currency: mergeCurrencyTotals(
+          accruedByCurrency,
+          invoiceRequestedByCurrency,
+          invoicedByCurrency
+        ),
         count: activeCommissions.length,
         by_type: {
           partner: {
             count: partnerCommissions.length,
             total: partnerCommissions.reduce((sum, c) => sum + c.accrual_amount, 0),
+            total_by_currency: partnerByCurrency,
           },
           introducer: {
             count: introducerCommissions.length,
             total: introducerCommissions.reduce((sum, c) => sum + c.accrual_amount, 0),
+            total_by_currency: introducerByCurrency,
           },
           commercial_partner: {
             count: cpCommissions.length,
             total: cpCommissions.reduce((sum, c) => sum + c.accrual_amount, 0),
+            total_by_currency: cpByCurrency,
           },
         },
       },
@@ -577,9 +656,11 @@ export default function PaymentRequestsPage() {
       )
     })
 
-  const selectedTotal = feeEvents
-    .filter(e => selectedFeeEvents.has(e.id))
-    .reduce((sum, e) => sum + e.computed_amount, 0)
+  const selectedTotalByCurrency = sumByCurrencyStrict(
+    feeEvents.filter(e => selectedFeeEvents.has(e.id)),
+    (e) => e.computed_amount,
+    (e) => e.currency
+  )
 
   // ============================================================================
   // Loading & Error States
@@ -609,7 +690,7 @@ export default function PaymentRequestsPage() {
   // ============================================================================
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -635,14 +716,14 @@ export default function PaymentRequestsPage() {
             <ArrowDownLeft className="h-4 w-4" />
             Fees Owed To Me
             <Badge variant="secondary" className="ml-1 text-xs">
-              {formatCurrency(inboundSummary.pendingTotal + inboundSummary.invoicedTotal, 'USD')}
+              {formatCurrencyTotals(inboundSummary.outstandingByCurrency)}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="outbound" className="flex items-center gap-2">
             <ArrowUpRight className="h-4 w-4" />
             Fees I Owe
             <Badge variant="secondary" className="ml-1 text-xs">
-              {formatCurrency(outboundSummary.total_owed, 'USD')}
+              {formatCurrencyTotals(outboundSummary.total_owed_by_currency)}
             </Badge>
           </TabsTrigger>
         </TabsList>
@@ -662,7 +743,7 @@ export default function PaymentRequestsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-blue-600">
-                  {formatCurrency(inboundSummary.pendingTotal, 'USD')}
+                  {formatCurrencyTotals(inboundSummary.pendingByCurrency)}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {inboundSummary.pendingFees} event{inboundSummary.pendingFees !== 1 ? 's' : ''} awaiting invoice
@@ -679,7 +760,7 @@ export default function PaymentRequestsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-amber-600">
-                  {formatCurrency(inboundSummary.invoicedTotal, 'USD')}
+                  {formatCurrencyTotals(inboundSummary.invoicedByCurrency)}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {inboundSummary.invoicedCount} event{inboundSummary.invoicedCount !== 1 ? 's' : ''} awaiting payment
@@ -696,7 +777,7 @@ export default function PaymentRequestsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
-                  {formatCurrency(inboundSummary.paidTotal, 'USD')}
+                  {formatCurrencyTotals(inboundSummary.paidByCurrency)}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {inboundSummary.paidCount} event{inboundSummary.paidCount !== 1 ? 's' : ''} collected
@@ -751,7 +832,7 @@ export default function PaymentRequestsPage() {
                       {selectedFeeEvents.size > 0 && (
                         <>
                           <span className="text-sm text-muted-foreground">
-                            {selectedFeeEvents.size} selected ({formatCurrency(selectedTotal, 'USD')})
+                            {selectedFeeEvents.size} selected ({formatCurrencyTotals(selectedTotalByCurrency)})
                           </span>
                           <Button variant="ghost" size="sm" onClick={clearSelection}>
                             Clear
@@ -815,7 +896,7 @@ export default function PaymentRequestsPage() {
                                 {event.fee_type.replace('_', ' ')}
                               </TableCell>
                               <TableCell className="font-medium">
-                                {formatCurrency(event.computed_amount, event.currency)}
+                                {formatAmountWithCurrency(event.computed_amount, event.currency)}
                               </TableCell>
                               <TableCell>{formatDate(event.event_date)}</TableCell>
                               <TableCell>
@@ -876,12 +957,12 @@ export default function PaymentRequestsPage() {
                               </TableCell>
                               <TableCell className="font-medium">{request.deal_name}</TableCell>
                               <TableCell className="font-medium">
-                                {formatCurrency(request.total, 'USD')}
+                                {formatAmountWithCurrency(request.total, request.currency)}
                               </TableCell>
                               <TableCell>
                                 {request.paid_amount > 0 ? (
                                   <span className="text-green-600">
-                                    {formatCurrency(request.paid_amount, 'USD')}
+                                    {formatAmountWithCurrency(request.paid_amount, request.currency)}
                                   </span>
                                 ) : (
                                   <span className="text-muted-foreground">—</span>
@@ -925,7 +1006,7 @@ export default function PaymentRequestsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                  {formatCurrency(outboundSummary.total_owed, 'USD')}
+                  {formatCurrencyTotals(outboundSummary.total_owed_by_currency)}
                 </div>
                 <p className="text-xs text-orange-600/70 dark:text-orange-400/70 mt-1">
                   To partners, introducers & CPs
@@ -943,7 +1024,7 @@ export default function PaymentRequestsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-xl font-bold text-foreground">
-                  {formatCurrency(outboundSummary.by_type.partner.total, 'USD')}
+                  {formatCurrencyTotals(outboundSummary.by_type.partner.total_by_currency)}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {outboundSummary.by_type.partner.count} commission{outboundSummary.by_type.partner.count !== 1 ? 's' : ''}
@@ -960,7 +1041,7 @@ export default function PaymentRequestsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-xl font-bold text-foreground">
-                  {formatCurrency(outboundSummary.by_type.introducer.total, 'USD')}
+                  {formatCurrencyTotals(outboundSummary.by_type.introducer.total_by_currency)}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {outboundSummary.by_type.introducer.count} commission{outboundSummary.by_type.introducer.count !== 1 ? 's' : ''}
@@ -977,7 +1058,7 @@ export default function PaymentRequestsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-xl font-bold text-foreground">
-                  {formatCurrency(outboundSummary.by_type.commercial_partner.total, 'USD')}
+                  {formatCurrencyTotals(outboundSummary.by_type.commercial_partner.total_by_currency)}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {outboundSummary.by_type.commercial_partner.count} commission{outboundSummary.by_type.commercial_partner.count !== 1 ? 's' : ''}
@@ -1077,7 +1158,7 @@ export default function PaymentRequestsPage() {
                             {commission.deal_name || '—'}
                           </TableCell>
                           <TableCell className="text-right font-medium">
-                            {formatCurrency(commission.accrual_amount, commission.currency)}
+                            {formatAmountWithCurrency(commission.accrual_amount, commission.currency)}
                           </TableCell>
                           <TableCell>
                             <Badge

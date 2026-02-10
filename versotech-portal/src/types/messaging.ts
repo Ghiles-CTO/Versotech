@@ -76,7 +76,7 @@ export interface ConversationFilters {
   unreadOnly?: boolean
   search?: string
   dealId?: string
+  complianceOnly?: boolean
 }
-
 
 

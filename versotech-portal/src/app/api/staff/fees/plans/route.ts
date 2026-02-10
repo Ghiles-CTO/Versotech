@@ -12,10 +12,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { createFeePlanSchema } from '@/lib/fees/validation';
 import type { FeePlan, FeeComponent } from '@/lib/fees/types';
 import { validateFeeComponentsAgainstTermSheet } from '@/lib/fees/term-sheet-sync';
+import { checkStaffAccess } from '@/lib/auth';
 
 /**
  * GET /api/staff/fees/plans
@@ -24,6 +25,7 @@ import { validateFeeComponentsAgainstTermSheet } from '@/lib/fees/term-sheet-syn
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
+    const serviceSupabase = createServiceClient();
 
     // Check auth
     const {
@@ -119,6 +121,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
+    const serviceSupabase = createServiceClient();
 
     // Check auth
     const {
@@ -126,6 +129,12 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Require staff access (including CEO) before bypassing RLS
+    const hasStaffAccess = await checkStaffAccess(user.id);
+    if (!hasStaffAccess) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // Parse and validate request body
@@ -145,7 +154,7 @@ export async function POST(request: NextRequest) {
     const { components, term_sheet_id, ...feePlanData } = validation.data;
 
     // VALIDATION 1: Verify term_sheet_id exists and is published
-    const { data: termSheet, error: termSheetError } = await supabase
+    const { data: termSheet, error: termSheetError } = await serviceSupabase
       .from('deal_fee_structures')
       .select('id, status, subscription_fee_percent, management_fee_percent, carried_interest_percent')
       .eq('id', term_sheet_id)
@@ -196,7 +205,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (entityId && entityTable) {
-      const { data: entity, error: entityError } = await supabase
+      const { data: entity, error: entityError } = await serviceSupabase
         .from(entityTable)
         .select('id')
         .eq('id', entityId)

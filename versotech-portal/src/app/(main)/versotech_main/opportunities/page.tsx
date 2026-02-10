@@ -248,7 +248,7 @@ export default async function OpportunitiesPage() {
   // If user has no deal memberships, show appropriate message
   if (dealsData.length === 0) {
     return (
-      <div className="p-6">
+      <div>
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">

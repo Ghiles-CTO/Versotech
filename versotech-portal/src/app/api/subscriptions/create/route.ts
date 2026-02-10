@@ -1,12 +1,13 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { requireStaffAuth } from '@/lib/auth'
+import { logBlacklistMatches, screenAgainstBlacklist } from '@/lib/compliance/blacklist'
 import { NextRequest, NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    await requireStaffAuth()
+    const user = await requireStaffAuth()
     const supabase = await createClient()
 
     const body = await request.json()
@@ -71,6 +72,58 @@ export async function POST(request: NextRequest) {
         { error: 'Failed to create subscription', details: createError.message },
         { status: 500 }
       )
+    }
+
+    // Screen investor against blacklist (alert only, do not block)
+    try {
+      const serviceSupabase = createServiceClient()
+      const { data: investorRecord } = await serviceSupabase
+        .from('investors')
+        .select('id, legal_name, display_name, type, email, phone, phone_mobile, phone_office, tax_id_number, entity_identifier')
+        .eq('id', investor_id)
+        .maybeSingle()
+
+      if (investorRecord) {
+        const isEntity = investorRecord.type && investorRecord.type !== 'individual'
+        const fullName = isEntity
+          ? null
+          : (investorRecord.display_name || investorRecord.legal_name)
+        const entityName = isEntity
+          ? (investorRecord.legal_name || investorRecord.display_name)
+          : null
+        const phone = investorRecord.phone || investorRecord.phone_mobile || investorRecord.phone_office
+        const taxId = investorRecord.tax_id_number || investorRecord.entity_identifier
+
+        const matches = await screenAgainstBlacklist(serviceSupabase, {
+          email: investorRecord.email,
+          fullName,
+          entityName,
+          phone,
+          taxId
+        })
+
+        const subjectLabel = fullName || entityName || investorRecord.legal_name || investorRecord.display_name || 'Investor'
+
+        await logBlacklistMatches({
+          supabase: serviceSupabase,
+          matches,
+          context: 'subscription_create',
+          input: {
+            email: investorRecord.email,
+            fullName,
+            entityName,
+            phone,
+            taxId
+          },
+          subjectLabel,
+          matchedInvestorId: investorRecord.id,
+          relatedInvestorId: investorRecord.id,
+          actorId: user.id,
+          actionLabel: 'alerted_on_subscription_create'
+        })
+      }
+    } catch (error) {
+      console.error('[subscription blacklist] Screening failed:', error)
     }
 
     return NextResponse.json({

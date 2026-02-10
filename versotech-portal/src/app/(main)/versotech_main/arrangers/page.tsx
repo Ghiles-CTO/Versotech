@@ -46,7 +46,7 @@ export default async function ArrangersPage() {
 
   if (!user || userError) {
     return (
-      <div className="p-6">
+      <div>
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
@@ -66,7 +66,7 @@ export default async function ArrangersPage() {
 
   if (!hasStaffAccess) {
     return (
-      <div className="p-6">
+      <div>
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
@@ -221,7 +221,7 @@ export default async function ArrangersPage() {
   const vehicles = (allVehiclesData ?? []).map((v) => ({ id: v.id, name: v.name || 'Untitled Vehicle' }))
 
   return (
-    <div className="p-6">
+    <div>
       <AddArrangerProvider>
         <ArrangersDashboard
           summary={summary}

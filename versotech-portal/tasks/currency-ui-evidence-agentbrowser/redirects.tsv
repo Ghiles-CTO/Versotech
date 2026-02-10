@@ -1,0 +1,7 @@
+/versotech_main/assigned-deals	http://localhost:3000/versotech_main/assigned-deals	http://localhost:3000/versotech_main/dashboard
+/versotech_main/introducer-reconciliation	http://localhost:3000/versotech_main/introducer-reconciliation	http://localhost:3000/versotech_main/arranger-reconciliation?tab=introducers
+/versotech_main/lawyer-deal/[id]	http://localhost:3000/versotech_main/lawyer-deal/d52d0d1c-e2e0-438c-9798-b9eb3a847638	http://localhost:3000/versotech_main/dashboard
+/versotech_main	http://localhost:3000/versotech_main	http://localhost:3000/versotech_main/dashboard
+/versotech_main/portfolio/[id]	http://localhost:3000/versotech_main/portfolio/ed1a5684-0bf3-4b8a-a460-b71724e2bfdc	http://localhost:3000/versotech_main/portfolio
+/versotech_main/processes	http://localhost:3000/versotech_main/processes	http://localhost:3000/versotech_admin/processes
+/versotech_admin	http://localhost:3000/versotech_admin	http://localhost:3000/versotech_admin/dashboard

@@ -1,4 +1,5 @@
 import type { ConversationSummary, ConversationFilters } from '@/types/messaging'
+import { isAgentChatConversation } from '@/lib/compliance/agent-chat'
 
 export function applyConversationFilters(
   conversations: ConversationSummary[],
@@ -9,6 +10,12 @@ export function applyConversationFilters(
     if (filters.visibility !== 'all' && conversation.visibility !== filters.visibility) return false
     if (filters.dealId && conversation.dealId !== filters.dealId) return false
     if (filters.unreadOnly && (!conversation.unreadCount || conversation.unreadCount === 0)) return false
+    if (filters.complianceOnly) {
+      const metadata = (conversation.metadata as Record<string, any>) || {}
+      const compliance = metadata.compliance
+      const isAgentChat = isAgentChatConversation(metadata)
+      if (!compliance?.flagged && !isAgentChat) return false
+    }
 
     if (filters.search) {
       const query = filters.search.toLowerCase()
@@ -38,6 +45,4 @@ export function sortConversations(conversations: ConversationSummary[]) {
     return bTime - aTime
   })
 }
-
-
 

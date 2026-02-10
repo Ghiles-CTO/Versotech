@@ -42,6 +42,7 @@ import {
 import { cn } from '@/lib/utils'
 import { formatDate, formatCurrency } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
+import { type CurrencyTotals, formatCurrencyTotals } from '@/lib/currency-totals'
 
 // Types
 type Deal = {
@@ -49,7 +50,7 @@ type Deal = {
   name: string
   company_name: string | null
   target_amount: number | null
-  currency: string
+  currency: string | null
   status: string
 }
 
@@ -61,7 +62,7 @@ type Subscription = {
   investor_name: string
   status: string
   commitment: number
-  currency: string
+  currency: string | null
   funded_amount: number
   outstanding_amount: number
   committed_at: string | null
@@ -78,7 +79,7 @@ type FeeEvent = {
   rate_bps: number | null
   base_amount: number | null
   computed_amount: number | null
-  currency: string
+  currency: string | null
   status: string
   processed_at: string | null
   event_date: string
@@ -122,6 +123,29 @@ const FEE_TYPE_LABELS: Record<string, string> = {
   placement: 'Placement Fee',
   transaction: 'Transaction Fee',
   admin: 'Admin Fee',
+}
+
+const isValidCurrencyCode = (currency?: string | null): currency is string =>
+  typeof currency === 'string' && currency.trim().length === 3
+
+const formatAmountWithCurrency = (amount: number, currency?: string | null) => {
+  if (isValidCurrencyCode(currency)) return formatCurrency(amount, currency.toUpperCase())
+  return amount.toLocaleString('en-US')
+}
+
+const sumByCurrencyStrict = <T,>(
+  items: T[],
+  amountGetter: (item: T) => number | null | undefined,
+  currencyGetter: (item: T) => string | null | undefined
+): CurrencyTotals => {
+  return items.reduce<CurrencyTotals>((totals, item) => {
+    const currency = currencyGetter(item)
+    if (!isValidCurrencyCode(currency)) return totals
+    const amount = Number(amountGetter(item)) || 0
+    const code = currency.toUpperCase()
+    totals[code] = (totals[code] || 0) + amount
+    return totals
+  }, {})
 }
 
 export function OverviewTab({ deals }: OverviewTabProps) {
@@ -206,7 +230,7 @@ export function OverviewTab({ deals }: OverviewTabProps) {
             investor_name: investor?.display_name || investor?.legal_name || 'Unknown Investor',
             status: sub.status,
             commitment: sub.commitment || 0,
-            currency: sub.currency || 'USD',
+            currency: sub.currency ? String(sub.currency).toUpperCase() : null,
             funded_amount: sub.funded_amount || 0,
             outstanding_amount: sub.outstanding_amount || 0,
             committed_at: sub.committed_at,
@@ -229,7 +253,7 @@ export function OverviewTab({ deals }: OverviewTabProps) {
             rate_bps: fee.rate_bps,
             base_amount: fee.base_amount,
             computed_amount: fee.computed_amount,
-            currency: fee.currency || 'USD',
+            currency: fee.currency ? String(fee.currency).toUpperCase() : null,
             status: fee.status,
             processed_at: fee.processed_at,
             event_date: fee.event_date,
@@ -266,12 +290,29 @@ export function OverviewTab({ deals }: OverviewTabProps) {
     const totalFeesPaid = feesPaid.reduce((sum, f) => sum + (f.computed_amount || 0), 0)
     const feesPending = feeEvents.filter(f => f.status === 'accrued' || f.status === 'invoiced')
     const totalFeesPending = feesPending.reduce((sum, f) => sum + (f.computed_amount || 0), 0)
+    const totalCommitmentByCurrency = sumByCurrencyStrict(
+      subscriptions,
+      (sub) => sub.commitment,
+      (sub) => sub.currency
+    )
+    const totalFundedByCurrency = sumByCurrencyStrict(
+      subscriptions,
+      (sub) => sub.funded_amount,
+      (sub) => sub.currency
+    )
+    const totalFeesPaidByCurrency = sumByCurrencyStrict(
+      feesPaid,
+      (fee) => fee.computed_amount || 0,
+      (fee) => fee.currency
+    )
 
     return {
       totalDeals: deals.length,
       totalSubscriptions: subscriptions.length,
       totalCommitment,
+      totalCommitmentByCurrency,
       totalFunded,
+      totalFundedByCurrency,
       totalOutstanding,
       awaitingFunding,
       partiallyFunded,
@@ -279,6 +320,7 @@ export function OverviewTab({ deals }: OverviewTabProps) {
       totalFeeEvents: feeEvents.length,
       totalFeesAccrued,
       totalFeesPaid,
+      totalFeesPaidByCurrency,
       totalFeesPending,
       feesPaidCount: feesPaid.length,
       feesPendingCount: feesPending.length,
@@ -385,10 +427,10 @@ export function OverviewTab({ deals }: OverviewTabProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-primary">
-              {formatCurrency(summary.totalCommitment, 'USD')}
+              {formatCurrencyTotals(summary.totalCommitmentByCurrency)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {formatCurrency(summary.totalFunded, 'USD')} funded
+              {formatCurrencyTotals(summary.totalFundedByCurrency)} funded
             </p>
           </CardContent>
         </Card>
@@ -418,7 +460,7 @@ export function OverviewTab({ deals }: OverviewTabProps) {
           <CardContent>
             <div className="text-2xl font-bold">{summary.totalFeeEvents}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {formatCurrency(summary.totalFeesPaid, 'USD')} paid
+              {formatCurrencyTotals(summary.totalFeesPaidByCurrency)} paid
             </p>
           </CardContent>
         </Card>
@@ -507,13 +549,13 @@ export function OverviewTab({ deals }: OverviewTabProps) {
                           <TableCell className="font-medium">{sub.investor_name}</TableCell>
                           <TableCell>{sub.deal_name}</TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(sub.commitment, sub.currency)}
+                            {formatAmountWithCurrency(sub.commitment, sub.currency)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(sub.funded_amount, sub.currency)}
+                            {formatAmountWithCurrency(sub.funded_amount, sub.currency)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(sub.outstanding_amount, sub.currency)}
+                            {formatAmountWithCurrency(sub.outstanding_amount, sub.currency)}
                           </TableCell>
                           <TableCell>
                             <Badge
@@ -581,7 +623,7 @@ export function OverviewTab({ deals }: OverviewTabProps) {
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right font-medium">
-                            {formatCurrency(fee.computed_amount || 0, fee.currency)}
+                            {formatAmountWithCurrency(fee.computed_amount || 0, fee.currency)}
                           </TableCell>
                           <TableCell>
                             {fee.invoice_number ? (
@@ -659,10 +701,10 @@ export function OverviewTab({ deals }: OverviewTabProps) {
                           <TableCell>{deal.company_name || '-'}</TableCell>
                           <TableCell className="text-right">{deal.subscription_count}</TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(deal.total_commitment, deal.currency)}
+                            {formatAmountWithCurrency(deal.total_commitment, deal.currency)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(deal.total_funded, deal.currency)}
+                            {formatAmountWithCurrency(deal.total_funded, deal.currency)}
                           </TableCell>
                           <TableCell className="text-right">
                             <Badge
@@ -680,7 +722,7 @@ export function OverviewTab({ deals }: OverviewTabProps) {
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(deal.total_fees, deal.currency)}
+                            {formatAmountWithCurrency(deal.total_fees, deal.currency)}
                           </TableCell>
                         </TableRow>
                       ))

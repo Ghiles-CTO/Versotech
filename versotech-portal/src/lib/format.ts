@@ -1,10 +1,11 @@
 export const formatCurrency = (value: number | null | undefined, currency: string = 'USD') => {
-  if (!value) return '$0'
+  const numeric = Number(value)
+  const safeValue = Number.isFinite(numeric) ? numeric : 0
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currency,
     maximumFractionDigits: 0,
-  }).format(value)
+  }).format(safeValue)
 }
 
 export const formatBps = (bps: number | null | undefined) => {
@@ -46,7 +47,6 @@ export const formatDateTime = (value: string | Date | null | undefined) => {
   })
   return `${datePart} ${timePart}`
 }
-
 
 
 

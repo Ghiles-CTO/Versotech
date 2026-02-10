@@ -142,6 +142,13 @@ const staffNavItems: SidebarItem[] = [
     description: 'Inbox'
   },
   {
+    name: 'Notifications',
+    href: '/versotech_main/notifications',
+    icon: Bell,
+    notificationKey: 'notifications',
+    description: 'Alerts'
+  },
+  {
     name: 'Approvals',
     href: '/versotech_main/approvals',
     icon: UserCheck,
@@ -297,47 +304,20 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
       {/* Header */}
       <div className="p-6 flex items-center justify-between h-20">
         {!collapsed && (
-          <div className="flex items-center gap-3 animate-in fade-in duration-300">
-            <div className="relative h-8 w-40 overflow-hidden">
-              {/* Light mode logo */}
-              <Image
-                src="/versotech-logo.png"
-                alt="VERSOTECH"
-                fill
-                className="object-contain object-left dark:hidden"
-                priority
-              />
-              {/* Dark mode logo */}
-              <Image
-                src="/versotech-logo-dark.png"
-                alt="VERSOTECH"
-                fill
-                className="object-contain object-left hidden dark:block"
-                priority
-              />
+          <div className="flex items-center gap-2.5 animate-in fade-in duration-300">
+            <div className="relative h-7 w-7 flex-shrink-0">
+              <Image src="/versotech-icon.png" alt="" fill className="object-contain" priority />
             </div>
+            <span style={{ fontFamily: 'var(--font-spartan), sans-serif' }} className="text-lg font-extrabold tracking-wide text-gray-900 dark:text-white">
+              VERSOTECH
+            </span>
           </div>
         )}
 
         {collapsed && (
           <div className="mx-auto">
             <div className="relative h-10 w-10 overflow-hidden">
-              {/* Light mode icon */}
-              <Image
-                src="/versotech-icon.png"
-                alt="VERSOTECH"
-                fill
-                className="object-contain dark:hidden"
-                priority
-              />
-              {/* Dark mode icon */}
-              <Image
-                src="/versotech-icon-dark.png"
-                alt="VERSOTECH"
-                fill
-                className="object-contain hidden dark:block"
-                priority
-              />
+              <Image src="/versotech-icon.png" alt="VERSOTECH" fill className="object-contain" priority />
             </div>
           </div>
         )}

@@ -1,4 +1,4 @@
-// VERSO Holdings brand tokens from PRD
+// V E R S O brand tokens from PRD
 export const theme = {
   colors: {
     blue: '#0B5FFF',

@@ -1,8 +1,12 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
-import { getAuthenticatedUser } from '@/lib/api-auth'
+import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { normalizeMessage } from '@/lib/messaging'
+import {
+  isAgentChatConversation,
+  markAgentChatFirstContact,
+} from '@/lib/compliance/agent-chat'
 
 // Get messages for a conversation
 export async function GET(
@@ -11,6 +15,7 @@ export async function GET(
 ) {
   try {
     const supabase = await createClient()
+    const serviceSupabase = createServiceClient()
     const { user, error: authError } = await getAuthenticatedUser(supabase)
     
     if (authError || !user) {
@@ -24,7 +29,10 @@ export async function GET(
     const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '50', 10) || 50, 1), 200)
     const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10) || 0, 0)
 
-    const { data: messages, error } = await supabase
+    const isStaff = await isStaffUser(supabase, user)
+    const readClient = isStaff ? serviceSupabase : supabase
+
+    const { data: messages, error } = await readClient
       .from('messages')
       .select(`
         *,
@@ -65,6 +73,7 @@ export async function POST(
 ) {
   try {
     const supabase = await createClient()
+    const serviceSupabase = createServiceClient()
     const { user, error: authError } = await getAuthenticatedUser(supabase)
     
     if (authError || !user) {
@@ -74,17 +83,18 @@ export async function POST(
     const userId = user.id
 
     const { id: conversationId } = await params
-    const { body, file_key, reply_to_message_id, metadata } = await request.json()
+    const { body, file_key, reply_to_message_id, metadata: messageMetadata } = await request.json()
 
     if (!body && !file_key) {
       return NextResponse.json({ error: 'Message body or file is required' }, { status: 400 })
     }
 
     // Verify conversation exists (access control handled by RLS)
-    const serviceClient = createServiceClient()
-    const { data: conversation, error: convError } = await serviceClient
+    const isStaff = await isStaffUser(supabase, user)
+
+    const { data: conversation, error: convError } = await serviceSupabase
       .from('conversations')
-      .select('id')
+      .select('id, metadata')
       .eq('id', conversationId)
       .single()
 
@@ -93,7 +103,27 @@ export async function POST(
     }
 
     // Create message (RLS will enforce access control)
-    const { data: message, error: msgError } = await supabase
+    if (isStaff) {
+      const { data: existingParticipant } = await serviceSupabase
+        .from('conversation_participants')
+        .select('user_id')
+        .eq('conversation_id', conversationId)
+        .eq('user_id', userId)
+        .maybeSingle()
+
+      if (!existingParticipant) {
+        await serviceSupabase
+          .from('conversation_participants')
+          .insert({
+            conversation_id: conversationId,
+            user_id: userId,
+            participant_role: 'member'
+          })
+      }
+    }
+
+    const writeClient = isStaff ? serviceSupabase : supabase
+    const { data: message, error: msgError } = await writeClient
       .from('messages')
       .insert({
         conversation_id: conversationId,
@@ -101,7 +131,7 @@ export async function POST(
         body,
         file_key,
         reply_to_message_id,
-        metadata: metadata ?? {}
+        metadata: messageMetadata ?? {}
       })
       .select(`
         *,
@@ -142,10 +172,28 @@ export async function POST(
         message_length: body?.length || 0
       }
     })
+    const conversationMetadata = ((conversation as { metadata?: unknown })?.metadata || {}) as Record<string, any>
+    const bodyText = typeof body === 'string' ? body.trim() : ''
+    const isAiAuthoredInput = (messageMetadata as Record<string, any> | undefined)?.ai_generated === true
+    const isEligibleAgentThread = isAgentChatConversation(conversationMetadata)
+    const agentReplyEligible = Boolean(
+      !isStaff && isEligibleAgentThread && bodyText && !isAiAuthoredInput
+    )
+
+    if (!isStaff && isAgentChatConversation(conversationMetadata) && bodyText && !isAiAuthoredInput) {
+      await markAgentChatFirstContact(serviceSupabase, {
+        conversationId,
+        conversationMetadata,
+        senderUserId: userId,
+        messageId: message.id,
+        messageCreatedAt: message.created_at,
+      })
+    }
 
     return NextResponse.json({
       success: true,
-      message: normalizedMessage
+      message: normalizedMessage,
+      agentReplyEligible,
     })
 
   } catch (error) {

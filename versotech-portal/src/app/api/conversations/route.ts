@@ -27,6 +27,7 @@ function parseFilters(url: URL): {
   const typeParam = (url.searchParams.get('type') || 'all').toLowerCase()
   const searchTermRaw = url.searchParams.get('search') || ''
   const unreadOnly = url.searchParams.get('unread') === 'true'
+  const complianceOnly = url.searchParams.get('compliance') === 'true'
   const includeMessages = url.searchParams.get('includeMessages') !== 'false'
   const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '50', 10) || 50, 1), 100)
   const offset = Math.max(parseInt(url.searchParams.get('offset') || '0', 10) || 0, 0)
@@ -47,6 +48,7 @@ function parseFilters(url: URL): {
       search: searchTermRaw.trim().toLowerCase() || undefined,
       dealId,
       unreadOnly,
+      complianceOnly,
     },
     unreadOnly,
     includeMessages,
@@ -241,6 +243,24 @@ export async function GET(request: NextRequest) {
 
     if (filters.unreadOnly) {
       filtered = filtered.filter((conv: NormalizedConversation) => conv.unreadCount > 0)
+    }
+
+    if (filters.complianceOnly) {
+      filtered = filtered.filter((conv: NormalizedConversation) => {
+        const metadata = (conv.metadata as Record<string, any>) || {}
+        const compliance = metadata.compliance as Record<string, any> | undefined
+        const agentChat = metadata.agent_chat as Record<string, any> | undefined
+        const ownerTeam = (conv.ownerTeam || '').toLowerCase()
+
+        // "Compliance" view should not depend on a manual flag. It should naturally include:
+        // - Any conversation owned by the compliance team
+        // - Any conversation with compliance metadata
+        // - Any agent-chat (Wayne) thread
+        if (ownerTeam === 'compliance') return true
+        if (agentChat && typeof agentChat === 'object') return true
+        if (compliance && typeof compliance === 'object') return true
+        return false
+      })
     }
 
     if (filters.search) {

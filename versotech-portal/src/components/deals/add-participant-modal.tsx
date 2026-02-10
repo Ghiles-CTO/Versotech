@@ -146,9 +146,30 @@ const FEE_KINDS = [
   { value: 'subscription', label: 'Subscription Fee' },
   { value: 'management', label: 'Management Fee' },
   { value: 'performance', label: 'Performance Fee' },
-  { value: 'spread_markup', label: 'Spread Markup' },
+  { value: 'spread_markup', label: 'BI Fee PPS' },
   { value: 'flat', label: 'Flat Fee' },
 ]
+
+const formatFeeComponentValue = (component: any) => {
+  if (!component) return '-'
+  const currencyCode = component.currency ? String(component.currency).toUpperCase() : ''
+  const flatAmountDisplay = component.flat_amount != null
+    ? `${currencyCode ? `${currencyCode} ` : ''}${Number(component.flat_amount).toLocaleString()}`
+    : '-'
+  if (component.calc_method === 'per_unit_spread') {
+    return component.flat_amount != null ? `${flatAmountDisplay} / share` : '-'
+  }
+  if (component.rate_bps !== undefined) {
+    return `${(Number(component.rate_bps) / 100).toFixed(2)}%`
+  }
+  if (component.flat_amount !== undefined) {
+    return flatAmountDisplay
+  }
+  return '-'
+}
+
+const getFeeKindLabel = (kind: string) =>
+  FEE_KINDS.find((k) => k.value === kind)?.label || kind.replace('_', ' ')
 
 export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipantModalProps) {
   const router = useRouter()
@@ -894,16 +915,10 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
                             .find(p => p.id === selectedFeePlanId)
                             ?.fee_components.map((fc, idx) => (
                               <div key={idx} className="flex justify-between">
-                                <span className="text-muted-foreground capitalize">
-                                  {fc.kind.replace('_', ' ')}
+                                <span className="text-muted-foreground">
+                                  {getFeeKindLabel(fc.kind)}
                                 </span>
-                                <span>
-                                  {fc.rate_bps !== undefined
-                                    ? `${(fc.rate_bps / 100).toFixed(2)}%`
-                                    : fc.flat_amount !== undefined
-                                      ? `$${fc.flat_amount.toLocaleString()}`
-                                      : '-'}
-                                </span>
+                                <span>{formatFeeComponentValue(fc)}</span>
                               </div>
                             ))}
                         </div>

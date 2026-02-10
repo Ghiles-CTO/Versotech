@@ -24,12 +24,13 @@ import { transactionColumns, BankTransactionRow } from './transaction-columns'
 import { InvoicesDataTable } from './invoices-data-table'
 import { invoiceColumns, ReconciliationInvoiceRow } from './invoice-columns'
 import { UploadCSVDialog, AutoMatchButton } from '@/components/staff/reconciliation-client'
+import { VerificationsTab } from './verifications-tab'
 import { toast } from 'sonner'
 
 export function ReconciliationPageClient() {
   const router = useRouter()
 
-  const [activeTab, setActiveTab] = useState<'transactions' | 'invoices'>('transactions')
+  const [activeTab, setActiveTab] = useState<'transactions' | 'invoices' | 'verifications'>('transactions')
 
   const [rawData, setRawData] = useState<BankTransactionRow[]>([])
   const [stats, setStats] = useState<any>(null)
@@ -345,8 +346,8 @@ export function ReconciliationPageClient() {
       </Card>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'transactions' | 'invoices')}>
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'transactions' | 'invoices' | 'verifications')}>
+        <TabsList className="grid w-full max-w-2xl grid-cols-3">
           <TabsTrigger value="transactions" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             Transactions ({rawData.length})
@@ -354,6 +355,10 @@ export function ReconciliationPageClient() {
           <TabsTrigger value="invoices" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Fee Invoices ({invoices.length})
+          </TabsTrigger>
+          <TabsTrigger value="verifications" className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4" />
+            Verifications
           </TabsTrigger>
         </TabsList>
 
@@ -580,6 +585,11 @@ export function ReconciliationPageClient() {
               />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Verifications Tab */}
+        <TabsContent value="verifications" className="space-y-4">
+          <VerificationsTab />
         </TabsContent>
       </Tabs>
     </div>

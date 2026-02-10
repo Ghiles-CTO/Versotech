@@ -124,7 +124,7 @@ const dateStringSchema = z.string().refine(
  *
  * Fee values must NOT exceed term sheet limits.
  */
-export const createFeePlanSchema = z.object({
+const feePlanBaseSchema = z.object({
   // Required: Must be linked to a deal (no global templates per Fred)
   deal_id: flexibleUuidSchema,
   vehicle_id: optionalFlexibleUuidSchema,
@@ -150,7 +150,9 @@ export const createFeePlanSchema = z.object({
   non_circumvention_months: z.number().int().min(1).max(240).nullable().optional(),
   vat_registration_number: z.string().max(50).nullable().optional(),
   governing_law: z.string().optional().default('British Virgin Islands'),
-}).refine(
+});
+
+export const createFeePlanSchema = feePlanBaseSchema.refine(
   (data) => {
     // Ensure exactly one entity is provided
     const entityCount = [
@@ -167,9 +169,26 @@ export const createFeePlanSchema = z.object({
 );
 
 // For updates, all fields are optional except we add is_active
-// Note: Uses .safeExtend() because createFeePlanSchema has a refinement
-export const updateFeePlanSchema = createFeePlanSchema.partial().safeExtend({
+// Note: Uses .safeExtend() because feePlanBaseSchema is refined for create only
+export const updateFeePlanSchema = feePlanBaseSchema.partial().safeExtend({
   is_active: z.boolean().optional(),
+}).superRefine((data, ctx) => {
+  const provided = [
+    data.introducer_id,
+    data.partner_id,
+    data.commercial_partner_id,
+  ].filter((value) => value !== undefined);
+
+  // Allow partial updates to omit entity fields entirely
+  if (provided.length === 0) return;
+
+  if (provided.length !== 1) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Exactly one entity must be specified: introducer_id, partner_id, or commercial_partner_id',
+      path: ['entity'],
+    });
+  }
 });
 
 // Fee Event schemas

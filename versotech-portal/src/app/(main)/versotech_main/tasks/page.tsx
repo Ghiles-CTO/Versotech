@@ -20,7 +20,7 @@ export default async function TasksPage() {
 
   if (!user || userError) {
     return (
-      <div className="p-6">
+      <div>
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
@@ -48,7 +48,7 @@ export default async function TasksPage() {
 
   if (!hasStaffAccess && !hasInvestorAccess) {
     return (
-      <div className="p-6">
+      <div>
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
@@ -159,7 +159,7 @@ export default async function TasksPage() {
   )
 
   return (
-    <div className="p-6">
+    <div>
       <TasksPageClient
         userId={user.id}
         investorIds={investorIds}

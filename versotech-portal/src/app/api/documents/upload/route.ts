@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
       uploaded_by: profile.title || user.email,
       uploaded_at: new Date().toISOString(),
       document_classification: isConfidential ? 'CONFIDENTIAL' : 'INTERNAL',
-      verso_holdings_notice: "Property of VERSO Holdings - Authorized Use Only",
+      verso_holdings_notice: "Property of V E R S O - Authorized Use Only",
       compliance_notice: "Subject to BVI FSC regulation and GDPR data protection",
       original_filename: file.name,
       file_hash: crypto.createHash('sha256').update(fileBuffer).digest('hex')

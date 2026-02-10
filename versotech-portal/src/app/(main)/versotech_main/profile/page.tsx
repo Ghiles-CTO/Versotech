@@ -35,7 +35,7 @@ export default async function ProfilePage({
 
   if (error || !profile) {
     return (
-      <div className="p-6">
+      <div>
         <div className="max-w-2xl mx-auto text-center py-12">
           <h1 className="text-2xl font-bold text-foreground mb-2">Error Loading Profile</h1>
           <p className="text-muted-foreground">

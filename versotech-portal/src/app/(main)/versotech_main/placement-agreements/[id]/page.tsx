@@ -23,6 +23,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { formatCurrency } from '@/lib/format'
 import Link from 'next/link'
 
 type Agreement = {
@@ -33,6 +34,7 @@ type Agreement = {
   expiry_date: string | null
   default_commission_bps: number
   commission_cap_amount: number | null
+  currency?: string | null
   payment_terms: string | null
   territory: string | null
   deal_types: string[] | null
@@ -88,6 +90,14 @@ function formatDate(dateString: string | null): string {
 
 function formatBps(bps: number): string {
   return `${(bps / 100).toFixed(2)}%`
+}
+
+function formatAmountWithCurrency(amount: number | null | undefined, currency?: string | null): string {
+  const numeric = Number(amount)
+  if (!Number.isFinite(numeric)) return '—'
+  const code = (currency || '').trim().toUpperCase()
+  if (!code) return numeric.toLocaleString()
+  return formatCurrency(numeric, code)
 }
 
 export default function PlacementAgreementDetailPage() {
@@ -153,7 +163,7 @@ export default function PlacementAgreementDetailPage() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="space-y-6">
         <Skeleton className="h-8 w-64" />
         <Card>
           <CardHeader>
@@ -172,7 +182,7 @@ export default function PlacementAgreementDetailPage() {
 
   if (error || !agreement) {
     return (
-      <div className="p-6">
+      <div>
         <Card className="max-w-lg mx-auto">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-destructive">
@@ -200,7 +210,7 @@ export default function PlacementAgreementDetailPage() {
   const showPdf = agreement.signed_pdf_url || agreement.pdf_url
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -255,7 +265,7 @@ export default function PlacementAgreementDetailPage() {
               {agreement.commission_cap_amount && (
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Commission Cap</p>
-                  <p className="font-medium">${agreement.commission_cap_amount.toLocaleString()}</p>
+                  <p className="font-medium">{formatAmountWithCurrency(agreement.commission_cap_amount, agreement.currency)}</p>
                 </div>
               )}
 

@@ -314,7 +314,7 @@ export function ProfilePageClient({
 
   // Investor layout - full-width like Partner profile
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header with Avatar and Status */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">

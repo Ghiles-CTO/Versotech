@@ -62,14 +62,14 @@ export function ProcessCenterClient({ profile }: ProcessCenterClientProps) {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="border-b border-white/20 pb-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-white">Process Center</h1>
             <p className="text-lg text-gray-300 mt-1">
-              Workflow automation for VERSO Holdings operations
+              Workflow automation for V E R S O operations
             </p>
           </div>
           <div className="text-right">

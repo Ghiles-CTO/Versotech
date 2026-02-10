@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -78,6 +79,8 @@ export function TopEngagedUsersTable({ days }: TopEngagedUsersTableProps) {
   const [data, setData] = useState<EngagedUser[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const pageSize = 15
 
   useEffect(() => {
     async function fetchData() {
@@ -104,6 +107,10 @@ export function TopEngagedUsersTable({ days }: TopEngagedUsersTableProps) {
     }
 
     fetchData()
+  }, [days])
+
+  useEffect(() => {
+    setPage(1)
   }, [days])
 
   if (loading) {
@@ -144,6 +151,13 @@ export function TopEngagedUsersTable({ days }: TopEngagedUsersTableProps) {
     )
   }
 
+  const totalRows = data.length
+  const totalPages = Math.max(1, Math.ceil(totalRows / pageSize))
+  const safePage = Math.min(page, totalPages)
+  const startIndex = (safePage - 1) * pageSize
+  const endIndex = Math.min(startIndex + pageSize, totalRows)
+  const pagedData = data.slice(startIndex, endIndex)
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -167,8 +181,8 @@ export function TopEngagedUsersTable({ days }: TopEngagedUsersTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((user, index) => {
-              const rank = index + 1
+            {pagedData.map((user, index) => {
+              const rank = startIndex + index + 1
               const avgActionsPerSession = user.sessions > 0
                 ? (user.actions / user.sessions).toFixed(1)
                 : '-'
@@ -214,6 +228,32 @@ export function TopEngagedUsersTable({ days }: TopEngagedUsersTableProps) {
             })}
           </TableBody>
         </Table>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+          <span>
+            Showing {totalRows === 0 ? 0 : startIndex + 1}-{endIndex} of {totalRows}
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={safePage <= 1}
+            >
+              Previous
+            </Button>
+            <span>
+              Page {safePage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              disabled={safePage >= totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       </CardContent>
     </Card>
   )

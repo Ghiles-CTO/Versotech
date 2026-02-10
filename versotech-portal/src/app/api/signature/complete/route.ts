@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { resolveAgentIdForTask } from '@/lib/agents'
 import { buildExecutedDocumentName, formatCounterpartyName } from '@/lib/documents/executed-document-name'
 import crypto from 'crypto'
 
@@ -226,6 +227,122 @@ async function handleNDACompletion(
 
   const now = new Date().toISOString()
 
+  // Archive executed NDA into Documents (if not already archived)
+  try {
+    const { data: existingDoc } = await supabase
+      .from('documents')
+      .select('id')
+      .eq('owner_investor_id', investorId)
+      .eq('deal_id', dealId)
+      .eq('type', 'nda')
+      .limit(1)
+      .maybeSingle()
+
+    if (!existingDoc) {
+      const { data: signedRequest } = await supabase
+        .from('signature_requests')
+        .select('signed_pdf_path, signed_pdf_size, updated_at')
+        .eq('deal_id', dealId)
+        .eq('investor_id', investorId)
+        .eq('document_type', 'nda')
+        .not('signed_pdf_path', 'is', null)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (signedRequest?.signed_pdf_path) {
+        const { data: signedPdfData } = await supabase.storage
+          .from(process.env.SIGNATURES_BUCKET || 'signatures')
+          .download(signedRequest.signed_pdf_path)
+
+        if (signedPdfData) {
+          const { data: deal } = await supabase
+            .from('deals')
+            .select('id, name, vehicle_id')
+            .eq('id', dealId)
+            .single()
+
+          const { data: investor } = await supabase
+            .from('investors')
+            .select('id, legal_name, display_name, first_name, last_name, type')
+            .eq('id', investorId)
+            .single()
+
+          const investorName = formatCounterpartyName({
+            type: investor?.type,
+            firstName: investor?.first_name,
+            lastName: investor?.last_name,
+            legalName: investor?.legal_name,
+            displayName: investor?.display_name
+          })
+
+          const { data: vehicle } = deal?.vehicle_id
+            ? await supabase
+                .from('vehicles')
+                .select('entity_code')
+                .eq('id', deal.vehicle_id)
+                .maybeSingle()
+            : { data: null }
+
+          const vehicleCode = vehicle?.entity_code || 'VCXXX'
+          const { displayName: executedDocumentName, storageFileName } = buildExecutedDocumentName({
+            vehicleCode,
+            documentLabel: 'NDA NDNC',
+            counterpartyName: investorName
+          })
+
+          let ndaFolderId: string | null = null
+          if (deal?.vehicle_id) {
+            const { data: ndaFolder } = await supabase
+              .from('document_folders')
+              .select('id')
+              .eq('vehicle_id', deal.vehicle_id)
+              .eq('name', 'NDAs')
+              .single()
+
+            ndaFolderId = ndaFolder?.id || null
+          }
+
+          const timestamp = Date.now()
+          const documentFileName = `ndas/${dealId}/${timestamp}-${storageFileName}`
+          const { data: docUploadData, error: docUploadError } = await supabase.storage
+            .from(process.env.STORAGE_BUCKET_NAME || 'documents')
+            .upload(documentFileName, signedPdfData, {
+              contentType: 'application/pdf',
+              upsert: false
+            })
+
+          if (docUploadError) {
+            console.error('❌ [NDA] Failed to archive NDA PDF:', docUploadError)
+          } else {
+            await supabase
+              .from('documents')
+              .insert({
+                owner_investor_id: investorId,
+                deal_id: dealId,
+                vehicle_id: deal?.vehicle_id || null,
+                folder_id: ndaFolderId,
+                type: 'nda',
+                file_key: docUploadData.path,
+                name: executedDocumentName,
+                description: `Fully executed Non-Disclosure Agreement for ${deal?.name || 'deal'}`.substring(0, 500),
+                tags: ['nda', 'signed', 'executed'],
+                mime_type: 'application/pdf',
+                file_size_bytes: signedRequest?.signed_pdf_size || null,
+                is_published: true,
+                published_at: now,
+                status: 'published',
+                current_version: 1,
+                signature_workflow_run_id: workflowRunId || null
+              })
+          }
+        }
+      }
+    }
+  } catch (archiveError) {
+    console.error('❌ [NDA] Failed to archive executed NDA:', archiveError)
+  }
+
   // Check if this is a Direct Subscribe NDA (has associated pending subscription)
   // If yes, skip data room access grant - Direct Subscribe doesn't get data room
   const { data: associatedSub } = await supabase
@@ -245,6 +362,8 @@ async function handleNDACompletion(
     .from('investor_users')
     .select('user_id')
     .eq('investor_id', investorId)
+
+  const agentId = await resolveAgentIdForTask(supabase, 'V001')
 
   if (investorUsers && investorUsers.length > 0) {
     // For Direct Subscribe: update only nda_signed_at (no data_room_granted_at)
@@ -299,7 +418,8 @@ async function handleNDACompletion(
         title: 'Data room unlocked',
         message: `Your NDA for ${deal?.name || 'the deal'} is complete. The data room is now available.`,
         link: `/versotech_main/opportunities/${dealId}`,
-        metadata: { type: 'nda_complete', deal_id: dealId }
+        metadata: { type: 'nda_complete', deal_id: dealId },
+        agent_id: agentId
       })
       console.log('✅ [NDA] Notification created')
     }
@@ -320,7 +440,8 @@ async function handleNDACompletion(
         title: 'NDA signed',
         message: `Your NDA for ${deal?.name || 'the deal'} is complete. Please complete the subscription pack signing.`,
         link: `/versotech_main/opportunities/${dealId}`,
-        metadata: { type: 'nda_complete_direct_subscribe', deal_id: dealId }
+        metadata: { type: 'nda_complete_direct_subscribe', deal_id: dealId },
+        agent_id: agentId
       })
       console.log('✅ [NDA] Direct Subscribe notification created')
     }
@@ -557,6 +678,20 @@ async function checkAndPublishSubscriptionDocument(
     console.error('❌ [PUBLISH CHECK] Failed to publish document:', updateError)
   } else {
     console.log('✅ [PUBLISH CHECK] Document published! Investors can now see the signed subscription pack:', documentId)
+
+    // Safety net: Ensure signed_at is set when ALL parties have signed
+    // This handles cases where the investor-only flow didn't set it
+    const { error: signedAtError } = await supabase
+      .from('subscriptions')
+      .update({ signed_at: new Date().toISOString() })
+      .eq('id', subscriptionId)
+      .is('signed_at', null)  // Only update if not already set
+
+    if (signedAtError) {
+      console.error('❌ [PUBLISH CHECK] Failed to set signed_at:', signedAtError)
+    } else {
+      console.log('✅ [PUBLISH CHECK] Subscription signed_at ensured for:', subscriptionId)
+    }
   }
 }
 

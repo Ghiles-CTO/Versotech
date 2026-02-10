@@ -708,6 +708,18 @@ export async function POST(
             } else {
               console.log('✅ Introducer agreement updated with PDF URL');
 
+              // Mark workflow as completed now that document is stored
+              // Use serviceSupabase to bypass RLS on workflow_runs table
+              if (workflowResult?.workflow_run_id) {
+                const serviceSupabaseForWorkflow = createServiceClient();
+                await serviceSupabaseForWorkflow.from('workflow_runs').update({
+                  status: 'completed',
+                  completed_at: new Date().toISOString(),
+                  result_doc_id: null // Introducer agreements don't use documents table
+                }).eq('id', workflowResult.workflow_run_id);
+                console.log('✅ Workflow run marked as completed');
+              }
+
               // === CREATE CEO SIGNATURE TASK IN VERSOSIGN ===
               // Automatically queue the agreement for CEO signature
               // Use the CURRENT user who is generating the agreement as the signer

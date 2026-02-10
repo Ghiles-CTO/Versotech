@@ -140,16 +140,13 @@ function SetPasswordContent() {
       <div className="w-full max-w-md space-y-8 animate-in fade-in zoom-in-95 duration-700">
 
         <div className="text-center space-y-4">
-          <div className="flex justify-center mb-4">
-             <div className="relative w-48 h-16">
-                <Image
-                  src="/versotech-logo-dark.png"
-                  alt="VERSOTECH"
-                  fill
-                  className="object-contain"
-                  priority
-                />
-             </div>
+          <div className="flex justify-center items-center gap-3 mb-4">
+            <div className="relative w-10 h-10 flex-shrink-0">
+              <Image src="/versotech-icon.png" alt="" fill className="object-contain" priority />
+            </div>
+            <span style={{ fontFamily: 'var(--font-spartan), sans-serif' }} className="text-2xl font-extrabold tracking-wide text-white">
+              VERSOTECH
+            </span>
           </div>
           <h1 className="text-2xl font-light tracking-tight text-white">Set Your Password</h1>
           <p className="text-zinc-500 text-sm">Complete your account setup</p>

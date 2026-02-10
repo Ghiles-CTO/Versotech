@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { EditInvestorModal } from './edit-investor-modal'
 import { AddUserToInvestorModal } from './add-user-to-investor-modal'
-import { Edit, UserPlus, List } from 'lucide-react'
+import { Edit, UserPlus, List, ShieldCheck } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 type InvestorDetailActionsProps = {
@@ -26,6 +26,18 @@ export function InvestorDetailActions({ investor }: InvestorDetailActionsProps) 
   const router = useRouter()
   const [editOpen, setEditOpen] = useState(false)
   const [addUserOpen, setAddUserOpen] = useState(false)
+  const ofacName =
+    investor.legal_name ||
+    investor.display_name ||
+    investor.email ||
+    `Investor ${investor.id.slice(0, 8)}`
+  const ofacParams = new URLSearchParams({
+    mode: 'ofac',
+    ofac_entity_type: 'investor',
+    ofac_entity_id: investor.id,
+    ofac_name: ofacName
+  })
+  const ofacHref = `/versotech_admin/agents?${ofacParams.toString()}`
 
   const handleSuccess = () => {
     router.refresh()
@@ -56,6 +68,15 @@ export function InvestorDetailActions({ investor }: InvestorDetailActionsProps) 
       >
         <List className="h-4 w-4 mr-2" />
         Manage Subscriptions
+      </Button>
+
+      <Button
+        variant="outline"
+        className="border-amber-500/60 text-amber-600 hover:bg-amber-50"
+        onClick={() => router.push(ofacHref)}
+      >
+        <ShieldCheck className="h-4 w-4 mr-2" />
+        Screen OFAC
       </Button>
 
       <EditInvestorModal

@@ -1,0 +1,357 @@
+-- =============================================================================
+-- Risk Profile System matrices (countries, industries, investment types)
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS risk_grades (
+  code text PRIMARY KEY,
+  label text NOT NULL,
+  points integer NOT NULL,
+  color text,
+  sort_order integer NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS country_risks (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  country_code text,
+  country_name text NOT NULL UNIQUE,
+  country_risk_grade text NOT NULL REFERENCES risk_grades(code),
+  business_climate_grade text NOT NULL REFERENCES risk_grades(code),
+  needs_review boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS country_risks_country_code_unique
+  ON country_risks(country_code)
+  WHERE country_code IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS industry_risks (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  sector_code text NOT NULL UNIQUE,
+  sector_name text NOT NULL,
+  risk_grade text NOT NULL REFERENCES risk_grades(code),
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS investment_type_risks (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  investment_type text NOT NULL UNIQUE,
+  category text,
+  key_risk_drivers text,
+  risk_grade text NOT NULL REFERENCES risk_grades(code),
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE risk_grades ENABLE ROW LEVEL SECURITY;
+ALTER TABLE country_risks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE industry_risks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE investment_type_risks ENABLE ROW LEVEL SECURITY;
+
+-- Select policies (CEO only)
+CREATE POLICY "risk_grades_select" ON risk_grades FOR SELECT
+USING (EXISTS (SELECT 1 FROM ceo_users cu WHERE cu.user_id = auth.uid()));
+
+CREATE POLICY "country_risks_select" ON country_risks FOR SELECT
+USING (EXISTS (SELECT 1 FROM ceo_users cu WHERE cu.user_id = auth.uid()));
+
+CREATE POLICY "industry_risks_select" ON industry_risks FOR SELECT
+USING (EXISTS (SELECT 1 FROM ceo_users cu WHERE cu.user_id = auth.uid()));
+
+CREATE POLICY "investment_type_risks_select" ON investment_type_risks FOR SELECT
+USING (EXISTS (SELECT 1 FROM ceo_users cu WHERE cu.user_id = auth.uid()));
+
+-- Write policies (CEO admin only)
+CREATE POLICY "risk_grades_insert" ON risk_grades FOR INSERT
+WITH CHECK (EXISTS (SELECT 1 FROM ceo_users cu WHERE cu.user_id = auth.uid() AND cu.role = 'admin'));
+
+CREATE POLICY "risk_grades_update" ON risk_grades FOR UPDATE
+USING (EXISTS (SELECT 1 FROM ceo_users cu WHERE cu.user_id = auth.uid() AND cu.role = 'admin'));
+
+CREATE POLICY "risk_grades_delete" ON risk_grades FOR DELETE
+USING (EXISTS (SELECT 1 FROM ceo_users cu WHERE cu.user_id = auth.uid() AND cu.role = 'admin'));
+
+CREATE POLICY "country_risks_insert" ON country_risks FOR INSERT
+WITH CHECK (EXISTS (SELECT 1 FROM ceo_users cu WHERE cu.user_id = auth.uid() AND cu.role = 'admin'));
+
+CREATE POLICY "country_risks_update" ON country_risks FOR UPDATE
+USING (EXISTS (SELECT 1 FROM ceo_users cu WHERE cu.user_id = auth.uid() AND cu.role = 'admin'));
+
+CREATE POLICY "country_risks_delete" ON country_risks FOR DELETE
+USING (EXISTS (SELECT 1 FROM ceo_users cu WHERE cu.user_id = auth.uid() AND cu.role = 'admin'));
+
+CREATE POLICY "industry_risks_insert" ON industry_risks FOR INSERT
+WITH CHECK (EXISTS (SELECT 1 FROM ceo_users cu WHERE cu.user_id = auth.uid() AND cu.role = 'admin'));
+
+CREATE POLICY "industry_risks_update" ON industry_risks FOR UPDATE
+USING (EXISTS (SELECT 1 FROM ceo_users cu WHERE cu.user_id = auth.uid() AND cu.role = 'admin'));
+
+CREATE POLICY "industry_risks_delete" ON industry_risks FOR DELETE
+USING (EXISTS (SELECT 1 FROM ceo_users cu WHERE cu.user_id = auth.uid() AND cu.role = 'admin'));
+
+CREATE POLICY "investment_type_risks_insert" ON investment_type_risks FOR INSERT
+WITH CHECK (EXISTS (SELECT 1 FROM ceo_users cu WHERE cu.user_id = auth.uid() AND cu.role = 'admin'));
+
+CREATE POLICY "investment_type_risks_update" ON investment_type_risks FOR UPDATE
+USING (EXISTS (SELECT 1 FROM ceo_users cu WHERE cu.user_id = auth.uid() AND cu.role = 'admin'));
+
+CREATE POLICY "investment_type_risks_delete" ON investment_type_risks FOR DELETE
+USING (EXISTS (SELECT 1 FROM ceo_users cu WHERE cu.user_id = auth.uid() AND cu.role = 'admin'));
+
+
+-- Risk grades
+INSERT INTO risk_grades (code, label, points, color, sort_order) VALUES
+('A1', 'Capital Preservation', 0, 'Dark Green', 0),
+('A2', 'Very Low Risk', 1, 'Green', 1),
+('A3', 'Low Risk', 2, 'Light Green', 2),
+('A4', 'Moderate Risk', 3, 'Yellow', 3),
+('B', 'Elevated Risk', 5, 'Orange', 5),
+('C', 'High Risk', 10, 'Red', 10),
+('D', 'Very High Risk', 15, 'Dark Red', 15),
+('E', 'Extreme / Speculative', 20, 'Black', 20)
+ON CONFLICT (code) DO UPDATE SET label = EXCLUDED.label, points = EXCLUDED.points, color = EXCLUDED.color, sort_order = EXCLUDED.sort_order;
+
+-- Country risks
+INSERT INTO country_risks (country_code, country_name, country_risk_grade, business_climate_grade, needs_review) VALUES
+('AL', 'Albania', 'B', 'B', false),
+('DZ', 'Algeria', 'C', 'C', false),
+('AO', 'Angola', 'C', 'D', false),
+('AR', 'Argentina', 'D', 'B', false),
+('AM', 'Armenia', 'B', 'B', false),
+('AU', 'Australia', 'A2', 'A1', false),
+('AT', 'Austria', 'A3', 'A1', false),
+('AZ', 'Azerbaijan', 'B', 'C', false),
+('BS', 'Bahamas', 'B', 'A4', false),
+('BH', 'Bahrain', 'C', 'A4', false),
+('BD', 'Bangladesh', 'D', 'C', false),
+('BB', 'Barbados', 'C', 'A4', false),
+('BY', 'Belarus', 'D', 'D', false),
+('BE', 'Belgium', 'A2', 'A1', false),
+('BZ', 'Belize', 'C', 'C', false),
+('BJ', 'Benin', 'B', 'C', false),
+('BO', 'Bolivia', 'D', 'B', false),
+('BA', 'Bosnia & Herzegovina', 'C', 'B', false),
+('BW', 'Botswana', 'B', 'A4', false),
+('BR', 'Brazil', 'B', 'A4', false),
+('BG', 'Bulgaria', 'B', 'A3', false),
+('BF', 'Burkina Faso', 'D', 'D', false),
+('BI', 'Burundi', 'D', 'E', false),
+('KH', 'Cambodia', 'C', 'B', false),
+('CM', 'Cameroon', 'C', 'D', false),
+('CA', 'Canada', 'A3', 'A1', false),
+('CV', 'Cabo Verde', 'A4', 'B', false),
+('CF', 'Central African Republic', 'D', 'E', false),
+('TD', 'Chad', 'D', 'E', false),
+('CL', 'Chile', 'A4', 'A3', false),
+('CN', 'China', 'B', 'B', false),
+('CO', 'Colombia', 'C', 'A4', false),
+('CG', 'Congo (Republic)', 'C', 'D', false),
+('CD', 'Congo (DRC)', 'D', 'E', false),
+('CR', 'Costa Rica', 'A4', 'A3', false),
+('HR', 'Croatia', 'A3', 'A2', false),
+('CU', 'Cuba', 'E', 'E', false),
+('CY', 'Cyprus', 'A4', 'A3', false),
+('CZ', 'Czechia', 'A3', 'A2', false),
+('CI', 'Côte d’Ivoire', 'B', 'B', false),
+('DK', 'Denmark', 'A1', 'A1', false),
+('DJ', 'Djibouti', 'C', 'C', false),
+('DO', 'Dominican Republic', 'B', 'B', false),
+('EC', 'Ecuador', 'D', 'B', false),
+('EG', 'Egypt', 'C', 'C', false),
+('SV', 'El Salvador', 'D', 'B', false),
+('EE', 'Estonia', 'A3', 'A1', false),
+('ET', 'Ethiopia', 'C', 'D', false),
+('FJ', 'Fiji', 'C', 'A4', false),
+('FI', 'Finland', 'A3', 'A1', false),
+('FR', 'France', 'A3', 'A1', false),
+('GA', 'Gabon', 'C', 'D', false),
+('GE', 'Georgia', 'B', 'A3', false),
+('DE', 'Germany', 'A3', 'A1', false),
+('GH', 'Ghana', 'C', 'B', false),
+('GR', 'Greece', 'A4', 'A2', false),
+('GT', 'Guatemala', 'C', 'C', false),
+('GN', 'Guinea', 'C', 'D', false),
+('GY', 'Guyana', 'B', 'C', false),
+('HN', 'Honduras', 'C', 'C', false),
+('HK', 'Hong Kong', 'A3', 'A1', false),
+('HU', 'Hungary', 'A4', 'A3', false),
+('IS', 'Iceland', 'A3', 'A1', false),
+('IN', 'India', 'B', 'A4', false),
+('ID', 'Indonesia', 'A4', 'A4', false),
+('IR', 'Iran', 'E', 'D', false),
+('IQ', 'Iraq', 'E', 'E', false),
+('IE', 'Ireland', 'A3', 'A1', false),
+('IL', 'Israel', 'A4', 'A3', false),
+('IT', 'Italy', 'B', 'A2', false),
+('JM', 'Jamaica', 'C', 'A4', false),
+('JP', 'Japan', 'A2', 'A1', false),
+('JO', 'Jordan', 'C', 'B', false),
+('KZ', 'Kazakhstan', 'B', 'B', false),
+('KE', 'Kenya', 'C', 'A4', false),
+('KR', 'South Korea', 'A2', 'A1', false),
+('KW', 'Kuwait', 'A4', 'A3', false),
+('KG', 'Kyrgyzstan', 'C', 'D', false),
+('LA', 'Laos', 'D', 'D', false),
+('LV', 'Latvia', 'A4', 'A1', false),
+('LB', 'Lebanon', 'D', 'D', false),
+('LS', 'Lesotho', 'C', 'B', false),
+('LR', 'Liberia', 'D', 'E', false),
+('LY', 'Libya', 'E', 'E', false),
+('LT', 'Lithuania', 'A4', 'A1', false),
+('LU', 'Luxembourg', 'A1', 'A1', false),
+('MG', 'Madagascar', 'C', 'C', false),
+('MW', 'Malawi', 'D', 'D', false),
+('MY', 'Malaysia', 'A4', 'A3', false),
+('MV', 'Maldives', 'D', 'C', false),
+('ML', 'Mali', 'D', 'D', false),
+('MT', 'Malta', 'A3', 'A4', false),
+('MR', 'Mauritania', 'C', 'C', false),
+('MU', 'Mauritius', 'A4', 'A3', false),
+('MX', 'Mexico', 'B', 'B', false),
+('MD', 'Moldova', 'C', 'B', false),
+('MN', 'Mongolia', 'C', 'C', false),
+('ME', 'Montenegro', 'C', 'A4', false),
+('MA', 'Morocco', 'B', 'A4', false),
+('MZ', 'Mozambique', 'D', 'D', false),
+('MM', 'Myanmar', 'D', 'E', false),
+(NULL, 'Namibia', 'B', 'A4', false),
+('NP', 'Nepal', 'C', 'B', false),
+('NL', 'Netherlands', 'A2', 'A1', false),
+('NZ', 'New Zealand', 'A3', 'A1', false),
+('NI', 'Nicaragua', 'D', 'C', false),
+('NE', 'Niger', 'D', 'D', false),
+('NG', 'Nigeria', 'C', 'D', false),
+('MK', 'North Macedonia', 'C', 'A4', false),
+('NO', 'Norway', 'A1', 'A1', false),
+('OM', 'Oman', 'B', 'A4', false),
+('PK', 'Pakistan', 'D', 'C', false),
+('PA', 'Panama', 'B', 'A4', false),
+('PG', 'Papua New Guinea', 'B', 'C', false),
+('PY', 'Paraguay', 'B', 'B', false),
+('PE', 'Peru', 'B', 'A4', false),
+('PH', 'Philippines', 'A4', 'B', false),
+('PL', 'Poland', 'A4', 'A2', false),
+('PT', 'Portugal', 'A2', 'A2', false),
+('QA', 'Qatar', 'A3', 'A3', false),
+('RO', 'Romania', 'B', 'A3', false),
+('RU', 'Russia', 'D', 'D', false),
+('RW', 'Rwanda', 'A4', 'A4', false),
+('SA', 'Saudi Arabia', 'A3', 'B', false),
+('SN', 'Senegal', 'B', 'B', false),
+('RS', 'Serbia', 'C', 'A4', false),
+('SL', 'Sierra Leone', 'D', 'D', false),
+('SG', 'Singapore', 'A3', 'A1', false),
+('SK', 'Slovakia', 'A4', 'A2', false),
+('SI', 'Slovenia', 'A3', 'A1', false),
+('ZA', 'South Africa', 'C', 'A4', false),
+('ES', 'Spain', 'A2', 'A1', false),
+('LK', 'Sri Lanka', 'D', 'B', false),
+('SD', 'Sudan', 'E', 'E', false),
+('SR', 'Suriname', 'D', 'C', false),
+('SZ', 'Eswatini', 'D', 'C', false),
+('SE', 'Sweden', 'A3', 'A1', false),
+('CH', 'Switzerland', 'A1', 'A1', false),
+('TW', 'Taiwan', 'A2', 'A1', false),
+('TJ', 'Tajikistan', 'D', 'D', false),
+('TZ', 'Tanzania', 'B', 'C', false),
+('TH', 'Thailand', 'B', 'A3', false),
+('TL', 'Timor-Leste', 'D', 'C', false),
+('TG', 'Togo', 'C', 'C', false),
+('TT', 'Trinidad & Tobago', 'B', 'A4', false),
+('TN', 'Tunisia', 'C', 'C', false),
+('TR', 'Türkiye', 'C', 'A4', false),
+('TM', 'Turkmenistan', 'D', 'E', false),
+('UG', 'Uganda', 'C', 'C', false),
+('UA', 'Ukraine', 'D', 'D', false),
+('AE', 'United Arab Emirates', 'A2', 'A2', false),
+('GB', 'United Kingdom', 'A3', 'A1', false),
+('US', 'United States', 'A2', 'A1', false),
+('UY', 'Uruguay', 'A4', 'A3', false),
+('UZ', 'Uzbekistan', 'B', 'B', false),
+('VE', 'Venezuela', 'E', 'E', false),
+('VN', 'Vietnam', 'A4', 'A4', false),
+('ZM', 'Zambia', 'D', 'C', false),
+('ZW', 'Zimbabwe', 'E', 'E', false)
+ON CONFLICT (country_name) DO UPDATE SET country_code = EXCLUDED.country_code, country_risk_grade = EXCLUDED.country_risk_grade, business_climate_grade = EXCLUDED.business_climate_grade, needs_review = EXCLUDED.needs_review;
+
+-- Industry risks
+INSERT INTO industry_risks (sector_code, sector_name, risk_grade) VALUES
+('energy', 'Energy', 'C'),
+('materials', 'Materials', 'B'),
+('industrials', 'Industrials', 'B'),
+('consumer_discretionary', 'Consumer Discretionary', 'B'),
+('consumer_staples', 'Consumer Staples', 'A3'),
+('health_care', 'Health Care', 'A3'),
+('financials', 'Financials', 'B'),
+('information_technology', 'Information Technology', 'A4'),
+('communication_services', 'Communication Services', 'B'),
+('utilities', 'Utilities', 'A3'),
+('real_estate', 'Real Estate', 'B')
+ON CONFLICT (sector_code) DO UPDATE SET sector_name = EXCLUDED.sector_name, risk_grade = EXCLUDED.risk_grade;
+
+-- Investment type risks
+INSERT INTO investment_type_risks (investment_type, category, key_risk_drivers, risk_grade) VALUES
+('Central bank reserves / sovereign cash (AAA)', NULL, 'Counterparty, inflation erosion', 'A1'),
+('Money market funds (government-only)', NULL, 'Interest rate, liquidity', 'A1'),
+('Money market funds (prime / corporate)', NULL, 'Credit spread, liquidity stress', 'A2'),
+('Bank deposits (OECD banks)', NULL, 'Bank solvency, bail-in', 'A2'),
+('Short-term T-Bills (OECD)', NULL, 'Rate risk', 'A1'),
+('Investment Type', NULL, 'Key Risk Drivers', 'Risk Grade'),
+('Sovereign bonds (AAA–AA)', NULL, 'Duration, fiscal', 'A1–A2'),
+('Sovereign bonds (BBB)', NULL, 'Debt sustainability', 'A3'),
+('Emerging market sovereign debt', NULL, 'FX, political risk', 'B'),
+('Investment-grade corporate bonds', NULL, 'Credit cycle, duration', 'A3'),
+('High-yield bonds', NULL, 'Default risk', 'B–C'),
+('Distressed debt', NULL, 'Recovery uncertainty', 'C–D'),
+('Structured credit (ABS, CLO mezzanine)', NULL, 'Complexity, correlation', 'B–C'),
+('Investment Type', NULL, 'Key Risk Drivers', 'Risk Grade'),
+('Developed market equities', NULL, 'Market volatility', 'A4'),
+('Emerging market equities', NULL, 'FX, governance', 'B'),
+('Sector ETFs (cyclical sectors)', NULL, 'Sector concentration', 'B'),
+('Volatility products / leveraged ETFs', NULL, 'Path dependency', 'C–D'),
+('Listed REITs', NULL, 'Rate sensitivity', 'B'),
+('Investment Type', NULL, 'Key Risk Drivers', 'Risk Grade'),
+('Residential real estate (core, OECD)', NULL, 'Rates, liquidity', 'A3'),
+('Residential real estate (leveraged)', NULL, 'Leverage, cycles', 'A4'),
+('Commercial real estate – core (office, retail prime)', NULL, 'Demand shifts', 'A4–B'),
+('Logistics / data centers', NULL, 'Tenant concentration', 'A3'),
+('Hospitality / retail secondary', NULL, 'Cyclicality', 'B–C'),
+('Real estate development', NULL, 'Execution risk', 'C'),
+('Distressed real estate', NULL, 'Liquidity, legal', 'C–D'),
+('Investment Type', NULL, 'Key Risk Drivers', 'Risk Grade'),
+('Private equity funds – buyout', NULL, 'Leverage, exit risk', 'B'),
+('Growth equity', NULL, 'Valuation risk', 'B'),
+('Venture capital (early stage)', NULL, 'Failure probability', 'C–D'),
+('Venture capital (late stage)', NULL, 'Liquidity, repricing', 'C'),
+('Fund-of-funds (PE/VC)', NULL, 'Layered fees', 'B'),
+('Co-investments', NULL, 'Concentration', 'B–C'),
+('Investment Type', NULL, 'Key Risk Drivers', 'Risk Grade'),
+('Core infrastructure (regulated utilities)', NULL, 'Regulatory risk', 'A3'),
+('Renewable energy (subsidy-backed)', NULL, 'Policy risk', 'A4'),
+('Transport infrastructure', NULL, 'Demand elasticity', 'B'),
+('Natural resources / mining', NULL, 'Commodity volatility', 'C'),
+('Timberland / farmland', NULL, 'Climate, liquidity', 'A4'),
+('Investment Type', NULL, 'Key Risk Drivers', 'Risk Grade'),
+('Market-neutral hedge funds', NULL, 'Model risk', 'A4'),
+('Global macro', NULL, 'Event risk', 'B'),
+('Long/short equity', NULL, 'Beta leakage', 'B'),
+('Event-driven', NULL, 'Deal failure', 'B'),
+('CTA / trend-following', NULL, 'Regime shifts', 'B'),
+('Investment Type', NULL, 'Key Risk Drivers', 'Risk Grade'),
+('G10 FX (unleveraged)', NULL, 'Volatility', 'A4'),
+('EM FX', NULL, 'Political / liquidity', 'B–C'),
+('Leveraged FX trading', NULL, 'Margin risk', 'C–D'),
+('Gold', NULL, 'Price volatility', 'A4'),
+('Industrial commodities', NULL, 'Cyclicality', 'B'),
+('Cryptoassets (BTC/ETH)', NULL, 'Volatility, regulation', 'D'),
+('Altcoins / DeFi', NULL, 'Counterparty, hacks', 'E'),
+('Investment Type', NULL, 'Key Risk Drivers', 'Risk Grade'),
+('Structured notes (capital protected)', NULL, 'Issuer risk', 'A3'),
+('Structured notes (yield-enhanced)', NULL, 'Optionality risk', 'B'),
+('Trade finance (insured)', NULL, 'Counterparty', 'A3'),
+('Trade finance (uninsured)', NULL, 'Default risk', 'B–C'),
+('Litigation finance', NULL, 'Binary outcomes', 'C'),
+('Special situations', NULL, 'Legal, timing', 'C–D'),
+('A1–A3: Capital preservation, liquidity sleeves, regulatory capital efficiency', NULL, NULL, NULL),
+('A4–B: Core growth and income engines', NULL, NULL, NULL),
+('C–E: Opportunistic, asymmetric, return-seeking capital only', NULL, NULL, NULL)
+ON CONFLICT (investment_type) DO UPDATE SET category = EXCLUDED.category, key_risk_drivers = EXCLUDED.key_risk_drivers, risk_grade = EXCLUDED.risk_grade;

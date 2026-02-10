@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { RefreshCw, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { applyConversationFilters, sortConversations, formatRelativeTime, getInitials, truncateText } from '@/lib/messaging'
+import { isAgentChatConversation } from '@/lib/compliance/agent-chat'
 
 interface InvestorContactsProps {
   conversations: ConversationSummary[]
@@ -16,6 +17,7 @@ interface InvestorContactsProps {
   onSelectConversation: (conversationId: string) => void
   activeConversationId: string | null
   isLoading: boolean
+  currentUserId: string
 }
 
 export function InvestorContacts({
@@ -26,6 +28,7 @@ export function InvestorContacts({
   onSelectConversation,
   activeConversationId,
   isLoading,
+  currentUserId,
 }: InvestorContactsProps) {
   const [search, setSearch] = useState(filters.search || '')
 
@@ -38,7 +41,7 @@ export function InvestorContacts({
   const unreadTotal = conversations.reduce((total, conversation) => total + (conversation.unreadCount || 0), 0)
 
   return (
-    <aside className="w-full sm:w-[320px] border-r bg-card flex flex-col">
+    <aside className="w-full sm:w-[320px] border-r bg-card flex flex-col min-h-0">
       <div className="p-4 border-b space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div>
@@ -74,9 +77,22 @@ export function InvestorContacts({
           <ul className="p-2 space-y-1">
             {filteredConversations.map(conversation => {
               const isActive = conversation.id === activeConversationId
-              const staffParticipant = conversation.participants.find(p => (p.role || '').startsWith('staff_') || p.role === 'ceo')
-              const contactName = staffParticipant?.displayName || staffParticipant?.email || conversation.subject || 'Verso Team'
-              const additionalParticipants = conversation.participants.length > 2 ? ` +${conversation.participants.length - 2}` : ''
+              const metadata = (conversation.metadata as Record<string, any>) || {}
+              const agentChat = (metadata.agent_chat as Record<string, any>) || {}
+              const isAgentChat = isAgentChatConversation(metadata)
+              const agentName = typeof agentChat.agent_name === 'string' ? agentChat.agent_name : null
+              const agentAvatarUrl = typeof agentChat.agent_avatar_url === 'string' ? agentChat.agent_avatar_url : null
+
+              const otherParticipants = conversation.participants.filter(p => p.id !== currentUserId)
+              const staffParticipant = otherParticipants.find(p => (p.role || '').startsWith('staff_') || p.role === 'ceo')
+
+              const contactName = isAgentChat
+                ? (agentName || conversation.subject || 'Verso Team')
+                : (staffParticipant?.displayName || staffParticipant?.email || conversation.subject || 'Verso Team')
+
+              const additionalParticipants = otherParticipants.length > 1
+                ? ` +${otherParticipants.length - 1}`
+                : ''
               const timestamp = conversation.lastMessageAt || conversation.createdAt
               
               return (
@@ -96,9 +112,11 @@ export function InvestorContacts({
                       {/* Avatar */}
                       <div className="relative">
                         <Avatar className="h-11 w-11 transition-transform duration-200 group-hover:scale-110">
-                          {staffParticipant?.avatarUrl && (
+                          {isAgentChat && agentAvatarUrl ? (
+                            <AvatarImage src={agentAvatarUrl} alt={contactName} />
+                          ) : staffParticipant?.avatarUrl ? (
                             <AvatarImage src={staffParticipant.avatarUrl} alt={contactName} />
-                          )}
+                          ) : null}
                           <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
                             {getInitials(contactName)}
                           </AvatarFallback>
@@ -155,5 +173,3 @@ export function InvestorContacts({
     </aside>
   )
 }
-
-

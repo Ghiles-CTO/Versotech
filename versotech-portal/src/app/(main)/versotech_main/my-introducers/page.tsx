@@ -41,8 +41,9 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { formatCurrency, formatDate } from '@/lib/format'
+import { formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
+import { type CurrencyTotals, formatCurrencyTotals, sumByCurrency } from '@/lib/currency-totals'
 import { CreateAgreementDialog } from '@/components/staff/introducers/create-agreement-dialog'
 import { IntroducerDetailDrawer } from '@/components/introducers/introducer-detail-drawer'
 import { CommissionSummary } from '@/components/common/commission-summary'
@@ -87,8 +88,11 @@ type Summary = {
   activeIntroducers: number
   totalReferrals: number
   totalFeesOwed: number
+  totalFeesOwedByCurrency: CurrencyTotals
   totalFeesPaid: number
+  totalFeesPaidByCurrency: CurrencyTotals
   totalCommissions: number
+  totalCommissionsByCurrency: CurrencyTotals
 }
 
 type PendingAgreement = {
@@ -125,8 +129,11 @@ export default function MyIntroducersPage() {
     activeIntroducers: 0,
     totalReferrals: 0,
     totalFeesOwed: 0,
+    totalFeesOwedByCurrency: {},
     totalFeesPaid: 0,
+    totalFeesPaidByCurrency: {},
     totalCommissions: 0,
+    totalCommissionsByCurrency: {},
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -226,7 +233,17 @@ export default function MyIntroducersPage() {
 
       if (!dealsData || dealsData.length === 0) {
         setIntroducers([])
-        setSummary({ totalIntroducers: 0, activeIntroducers: 0, totalReferrals: 0, totalFeesOwed: 0, totalFeesPaid: 0, totalCommissions: 0 })
+        setSummary({
+          totalIntroducers: 0,
+          activeIntroducers: 0,
+          totalReferrals: 0,
+          totalFeesOwed: 0,
+          totalFeesOwedByCurrency: {},
+          totalFeesPaid: 0,
+          totalFeesPaidByCurrency: {},
+          totalCommissions: 0,
+          totalCommissionsByCurrency: {},
+        })
         return
       }
 
@@ -246,7 +263,17 @@ export default function MyIntroducersPage() {
 
       if (introducerIds.length === 0) {
         setIntroducers([])
-        setSummary({ totalIntroducers: 0, activeIntroducers: 0, totalReferrals: 0, totalFeesOwed: 0, totalFeesPaid: 0, totalCommissions: 0 })
+        setSummary({
+          totalIntroducers: 0,
+          activeIntroducers: 0,
+          totalReferrals: 0,
+          totalFeesOwed: 0,
+          totalFeesOwedByCurrency: {},
+          totalFeesPaid: 0,
+          totalFeesPaidByCurrency: {},
+          totalCommissions: 0,
+          totalCommissionsByCurrency: {},
+        })
         return
       }
 
@@ -292,7 +319,7 @@ export default function MyIntroducersPage() {
           paid: 0,
           cancelled: 0,
           total_owed: 0,
-          currency: 'USD',
+          currency: '',
         })
       })
 
@@ -306,7 +333,7 @@ export default function MyIntroducersPage() {
           else if (c.status === 'invoiced') summary.invoiced += amount
           else if (c.status === 'paid') summary.paid += amount
           else if (c.status === 'cancelled') summary.cancelled += amount
-          if (c.currency) summary.currency = c.currency
+          if (c.currency) summary.currency = String(c.currency).toUpperCase()
         }
       })
 
@@ -345,7 +372,7 @@ export default function MyIntroducersPage() {
           paid: 0,
           cancelled: 0,
           total_owed: 0,
-          currency: 'USD',
+          currency: '',
         }
 
         return {
@@ -369,20 +396,40 @@ export default function MyIntroducersPage() {
       setIntroducers(processedIntroducers)
 
       // Calculate overall summary
-      let totalFeesOwed = 0
-      let totalFeesPaid = 0
-      processedIntroducers.forEach(i => {
-        totalFeesOwed += i.commission_summary.total_owed
-        totalFeesPaid += i.commission_summary.paid
-      })
+      const paidCommissions = (commissionsData || []).filter((commission: any) => commission.status === 'paid')
+      const owedCommissions = (commissionsData || []).filter((commission: any) =>
+        ['accrued', 'invoice_requested', 'invoice_submitted', 'invoiced'].includes(commission.status)
+      )
+      const allCommissions = commissionsData || []
+
+      const totalFeesOwed = owedCommissions.reduce((sum: number, commission: any) => sum + (Number(commission.accrual_amount) || 0), 0)
+      const totalFeesPaid = paidCommissions.reduce((sum: number, commission: any) => sum + (Number(commission.accrual_amount) || 0), 0)
+      const totalFeesOwedByCurrency = sumByCurrency(
+        owedCommissions,
+        (commission: any) => commission.accrual_amount,
+        (commission: any) => commission.currency
+      )
+      const totalFeesPaidByCurrency = sumByCurrency(
+        paidCommissions,
+        (commission: any) => commission.accrual_amount,
+        (commission: any) => commission.currency
+      )
+      const totalCommissionsByCurrency = sumByCurrency(
+        allCommissions,
+        (commission: any) => commission.accrual_amount,
+        (commission: any) => commission.currency
+      )
 
       setSummary({
         totalIntroducers: processedIntroducers.length,
         activeIntroducers: processedIntroducers.filter(i => i.status === 'active').length,
         totalReferrals: processedIntroducers.reduce((sum, i) => sum + i.referrals_count, 0),
         totalFeesOwed,
+        totalFeesOwedByCurrency,
         totalFeesPaid,
+        totalFeesPaidByCurrency,
         totalCommissions: totalFeesOwed + totalFeesPaid,
+        totalCommissionsByCurrency,
       })
       setError(null)
     } catch (err) {
@@ -423,7 +470,7 @@ export default function MyIntroducersPage() {
         paid: 0,
         cancelled: 0,
         total_owed: 0,
-        currency: 'USD',
+        currency: '',
       },
     }))
 
@@ -433,8 +480,11 @@ export default function MyIntroducersPage() {
       activeIntroducers: processedIntroducers.filter(i => i.status === 'active').length,
       totalReferrals: 0,
       totalFeesOwed: 0,
+      totalFeesOwedByCurrency: {},
       totalFeesPaid: 0,
+      totalFeesPaidByCurrency: {},
       totalCommissions: 0,
+      totalCommissionsByCurrency: {},
     })
   }
 
@@ -482,7 +532,7 @@ export default function MyIntroducersPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">My Introducers</h1>
@@ -609,7 +659,7 @@ export default function MyIntroducersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">{formatCurrency(summary.totalCommissions, 'USD')}</div>
+            <div className="text-2xl font-bold text-purple-600">{formatCurrencyTotals(summary.totalCommissionsByCurrency)}</div>
             <p className="text-xs text-muted-foreground mt-1">All time</p>
           </CardContent>
         </Card>
@@ -620,7 +670,7 @@ export default function MyIntroducersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{formatCurrency(summary.totalFeesOwed, 'USD')}</div>
+            <div className="text-2xl font-bold text-orange-600">{formatCurrencyTotals(summary.totalFeesOwedByCurrency)}</div>
             <p className="text-xs text-muted-foreground mt-1">Pending payment</p>
           </CardContent>
         </Card>
@@ -631,7 +681,7 @@ export default function MyIntroducersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(summary.totalFeesPaid, 'USD')}</div>
+            <div className="text-2xl font-bold text-green-600">{formatCurrencyTotals(summary.totalFeesPaidByCurrency)}</div>
             <p className="text-xs text-muted-foreground mt-1">Completed</p>
           </CardContent>
         </Card>

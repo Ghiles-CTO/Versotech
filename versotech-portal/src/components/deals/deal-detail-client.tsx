@@ -191,7 +191,7 @@ export function DealDetailClient({
   // Safety check - if no deal, show error state (server should handle redirect)
   if (!deal || !deal.id) {
     return (
-      <div className="p-6">
+      <div>
         <Card className="border border-destructive/50 bg-destructive/10">
           <CardContent className="p-6 text-center text-foreground">
             <p>Unable to load deal details</p>
@@ -207,7 +207,7 @@ export function DealDetailClient({
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="space-y-1">

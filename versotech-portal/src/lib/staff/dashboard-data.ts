@@ -1,4 +1,5 @@
 import { createServiceClient } from '@/lib/supabase/server'
+import { formatCurrency } from '@/lib/format'
 
 type NullableString = string | null
 
@@ -33,6 +34,7 @@ export type StaffDashboardData = {
     activityType: 'fee' | 'subscription' | 'investor' | 'other'
     createdAt: string
     amount?: number
+    currency?: string
     status?: string
   }>
   charts: {
@@ -241,13 +243,13 @@ export async function getStaffDashboardData(
     // 1. Latest Fees
     supabase
         .from('fee_events')
-        .select('id, computed_amount, fee_type, created_at')
+        .select('id, computed_amount, fee_type, currency, created_at')
         .order('created_at', { ascending: false })
         .limit(5),
     // 2. Latest Subscriptions
     supabase
         .from('subscriptions')
-        .select('id, commitment, status, created_at')
+        .select('id, commitment, currency, status, created_at')
         .order('created_at', { ascending: false })
         .limit(5),
     // 3. Latest Investors (e.g. newly approved)
@@ -320,26 +322,30 @@ export async function getStaffDashboardData(
 
   // Add Fees
   latestFeesRes.data?.forEach(fee => {
+    const currency = fee.currency || 'USD'
     activities.push({
         id: fee.id,
         title: 'Fee Calculated',
-        description: `${fee.fee_type} fee of $${fee.computed_amount?.toLocaleString()}`,
+        description: `${fee.fee_type} fee of ${formatCurrency(fee.computed_amount, currency)}`,
         activityType: 'fee',
         createdAt: fee.created_at,
         amount: fee.computed_amount,
+        currency,
         status: 'processed'
     })
   })
 
   // Add Subscriptions
   latestSubscriptionsRes.data?.forEach(sub => {
+    const currency = sub.currency || 'USD'
     activities.push({
         id: sub.id,
         title: 'New Subscription',
-        description: `Commitment: $${sub.commitment?.toLocaleString() ?? '0'}`,
+        description: `Commitment: ${formatCurrency(sub.commitment, currency)}`,
         activityType: 'subscription',
         createdAt: sub.created_at,
         amount: sub.commitment,
+        currency,
         status: sub.status
     })
   })

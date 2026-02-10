@@ -123,7 +123,7 @@ export function PartnerDashboard({ partnerId, userId, persona }: PartnerDashboar
 
   if (error) {
     return (
-      <div className="p-6">
+      <div>
         <Card>
           <CardHeader>
             <CardTitle>Partner Dashboard</CardTitle>

@@ -1,8 +1,8 @@
 'use client'
 
 import type { ConversationSummary, ConversationMessage } from '@/types/messaging'
-import { useEffect, useMemo, useState, useRef } from 'react'
-import { fetchConversationMessages, markConversationRead, subscribeToConversationUpdates } from '@/lib/messaging'
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
+import { fetchConversationMessages, markConversationRead, subscribeToConversationUpdates, getClientSupabase } from '@/lib/messaging'
 import { groupMessages, getInitials, formatRelativeTime, getDateDivider, shouldShowDateDivider } from '@/lib/messaging/utils'
 import { MessageBubble } from '@/components/messaging/shared/message-bubble'
 import { MessageSkeleton } from '@/components/messaging/message-skeleton'
@@ -12,7 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { Send, Paperclip, MoreVertical, Users, Smile, Trash2, MessageSquare } from 'lucide-react'
+import { Send, MoreVertical, Users, Trash2, MessageSquare } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +20,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,16 +38,36 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { toast } from 'sonner'
+
+// Module-level tracker for pending agent replies. Survives component unmount/remount
+// so the new instance can pick up polling where the old one left off.
+const pendingAgentReplies = new Map<
+  string,
+  { messageId: string; conversationId: string; triggeredAt: number }
+>()
 
 interface ConversationViewProps {
   conversation: ConversationSummary
   currentUserId: string
+  showAssistantBadge?: boolean
+  showComplianceControls?: boolean
   onRead?: () => void
   onError?: (message: string) => void
   onDelete?: (conversationId: string) => void
+  onRefresh?: () => void
 }
 
-export function ConversationView({ conversation, currentUserId, onRead, onError, onDelete }: ConversationViewProps) {
+export function ConversationView({
+  conversation,
+  currentUserId,
+  showAssistantBadge = true,
+  showComplianceControls = true,
+  onRead,
+  onError,
+  onDelete,
+  onRefresh,
+}: ConversationViewProps) {
   const [messages, setMessages] = useState<ConversationMessage[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [composerMessage, setComposerMessage] = useState('')
@@ -48,9 +76,114 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const didInitialScrollRef = useRef(false)
+  const isNearBottomRef = useRef(true)
+  const [showComplianceDialog, setShowComplianceDialog] = useState(false)
+  const [complianceReason, setComplianceReason] = useState('')
+  const [complianceUrgency, setComplianceUrgency] = useState<'low' | 'medium' | 'high'>('medium')
+  const [complianceSubmitting, setComplianceSubmitting] = useState(false)
+  const isMountedRef = useRef(true)
+  // When non-null, an interval refetches messages until the agent reply is found.
+  const [pendingReplyMessageId, setPendingReplyMessageId] = useState<string | null>(() => {
+    const pending = pendingAgentReplies.get(conversation.id)
+    if (pending && Date.now() - pending.triggeredAt < 60_000) return pending.messageId
+    return null
+  })
 
-  console.log('[ConversationView] Rendering with', messages.length, 'messages for conversation:', conversation.id)
-  
+  // Typing indicator state
+  const [typingUsers, setTypingUsers] = useState<Map<string, { name: string; expiresAt: number }>>(new Map())
+  const lastTypingBroadcastRef = useRef(0)
+  const typingChannelRef = useRef<ReturnType<ReturnType<typeof getClientSupabase>['channel']> | null>(null)
+
+  useEffect(() => {
+    // Must explicitly set to true on mount so that React Strict Mode's
+    // double-mount cycle (mount → cleanup → mount) restores the ref
+    // after the first cleanup sets it to false.
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
+  // Typing indicator: broadcast channel + listener
+  useEffect(() => {
+    const supabase = getClientSupabase()
+    const channel = supabase.channel(`typing-${conversation.id}`)
+
+    channel
+      .on('broadcast', { event: 'typing' }, (payload) => {
+        const { userId, userName } = payload.payload as { userId: string; userName: string }
+        if (userId === currentUserId) return
+        setTypingUsers(prev => {
+          const next = new Map(prev)
+          next.set(userId, { name: userName, expiresAt: Date.now() + 3000 })
+          return next
+        })
+      })
+      .subscribe()
+
+    typingChannelRef.current = channel
+
+    return () => {
+      typingChannelRef.current = null
+      supabase.removeChannel(channel)
+    }
+  }, [conversation.id, currentUserId])
+
+  // Auto-clear expired typing indicators
+  useEffect(() => {
+    if (typingUsers.size === 0) return
+    const timerId = setInterval(() => {
+      const now = Date.now()
+      setTypingUsers(prev => {
+        const next = new Map(prev)
+        let changed = false
+        for (const [id, entry] of next) {
+          if (entry.expiresAt <= now) {
+            next.delete(id)
+            changed = true
+          }
+        }
+        return changed ? next : prev
+      })
+    }, 1000)
+    return () => clearInterval(timerId)
+  }, [typingUsers.size])
+
+  // Broadcast typing event (throttled to max once per 2s)
+  const broadcastTyping = useCallback(() => {
+    const now = Date.now()
+    if (now - lastTypingBroadcastRef.current < 2000) return
+    lastTypingBroadcastRef.current = now
+
+    const self = conversation.participants.find(p => p.id === currentUserId)
+    const userName = self?.displayName || self?.email || 'Someone'
+
+    typingChannelRef.current?.send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: { userId: currentUserId, userName },
+    })
+  }, [conversation.participants, currentUserId])
+
+  // Live participant read-status tracking (updated via realtime)
+  const [liveReadAt, setLiveReadAt] = useState<Map<string, string>>(() => {
+    const map = new Map<string, string>()
+    for (const p of conversation.participants) {
+      if (p.lastReadAt) map.set(p.id, p.lastReadAt)
+    }
+    return map
+  })
+
+  // Reset when switching conversations
+  useEffect(() => {
+    const map = new Map<string, string>()
+    for (const p of conversation.participants) {
+      if (p.lastReadAt) map.set(p.id, p.lastReadAt)
+    }
+    setLiveReadAt(map)
+  }, [conversation.id, conversation.participants])
+
   const handleDeleteConversation = async () => {
     try {
       const response = await fetch(`/api/conversations/${conversation.id}`, {
@@ -86,6 +219,83 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
     }
   }
 
+  const complianceMeta = useMemo(() => {
+    const metadata = (conversation.metadata as Record<string, any>) || {}
+    return metadata.compliance || {}
+  }, [conversation.metadata])
+
+  const agentChatMeta = useMemo(() => {
+    const metadata = (conversation.metadata as Record<string, any>) || {}
+    const agentChat = metadata.agent_chat || {}
+    return {
+      agentName: typeof agentChat.agent_name === 'string' ? agentChat.agent_name : null,
+      agentAvatarUrl: typeof agentChat.agent_avatar_url === 'string' ? agentChat.agent_avatar_url : null,
+    }
+  }, [conversation.metadata])
+
+  const displayParticipants = useMemo(() => {
+    const nonSelfParticipants = conversation.participants.filter((participant) => participant.id !== currentUserId)
+    if (nonSelfParticipants.length > 0) return nonSelfParticipants
+    if (!agentChatMeta.agentName) return conversation.participants
+
+    return [
+      {
+        id: `agent:${agentChatMeta.agentName}`,
+        displayName: agentChatMeta.agentName,
+        email: null,
+        role: 'staff_compliance',
+        avatarUrl: agentChatMeta.agentAvatarUrl,
+        participantRole: 'member',
+        joinedAt: conversation.createdAt,
+        lastReadAt: null,
+        lastNotifiedAt: null,
+        isMuted: false,
+        isPinned: false,
+      },
+    ]
+  }, [agentChatMeta.agentAvatarUrl, agentChatMeta.agentName, conversation.createdAt, conversation.participants, currentUserId])
+
+  // Total participant count includes self + virtual agent for display purposes
+  const totalParticipantCount = agentChatMeta.agentName
+    ? Math.max(conversation.participants.length + 1, 2)
+    : conversation.participants.length
+
+  const complianceStatus = complianceMeta?.status || (complianceMeta?.flagged ? 'open' : null)
+
+  const submitComplianceAction = async (action: 'flag' | 'resolve') => {
+    setComplianceSubmitting(true)
+    try {
+      const response = await fetch(`/api/conversations/${conversation.id}/compliance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          reason: action === 'flag' ? complianceReason : undefined,
+          urgency: action === 'flag' ? complianceUrgency : undefined,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null)
+        throw new Error(error?.error || 'Failed to update compliance flag')
+      }
+
+      toast.success(
+        action === 'flag' ? 'Compliance flag added' : 'Compliance flag resolved'
+      )
+      setShowComplianceDialog(false)
+      if (action === 'flag') {
+        setComplianceReason('')
+      }
+      onRefresh?.()
+    } catch (error: any) {
+      console.error('[ConversationView] Compliance action error:', error)
+      toast.error(error?.message || 'Failed to update compliance status')
+    } finally {
+      setComplianceSubmitting(false)
+    }
+  }
+
   const participantsLookup = useMemo(() => {
     const map = new Map<string, { name: string, email: string | null }>()
     conversation.participants.forEach(participant => {
@@ -108,11 +318,45 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
     return groupMessages(messages)
   }, [messages])
 
-  // Auto-scroll to bottom when messages change
+  const getViewport = () => {
+    const root = scrollAreaRef.current
+    if (!root) return null
+    return root.querySelector<HTMLElement>('[data-radix-scroll-area-viewport]')
+  }
+
+  // Track whether user is near the bottom to avoid jumpy scrolls while reading history
   useEffect(() => {
-    console.log('[ConversationView] Auto-scroll triggered, messages:', messages.length)
-    if (messages.length > 0 && messagesEndRef.current) {
-      console.log('[ConversationView] Scrolling to bottom')
+    const viewport = getViewport()
+    if (!viewport) return
+
+    const handleScroll = () => {
+      const distanceFromBottom = viewport.scrollHeight - (viewport.scrollTop + viewport.clientHeight)
+      isNearBottomRef.current = distanceFromBottom < 120
+    }
+
+    handleScroll()
+    viewport.addEventListener('scroll', handleScroll, { passive: true })
+    return () => {
+      viewport.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
+  // Reset auto-scroll state when switching conversations
+  useEffect(() => {
+    didInitialScrollRef.current = false
+  }, [conversation.id])
+
+  // Auto-scroll to bottom on initial load, and only when user is near bottom afterward
+  useEffect(() => {
+    if (messages.length === 0 || !messagesEndRef.current) return
+
+    if (!didInitialScrollRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'auto' })
+      didInitialScrollRef.current = true
+      return
+    }
+
+    if (isNearBottomRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
   }, [messages])
@@ -121,17 +365,21 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
   useEffect(() => {
     let isMounted = true
     setIsLoading(true)
-    setMessages([])
+    const seedMessages = conversation.latestMessage ? [conversation.latestMessage] : []
+    setMessages(seedMessages)
     
     fetchConversationMessages(conversation.id, { limit: 200 })
       .then(data => {
         if (!isMounted) return
-        setMessages(data)
+        setMessages(data.length > 0 ? data : seedMessages)
         onRead?.()
         markConversationRead(conversation.id).catch(console.error)
       })
       .catch(error => {
         console.error('Load messages error', error)
+        if (isMounted && seedMessages.length > 0) {
+          setMessages(seedMessages)
+        }
       })
       .finally(() => {
         if (isMounted) setIsLoading(false)
@@ -142,11 +390,46 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
     }
   }, [conversation.id, onRead])
 
+  // Interval-based polling while waiting for an agent reply.
+  // Fires every 3s and stops once the reply appears or 45s elapses.
+  useEffect(() => {
+    if (!pendingReplyMessageId) return
+
+    const intervalId = setInterval(async () => {
+      try {
+        const updated = await fetchConversationMessages(conversation.id, { limit: 200 })
+        if (!isMountedRef.current) return
+        setMessages(updated.length > 0 ? updated : (conversation.latestMessage ? [conversation.latestMessage] : []))
+
+        const hasReply = updated.some((msg) => {
+          const meta = (msg.metadata || {}) as Record<string, unknown>
+          return meta.source === 'compliance_assistant' && meta.reply_to_message_id === pendingReplyMessageId
+        })
+        if (hasReply) {
+          pendingAgentReplies.delete(conversation.id)
+          setPendingReplyMessageId(null)
+        }
+      } catch {
+        // Ignore fetch errors during polling
+      }
+    }, 3000)
+
+    // Safety timeout: stop polling after 45s regardless
+    const timeoutId = setTimeout(() => {
+      pendingAgentReplies.delete(conversation.id)
+      setPendingReplyMessageId(null)
+    }, 45_000)
+
+    return () => {
+      clearInterval(intervalId)
+      clearTimeout(timeoutId)
+    }
+  }, [pendingReplyMessageId, conversation.id])
+
   // Handle message sending with optimistic update
   const handleSend = async () => {
     if (!composerMessage.trim()) return
-    
-    console.log('[ConversationView] Sending message:', composerMessage)
+
     setIsSending(true)
 
     try {
@@ -162,13 +445,32 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
       }
 
       const result = await response.json()
-      console.log('[ConversationView] Message sent, adding optimistically:', result.message)
       
       // Add message optimistically
       if (result.message) {
         setMessages(prev => {
           if (prev.some(m => m.id === result.message.id)) return prev
           return [...prev, result.message]
+        })
+      }
+
+      if (result?.agentReplyEligible && result?.message?.id) {
+        // Track at module level (survives unmount) and in component state (drives interval polling).
+        pendingAgentReplies.set(conversation.id, {
+          messageId: result.message.id,
+          conversationId: conversation.id,
+          triggeredAt: Date.now(),
+        })
+        setPendingReplyMessageId(result.message.id)
+
+        // Fire-and-forget: trigger the AI agent reply on the server.
+        // The interval-based polling effect will pick up the reply once it's in the DB.
+        void fetch(`/api/conversations/${conversation.id}/agent-reply`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message_id: result.message.id }),
+        }).catch((error) => {
+          console.error('[ConversationView] Failed to trigger agent reply', error)
         })
       }
       
@@ -188,32 +490,26 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
     }
   }
 
-  // Subscribe to new messages in realtime (for messages from OTHER users)
+  // Subscribe to new messages + participant read status in realtime
   useEffect(() => {
-    console.log('[ConversationView] Setting up realtime for conversation:', conversation.id)
-    
     const cleanup = subscribeToConversationUpdates(conversation.id, {
       onMessage: (newMessage) => {
-        console.log('[ConversationView] Received new message from realtime:', newMessage)
         setMessages(prev => {
-          console.log('[ConversationView] Current messages before add:', prev.length)
-          // Avoid duplicates
-          if (prev.some(m => m.id === newMessage.id)) {
-            console.log('[ConversationView] Message already exists, skipping')
-            return prev
-          }
-          console.log('[ConversationView] Adding realtime message to list')
-          const updated = [...prev, newMessage]
-          console.log('[ConversationView] Messages after add:', updated.length)
-          return updated
+          if (prev.some(m => m.id === newMessage.id)) return prev
+          return [...prev, newMessage]
         })
-        // Mark as read if we&apos;re viewing
         markConversationRead(conversation.id).catch(console.error)
-      }
+      },
+      onParticipantRead: (userId, lastReadAt) => {
+        setLiveReadAt(prev => {
+          const next = new Map(prev)
+          next.set(userId, lastReadAt)
+          return next
+        })
+      },
     })
 
     return () => {
-      console.log('[ConversationView] Cleaning up realtime for conversation:', conversation.id)
       cleanup()
     }
   }, [conversation.id])
@@ -226,7 +522,7 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
           <div className="flex items-center gap-3">
             {/* Participant Avatars */}
             <div className="flex -space-x-2">
-              {conversation.participants.slice(0, 3).map((participant, idx) => (
+              {displayParticipants.slice(0, 3).map((participant) => (
                 <Avatar key={participant.id} className="h-9 w-9 border-2 border-background">
                   {participant.avatarUrl && (
                     <AvatarImage src={participant.avatarUrl} alt={participant.displayName || participant.email || 'User'} />
@@ -236,10 +532,10 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
                   </AvatarFallback>
                 </Avatar>
               ))}
-              {conversation.participants.length > 3 && (
+              {displayParticipants.length > 3 && (
                 <Avatar className="h-9 w-9 border-2 border-background">
                   <AvatarFallback className="text-xs bg-muted text-foreground">
-                    +{conversation.participants.length - 3}
+                    +{displayParticipants.length - 3}
                   </AvatarFallback>
                 </Avatar>
               )}
@@ -252,7 +548,7 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
               </h3>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Users className="h-3 w-3" />
-                <span>{conversation.participants.length} participant{conversation.participants.length !== 1 ? 's' : ''}</span>
+                <span>{totalParticipantCount} participant{totalParticipantCount !== 1 ? 's' : ''}</span>
               </div>
             </div>
           </div>
@@ -262,7 +558,6 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
             <Badge variant="outline" className="capitalize border-border text-foreground">
               {conversation.type.replace('_', ' ')}
             </Badge>
-            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -277,6 +572,25 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
                   Mute Notifications
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                {showComplianceControls && (
+                  <>
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => setShowComplianceDialog(true)}
+                    >
+                      Flag for Compliance
+                    </DropdownMenuItem>
+                    {complianceMeta?.flagged && complianceStatus !== 'resolved' && (
+                      <DropdownMenuItem
+                        className="cursor-pointer"
+                        onClick={() => submitComplianceAction('resolve')}
+                      >
+                        Mark Compliance Resolved
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                  </>
+                )}
                 <DropdownMenuItem 
                   className="cursor-pointer text-red-600 focus:text-red-600"
                   onClick={() => setShowDeleteDialog(true)}
@@ -290,7 +604,7 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
         </div>
       </header>
 
-      <ScrollArea className="flex-1 min-h-0 bg-muted/20">
+      <ScrollArea ref={scrollAreaRef} className="flex-1 min-h-0 bg-muted/20">
         <div className="px-4 py-6 md:px-8">
           {isLoading ? (
             <MessageSkeleton count={3} />
@@ -308,7 +622,7 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
               <p className="text-sm text-muted-foreground max-w-md leading-relaxed">
                 No messages yet. Break the ice and send the first message to{' '}
                 <span className="font-medium text-foreground">
-                  {conversation.participants.filter(p => p.id !== currentUserId)[0]?.displayName || 'your team'}
+                  {displayParticipants[0]?.displayName || 'your team'}
                 </span>
                 .
               </p>
@@ -317,11 +631,32 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
             <div className="space-y-0">
               {groupedMessages.map((message, index) => {
                 const isSelf = message.senderId === currentUserId
-                const senderInfo = message.sender?.displayName 
+                const metadata = (message.metadata || {}) as Record<string, unknown>
+                const isAssistantMessage = metadata.ai_generated === true
+                const assistantName =
+                  typeof metadata.assistant_name === 'string' ? metadata.assistant_name : null
+                const assistantAvatarUrl =
+                  typeof metadata.assistant_avatar_url === 'string' ? metadata.assistant_avatar_url : null
+                const senderInfo = message.sender?.displayName
                   ? { name: message.sender.displayName, email: message.sender.email }
                   : participantsLookup.get(message.senderId || '')
-                const displayName = senderInfo?.name || 'Unknown User'
-                
+                const displayName = senderInfo?.name || assistantName || (isAssistantMessage ? 'Compliance Assistant' : 'Unknown User')
+
+                // Compute readBy from live participant lastReadAt timestamps
+                const msgTime = new Date(message.createdAt).getTime()
+                const computedReadBy = isSelf
+                  ? conversation.participants
+                      .filter(p => {
+                        if (p.id === currentUserId) return false
+                        const readAt = liveReadAt.get(p.id)
+                        return readAt && new Date(readAt).getTime() >= msgTime
+                      })
+                      .map(p => p.id)
+                  : []
+                const messageWithReadBy = computedReadBy.length > 0
+                  ? { ...message, readBy: computedReadBy }
+                  : message
+
                 // Check if we need a date divider
                 const previousMessage = index > 0 ? groupedMessages[index - 1] : undefined
                 const showDivider = shouldShowDateDivider(message, previousMessage)
@@ -338,17 +673,19 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
                         </div>
                       </div>
                     )}
-                    
+
                     <MessageBubble
-                      message={message}
+                      message={messageWithReadBy}
                       senderName={displayName}
+                      assistantName={isAssistantMessage ? assistantName || 'Compliance Assistant' : null}
                       senderEmail={senderInfo?.email}
-                      senderAvatarUrl={message.sender?.avatarUrl ?? null}
+                      senderAvatarUrl={message.sender?.avatarUrl ?? assistantAvatarUrl ?? null}
                       isSelf={isSelf}
                       isGroupStart={message.isGroupStart}
                       isGroupEnd={message.isGroupEnd}
                       showAvatar={message.showAvatar}
                       showTimestamp={message.showTimestamp}
+                      showAssistantBadge={showAssistantBadge}
                       onDelete={setMessageToDelete}
                     />
                   </div>
@@ -360,36 +697,29 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
         </div>
       </ScrollArea>
       
-      {/* Enhanced Composer (WhatsApp/Slack style) */}
-      <div className="relative z-10 border-t border-border bg-card px-6 py-4">
-        <div className="flex items-end gap-2">
-          {/* Action Buttons */}
-          <div className="flex items-center gap-1 shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-muted-foreground hover:text-foreground"
-              disabled={isSending}
-              title="Add emoji"
-            >
-              <Smile className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-muted-foreground hover:text-foreground"
-              disabled={isSending}
-              title="Attach file"
-            >
-              <Paperclip className="h-5 w-5" />
-            </Button>
-          </div>
+      {/* Typing Indicator */}
+      {typingUsers.size > 0 && (
+        <div className="px-6 py-1.5 text-xs text-muted-foreground flex items-center gap-1.5 bg-card border-t border-border">
+          <span className="inline-flex gap-0.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: '0ms' }} />
+            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: '150ms' }} />
+            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: '300ms' }} />
+          </span>
+          <span className="italic">
+            {Array.from(typingUsers.values()).map(u => u.name).join(', ')}{' '}
+            {typingUsers.size === 1 ? 'is' : 'are'} typing…
+          </span>
+        </div>
+      )}
 
+      {/* Enhanced Composer (WhatsApp/Slack style) */}
+      <div className={cn("relative z-10 border-t border-border bg-card px-6 py-4", typingUsers.size > 0 && "border-t-0")}>
+        <div className="flex items-end gap-2">
           {/* Message Input Container */}
           <div className="flex-1 relative">
             <AutoExpandTextarea
               value={composerMessage}
-              onChange={event => setComposerMessage(event.target.value)}
+              onChange={event => { setComposerMessage(event.target.value); broadcastTyping() }}
               onKeyDown={handleKeyDown}
               placeholder="Type a message…"
               disabled={isSending}
@@ -433,6 +763,58 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
         )}
       </div>
       
+      <Dialog open={showComplianceControls && showComplianceDialog} onOpenChange={setShowComplianceDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Flag for Compliance</DialogTitle>
+            <DialogDescription>
+              Tag this conversation for Wayne to review and follow up.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-muted-foreground">Urgency</label>
+              <select
+                value={complianceUrgency}
+                onChange={(event) => setComplianceUrgency(event.target.value as 'low' | 'medium' | 'high')}
+                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Reason</label>
+              <textarea
+                value={complianceReason}
+                onChange={(event) => setComplianceReason(event.target.value)}
+                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                rows={3}
+                placeholder="Summarize the compliance concern or question."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowComplianceDialog(false)}
+              disabled={complianceSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => submitComplianceAction('flag')}
+              disabled={complianceSubmitting || !complianceReason.trim()}
+            >
+              {complianceSubmitting ? 'Saving...' : 'Flag conversation'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Conversation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
@@ -477,5 +859,3 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
     </div>
   )
 }
-
-

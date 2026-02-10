@@ -174,13 +174,13 @@ async function main() {
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL.replace(/\/+$/, '')
   const acceptUrl = `${appUrl}/invitation/accept?token=${pendingInvite.invitation_token}`
-  const fromAddress = process.env.EMAIL_FROM || 'VERSO Holdings <onboarding@resend.dev>'
+  const fromAddress = process.env.EMAIL_FROM || 'V E R S O <onboarding@resend.dev>'
 
   const emailResult = await sendResendEmail({
     from: fromAddress,
     to: pendingInvite.email,
-    subject: `Welcome to VERSO Holdings - ${pendingInvite.entity_name || 'Investor'}`,
-    html: `<p>Welcome to VERSO Holdings.</p><p>Accept your invitation: <a href="${acceptUrl}">${acceptUrl}</a></p>`,
+    subject: `Welcome to V E R S O - ${pendingInvite.entity_name || 'Investor'}`,
+    html: `<p>Welcome to <span style="font-family: 'League Spartan', Arial, sans-serif; letter-spacing: 0.3em; font-weight: 700;">V E R S O</span>.</p><p>Accept your invitation: <a href="${acceptUrl}">${acceptUrl}</a></p>`,
   })
 
   if (!emailResult.success) {

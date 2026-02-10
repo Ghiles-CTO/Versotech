@@ -194,6 +194,12 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
       ? enhancedMembers.filter(m => !m.assigned_fee_plan)
       : enhancedMembers.filter(m => m.assigned_fee_plan?.id === feePlanFilter)
 
+  const formatFlatAmount = (amount: number | null, currency?: string | null) => {
+    if (amount === null || amount === undefined) return '—'
+    const code = currency ? String(currency).toUpperCase() : ''
+    return `${code ? `${code} ` : ''}${Number(amount).toLocaleString()}`
+  }
+
   // Update local state when server data changes
   useEffect(() => {
     setMembers(initialMembers)
@@ -271,7 +277,7 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
     subscription: 'Subscription Fee',
     management: 'Management Fee',
     performance: 'Performance Fee',
-    spread_markup: 'Spread Markup',
+    spread_markup: 'BI Fee PPS',
     flat: 'Flat Fee',
     other: 'Other'
   }
@@ -644,7 +650,7 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
                             {assignment.fee_components.length > 0 ? (
                               assignment.fee_components.map((fc) => (
                                 <span key={fc.id} className="mr-2">
-                                  {feeKindLabels[fc.kind] || fc.kind}: {fc.rate_bps !== null && fc.rate_bps !== undefined ? `${fc.rate_bps / 100}%` : fc.flat_amount !== null && fc.flat_amount !== undefined ? `$${fc.flat_amount}` : '—'}
+                                  {feeKindLabels[fc.kind] || fc.kind}: {fc.rate_bps !== null && fc.rate_bps !== undefined ? `${fc.rate_bps / 100}%` : formatFlatAmount(fc.flat_amount, fc.currency)}
                                 </span>
                               ))
                             ) : (

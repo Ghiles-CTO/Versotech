@@ -217,7 +217,7 @@ export function CategorizedDocumentsClient({
   // Holdings overview (main view)
   if (!selectedHolding) {
     return (
-      <div className="p-6 space-y-8">
+      <div className="space-y-8">
         {/* Header */}
         <div className="relative border-b border-border pb-8 mb-2">
           <div className="absolute inset-0 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900/50 dark:via-blue-900/30 dark:to-indigo-900/30 opacity-60 rounded-t-2xl" />
@@ -376,7 +376,7 @@ export function CategorizedDocumentsClient({
   }
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="space-y-8">
       {/* Header with breadcrumb */}
       <div className="relative border-b border-border pb-8 mb-2">
         <div className="absolute inset-0 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900/50 dark:via-blue-900/30 dark:to-indigo-900/30 opacity-60 rounded-t-2xl" />

@@ -32,6 +32,10 @@ interface NotificationItem {
   read: boolean
   created_at: string
   deal_name?: string
+  agent?: {
+    name: string
+    avatar_url: string | null
+  } | null
 }
 
 interface NotificationCenterProps {
@@ -170,7 +174,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
         // Notifications use read_at timestamp (null = unread)
         const { data: notifs } = await supabase
           .from('investor_notifications')
-          .select('id, title, message, created_at, read_at, link')
+          .select('id, title, message, created_at, read_at, link, agent:agent_id (name, avatar_url)')
           .eq('user_id', userId)
           .is('read_at', null)
           .order('created_at', { ascending: false })
@@ -185,7 +189,8 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
               description: notif.message,
               href: notif.link || '/versotech_main/notifications',
               read: notif.read_at !== null,
-              created_at: notif.created_at
+              created_at: notif.created_at,
+              agent: notif.agent ?? null
             })
           })
         }
@@ -193,7 +198,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
         if (personaType === 'lawyer') {
           const { data: lawyerNotifs } = await supabase
             .from('notifications')
-            .select('id, title, message, created_at, read, link')
+            .select('id, title, message, created_at, read, link, agent:agent_id (name, avatar_url)')
             .eq('user_id', userId)
             .eq('read', false)
             .order('created_at', { ascending: false })
@@ -208,7 +213,8 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
                 description: notif.message,
                 href: notif.link || '/versotech_main/notifications',
                 read: !!notif.read,
-                created_at: notif.created_at
+                created_at: notif.created_at,
+                agent: notif.agent ?? null
               })
             })
           }
@@ -320,6 +326,23 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
           )}
         </DropdownMenuLabel>
 
+        <div className="px-3 pb-2">
+          <Button
+            asChild
+            variant="secondary"
+            className={cn(
+              "w-full justify-center text-sm",
+              isDark
+                ? "bg-white/10 text-white hover:bg-white/20"
+                : "bg-gray-100 text-gray-900 hover:bg-gray-200"
+            )}
+          >
+            <Link href="/versotech_main/notifications">
+              Open notifications
+            </Link>
+          </Button>
+        </div>
+
         <DropdownMenuSeparator className={isDark ? "bg-white/10" : "bg-gray-100"} />
 
         {loading ? (
@@ -367,17 +390,25 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className={cn(
-                        "text-sm font-medium truncate",
+                        "text-sm font-medium leading-snug line-clamp-2 break-words",
                         isDark ? "text-white" : "text-gray-900"
                       )}>
                         {item.title}
                       </div>
                       {item.description && (
                         <div className={cn(
-                          "text-xs truncate",
+                          "text-xs leading-snug line-clamp-2 break-words",
                           isDark ? "text-gray-400" : "text-gray-500"
                         )}>
                           {item.description}
+                        </div>
+                      )}
+                      {item.agent?.name && (
+                        <div className={cn(
+                          "text-[10px] mt-1",
+                          isDark ? "text-gray-400" : "text-gray-500"
+                        )}>
+                          From {item.agent.name}
                         </div>
                       )}
                       <div className={cn(
@@ -398,19 +429,6 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
           </div>
         )}
 
-        <DropdownMenuSeparator className={isDark ? "bg-white/10" : "bg-gray-100"} />
-
-        <DropdownMenuItem asChild>
-          <Link
-            href="/versotech_main/notifications"
-            className={cn(
-              "flex items-center justify-center text-sm py-2",
-              isDark ? "text-blue-400" : "text-blue-600"
-            )}
-          >
-            View all notifications
-          </Link>
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

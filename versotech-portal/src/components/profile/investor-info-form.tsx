@@ -237,7 +237,7 @@ export function InvestorInfoForm({ onComplete }: InvestorInfoFormProps) {
             Account Information
           </CardTitle>
           <CardDescription>
-            These fields are set by VERSO Holdings and cannot be modified.
+            These fields are set by V E R S O and cannot be modified.
           </CardDescription>
         </CardHeader>
         <CardContent>

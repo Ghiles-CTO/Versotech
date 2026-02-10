@@ -21,6 +21,17 @@ export async function GET(request: NextRequest) {
     const futureDate = new Date();
     futureDate.setDate(today.getDate() + daysAhead);
 
+    const addCurrencyAmount = (
+      totals: Record<string, number>,
+      amount: number | null | undefined,
+      currency: string | null | undefined
+    ) => {
+      const code = (currency || '').trim().toUpperCase();
+      if (!code) return totals;
+      totals[code] = (totals[code] || 0) + (Number(amount) || 0);
+      return totals;
+    };
+
     // Fetch all committed subscriptions with recurring fees
     const { data: subscriptions, error: subsError } = await serviceSupabase
       .from('subscriptions')
@@ -28,6 +39,7 @@ export async function GET(request: NextRequest) {
         id,
         subscription_number,
         commitment,
+        currency,
         effective_date,
         created_at,
         subscription_fee_percent,
@@ -99,6 +111,7 @@ export async function GET(request: NextRequest) {
             fee_type: 'management',
             fee_name: 'Management Fee',
             amount,
+            currency: sub.currency,
             frequency,
             next_due_date: nextDue.toISOString().split('T')[0],
             status: 'scheduled',
@@ -134,6 +147,7 @@ export async function GET(request: NextRequest) {
               fee_type: 'subscription',
               fee_name: 'Subscription Fee',
               amount,
+              currency: sub.currency,
               frequency,
               next_due_date: nextDue.toISOString().split('T')[0],
               status: 'scheduled',
@@ -148,6 +162,10 @@ export async function GET(request: NextRequest) {
 
     // Calculate summary
     const totalAmount = upcomingFees.reduce((sum, fee) => sum + Number(fee.amount), 0);
+    const totalAmountByCurrency = upcomingFees.reduce((acc, fee) => {
+      addCurrencyAmount(acc, fee.amount, fee.currency);
+      return acc;
+    }, {} as Record<string, number>);
     const byMonth = upcomingFees.reduce((acc, fee) => {
       const month = new Date(fee.next_due_date).toLocaleDateString('en-US', {
         year: 'numeric',
@@ -157,10 +175,12 @@ export async function GET(request: NextRequest) {
         acc[month] = {
           fees: [],
           total: 0,
+          total_by_currency: {},
         };
       }
       acc[month].fees.push(fee);
       acc[month].total += Number(fee.amount);
+      addCurrencyAmount(acc[month].total_by_currency, fee.amount, fee.currency);
       return acc;
     }, {} as Record<string, any>);
 
@@ -169,6 +189,7 @@ export async function GET(request: NextRequest) {
       summary: {
         total_scheduled: upcomingFees.length,
         total_amount: totalAmount,
+        total_amount_by_currency: totalAmountByCurrency,
         date_range: {
           from: today.toISOString().split('T')[0],
           to: futureDate.toISOString().split('T')[0],

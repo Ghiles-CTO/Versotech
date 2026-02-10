@@ -46,7 +46,13 @@ export interface SignInApiResponse {
   error?: string
 }
 
-const syncBrowserSession = async (session?: { access_token: string; refresh_token: string }) => {
+const syncBrowserSession = async (
+  session?: {
+    access_token: string
+    refresh_token: string
+    expires_at?: number | null
+  }
+) => {
   console.log('[auth] syncBrowserSession called, session provided:', !!session)
 
   if (!session) {
@@ -124,11 +130,29 @@ export const signIn = async (email: string, password: string, portal: 'investor'
 
     const synced = await syncBrowserSession(payload.session ? {
       access_token: payload.session.access_token,
-      refresh_token: payload.session.refresh_token
+      refresh_token: payload.session.refresh_token,
+      expires_at: payload.session.expires_at,
     } : undefined)
 
     if (!synced) {
       throw new AuthError('Unable to establish session. Please try again.')
+    }
+
+    // Wait for auth cookie/session propagation before redirect-driven navigation.
+    // This avoids transient loops back to /login on slower clients.
+    const supabase = createClient()
+    const waitUntil = Date.now() + 3000
+    let hasSession = false
+    while (Date.now() < waitUntil) {
+      const { data } = await supabase.auth.getSession()
+      if (data.session?.access_token) {
+        hasSession = true
+        break
+      }
+      await new Promise((resolve) => setTimeout(resolve, 120))
+    }
+    if (!hasSession) {
+      console.warn('[auth-client] Session propagation timeout after sign-in')
     }
 
     sessionManager.markAuthenticated()

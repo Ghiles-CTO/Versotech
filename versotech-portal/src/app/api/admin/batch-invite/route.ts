@@ -268,7 +268,7 @@ export async function POST(request: NextRequest) {
           // CUSTOM INVITATION FLOW - uses member_invitations + Resend email
           const { data: inviterProfile } = await supabase
             .from('profiles').select('display_name, email').eq('id', user.id).single()
-          const inviterName = inviterProfile?.display_name || inviterProfile?.email || 'VERSO Holdings'
+          const inviterName = inviterProfile?.display_name || inviterProfile?.email || 'V E R S O'
 
           // Check for existing pending invitation
           const { data: existingInv } = await supabase

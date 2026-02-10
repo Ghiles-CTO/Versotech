@@ -97,7 +97,7 @@ const FEE_KINDS = [
   { value: 'management', label: 'Management Fee', color: 'green' },
   { value: 'performance', label: 'Performance Fee', color: 'purple' },
   { value: 'flat', label: 'Flat Fee', color: 'amber' },
-  { value: 'spread_markup', label: 'Spread/Markup', color: 'cyan' },
+  { value: 'spread_markup', label: 'BI Fee PPS', color: 'cyan' },
   { value: 'other', label: 'Other', color: 'gray' },
 ] as const;
 
@@ -105,6 +105,7 @@ const CALC_METHODS = [
   { value: 'percent_of_investment', label: '% of Investment' },
   { value: 'percent_per_annum', label: '% per Annum' },
   { value: 'percent_of_profit', label: '% of Profit' },
+  { value: 'per_unit_spread', label: 'Share Count' },
   { value: 'fixed_amount', label: 'Fixed Amount' },
 ] as const;
 
@@ -128,6 +129,14 @@ const DEFAULT_AGREEMENT_TERMS: AgreementTerms = {
   has_high_water_mark: false,
   has_no_cap: true,
 };
+
+const coerceOptional = <T,>(value: T | null | undefined) => (value === null ? undefined : value);
+
+const stripNulls = <T extends Record<string, any>>(value: T): T =>
+  Object.fromEntries(Object.entries(value).filter(([, v]) => v !== null)) as T;
+
+const usesFlatAmount = (method?: string) =>
+  method === 'fixed_amount' || method === 'fixed' || method === 'per_unit_spread';
 
 // ============================================================================
 // SECTION COMPONENTS
@@ -227,7 +236,8 @@ function FeeComponentCard({
 }: FeeComponentCardProps) {
   const kindConfig = FEE_KINDS.find((k) => k.value === component.kind);
 
-  const ratePercent = component.rate_bps ? (component.rate_bps / 100).toFixed(2) : null;
+  const isFlatAmount = usesFlatAmount(component.calc_method);
+  const ratePercent = !isFlatAmount && component.rate_bps ? (component.rate_bps / 100).toFixed(2) : null;
 
   // Check if rate exceeds term sheet limit
   const exceedsLimit = useMemo(() => {
@@ -273,7 +283,26 @@ function FeeComponentCard({
             <Label className="text-sm text-muted-foreground">Fee Type</Label>
             <Select
               value={component.kind}
-              onValueChange={(val) => onChange({ kind: val as FeeComponent['kind'] })}
+              onValueChange={(val) => {
+                const nextKind = val as FeeComponent['kind'];
+                if (nextKind === 'spread_markup') {
+                  onChange({
+                    kind: nextKind,
+                    calc_method: 'per_unit_spread',
+                    rate_bps: undefined,
+                  });
+                  return;
+                }
+                if (nextKind === 'flat') {
+                  onChange({
+                    kind: nextKind,
+                    calc_method: 'fixed_amount',
+                    rate_bps: undefined,
+                  });
+                  return;
+                }
+                onChange({ kind: nextKind });
+              }}
             >
               <SelectTrigger className="w-64 bg-muted/50 border-border text-foreground h-12 text-base font-medium">
                 <SelectValue />
@@ -306,7 +335,14 @@ function FeeComponentCard({
           <Label className="text-sm text-muted-foreground font-medium">Calculation Method</Label>
           <Select
             value={component.calc_method}
-            onValueChange={(val) => onChange({ calc_method: val })}
+            onValueChange={(val) => {
+              onChange({
+                calc_method: val,
+                ...(usesFlatAmount(val)
+                  ? { rate_bps: undefined }
+                  : { flat_amount: undefined }),
+              });
+            }}
           >
             <SelectTrigger className="bg-muted/50 border-border text-foreground h-12 text-base">
               <SelectValue />
@@ -322,21 +358,30 @@ function FeeComponentCard({
         </div>
 
         {/* Conditional: Rate OR Flat Amount based on calc_method */}
-        {component.calc_method === 'fixed_amount' ? (
+        {isFlatAmount ? (
           <div className="space-y-2">
-            <Label className="text-sm text-muted-foreground font-medium">Amount (USD)</Label>
+            <Label className="text-sm text-muted-foreground font-medium">
+              {component.calc_method === 'per_unit_spread'
+                ? 'BI Fee PPS (Deal Currency)'
+                : 'Amount (Deal Currency)'}
+            </Label>
             <Input
               type="number"
               step="0.01"
               min="0"
-              value={component.flat_amount || ''}
+              value={component.flat_amount ?? ''}
               onChange={(e) => onChange({ flat_amount: e.target.value ? Number(e.target.value) : undefined })}
               placeholder="5,000.00"
               className="bg-muted/50 border-border text-foreground h-12 text-lg font-mono"
             />
-            {component.flat_amount && (
+            {component.flat_amount != null && (
               <p className="text-base text-green-600 dark:text-green-400 font-semibold">
-                ${component.flat_amount.toLocaleString()}
+                {component.flat_amount.toLocaleString()}
+              </p>
+            )}
+            {component.calc_method === 'per_unit_spread' && (
+              <p className="text-xs text-muted-foreground">
+                Total fee = BI fee per share × share count
               </p>
             )}
           </div>
@@ -345,7 +390,7 @@ function FeeComponentCard({
             <Label className="text-sm text-muted-foreground font-medium">Rate (Basis Points)</Label>
             <Input
               type="number"
-              value={component.rate_bps || ''}
+              value={component.rate_bps ?? ''}
               onChange={(e) => onChange({ rate_bps: e.target.value ? Number(e.target.value) : undefined })}
               placeholder="200"
               className={`bg-muted/50 border-border text-foreground h-12 text-lg font-mono ${exceedsLimit ? 'border-red-500 bg-red-500/10' : ''}`}
@@ -536,14 +581,19 @@ export default function FeePlanEditModal({
         existingComponents.map((c: any) => ({
           id: c.id,
           kind: c.kind,
-          calc_method: c.calc_method || 'percent_of_investment',
-          frequency: c.frequency || 'one_time',
-          rate_bps: c.rate_bps,
-          flat_amount: c.flat_amount,
-          notes: c.notes || '',
-          payment_schedule: c.payment_schedule || 'upfront',
-          duration_periods: c.duration_periods,
-          duration_unit: c.duration_unit,
+          calc_method: c.calc_method
+            ?? (c.kind === 'spread_markup' && c.flat_amount != null
+              ? 'per_unit_spread'
+              : c.kind === 'flat'
+                ? 'fixed_amount'
+                : 'percent_of_investment'),
+          frequency: c.frequency ?? 'one_time',
+          rate_bps: coerceOptional(c.rate_bps),
+          flat_amount: coerceOptional(c.flat_amount),
+          notes: c.notes ?? '',
+          payment_schedule: c.payment_schedule ?? 'upfront',
+          duration_periods: coerceOptional(c.duration_periods),
+          duration_unit: coerceOptional(c.duration_unit),
         }))
       );
     } else {
@@ -669,35 +719,43 @@ export default function FeePlanEditModal({
       // IMPORTANT: has_catchup and has_high_water_mark are NOT NULL in DB
       const processedComponents = components.map((c) => {
         const { id, notes, ...rest } = c;
+        const isFlatMethod = usesFlatAmount(rest.calc_method);
+        const normalized = {
+          ...rest,
+          rate_bps: isFlatMethod ? undefined : rest.rate_bps,
+          flat_amount: isFlatMethod ? rest.flat_amount : undefined,
+        };
 
         // Base fields for ALL components - include NOT NULL boolean defaults
-        const base = {
-          ...rest,
+        const base = stripNulls({
+          ...normalized,
           notes: notes?.trim() || undefined,
           // These columns are NOT NULL in DB - must always provide values
           has_catchup: false,
           has_high_water_mark: false,
           ...(id && id.length > 10 ? { id } : {}),
-        };
+        });
 
         if (c.kind === 'subscription') {
-          return {
+          return stripNulls({
             ...base,
             payment_days_after_event: agreementTerms.intro_payment_days,
-          };
+          });
         }
 
         if (c.kind === 'performance') {
-          return {
+          return stripNulls({
             ...base,
             payment_days_after_event: agreementTerms.perf_payment_days,
-            hurdle_rate_bps: agreementTerms.hurdle_rate_bps || undefined,
+            hurdle_rate_bps: agreementTerms.hurdle_rate_bps ?? undefined,
             has_catchup: agreementTerms.has_catchup,
-            catchup_rate_bps: agreementTerms.has_catchup ? agreementTerms.catchup_rate_bps : undefined,
+            catchup_rate_bps: agreementTerms.has_catchup ? (agreementTerms.catchup_rate_bps ?? undefined) : undefined,
             has_high_water_mark: agreementTerms.has_high_water_mark,
             has_no_cap: agreementTerms.has_no_cap,
-            performance_cap_percent: agreementTerms.has_no_cap ? undefined : agreementTerms.performance_cap_percent,
-          };
+            performance_cap_percent: agreementTerms.has_no_cap
+              ? undefined
+              : (agreementTerms.performance_cap_percent ?? undefined),
+          });
         }
 
         return base;

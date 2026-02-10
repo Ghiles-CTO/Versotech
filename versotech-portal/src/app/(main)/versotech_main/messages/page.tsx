@@ -2,7 +2,9 @@ import { MessagingClient } from '@/components/messaging/staff/messaging-client'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { normalizeConversation } from '@/lib/messaging/supabase'
 import { AlertCircle } from 'lucide-react'
+import { ComplianceQuestionCard } from '@/components/notifications/compliance-question-card'
 import { checkStaffAccess } from '@/lib/auth'
+import { ensureDefaultAgentConversationForInvestor } from '@/lib/compliance/agent-chat'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,7 +21,7 @@ export default async function MessagesPage() {
 
   if (!user || userError) {
     return (
-      <div className="p-6">
+      <div>
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
@@ -42,13 +44,14 @@ export default async function MessagesPage() {
   })
   const isArranger = personas?.some((p: any) => p.persona_type === 'arranger') || false
   const isIntroducer = personas?.some((p: any) => p.persona_type === 'introducer') || false
+  const isInvestor = personas?.some((p: any) => p.persona_type === 'investor') || false
 
   // Block arrangers who don't have staff access
   // Per user stories: Arrangers need notifications, not messaging
-  if (isArranger && !isStaff) {
+  if (isArranger && !isStaff && !isInvestor) {
     return (
-      <div className="p-6">
-        <div className="text-center py-16">
+      <div className="space-y-8">
+        <div className="text-center py-10">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
             Messages Not Available
@@ -58,16 +61,19 @@ export default async function MessagesPage() {
             Check the notification bell for alerts about agreements, payments, and signatures.
           </p>
         </div>
+        <div className="max-w-2xl mx-auto">
+          <ComplianceQuestionCard />
+        </div>
       </div>
     )
   }
 
   // Block introducers who don't have staff access
   // Per PRD: Introducers have zero messaging user stories - passive notification recipients only
-  if (isIntroducer && !isStaff) {
+  if (isIntroducer && !isStaff && !isInvestor) {
     return (
-      <div className="p-6">
-        <div className="text-center py-16">
+      <div className="space-y-8">
+        <div className="text-center py-10">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
             Messages Not Available
@@ -77,12 +83,19 @@ export default async function MessagesPage() {
             Check the notification bell for alerts about introduction progress and commission updates.
           </p>
         </div>
+        <div className="max-w-2xl mx-auto">
+          <ComplianceQuestionCard />
+        </div>
       </div>
     )
   }
 
   // Only staff get elevated messaging access (all conversations)
   const hasStaffAccess = isStaff
+
+  if (!hasStaffAccess && isInvestor) {
+    await ensureDefaultAgentConversationForInvestor(serviceSupabase, user.id)
+  }
 
   let conversationData: any[] = []
 
@@ -220,6 +233,10 @@ export default async function MessagesPage() {
   }
 
   return (
-    <MessagingClient initialConversations={normalizedConversations} currentUserId={user.id} />
+    <MessagingClient
+      initialConversations={normalizedConversations}
+      currentUserId={user.id}
+      canCreateConversation={hasStaffAccess}
+    />
   )
 }

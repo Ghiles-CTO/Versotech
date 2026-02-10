@@ -18,13 +18,11 @@ import {
   TrendingUp,
   FileSignature,
   Briefcase,
-  UserCheck,
-  Eye,
-  PenTool,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { formatCurrency, formatDate } from '@/lib/format'
+import { formatCurrency } from '@/lib/format'
 import { useTheme } from '@/components/theme-provider'
+import { type CurrencyTotals, formatCurrencyTotals, sumByCurrency } from '@/lib/currency-totals'
 
 type Persona = {
   persona_type: string
@@ -50,13 +48,18 @@ type CPMetrics = {
   totalSubscriptions: number
   pendingSubscriptions: number
   ownInvestmentValue: number
+  ownInvestmentByCurrency: CurrencyTotals
   clientInvestmentValue: number
+  clientInvestmentByCurrency: CurrencyTotals
   pendingAgreements: number
   activeAgreements: number
   // Commission aggregations from commercial_partner_commissions
   commissionPaid: number
+  commissionPaidByCurrency: CurrencyTotals
   commissionAccrued: number
+  commissionAccruedByCurrency: CurrencyTotals
   commissionPending: number
+  commissionPendingByCurrency: CurrencyTotals
 }
 
 type RecentSubscription = {
@@ -64,6 +67,7 @@ type RecentSubscription = {
   deal_name: string
   investor_name: string
   commitment: number
+  currency: string | null
   status: string
   created_at: string
   is_proxy: boolean
@@ -172,7 +176,9 @@ export function CommercialPartnerDashboard({ commercialPartnerId, userId, person
 
         // Fetch subscriptions - both own investments (MODE 1) and client subscriptions (MODE 2)
         let ownInvestmentValue = 0
+        let ownInvestmentByCurrency: CurrencyTotals = {}
         let clientInvestmentValue = 0
+        let clientInvestmentByCurrency: CurrencyTotals = {}
         let totalSubscriptions = 0
         let pendingSubscriptions = 0
         const allSubscriptions: RecentSubscription[] = []
@@ -182,7 +188,7 @@ export function CommercialPartnerDashboard({ commercialPartnerId, userId, person
           const { data: ownSubs } = await supabase
             .from('subscriptions')
             .select(`
-              id, commitment, status, created_at,
+              id, commitment, currency, status, created_at,
               deals (id, name),
               investors (id, legal_name)
             `)
@@ -190,10 +196,17 @@ export function CommercialPartnerDashboard({ commercialPartnerId, userId, person
             .order('created_at', { ascending: false })
             .limit(10)
 
+          const ownEligibleSubs = (ownSubs || []).filter((sub: any) =>
+            ['committed', 'active', 'signed', 'funded'].includes(sub.status)
+          )
+          ownInvestmentValue = ownEligibleSubs.reduce((sum: number, sub: any) => sum + (sub.commitment || 0), 0)
+          ownInvestmentByCurrency = sumByCurrency(
+            ownEligibleSubs,
+            (sub: any) => sub.commitment,
+            (sub: any) => sub.currency
+          )
+
           ;(ownSubs || []).forEach((sub: any) => {
-            if (['committed', 'active', 'signed', 'funded'].includes(sub.status)) {
-              ownInvestmentValue += sub.commitment || 0
-            }
             totalSubscriptions++
             if (sub.status === 'pending') pendingSubscriptions++
 
@@ -202,6 +215,7 @@ export function CommercialPartnerDashboard({ commercialPartnerId, userId, person
               deal_name: sub.deals?.name || 'Unknown Deal',
               investor_name: 'My Investment',
               commitment: sub.commitment || 0,
+              currency: sub.currency ? String(sub.currency).toUpperCase() : null,
               status: sub.status,
               created_at: sub.created_at,
               is_proxy: false,
@@ -214,7 +228,7 @@ export function CommercialPartnerDashboard({ commercialPartnerId, userId, person
           const { data: clientSubs } = await supabase
             .from('subscriptions')
             .select(`
-              id, commitment, status, created_at,
+              id, commitment, currency, status, created_at,
               deals (id, name),
               investors (id, legal_name)
             `)
@@ -222,10 +236,17 @@ export function CommercialPartnerDashboard({ commercialPartnerId, userId, person
             .order('created_at', { ascending: false })
             .limit(10)
 
+          const clientEligibleSubs = (clientSubs || []).filter((sub: any) =>
+            ['committed', 'active', 'signed', 'funded'].includes(sub.status)
+          )
+          clientInvestmentValue = clientEligibleSubs.reduce((sum: number, sub: any) => sum + (sub.commitment || 0), 0)
+          clientInvestmentByCurrency = sumByCurrency(
+            clientEligibleSubs,
+            (sub: any) => sub.commitment,
+            (sub: any) => sub.currency
+          )
+
           ;(clientSubs || []).forEach((sub: any) => {
-            if (['committed', 'active', 'signed', 'funded'].includes(sub.status)) {
-              clientInvestmentValue += sub.commitment || 0
-            }
             totalSubscriptions++
             if (sub.status === 'pending') pendingSubscriptions++
 
@@ -234,6 +255,7 @@ export function CommercialPartnerDashboard({ commercialPartnerId, userId, person
               deal_name: sub.deals?.name || 'Unknown Deal',
               investor_name: sub.investors?.legal_name || 'Client',
               commitment: sub.commitment || 0,
+              currency: sub.currency ? String(sub.currency).toUpperCase() : null,
               status: sub.status,
               created_at: sub.created_at,
               is_proxy: true,
@@ -263,30 +285,41 @@ export function CommercialPartnerDashboard({ commercialPartnerId, userId, person
 
         // Fetch commission aggregations from commercial_partner_commissions
         let commissionPaid = 0
+        let commissionPaidByCurrency: CurrencyTotals = {}
         let commissionAccrued = 0
+        let commissionAccruedByCurrency: CurrencyTotals = {}
         let commissionPending = 0
+        let commissionPendingByCurrency: CurrencyTotals = {}
 
         const { data: commissions } = await supabase
           .from('commercial_partner_commissions')
-          .select('status, accrual_amount')
+          .select('status, accrual_amount, currency')
           .eq('commercial_partner_id', commercialPartnerId)
 
         if (commissions && commissions.length > 0) {
-          commissions.forEach((c: any) => {
-            const amount = parseFloat(c.accrual_amount) || 0
-            switch (c.status) {
-              case 'paid':
-                commissionPaid += amount
-                break
-              case 'accrued':
-                commissionAccrued += amount
-                break
-              case 'invoice_requested':
-              case 'invoiced':
-                commissionPending += amount
-                break
-            }
-          })
+          const paidCommissions = commissions.filter((c: any) => c.status === 'paid')
+          const accruedCommissions = commissions.filter((c: any) => c.status === 'accrued')
+          const pendingCommissions = commissions.filter((c: any) => ['invoice_requested', 'invoiced'].includes(c.status))
+
+          commissionPaid = paidCommissions.reduce((sum: number, c: any) => sum + (parseFloat(c.accrual_amount) || 0), 0)
+          commissionAccrued = accruedCommissions.reduce((sum: number, c: any) => sum + (parseFloat(c.accrual_amount) || 0), 0)
+          commissionPending = pendingCommissions.reduce((sum: number, c: any) => sum + (parseFloat(c.accrual_amount) || 0), 0)
+
+          commissionPaidByCurrency = sumByCurrency(
+            paidCommissions,
+            (c: any) => c.accrual_amount,
+            (c: any) => c.currency
+          )
+          commissionAccruedByCurrency = sumByCurrency(
+            accruedCommissions,
+            (c: any) => c.accrual_amount,
+            (c: any) => c.currency
+          )
+          commissionPendingByCurrency = sumByCurrency(
+            pendingCommissions,
+            (c: any) => c.accrual_amount,
+            (c: any) => c.currency
+          )
         }
 
         setMetrics({
@@ -297,12 +330,17 @@ export function CommercialPartnerDashboard({ commercialPartnerId, userId, person
           totalSubscriptions,
           pendingSubscriptions,
           ownInvestmentValue,
+          ownInvestmentByCurrency,
           clientInvestmentValue,
+          clientInvestmentByCurrency,
           pendingAgreements,
           activeAgreements,
           commissionPaid,
+          commissionPaidByCurrency,
           commissionAccrued,
+          commissionAccruedByCurrency,
           commissionPending,
+          commissionPendingByCurrency,
         })
       } catch (error) {
         console.error('Error fetching commercial partner data:', error)
@@ -357,8 +395,13 @@ export function CommercialPartnerDashboard({ commercialPartnerId, userId, person
     terminated: 'Terminated',
   }
 
+  const formatAmountWithCurrency = (amount: number, currency?: string | null) => {
+    if (currency) return formatCurrency(amount, currency)
+    return amount.toLocaleString('en-US')
+  }
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -489,7 +532,7 @@ export function CommercialPartnerDashboard({ commercialPartnerId, userId, person
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold text-green-500`}>
-              {formatCurrency(metrics?.clientInvestmentValue || 0)}
+              {formatCurrencyTotals(metrics?.clientInvestmentByCurrency || {})}
             </div>
             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
               Via proxy subscriptions
@@ -506,7 +549,7 @@ export function CommercialPartnerDashboard({ commercialPartnerId, userId, person
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {formatCurrency(metrics?.ownInvestmentValue || 0)}
+              {formatCurrencyTotals(metrics?.ownInvestmentByCurrency || {})}
             </div>
             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
               Direct investments
@@ -534,19 +577,19 @@ export function CommercialPartnerDashboard({ commercialPartnerId, userId, person
               <div className={`p-4 rounded-lg ${isDark ? 'bg-white/5' : 'bg-green-50'}`}>
                 <p className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-1`}>Paid</p>
                 <p className="text-xl font-bold text-green-500">
-                  {formatCurrency(metrics?.commissionPaid || 0)}
+                  {formatCurrencyTotals(metrics?.commissionPaidByCurrency || {})}
                 </p>
               </div>
               <div className={`p-4 rounded-lg ${isDark ? 'bg-white/5' : 'bg-blue-50'}`}>
                 <p className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-1`}>Accrued</p>
                 <p className="text-xl font-bold text-blue-500">
-                  {formatCurrency(metrics?.commissionAccrued || 0)}
+                  {formatCurrencyTotals(metrics?.commissionAccruedByCurrency || {})}
                 </p>
               </div>
               <div className={`p-4 rounded-lg ${isDark ? 'bg-white/5' : 'bg-amber-50'}`}>
                 <p className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-1`}>Pending</p>
                 <p className="text-xl font-bold text-amber-500">
-                  {formatCurrency(metrics?.commissionPending || 0)}
+                  {formatCurrencyTotals(metrics?.commissionPendingByCurrency || {})}
                 </p>
               </div>
             </div>
@@ -641,7 +684,7 @@ export function CommercialPartnerDashboard({ commercialPartnerId, userId, person
                         )}
                       </div>
                       <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {sub.investor_name} • {formatCurrency(sub.commitment)}
+                        {sub.investor_name} • {formatAmountWithCurrency(sub.commitment, sub.currency)}
                       </p>
                     </div>
                     <Badge className={subscriptionStatusStyles[sub.status] || 'bg-gray-500/20 text-gray-400'}>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
+import { resolveAgentIdForTask } from '@/lib/agents'
 
 const payloadSchema = z.object({
   deal_id: z.string().uuid(),
@@ -276,6 +277,7 @@ export async function POST(request: NextRequest) {
 
   if (ownerUserId) {
     try {
+      const agentId = await resolveAgentIdForTask(serviceSupabase, 'V001')
       const { data: dealRecord } = await serviceSupabase
         .from('deals')
         .select('name')
@@ -290,6 +292,7 @@ export async function POST(request: NextRequest) {
         title: 'Data room unlocked',
         message: `Your NDA for ${dealName} is complete. The data room is now available for review.`,
         link: `/versotech_main/opportunities/${deal_id}?tab=data-room`,
+        agent_id: agentId,
         metadata: {
           type: 'nda_complete',
           deal_id,

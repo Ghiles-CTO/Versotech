@@ -86,9 +86,27 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
     subscription: 'Subscription Fee',
     management: 'Management Fee',
     performance: 'Performance Fee',
-    spread_markup: 'Spread Markup',
+    spread_markup: 'BI Fee PPS',
     flat: 'Flat Fee',
     other: 'Other'
+  }
+
+  const formatComponentValue = (component: any) => {
+    if (!component) return '—'
+    const currencyCode = component.currency ? String(component.currency).toUpperCase() : ''
+    const flatAmountDisplay = component.flat_amount != null
+      ? `${currencyCode ? `${currencyCode} ` : ''}${Number(component.flat_amount).toLocaleString()}`
+      : '—'
+    if (component.calc_method === 'per_unit_spread') {
+      return component.flat_amount != null ? `${flatAmountDisplay} / share` : '—'
+    }
+    if (component.rate_bps != null) {
+      return `${Number(component.rate_bps) / 100}%`
+    }
+    if (component.flat_amount != null) {
+      return flatAmountDisplay
+    }
+    return '—'
   }
 
   // Helper to get entity display info
@@ -397,8 +415,7 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
                                 {feeKindLabels[component.kind]}
                               </span>
                               <Badge variant="outline" className="border-border text-muted-foreground">
-                                {component.rate_bps ? `${component.rate_bps / 100}%` :
-                                 component.flat_amount ? `$${component.flat_amount}` : '—'}
+                                {formatComponentValue(component)}
                               </Badge>
                             </div>
                           ))}

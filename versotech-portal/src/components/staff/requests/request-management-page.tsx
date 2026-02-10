@@ -334,7 +334,7 @@ export function RequestManagementPage() {
   }
 
   return (
-    <div className="p-6 space-y-6 text-foreground">
+    <div className="space-y-6 text-foreground">
       {authError && (
         <Card className="border border-amber-400/40 bg-amber-500/10">
           <CardHeader>

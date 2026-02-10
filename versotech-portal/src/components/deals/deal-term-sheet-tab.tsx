@@ -225,6 +225,14 @@ function getPricePerShareDisplay(termSheet: TermSheet) {
   return ''
 }
 
+function formatAmountWithCurrency(amount?: number | null, currency?: string | null) {
+  if (amount === null || amount === undefined || Number.isNaN(Number(amount))) return '—'
+  const numeric = Number(amount)
+  const code = (currency || '').trim().toUpperCase()
+  if (code.length === 3) return `${code} ${numeric.toLocaleString()}`
+  return numeric.toLocaleString()
+}
+
 function buildPayload(values: FormState) {
   const pricePerShare = toNumber(values.price_per_share)
   return {
@@ -859,7 +867,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                 <div>
                   <span className="text-muted-foreground block text-xs">Allocation Up To</span>
                   <span className="text-foreground font-medium">
-                    {published.allocation_up_to ? published.allocation_up_to.toLocaleString() : '—'}
+                    {formatAmountWithCurrency(published.allocation_up_to, published.currency)}
                   </span>
                 </div>
                 <div>
@@ -869,7 +877,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                 <div>
                   <span className="text-muted-foreground block text-xs">Minimum Ticket</span>
                   <span className="text-foreground font-medium">
-                    {published.minimum_ticket ? published.minimum_ticket.toLocaleString() : '—'}
+                    {formatAmountWithCurrency(published.minimum_ticket, published.currency)}
                   </span>
                 </div>
               </div>
@@ -1123,7 +1131,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   <div>
                     <span className="text-muted-foreground block text-xs">Allocation</span>
                     <span className="text-foreground font-medium">
-                      {termSheet.allocation_up_to ? termSheet.allocation_up_to.toLocaleString() : '—'}
+                      {formatAmountWithCurrency(termSheet.allocation_up_to, termSheet.currency)}
                     </span>
                   </div>
                 <div>
@@ -1133,7 +1141,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   <div>
                     <span className="text-muted-foreground block text-xs">Min Ticket</span>
                     <span className="text-foreground font-medium">
-                      {termSheet.minimum_ticket ? termSheet.minimum_ticket.toLocaleString() : '—'}
+                      {formatAmountWithCurrency(termSheet.minimum_ticket, termSheet.currency)}
                     </span>
                   </div>
                 </div>

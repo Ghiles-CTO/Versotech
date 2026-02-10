@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
+import { currencyTotalsEntries, getSingleCurrency, normalizeCurrencyCode } from '@/lib/currency-totals'
 
 export async function GET(request: Request) {
   try {
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
       // Subscriptions for AUM and Revenue metrics (limit to prevent billing spikes)
       supabase
         .from('subscriptions')
-        .select('id, commitment, funded_amount, current_nav, spread_fee_amount, subscription_fee_amount, management_fee_amount, status, subscription_date')
+        .select('id, commitment, funded_amount, current_nav, spread_fee_amount, subscription_fee_amount, management_fee_amount, currency, status, subscription_date')
         .in('status', ['active', 'committed', 'funded'])
         .limit(50000),
 
@@ -134,11 +135,63 @@ export async function GET(request: Request) {
     const totalFunded = subscriptions.reduce((sum, s) => sum + (s.funded_amount || 0), 0)
     const fundingRate = totalCommitment > 0 ? Math.round((totalFunded / totalCommitment) * 100) : 0
 
+    const aumByCurrency: Record<string, { value: number; commitment: number; funded: number; funding_rate: number }> = {}
+    subscriptions.forEach((sub) => {
+      const currency = normalizeCurrencyCode(sub.currency)
+      if (!aumByCurrency[currency]) {
+        aumByCurrency[currency] = { value: 0, commitment: 0, funded: 0, funding_rate: 0 }
+      }
+      aumByCurrency[currency].value += sub.current_nav || sub.commitment || 0
+      aumByCurrency[currency].commitment += sub.commitment || 0
+      aumByCurrency[currency].funded += sub.funded_amount || 0
+    })
+    Object.values(aumByCurrency).forEach((entry) => {
+      entry.funding_rate =
+        entry.commitment > 0 ? Math.round((entry.funded / entry.commitment) * 100) : 0
+    })
+    const aumCurrencyEntries = currencyTotalsEntries(
+      Object.fromEntries(Object.entries(aumByCurrency).map(([k, v]) => [k, v.value]))
+    )
+    const aumDefaultCurrency = getSingleCurrency(
+      Object.fromEntries(Object.entries(aumByCurrency).map(([k, v]) => [k, v.value]))
+    ) || aumCurrencyEntries[0]?.[0] || 'USD'
+    const aumCurrencyMode = aumCurrencyEntries.length > 1 ? 'mixed' : 'single'
+
     // VERSO's PRIMARY REVENUE - Spread fees
     const spreadFeeRevenue = subscriptions.reduce((sum, s) => sum + (s.spread_fee_amount || 0), 0)
     const subscriptionFeeRevenue = subscriptions.reduce((sum, s) => sum + (s.subscription_fee_amount || 0), 0)
     const managementFeeRevenue = subscriptions.reduce((sum, s) => sum + (s.management_fee_amount || 0), 0)
     const totalRevenue = spreadFeeRevenue + subscriptionFeeRevenue + managementFeeRevenue
+
+    const revenueByCurrency: Record<
+      string,
+      { total: number; spread_fees: number; subscription_fees: number; management_fees: number }
+    > = {}
+    subscriptions.forEach((sub) => {
+      const currency = normalizeCurrencyCode(sub.currency)
+      if (!revenueByCurrency[currency]) {
+        revenueByCurrency[currency] = {
+          total: 0,
+          spread_fees: 0,
+          subscription_fees: 0,
+          management_fees: 0,
+        }
+      }
+      revenueByCurrency[currency].spread_fees += sub.spread_fee_amount || 0
+      revenueByCurrency[currency].subscription_fees += sub.subscription_fee_amount || 0
+      revenueByCurrency[currency].management_fees += sub.management_fee_amount || 0
+      revenueByCurrency[currency].total =
+        revenueByCurrency[currency].spread_fees +
+        revenueByCurrency[currency].subscription_fees +
+        revenueByCurrency[currency].management_fees
+    })
+    const revenueCurrencyEntries = currencyTotalsEntries(
+      Object.fromEntries(Object.entries(revenueByCurrency).map(([k, v]) => [k, v.total]))
+    )
+    const revenueDefaultCurrency = getSingleCurrency(
+      Object.fromEntries(Object.entries(revenueByCurrency).map(([k, v]) => [k, v.total]))
+    ) || revenueCurrencyEntries[0]?.[0] || 'USD'
+    const revenueCurrencyMode = revenueCurrencyEntries.length > 1 ? 'mixed' : 'single'
 
     // Calculate investor metrics
     const investors = investorResult.data || []
@@ -353,12 +406,18 @@ export async function GET(request: Request) {
             funding_rate: fundingRate,
             change_mtd: null, // Requires historical snapshots to calculate
             trend: null, // Requires historical snapshots to calculate
+            default_currency: aumDefaultCurrency,
+            currency_mode: aumCurrencyMode,
+            by_currency: aumByCurrency,
           },
           revenue: {
             total: totalRevenue,
             spread_fees: spreadFeeRevenue,
             subscription_fees: subscriptionFeeRevenue,
             management_fees: managementFeeRevenue,
+            default_currency: revenueDefaultCurrency,
+            currency_mode: revenueCurrencyMode,
+            by_currency: revenueByCurrency,
           },
           investors: {
             active: totalInvestors,

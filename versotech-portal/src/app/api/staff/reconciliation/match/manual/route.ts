@@ -317,112 +317,53 @@ export async function POST(req: Request) {
       .eq('bank_transaction_id', bank_transaction_id)
       .eq('invoice_id', invoice_id)
 
-    if (invoiceAfter?.status === 'paid') {
-      // Update fee events to paid status
-      await supabase
-        .from('fee_events')
-        .update({ status: 'paid' })
-        .eq('invoice_id', invoice_id)
-        .in('status', ['accrued', 'invoiced'])
+    // === VERIFICATION-ONLY MODE ===
+    // Reconciliation now ONLY records matches for lawyer verification
+    // Status changes (subscription funded, invoice paid) happen when lawyer confirms via escrow page
+    // This ensures lawyer escrow confirmation is the legal source of truth
 
-      // Update subscription funded amount when investment commitment is paid
-      // Get fee events for this invoice to find investment commitments
-      const { data: feeEvents } = await supabase
-        .from('fee_events')
-        .select('allocation_id, fee_type, computed_amount')
-        .eq('invoice_id', invoice_id)
-        .eq('fee_type', 'flat') // 'flat' = investment commitment
+    // Get subscription ID from fee events if this invoice is linked to a subscription
+    let subscriptionId: string | null = null
+    const { data: feeEventsForVerification } = await supabase
+      .from('fee_events')
+      .select('allocation_id')
+      .eq('invoice_id', invoice_id)
+      .not('allocation_id', 'is', null)
+      .limit(1)
 
-      if (feeEvents && feeEvents.length > 0) {
-        // Group by subscription (allocation_id)
-        const subscriptionPayments = feeEvents.reduce((acc, event) => {
-          if (event.allocation_id) {
-            acc[event.allocation_id] = (acc[event.allocation_id] || 0) + toNumber(event.computed_amount)
-          }
-          return acc
-        }, {} as Record<string, number>)
-
-        // Update each subscription's funded amount
-        for (const [subscriptionId, paidAmount] of Object.entries(subscriptionPayments)) {
-          // Get current subscription details
-          const { data: subscription } = await supabase
-            .from('subscriptions')
-            .select('commitment, funded_amount, status, investor_id, vehicle_id, num_shares, units, price_per_share, cost_per_share')
-            .eq('id', subscriptionId)
-            .single()
-
-          if (subscription) {
-            // Validate subscription can receive funding
-            const validFundingStatuses = ['pending', 'committed', 'partially_funded', 'funded', 'active']
-            if (!validFundingStatuses.includes(subscription.status)) {
-              console.warn(`⚠️ Cannot fund subscription ${subscriptionId} with status '${subscription.status}' - skipping`)
-              continue // Skip this subscription
-            }
-
-            const currentFunded = toNumber(subscription.funded_amount)
-            const newFundedAmount = clampCurrency(currentFunded + paidAmount)
-            const commitment = toNumber(subscription.commitment)
-
-            // Determine new status based on funded percentage
-            let newStatus = subscription.status
-            if (commitment > 0) {
-              const fundedPercentage = (newFundedAmount / commitment) * 100
-
-              // Update status based on funding level
-              // NOTE: Status changes to 'funded' here, NOT 'active'
-              // 'active' status + position + certificate are set at DEAL CLOSE (see deal-close-handler.ts)
-              if (fundedPercentage >= 99.99) {
-                newStatus = 'funded' // Fully funded - awaiting deal close
-              } else if (fundedPercentage > 0) {
-                newStatus = 'partially_funded'
-              }
-            }
-
-            // Update subscription
-            const { error: subUpdateError } = await supabase
-              .from('subscriptions')
-              .update({
-                funded_amount: newFundedAmount,
-                status: newStatus,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', subscriptionId)
-
-            if (subUpdateError) {
-              console.error(`❌ CRITICAL: Failed to update subscription ${subscriptionId} funded amount:`, subUpdateError)
-              // This is critical - subscription funding tracking will be incorrect
-              throw new Error(`Failed to update subscription funded amount: ${subUpdateError.message}`)
-            }
-
-            console.log(`✅ Updated subscription ${subscriptionId}: funded_amount=${newFundedAmount}, status=${newStatus}`)
-
-            // NOTE: Position creation and certificate generation are now handled at DEAL CLOSE
-            // See: src/lib/deals/deal-close-handler.ts
-            // This ensures certificates/positions are only created after the deal officially closes,
-            // not just when funding is received (per Fred's requirements 2024)
-
-            // Audit log for subscription funding update
-            await auditLogger.log({
-              actor_user_id: profile.id,
-              action: AuditActions.UPDATE,
-              entity: 'subscriptions' as any,
-              entity_id: subscriptionId,
-              metadata: {
-                invoice_id: invoice_id,
-                match_id: createdMatch.id,
-                payment_amount: paidAmount,
-                previous_funded: currentFunded,
-                new_funded: newFundedAmount,
-                previous_status: subscription.status,
-                new_status: newStatus,
-                commitment: commitment,
-                manual_match: true
-              }
-            })
-          }
-        }
-      }
+    if (feeEventsForVerification && feeEventsForVerification.length > 0) {
+      subscriptionId = feeEventsForVerification[0].allocation_id
     }
+
+    // Get deal_id from invoice
+    const dealId = (invoice.deal as any)?.id || null
+
+    // Create verification record for lawyer review
+    const { error: verificationError } = await supabase
+      .from('reconciliation_verifications')
+      .insert({
+        bank_transaction_id: bank_transaction_id,
+        subscription_id: subscriptionId,
+        invoice_id: invoice_id,
+        deal_id: dealId,
+        matched_amount: appliedAmount,
+        match_type: 'manual',
+        match_confidence: 100,
+        match_notes: manualReason,
+        matched_by: profile.id,
+        status: 'pending'
+      })
+
+    if (verificationError) {
+      console.error('Failed to create verification record:', verificationError)
+      // Non-critical - continue with match but log the error
+    } else {
+      console.log(`✅ Created verification record for manual match: bank tx ${bank_transaction_id} -> invoice ${invoice_id}`)
+    }
+
+    // NOTE: Invoice and subscription status changes are NO LONGER done here
+    // Lawyer must confirm funding via escrow page to change statuses
+    // See: /api/escrow/[id]/confirm-funding/route.ts
 
     await auditLogger.log({
       actor_user_id: profile.id,

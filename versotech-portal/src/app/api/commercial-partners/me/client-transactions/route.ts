@@ -20,6 +20,7 @@ type ClientTransaction = {
   investor_id: string | null
   subscription_id: string | null
   subscription_amount: number | null
+  currency: string | null
   subscription_status: string | null
   subscription_date: string | null
   journey_stage: 'new_lead' | 'interested' | 'subscribing' | 'funded' | 'passed'
@@ -34,7 +35,25 @@ type Summary = {
   activeClients: number
   totalTransactions: number
   totalValue: number
+  totalValueByCurrency: Record<string, number>
   estimatedCommission: number
+  estimatedCommissionByCurrency: Record<string, number>
+}
+
+function normalizeCurrencyCode(currency: string | null | undefined): string {
+  const code = (currency || '').trim().toUpperCase()
+  if (code.length === 3) return code
+  return 'USD'
+}
+
+function addCurrencyTotal(
+  totals: Record<string, number>,
+  currency: string | null | undefined,
+  amount: number | null | undefined
+) {
+  const code = normalizeCurrencyCode(currency)
+  const value = Number(amount) || 0
+  totals[code] = (totals[code] || 0) + value
 }
 
 function getJourneyStage(
@@ -104,7 +123,8 @@ export async function GET() {
           deal:created_for_deal_id (
             id,
             name,
-            status
+            status,
+            currency
           )
         `)
         .order('created_at', { ascending: false })
@@ -125,6 +145,7 @@ export async function GET() {
           investor_id: client.client_investor_id,
           subscription_id: null,
           subscription_amount: null,
+          currency: deal?.currency || null,
           subscription_status: null,
           subscription_date: null,
           journey_stage: 'new_lead',
@@ -140,7 +161,9 @@ export async function GET() {
         activeClients: processed.filter(c => c.is_active).length,
         totalTransactions: 0,
         totalValue: 0,
+        totalValueByCurrency: {},
         estimatedCommission: 0,
+        estimatedCommissionByCurrency: {},
       }
 
       return NextResponse.json({
@@ -181,7 +204,8 @@ export async function GET() {
         deal:created_for_deal_id (
           id,
           name,
-          status
+          status,
+          currency
         )
       `)
       .eq('commercial_partner_id', cpId)
@@ -210,12 +234,14 @@ export async function GET() {
           investor_id,
           deal_id,
           commitment,
+          currency,
           status,
           subscription_date,
           deals (
             id,
             name,
-            status
+            status,
+            currency
           )
         `)
         .in('investor_id', investorIds)
@@ -321,6 +347,7 @@ export async function GET() {
           investor_id: client.client_investor_id,
           subscription_id: null,
           subscription_amount: null,
+          currency: deal?.currency || null,
           subscription_status: null,
           subscription_date: null,
           journey_stage: getJourneyStage(null, false, membership),
@@ -357,6 +384,7 @@ export async function GET() {
             investor_id: client.client_investor_id,
             subscription_id: sub.id,
             subscription_amount: commitment,
+            currency: sub.currency || deal?.currency || null,
             subscription_status: sub.status,
             subscription_date: sub.subscription_date,
             journey_stage: getJourneyStage(sub.status, true, membership),
@@ -378,13 +406,21 @@ export async function GET() {
     const withSubscription = processed.filter(client => client.subscription_amount)
     const totalValue = withSubscription.reduce((sum, client) => sum + (client.subscription_amount || 0), 0)
     const estimatedCommission = withSubscription.reduce((sum, client) => sum + (client.estimated_commission || 0), 0)
+    const totalValueByCurrency: Record<string, number> = {}
+    const estimatedCommissionByCurrency: Record<string, number> = {}
+    withSubscription.forEach((client) => {
+      addCurrencyTotal(totalValueByCurrency, client.currency, client.subscription_amount)
+      addCurrencyTotal(estimatedCommissionByCurrency, client.currency, client.estimated_commission)
+    })
 
     const summary: Summary = {
       totalClients: uniqueClients.size,
       activeClients,
       totalTransactions: withSubscription.length,
       totalValue,
+      totalValueByCurrency,
       estimatedCommission,
+      estimatedCommissionByCurrency,
     }
 
     return NextResponse.json({

@@ -484,6 +484,16 @@ export async function POST(
           console.error('⚠️ [TERMSHEET] Failed to update attachment key:', updateError)
         }
 
+        // Mark workflow as completed now that document is stored
+        if (result?.workflow_run_id) {
+          await serviceSupabase.from('workflow_runs').update({
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+            result_doc_id: null // Term sheets don't have a documents record
+          }).eq('id', result.workflow_run_id)
+          console.log('✅ [TERMSHEET] Workflow run marked as completed')
+        }
+
         // Create audit log
         await auditLogger.log({
           actor_user_id: authUser.id,

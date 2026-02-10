@@ -6,11 +6,13 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatRelativeTime, formatFullTimestamp, getInitials } from '@/lib/messaging/utils'
 import { CheckCheck, Check, Trash2 } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface MessageBubbleProps {
   message: ConversationMessage
   senderName: string
+  assistantName?: string | null
+  showAssistantBadge?: boolean
   senderEmail?: string | null
   senderAvatarUrl?: string | null
   isSelf: boolean
@@ -24,6 +26,8 @@ interface MessageBubbleProps {
 export function MessageBubble({
   message,
   senderName,
+  assistantName,
+  showAssistantBadge = true,
   senderEmail,
   senderAvatarUrl,
   isSelf,
@@ -89,9 +93,11 @@ export function MessageBubble({
         
         {/* Sender Name (only at group start) */}
         {isGroupStart && !isSelf && (
-          <span className="text-xs font-semibold text-foreground/80 px-2 mb-0.5">
-            {senderName}
-          </span>
+          <div className="flex items-center gap-2 px-2 mb-0.5">
+            <span className="text-xs font-semibold text-foreground/80">
+              {senderName}
+            </span>
+          </div>
         )}
 
         {/* Message Bubble (WhatsApp style) */}
@@ -129,11 +135,30 @@ export function MessageBubble({
                 {new Date(message.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
               </span>
               {isSelf && (
-                <span className="ml-0.5">
-                  {message.readBy && message.readBy.length > 0 
-                    ? <CheckCheck className="h-3.5 w-3.5" />
-                    : <Check className="h-3.5 w-3.5" />
-                  }
+                <span className="ml-0.5 inline-flex items-center">
+                  <AnimatePresence mode="wait" initial={false}>
+                    {message.readBy && message.readBy.length > 0 ? (
+                      <motion.span
+                        key="read"
+                        initial={{ scale: 0.4, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                        className="text-blue-300"
+                      >
+                        <CheckCheck className="h-3.5 w-3.5" />
+                      </motion.span>
+                    ) : (
+                      <motion.span
+                        key="sent"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ duration: 0.15 }}
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                 </span>
               )}
             </div>
@@ -143,4 +168,3 @@ export function MessageBubble({
     </motion.div>
   )
 }
-

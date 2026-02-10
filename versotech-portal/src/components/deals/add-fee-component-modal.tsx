@@ -34,15 +34,16 @@ export function AddFeeComponentModal({ dealId, feePlanId }: AddFeeComponentModal
   })
 
   const handleSubmit = async () => {
-    const isPercentMethod = formData.calc_method !== 'fixed'
+    const usesFlatAmount = ['fixed', 'fixed_amount', 'per_unit_spread'].includes(formData.calc_method)
+    const isPercentMethod = !usesFlatAmount
     
     if (isPercentMethod && !formData.rate_bps) {
       setError('Rate in basis points is required')
       return
     }
 
-    if (formData.calc_method === 'fixed' && !formData.flat_amount) {
-      setError('Flat amount is required')
+    if (usesFlatAmount && !formData.flat_amount) {
+      setError(formData.calc_method === 'per_unit_spread' ? 'BI fee per share is required' : 'Flat amount is required')
       return
     }
 
@@ -56,8 +57,8 @@ export function AddFeeComponentModal({ dealId, feePlanId }: AddFeeComponentModal
         body: JSON.stringify({
           kind: formData.kind,
           calc_method: formData.calc_method,
-          rate_bps: formData.rate_bps ? parseInt(formData.rate_bps) : undefined,
-          flat_amount: formData.flat_amount ? parseFloat(formData.flat_amount) : undefined,
+          rate_bps: isPercentMethod && formData.rate_bps ? parseInt(formData.rate_bps) : undefined,
+          flat_amount: usesFlatAmount && formData.flat_amount ? parseFloat(formData.flat_amount) : undefined,
           frequency: formData.frequency,
           hurdle_rate_bps: formData.hurdle_rate_bps ? parseInt(formData.hurdle_rate_bps) : undefined,
           has_high_water_mark: formData.has_high_water_mark,
@@ -118,7 +119,7 @@ export function AddFeeComponentModal({ dealId, feePlanId }: AddFeeComponentModal
                   <SelectItem value="subscription">Subscription (Upfront)</SelectItem>
                   <SelectItem value="management">Management (Annual)</SelectItem>
                   <SelectItem value="performance">Performance (Carry)</SelectItem>
-                  <SelectItem value="spread_markup">Spread Markup</SelectItem>
+                  <SelectItem value="spread_markup">BI Fee PPS</SelectItem>
                   <SelectItem value="flat">Flat Fee</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
@@ -135,7 +136,7 @@ export function AddFeeComponentModal({ dealId, feePlanId }: AddFeeComponentModal
                   <SelectItem value="percent_of_investment">% of Investment</SelectItem>
                   <SelectItem value="percent_per_annum">% Per Annum</SelectItem>
                   <SelectItem value="percent_of_profit">% of Profit</SelectItem>
-                  <SelectItem value="per_unit_spread">Per Unit Spread</SelectItem>
+                  <SelectItem value="per_unit_spread">Share Count</SelectItem>
                   <SelectItem value="fixed">Fixed Amount</SelectItem>
                 </SelectContent>
               </Select>
@@ -143,7 +144,7 @@ export function AddFeeComponentModal({ dealId, feePlanId }: AddFeeComponentModal
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {formData.calc_method !== 'fixed' ? (
+            {!['fixed', 'fixed_amount', 'per_unit_spread'].includes(formData.calc_method) ? (
               <div className="space-y-2">
                 <Label htmlFor="rate_bps">Rate (Basis Points) *</Label>
                 <Input
@@ -157,15 +158,20 @@ export function AddFeeComponentModal({ dealId, feePlanId }: AddFeeComponentModal
               </div>
             ) : (
               <div className="space-y-2">
-                <Label htmlFor="flat_amount">Flat Amount *</Label>
+                <Label htmlFor="flat_amount">
+                  {formData.calc_method === 'per_unit_spread' ? 'BI Fee PPS (Deal Currency) *' : 'Flat Amount *'}
+                </Label>
                 <Input
                   id="flat_amount"
                   type="number"
                   step="0.01"
-                  placeholder="1000.00"
+                  placeholder={formData.calc_method === 'per_unit_spread' ? '5.00' : '1000.00'}
                   value={formData.flat_amount}
                   onChange={(e) => setFormData(prev => ({ ...prev, flat_amount: e.target.value }))}
                 />
+                {formData.calc_method === 'per_unit_spread' && (
+                  <p className="text-xs text-muted-foreground">Total fee = BI fee per share × share count</p>
+                )}
               </div>
             )}
 
@@ -251,4 +257,3 @@ export function AddFeeComponentModal({ dealId, feePlanId }: AddFeeComponentModal
     </Dialog>
   )
 }
-

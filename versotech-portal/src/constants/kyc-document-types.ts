@@ -1,5 +1,5 @@
 /**
- * KYC Document Types - VERSO Holdings
+ * KYC Document Types - V E R S O
  *
  * Compulsory KYC documents for all entities including investors, partners,
  * introducers, lawyers, arrangers, and commercial partners.

@@ -2,6 +2,7 @@ import { ReactNode } from 'react'
 import { Sidebar } from './sidebar'
 import { BrandHeader } from './brand-header'
 import { UserMenu } from './user-menu'
+import { HeaderNotifications } from './header-notifications'
 import { GlobalKeyboardShortcuts } from './global-keyboard-shortcuts'
 import { ThemeProvider } from '@/components/theme-provider'
 import { getProfile } from '@/lib/auth'
@@ -84,6 +85,11 @@ export async function AppLayout({ children, brand }: AppLayoutProps) {
           <header className="bg-white/80 dark:bg-zinc-950 backdrop-blur-sm border-b border-gray-200 dark:border-white/10 px-6 py-4 flex items-center justify-between">
             <BrandHeader brand={brand} />
             <div className="flex items-center space-x-4">
+              <HeaderNotifications
+                userId={profile.id}
+                userRole={profile.role}
+                href={brand === 'versotech' ? '/versotech_main/notifications' : '/versoholdings/notifications'}
+              />
               <UserMenu profile={profile} brand={brand} />
             </div>
           </header>

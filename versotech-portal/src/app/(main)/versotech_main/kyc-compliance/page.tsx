@@ -1,7 +1,7 @@
 import { KYCComplianceDashboard } from '@/components/compliance/kyc-compliance-dashboard'
 
 export const metadata = {
-  title: 'KYC Compliance | VERSO Holdings',
+  title: 'KYC Compliance | V E R S O',
   description: 'Monitor KYC compliance status across all entities',
 }
 

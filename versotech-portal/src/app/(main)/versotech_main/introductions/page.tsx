@@ -41,6 +41,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate, formatBps } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
+import { type CurrencyTotals, formatCurrencyTotals, sumByCurrency } from '@/lib/currency-totals'
 import Link from 'next/link'
 import {
   Dialog,
@@ -70,7 +71,7 @@ type Introduction = {
   } | null
   commission: {
     accrual_amount: number
-    currency: string
+    currency: string | null
     status: string
   } | null
 }
@@ -114,7 +115,9 @@ type Summary = {
   fundedCount: number
   passedCount: number
   totalCommissionEarned: number
+  totalCommissionEarnedByCurrency: CurrencyTotals
   pendingCommission: number
+  pendingCommissionByCurrency: CurrencyTotals
 }
 
 type JourneyStage = 'interested' | 'approved' | 'signed' | 'funded' | 'passed'
@@ -181,6 +184,11 @@ const STATUS_FILTERS = [
   { label: 'Passed', value: 'passed' },
 ]
 
+const formatAmountWithCurrency = (amount: number, currency?: string | null) => {
+  if (currency) return formatCurrency(amount, String(currency).toUpperCase())
+  return amount.toLocaleString('en-US')
+}
+
 export default function IntroductionsPage() {
   const [introducerInfo, setIntroducerInfo] = useState<IntroducerInfo | null>(null)
   const [introductions, setIntroductions] = useState<Introduction[]>([])
@@ -193,6 +201,8 @@ export default function IntroductionsPage() {
     passedCount: 0,
     totalCommissionEarned: 0,
     pendingCommission: 0,
+    totalCommissionEarnedByCurrency: {},
+    pendingCommissionByCurrency: {},
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -386,7 +396,7 @@ export default function IntroductionsPage() {
 
         // Fetch commissions for these introductions
         const introIds = (introData || []).map(i => i.id)
-        let commissionsMap: Record<string, { accrual_amount: number; currency: string; status: string }> = {}
+        let commissionsMap: Record<string, { accrual_amount: number; currency: string | null; status: string }> = {}
 
         if (introIds.length > 0) {
           const { data: commissions } = await supabase
@@ -398,7 +408,7 @@ export default function IntroductionsPage() {
             if (comm.introduction_id) {
               commissionsMap[comm.introduction_id] = {
                 accrual_amount: Number(comm.accrual_amount) || 0,
-                currency: comm.currency || 'USD',
+                currency: comm.currency ? String(comm.currency).toUpperCase() : null,
                 status: comm.status || 'accrued',
               }
             }
@@ -449,6 +459,16 @@ export default function IntroductionsPage() {
             }
           }
         }
+        const totalCommissionEarnedByCurrency = sumByCurrency(
+          processedIntroductions.filter((intro) => intro.commission?.status === 'paid'),
+          (intro) => intro.commission?.accrual_amount,
+          (intro) => intro.commission?.currency
+        )
+        const pendingCommissionByCurrency = sumByCurrency(
+          processedIntroductions.filter((intro) => intro.commission?.status === 'accrued' || intro.commission?.status === 'invoiced'),
+          (intro) => intro.commission?.accrual_amount,
+          (intro) => intro.commission?.currency
+        )
 
         setSummary({
           totalIntroductions: processedIntroductions.length,
@@ -459,6 +479,8 @@ export default function IntroductionsPage() {
           passedCount: passed,
           totalCommissionEarned: totalEarned,
           pendingCommission: pending,
+          totalCommissionEarnedByCurrency,
+          pendingCommissionByCurrency,
         })
 
         setError(null)
@@ -525,6 +547,8 @@ export default function IntroductionsPage() {
         passedCount: passed,
         totalCommissionEarned: 0,
         pendingCommission: 0,
+        totalCommissionEarnedByCurrency: {},
+        pendingCommissionByCurrency: {},
       })
     }
 
@@ -579,7 +603,7 @@ export default function IntroductionsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">My Introductions</h1>
@@ -645,7 +669,7 @@ export default function IntroductionsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(summary.totalCommissionEarned)}</div>
+            <div className="text-2xl font-bold">{formatCurrencyTotals(summary.totalCommissionEarnedByCurrency)}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Total paid out
             </p>
@@ -660,7 +684,7 @@ export default function IntroductionsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-500">{formatCurrency(summary.pendingCommission)}</div>
+            <div className="text-2xl font-bold text-orange-500">{formatCurrencyTotals(summary.pendingCommissionByCurrency)}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Awaiting payment
             </p>
@@ -812,7 +836,7 @@ export default function IntroductionsPage() {
                         {intro.commission ? (
                           <div>
                             <div className="font-medium">
-                              {formatCurrency(intro.commission.accrual_amount, intro.commission.currency)}
+                              {formatAmountWithCurrency(intro.commission.accrual_amount, intro.commission.currency)}
                             </div>
                             <div className="text-xs text-muted-foreground capitalize">
                               {intro.commission.status}
@@ -967,7 +991,7 @@ export default function IntroductionsPage() {
                       <div>
                         <Label className="text-xs text-muted-foreground">Target Raise</Label>
                         <p className="font-medium mt-1">
-                          {formatCurrency(selectedDeal.target_amount, selectedDeal.currency || 'USD')}
+                          {formatAmountWithCurrency(selectedDeal.target_amount, selectedDeal.currency)}
                         </p>
                       </div>
                     )}
@@ -975,7 +999,7 @@ export default function IntroductionsPage() {
                       <div>
                         <Label className="text-xs text-muted-foreground">Raised</Label>
                         <p className="font-medium mt-1">
-                          {formatCurrency(selectedDeal.raised_amount, selectedDeal.currency || 'USD')}
+                          {formatAmountWithCurrency(selectedDeal.raised_amount, selectedDeal.currency)}
                         </p>
                       </div>
                     )}
@@ -983,7 +1007,7 @@ export default function IntroductionsPage() {
                       <div>
                         <Label className="text-xs text-muted-foreground">Min Investment</Label>
                         <p className="font-medium mt-1">
-                          {formatCurrency(selectedDeal.minimum_investment, selectedDeal.currency || 'USD')}
+                          {formatAmountWithCurrency(selectedDeal.minimum_investment, selectedDeal.currency)}
                         </p>
                       </div>
                     )}
@@ -991,7 +1015,7 @@ export default function IntroductionsPage() {
                       <div>
                         <Label className="text-xs text-muted-foreground">Max Investment</Label>
                         <p className="font-medium mt-1">
-                          {formatCurrency(selectedDeal.maximum_investment, selectedDeal.currency || 'USD')}
+                          {formatAmountWithCurrency(selectedDeal.maximum_investment, selectedDeal.currency)}
                         </p>
                       </div>
                     )}
@@ -999,7 +1023,7 @@ export default function IntroductionsPage() {
                       <div>
                         <Label className="text-xs text-muted-foreground">Unit Price</Label>
                         <p className="font-medium mt-1">
-                          {formatCurrency(selectedDeal.offer_unit_price, selectedDeal.currency || 'USD')}
+                          {formatAmountWithCurrency(selectedDeal.offer_unit_price, selectedDeal.currency)}
                         </p>
                       </div>
                     )}

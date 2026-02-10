@@ -1,6 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import InvestorNotificationsClient from '@/components/notifications/investor-notifications-client'
 import { AlertCircle } from 'lucide-react'
+import { checkStaffAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -17,7 +18,7 @@ export default async function NotificationsPage() {
 
   if (!user || userError) {
     return (
-      <div className="p-6">
+      <div>
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
@@ -39,7 +40,7 @@ export default async function NotificationsPage() {
 
   if (!personas || personas.length === 0) {
     return (
-      <div className="p-6">
+      <div>
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
@@ -53,9 +54,37 @@ export default async function NotificationsPage() {
     )
   }
 
+  const hasStaffAccess = await checkStaffAccess(user.id)
+
+  const complianceAlerts = hasStaffAccess
+    ? await serviceSupabase
+        .from('compliance_alerts')
+        .select('id, audit_log_id, alert_type, severity, description, status, assigned_to, created_at')
+        .eq('status', 'open')
+        .order('created_at', { ascending: false })
+        .limit(20)
+        .then(({ data }) => data || [])
+    : []
+
+  const complianceTasks = hasStaffAccess
+    ? await serviceSupabase
+        .from('tasks')
+        .select('id, title, description, status, priority, due_at, action_url, owner_user_id')
+        .eq('category', 'compliance')
+        .in('status', ['pending', 'in_progress'])
+        .order('due_at', { ascending: true, nullsFirst: false })
+        .limit(30)
+        .then(({ data }) => data || [])
+    : []
+
   return (
-    <div className="p-6">
-      <InvestorNotificationsClient />
+    <div>
+      <InvestorNotificationsClient
+        isStaff={hasStaffAccess}
+        currentUserId={user.id}
+        complianceAlerts={complianceAlerts}
+        complianceTasks={complianceTasks}
+      />
     </div>
   )
 }

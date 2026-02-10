@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, RefreshCw, MessageSquarePlus, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { applyConversationFilters, sortConversations, formatRelativeTime, getInitials, truncateText } from '@/lib/messaging'
+import { isAgentChatConversation } from '@/lib/compliance/agent-chat'
 
 interface ConversationsSidebarProps {
   conversations: ConversationSummary[]
@@ -21,6 +22,8 @@ interface ConversationsSidebarProps {
   errorMessage: string | null
   /** If false, hides New Chat/Group buttons. Default: true */
   canCreateConversation?: boolean
+  /** Current user ID - used to filter out self from participant avatars */
+  currentUserId?: string
 }
 
 const VISIBILITY_FILTERS: Array<{ value: ConversationFilters['visibility']; label: string }> = [
@@ -49,6 +52,7 @@ export function ConversationsSidebar({
   isLoading,
   errorMessage,
   canCreateConversation = true,
+  currentUserId,
 }: ConversationsSidebarProps) {
   const [searchValue, setSearchValue] = useState(filters.search || '')
 
@@ -95,7 +99,7 @@ export function ConversationsSidebar({
   }, [conversations])
 
   return (
-    <aside className="w-full sm:w-[360px] border-r border-border bg-card flex flex-col text-foreground">
+    <aside className="w-full sm:w-[360px] border-r border-border bg-card flex flex-col text-foreground min-h-0">
       <div className="p-4 border-b border-border space-y-3">
         <div className="flex items-center justify-between gap-2 text-foreground">
           <div>
@@ -155,7 +159,6 @@ export function ConversationsSidebar({
           >
             Unread {filters.unreadOnly ? '' : `(${unreadTotals.all})`}
           </Button>
-
           {canCreateConversation && (
             <div className="grid grid-cols-2 gap-2">
               <Button
@@ -203,8 +206,34 @@ export function ConversationsSidebar({
           <ul className="p-2 space-y-1">
             {filteredConversations.map(conversation => {
               const isActive = conversation.id === activeConversationId
-              const firstParticipant = conversation.participants[0]
               const timestamp = conversation.lastMessageAt || conversation.createdAt
+              const agentChat = (conversation.metadata as Record<string, any>)?.agent_chat as Record<string, any> | undefined
+              const agentName = typeof agentChat?.agent_name === 'string' ? agentChat.agent_name : null
+              const agentAvatar = typeof agentChat?.agent_avatar_url === 'string' ? agentChat.agent_avatar_url : null
+              const isAgentThread = isAgentChatConversation(conversation.metadata)
+
+              // Show the OTHER participant's avatar/name, not the current user's
+              const otherParticipants = currentUserId
+                ? conversation.participants.filter(p => p.id !== currentUserId)
+                : conversation.participants
+              const displayParticipant = otherParticipants[0] || conversation.participants[0]
+
+              // For agent threads, always show agent identity regardless of staff/investor view
+              const displayName = (isAgentThread && agentName)
+                ? agentName
+                : (!canCreateConversation && (agentName || conversation.subject))
+                  ? (agentName || conversation.subject || 'Compliance Team')
+                  : (conversation.subject || 'Untitled Conversation')
+              const displayAvatarUrl = (isAgentThread && agentAvatar)
+                ? agentAvatar
+                : displayParticipant?.avatarUrl
+              const displayAvatarName = (isAgentThread && agentName)
+                ? agentName
+                : (displayParticipant?.displayName || displayParticipant?.email || displayName)
+              // For agent threads, count the virtual agent as a participant
+              const effectiveParticipantCount = isAgentThread
+                ? Math.max(conversation.participants.length + 1, 2)
+                : conversation.participants.length
               
               return (
                 <li key={conversation.id}>
@@ -223,11 +252,11 @@ export function ConversationsSidebar({
                       {/* Avatar */}
                       <div className="relative">
                         <Avatar className="h-11 w-11 transition-transform duration-200 group-hover:scale-110">
-                          {firstParticipant?.avatarUrl && (
-                            <AvatarImage src={firstParticipant.avatarUrl} alt={firstParticipant.displayName || firstParticipant.email || 'User'} />
+                          {displayAvatarUrl && (
+                            <AvatarImage src={displayAvatarUrl} alt={displayAvatarName || 'User'} />
                           )}
                           <AvatarFallback className="bg-secondary text-foreground text-sm font-medium">
-                            {getInitials(firstParticipant?.displayName || firstParticipant?.email)}
+                            {getInitials(displayAvatarName)}
                           </AvatarFallback>
                         </Avatar>
                         {conversation.unreadCount > 0 && (
@@ -246,7 +275,7 @@ export function ConversationsSidebar({
                             "font-semibold truncate text-sm",
                             conversation.unreadCount > 0 ? "text-gray-900 dark:text-white" : "text-foreground"
                           )}>
-                            {conversation.subject || 'Untitled Conversation'}
+                            {displayName}
                           </span>
                           <span className="text-[10px] text-muted-foreground shrink-0" suppressHydrationWarning>
                             {formatRelativeTime(timestamp)}
@@ -264,9 +293,9 @@ export function ConversationsSidebar({
                           <Badge variant="outline" className="text-[10px] capitalize border-border text-muted-foreground px-1.5 py-0">
                             {conversation.type.replace('_', ' ')}
                           </Badge>
-                          {conversation.participants.length > 1 && (
+                          {effectiveParticipantCount > 1 && (
                             <span className="text-[10px] text-muted-foreground">
-                              {conversation.participants.length} participants
+                              {effectiveParticipantCount} participants
                             </span>
                           )}
                         </div>
@@ -282,5 +311,3 @@ export function ConversationsSidebar({
     </aside>
   )
 }
-
-

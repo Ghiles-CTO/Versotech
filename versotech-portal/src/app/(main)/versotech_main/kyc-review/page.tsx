@@ -25,7 +25,7 @@ export default async function KYCReviewPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <KYCReviewClient />
     </div>
   )

@@ -38,7 +38,7 @@ const certificationItems = [
     name: 'agreesToUpdates',
     title: 'Update Obligation',
     description:
-      'I agree to promptly notify VERSO Holdings of any material changes to the information provided herein.',
+      'I agree to promptly notify V E R S O of any material changes to the information provided herein.',
   },
   {
     name: 'consentToProcessing',

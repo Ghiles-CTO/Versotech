@@ -54,7 +54,7 @@ export default async function InvestorProfilePage() {
             <CardTitle>Account Overview</CardTitle>
           </div>
           <CardDescription>
-            Your VERSO Holdings investor portal account information
+            Your V E R S O investor portal account information
           </CardDescription>
         </CardHeader>
         <CardContent>

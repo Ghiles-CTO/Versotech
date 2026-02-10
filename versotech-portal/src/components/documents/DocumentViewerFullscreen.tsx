@@ -262,7 +262,7 @@ export function DocumentViewerFullscreen({
             </div>
             {/* Footer attribution */}
             <div className="absolute bottom-4 right-4 text-xs text-gray-400/50 bg-black/20 px-2 py-1 rounded select-none">
-              VERSO Holdings • {document.watermark.uploaded_at
+              V E R S O • {document.watermark.uploaded_at
                 ? new Date(document.watermark.uploaded_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
                 : 'Confidential Document'}
             </div>

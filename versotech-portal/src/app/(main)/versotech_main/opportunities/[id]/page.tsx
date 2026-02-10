@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/accordion'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { InvestorJourneyBar } from '@/components/deals/investor-journey-bar'
 import { DataRoomViewer, type DataRoomDocument } from '@/components/deals/data-room-viewer'
 import { DealTimelineCard } from '@/components/deals/deal-timeline-card'
@@ -57,6 +58,7 @@ import type { DocumentReference } from '@/types/document-viewer.types'
 import { usePersona } from '@/contexts/persona-context'
 import { useProxyMode } from '@/components/commercial-partner'
 import { getAccountStatusCopy, formatKycStatusLabel } from '@/lib/account-approval-status'
+import { toast } from 'sonner'
 
 interface Document {
   id: string
@@ -351,6 +353,10 @@ export default function OpportunityDetailPage() {
   const [showSubscribeDialog, setShowSubscribeDialog] = useState(false)
   const [subscribeAmount, setSubscribeAmount] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
+  const [ndaRequestOpen, setNdaRequestOpen] = useState(false)
+  const [ndaRequestSubject, setNdaRequestSubject] = useState('')
+  const [ndaRequestDetails, setNdaRequestDetails] = useState('')
+  const [ndaRequestSubmitting, setNdaRequestSubmitting] = useState(false)
   const isPartnerPersona = activePersona?.persona_type === 'partner'
 
   // Term sheet preview state
@@ -550,11 +556,60 @@ export default function OpportunityDetailPage() {
     }
   }
 
+  const openNdaRequestDialog = () => {
+    if (!ndaRequestSubject.trim()) {
+      const dealLabel = opportunity?.name || 'deal'
+      setNdaRequestSubject(`NDA modification request - ${dealLabel}`)
+    }
+    setShowNdaDialog(false)
+    setNdaRequestOpen(true)
+  }
+
+  const handleNdaRequestSubmit = async () => {
+    if (!ndaRequestSubject.trim()) {
+      toast.error('Please enter a subject for the NDA request.')
+      return
+    }
+    if (!ndaRequestDetails.trim()) {
+      toast.error('Please add details about the NDA changes you need.')
+      return
+    }
+
+    try {
+      setNdaRequestSubmitting(true)
+      const response = await fetch('/api/requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: 'communication',
+          subject: ndaRequestSubject.trim(),
+          details: ndaRequestDetails.trim(),
+          dealId,
+          requestType: 'nda_modification'
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to submit NDA request')
+      }
+
+      toast.success('NDA modification request sent.')
+      setNdaRequestDetails('')
+      setNdaRequestOpen(false)
+    } catch (error) {
+      console.error('Error submitting NDA modification request:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to submit NDA request')
+    } finally {
+      setNdaRequestSubmitting(false)
+    }
+  }
+
 
   // Show loading while persona context is initializing
   if (personaLoading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="space-y-6">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-24 w-full" />
         <Skeleton className="h-64 w-full" />
@@ -564,7 +619,7 @@ export default function OpportunityDetailPage() {
 
   if (!hasAnyPersona) {
     return (
-      <div className="p-6">
+      <div>
         <Card className="max-w-lg mx-auto">
           <CardHeader>
             <CardTitle>Access Required</CardTitle>
@@ -579,7 +634,7 @@ export default function OpportunityDetailPage() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="space-y-6">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-24 w-full" />
         <Skeleton className="h-64 w-full" />
@@ -589,7 +644,7 @@ export default function OpportunityDetailPage() {
 
   if (error || !opportunity) {
     return (
-      <div className="p-6">
+      <div>
         <Card className="max-w-lg mx-auto">
           <CardHeader>
             <CardTitle>Error</CardTitle>
@@ -646,7 +701,7 @@ export default function OpportunityDetailPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Back button - context-aware navigation */}
       <Button
         variant="ghost"
@@ -1400,8 +1455,55 @@ export default function OpportunityDetailPage() {
             </div>
           </div>
           <DialogFooter>
+            <Button variant="outline" onClick={openNdaRequestDialog}>
+              Request NDA changes
+            </Button>
             <Button onClick={() => setShowNdaDialog(false)}>
               Got it
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={ndaRequestOpen} onOpenChange={setNdaRequestOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Request NDA Modifications</DialogTitle>
+            <DialogDescription>
+              Share the exact sections or terms you want reviewed. The compliance team will follow up.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Subject</Label>
+              <Input
+                value={ndaRequestSubject}
+                onChange={(event) => setNdaRequestSubject(event.target.value)}
+                placeholder="NDA modification request"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Details</Label>
+              <Textarea
+                value={ndaRequestDetails}
+                onChange={(event) => setNdaRequestDetails(event.target.value)}
+                placeholder="Add clause numbers, requested changes, or questions..."
+                rows={5}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setNdaRequestOpen(false)}
+              disabled={ndaRequestSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleNdaRequestSubmit} disabled={ndaRequestSubmitting}>
+              {ndaRequestSubmitting ? 'Sending...' : 'Send request'}
             </Button>
           </DialogFooter>
         </DialogContent>

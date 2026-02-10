@@ -48,6 +48,12 @@ export function CommissionSummary({
   const { accrued, invoice_requested, invoiced, paid, total_owed, currency } = summary
   const invoicedTotal = invoice_requested + invoiceSubmitted + invoiced
 
+  const formatAmount = (amount: number) => {
+    const code = typeof currency === 'string' ? currency.trim().toUpperCase() : ''
+    if (code.length === 3) return formatCurrency(amount, code)
+    return amount.toLocaleString('en-US')
+  }
+
   // Inline variant - for table cells
   if (variant === 'inline') {
     return (
@@ -55,14 +61,14 @@ export function CommissionSummary({
         {paid > 0 && (
           <div className="text-sm">
             <span className="text-green-600 font-medium">
-              {formatCurrency(paid, currency)}
+              {formatAmount(paid)}
             </span>
             <span className="text-muted-foreground text-xs ml-1">paid</span>
           </div>
         )}
         {total_owed > 0 && (
           <div className="text-xs text-yellow-600">
-            {formatCurrency(total_owed, currency)} pending
+            {formatAmount(total_owed)} pending
           </div>
         )}
         {paid === 0 && total_owed === 0 && (
@@ -79,19 +85,19 @@ export function CommissionSummary({
         {accrued > 0 && (
           <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-200">
             <Clock className="h-3 w-3 mr-1" />
-            {formatCurrency(accrued, currency)} accrued
+            {formatAmount(accrued)} accrued
           </Badge>
         )}
         {invoicedTotal > 0 && (
           <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-200">
             <FileCheck className="h-3 w-3 mr-1" />
-            {formatCurrency(invoicedTotal, currency)} invoiced
+            {formatAmount(invoicedTotal)} invoiced
           </Badge>
         )}
         {paid > 0 && (
           <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">
             <CheckCircle2 className="h-3 w-3 mr-1" />
-            {formatCurrency(paid, currency)} paid
+            {formatAmount(paid)} paid
           </Badge>
         )}
       </div>
@@ -116,7 +122,7 @@ export function CommissionSummary({
               Accrued
             </div>
             <div className="text-lg font-semibold text-blue-600">
-              {formatCurrency(accrued, currency)}
+              {formatAmount(accrued)}
             </div>
           </div>
 
@@ -127,7 +133,7 @@ export function CommissionSummary({
               Invoiced
             </div>
             <div className="text-lg font-semibold text-yellow-600">
-            {formatCurrency(invoicedTotal, currency)}
+            {formatAmount(invoicedTotal)}
             </div>
           </div>
 
@@ -138,7 +144,7 @@ export function CommissionSummary({
               Paid
             </div>
             <div className="text-lg font-semibold text-green-600">
-              {formatCurrency(paid, currency)}
+              {formatAmount(paid)}
             </div>
           </div>
 
@@ -149,7 +155,7 @@ export function CommissionSummary({
               Total Owed
             </div>
             <div className="text-lg font-semibold text-purple-600">
-              {formatCurrency(total_owed, currency)}
+              {formatAmount(total_owed)}
             </div>
           </div>
         </div>
@@ -208,7 +214,9 @@ export function PaymentStatusBadge({
   return (
     <Badge variant="outline" className={cn('bg-yellow-500/10 text-yellow-600 border-yellow-200', className)}>
       <Clock className="h-3 w-3 mr-1" />
-      {formatCurrency(total_owed, summary.currency)} pending
+      {(typeof summary.currency === 'string' && summary.currency.trim().length === 3
+        ? formatCurrency(total_owed, summary.currency.trim().toUpperCase())
+        : total_owed.toLocaleString('en-US'))} pending
     </Badge>
   )
 }

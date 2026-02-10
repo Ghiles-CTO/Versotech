@@ -35,7 +35,7 @@ interface Position {
 
 interface Subscription {
   commitment: number
-  currency: string
+  currency: string | null
   status: string
   signedDate: string
 }
@@ -167,7 +167,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
   // Process subscription data
   const subscriptionData: Subscription = {
     commitment: subscription.commitment,
-    currency: subscription.currency,
+    currency: subscription.currency ? String(subscription.currency).toUpperCase() : null,
     status: subscription.status,
     signedDate: subscription.created_at
   }
@@ -223,13 +223,41 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
     }
   }
 
+  const activeCurrency = subscriptionData.currency || (vehicle.currency ? String(vehicle.currency).toUpperCase() : null)
+
   // Format currency helper
-  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: vehicle.currency || 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(amount)
+  const formatAmount = (amount: number) => {
+    const safeAmount = Number(amount) || 0
+    if (activeCurrency) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: activeCurrency,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(safeAmount)
+    }
+    return safeAmount.toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    })
+  }
+
+  const formatCurrencyPrecise = (amount: number | null | undefined, fractionDigits = 3) => {
+    if (amount === null || amount === undefined || Number.isNaN(Number(amount))) return 'N/A'
+    const safeAmount = Number(amount)
+    if (activeCurrency) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: activeCurrency,
+        minimumFractionDigits: fractionDigits,
+        maximumFractionDigits: fractionDigits
+      }).format(safeAmount)
+    }
+    return safeAmount.toLocaleString('en-US', {
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits
+    })
+  }
 
   const formatUnits = (units: number) => new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 0,
@@ -237,7 +265,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
   }).format(units)
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="space-y-8">
         {/* Enhanced Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -297,7 +325,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-gray-900">
-                  {formatCurrency(positionData.currentValue)}
+                  {formatAmount(positionData.currentValue)}
                 </div>
                 {positionData.unrealizedGainPct !== undefined && (
                   <div className={`flex items-center gap-1 text-sm mt-2 ${positionData.unrealizedGainPct > 0 ? 'text-green-600' :
@@ -338,7 +366,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-gray-900">
-                  {formatCurrency(positionData.costBasis)}
+                  {formatAmount(positionData.costBasis)}
                 </div>
                 <div className="text-sm text-gray-500 mt-2">Total invested</div>
               </CardContent>
@@ -356,7 +384,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                   positionData.unrealizedGain < 0 ? 'text-red-600' : 'text-gray-900'
                   }`}>
                   {positionData.unrealizedGain > 0 ? '+' : ''}
-                  {formatCurrency(positionData.unrealizedGain)}
+                  {formatAmount(positionData.unrealizedGain)}
                 </div>
                 <div className="text-sm text-gray-500 mt-2">Mark-to-market</div>
               </CardContent>
@@ -393,7 +421,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Total Commitment</span>
                       <span className="font-semibold text-lg">
-                        {formatCurrency(subscriptionData.commitment)}
+                        {formatAmount(subscriptionData.commitment)}
                       </span>
                     </div>
                     {cashflowData && (
@@ -401,19 +429,19 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                         <div className="flex justify-between items-center">
                           <span className="text-gray-600">Total Contributions</span>
                           <span className="font-semibold">
-                            {formatCurrency(cashflowData.totalContributions)}
+                            {formatAmount(cashflowData.totalContributions)}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-gray-600">Total Distributions</span>
                           <span className="font-semibold">
-                            {formatCurrency(cashflowData.totalDistributions)}
+                            {formatAmount(cashflowData.totalDistributions)}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-gray-600">Unfunded Commitment</span>
                           <span className="font-semibold text-blue-600">
-                            {formatCurrency(cashflowData.unfundedCommitment)}
+                            {formatAmount(cashflowData.unfundedCommitment)}
                           </span>
                         </div>
                       </>
@@ -467,7 +495,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                           <div className={`font-semibold ${flow.type === 'call' ? 'text-red-600' : 'text-green-600'
                             }`}>
                             {flow.type === 'call' ? '-' : '+'}
-                            {formatCurrency(Math.abs(flow.amount))}
+                            {formatAmount(Math.abs(flow.amount))}
                           </div>
                         </div>
                       ))}
@@ -511,12 +539,12 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                             {feeStructure.subscriptionFeePercent
                               ? `${feeStructure.subscriptionFeePercent}%`
                               : feeStructure.subscriptionFeeAmount
-                                ? formatCurrency(feeStructure.subscriptionFeeAmount)
+                                ? formatAmount(feeStructure.subscriptionFeeAmount)
                                 : '—'
                             }
                             {feeStructure.subscriptionFeePercent && subscriptionData.commitment && (
                               <span className="text-gray-500 text-sm ml-1">
-                                ({formatCurrency((feeStructure.subscriptionFeePercent / 100) * subscriptionData.commitment)})
+                                ({formatAmount((feeStructure.subscriptionFeePercent / 100) * subscriptionData.commitment)})
                               </span>
                             )}
                           </span>
@@ -526,28 +554,28 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                       {feeStructure.spreadFeeAmount && feeStructure.spreadFeeAmount > 0 && (
                         <div className="flex justify-between items-center py-2 border-b border-gray-100">
                           <span className="text-gray-600">Spread Fee</span>
-                          <span className="font-semibold">{formatCurrency(feeStructure.spreadFeeAmount)}</span>
+                          <span className="font-semibold">{formatAmount(feeStructure.spreadFeeAmount)}</span>
                         </div>
                       )}
 
                       {feeStructure.bdFeeAmount && feeStructure.bdFeeAmount > 0 && (
                         <div className="flex justify-between items-center py-2 border-b border-gray-100">
                           <span className="text-gray-600">BD Fee</span>
-                          <span className="font-semibold">{formatCurrency(feeStructure.bdFeeAmount)}</span>
+                          <span className="font-semibold">{formatAmount(feeStructure.bdFeeAmount)}</span>
                         </div>
                       )}
 
                       {feeStructure.finraFeeAmount && feeStructure.finraFeeAmount > 0 && (
                         <div className="flex justify-between items-center py-2 border-b border-gray-100">
                           <span className="text-gray-600">FINRA Fee</span>
-                          <span className="font-semibold">{formatCurrency(feeStructure.finraFeeAmount)}</span>
+                          <span className="font-semibold">{formatAmount(feeStructure.finraFeeAmount)}</span>
                         </div>
                       )}
 
                       {feeStructure.totalUpfrontFees > 0 && (
                         <div className="flex justify-between items-center py-3 bg-gray-50 rounded-lg px-3 mt-2">
                           <span className="font-semibold text-gray-900">Total Upfront Fees</span>
-                          <span className="font-bold text-lg text-blue-600">{formatCurrency(feeStructure.totalUpfrontFees)}</span>
+                          <span className="font-bold text-lg text-blue-600">{formatAmount(feeStructure.totalUpfrontFees)}</span>
                         </div>
                       )}
                     </div>
@@ -563,7 +591,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                             {feeStructure.managementFeePercent
                               ? `${feeStructure.managementFeePercent}%`
                               : feeStructure.managementFeeAmount
-                                ? formatCurrency(feeStructure.managementFeeAmount)
+                                ? formatAmount(feeStructure.managementFeeAmount)
                                 : '—'
                             }
                             {feeStructure.managementFeeFrequency && (
@@ -623,13 +651,13 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                       </div>
                       <div className="text-center p-4 bg-green-50 rounded-lg">
                         <div className="text-2xl font-bold text-green-600">
-                          ${valuations?.[0]?.nav_per_unit?.toFixed(3) || 'N/A'}
+                          {formatCurrencyPrecise(valuations?.[0]?.nav_per_unit, 3)}
                         </div>
                         <div className="text-sm text-gray-600">NAV per Unit</div>
                       </div>
                       <div className="text-center p-4 bg-gray-50 rounded-lg">
                         <div className="text-2xl font-bold text-gray-600">
-                          ${(positionData.costBasis / positionData.units).toFixed(3)}
+                          {positionData.units > 0 ? formatCurrencyPrecise(positionData.costBasis / positionData.units, 3) : 'N/A'}
                         </div>
                         <div className="text-sm text-gray-600">Cost per Unit</div>
                       </div>
@@ -691,7 +719,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                           <div className={`font-semibold text-lg ${flow.type === 'call' ? 'text-red-600' : 'text-green-600'
                             }`}>
                             {flow.type === 'call' ? '-' : '+'}
-                            {formatCurrency(Math.abs(flow.amount))}
+                            {formatAmount(Math.abs(flow.amount))}
                           </div>
                           {flow.reference && (
                             <div className="text-xs text-gray-400">
@@ -740,11 +768,11 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                         </div>
                         <div className="text-right">
                           <div className="font-semibold text-lg">
-                            ${valuation.nav_per_unit?.toFixed(3)} per unit
+                            {formatCurrencyPrecise(valuation.nav_per_unit, 3)} per unit
                           </div>
                           {valuation.nav_total && (
                             <div className="text-sm text-gray-500">
-                              Total NAV: {formatCurrency(valuation.nav_total)}
+                              Total NAV: {formatAmount(valuation.nav_total)}
                             </div>
                           )}
                         </div>

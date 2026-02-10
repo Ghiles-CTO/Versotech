@@ -90,6 +90,7 @@ export async function GET(request: NextRequest) {
             id,
             subscription_number,
             commitment,
+            currency,
             vehicle:vehicles(
               id,
               name

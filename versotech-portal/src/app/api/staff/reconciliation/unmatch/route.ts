@@ -16,6 +16,9 @@ const toNumber = (value: NumericLike): number => {
   return Number.isNaN(parsed) ? 0 : parsed
 }
 
+/**
+ * Recalculate bank transaction state based on remaining approved matches
+ */
 async function recalcTransactionState(supabase: any, bankTransactionId: string) {
   const [{ data: transaction }, { data: approvedMatches }] = await Promise.all([
     supabase
@@ -71,68 +74,18 @@ async function recalcTransactionState(supabase: any, bankTransactionId: string) 
   return updatedTransaction
 }
 
-async function revertInvoicePayment(
-  supabase: any,
-  invoiceId: string,
-  amount: number
-) {
-  const { data: invoice, error: invoiceError } = await supabase
-    .from('invoices')
-    .select('id, total, paid_amount, status, match_status, paid_at')
-    .eq('id', invoiceId)
-    .single()
-
-  if (invoiceError || !invoice) {
-    throw new Error('Invoice not found while reversing match')
-  }
-
-  const currentPaid = toNumber(invoice.paid_amount)
-  const total = toNumber(invoice.total)
-  const newPaid = Math.max(currentPaid - amount, 0)
-
-  let newStatus = invoice.status
-  if (newPaid <= TOLERANCE) {
-    newStatus = 'sent'
-  } else if (newPaid >= total - TOLERANCE) {
-    newStatus = 'paid'
-  } else {
-    newStatus = 'partially_paid'
-  }
-
-  const newMatchStatus = newPaid <= TOLERANCE
-    ? 'unmatched'
-    : newPaid >= total - TOLERANCE
-    ? 'matched'
-    : 'partially_matched'
-
-  const { error: updateError, data: updatedInvoice } = await supabase
-    .from('invoices')
-    .update({
-      paid_amount: newPaid,
-      status: newStatus,
-      match_status: newMatchStatus,
-      paid_at: newStatus === 'paid' ? invoice.paid_at : null
-    })
-    .eq('id', invoiceId)
-    .select()
-    .single()
-
-  if (updateError) {
-    throw updateError
-  }
-
-  if (newStatus !== 'paid') {
-    await supabase
-      .from('fee_events')
-      .update({ status: 'invoiced' })
-      .eq('invoice_id', invoiceId)
-      .eq('status', 'paid')
-  }
-
-  return updatedInvoice
-}
-
-// Unmatch a bank transaction from its invoices
+/**
+ * Unmatch a bank transaction from its invoices
+ *
+ * VERIFICATION-ONLY MODE:
+ * This route now only:
+ * 1. Marks reconciliation_matches as 'reversed'
+ * 2. Deletes associated reconciliation_verifications records
+ * 3. Updates bank_transaction status
+ *
+ * It does NOT revert invoice/subscription statuses because those are now
+ * only changed by lawyer escrow confirmation.
+ */
 export async function POST(req: Request) {
   const profile = await requireStaffAuth()
   if (!profile) {
@@ -148,10 +101,11 @@ export async function POST(req: Request) {
 
     const supabase = await createClient()
 
+    // Handle single match reversal
     if (match_id) {
       const { data: matchRecord, error: matchError } = await supabase
         .from('reconciliation_matches')
-        .select('id, bank_transaction_id, invoice_id, matched_amount, status, match_reason, notes, invoices ( id, total, paid_amount, status, match_status, paid_at )')
+        .select('id, bank_transaction_id, invoice_id, matched_amount, status, match_reason, notes')
         .eq('id', match_id)
         .single()
 
@@ -168,8 +122,9 @@ export async function POST(req: Request) {
       }
 
       const matchedAmount = toNumber(matchRecord.matched_amount)
-
       const timestamp = new Date().toISOString()
+
+      // Mark the reconciliation match as reversed
       const { error: reverseError } = await supabase
         .from('reconciliation_matches')
         .update({
@@ -184,20 +139,23 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Failed to reverse match' }, { status: 500 })
       }
 
-      const updatedInvoice = await revertInvoicePayment(supabase, matchRecord.invoice_id, matchedAmount)
+      // Delete associated verification record(s)
+      const { error: deleteVerificationError } = await supabase
+        .from('reconciliation_verifications')
+        .delete()
+        .eq('bank_transaction_id', bank_transaction_id)
+        .eq('invoice_id', matchRecord.invoice_id)
+
+      if (deleteVerificationError) {
+        console.warn('Failed to delete verification record:', deleteVerificationError)
+        // Non-critical - continue
+      }
+
+      // Recalculate bank transaction state
       const updatedTransaction = await recalcTransactionState(supabase, bank_transaction_id)
 
-      await auditLogger.log({
-        actor_user_id: profile.id,
-        action: AuditActions.UPDATE,
-        entity: AuditEntities.INVOICES,
-        entity_id: matchRecord.invoice_id,
-        metadata: {
-          reversed_match_id: match_id,
-          amount: matchedAmount,
-          new_paid_amount: updatedInvoice?.paid_amount
-        }
-      })
+      // NOTE: We no longer revert invoice payments or subscription statuses
+      // Those are only changed by lawyer escrow confirmation, not by reconciliation
 
       await auditLogger.log({
         actor_user_id: profile.id,
@@ -208,18 +166,19 @@ export async function POST(req: Request) {
           reversed_match_id: match_id,
           amount: matchedAmount,
           status: updatedTransaction?.status,
-          matched_invoice_ids: updatedTransaction?.matched_invoice_ids
+          matched_invoice_ids: updatedTransaction?.matched_invoice_ids,
+          verification_mode: true
         }
       })
 
       return NextResponse.json({
         success: true,
         message: 'Match reversed successfully',
-        invoice: updatedInvoice,
         bank_transaction: updatedTransaction
       })
     }
 
+    // Handle full transaction unmatch (all matches)
     const { data: matches, error: matchesError } = await supabase
       .from('reconciliation_matches')
       .select('id, invoice_id, matched_amount, status, match_reason, notes')
@@ -237,9 +196,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, message: 'No approved matches to reverse' })
     }
 
-    for (const match of approvedMatches) {
-      const matchedAmount = toNumber(match.matched_amount)
+    const invoiceIds: string[] = []
 
+    // Reverse all approved matches
+    for (const match of approvedMatches) {
       const timestamp = new Date().toISOString()
       const { error: reverseError } = await supabase
         .from('reconciliation_matches')
@@ -255,9 +215,23 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Failed to reverse matches' }, { status: 500 })
       }
 
-      await revertInvoicePayment(supabase, match.invoice_id, matchedAmount)
+      if (match.invoice_id) {
+        invoiceIds.push(match.invoice_id)
+      }
     }
 
+    // Delete all verification records for this bank transaction
+    const { error: deleteVerificationsError } = await supabase
+      .from('reconciliation_verifications')
+      .delete()
+      .eq('bank_transaction_id', bank_transaction_id)
+
+    if (deleteVerificationsError) {
+      console.warn('Failed to delete verification records:', deleteVerificationsError)
+      // Non-critical - continue
+    }
+
+    // Recalculate bank transaction state
     const updatedTransaction = await recalcTransactionState(supabase, bank_transaction_id)
 
     await auditLogger.log({
@@ -267,7 +241,9 @@ export async function POST(req: Request) {
       entity_id: bank_transaction_id,
       metadata: {
         reversed_matches: approvedMatches.length,
-        status: updatedTransaction?.status
+        invoice_ids: invoiceIds,
+        status: updatedTransaction?.status,
+        verification_mode: true
       }
     })
 

@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Loader2, FileSignature, CheckCircle2, XCircle } from 'lucide-react'
-import { formatCurrency } from '@/lib/format'
 import { toast } from 'sonner'
 
 type FeeComponent = {
@@ -13,6 +12,7 @@ type FeeComponent = {
   kind: string
   rate_bps: number | string | null
   flat_amount: number | string | null
+  currency?: string | null
   calc_method: string | null
   frequency: string | null
 }
@@ -37,6 +37,7 @@ const FEE_KIND_LABELS: Record<string, string> = {
   subscription: 'Subscription Fee',
   management: 'Management Fee',
   performance: 'Performance Fee',
+  spread_markup: 'BI Fee PPS',
   flat: 'Flat Fee'
 }
 
@@ -60,6 +61,17 @@ const STATUS_STYLES: Record<string, string> = {
 
 function formatComponentValue(component?: FeeComponent): string {
   if (!component) return '—'
+  const currencyCode = component.currency ? String(component.currency).toUpperCase() : ''
+  const formatFlatAmount = (value: number) =>
+    `${currencyCode ? `${currencyCode} ` : ''}${value.toLocaleString()}`
+  if (component.calc_method === 'per_unit_spread') {
+    const flatAmount = component.flat_amount !== null && component.flat_amount !== undefined
+      ? Number(component.flat_amount)
+      : null
+    return flatAmount !== null && !Number.isNaN(flatAmount)
+      ? `${formatFlatAmount(flatAmount)} / share`
+      : '—'
+  }
   if (component.rate_bps !== null && component.rate_bps !== undefined) {
     const rateBps = Number(component.rate_bps)
     if (!Number.isNaN(rateBps)) {
@@ -69,7 +81,7 @@ function formatComponentValue(component?: FeeComponent): string {
   if (component.flat_amount !== null && component.flat_amount !== undefined) {
     const flatAmount = Number(component.flat_amount)
     if (!Number.isNaN(flatAmount)) {
-      return formatCurrency(flatAmount)
+      return formatFlatAmount(flatAmount)
     }
   }
   return '—'

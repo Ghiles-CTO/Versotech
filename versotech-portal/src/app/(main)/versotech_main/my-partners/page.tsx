@@ -36,8 +36,8 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatCurrency } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
+import { addCurrencyAmount, type CurrencyTotals, formatCurrencyTotals, mergeCurrencyTotals, sumByCurrency } from '@/lib/currency-totals'
 import Link from 'next/link'
 import { PartnerDetailDrawer } from '@/components/partners/partner-detail-drawer'
 import {
@@ -78,6 +78,7 @@ type Partner = {
   deals_count: number
   referrals_count: number
   total_referral_value: number
+  total_referral_value_by_currency: CurrencyTotals
   last_activity: string | null
   fee_plans: FeePlan[]
   commission_summary: CommissionSummary
@@ -88,8 +89,11 @@ type Summary = {
   activePartners: number
   totalReferrals: number
   totalReferralValue: number
+  totalReferralValueByCurrency: CurrencyTotals
   totalOwed: number
+  totalOwedByCurrency: CurrencyTotals
   totalPaid: number
+  totalPaidByCurrency: CurrencyTotals
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -123,8 +127,11 @@ export default function MyPartnersPage() {
     activePartners: 0,
     totalReferrals: 0,
     totalReferralValue: 0,
+    totalReferralValueByCurrency: {},
     totalOwed: 0,
     totalPaid: 0,
+    totalOwedByCurrency: {},
+    totalPaidByCurrency: {},
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -196,8 +203,11 @@ export default function MyPartnersPage() {
             activePartners: 0,
             totalReferrals: 0,
             totalReferralValue: 0,
+            totalReferralValueByCurrency: {},
             totalOwed: 0,
             totalPaid: 0,
+            totalOwedByCurrency: {},
+            totalPaidByCurrency: {},
           })
           return
         }
@@ -232,8 +242,11 @@ export default function MyPartnersPage() {
             activePartners: 0,
             totalReferrals: 0,
             totalReferralValue: 0,
+            totalReferralValueByCurrency: {},
             totalOwed: 0,
             totalPaid: 0,
+            totalOwedByCurrency: {},
+            totalPaidByCurrency: {},
           })
           return
         }
@@ -246,6 +259,39 @@ export default function MyPartnersPage() {
           .order('name')
 
         if (partnersError) throw partnersError
+
+        const { data: referrals, error: referralsError } = await supabase
+          .from('deal_memberships')
+          .select('deal_id, investor_id, referred_by_entity_id')
+          .in('deal_id', dealIds)
+          .eq('referred_by_entity_type', 'partner')
+          .in('referred_by_entity_id', partnerIds)
+          .not('investor_id', 'is', null)
+
+        if (referralsError) throw referralsError
+
+        const referralInvestorIds = [...new Set((referrals || []).map((r: any) => r.investor_id).filter(Boolean))]
+        const subscriptionTotalsByDealInvestor = new Map<string, CurrencyTotals>()
+        if (referralInvestorIds.length > 0) {
+          const { data: referralSubscriptions, error: referralSubscriptionsError } = await supabase
+            .from('subscriptions')
+            .select('deal_id, investor_id, commitment, currency, status')
+            .in('deal_id', dealIds)
+            .in('investor_id', referralInvestorIds)
+            .in('status', ['committed', 'active', 'signed', 'funded'])
+
+          if (referralSubscriptionsError) throw referralSubscriptionsError
+
+          ;(referralSubscriptions || []).forEach((subscription: any) => {
+            const dealId = subscription.deal_id
+            const investorId = subscription.investor_id
+            if (!dealId || !investorId) return
+            const key = `${dealId}::${investorId}`
+            const totals = subscriptionTotalsByDealInvestor.get(key) || {}
+            addCurrencyAmount(totals, subscription.commitment, subscription.currency)
+            subscriptionTotalsByDealInvestor.set(key, totals)
+          })
+        }
 
         // Build fee plans by partner
         const feePlansByPartner = new Map<string, FeePlan[]>()
@@ -280,7 +326,7 @@ export default function MyPartnersPage() {
             paid: 0,
             cancelled: 0,
             total_owed: 0,
-            currency: 'USD',
+            currency: '',
           })
         })
 
@@ -297,13 +343,23 @@ export default function MyPartnersPage() {
           if (['accrued', 'invoice_requested', 'invoice_submitted', 'invoiced'].includes(c.status)) {
             summary.total_owed += amount
           }
-          if (c.currency) summary.currency = c.currency
+          if (c.currency) summary.currency = String(c.currency).toUpperCase()
         })
 
         // Process partners with stats
         const processedPartners: Partner[] = (partnersData || []).map((p: any) => {
           const partnerFeePlans = feePlansByPartner.get(p.id) || []
           const partnerDealIds = dealsByPartner.get(p.id) || new Set()
+          const partnerReferrals = (referrals || []).filter((ref: any) => ref.referred_by_entity_id === p.id)
+          const referralKeys = [...new Set(
+            partnerReferrals
+              .map((ref: any) => ref.deal_id && ref.investor_id ? `${ref.deal_id}::${ref.investor_id}` : '')
+              .filter(Boolean)
+          )]
+          const totalReferralValueByCurrency = referralKeys.reduce<CurrencyTotals>((totals, key) => {
+            return mergeCurrencyTotals(totals, subscriptionTotalsByDealInvestor.get(key) || {})
+          }, {})
+          const totalReferralValue = Object.values(totalReferralValueByCurrency).reduce((sum, value) => sum + value, 0)
 
           return {
             id: p.id,
@@ -318,8 +374,9 @@ export default function MyPartnersPage() {
             logo_url: p.logo_url,
             kyc_status: p.kyc_status,
             deals_count: partnerDealIds.size,
-            referrals_count: 0, // Will be populated if we track referrals separately
-            total_referral_value: 0, // Will be populated if we track referrals separately
+            referrals_count: referralKeys.length,
+            total_referral_value: totalReferralValue,
+            total_referral_value_by_currency: totalReferralValueByCurrency,
             last_activity: null,
             fee_plans: partnerFeePlans,
             commission_summary: commissionsByPartner.get(p.id) || {
@@ -330,7 +387,7 @@ export default function MyPartnersPage() {
               paid: 0,
               cancelled: 0,
               total_owed: 0,
-              currency: 'USD',
+              currency: '',
             },
           }
         })
@@ -339,17 +396,35 @@ export default function MyPartnersPage() {
 
         const active = processedPartners.filter(p => p.status === 'active').length
         const totalRefs = processedPartners.reduce((sum, p) => sum + p.referrals_count, 0)
-        const totalVal = processedPartners.reduce((sum, p) => sum + p.total_referral_value, 0)
+        const totalReferralValueByCurrency = processedPartners.reduce<CurrencyTotals>((totals, partner) => {
+          return mergeCurrencyTotals(totals, partner.total_referral_value_by_currency)
+        }, {})
+        const totalVal = Object.values(totalReferralValueByCurrency).reduce((sum, value) => sum + value, 0)
         const totalOwed = processedPartners.reduce((sum, p) => sum + p.commission_summary.total_owed, 0)
         const totalPaid = processedPartners.reduce((sum, p) => sum + p.commission_summary.paid, 0)
+        const totalOwedByCurrency = sumByCurrency(
+          (commissions || []).filter((commission: any) =>
+            ['accrued', 'invoice_requested', 'invoice_submitted', 'invoiced'].includes(commission.status)
+          ),
+          (commission: any) => commission.accrual_amount,
+          (commission: any) => commission.currency
+        )
+        const totalPaidByCurrency = sumByCurrency(
+          (commissions || []).filter((commission: any) => commission.status === 'paid'),
+          (commission: any) => commission.accrual_amount,
+          (commission: any) => commission.currency
+        )
 
         setSummary({
           totalPartners: processedPartners.length,
           activePartners: active,
           totalReferrals: totalRefs,
           totalReferralValue: totalVal,
+          totalReferralValueByCurrency,
           totalOwed,
+          totalOwedByCurrency,
           totalPaid,
+          totalPaidByCurrency,
         })
 
         setError(null)
@@ -378,7 +453,7 @@ export default function MyPartnersPage() {
         paid: 0,
         cancelled: 0,
         total_owed: 0,
-        currency: 'USD',
+        currency: '',
       }
 
       const processedPartners: Partner[] = (partnersData || []).map((p: any) => ({
@@ -396,6 +471,7 @@ export default function MyPartnersPage() {
         deals_count: 0,
         referrals_count: 0,
         total_referral_value: 0,
+        total_referral_value_by_currency: {},
         last_activity: null,
         fee_plans: [],
         commission_summary: emptyCommission,
@@ -407,8 +483,11 @@ export default function MyPartnersPage() {
         activePartners: processedPartners.filter(p => p.status === 'active').length,
         totalReferrals: 0,
         totalReferralValue: 0,
+        totalReferralValueByCurrency: {},
         totalOwed: 0,
         totalPaid: 0,
+        totalOwedByCurrency: {},
+        totalPaidByCurrency: {},
       })
     }
 
@@ -452,7 +531,7 @@ export default function MyPartnersPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">My Partners</h1>
@@ -526,7 +605,7 @@ export default function MyPartnersPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {formatCurrency(summary.totalReferralValue, 'USD')}
+              {formatCurrencyTotals(summary.totalReferralValueByCurrency)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Total commitments
@@ -543,7 +622,7 @@ export default function MyPartnersPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              {formatCurrency(summary.totalOwed, 'USD')}
+              {formatCurrencyTotals(summary.totalOwedByCurrency)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Pending payment
@@ -560,7 +639,7 @@ export default function MyPartnersPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(summary.totalPaid, 'USD')}
+              {formatCurrencyTotals(summary.totalPaidByCurrency)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Total paid out
@@ -729,9 +808,9 @@ export default function MyPartnersPage() {
                       <TableCell>
                         <div>
                           <div className="font-medium">{partner.referrals_count} referrals</div>
-                          {partner.total_referral_value > 0 && (
+                          {Object.keys(partner.total_referral_value_by_currency).length > 0 && (
                             <div className="text-xs text-muted-foreground">
-                              {formatCurrency(partner.total_referral_value, 'USD')}
+                              {formatCurrencyTotals(partner.total_referral_value_by_currency)}
                             </div>
                           )}
                         </div>

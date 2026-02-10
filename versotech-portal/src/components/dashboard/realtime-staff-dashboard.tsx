@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
@@ -266,63 +265,6 @@ export function RealtimeStaffDashboard({
 
   return (
     <div className={cn("space-y-4", className)}>
-      {/* Connection Status Bar */}
-      <Card className="bg-white/95 dark:bg-black/95 border-gray-200 dark:border-white/10">
-        <CardContent className="p-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                {isConnected ? (
-                  <>
-                    <Wifi className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    <span className="text-xs text-emerald-700 dark:text-emerald-200">Real-time connected</span>
-                  </>
-                ) : (
-                  <>
-                    <WifiOff className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                    <span className="text-xs text-amber-700 dark:text-amber-200">Connecting...</span>
-                  </>
-                )}
-              </div>
-              <Badge variant="outline" className="text-[10px] border-gray-300 dark:border-white/10 text-gray-500 dark:text-slate-400">
-                Last updated: {new Date(metrics.lastUpdated).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
-              </Badge>
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 px-2 text-xs border-gray-300 dark:border-white/10 text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-white/10"
-              onClick={handleManualRefresh}
-              disabled={isRefreshing}
-            >
-              <RefreshCw className={cn("h-3 w-3 mr-1", isRefreshing && "animate-spin")} />
-              Refresh
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Live Metrics Display */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label: 'Active LPs', value: metrics.activeLps, color: 'text-sky-600 dark:text-sky-400' },
-          { label: 'Pending KYC', value: metrics.pendingKyc, color: 'text-amber-600 dark:text-amber-400' },
-          { label: 'Active Deals', value: metrics.activeDeals, color: 'text-purple-600 dark:text-purple-400' },
-          { label: 'Compliance', value: `${metrics.complianceRate}%`, color: 'text-emerald-600 dark:text-emerald-400' }
-        ].map((metric) => (
-          <div
-            key={metric.label}
-            className="p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-white/50 dark:bg-black/50 backdrop-blur"
-          >
-            <div className="text-xs text-gray-500 dark:text-slate-500 mb-1">{metric.label}</div>
-            <div className={cn("text-2xl font-bold", metric.color)}>
-              {metric.value}
-            </div>
-          </div>
-        ))}
-      </div>
-
       {/* Recent Real-time Updates */}
       {realtimeUpdates.length > 0 && (
         <Card className="bg-white/95 dark:bg-black/95 border-gray-200 dark:border-white/10">
@@ -352,6 +294,39 @@ export function RealtimeStaffDashboard({
           </CardContent>
         </Card>
       )}
+
+      {/* Connection Status Bar - bottom of page */}
+      <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-white/50 dark:bg-black/50">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {isConnected ? (
+              <>
+                <Wifi className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-xs text-emerald-700 dark:text-emerald-200">Real-time connected</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                <span className="text-xs text-amber-700 dark:text-amber-200">Connecting...</span>
+              </>
+            )}
+          </div>
+          <span className="text-[10px] text-gray-400 dark:text-slate-500">
+            Last updated: {new Date(metrics.lastUpdated).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
+          </span>
+        </div>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-xs text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
+          onClick={handleManualRefresh}
+          disabled={isRefreshing}
+        >
+          <RefreshCw className={cn("h-3 w-3 mr-1", isRefreshing && "animate-spin")} />
+          Refresh
+        </Button>
+      </div>
     </div>
   )
 }

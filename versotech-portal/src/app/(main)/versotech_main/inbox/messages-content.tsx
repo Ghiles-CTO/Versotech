@@ -31,6 +31,13 @@ export default function MessagesContent() {
 
         setCurrentUserId(user.id)
 
+        // Ensure the default compliance chat thread exists for investors.
+        // This is safe to call on every load; the server will no-op if already created.
+        await fetch('/api/compliance/agent-chat/ensure-default', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        }).catch(() => null)
+
         // Fetch conversations
         const { data, error: fetchError } = await supabase
           .from('conversations')

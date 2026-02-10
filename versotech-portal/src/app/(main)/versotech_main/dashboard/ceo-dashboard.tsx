@@ -26,11 +26,11 @@ interface CEODashboardProps {
 export function CEODashboard({ dashboardData, realtimeMetrics }: CEODashboardProps) {
   return (
     <div className="space-y-6">
-      {/* Real-time connection and live metrics */}
-      <RealtimeStaffDashboard initialData={realtimeMetrics} />
-
       {/* Main comprehensive dashboard */}
       <EnhancedStaffDashboard initialData={dashboardData} />
+
+      {/* Real-time connection status - bottom of page */}
+      <RealtimeStaffDashboard initialData={realtimeMetrics} />
     </div>
   )
 }

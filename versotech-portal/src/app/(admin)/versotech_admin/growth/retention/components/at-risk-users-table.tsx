@@ -16,6 +16,8 @@ import {
 import { AlertTriangle, Mail, ExternalLink, UserX } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
+import { currencyTotalsEntries } from '@/lib/currency-totals'
+import { formatCurrency } from '@/lib/format'
 
 interface AtRiskUser {
   id: string
@@ -23,6 +25,7 @@ interface AtRiskUser {
   email: string
   lastActive: string
   totalInvested: number
+  totalInvestedByCurrency?: Record<string, number>
 }
 
 interface RetentionData {
@@ -33,15 +36,18 @@ interface AtRiskUsersTableProps {
   days: string
 }
 
-// Format currency values
-function formatCurrency(value: number): string {
-  if (value >= 1000000) {
-    return `$${(value / 1000000).toFixed(1)}M`
+function formatInvestmentDisplay(user: AtRiskUser): string {
+  const entries = currencyTotalsEntries(user.totalInvestedByCurrency || {})
+  if (entries.length === 0) {
+    return user.totalInvested > 0 ? user.totalInvested.toLocaleString() : '-'
   }
-  if (value >= 1000) {
-    return `$${(value / 1000).toFixed(0)}K`
+  if (entries.length === 1) {
+    const [currency, amount] = entries[0]
+    return formatCurrency(amount, currency)
   }
-  return `$${value.toLocaleString()}`
+  return entries
+    .map(([currency, amount]) => `${currency} ${formatCurrency(amount, currency)}`)
+    .join(' / ')
 }
 
 // Get initials from name
@@ -58,6 +64,8 @@ export function AtRiskUsersTable({ days }: AtRiskUsersTableProps) {
   const [users, setUsers] = useState<AtRiskUser[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const pageSize = 15
 
   useEffect(() => {
     async function fetchData() {
@@ -82,6 +90,10 @@ export function AtRiskUsersTable({ days }: AtRiskUsersTableProps) {
     }
 
     fetchData()
+  }, [days])
+
+  useEffect(() => {
+    setPage(1)
   }, [days])
 
   if (loading) {
@@ -165,6 +177,13 @@ export function AtRiskUsersTable({ days }: AtRiskUsersTableProps) {
     )
   }
 
+  const totalRows = users.length
+  const totalPages = Math.max(1, Math.ceil(totalRows / pageSize))
+  const safePage = Math.min(page, totalPages)
+  const startIndex = (safePage - 1) * pageSize
+  const endIndex = Math.min(startIndex + pageSize, totalRows)
+  const pagedUsers = users.slice(startIndex, endIndex)
+
   return (
     <Card>
       <CardHeader>
@@ -195,7 +214,7 @@ export function AtRiskUsersTable({ days }: AtRiskUsersTableProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
+              {pagedUsers.map((user) => (
                 <TableRow key={user.id}>
                   {/* User Column */}
                   <TableCell>
@@ -228,7 +247,7 @@ export function AtRiskUsersTable({ days }: AtRiskUsersTableProps) {
                   {/* Total Invested Column */}
                   <TableCell className="text-right">
                     <span className="font-medium">
-                      {user.totalInvested > 0 ? formatCurrency(user.totalInvested) : '-'}
+                      {formatInvestmentDisplay(user)}
                     </span>
                   </TableCell>
 
@@ -251,6 +270,32 @@ export function AtRiskUsersTable({ days }: AtRiskUsersTableProps) {
               ))}
             </TableBody>
           </Table>
+        </div>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+          <span>
+            Showing {totalRows === 0 ? 0 : startIndex + 1}-{endIndex} of {totalRows}
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={safePage <= 1}
+            >
+              Previous
+            </Button>
+            <span>
+              Page {safePage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              disabled={safePage >= totalPages}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

@@ -33,6 +33,30 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    const addCurrencyTotal = (
+      totals: Record<string, number>,
+      currency: string | null | undefined,
+      amount: number | null | undefined
+    ) => {
+      const code = (currency || 'USD').toUpperCase()
+      const value = Number(amount) || 0
+      totals[code] = (totals[code] || 0) + value
+    }
+
+    const grandTotalsByCurrency = {
+      total_commitment: {} as Record<string, number>,
+      total_funded: {} as Record<string, number>,
+      total_outstanding: {} as Record<string, number>,
+      total_nav: {} as Record<string, number>,
+      total_capital_calls: {} as Record<string, number>,
+      total_distributions: {} as Record<string, number>,
+      total_spread_fees: {} as Record<string, number>,
+      total_subscription_fees: {} as Record<string, number>,
+      total_bd_fees: {} as Record<string, number>,
+      total_finra_fees: {} as Record<string, number>,
+      total_fees: {} as Record<string, number>,
+    }
+
     // Group by vehicle and aggregate
     const vehicleMap = new Map<string, any>()
 
@@ -109,6 +133,25 @@ export async function GET(request: NextRequest) {
       vehicle.total_bd_fees += Number(sub.bd_fee_amount) || 0
       vehicle.total_finra_fees += Number(sub.finra_fee_amount) || 0
 
+      const currency = sub.currency || 'USD'
+      const totalFeesForSubscription =
+        (Number(sub.spread_fee_amount) || 0) +
+        (Number(sub.subscription_fee_amount) || 0) +
+        (Number(sub.bd_fee_amount) || 0) +
+        (Number(sub.finra_fee_amount) || 0)
+
+      addCurrencyTotal(grandTotalsByCurrency.total_commitment, currency, sub.commitment)
+      addCurrencyTotal(grandTotalsByCurrency.total_funded, currency, sub.funded_amount)
+      addCurrencyTotal(grandTotalsByCurrency.total_outstanding, currency, sub.outstanding_amount)
+      addCurrencyTotal(grandTotalsByCurrency.total_nav, currency, sub.current_nav)
+      addCurrencyTotal(grandTotalsByCurrency.total_capital_calls, currency, sub.capital_calls_total)
+      addCurrencyTotal(grandTotalsByCurrency.total_distributions, currency, sub.distributions_total)
+      addCurrencyTotal(grandTotalsByCurrency.total_spread_fees, currency, sub.spread_fee_amount)
+      addCurrencyTotal(grandTotalsByCurrency.total_subscription_fees, currency, sub.subscription_fee_amount)
+      addCurrencyTotal(grandTotalsByCurrency.total_bd_fees, currency, sub.bd_fee_amount)
+      addCurrencyTotal(grandTotalsByCurrency.total_finra_fees, currency, sub.finra_fee_amount)
+      addCurrencyTotal(grandTotalsByCurrency.total_fees, currency, totalFeesForSubscription)
+
       // Count subscriptions and investors
       vehicle.subscription_count++
       if (sub.investor_id) {
@@ -175,7 +218,8 @@ export async function GET(request: NextRequest) {
         total_outstanding: vehicleSummaries.reduce((sum, v) => sum + v.total_outstanding, 0),
         total_nav: vehicleSummaries.reduce((sum, v) => sum + v.total_nav, 0),
         total_subscriptions: vehicleSummaries.reduce((sum, v) => sum + v.subscription_count, 0),
-      }
+      },
+      grand_totals_by_currency: grandTotalsByCurrency,
     })
   } catch (error) {
     console.error('Vehicle summary API error:', error)

@@ -18,11 +18,28 @@ const INITIAL_FILTERS: ConversationFilters = {
   type: 'all',
 }
 
+function resolveAvailableMessagingHeight(target: HTMLElement): number {
+  const mainElement = target.closest('main')
+  if (!mainElement) return 720
+  const mainRect = mainElement.getBoundingClientRect()
+  const targetRect = target.getBoundingClientRect()
+  const offsetWithinMain = Math.max(0, targetRect.top - mainRect.top)
+  return Math.max(320, mainRect.height - offsetWithinMain)
+}
+
+function resetMainScrollPosition(target: HTMLElement) {
+  const mainElement = target.closest('main')
+  if (!mainElement) return
+  mainElement.scrollTo({ top: 0, behavior: 'auto' })
+}
+
 export function InvestorMessagingClient({ currentUserId, initialConversations }: InvestorMessagingClientProps) {
   const [conversations, setConversations] = useState<ConversationSummary[]>(initialConversations)
   const [activeConversationId, setActiveConversationId] = useState<string | null>(initialConversations[0]?.id || null)
   const [filters, setFilters] = useState<ConversationFilters>(INITIAL_FILTERS)
   const [isLoading, setIsLoading] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerHeight, setContainerHeight] = useState<number | null>(null)
 
   // Ref to track active conversation without recreating subscriptions
   const activeConversationIdRef = useRef(activeConversationId)
@@ -56,6 +73,39 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
     markConversationRead(conversationId).catch(console.error)
   }, [])
 
+  useEffect(() => {
+    const element = containerRef.current
+    if (!element) return
+
+    resetMainScrollPosition(element)
+
+    const updateHeight = () => {
+      const target = containerRef.current
+      if (!target) return
+      const available = resolveAvailableMessagingHeight(target)
+      setContainerHeight(available)
+    }
+
+    updateHeight()
+    requestAnimationFrame(updateHeight)
+    const handleResize = () => requestAnimationFrame(updateHeight)
+    window.addEventListener('resize', handleResize)
+
+    const resizeObserver = typeof ResizeObserver === 'undefined'
+      ? null
+      : new ResizeObserver(() => requestAnimationFrame(updateHeight))
+
+    const mainElement = element.closest('main')
+    if (resizeObserver && mainElement) {
+      resizeObserver.observe(mainElement)
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      resizeObserver?.disconnect()
+    }
+  }, [])
+
   // Load initial conversations
   useEffect(() => {
     void loadConversations(filters)
@@ -63,8 +113,6 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
 
   // Global realtime subscription for conversations and messages
   useEffect(() => {
-    console.log('[Investor Messages] Setting up realtime subscription')
-
     const supabase = createClient()
     const channel = supabase
       .channel('investor_conversations_all')
@@ -73,7 +121,6 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
         schema: 'public',
         table: 'conversations'
       }, () => {
-        console.log('[Realtime] New conversation created, refreshing list')
         void fetchConversationsClient({ ...filters, includeMessages: true, limit: 50 })
           .then(({ conversations: data }) => {
             setConversations(data)
@@ -89,7 +136,6 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
         // This updates preview text, timestamps, and unread counts
         const messageConvId = (payload.new as { conversation_id?: string })?.conversation_id
         if (messageConvId && messageConvId !== activeConversationIdRef.current) {
-          console.log('[Realtime] New message in background conversation, refreshing list')
           void fetchConversationsClient({ ...filters, includeMessages: true, limit: 50 })
             .then(({ conversations: data }) => {
               setConversations(data)
@@ -97,18 +143,19 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
             .catch(console.error)
         }
       })
-      .subscribe((status) => {
-        console.log('[Realtime] Subscription status:', status)
-      })
+      .subscribe()
 
     return () => {
-      console.log('[Investor Messages] Cleaning up realtime subscription')
       supabase.removeChannel(channel)
     }
   }, [filters])
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+    <div
+      ref={containerRef}
+      className="flex min-h-0 overflow-hidden"
+      style={containerHeight ? { height: `${containerHeight}px` } : undefined}
+    >
       <InvestorContacts
         conversations={conversations}
         filters={filters}
@@ -117,13 +164,16 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
         onSelectConversation={handleSelectConversation}
         activeConversationId={activeConversationId}
         isLoading={isLoading}
+        currentUserId={currentUserId}
       />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         {activeConversation ? (
           <ConversationView
             key={activeConversation.id}
             conversation={activeConversation}
             currentUserId={currentUserId}
+            showAssistantBadge={false}
+            showComplianceControls={false}
             onRead={() => markConversationRead(activeConversation.id)}
             onError={message => toast.error(message)}
             onDelete={(id) => {

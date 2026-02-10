@@ -5,9 +5,11 @@ import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   flexRender,
   ColumnDef,
   SortingState,
+  PaginationState,
 } from '@tanstack/react-table'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -22,6 +24,8 @@ import {
 } from '@/components/ui/table'
 import { ArrowUpDown, Users, TrendingUp, Clock, DollarSign } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { currencyTotalsEntries } from '@/lib/currency-totals'
+import { formatCurrency } from '@/lib/format'
 
 interface Cohort {
   cohortName: string
@@ -29,6 +33,7 @@ interface Cohort {
   activationRate: number
   investmentRate: number
   avgInvestment: number
+  avgInvestmentByCurrency?: Record<string, number>
   avgTimeToFirstInvestment: number | null
   retention30d: number
   retention60d: number
@@ -39,15 +44,18 @@ interface CohortsDataTableProps {
   groupBy: string
 }
 
-// Format currency values
-function formatCurrency(value: number): string {
-  if (value >= 1000000) {
-    return `$${(value / 1000000).toFixed(1)}M`
+function formatAverageInvestment(cohort: Cohort): string {
+  const entries = currencyTotalsEntries(cohort.avgInvestmentByCurrency || {})
+  if (entries.length === 0) {
+    return cohort.avgInvestment > 0 ? cohort.avgInvestment.toLocaleString() : '-'
   }
-  if (value >= 1000) {
-    return `$${(value / 1000).toFixed(0)}K`
+  if (entries.length === 1) {
+    const [currency, amount] = entries[0]
+    return formatCurrency(amount, currency)
   }
-  return `$${value.toLocaleString()}`
+  return entries
+    .map(([currency, amount]) => `${currency} ${formatCurrency(amount, currency)}`)
+    .join(' / ')
 }
 
 // Get retention color class based on percentage
@@ -76,6 +84,10 @@ export function CohortsDataTable({ groupBy }: CohortsDataTableProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [sorting, setSorting] = useState<SortingState>([])
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  })
 
   useEffect(() => {
     async function fetchData() {
@@ -101,6 +113,13 @@ export function CohortsDataTable({ groupBy }: CohortsDataTableProps) {
 
     fetchData()
   }, [groupBy])
+
+  useEffect(() => {
+    setPagination((current) => ({
+      ...current,
+      pageIndex: 0,
+    }))
+  }, [groupBy, cohorts?.length])
 
   const columns: ColumnDef<Cohort>[] = useMemo(
     () => [
@@ -193,11 +212,10 @@ export function CohortsDataTable({ groupBy }: CohortsDataTableProps) {
           </Button>
         ),
         cell: ({ row }) => {
-          const value = row.getValue('avgInvestment') as number
           return (
             <div className="flex items-center gap-1">
               <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
-              <span>{value > 0 ? formatCurrency(value) : '-'}</span>
+              <span>{formatAverageInvestment(row.original)}</span>
             </div>
           )
         },
@@ -296,9 +314,12 @@ export function CohortsDataTable({ groupBy }: CohortsDataTableProps) {
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     state: {
       sorting,
+      pagination,
     },
   })
 
@@ -375,6 +396,9 @@ export function CohortsDataTable({ groupBy }: CohortsDataTableProps) {
   const totalUsers = cohorts.reduce((sum, c) => sum + c.size, 0)
   const avgActivation = cohorts.reduce((sum, c) => sum + c.activationRate, 0) / cohorts.length
   const avgInvestmentRate = cohorts.reduce((sum, c) => sum + c.investmentRate, 0) / cohorts.length
+  const totalRows = table.getPrePaginationRowModel().rows.length
+  const startRow = totalRows === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1
+  const endRow = Math.min((pagination.pageIndex + 1) * pagination.pageSize, totalRows)
 
   return (
     <div className="space-y-4">
@@ -449,6 +473,43 @@ export function CohortsDataTable({ groupBy }: CohortsDataTableProps) {
                 ))}
               </TableBody>
             </Table>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+            <span>
+              Showing {startRow}-{endRow} of {totalRows}
+            </span>
+            <div className="flex items-center gap-2">
+              <select
+                value={String(pagination.pageSize)}
+                onChange={(event) => {
+                  table.setPageSize(Number(event.target.value))
+                }}
+                className="rounded-md border border-input bg-background px-2 py-1 text-xs"
+              >
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+              </select>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                Previous
+              </Button>
+              <span>
+                Page {pagination.pageIndex + 1} of {table.getPageCount()}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                Next
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

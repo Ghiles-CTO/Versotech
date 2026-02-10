@@ -610,7 +610,7 @@ export function TasksPageClient({
         {/* Sections */}
         {staffCreatedTasks.length > 0 && (
           <TaskSection
-            title="Created by VERSO Holdings for you"
+            title="Created by V E R S O for you"
             icon={User}
             tasks={staffCreatedTasks}
             sectionKey="staffCreated"
