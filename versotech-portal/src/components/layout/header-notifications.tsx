@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/components/theme-provider'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 
 type NotificationItem = {
   id: string
@@ -192,9 +193,17 @@ export function HeaderNotifications({ href, userId, userRole }: HeaderNotificati
                     </div>
                     {item.agent?.name && (
                       <div className={cn(
-                        'text-[10px] mt-1',
+                        'text-[10px] mt-1 flex items-center gap-1',
                         isDark ? 'text-gray-400' : 'text-gray-500'
                       )}>
+                        <Avatar className="h-4 w-4">
+                          {item.agent.avatar_url && (
+                            <AvatarImage src={item.agent.avatar_url} alt={item.agent.name} />
+                          )}
+                          <AvatarFallback className="text-[6px]">
+                            {item.agent.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
                         From {item.agent.name}
                       </div>
                     )}

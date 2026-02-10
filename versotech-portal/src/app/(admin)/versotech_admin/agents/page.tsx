@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 import { getCurrentUser } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
@@ -1697,9 +1698,9 @@ export default async function AgentsPage({
     }
   })
 
-  const agentNameMap = new Map<string, string>()
+  const agentNameMap = new Map<string, { name: string; avatar_url: string | null }>()
   agents.forEach((agent) => {
-    agentNameMap.set(agent.id, agent.name)
+    agentNameMap.set(agent.id, { name: agent.name, avatar_url: agent.avatar_url })
   })
 
   const investorOptions = Array.from(investorNameMap.entries()).sort((a, b) =>
@@ -1716,10 +1717,9 @@ export default async function AgentsPage({
       metadata.actor_name ||
       metadata.actor_email ||
       (log.created_by ? `User ${log.created_by.slice(0, 6)}` : 'System')
-    const agentLabel =
-      (log.agent_id ? agentNameMap.get(log.agent_id) : null) ||
-      metadata.agent_name ||
-      '—'
+    const agentInfo = log.agent_id ? agentNameMap.get(log.agent_id) : null
+    const agentLabel = agentInfo?.name || metadata.agent_name || '—'
+    const agentAvatarUrl = agentInfo?.avatar_url ?? null
     const entityLabel =
       (log.related_investor_id ? investorNameMap.get(log.related_investor_id) : null) ||
       (log.related_deal_id ? dealNameMap.get(log.related_deal_id) : null) ||
@@ -1733,6 +1733,7 @@ export default async function AgentsPage({
       description: log.description || metadata.description || '—',
       actor: actorLabel,
       agent: agentLabel,
+      agentAvatarUrl,
       entity: entityLabel,
     }
   })
@@ -1765,6 +1766,7 @@ export default async function AgentsPage({
       participants: participants.length ? participants.join(', ') : '—',
       status,
       assignedAgent: assignedAgent?.name || 'Wayne O\'Connor',
+      assignedAgentAvatarUrl: assignedAgent?.avatar_url ?? null,
       firstContactAt,
       firstContactState: firstContactAt ? 'Started' : 'Awaiting investor first message',
       lastMessageAt: conversation.last_message_at || conversation.created_at,
@@ -4716,7 +4718,19 @@ export default async function AgentsPage({
                             <div className="mt-1 text-xs text-muted-foreground">{row.preview}</div>
                           </td>
                           <td className="px-3 py-3 text-muted-foreground">{row.participants}</td>
-                          <td className="px-3 py-3 text-muted-foreground">{row.assignedAgent}</td>
+                          <td className="px-3 py-3 text-muted-foreground">
+                            <div className="flex items-center gap-1.5">
+                              <Avatar className="h-5 w-5">
+                                {row.assignedAgentAvatarUrl && (
+                                  <AvatarImage src={row.assignedAgentAvatarUrl} alt={row.assignedAgent} />
+                                )}
+                                <AvatarFallback className="text-[8px]">
+                                  {row.assignedAgent.split(' ').map((w: string) => w[0]).join('').slice(0, 2)}
+                                </AvatarFallback>
+                              </Avatar>
+                              {row.assignedAgent}
+                            </div>
+                          </td>
                           <td className="px-3 py-3">
                             <Badge variant="outline" className="capitalize">
                               {row.status}
@@ -4835,7 +4849,17 @@ export default async function AgentsPage({
                               </Badge>
                             </td>
                             <td className="px-3 py-3 text-muted-foreground">
-                              {assignedAgent?.name || 'Auto (Wayne)'}
+                              <div className="flex items-center gap-1.5">
+                                <Avatar className="h-5 w-5">
+                                  {assignedAgent?.avatar_url && (
+                                    <AvatarImage src={assignedAgent.avatar_url} alt={assignedAgent.name} />
+                                  )}
+                                  <AvatarFallback className="text-[8px]">
+                                    {(assignedAgent?.name || 'WO').split(' ').map((w: string) => w[0]).join('').slice(0, 2)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                {assignedAgent?.name || 'Auto (Wayne)'}
+                              </div>
                             </td>
                             <td className="px-3 py-3 text-muted-foreground">
                               {formatDate(compliance.flagged_at || conversation.last_message_at || conversation.created_at)}
@@ -5049,7 +5073,21 @@ export default async function AgentsPage({
                           </td>
                           <td className="px-3 py-3 text-muted-foreground">{row.description}</td>
                           <td className="px-3 py-3 text-muted-foreground">{row.entity}</td>
-                          <td className="px-3 py-3 text-muted-foreground">{row.agent}</td>
+                          <td className="px-3 py-3 text-muted-foreground">
+                            {row.agent !== '—' ? (
+                              <div className="flex items-center gap-1.5">
+                                <Avatar className="h-5 w-5">
+                                  {row.agentAvatarUrl && (
+                                    <AvatarImage src={row.agentAvatarUrl} alt={row.agent} />
+                                  )}
+                                  <AvatarFallback className="text-[8px]">
+                                    {row.agent.split(' ').map((w: string) => w[0]).join('').slice(0, 2)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                {row.agent}
+                              </div>
+                            ) : '—'}
+                          </td>
                           <td className="px-3 py-3 text-muted-foreground">{row.actor}</td>
                         </tr>
                       ))}

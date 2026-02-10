@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils'
 import { usePersona } from '@/contexts/persona-context'
 import { useTheme } from '@/components/theme-provider'
 import { createClient } from '@/lib/supabase/client'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import {
   Bell,
   CheckSquare,
@@ -405,9 +406,17 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
                       )}
                       {item.agent?.name && (
                         <div className={cn(
-                          "text-[10px] mt-1",
+                          "text-[10px] mt-1 flex items-center gap-1",
                           isDark ? "text-gray-400" : "text-gray-500"
                         )}>
+                          <Avatar className="h-4 w-4">
+                            {item.agent.avatar_url && (
+                              <AvatarImage src={item.agent.avatar_url} alt={item.agent.name} />
+                            )}
+                            <AvatarFallback className="text-[6px]">
+                              {item.agent.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
+                            </AvatarFallback>
+                          </Avatar>
                           From {item.agent.name}
                         </div>
                       )}

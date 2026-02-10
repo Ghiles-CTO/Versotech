@@ -50,6 +50,9 @@ export type NotificationType =
   // Deal share types (PRD Rows 95-96)
   | 'deal_shared'
   | 'partner_deal_share'
+  // Compliance types (agent-branded)
+  | 'risk_alert'
+  | 'compliance_question'
 
 export interface CreateNotificationParams {
   /** The user_id (profile) to notify */
@@ -79,6 +82,8 @@ export interface CreateNotificationParams {
 const DEFAULT_AGENT_TASK_BY_TYPE: Partial<Record<NotificationType, string>> = {
   kyc_status: 'V002',
   nda_complete: 'V001',
+  risk_alert: 'U002',
+  compliance_question: 'W001',
 }
 
 // Notification types that should trigger email notifications
