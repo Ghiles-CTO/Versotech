@@ -52,8 +52,7 @@ interface StageDefinition {
 }
 
 const COMMON_STAGES: StageDefinition[] = [
-  { name: 'Received', key: 'received', index: 1 },
-  { name: 'Viewed', key: 'viewed', index: 2 }
+  { name: 'Viewed', key: 'viewed', index: 1 }
 ]
 
 const NDA_BRANCH_STAGES: StageDefinition[] = [
@@ -69,11 +68,9 @@ const MERGE_STAGE: StageDefinition = {
 }
 
 const POST_MERGE_STAGES: StageDefinition[] = [
-  { name: 'Subscription Pack', key: 'pack_generated', index: 6 },
-  { name: 'Pack Sent', key: 'pack_sent', index: 7 },
-  { name: 'Signed', key: 'signed', index: 8 },
-  { name: 'Funded', key: 'funded', index: 9 },
-  { name: 'Active', key: 'active', index: 10 }
+  { name: 'Subscription Pack Signed', key: 'signed', index: 4 },
+  { name: 'Funded', key: 'funded', index: 5 },
+  { name: 'Completed', key: 'active', index: 6 }
 ]
 
 const DATA_ROOM_STAGE_ORDER: StageDefinition[] = [
@@ -193,12 +190,6 @@ export function InvestorJourneyBar({
   }
 
   const route = detectRoute(effectiveSummary, subscriptionSubmittedAt)
-  const stagesForRoute =
-    route === 'direct_subscribe'
-      ? DIRECT_ROUTE_STAGES
-      : route === 'choose'
-        ? CHOOSE_ROUTE_STAGES
-        : DATA_ROOM_ROUTE_STAGES
   const showRouteLabels = !compact
 
   const getCurrentIndex = (stageList: StageDefinition[]) => {
@@ -382,8 +373,7 @@ export function InvestorJourneyBar({
   )
 
   const renderSplitBar = (label: string) => {
-    const receivedStage = COMMON_STAGES[0]
-    const viewedStage = COMMON_STAGES[1]
+    const viewedStage = COMMON_STAGES[0]
 
     const accessStage = NDA_BRANCH_STAGES[0]
     const ndaSignedStage = NDA_BRANCH_STAGES[1]
@@ -391,34 +381,26 @@ export function InvestorJourneyBar({
 
     const mergeStage = MERGE_STAGE
 
-    const packGenStage = POST_MERGE_STAGES[0]
-    const packSentStage = POST_MERGE_STAGES[1]
-    const signedStage = POST_MERGE_STAGES[2]
-    const fundedStage = POST_MERGE_STAGES[3]
-    const activeStage = POST_MERGE_STAGES[4]
+    const subPackSignedStage = POST_MERGE_STAGES[0]
+    const fundedStage = POST_MERGE_STAGES[1]
+    const completedStage = POST_MERGE_STAGES[2]
 
     const nodeCol = 'minmax(96px, 1fr)'
     const lineCol = '16px'
     const dotCol = '16px'
     const branchCol = 'minmax(220px, 2fr)'
     const gridTemplateColumns = [
-      nodeCol,
-      lineCol,
-      nodeCol,
-      lineCol,
-      dotCol,
-      branchCol,
-      nodeCol,
-      lineCol,
-      nodeCol,
-      lineCol,
-      nodeCol,
-      lineCol,
-      nodeCol,
-      lineCol,
-      nodeCol,
-      lineCol,
-      nodeCol
+      nodeCol,    // Viewed
+      lineCol,    // line
+      dotCol,     // fork
+      branchCol,  // branch area
+      nodeCol,    // Confirm Interest
+      lineCol,    // line
+      nodeCol,    // Subscription Pack Signed
+      lineCol,    // line
+      nodeCol,    // Funded
+      lineCol,    // line
+      nodeCol     // Completed
     ].join(' ')
 
     return (
@@ -429,7 +411,7 @@ export function InvestorJourneyBar({
 
         {/* Branching layout */}
         <div className="relative overflow-x-auto">
-          <div ref={containerRef} className="relative min-w-[1100px] space-y-2">
+          <div ref={containerRef} className="relative min-w-[750px] space-y-2">
             {connectorPositions && (
               <svg className="absolute inset-0 w-full h-full pointer-events-none">
                 {(() => {
@@ -497,7 +479,7 @@ export function InvestorJourneyBar({
                 className={cn('grid items-center', muteNda && 'opacity-40')}
                 style={{ gridTemplateColumns }}
               >
-                <div className="relative flex items-center justify-center" style={{ gridColumn: '5 / 8' }}>
+                <div className="relative flex items-center justify-center" style={{ gridColumn: '3 / 6' }}>
                   <div ref={ndaRowRef} className="relative z-10 flex items-center bg-violet-50 dark:bg-violet-950/30 rounded-lg px-3 py-2 border border-violet-200 dark:border-violet-800">
                     <span className="text-[10px] font-semibold text-violet-600 dark:text-violet-400 mr-3 uppercase tracking-wide shrink-0">NDA</span>
                     {renderFlexNode(accessStage, dataRoomStatuses.interest_confirmed, muteNda, false)}
@@ -515,35 +497,29 @@ export function InvestorJourneyBar({
               className="grid items-center"
               style={{ gridTemplateColumns }}
             >
-              <div style={{ gridColumn: 1 }}>{renderFlexNode(receivedStage, sharedStatuses.received)}</div>
+              <div style={{ gridColumn: 1 }}>{renderFlexNode(viewedStage, sharedStatuses.viewed)}</div>
               <div style={{ gridColumn: 2 }}><HLine /></div>
-              <div style={{ gridColumn: 3 }}>{renderFlexNode(viewedStage, sharedStatuses.viewed)}</div>
-              <div style={{ gridColumn: 4 }}><HLine /></div>
 
               {/* Fork point with vertical connectors */}
-              <div className="relative flex items-center justify-center w-4 h-8" style={{ gridColumn: 5 }}>
+              <div className="relative flex items-center justify-center w-4 h-8" style={{ gridColumn: 3 }}>
                 <div ref={forkRef} className="w-2.5 h-2.5 rounded-full bg-border z-10" />
               </div>
 
-              <div style={{ gridColumn: 6 }}><FlexLine /></div>
+              <div style={{ gridColumn: 4 }}><FlexLine /></div>
 
               {/* Merge stage with vertical connectors */}
-              <div className="justify-self-center" style={{ gridColumn: 7 }}>
+              <div className="justify-self-center" style={{ gridColumn: 5 }}>
                 {renderFlexNode(mergeStage, sharedStatuses.subscription_requested, false, true, mergeBubbleRef)}
               </div>
 
-              <div style={{ gridColumn: 8 }}><HLine /></div>
+              <div style={{ gridColumn: 6 }}><HLine /></div>
 
               {/* Post-merge shared stages */}
-              <div style={{ gridColumn: 9 }}>{renderFlexNode(packGenStage, sharedStatuses.pack_generated)}</div>
+              <div style={{ gridColumn: 7 }}>{renderFlexNode(subPackSignedStage, sharedStatuses.signed)}</div>
+              <div style={{ gridColumn: 8 }}><HLine /></div>
+              <div style={{ gridColumn: 9 }}>{renderFlexNode(fundedStage, sharedStatuses.funded)}</div>
               <div style={{ gridColumn: 10 }}><HLine /></div>
-              <div style={{ gridColumn: 11 }}>{renderFlexNode(packSentStage, sharedStatuses.pack_sent)}</div>
-              <div style={{ gridColumn: 12 }}><HLine /></div>
-              <div style={{ gridColumn: 13 }}>{renderFlexNode(signedStage, sharedStatuses.signed)}</div>
-              <div style={{ gridColumn: 14 }}><HLine /></div>
-              <div style={{ gridColumn: 15 }}>{renderFlexNode(fundedStage, sharedStatuses.funded)}</div>
-              <div style={{ gridColumn: 16 }}><HLine /></div>
-              <div style={{ gridColumn: 17 }}>{renderFlexNode(activeStage, sharedStatuses.active)}</div>
+              <div style={{ gridColumn: 11 }}>{renderFlexNode(completedStage, sharedStatuses.active)}</div>
             </div>
 
             {/* Direct Path (bottom row) */}
@@ -552,7 +528,7 @@ export function InvestorJourneyBar({
                 className={cn('grid items-center', muteDirect && 'opacity-40')}
                 style={{ gridTemplateColumns }}
               >
-                <div className="relative flex items-center justify-center" style={{ gridColumn: '5 / 8' }}>
+                <div className="relative flex items-center justify-center" style={{ gridColumn: '3 / 6' }}>
                   <div ref={directRowRef} className="relative z-10 flex items-center bg-amber-50 dark:bg-amber-950/30 rounded-lg px-3 py-2 border border-amber-200 dark:border-amber-800">
                     <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 mr-3 uppercase tracking-wide shrink-0">Direct</span>
                     <span className="text-xs font-medium text-amber-700 dark:text-amber-300">Direct Subscribe</span>
@@ -566,22 +542,10 @@ export function InvestorJourneyBar({
     )
   }
 
-  const currentRouteStages = stagesForRoute
-  const currentRouteIndex = getCurrentIndex(currentRouteStages)
-  const currentStageName = currentRouteStages[currentRouteIndex]?.name || 'Not started'
-
   return (
     <TooltipProvider>
       <div className={cn('w-full space-y-4', className)}>
         {renderSplitBar(getRouteLabel(route))}
-
-        {!compact && route !== 'choose' && (
-          <div className="text-center">
-            <span className="text-sm text-muted-foreground">
-              Current stage: {currentStageName}
-            </span>
-          </div>
-        )}
       </div>
     </TooltipProvider>
   )

@@ -326,7 +326,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <Building2 className="h-6 w-6 text-emerald-600" />
             <span className="text-lg font-light tracking-wide text-zinc-400">
-              VERSO <span className="font-bold text-zinc-200">HOLDINGS</span>
+              VERSOTECH
             </span>
           </div>
           
