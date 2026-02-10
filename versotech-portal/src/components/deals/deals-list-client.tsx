@@ -332,7 +332,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
             {deal.vehicles && (
                     <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground">
                       <Building2 className="h-4 w-4 flex-shrink-0" />
-                      <span>{deal.vehicles.name} ({deal.vehicles.type})</span>
+                      <span>{deal.vehicles.name}</span>
                     </div>
                   )}
 
