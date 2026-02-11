@@ -42,6 +42,11 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
+
+function formatUTC(dateStr: string, fmt: string) {
+  const d = new Date(dateStr)
+  return format(new Date(d.getTime() + d.getTimezoneOffset() * 60000), fmt)
+}
 import { AddCommercialPartnerModal } from '@/components/users/add-commercial-partner-modal'
 import { InviteUserDialog } from '@/components/users/invite-user-dialog'
 
@@ -445,7 +450,7 @@ export default function CommercialPartnersContent() {
                         <div className="flex items-center gap-1">
                           <FileText className="h-3 w-3 text-muted-foreground" />
                           <span className="text-sm">
-                            Expires {format(new Date(partner.contractEndDate), 'MMM d, yyyy')}
+                            Expires {formatUTC(partner.contractEndDate, 'MMM d, yyyy')}
                           </span>
                         </div>
                       ) : partner.contractStartDate ? (

@@ -81,7 +81,7 @@ function AlertItem({ alert }: { alert: ComplianceAlert }) {
         {alert.due_date && (
           <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
             <Calendar className="h-3 w-3" />
-            <span>Due: {new Date(alert.due_date).toLocaleDateString()}</span>
+            <span>Due: {new Date(alert.due_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}</span>
           </div>
         )}
       </div>

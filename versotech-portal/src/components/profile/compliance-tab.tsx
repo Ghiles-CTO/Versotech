@@ -19,6 +19,11 @@ import {
 import { format, differenceInDays, isPast, addDays } from 'date-fns'
 import { cn } from '@/lib/utils'
 
+function formatUTC(dateStr: string, fmt: string) {
+  const d = new Date(dateStr)
+  return format(new Date(d.getTime() + d.getTimezoneOffset() * 60000), fmt)
+}
+
 interface ComplianceData {
   aml_risk_rating: string | null
   aml_last_reviewed_at: string | null
@@ -96,7 +101,7 @@ function ExpiryBadge({ date, label }: { date: string | null, label: string }) {
       </div>
       <p className="text-sm text-muted-foreground flex items-center gap-1">
         <Calendar className="h-3 w-3" />
-        {format(new Date(date!), 'MMM dd, yyyy')}
+        {formatUTC(date!, 'MMM dd, yyyy')}
       </p>
     </div>
   )

@@ -105,8 +105,11 @@ export async function POST(request: NextRequest) {
         minimumFractionDigits: 0
       }).format(val)
 
-    const formatDate = (dateStr: string | null) =>
-      dateStr ? format(new Date(dateStr), 'yyyy-MM-dd') : ''
+    const formatDate = (dateStr: string | null) => {
+      if (!dateStr) return ''
+      const d = new Date(dateStr)
+      return format(new Date(d.getTime() + d.getTimezoneOffset() * 60000), 'yyyy-MM-dd')
+    }
 
     const rows = enrichedData.map(sub => [
       sub.subscription_number,

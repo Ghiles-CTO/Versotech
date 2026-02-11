@@ -560,7 +560,7 @@ export function ApprovalDetailDrawer({
                       {approval.entity_metadata.counterparty_entity.kyc_expiry_date && (
                         <div className="mt-2 pt-2 border-t border-border">
                           <p className="text-xs text-muted-foreground">
-                            Expires: {new Date(approval.entity_metadata.counterparty_entity.kyc_expiry_date).toLocaleDateString()}
+                            Expires: {new Date(approval.entity_metadata.counterparty_entity.kyc_expiry_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                           </p>
                         </div>
                       )}

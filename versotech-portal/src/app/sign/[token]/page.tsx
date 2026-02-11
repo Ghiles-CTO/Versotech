@@ -186,7 +186,7 @@ export default function SignPage() {
               <span className="text-muted-foreground">Expires:</span>
               <span className="font-medium text-foreground">
                 {signatureRequest?.expires_at
-                  ? new Date(signatureRequest.expires_at).toLocaleDateString()
+                  ? new Date(signatureRequest.expires_at).toLocaleDateString(undefined, { timeZone: 'UTC' })
                   : 'N/A'}
               </span>
             </div>

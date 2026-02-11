@@ -536,7 +536,7 @@ export function GenerateInvoiceModal({ open, onClose, onSuccess, preselectedInve
                             <span className="text-white">{formatAmount(event.computed_amount, event.currency || selectedSubscription?.currency)}</span>
                           </div>
                           <div className="text-sm text-gray-400">
-                            {new Date(event.event_date).toLocaleDateString()}
+                            {new Date(event.event_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                             {event.deal && ` • ${event.deal.name}`}
                           </div>
                         </div>

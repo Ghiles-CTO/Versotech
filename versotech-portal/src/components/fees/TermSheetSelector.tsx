@@ -150,7 +150,7 @@ export function TermSheetSelector({
                     <span>Version {ts.version}</span>
                     {ts.term_sheet_date && (
                       <span className="text-muted-foreground text-xs">
-                        ({new Date(ts.term_sheet_date).toLocaleDateString()})
+                        ({new Date(ts.term_sheet_date).toLocaleDateString(undefined, { timeZone: 'UTC' })})
                       </span>
                     )}
                   </div>

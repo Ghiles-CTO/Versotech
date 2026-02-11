@@ -325,7 +325,7 @@ export function ComplianceAlertsPanel({ isDark = true }: ComplianceAlertsPanelPr
                           <div className="flex items-center gap-2">
                             <Calendar className={cn('h-3 w-3', isDark ? 'text-zinc-400' : 'text-gray-500')} />
                             <span className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>
-                              {new Date(alert.due_date).toLocaleDateString()}
+                              {new Date(alert.due_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                             </span>
                             {alert.days_until_due !== undefined && (
                               <Badge

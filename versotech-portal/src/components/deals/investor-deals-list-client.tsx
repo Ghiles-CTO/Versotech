@@ -496,7 +496,7 @@ function formatDeadlineCopy(
   const now = new Date()
 
   if (effectiveStatus === 'closed' || closeDate < now) {
-    return `Closed ${closeDate.toLocaleDateString()}`
+    return `Closed ${closeDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}`
   }
 
   const diffMs = closeDate.getTime() - now.getTime()
@@ -514,7 +514,7 @@ function formatDeadlineCopy(
     return `Closes in ${diffDays} days`
   }
 
-  return `Closes ${closeDate.toLocaleDateString()}`
+  return `Closes ${closeDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}`
 }
 
 export function InvestorDealsListClient({
@@ -1399,7 +1399,7 @@ export function InvestorDealsListClient({
                       <p className="text-sm font-medium text-foreground">{deadlineCopy}</p>
                       {ndaAccess?.expires_at && (
                         <p className="text-xs text-muted-foreground">
-                          NDA access until {new Date(ndaAccess.expires_at).toLocaleDateString()}
+                          NDA access until {new Date(ndaAccess.expires_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                         </p>
                       )}
                     </div>
@@ -1642,7 +1642,7 @@ export function InvestorDealsListClient({
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
                       <CalendarClock className="h-4 w-4 text-muted-foreground" />
                       {deal.open_at
-                        ? `Opened ${new Date(deal.open_at).toLocaleDateString()}`
+                        ? `Opened ${new Date(deal.open_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}`
                         : 'Opening window announced soon'}
                     </div>
                     <div className="flex flex-wrap items-center gap-3">

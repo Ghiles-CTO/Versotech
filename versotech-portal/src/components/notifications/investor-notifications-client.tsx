@@ -607,7 +607,7 @@ export default function InvestorNotificationsClient({
                           )}
                           {task.due_at && (
                             <p className="text-xs text-muted-foreground">
-                              Due {new Date(task.due_at).toLocaleDateString()}
+                              Due {new Date(task.due_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                             </p>
                           )}
                         </div>

@@ -316,14 +316,14 @@ const formatWorkbookDate = (value?: string | number | null) => {
     const excelEpoch = new Date(1899, 11, 30)
     const computed = new Date(excelEpoch.getTime() + castNumber * 24 * 60 * 60 * 1000)
     if (!Number.isNaN(computed.getTime())) {
-      return computed.toLocaleDateString()
+      return computed.toLocaleDateString(undefined, { timeZone: 'UTC' })
     }
   }
 
   if (typeof value === 'string') {
     const parsed = new Date(value)
     if (!Number.isNaN(parsed.getTime())) {
-      return parsed.toLocaleDateString()
+      return parsed.toLocaleDateString(undefined, { timeZone: 'UTC' })
     }
   }
 
@@ -699,7 +699,7 @@ export function EntityDetailEnhanced({
     confirm(
       {
         title: 'Delete valuation?',
-        description: `This will permanently remove the valuation dated ${new Date(valuation.as_of_date).toLocaleDateString()}.`,
+        description: `This will permanently remove the valuation dated ${new Date(valuation.as_of_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}.`,
         confirmText: 'Delete',
         cancelText: 'Cancel',
         variant: 'destructive'
@@ -1159,7 +1159,7 @@ export function EntityDetailEnhanced({
       {
         label: 'Formation Date',
         value: entity.formation_date
-          ? new Date(entity.formation_date).toLocaleDateString()
+          ? new Date(entity.formation_date).toLocaleDateString(undefined, { timeZone: 'UTC' })
           : '—',
         icon: CalendarClock
       },
@@ -1495,7 +1495,7 @@ export function EntityDetailEnhanced({
                 <p className="text-muted-foreground">Formation Date</p>
                 <p className="text-foreground font-medium">
                   {entity.formation_date
-                    ? new Date(entity.formation_date).toLocaleDateString()
+                    ? new Date(entity.formation_date).toLocaleDateString(undefined, { timeZone: 'UTC' })
                     : '—'}
                 </p>
               </div>
@@ -1836,13 +1836,13 @@ export function EntityDetailEnhanced({
                                           <span>
                                             <span className="text-blue-300">Eff:</span>{' '}
                                             {holding.effective_date
-                                              ? new Date(holding.effective_date).toLocaleDateString()
+                                              ? new Date(holding.effective_date).toLocaleDateString(undefined, { timeZone: 'UTC' })
                                               : '—'}
                                           </span>
                                           <span>
                                             <span className="text-blue-300">Due:</span>{' '}
                                             {holding.funding_due_at
-                                              ? new Date(holding.funding_due_at).toLocaleDateString()
+                                              ? new Date(holding.funding_due_at).toLocaleDateString(undefined, { timeZone: 'UTC' })
                                               : '—'}
                                           </span>
                                         </div>
@@ -2211,10 +2211,10 @@ export function EntityDetailEnhanced({
                                 </div>
                                 <p className="text-xs text-gray-400 mt-1">
                                   Effective {stakeholder.effective_from
-                                    ? new Date(stakeholder.effective_from).toLocaleDateString()
+                                    ? new Date(stakeholder.effective_from).toLocaleDateString(undefined, { timeZone: 'UTC' })
                                     : 'unknown'}
                                   {stakeholder.effective_to &&
-                                    ` • Ended ${new Date(stakeholder.effective_to).toLocaleDateString()}`}
+                                    ` • Ended ${new Date(stakeholder.effective_to).toLocaleDateString(undefined, { timeZone: 'UTC' })}`}
                                 </p>
                                 {stakeholder.notes && (
                                   <p className="text-sm text-gray-400 mt-2">{stakeholder.notes}</p>
@@ -2298,10 +2298,10 @@ export function EntityDetailEnhanced({
                       <div className="text-xs text-gray-400 mt-2">
                         Effective{' '}
                         {director.effective_from
-                          ? new Date(director.effective_from).toLocaleDateString()
+                          ? new Date(director.effective_from).toLocaleDateString(undefined, { timeZone: 'UTC' })
                           : 'unknown'}
                         {director.effective_to &&
-                          ` • Ended ${new Date(director.effective_to).toLocaleDateString()}`}
+                          ` • Ended ${new Date(director.effective_to).toLocaleDateString(undefined, { timeZone: 'UTC' })}`}
                       </div>
                       {director.notes && (
                         <p className="text-sm text-gray-400 mt-2">{director.notes}</p>
@@ -2522,7 +2522,7 @@ export function EntityDetailEnhanced({
                       {valuations.map((valuation) => (
                         <tr key={valuation.id} className="border-b border-white/5 hover:bg-white/5">
                           <td className="py-3 px-4 text-sm">
-                            {new Date(valuation.as_of_date).toLocaleDateString()}
+                            {new Date(valuation.as_of_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                           </td>
                           <td className="py-3 px-4 text-sm text-right font-mono">
                             {valuation.nav_total
@@ -2663,7 +2663,7 @@ export function EntityDetailEnhanced({
                             </td>
                             <td className="py-3 px-4 text-sm">
                               {position.as_of_date
-                                ? new Date(position.as_of_date).toLocaleDateString()
+                                ? new Date(position.as_of_date).toLocaleDateString(undefined, { timeZone: 'UTC' })
                                 : '-'}
                             </td>
                             <td className="py-3 px-4 text-right">

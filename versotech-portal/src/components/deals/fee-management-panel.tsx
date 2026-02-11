@@ -232,7 +232,7 @@ export default function FeeManagementPanel({ dealId, dealName }: FeeManagementPa
                 </div>
                 <div className="text-sm text-muted-foreground mt-1">
                   Investor: {event.investors?.legal_name} • 
-                  Date: {new Date(event.event_date).toLocaleDateString()} •
+                  Date: {new Date(event.event_date).toLocaleDateString(undefined, { timeZone: 'UTC' })} •
                   Method: {event.fee_components?.calc_method} ({event.fee_components?.rate_bps} bps)
                 </div>
               </div>
@@ -265,7 +265,7 @@ export default function FeeManagementPanel({ dealId, dealName }: FeeManagementPa
                 </div>
                 <div className="text-sm text-muted-foreground mt-1">
                   Investor: {invoice.investors?.legal_name} • 
-                  Due: {new Date(invoice.due_date).toLocaleDateString()} •
+                  Due: {new Date(invoice.due_date).toLocaleDateString(undefined, { timeZone: 'UTC' })} •
                   Lines: {invoice.invoice_lines?.length || 0}
                 </div>
               </div>

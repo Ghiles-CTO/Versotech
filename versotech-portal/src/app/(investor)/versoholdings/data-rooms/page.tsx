@@ -43,7 +43,7 @@ function formatDate(value: string | null, fallback = 'Open ended') {
   if (!value) return fallback
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) return fallback
-  return parsed.toLocaleDateString()
+  return parsed.toLocaleDateString(undefined, { timeZone: 'UTC' })
 }
 
 function daysUntil(date: string | null) {

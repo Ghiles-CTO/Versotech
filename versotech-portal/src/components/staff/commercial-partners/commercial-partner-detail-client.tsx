@@ -23,6 +23,11 @@ import {
   CreditCard,
 } from 'lucide-react'
 import { formatDistanceToNow, format } from 'date-fns'
+
+function formatUTC(dateStr: string, fmt: string) {
+  const d = new Date(dateStr)
+  return format(new Date(d.getTime() + d.getTimezoneOffset() * 60000), fmt)
+}
 import { EditCommercialPartnerDialog } from '@/components/staff/commercial-partners/edit-commercial-partner-dialog'
 import { KYCDocumentsTab } from '@/components/shared/kyc-documents-tab'
 import { BankDetailsTab } from '@/components/shared/bank-details-tab'
@@ -377,7 +382,7 @@ export function CommercialPartnerDetailClient({
                     <p className="text-sm text-muted-foreground">Contract Start</p>
                     <p className="font-medium">
                       {partner.contract_start_date
-                        ? format(new Date(partner.contract_start_date), 'dd MMM yyyy')
+                        ? formatUTC(partner.contract_start_date, 'dd MMM yyyy')
                         : 'Not specified'}
                     </p>
                   </div>
@@ -385,7 +390,7 @@ export function CommercialPartnerDetailClient({
                     <p className="text-sm text-muted-foreground">Contract End</p>
                     <p className="font-medium">
                       {partner.contract_end_date
-                        ? format(new Date(partner.contract_end_date), 'dd MMM yyyy')
+                        ? formatUTC(partner.contract_end_date, 'dd MMM yyyy')
                         : 'Not specified'}
                     </p>
                   </div>

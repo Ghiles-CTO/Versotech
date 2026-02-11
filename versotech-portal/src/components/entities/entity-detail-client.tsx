@@ -189,7 +189,7 @@ export function EntityDetailClient({ entity: initialEntity, directors: initialDi
       {
         label: 'Formation Date',
         value: entity.formation_date
-          ? new Date(entity.formation_date).toLocaleDateString()
+          ? new Date(entity.formation_date).toLocaleDateString(undefined, { timeZone: 'UTC' })
           : '—',
         icon: CalendarClock
       },
@@ -511,8 +511,8 @@ export function EntityDetailClient({ entity: initialEntity, directors: initialDi
                         </Badge>
                       </div>
                       <div className="text-xs text-muted-foreground mt-2">
-                        Effective {director.effective_from ? new Date(director.effective_from).toLocaleDateString() : 'unknown'}
-                        {director.effective_to && ` • Ended ${new Date(director.effective_to).toLocaleDateString()}`}
+                        Effective {director.effective_from ? new Date(director.effective_from).toLocaleDateString(undefined, { timeZone: 'UTC' }) : 'unknown'}
+                        {director.effective_to && ` • Ended ${new Date(director.effective_to).toLocaleDateString(undefined, { timeZone: 'UTC' })}`}
                       </div>
                       {director.notes && (
                         <p className="text-sm text-muted-foreground mt-2">{director.notes}</p>

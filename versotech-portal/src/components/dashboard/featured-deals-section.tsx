@@ -101,7 +101,7 @@ function formatDeadlineCopy(closeAt: string | null, status: string) {
   const now = new Date()
 
   if (status === 'closed' || closeDate < now) {
-    return `Closed ${closeDate.toLocaleDateString()}`
+    return `Closed ${closeDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}`
   }
 
   const diffMs = closeDate.getTime() - now.getTime()
@@ -111,7 +111,7 @@ function formatDeadlineCopy(closeAt: string | null, status: string) {
   if (diffDays === 1) return 'Closes tomorrow'
   if (diffDays <= 14) return `Closes in ${diffDays} days`
 
-  return `Closes ${closeDate.toLocaleDateString()}`
+  return `Closes ${closeDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}`
 }
 
 function formatCurrency(amount: number | null, currency: string | null) {

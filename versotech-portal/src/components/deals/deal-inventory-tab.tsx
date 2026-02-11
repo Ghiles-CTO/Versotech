@@ -116,7 +116,7 @@ export function DealInventoryTab({ dealId, shareLots, inventorySummary, onRefres
                         <span>Remaining: {lot.units_remaining.toLocaleString()} units</span>
                         <span>Cost: {lot.currency} {lot.unit_cost.toFixed(2)}/unit</span>
                         {lot.acquired_at && (
-                          <span>Acquired: {new Date(lot.acquired_at).toLocaleDateString()}</span>
+                          <span>Acquired: {new Date(lot.acquired_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}</span>
                         )}
                       </div>
                     </div>

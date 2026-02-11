@@ -539,7 +539,7 @@ export function StaffEntityMembersTab({
                             </Badge>
                           ) : (
                             <span className="text-sm">
-                              {new Date(member.id_expiry_date).toLocaleDateString()}
+                              {new Date(member.id_expiry_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                             </span>
                           )}
                         </div>

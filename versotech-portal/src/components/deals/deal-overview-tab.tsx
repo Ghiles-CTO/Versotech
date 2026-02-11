@@ -337,7 +337,8 @@ export function DealOverviewTab({
                 {deal.open_at ? new Date(deal.open_at).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
-                  day: 'numeric'
+                  day: 'numeric',
+                  timeZone: 'UTC'
                 }) : '—'}
               </p>
             </div>
@@ -348,7 +349,8 @@ export function DealOverviewTab({
                 {deal.close_at ? new Date(deal.close_at).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
-                  day: 'numeric'
+                  day: 'numeric',
+                  timeZone: 'UTC'
                 }) : '—'}
               </p>
             </div>

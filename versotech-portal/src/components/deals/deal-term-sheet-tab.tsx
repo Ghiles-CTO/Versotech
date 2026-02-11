@@ -171,7 +171,7 @@ function mapTermSheetToForm(termSheet?: TermSheet): FormState {
     ? Number(String(termSheet.price_per_share_text).replace(/[^\d.]/g, ''))
     : null
   const formattedCompletionDate = termSheet.completion_date
-    ? `By ${format(new Date(termSheet.completion_date), 'MMMM d, yyyy')}`
+    ? `By ${formatUTC(termSheet.completion_date, 'MMMM d, yyyy')}`
     : ''
   return {
     term_sheet_date: termSheet.term_sheet_date ? termSheet.term_sheet_date.slice(0, 10) : '',
@@ -722,7 +722,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                     <CardDescription>
                       Published{' '}
                       {published.published_at ? format(new Date(published.published_at), 'dd MMM yyyy') : '—'}
-                      {published.term_sheet_date && <span className="ml-2">• Dated: {format(new Date(published.term_sheet_date), 'dd MMM yyyy')}</span>}
+                      {published.term_sheet_date && <span className="ml-2">• Dated: {formatUTC(published.term_sheet_date, 'dd MMM yyyy')}</span>}
                       {published.vehicle && <span className="ml-2">• {published.vehicle}</span>}
                     </CardDescription>
                   </div>
@@ -952,7 +952,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   <span className="text-muted-foreground block text-xs">Completion Date</span>
                   <span className="text-foreground font-medium">
                     {published.completion_date
-                      ? format(new Date(published.completion_date), 'dd MMM yyyy')
+                      ? formatUTC(published.completion_date, 'dd MMM yyyy')
                       : published.completion_date_text || '—'}
                   </span>
                 </div>
@@ -1059,7 +1059,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                 </CardTitle>
                 <CardDescription>
                   Created {format(new Date(termSheet.created_at), 'dd MMM yyyy')}
-                  {termSheet.term_sheet_date && ` • Term Sheet Date: ${format(new Date(termSheet.term_sheet_date), 'dd MMM yyyy')}`}
+                  {termSheet.term_sheet_date && ` • Term Sheet Date: ${formatUTC(termSheet.term_sheet_date, 'dd MMM yyyy')}`}
                 </CardDescription>
               </div>
               <Badge className={statusClasses[termSheet.status] ?? statusClasses.draft}>
@@ -1218,7 +1218,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                     <span className="text-muted-foreground block text-xs">Completion Date</span>
                     <span className="text-foreground font-medium">
                       {termSheet.completion_date
-                        ? format(new Date(termSheet.completion_date), 'dd MMM yyyy')
+                        ? formatUTC(termSheet.completion_date, 'dd MMM yyyy')
                         : termSheet.completion_date_text || '—'}
                     </span>
                   </div>

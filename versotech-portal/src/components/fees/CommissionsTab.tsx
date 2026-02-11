@@ -459,7 +459,7 @@ export default function CommissionsTab() {
                                 {(commission.rate_bps / 100).toFixed(2)}% of {formatCurrency(commission.base_amount, commission.currency)}
                                 {commission.payment_due_date && (
                                   <span className="ml-2">
-                                    • Due: {new Date(commission.payment_due_date).toLocaleDateString()}
+                                    • Due: {new Date(commission.payment_due_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                                   </span>
                                 )}
                               </p>

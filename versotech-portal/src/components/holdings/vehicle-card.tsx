@@ -287,7 +287,7 @@ export function VehicleCard({
                       </p>
                       <p className="text-xs text-muted-foreground flex items-center justify-end gap-1">
                         <Calendar className="h-3 w-3" />
-                        {new Date(holding.valuation.asOfDate).toLocaleDateString()}
+                        {new Date(holding.valuation.asOfDate).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                       </p>
                     </div>
                   </div>
@@ -320,7 +320,7 @@ export function VehicleCard({
                 )}
                 {holding.subscription?.funding_due_at && (
                   <p className="text-xs text-muted-foreground">
-                    Funding due {new Date(holding.subscription.funding_due_at).toLocaleDateString()}
+                    Funding due {new Date(holding.subscription.funding_due_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                   </p>
                 )}
                 {holding.invite_sent_at && (

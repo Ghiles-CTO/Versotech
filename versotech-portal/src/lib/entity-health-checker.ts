@@ -208,7 +208,7 @@ export function checkMetadataCompleteness(entity: Entity): HealthCheck[] {
       category: 'metadata',
       title: 'Formation Date',
       status: 'pass',
-      message: `Formed: ${new Date(entity.formation_date).toLocaleDateString()}`
+      message: `Formed: ${new Date(entity.formation_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}`
     })
   }
 

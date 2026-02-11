@@ -22,6 +22,11 @@ import {
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { SignatureCanvasWidget } from '@/components/signature/signature-canvas-widget'
+
+function formatUTC(dateStr: string, fmt: string) {
+  const d = new Date(dateStr)
+  return format(new Date(d.getTime() + d.getTimezoneOffset() * 60000), fmt)
+}
 import { InlinePdfViewer } from '@/components/signature/inline-pdf-viewer'
 import type { SignatureGroup, ExpiredSignature } from './page'
 import type { SignatureTask } from './page'
@@ -606,7 +611,7 @@ Action Required: ${task.instructions?.action_required || 'Send signature link to
                               {task.due_at && (
                                 <span className="flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
-                                  Due {format(new Date(task.due_at), 'MMM d, yyyy')}
+                                  Due {formatUTC(task.due_at, 'MMM d, yyyy')}
                                 </span>
                               )}
                               {task.instructions?.investor_email && (

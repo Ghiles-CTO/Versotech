@@ -383,7 +383,7 @@ export default function InvoicesTab() {
                                       {formatAmount(event.computed_amount, event.currency || subGroup.subscription?.currency)}
                                     </div>
                                     <div className="text-xs text-muted-foreground">
-                                      {new Date(event.event_date).toLocaleDateString()}
+                                      {new Date(event.event_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                                     </div>
                                   </div>
                                 </div>
@@ -497,7 +497,7 @@ export default function InvoicesTab() {
                             {formatAmount(invoice.total, getInvoiceCurrency(invoice))}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            Due: {new Date(invoice.due_date).toLocaleDateString()}
+                            Due: {new Date(invoice.due_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                             {invoice.balance_due && invoice.balance_due > 0 && (
                               <span className="ml-2">
                                 • Balance: {formatAmount(invoice.balance_due, getInvoiceCurrency(invoice))}

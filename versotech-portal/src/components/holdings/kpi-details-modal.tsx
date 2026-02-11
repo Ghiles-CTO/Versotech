@@ -247,7 +247,7 @@ export function KPIDetailsModal({
                     metadata.last_contribution_date ||
                     metadata.last_distribution_date ||
                     ''
-                  ).toLocaleDateString()}
+                  ).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                 </span>
               </div>
             )}
@@ -345,7 +345,7 @@ export function KPIDetailsModal({
                       {data.items.length} {data.items.length === 1 ? 'Item' : 'Items'}
                     </h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Total: <span className="font-medium">{config?.formatValue(data.total) || data.total.toLocaleString()}</span> • As of {new Date(data.asOfDate).toLocaleDateString()}
+                      Total: <span className="font-medium">{config?.formatValue(data.total) || data.total.toLocaleString()}</span> • As of {new Date(data.asOfDate).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                     </p>
                   </div>
                   {data.total > 0 && (

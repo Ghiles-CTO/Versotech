@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
     if (invoice.investor?.user_id) {
       const dueDate = new Date(invoice.due_date);
       const taskTitle = `Pay Invoice ${invoice_number}`;
-      const taskDescription = `Invoice ${invoice_number} for $${Number(invoice.total).toLocaleString()} is due on ${dueDate.toLocaleDateString()}. Please review and submit payment.`;
+      const taskDescription = `Invoice ${invoice_number} for $${Number(invoice.total).toLocaleString()} is due on ${dueDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}. Please review and submit payment.`;
 
       await supabase
         .from('tasks')

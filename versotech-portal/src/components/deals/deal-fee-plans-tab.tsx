@@ -369,7 +369,7 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
                               Term Sheet v{plan.term_sheet.version}
                               {plan.term_sheet.term_sheet_date && (
                                 <span className="text-muted-foreground ml-1">
-                                  ({new Date(plan.term_sheet.term_sheet_date).toLocaleDateString()})
+                                  ({new Date(plan.term_sheet.term_sheet_date).toLocaleDateString(undefined, { timeZone: 'UTC' })})
                                 </span>
                               )}
                             </span>

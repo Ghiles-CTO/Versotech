@@ -374,12 +374,12 @@ export function DealContextSelector({
             <div>Type: {getDealTypeLabel(selectedDeal.deal_type)}</div>
             {selectedDeal.open_at && (
               <div>
-                Opened: {new Date(selectedDeal.open_at).toLocaleDateString()}
+                Opened: {new Date(selectedDeal.open_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}
               </div>
             )}
             {selectedDeal.close_at && (
               <div>
-                Closes: {new Date(selectedDeal.close_at).toLocaleDateString()}
+                Closes: {new Date(selectedDeal.close_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}
               </div>
             )}
           </div>
