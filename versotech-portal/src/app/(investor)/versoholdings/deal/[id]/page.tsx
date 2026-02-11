@@ -544,6 +544,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                               day: 'numeric',
                               hour: 'numeric',
                               minute: '2-digit',
+                              timeZone: 'UTC',
                               timeZoneName: 'short'
                             })}
                           </p>
@@ -604,6 +605,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                               day: 'numeric',
                               hour: 'numeric',
                               minute: '2-digit',
+                              timeZone: 'UTC',
                               timeZoneName: 'short'
                             })}
                           </p>

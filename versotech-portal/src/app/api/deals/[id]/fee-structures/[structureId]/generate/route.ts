@@ -40,13 +40,15 @@ function formatDate(
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: 'numeric'
+      year: 'numeric',
+      timeZone: 'UTC'
     })
   }
   return date.toLocaleDateString('en-US', {
     month: 'long',
     day: 'numeric',
-    year: 'numeric'
+    year: 'numeric',
+    timeZone: 'UTC'
   })
 }
 
@@ -97,12 +99,14 @@ function formatDateTimeWithTimezone(dateStr: string | null): string {
   const dateFormatted = date.toLocaleDateString('en-US', {
     month: 'long',
     day: 'numeric',
-    year: 'numeric'
+    year: 'numeric',
+    timeZone: 'UTC'
   })
   const timeFormatted = date.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
-    hour12: true
+    hour12: true,
+    timeZone: 'UTC'
   })
   return `${dateFormatted} ${timeFormatted} Luxembourg time`
 }

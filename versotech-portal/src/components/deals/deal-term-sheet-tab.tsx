@@ -1202,7 +1202,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   <div>
                     <span className="text-muted-foreground block text-xs">Interest Deadline</span>
                     <span className="text-foreground font-medium">
-                      {format(new Date(termSheet.interest_confirmation_deadline), 'dd MMM yyyy HH:mm')}
+                      {formatUTC(termSheet.interest_confirmation_deadline, 'dd MMM yyyy HH:mm')}
                     </span>
                   </div>
                   )}
@@ -1210,7 +1210,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   <div>
                     <span className="text-muted-foreground block text-xs">Validity</span>
                     <span className="text-foreground font-medium">
-                      {format(new Date(termSheet.validity_date), 'dd MMM yyyy HH:mm')}
+                      {formatUTC(termSheet.validity_date, 'dd MMM yyyy HH:mm')}
                     </span>
                   </div>
                   )}

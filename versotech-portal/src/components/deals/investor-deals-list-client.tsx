@@ -1606,7 +1606,7 @@ export function InvestorDealsListClient({
                               )}
                               {feeStructure?.interest_confirmation_deadline && (
                                 <span className="text-xs text-muted-foreground">
-                                  Interest deadline: {new Date(feeStructure.interest_confirmation_deadline).toLocaleDateString()}
+                                  Interest deadline: {new Date(feeStructure.interest_confirmation_deadline).toLocaleDateString('en-US', { timeZone: 'UTC' })}
                                 </span>
                               )}
                             </>
