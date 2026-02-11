@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -13,11 +13,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, X } from 'lucide-react'
+import { Loader2, X, FolderOpen, Check, ChevronsUpDown, Plus } from 'lucide-react'
 import { toast } from 'sonner'
+import { DATA_ROOM_DEFAULT_FOLDERS, validateFolderName } from '@/lib/data-room/constants'
+import { cn } from '@/lib/utils'
 
 interface DocumentEditorProps {
   dealId: string
@@ -25,24 +28,17 @@ interface DocumentEditorProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSaved?: () => void
+  existingFolders?: string[]
   initialData?: {
     file_name?: string
     folder?: string
     visible_to_investors?: boolean
+    is_featured?: boolean
     tags?: string[]
     document_notes?: string
     document_expires_at?: string | null
   }
 }
-
-const FOLDERS = [
-  'Legal',
-  'KYC',
-  'Reports',
-  'Presentations',
-  'Financial Models',
-  'Misc'
-]
 
 export function DataRoomDocumentEditor({
   dealId,
@@ -50,26 +46,37 @@ export function DataRoomDocumentEditor({
   open,
   onOpenChange,
   onSaved,
+  existingFolders = [],
   initialData
 }: DocumentEditorProps) {
   const [fileName, setFileName] = useState(initialData?.file_name || '')
-  const [folder, setFolder] = useState(initialData?.folder || 'Legal')
+  const [folder, setFolder] = useState(initialData?.folder || 'Data Room')
   const [visibleToInvestors, setVisibleToInvestors] = useState(initialData?.visible_to_investors || false)
+  const [isFeatured, setIsFeatured] = useState(initialData?.is_featured || false)
   const [tags, setTags] = useState<string[]>(initialData?.tags || [])
   const [tagInput, setTagInput] = useState('')
   const [notes, setNotes] = useState(initialData?.document_notes || '')
   const [expiresAt, setExpiresAt] = useState(
-    initialData?.document_expires_at 
+    initialData?.document_expires_at
       ? new Date(initialData.document_expires_at).toISOString().slice(0, 16)
       : ''
   )
   const [saving, setSaving] = useState(false)
+  const [folderComboOpen, setFolderComboOpen] = useState(false)
+  const [folderSearch, setFolderSearch] = useState('')
+
+  const allFolderOptions = useMemo(() => {
+    const set = new Set<string>([...DATA_ROOM_DEFAULT_FOLDERS])
+    existingFolders.forEach(f => set.add(f))
+    return Array.from(set)
+  }, [existingFolders])
 
   useEffect(() => {
     if (initialData) {
       setFileName(initialData.file_name || '')
-      setFolder(initialData.folder || 'Legal')
+      setFolder(initialData.folder || 'Data Room')
       setVisibleToInvestors(initialData.visible_to_investors || false)
+      setIsFeatured(initialData.is_featured || false)
       setTags(initialData.tags || [])
       setNotes(initialData.document_notes || '')
       setExpiresAt(
@@ -92,6 +99,17 @@ export function DataRoomDocumentEditor({
     setTags(tags.filter(t => t !== tag))
   }
 
+  const handleCreateFolder = (name: string) => {
+    const result = validateFolderName(name)
+    if (!result.valid) {
+      toast.error(result.error)
+      return
+    }
+    setFolder(name.trim())
+    setFolderComboOpen(false)
+    setFolderSearch('')
+  }
+
   const handleSave = async () => {
     setSaving(true)
 
@@ -103,6 +121,7 @@ export function DataRoomDocumentEditor({
           file_name: fileName,
           folder,
           visible_to_investors: visibleToInvestors,
+          is_featured: isFeatured,
           tags,
           document_notes: notes || null,
           document_expires_at: expiresAt ? new Date(expiresAt).toISOString() : null
@@ -150,36 +169,100 @@ export function DataRoomDocumentEditor({
             />
           </div>
 
-          {/* Folder */}
+          {/* Folder - Combobox */}
           <div className="space-y-2">
             <Label>Folder</Label>
-            <Select value={folder} onValueChange={setFolder}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {FOLDERS.map(f => (
-                  <SelectItem key={f} value={f}>
-                    {f}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={folderComboOpen} onOpenChange={setFolderComboOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={folderComboOpen}
+                  className="w-full justify-between font-normal"
+                  disabled={saving}
+                >
+                  <span className="flex items-center gap-2 truncate">
+                    <FolderOpen className="h-3.5 w-3.5 flex-shrink-0" />
+                    {folder || 'Select folder...'}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <Command>
+                  <CommandInput
+                    placeholder="Search or create folder..."
+                    value={folderSearch}
+                    onValueChange={setFolderSearch}
+                  />
+                  <CommandList>
+                    <CommandEmpty>
+                      {folderSearch.trim() && (
+                        <button
+                          className="flex w-full items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm"
+                          onClick={() => handleCreateFolder(folderSearch.trim())}
+                        >
+                          <Plus className="h-4 w-4" />
+                          Create folder: &quot;{folderSearch.trim()}&quot;
+                        </button>
+                      )}
+                    </CommandEmpty>
+                    <CommandGroup>
+                      {allFolderOptions.map((f) => (
+                        <CommandItem
+                          key={f}
+                          value={f}
+                          onSelect={() => {
+                            setFolder(f)
+                            setFolderComboOpen(false)
+                            setFolderSearch('')
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              folder === f ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <FolderOpen className="mr-2 h-3.5 w-3.5" />
+                          {f}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
-          {/* Visibility */}
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="visible"
-              checked={visibleToInvestors}
-              onCheckedChange={(checked) => setVisibleToInvestors(checked as boolean)}
-            />
-            <label
-              htmlFor="visible"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              Visible to investors
-            </label>
+          {/* Visibility & Featured */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="visible"
+                checked={visibleToInvestors}
+                onCheckedChange={(checked) => setVisibleToInvestors(checked as boolean)}
+              />
+              <label
+                htmlFor="visible"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Visible to investors
+              </label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="featured"
+                checked={isFeatured}
+                onCheckedChange={(checked) => setIsFeatured(checked as boolean)}
+              />
+              <label
+                htmlFor="featured"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Featured document
+              </label>
+            </div>
           </div>
 
           {/* Tags */}
@@ -251,4 +334,3 @@ export function DataRoomDocumentEditor({
     </Dialog>
   )
 }
-

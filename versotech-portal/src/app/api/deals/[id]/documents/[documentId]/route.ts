@@ -9,6 +9,7 @@ const updateSchema = z.object({
   folder: z.string().optional(),
   file_name: z.string().optional(),
   visible_to_investors: z.boolean().optional(),
+  is_featured: z.boolean().optional(),
   tags: z.array(z.string()).optional(),
   document_notes: z.string().optional(),
   document_expires_at: z.string().datetime().optional().nullable(),

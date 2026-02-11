@@ -27,7 +27,7 @@ interface EmailResult {
 const DEFAULT_FROM = process.env.EMAIL_FROM || 'V E R S O <noreply@mail.versotech.com>'
 const RESEND_API_KEY = process.env.RESEND_API_KEY
 const VERSO_BLUE = '#0077ac'
-const INVITATION_FOOTER_COPY = '&copy; 2026 VERSOTECH. All rights reserved.'
+const FOOTER_COPY = '&copy; 2026 VERSOTECH. All rights reserved.'
 
 // Validate API key at module load time in production
 if (process.env.NODE_ENV === 'production') {
@@ -44,13 +44,13 @@ if (process.env.NODE_ENV === 'production') {
  * Shared email shell used by all templates.
  * Produces the V E R S O header + separator + content slot + footer.
  */
-function emailShell(
+export function emailShell(
   bodyContent: string,
   options?: {
     footerCopy?: string
   }
 ): string {
-  const footerCopy = options?.footerCopy || `&copy; ${new Date().getFullYear()} V E R S O. All rights reserved.`
+  const footerCopy = options?.footerCopy || FOOTER_COPY
 
   return `
 <!DOCTYPE html>
@@ -243,7 +243,7 @@ export async function sendStaffInvitation(params: {
 }): Promise<EmailResult> {
   const body = `
     <div class="content">
-      <p>Hi ${params.displayName},</p>
+      <p>Hello ${params.displayName},</p>
       <p>You've been invited to join <span style="font-family: 'League Spartan', Arial, sans-serif; letter-spacing: 0.2em; font-weight: 700;">V E R S O</span> as a <strong>${params.title}</strong>.</p>
 
       <div class="credentials-box">
@@ -279,7 +279,7 @@ export async function sendPasswordResetEmail(params: {
 
   const body = `
     <div class="content">
-      <p>Dear ${displayName},</p>
+      <p>Hello ${displayName},</p>
       <p>We received a request to reset the password for your V E R S O account.</p>
       <p>Click the button below to create a new password. For security reasons, this link will expire in 1 hour.</p>
     </div>
@@ -322,7 +322,7 @@ export async function sendSecurityAlertEmail(params: {
 
   const body = `
     <div class="content">
-      <p>Hi ${params.displayName},</p>
+      <p>Hello ${params.displayName},</p>
 
       <div class="security-box">
         <p style="margin: 0 0 10px 0; font-weight: 600;">${alertTitles[params.alertType]}</p>
@@ -337,6 +337,163 @@ export async function sendSecurityAlertEmail(params: {
   return sendEmail({
     to: params.email,
     subject: `Security Alert: ${alertTitles[params.alertType]} - V E R S O`,
+    html: emailShell(body),
+  })
+}
+
+/**
+ * Template 2: Password Changed (except first set-up)
+ * Matches client doc exactly.
+ */
+export async function sendPasswordChangedEmail(params: {
+  email: string
+  displayName: string
+}): Promise<EmailResult> {
+  const body = `
+    <div class="content">
+      <p>Hello ${params.displayName},</p>
+      <p>We would like to confirm that the password for your account has been successfully changed. Your account is now secured with the new password that you have set.</p>
+      <p>If you did not change your password, please contact us immediately at <a href="mailto:support@versotech.com">support@versotech.com</a> to report any unauthorized access to your account.</p>
+      <p>Sincerely,<br>The VERSO team</p>
+    </div>
+  `
+
+  return sendEmail({
+    to: params.email,
+    subject: 'Password Changed in VERSOTECH',
+    html: emailShell(body),
+  })
+}
+
+/**
+ * Template 3: Account Status (approved / rejected / more info)
+ * Three variants with colour-coded messaging per client doc.
+ */
+export async function sendAccountStatusEmail(params: {
+  email: string
+  displayName: string
+  status: 'approved' | 'rejected' | 'more_info'
+  reasons?: string
+  dealLink?: string
+}): Promise<EmailResult> {
+  const portalUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.versotech.com'
+  const link = params.dealLink || `${portalUrl}/versotech_main/opportunities`
+
+  let subjectSuffix: string
+  let bodyContent: string
+
+  if (params.status === 'approved') {
+    subjectSuffix = 'Your account has been approved in VERSOTECH'
+    bodyContent = `
+      <p>Congratulations! Your account has been approved. You can now have full access to VERSO Portal.</p>
+    </div>
+    <div class="button-container">
+      <a href="${link}" class="button">Access Deal on VERSO Portal</a>
+    </div>
+    <div class="content">
+    `
+  } else if (params.status === 'more_info') {
+    subjectSuffix = 'More information required about your account in VERSOTECH'
+    bodyContent = `
+      <p style="color: #007BB8;">We have received your information and we would need to receive more information about your KYC information to approve your account.</p>
+      ${params.reasons ? `<p style="color: #007BB8;">${params.reasons}</p>` : ''}
+    `
+  } else {
+    subjectSuffix = 'Your account has been rejected in VERSOTECH'
+    bodyContent = `
+      <p style="color: #EE0000;">Unfortunately, your account has been rejected.</p>
+      ${params.reasons ? `<p style="color: #EE0000;">${params.reasons}</p>` : ''}
+    `
+  }
+
+  const body = `
+    <div class="content">
+      <p>Hello ${params.displayName},</p>
+      ${bodyContent}
+      <p>Sincerely,<br>The VERSO team</p>
+    </div>
+  `
+
+  return sendEmail({
+    to: params.email,
+    subject: subjectSuffix,
+    html: emailShell(body),
+  })
+}
+
+/**
+ * Template 4: New Investment Opportunity
+ * Matches client doc exactly.
+ */
+export async function sendNewDealEmail(params: {
+  email: string
+  displayName: string
+  dealLink: string
+}): Promise<EmailResult> {
+  const body = `
+    <div class="content">
+      <p>Hello ${params.displayName},</p>
+      <p>We are thrilled to share with you a new deal.</p>
+      <p>You can learn more about the deal in the Deal section of VERSOTECH.</p>
+    </div>
+
+    <div class="button-container">
+      <a href="${params.dealLink}" class="button">Access Deal on VERSO Portal</a>
+    </div>
+
+    <div class="content">
+      <p>Sincerely,<br>The VERSO team</p>
+    </div>
+  `
+
+  return sendEmail({
+    to: params.email,
+    subject: 'New Investment Opportunity in VERSO',
+    html: emailShell(body),
+  })
+}
+
+/**
+ * Template 6: NDA Signed (document fully executed)
+ * Generic for any document type per client doc note.
+ */
+export async function sendDocumentSignedEmail(params: {
+  email: string
+  displayName: string
+  documentType: string
+  dealLink: string
+}): Promise<EmailResult> {
+  const documentTypeLabels: Record<string, string> = {
+    nda: 'Non-Disclosure Agreement',
+    subscription: 'Subscription Pack',
+    amendment: 'Amendment',
+    other: 'Document'
+  }
+  const documentLabel = documentTypeLabels[params.documentType] || params.documentType
+
+  const isSubscription = params.documentType === 'subscription'
+  const subject = isSubscription
+    ? 'A Subscription pack is signed in VERSOTECH'
+    : `A ${documentLabel} is signed in VERSOTECH`
+
+  const body = `
+    <div class="content">
+      <p>Hello ${params.displayName},</p>
+      <p>A ${documentLabel} is fully executed. You can open the final document and download a copy for reference in the Deal section of VERSOTECH.</p>
+    </div>
+
+    <div class="button-container">
+      <a href="${params.dealLink}" class="button">Access Deal VERSO Portal</a>
+    </div>
+
+    <div class="content">
+      <p>Sincerely,<br>The VERSO team</p>
+    </div>
+  `
+
+  return sendEmail({
+    to: params.email,
+    subject,
     html: emailShell(body),
   })
 }
@@ -364,7 +521,7 @@ export async function sendInvitationEmail(params: {
 
   const passwordSetupBody = `
     <div class="content">
-      <p>Hi ${firstName},</p>
+      <p>Hello ${fullName},</p>
       <p>You've been invited to join <strong>VERSOTECH</strong> - your gateway to exclusive investment opportunities.</p>
       <p>You have been invited by <strong>${inviterName}</strong> to join the <strong>VERSO Portal</strong>.</p>
       <p>You're almost signed up for VERSOTECH. To change your password immediately, please click the button below:</p>
@@ -382,7 +539,7 @@ export async function sendInvitationEmail(params: {
 
   const accountSetupBody = `
     <div class="content">
-      <p>Dear ${fullName},</p>
+      <p>Hello ${fullName},</p>
       <p>Thank you for creating your account.</p>
       <p>VERSO TECH is a secure platform that provides you with comprehensive access to your investment portfolio, performance analytics, and exclusive deal opportunities.</p>
       <p>Through your personalized dashboard, you'll be able to:</p>
@@ -411,13 +568,14 @@ export async function sendInvitationEmail(params: {
     to: params.email,
     subject: 'Welcome to VERSOTECH',
     html: emailShell(body, {
-      footerCopy: INVITATION_FOOTER_COPY,
+      footerCopy: FOOTER_COPY,
     }),
   })
 }
 
 /**
- * Send signature request email with signing link
+ * Template 5: Document received for signature
+ * Matches client doc exactly. Generic for NDA, subscription, etc.
  */
 export async function sendSignatureRequestEmail(params: {
   email: string
@@ -428,10 +586,11 @@ export async function sendSignatureRequestEmail(params: {
 }): Promise<EmailResult> {
   const expiryDate = new Date(params.expiresAt)
   const daysUntilExpiry = Math.ceil((expiryDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000))
+  const formattedDate = expiryDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
 
   const documentTypeLabels: Record<string, string> = {
     nda: 'Non-Disclosure Agreement',
-    subscription: 'Subscription Agreement',
+    subscription: 'Subscription Pack',
     amendment: 'Amendment',
     other: 'Document'
   }
@@ -440,34 +599,27 @@ export async function sendSignatureRequestEmail(params: {
 
   const body = `
     <div class="content">
-      <p>Hi ${params.signerName},</p>
-      <p>Your <strong>${documentLabel}</strong> is ready for your electronic signature.</p>
-
-      <div class="alert-box">
-        <p style="margin: 0;"><strong>Time Sensitive:</strong> This signature link expires in ${daysUntilExpiry} days (${expiryDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}).</p>
-      </div>
-
-      <p>To review and sign the document, click the button below:</p>
+      <p>Hello ${params.signerName},</p>
+      <p>A ${documentLabel} is ready for your electronic signature in the Deal section of VERSOTECH. This signature link expires in ${daysUntilExpiry} days (${formattedDate}). To review and sign the document, click the button below:</p>
     </div>
 
     <div class="button-container">
-      <a href="${params.signingUrl}" class="button">Review and Sign</a>
+      <a href="${params.signingUrl}" class="button">Access Deal VERSO Portal</a>
     </div>
 
     <div class="content">
-      <p style="font-size: 14px; color: #666666; padding-top: 20px; border-top: 1px solid #f0f0f0;">
-        <strong>What happens next?</strong><br>
-        1. Click the link above to view the document<br>
-        2. Review the content carefully<br>
-        3. Draw or upload your signature<br>
-        4. Submit to complete the signing process
-      </p>
+      <p><strong>What happens next?</strong></p>
+      <p>1. Click the link above to view the document<br>
+      2. Review the content carefully<br>
+      3. Draw or upload your signature<br>
+      4. Submit to complete the signing process</p>
+      <p>Sincerely,<br>The VERSO team</p>
     </div>
   `
 
   return sendEmail({
     to: params.email,
-    subject: `${documentLabel} Ready for Your Signature - V E R S O`,
+    subject: `A ${documentLabel} available for your signature in VERSOTECH`,
     html: emailShell(body),
   })
 }

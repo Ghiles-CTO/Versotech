@@ -448,6 +448,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         `)
         .eq('deal_id', dealId)
         .eq('visible_to_investors', true)
+        .is('replaced_by_id', null)
         .order('folder', { ascending: true })
         .order('file_name', { ascending: true })
 
@@ -463,6 +464,48 @@ export async function GET(request: Request, { params }: RouteParams) {
           description: doc.document_notes || null,
           uploaded_at: doc.created_at,
           is_featured: doc.is_featured || false,
+          external_link: doc.external_link || null,
+          file_key: doc.file_key || null
+        }))
+    }
+
+    // Fetch featured documents separately — available without data room access
+    // but still blocked for introducers/lawyers
+    let featuredDocuments: any[] = []
+    if (!isRestrictedFromDataRoom) {
+      const { data: featuredDocs } = await serviceSupabase
+        .from('deal_data_room_documents')
+        .select(`
+          id,
+          file_name,
+          file_key,
+          folder,
+          file_size_bytes,
+          mime_type,
+          document_notes,
+          created_at,
+          document_expires_at,
+          is_featured,
+          external_link
+        `)
+        .eq('deal_id', dealId)
+        .eq('is_featured', true)
+        .eq('visible_to_investors', true)
+        .is('replaced_by_id', null)
+        .order('file_name', { ascending: true })
+
+      const now = new Date()
+      featuredDocuments = (featuredDocs || [])
+        .filter(doc => !doc.document_expires_at || new Date(doc.document_expires_at) > now)
+        .map(doc => ({
+          id: doc.id,
+          file_name: doc.file_name || 'Document',
+          file_type: doc.mime_type || 'application/octet-stream',
+          file_size: doc.file_size_bytes ? Number(doc.file_size_bytes) : 0,
+          category: doc.folder || 'General',
+          description: doc.document_notes || null,
+          uploaded_at: doc.created_at,
+          is_featured: true,
           external_link: doc.external_link || null,
           file_key: doc.file_key || null
         }))
@@ -592,6 +635,7 @@ export async function GET(request: Request, { params }: RouteParams) {
           auto_granted: dataRoomAccess.auto_granted
         } : null,
         documents: dataRoomDocuments,
+        featured_documents: featuredDocuments,
         requires_nda: !allSignatoriesSignedNda,
         nda_status: {
           all_signed: allSignatoriesSignedNda,

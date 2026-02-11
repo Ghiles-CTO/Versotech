@@ -202,6 +202,18 @@ export default async function DealDetailPage({ params }: PageParams) {
     .select(`
       id,
       file_key,
+      file_name,
+      folder,
+      visible_to_investors,
+      is_featured,
+      tags,
+      document_notes,
+      document_expires_at,
+      file_size_bytes,
+      mime_type,
+      external_link,
+      version,
+      replaced_by_id,
       created_at,
       created_by,
       created_by_profile:created_by (
@@ -209,6 +221,7 @@ export default async function DealDetailPage({ params }: PageParams) {
       )
     `)
     .eq('deal_id', dealId)
+    .is('replaced_by_id', null)
     .order('created_at', { ascending: false })
 
   // Fetch term sheet versions

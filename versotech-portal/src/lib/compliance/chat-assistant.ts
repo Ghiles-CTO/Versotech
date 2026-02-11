@@ -148,7 +148,8 @@ async function runOpenAi(systemPrompt: string, userPrompt: string): Promise<{ te
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) throw new Error('OPENAI_API_KEY is missing')
 
-  const primaryModel = process.env.COMPLIANCE_AI_OPENAI_MODEL || 'gpt-5-mini'
+  // Default to a fast GPT-5 model for low-latency chat. Override with COMPLIANCE_AI_OPENAI_MODEL if needed.
+  const primaryModel = process.env.COMPLIANCE_AI_OPENAI_MODEL || 'gpt-5.1-mini'
   // Avoid silently falling back to older models unless explicitly configured.
   // Default fallback stays in the GPT-5 family.
   const fallbackModels = (process.env.COMPLIANCE_AI_OPENAI_FALLBACK_MODELS || 'gpt-5-mini')
@@ -217,7 +218,7 @@ async function runOpenAi(systemPrompt: string, userPrompt: string): Promise<{ te
     try {
       const payload: Record<string, unknown> = {
         model,
-        max_output_tokens: 500,
+        max_output_tokens: 300,
         input: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
@@ -227,7 +228,9 @@ async function runOpenAi(systemPrompt: string, userPrompt: string): Promise<{ te
       // GPT-5 supports these controls; older models (e.g. 4.1-mini) reject them.
       if (/^gpt-5(\.|-|$)/i.test(model)) {
         payload.text = { verbosity: 'low' }
-        payload.reasoning = { effort: 'minimal' }
+        // "minimal" is not a supported effort value for GPT-5 models on the Responses API.
+        // Use the lowest supported setting to keep replies fast and cheap.
+        payload.reasoning = { effort: 'low' }
       }
 
       const timeoutMs = Number(process.env.COMPLIANCE_AI_OPENAI_TIMEOUT_MS || 12_000)

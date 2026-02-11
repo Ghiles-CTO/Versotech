@@ -41,6 +41,11 @@ export async function POST(
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
+    // Validate folder path: reject directory traversal and malformed paths
+    if (folder.includes('..') || folder.startsWith('/') || folder.includes('//')) {
+      return NextResponse.json({ error: 'Invalid folder path' }, { status: 400 })
+    }
+
     // Validate file size (50MB max)
     // Note: Deal data room intentionally accepts ALL file types (JSON, CSV, ZIP, etc.)
     const maxSize = 50 * 1024 * 1024
@@ -60,17 +65,35 @@ export async function POST(
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
+    const contentType = file.type || 'application/octet-stream'
+
     const { error: uploadError } = await serviceSupabase.storage
       .from('deal-documents')
       .upload(fileKey, buffer, {
-        contentType: file.type,
+        contentType,
         upsert: false
       })
 
     if (uploadError) {
       console.error('Storage upload error:', uploadError)
+
+      // Map Supabase StorageApiError status codes to appropriate HTTP responses
+      const storageStatus = (uploadError as any)?.statusCode || (uploadError as any)?.status
+      if (storageStatus === 413) {
+        return NextResponse.json(
+          { error: 'File too large for storage' },
+          { status: 413 }
+        )
+      }
+      if (storageStatus && storageStatus >= 400 && storageStatus < 500) {
+        return NextResponse.json(
+          { error: uploadError.message || 'Storage rejected the upload' },
+          { status: 400 }
+        )
+      }
+
       return NextResponse.json(
-        { error: 'Failed to upload file to storage', details: uploadError },
+        { error: 'Failed to upload file to storage' },
         { status: 500 }
       )
     }
@@ -98,7 +121,7 @@ export async function POST(
       // Clean up uploaded file
       await serviceSupabase.storage.from('deal-documents').remove([fileKey])
       return NextResponse.json(
-        { error: 'Failed to create document record', details: dbError },
+        { error: 'Failed to create document record' },
         { status: 500 }
       )
     }
@@ -127,10 +150,7 @@ export async function POST(
   } catch (error) {
     console.error('Upload error:', error)
     return NextResponse.json(
-      {
-        error: 'Unexpected error',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
+      { error: 'Unexpected error during upload' },
       { status: 500 }
     )
   }

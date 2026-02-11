@@ -72,33 +72,39 @@ export async function GET(
         }, { status: 403 })
       }
 
-      // Check if investor has active data room access
-      const { data: investorUsers } = await supabase
-        .from('investor_users')
-        .select('investor_id')
-        .eq('user_id', user.id)
+      // Featured documents can be downloaded without data room access
+      // (they are shown on the opportunity Overview tab)
+      const isFeaturedDoc = document.is_featured === true
 
-      const investorIds = investorUsers?.map(iu => iu.investor_id) ?? []
+      if (!isFeaturedDoc) {
+        // Non-featured docs require active data room access
+        const { data: investorUsers } = await supabase
+          .from('investor_users')
+          .select('investor_id')
+          .eq('user_id', user.id)
 
-      if (investorIds.length === 0) {
-        return NextResponse.json({
-          error: 'No investor profile found'
-        }, { status: 403 })
-      }
+        const investorIds = investorUsers?.map(iu => iu.investor_id) ?? []
 
-      const { data: dataRoomAccess } = await supabase
-        .from('deal_data_room_access')
-        .select('*')
-        .eq('deal_id', dealId)
-        .in('investor_id', investorIds)
-        .is('revoked_at', null)
-        .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
-        .single()
+        if (investorIds.length === 0) {
+          return NextResponse.json({
+            error: 'No investor profile found'
+          }, { status: 403 })
+        }
 
-      if (!dataRoomAccess) {
-        return NextResponse.json({
-          error: 'Data room access not granted or expired'
-        }, { status: 403 })
+        const { data: dataRoomAccess } = await supabase
+          .from('deal_data_room_access')
+          .select('*')
+          .eq('deal_id', dealId)
+          .in('investor_id', investorIds)
+          .is('revoked_at', null)
+          .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
+          .single()
+
+        if (!dataRoomAccess) {
+          return NextResponse.json({
+            error: 'Data room access not granted or expired'
+          }, { status: 403 })
+        }
       }
     }
 

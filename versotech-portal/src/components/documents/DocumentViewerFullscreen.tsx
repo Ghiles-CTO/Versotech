@@ -150,10 +150,9 @@ export function DocumentViewerFullscreen({
 
         <div className="flex items-center gap-2 flex-shrink-0">
           <Button
-            variant="outline"
             size="sm"
             onClick={onDownload}
-            className="gap-2 text-gray-900"
+            className="gap-2"
           >
             <Download className="h-4 w-4" />
             Download

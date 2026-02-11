@@ -181,6 +181,7 @@ export async function POST(
         file_key: fileKey,
         file_name: file.name,
         visible_to_investors: currentDoc.visible_to_investors,
+        is_featured: currentDoc.is_featured,
         file_size_bytes: file.size,
         mime_type: file.type,
         version: newVersion,

@@ -50,7 +50,23 @@ export function DataRoomDocumentVersions({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [downloadingVersionId, setDownloadingVersionId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleDownloadVersion = async (versionId: string) => {
+    setDownloadingVersionId(versionId)
+    try {
+      const response = await fetch(`/api/deals/${dealId}/documents/${versionId}/download`)
+      if (!response.ok) throw new Error('Failed to generate download link')
+      const data = await response.json()
+      window.open(data.download_url, '_blank')
+    } catch (err) {
+      console.error('Download error:', err)
+      toast.error('Failed to download document version')
+    } finally {
+      setDownloadingVersionId(null)
+    }
+  }
 
   const handleUploadVersion = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -214,9 +230,19 @@ export function DataRoomDocumentVersions({
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="outline" size="sm" className="gap-2">
-                        <Download className="h-4 w-4" />
-                        Download
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => handleDownloadVersion(version.id)}
+                        disabled={downloadingVersionId === version.id}
+                      >
+                        {downloadingVersionId === version.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Download className="h-4 w-4" />
+                        )}
+                        {downloadingVersionId === version.id ? 'Downloading...' : 'Download'}
                       </Button>
                     </TableCell>
                   </TableRow>

@@ -1,5 +1,5 @@
 import { createServiceClient } from '@/lib/supabase/server'
-import { sendEmail } from '@/lib/email/resend-service'
+import { sendEmail, emailShell } from '@/lib/email/resend-service'
 import { resolveAgentIdForTask } from '@/lib/agents'
 
 /**
@@ -221,7 +221,7 @@ export async function createInvestorNotificationForAll(params: Omit<CreateNotifi
 
 /**
  * Generate HTML email for notification
- * Uses the unified V E R S O clean design matching all other email templates.
+ * Uses the shared emailShell from resend-service for consistent styling.
  */
 function generateNotificationEmail(params: {
   recipientName: string
@@ -230,70 +230,27 @@ function generateNotificationEmail(params: {
   link: string
   type: NotificationType
 }): string {
-  // Determine button text based on notification type
   const dealTypes: NotificationType[] = ['deal_invite', 'deal_access', 'deal_shared', 'partner_deal_share']
-  const buttonText = dealTypes.includes(params.type) ? 'View Deal' : 'View in Verso'
-
-  // Hide title in body for deal_invite (it's redundant with the notification itself)
+  const buttonText = dealTypes.includes(params.type) ? 'Access Deal on VERSO Portal' : 'View in Verso'
   const showTitle = params.type !== 'deal_invite'
 
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!--[if mso]>
-  <style type="text/css">
-    body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
-  </style>
-  <![endif]-->
-  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@700;800&display=swap" rel="stylesheet">
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.7; color: #1a1a1a; background-color: #ffffff; margin: 0; padding: 0;">
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff;">
-    <tr>
-      <td align="center" style="padding: 50px 40px;">
-        <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; margin: 0 auto;">
-          <!-- Logo -->
-          <tr>
-            <td style="text-align: center; padding-bottom: 30px; border-bottom: 1px solid #f0f0f0;">
-              <p style="font-family: 'League Spartan', Arial, Helvetica, sans-serif; font-size: 48px; font-weight: 800; letter-spacing: 8px; color: #000000; text-transform: uppercase; margin: 0;">V E R S O</p>
-            </td>
-          </tr>
-          <!-- Content -->
-          <tr>
-            <td style="padding: 50px 0 0 0;">
-              ${showTitle ? `<p style="font-size: 18px; font-weight: 600; color: #1a1a1a; margin: 0 0 20px 0;">${params.title}</p>` : ''}
-              <p style="font-size: 15px; color: #333333; margin: 0 0 20px 0;">Hi ${params.recipientName},</p>
-              <p style="font-size: 15px; color: #333333; margin: 0 0 20px 0;">${params.message}</p>
-            </td>
-          </tr>
-          <!-- Button -->
-          <tr>
-            <td align="center" style="padding: 25px 0 45px 0;">
-              <table cellpadding="0" cellspacing="0" border="0">
-                <tr>
-                  <td style="background-color: #0077ac; border-radius: 4px;">
-                    <a href="${params.link}" style="display: inline-block; padding: 16px 40px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; letter-spacing: 1px; text-transform: uppercase;">${buttonText}</a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          <!-- Footer -->
-          <tr>
-            <td style="border-top: 1px solid #f0f0f0; padding-top: 30px; text-align: center;">
-              <p style="margin: 0; color: #999999; font-size: 12px;">&copy; ${new Date().getFullYear()} V E R S O. All rights reserved.</p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
+  const body = `
+    <div class="content">
+      ${showTitle ? `<p style="font-size: 18px; font-weight: 600; color: #1a1a1a;">${params.title}</p>` : ''}
+      <p>Hello ${params.recipientName},</p>
+      <p>${params.message}</p>
+    </div>
+
+    <div class="button-container">
+      <a href="${params.link}" class="button">${buttonText}</a>
+    </div>
+
+    <div class="content">
+      <p>Sincerely,<br>The VERSO team</p>
+    </div>
   `
+
+  return emailShell(body)
 }
 
 /**

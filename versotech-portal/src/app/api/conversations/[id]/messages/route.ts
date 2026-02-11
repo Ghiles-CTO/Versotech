@@ -94,7 +94,7 @@ export async function POST(
 
     const { data: conversation, error: convError } = await serviceSupabase
       .from('conversations')
-      .select('id, metadata')
+      .select('id, metadata, created_by')
       .eq('id', conversationId)
       .single()
 
@@ -176,11 +176,15 @@ export async function POST(
     const bodyText = typeof body === 'string' ? body.trim() : ''
     const isAiAuthoredInput = (messageMetadata as Record<string, any> | undefined)?.ai_generated === true
     const isEligibleAgentThread = isAgentChatConversation(conversationMetadata)
+    // Allow AI replies for the thread owner even if they also have staff roles (e.g. CEO
+    // with investor persona). Only block AI when a different staff member responds manually.
+    const isThreadOwner = conversation.created_by === userId
+    const isStaffInterveningManually = isStaff && !isThreadOwner
     const agentReplyEligible = Boolean(
-      !isStaff && isEligibleAgentThread && bodyText && !isAiAuthoredInput
+      !isStaffInterveningManually && isEligibleAgentThread && bodyText && !isAiAuthoredInput
     )
 
-    if (!isStaff && isAgentChatConversation(conversationMetadata) && bodyText && !isAiAuthoredInput) {
+    if (!isStaffInterveningManually && isAgentChatConversation(conversationMetadata) && bodyText && !isAiAuthoredInput) {
       await markAgentChatFirstContact(serviceSupabase, {
         conversationId,
         conversationMetadata,

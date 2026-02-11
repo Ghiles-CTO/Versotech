@@ -51,7 +51,8 @@ import {
   MessageSquare,
   Tag,
   FolderOpen,
-  Loader2
+  Loader2,
+  Star
 } from 'lucide-react'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import type { DocumentReference } from '@/types/document-viewer.types'
@@ -201,6 +202,7 @@ interface Opportunity {
       auto_granted: boolean
     } | null
     documents: Document[]
+    featured_documents?: Document[]
     requires_nda: boolean
   }
   subscription: {
@@ -331,6 +333,71 @@ function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function FeaturedDocRow({ doc, dealId, iconColor }: {
+  doc: { id: string; file_name: string; file_size: number; external_link?: string | null }
+  dealId: string
+  iconColor: string
+}) {
+  const [downloading, setDownloading] = useState(false)
+
+  const handleClick = async () => {
+    if (doc.external_link) {
+      window.open(doc.external_link, '_blank', 'noopener,noreferrer')
+      return
+    }
+    setDownloading(true)
+    try {
+      const response = await fetch(`/api/deals/${dealId}/documents/${doc.id}/download?mode=preview`)
+      if (!response.ok) throw new Error('Failed to get download link')
+      const data = await response.json()
+      window.open(data.download_url, '_blank')
+    } catch {
+      toast.error('Failed to open document')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border hover:bg-muted transition-colors">
+      <div className="flex items-center gap-3 min-w-0">
+        {doc.external_link ? (
+          <ExternalLink className={`h-4 w-4 ${iconColor} flex-shrink-0`} />
+        ) : (
+          <FileText className={`h-4 w-4 ${iconColor} flex-shrink-0`} />
+        )}
+        <div className="min-w-0">
+          <p className="text-sm font-medium truncate text-foreground">{doc.file_name}</p>
+          {doc.file_size > 0 && (
+            <p className="text-xs text-muted-foreground">{formatFileSize(doc.file_size)}</p>
+          )}
+        </div>
+      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        className="gap-1.5 flex-shrink-0 ml-3"
+        onClick={handleClick}
+        disabled={downloading}
+      >
+        {downloading ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : doc.external_link ? (
+          <>
+            <ExternalLink className="h-3.5 w-3.5" />
+            View
+          </>
+        ) : (
+          <>
+            <Download className="h-3.5 w-3.5" />
+            Download
+          </>
+        )}
+      </Button>
+    </div>
+  )
 }
 
 export default function OpportunityDetailPage() {
@@ -1005,6 +1072,49 @@ export default function OpportunityDetailPage() {
                       </a>
                     </div>
                   )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Featured Documents — visible without data room access */}
+          {opportunity.access_controls?.can_view_data_room !== false &&
+            opportunity.data_room.featured_documents &&
+            opportunity.data_room.featured_documents.length > 0 && (
+            <Card className="border-border">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Star className="h-5 w-5 text-amber-500" />
+                  Featured Documents
+                </CardTitle>
+                <CardDescription>
+                  Key documents available for review
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {opportunity.data_room.featured_documents.map((doc) => {
+                    const fileName = doc.file_name || ''
+                    const ext = fileName.split('.').pop()?.toLowerCase() || ''
+                    const iconColor = doc.external_link
+                      ? 'text-blue-500'
+                      : ext === 'pdf'
+                        ? 'text-red-400'
+                        : ['xlsx', 'xls', 'csv'].includes(ext)
+                          ? 'text-emerald-400'
+                          : ['doc', 'docx'].includes(ext)
+                            ? 'text-blue-400'
+                            : 'text-muted-foreground'
+
+                    return (
+                      <FeaturedDocRow
+                        key={doc.id}
+                        doc={doc}
+                        dealId={opportunity.id}
+                        iconColor={iconColor}
+                      />
+                    )
+                  })}
                 </div>
               </CardContent>
             </Card>

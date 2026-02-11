@@ -106,12 +106,33 @@ function ThemeToggle() {
 // on the html element. This prevents flash during SSR/hydration because the server-rendered
 // HTML has static class names, and the actual colors come from CSS cascade.
 function UnifiedAppLayoutInner({ children, profile }: UnifiedAppLayoutProps) {
-  const { isLoading } = usePersona()
+  const { isLoading, personas } = usePersona()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { theme } = useTheme()
 
   // Determine if dark mode for Sheet styling
   const isDark = theme === 'staff-dark'
+
+  // Ensure every investor account has the default Wayne compliance thread available.
+  // We run this once per session to keep inbox predictable without spamming the API.
+  useEffect(() => {
+    if (isLoading) return
+    const hasInvestorPersona = (personas || []).some((persona) => persona?.persona_type === 'investor')
+    if (!hasInvestorPersona) return
+
+    const key = `versotech:ensure_default_compliance_thread:${profile.id}`
+    if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(key) === '1') return
+    try {
+      sessionStorage.setItem(key, '1')
+    } catch {
+      // Ignore storage errors; worst case we call the endpoint again next load.
+    }
+
+    fetch('/api/compliance/agent-chat/ensure-default', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    }).catch(() => null)
+  }, [isLoading, personas, profile.id])
 
   if (isLoading) {
     // Use CSS classes that respond to .staff-dark - prevents SSR flash

@@ -66,7 +66,6 @@ const adminNavItems: NavItem[] = [
     name: 'Agents',
     href: '/versotech_admin/agents',
     icon: Bot,
-    badge: 'Soon',
   },
   {
     name: 'Settings',

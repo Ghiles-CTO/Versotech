@@ -22,6 +22,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { format } from 'date-fns'
+
+/** Format a UTC ISO timestamp as "wall clock" time (no timezone shift) */
+function formatUTC(dateStr: string, fmt: string) {
+  const d = new Date(dateStr)
+  return format(new Date(d.getTime() + d.getTimezoneOffset() * 60000), fmt)
+}
 import { Loader2, Plus, Copy, Rocket, Archive, Pencil, Upload, FileCheck, Users, Building2, Briefcase, Eye, Download, X, SendHorizontal } from 'lucide-react'
 import FeePlanEditModal from '@/components/fees/FeePlanEditModal'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
@@ -938,7 +944,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                 <div>
                   <span className="text-muted-foreground block text-xs">Interest Deadline</span>
                   <span className="text-foreground font-medium">
-                    {format(new Date(published.interest_confirmation_deadline), 'dd MMM yyyy HH:mm')}
+                    {formatUTC(published.interest_confirmation_deadline, 'dd MMM yyyy HH:mm')}
                   </span>
                 </div>
                 )}
@@ -954,7 +960,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                 <div>
                   <span className="text-muted-foreground block text-xs">Validity Date</span>
                   <span className="text-foreground font-medium">
-                    {format(new Date(published.validity_date), 'dd MMM yyyy HH:mm')}
+                    {formatUTC(published.validity_date, 'dd MMM yyyy HH:mm')}
                   </span>
                 </div>
                 )}

@@ -1,17 +1,20 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Progress } from '@/components/ui/progress'
-import { Upload, File, X, Loader2, FolderOpen } from 'lucide-react'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import { Upload, File, X, Loader2, FolderOpen, Check, ChevronsUpDown, Plus } from 'lucide-react'
 import { toast } from 'sonner'
+import { DATA_ROOM_DEFAULT_FOLDERS, validateFolderName } from '@/lib/data-room/constants'
+import { cn } from '@/lib/utils'
 
 interface DocumentUploadProps {
   dealId: string
@@ -26,23 +29,13 @@ interface DealFolder {
   folder_type: string
 }
 
-// Fallback folders if database folders aren't available
-const DEFAULT_FOLDERS = [
-  'Term Sheets',
-  'Data Room',
-  'Subscription Documents',
-  'Legal Documents',
-  'Financial Reports',
-  'Due Diligence'
-]
-
 export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: DocumentUploadProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [files, setFiles] = useState<File[]>([])
   const [dealFolders, setDealFolders] = useState<DealFolder[]>([])
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
-  const [folder, setFolder] = useState('Data Room') // Default folder name for backward compatibility
+  const [folder, setFolder] = useState('Data Room')
   const [visibleToInvestors, setVisibleToInvestors] = useState(false)
   const [isFeatured, setIsFeatured] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -51,6 +44,14 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
   const [externalLink, setExternalLink] = useState('')
   const [linkFileName, setLinkFileName] = useState('')
   const [loadingFolders, setLoadingFolders] = useState(false)
+  const [folderComboOpen, setFolderComboOpen] = useState(false)
+  const [folderSearch, setFolderSearch] = useState('')
+
+  const allFolderOptions = useMemo(() => {
+    const set = new Set<string>([...DATA_ROOM_DEFAULT_FOLDERS])
+    dealFolders.forEach(f => set.add(f.name))
+    return Array.from(set)
+  }, [dealFolders])
 
   const fetchDealFolders = useCallback(async () => {
     setLoadingFolders(true)
@@ -60,7 +61,6 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
         const data = await response.json()
         setDealFolders(data.folders || [])
 
-        // Set default folder (prefer Data Room folder)
         const dataRoomFolder = data.folders?.find((f: DealFolder) =>
           f.name === 'Data Room' || f.path?.includes('/Data Room')
         )
@@ -72,7 +72,6 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
           setFolder(data.folders[0].name)
         }
       } else {
-        // If folder fetch fails, folders might not be created yet
         console.warn('Could not fetch deal folders, using defaults')
       }
     } catch (error) {
@@ -82,7 +81,6 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
     }
   }, [dealId])
 
-  // Fetch deal folders when dialog opens
   useEffect(() => {
     if (open && dealId) {
       fetchDealFolders()
@@ -124,7 +122,6 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
 
     try {
       if (uploadMode === 'link') {
-        // Upload external link
         const response = await fetch(`/api/deals/${dealId}/documents/link`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -132,7 +129,7 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
             external_link: externalLink,
             file_name: linkFileName,
             folder,
-            folder_id: selectedFolderId, // Include folder_id when available
+            folder_id: selectedFolderId,
             visible_to_investors: visibleToInvestors,
             is_featured: isFeatured
           })
@@ -147,7 +144,6 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
 
         setUploadProgress(100)
       } else {
-        // Upload files
         let successCount = 0
 
         for (let i = 0; i < files.length; i++) {
@@ -156,7 +152,7 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
           formData.append('file', file)
           formData.append('folder', folder)
           if (selectedFolderId) {
-            formData.append('folder_id', selectedFolderId) // Include folder_id when available
+            formData.append('folder_id', selectedFolderId)
           }
           formData.append('visible_to_investors', visibleToInvestors.toString())
           formData.append('is_featured', isFeatured.toString())
@@ -181,14 +177,13 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
 
       // Reset form
       setFiles([])
-      setFolder('Legal')
+      setFolder('Data Room')
       setVisibleToInvestors(false)
       setIsFeatured(false)
       setExternalLink('')
       setLinkFileName('')
       setOpen(false)
 
-      // Refresh to show new documents
       onUploadComplete?.()
       router.refresh()
     } catch (error) {
@@ -203,7 +198,7 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
   return (
     <>
       <div onClick={() => setOpen(true)}>{trigger}</div>
-      
+
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
@@ -237,12 +232,12 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
                 {/* Dropzone */}
                 <div
                   {...getRootProps()}
-                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                  className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
                     isDragActive ? 'border-blue-500 bg-blue-500/10' : 'border-border hover:border-muted-foreground'
                   }`}
                 >
                   <input {...getInputProps()} />
-                  <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <Upload className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
                   {isDragActive ? (
                     <p className="text-blue-600 dark:text-blue-400 font-medium">Drop files here...</p>
                   ) : (
@@ -323,44 +318,83 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Folder</Label>
-                <Select
-                  value={selectedFolderId || folder}
-                  onValueChange={(value) => {
-                    // Check if value is a folder ID (UUID) or folder name
-                    const folderObj = dealFolders.find(f => f.id === value)
-                    if (folderObj) {
-                      setSelectedFolderId(folderObj.id)
-                      setFolder(folderObj.name)
-                    } else {
-                      // Fallback to using folder name directly
-                      setSelectedFolderId(null)
-                      setFolder(value)
-                    }
-                  }}
-                  disabled={uploading || loadingFolders}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={loadingFolders ? "Loading folders..." : "Select folder"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {dealFolders.length > 0 ? (
-                      dealFolders.map(f => (
-                        <SelectItem key={f.id} value={f.id}>
-                          <div className="flex items-center gap-2">
-                            <FolderOpen className="h-3 w-3" />
-                            <span>{f.name}</span>
-                          </div>
-                        </SelectItem>
-                      ))
-                    ) : (
-                      DEFAULT_FOLDERS.map(f => (
-                        <SelectItem key={f} value={f}>
-                          {f}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                <Popover open={folderComboOpen} onOpenChange={setFolderComboOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={folderComboOpen}
+                      className="w-full justify-between font-normal"
+                      disabled={uploading || loadingFolders}
+                    >
+                      <span className="flex items-center gap-2 truncate">
+                        <FolderOpen className="h-3.5 w-3.5 flex-shrink-0" />
+                        {folder || 'Select folder...'}
+                      </span>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <Command>
+                      <CommandInput
+                        placeholder="Search or create folder..."
+                        value={folderSearch}
+                        onValueChange={setFolderSearch}
+                      />
+                      <CommandList>
+                        <CommandEmpty>
+                          {folderSearch.trim() && (
+                            <button
+                              className="flex w-full items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm"
+                              onClick={() => {
+                                const result = validateFolderName(folderSearch.trim())
+                                if (!result.valid) {
+                                  toast.error(result.error)
+                                  return
+                                }
+                                setFolder(folderSearch.trim())
+                                setSelectedFolderId(null)
+                                setFolderComboOpen(false)
+                                setFolderSearch('')
+                              }}
+                            >
+                              <Plus className="h-4 w-4" />
+                              Create folder: &quot;{folderSearch.trim()}&quot;
+                            </button>
+                          )}
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {allFolderOptions.map((f) => (
+                            <CommandItem
+                              key={f}
+                              value={f}
+                              onSelect={() => {
+                                const folderObj = dealFolders.find(df => df.name === f)
+                                if (folderObj) {
+                                  setSelectedFolderId(folderObj.id)
+                                } else {
+                                  setSelectedFolderId(null)
+                                }
+                                setFolder(f)
+                                setFolderComboOpen(false)
+                                setFolderSearch('')
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  folder === f ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              <FolderOpen className="mr-2 h-3.5 w-3.5" />
+                              {f}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -422,4 +456,3 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
     </>
   )
 }
-
