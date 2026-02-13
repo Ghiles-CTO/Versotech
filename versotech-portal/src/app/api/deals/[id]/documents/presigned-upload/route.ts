@@ -138,7 +138,7 @@ export async function PUT(
         folder,
         file_key: fileKey,
         file_name: fileName,
-        visible_to_investors: visibleToInvestors ?? false,
+        visible_to_investors: (isFeatured ?? false) ? true : (visibleToInvestors ?? false),
         is_featured: isFeatured ?? false,
         file_size_bytes: fileSize || 0,
         mime_type: mimeType || 'application/octet-stream',

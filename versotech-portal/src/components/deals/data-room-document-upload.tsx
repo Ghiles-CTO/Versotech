@@ -148,27 +148,69 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
 
         for (let i = 0; i < files.length; i++) {
           const file = files[i]
-          const formData = new FormData()
-          formData.append('file', file)
-          formData.append('folder', folder)
-          if (selectedFolderId) {
-            formData.append('folder_id', selectedFolderId)
-          }
-          formData.append('visible_to_investors', visibleToInvestors.toString())
-          formData.append('is_featured', isFeatured.toString())
 
-          const response = await fetch(`/api/deals/${dealId}/documents/upload`, {
-            method: 'POST',
-            body: formData
-          })
+          try {
+            // Step 1: Get presigned upload URL (only JSON metadata, no file body)
+            const presignRes = await fetch(`/api/deals/${dealId}/documents/presigned-upload`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                fileName: file.name,
+                folder,
+                contentType: file.type || 'application/octet-stream',
+                fileSize: file.size
+              })
+            })
 
-          if (!response.ok) {
-            const error = await response.json()
-            toast.error(`Failed to upload ${file.name}: ${error.error}`)
+            if (!presignRes.ok) {
+              const err = await presignRes.json()
+              toast.error(`Failed to prepare upload for ${file.name}: ${err.error}`)
+              continue
+            }
+
+            const { signedUrl, fileKey, token } = await presignRes.json()
+
+            // Step 2: Upload file directly to Supabase Storage (bypasses Vercel 4.5MB limit)
+            const uploadRes = await fetch(signedUrl, {
+              method: 'PUT',
+              headers: { 'Content-Type': file.type || 'application/octet-stream' },
+              body: file
+            })
+
+            if (!uploadRes.ok) {
+              toast.error(`Failed to upload ${file.name} to storage`)
+              continue
+            }
+
+            // Step 3: Confirm upload and create DB record (only JSON metadata)
+            const confirmRes = await fetch(`/api/deals/${dealId}/documents/presigned-upload`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                fileKey,
+                token,
+                fileName: file.name,
+                folder,
+                fileSize: file.size,
+                mimeType: file.type || 'application/octet-stream',
+                visibleToInvestors,
+                isFeatured
+              })
+            })
+
+            if (!confirmRes.ok) {
+              const err = await confirmRes.json()
+              toast.error(`Failed to register ${file.name}: ${err.error}`)
+              continue
+            }
+
+            successCount++
+          } catch (err) {
+            console.error(`Upload error for ${file.name}:`, err)
+            toast.error(`Failed to upload ${file.name}`)
             continue
           }
 
-          successCount++
           setUploadProgress(Math.round(((i + 1) / files.length) * 100))
         }
 
