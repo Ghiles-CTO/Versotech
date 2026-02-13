@@ -136,44 +136,87 @@ export function DocumentUploadDialog({
     let failedCount = 0
     const totalFiles = files.length
 
-    // Determine upload endpoint based on data room mode
+    // Determine upload mode based on data room
     const isDataRoomUpload = !!dataRoomDealId
-    const uploadEndpoint = isDataRoomUpload
-      ? `/api/deals/${dataRoomDealId}/documents/upload`
-      : '/api/documents/upload'
 
     try {
       // Upload files one by one for better progress tracking
       for (const file of files) {
-        const formData = new FormData()
-        formData.append('file', file)
-
-        if (isDataRoomUpload) {
-          // Data room upload fields
-          formData.append('folder', documentType) // Use documentType as folder in data room
-          formData.append('visible_to_investors', 'false') // Default to not visible
-        } else {
-          // Regular document upload fields
-          formData.append('type', documentType)
-          formData.append('tags', tags)
-          formData.append('description', description)
-          if (selectedFolderId) formData.append('folder_id', selectedFolderId)
-          if (vehicleId) formData.append('vehicle_id', vehicleId)
-        }
-
         // Update file status
         setFiles(prev => prev.map(f =>
           f.id === file.id ? { ...f, status: 'uploading' as const } : f
         ))
 
         try {
-          const response = await fetch(uploadEndpoint, {
-            method: 'POST',
-            body: formData
-          })
+          if (isDataRoomUpload) {
+            // Presigned upload flow — bypasses Vercel 4.5MB body limit
+            // Step 1: Get presigned URL (only JSON metadata)
+            const presignRes = await fetch(`/api/deals/${dataRoomDealId}/documents/presigned-upload`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                fileName: file.name,
+                folder: documentType,
+                contentType: file.type || 'application/octet-stream',
+                fileSize: file.size
+              })
+            })
 
-          if (!response.ok) {
-            throw new Error('Upload failed')
+            if (!presignRes.ok) {
+              const err = await presignRes.json()
+              throw new Error(err.error || 'Failed to prepare upload')
+            }
+
+            const { signedUrl, fileKey, token } = await presignRes.json()
+
+            // Step 2: Upload file directly to Supabase Storage
+            const uploadRes = await fetch(signedUrl, {
+              method: 'PUT',
+              headers: { 'Content-Type': file.type || 'application/octet-stream' },
+              body: file
+            })
+
+            if (!uploadRes.ok) {
+              throw new Error('Failed to upload to storage')
+            }
+
+            // Step 3: Confirm upload and create DB record
+            const confirmRes = await fetch(`/api/deals/${dataRoomDealId}/documents/presigned-upload`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                fileKey,
+                token,
+                fileName: file.name,
+                folder: documentType,
+                fileSize: file.size,
+                mimeType: file.type || 'application/octet-stream',
+                visibleToInvestors: false,
+                isFeatured: false
+              })
+            })
+
+            if (!confirmRes.ok) {
+              throw new Error('Failed to create document record')
+            }
+          } else {
+            // Regular document upload — FormData through serverless function
+            const formData = new FormData()
+            formData.append('file', file)
+            formData.append('type', documentType)
+            formData.append('tags', tags)
+            formData.append('description', description)
+            if (selectedFolderId) formData.append('folder_id', selectedFolderId)
+            if (vehicleId) formData.append('vehicle_id', vehicleId)
+
+            const response = await fetch('/api/documents/upload', {
+              method: 'POST',
+              body: formData
+            })
+
+            if (!response.ok) {
+              throw new Error('Upload failed')
+            }
           }
 
           // Mark as success
