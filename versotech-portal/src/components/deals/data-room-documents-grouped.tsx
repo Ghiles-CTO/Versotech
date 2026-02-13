@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import {
   FileText,
@@ -110,24 +109,23 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
         throw new Error('No file available for download')
       }
 
-      const supabase = createClient()
-      const { data, error } = await supabase.storage
-        .from('deal-documents')
-        .download(doc.file_key)
+      // Use secure API route (auth + access checks + signed URL generation)
+      const response = await fetch(
+        `/api/deals/${doc.deal_id}/documents/${doc.id}/download?mode=download`
+      )
 
-      if (error || !data) {
-        throw new Error(error?.message || 'Download failed')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to generate download link')
       }
 
-      // Create blob URL and trigger download
-      const url = window.URL.createObjectURL(data)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = doc.file_name || 'document'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
+      const data = await response.json()
+      const url = data.download_url || data.url
+      if (!url) {
+        throw new Error('No download URL received')
+      }
+
+      window.open(url, '_blank', 'noopener,noreferrer')
     } catch (err) {
       console.error('Download error:', err)
       alert(err instanceof Error ? err.message : 'Failed to download document')

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import crypto from 'crypto'
 
@@ -8,7 +8,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string; documentId: string }> }
 ) {
   try {
-    const supabase = await createClient()
+    const clientSupabase = await createClient()
+    const serviceSupabase = createServiceClient()
     const { id: dealId, documentId } = await params
 
     // Get mode from query parameters (preview or download)
@@ -16,13 +17,13 @@ export async function GET(
     const mode = searchParams.get('mode') || 'download' // Default to download for backward compatibility
 
     // Authenticate user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await clientSupabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Get document with RLS enforcement
-    const { data: document, error: docError } = await supabase
+    const { data: document, error: docError } = await serviceSupabase
       .from('deal_data_room_documents')
       .select(`
         *,
@@ -43,7 +44,7 @@ export async function GET(
     }
 
     // Check if investor has data room access (for non-staff users)
-    const { data: profile } = await supabase
+    const { data: profile } = await serviceSupabase
       .from('profiles')
       .select('role, display_name, email')
       .eq('id', user.id)
@@ -52,7 +53,7 @@ export async function GET(
     const isStaff = profile?.role?.startsWith('staff_') || profile?.role === 'ceo'
 
     if (!isStaff) {
-      const { data: membership } = await supabase
+      const { data: membership } = await serviceSupabase
         .from('deal_memberships')
         .select('role')
         .eq('deal_id', dealId)
@@ -78,7 +79,7 @@ export async function GET(
 
       if (!isFeaturedDoc) {
         // Non-featured docs require active data room access
-        const { data: investorUsers } = await supabase
+        const { data: investorUsers } = await serviceSupabase
           .from('investor_users')
           .select('investor_id')
           .eq('user_id', user.id)
@@ -91,14 +92,15 @@ export async function GET(
           }, { status: 403 })
         }
 
-        const { data: dataRoomAccess } = await supabase
+        const { data: dataRoomAccess } = await serviceSupabase
           .from('deal_data_room_access')
           .select('*')
           .eq('deal_id', dealId)
           .in('investor_id', investorIds)
           .is('revoked_at', null)
           .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
-          .single()
+          .limit(1)
+          .maybeSingle()
 
         if (!dataRoomAccess) {
           return NextResponse.json({
@@ -112,7 +114,13 @@ export async function GET(
     const expiresIn = 120 // 2 minutes for deal data room documents
     const bucket = process.env.DEAL_DOCUMENTS_BUCKET || 'deal-documents'
 
-    const { data: signedUrl, error: urlError } = await supabase.storage
+    if (!document.file_key) {
+      return NextResponse.json({
+        error: 'Document file is not available'
+      }, { status: 404 })
+    }
+
+    const { data: signedUrl, error: urlError } = await serviceSupabase.storage
       .from(bucket)
       .createSignedUrl(document.file_key, expiresIn, {
         download: mode === 'download' // Only force download when mode is explicitly 'download'
