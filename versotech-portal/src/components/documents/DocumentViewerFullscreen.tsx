@@ -2,10 +2,13 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Download, Loader2, AlertCircle, FileText, AlertTriangle } from 'lucide-react'
+import { X, Download, Loader2, AlertCircle, FileText, AlertTriangle, FileImage, FileVideo2, Music, FileSpreadsheet } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatFileSize } from '@/lib/utils'
 import { DocumentReference } from '@/types/document-viewer.types'
+import { getFileTypeCategory, type FileTypeCategory } from '@/constants/document-preview.constants'
+import { ExcelPreview } from './ExcelPreview'
+import { DocxPreview } from './DocxPreview'
 
 interface DocumentViewerFullscreenProps {
   isOpen: boolean
@@ -18,14 +21,11 @@ interface DocumentViewerFullscreenProps {
 }
 
 /**
- * Check if a file is a PDF based on filename or URL
+ * Append PDF viewer parameters to URL to fix browser rendering issues
  */
-function isPdfFile(fileName?: string | null, url?: string | null): boolean {
-  if (fileName?.toLowerCase().endsWith('.pdf')) return true
-  if (url?.toLowerCase().includes('.pdf')) return true
-  // Supabase signed URLs have the file path in them
-  if (url?.includes('deal-documents') && url?.includes('.pdf')) return true
-  return false
+function getPdfViewerUrl(url: string): string {
+  if (url.includes('#')) return url
+  return `${url}#navpanes=0&view=FitH&pagemode=none`
 }
 
 /**
@@ -48,15 +48,16 @@ function formatExpiryDate(expiryDate: string): string {
 }
 
 /**
- * Append PDF viewer parameters to URL to fix browser rendering issues
- * - navpanes=0: Hide thumbnail sidebar (fixes Brave issue)
- * - view=FitH: Fit to width for better viewing
- * - pagemode=none: Don't show bookmarks/thumbnails
+ * Get toolbar icon based on file type
  */
-function getPdfViewerUrl(url: string): string {
-  // Don't add hash if URL already has one
-  if (url.includes('#')) return url
-  return `${url}#navpanes=0&view=FitH&pagemode=none`
+function getToolbarIcon(fileType: FileTypeCategory) {
+  switch (fileType) {
+    case 'image': return FileImage
+    case 'video': return FileVideo2
+    case 'audio': return Music
+    case 'excel': return FileSpreadsheet
+    default: return FileText
+  }
 }
 
 export function DocumentViewerFullscreen({
@@ -68,7 +69,7 @@ export function DocumentViewerFullscreen({
   onClose,
   onDownload,
 }: DocumentViewerFullscreenProps) {
-  const [iframeError, setIframeError] = useState(false)
+  const [contentError, setContentError] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   // Track mount state for portal rendering
@@ -77,15 +78,21 @@ export function DocumentViewerFullscreen({
     return () => setMounted(false)
   }, [])
 
-  // Compute the final iframe URL with PDF parameters if needed
-  const iframeSrc = useMemo(() => {
-    if (!previewUrl) return null
+  // Determine file type category
+  const fileType = useMemo<FileTypeCategory>(() => {
     const fileName = document?.file_name || document?.name
-    if (isPdfFile(fileName, previewUrl)) {
-      return getPdfViewerUrl(previewUrl)
-    }
+    const mimeType = document?.mime_type || document?.file_type
+    return getFileTypeCategory(fileName, mimeType)
+  }, [document])
+
+  // Compute the final URL with PDF parameters if needed
+  const viewerUrl = useMemo(() => {
+    if (!previewUrl) return null
+    if (fileType === 'pdf') return getPdfViewerUrl(previewUrl)
     return previewUrl
-  }, [previewUrl, document])
+  }, [previewUrl, fileType])
+
+  const ToolbarIcon = getToolbarIcon(fileType)
 
   // Handle ESC key to close
   useEffect(() => {
@@ -101,7 +108,6 @@ export function DocumentViewerFullscreen({
 
     if (isOpen && typeof window !== 'undefined') {
       window.addEventListener('keydown', handleKeyDown)
-      // Prevent body scroll when viewer is open
       if (window.document?.body) {
         window.document.body.style.overflow = 'hidden'
       }
@@ -115,13 +121,15 @@ export function DocumentViewerFullscreen({
     }
   }, [isOpen, onClose, onDownload])
 
-  // Reset iframe error when URL changes
+  // Reset content error when URL changes
   useEffect(() => {
-    setIframeError(false)
+    setContentError(false)
   }, [previewUrl])
 
   // Don't render until mounted (for portal) or if not open
   if (!isOpen || !mounted) return null
+
+  const showContent = viewerUrl && !isLoading && !error && !contentError
 
   // Use portal to render at body level, escaping backdrop-blur containing blocks
   const modalContent = (
@@ -129,7 +137,7 @@ export function DocumentViewerFullscreen({
       {/* Toolbar */}
       <div className="h-16 bg-white border-b shadow-md flex items-center justify-between px-6 flex-shrink-0 text-gray-900">
         <div className="flex items-center gap-4 flex-1 min-w-0">
-          <FileText className="h-5 w-5 text-gray-500 flex-shrink-0" />
+          <ToolbarIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />
           <div className="min-w-0 flex-1">
             <h2 className="text-lg font-semibold text-gray-900 truncate">
               {document?.file_name || document?.name || 'Document Preview'}
@@ -181,8 +189,8 @@ export function DocumentViewerFullscreen({
 
       {/* Main viewport */}
       <div className="flex-1 bg-gray-900 min-h-0 relative">
-        {/* Loading/error states need centering */}
-        {(isLoading || error || iframeError) && (
+        {/* Loading/error states */}
+        {(isLoading || error || contentError) && (
           <div className="w-full h-full flex items-center justify-center">
             {isLoading && (
               <div className="flex flex-col items-center gap-4 text-white">
@@ -207,7 +215,7 @@ export function DocumentViewerFullscreen({
               </div>
             )}
 
-            {iframeError && !isLoading && !error && (
+            {contentError && !isLoading && !error && (
               <div className="flex flex-col items-center gap-4 text-white max-w-md mx-auto px-4">
                 <AlertCircle className="h-16 w-16 text-red-400" />
                 <h3 className="text-xl font-semibold">Preview Unavailable</h3>
@@ -227,21 +235,79 @@ export function DocumentViewerFullscreen({
           </div>
         )}
 
-        {/* Iframe fills the entire viewport when ready */}
-        {iframeSrc && !isLoading && !error && !iframeError && (
+        {/* Content area - conditional rendering by file type */}
+        {showContent && fileType === 'pdf' && (
           <iframe
-            src={iframeSrc}
+            src={viewerUrl}
             className="w-full h-full border-0"
             title="Document Preview"
-            onError={() => {
-              console.error('iframe failed to load preview')
-              setIframeError(true)
-            }}
+            onError={() => setContentError(true)}
+          />
+        )}
+
+        {showContent && fileType === 'image' && (
+          <div className="w-full h-full flex items-center justify-center p-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={viewerUrl}
+              alt={document?.file_name || document?.name || 'Image preview'}
+              className="max-w-full max-h-full object-contain"
+              onError={() => setContentError(true)}
+            />
+          </div>
+        )}
+
+        {showContent && fileType === 'video' && (
+          <div className="w-full h-full flex items-center justify-center bg-black">
+            <video
+              src={viewerUrl}
+              controls
+              className="max-w-full max-h-full"
+              onError={() => setContentError(true)}
+            >
+              Your browser does not support video playback.
+            </video>
+          </div>
+        )}
+
+        {showContent && fileType === 'audio' && (
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="bg-gray-800 rounded-2xl p-8 flex flex-col items-center gap-6 max-w-md w-full mx-4">
+              <Music className="h-20 w-20 text-gray-400" />
+              <p className="text-white text-lg font-medium text-center truncate w-full">
+                {document?.file_name || document?.name || 'Audio File'}
+              </p>
+              <audio
+                src={viewerUrl}
+                controls
+                className="w-full"
+                onError={() => setContentError(true)}
+              >
+                Your browser does not support audio playback.
+              </audio>
+            </div>
+          </div>
+        )}
+
+        {showContent && fileType === 'excel' && (
+          <ExcelPreview url={viewerUrl} onDownload={onDownload} />
+        )}
+
+        {showContent && fileType === 'docx' && (
+          <DocxPreview url={viewerUrl} onDownload={onDownload} />
+        )}
+
+        {showContent && fileType === 'text' && (
+          <iframe
+            src={viewerUrl}
+            className="w-full h-full border-0 bg-white"
+            title="Document Preview"
+            onError={() => setContentError(true)}
           />
         )}
 
         {/* CONFIDENTIAL Watermark Overlay for watermarked documents */}
-        {document?.watermark && !isLoading && !error && !iframeError && (
+        {document?.watermark && !isLoading && !error && !contentError && (
           <div
             className="absolute inset-0 pointer-events-none overflow-hidden"
             aria-hidden="true"

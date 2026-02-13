@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
-import { FileText, Upload, Download, Trash2, CheckCircle2, Circle, Loader2, AlertCircle, Clock, AlertTriangle, Calendar } from 'lucide-react'
+import { FileText, Upload, Download, Trash2, CheckCircle2, Circle, Loader2, AlertCircle, Clock, AlertTriangle, Calendar, Eye } from 'lucide-react'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { toast } from 'sonner'
 import { differenceInDays } from 'date-fns'
@@ -33,6 +33,9 @@ import {
   isProofOfAddress,
   type ValidationStatus,
 } from '@/lib/validation/document-validation'
+import { useDocumentViewer } from '@/hooks/useDocumentViewer'
+import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
+import { isPreviewableExtension } from '@/constants/document-preview.constants'
 
 export type EntityType = 'investor' | 'introducer' | 'arranger' | 'lawyer' | 'partner' | 'commercial_partner'
 
@@ -165,6 +168,8 @@ export function KYCDocumentsTab({
   const [staffOverride, setStaffOverride] = useState(false)
   const [overrideReason, setOverrideReason] = useState('')
   const [validationError, setValidationError] = useState<{ error: string; canOverride: boolean } | null>(null)
+
+  const viewer = useDocumentViewer()
 
   const requiredDocuments = REQUIRED_DOCUMENTS[entityType] || []
 
@@ -673,6 +678,22 @@ export function KYCDocumentsTab({
 
                       {uploaded ? (
                         <>
+                          {isPreviewableExtension(uploaded.file_name || '') && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => viewer.openPreview({
+                                id: uploaded.id,
+                                file_name: uploaded.file_name,
+                                name: uploaded.name,
+                                file_size_bytes: uploaded.file_size_bytes,
+                              })}
+                              className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300"
+                              title="Preview"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -757,6 +778,22 @@ export function KYCDocumentsTab({
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
+                      {isPreviewableExtension(doc.file_name || '') && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => viewer.openPreview({
+                            id: doc.id,
+                            file_name: doc.file_name,
+                            name: doc.name,
+                            file_size_bytes: doc.file_size_bytes,
+                          })}
+                          className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300"
+                          title="Preview"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"
@@ -793,6 +830,17 @@ export function KYCDocumentsTab({
         {isProofOfAddress('proof_of_address') && <p>• Proof of address must be dated within the last 3 months</p>}
       </div>
     </div>
+
+    {/* Document Preview Fullscreen Viewer */}
+    <DocumentViewerFullscreen
+      isOpen={viewer.isOpen}
+      document={viewer.document}
+      previewUrl={viewer.previewUrl}
+      isLoading={viewer.isLoading}
+      error={viewer.error}
+      onClose={viewer.closePreview}
+      onDownload={viewer.downloadDocument}
+    />
     </>
   )
 }

@@ -5,11 +5,12 @@ import { toast } from 'sonner'
 import { DocumentService } from '@/services/document.service'
 import { DocumentReference, DocumentError } from '@/types/document-viewer.types'
 import {
-  PREVIEW_CONFIG,
   PREVIEW_ERROR_MESSAGES,
   isPreviewableExtension,
   isPreviewableMimeType,
   isWithinSizeLimit,
+  getFileTypeCategory,
+  getSizeLimitLabel,
 } from '@/constants/document-preview.constants'
 
 /**
@@ -26,30 +27,36 @@ export function useDocumentViewer() {
    * Validate if document can be previewed
    */
   const validateDocument = (doc: DocumentReference): string | null => {
-    // Check file size
-    if (doc.file_size_bytes && !isWithinSizeLimit(doc.file_size_bytes)) {
-      return PREVIEW_ERROR_MESSAGES.FILE_TOO_LARGE
+    const fileName = doc.file_name || doc.name || ''
+    const mimeType = doc.mime_type || ''
+
+    // Check file size with category-aware limits
+    if (doc.file_size_bytes) {
+      if (!isWithinSizeLimit(doc.file_size_bytes, fileName, mimeType)) {
+        const category = getFileTypeCategory(fileName, mimeType)
+        const limit = getSizeLimitLabel(category)
+        return `File is too large for preview (maximum ${limit}). Please download to view.`
+      }
     }
 
     // Check file type by extension
-    const fileName = doc.file_name || doc.name || ''
     const canPreviewByExtension = fileName ? isPreviewableExtension(fileName) : false
 
     // Check file type by MIME type if available
-    const mimeType = doc.mime_type || ''
     const canPreviewByMimeType = mimeType
       ? isPreviewableMimeType(mimeType)
-      : false // If no MIME type, must fail validation (was incorrectly true)
+      : false // If no MIME type, must fail validation
 
     // Explicitly check for Office documents that cannot be previewed
+    // Note: xlsx/xls/csv are now previewable via ExcelPreview, so exclude them
     const fileExt = fileName.split('.').pop()?.toLowerCase() || ''
-    const officeExtensions = ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt', 'odt', 'ods', 'odp']
+    // Note: docx is now previewable via DocxPreview, so exclude it from blocked list
+    const officeExtensions = ['doc', 'pptx', 'ppt', 'odt', 'ods', 'odp']
     const isOfficeByExtension = officeExtensions.includes(fileExt)
 
     const isOfficeDocument = isOfficeByExtension || (mimeType && (
-      mimeType.includes('officedocument') || // Office 2007+ formats
-      mimeType.includes('msword') || // Old Word format
-      mimeType.includes('ms-excel') || // Old Excel format
+      mimeType.includes('presentationml') || // PowerPoint 2007+
+      mimeType.includes('msword') || // Old Word format (.doc)
       mimeType.includes('ms-powerpoint') || // Old PowerPoint format
       mimeType.includes('opendocument') // OpenOffice/LibreOffice formats
     ))

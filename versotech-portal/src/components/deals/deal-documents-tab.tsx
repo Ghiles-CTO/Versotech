@@ -5,11 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
-import { FileText, Upload, Download, Trash2, Plus, Edit, History, FolderUp, FolderOpen, Star, Loader2 } from 'lucide-react'
+import { FileText, Upload, Download, Trash2, Plus, Edit, History, FolderUp, FolderOpen, Star, Loader2, Eye } from 'lucide-react'
 import { DataRoomDocumentUpload } from './data-room-document-upload'
 import { DataRoomFolderUpload } from './data-room-folder-upload'
 import { DataRoomDocumentEditor } from './data-room-document-editor'
 import { DataRoomDocumentVersions } from './data-room-document-versions'
+import { useDocumentViewer } from '@/hooks/useDocumentViewer'
+import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
+import { getFileTypeCategory } from '@/constants/document-preview.constants'
 import { toast } from 'sonner'
 
 interface DealDocumentsTabProps {
@@ -26,6 +29,7 @@ export function DealDocumentsTab({ dealId, documents, onRefresh }: DealDocuments
   const [downloading, setDownloading] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkDeleting, setBulkDeleting] = useState(false)
+  const viewer = useDocumentViewer()
 
   // Prune stale selections when documents change
   useEffect(() => {
@@ -301,6 +305,23 @@ export function DealDocumentsTab({ dealId, documents, onRefresh }: DealDocuments
                       <History className="h-4 w-4" />
                       Versions
                     </Button>
+                    {getFileTypeCategory(doc.file_name || doc.file_key?.split('/').pop()) !== 'unsupported' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
+                        onClick={() => viewer.openPreview({
+                          id: doc.id,
+                          file_name: doc.file_name || doc.file_key?.split('/').pop(),
+                          file_size_bytes: doc.file_size_bytes,
+                          mime_type: doc.file_type,
+                        }, dealId)}
+                        disabled={bulkDeleting}
+                      >
+                        <Eye className="h-4 w-4" />
+                        Preview
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -363,6 +384,17 @@ export function DealDocumentsTab({ dealId, documents, onRefresh }: DealDocuments
           onOpenChange={(open) => !open && setVersionHistoryDoc(null)}
         />
       )}
+
+      {/* Document Preview Fullscreen Viewer */}
+      <DocumentViewerFullscreen
+        isOpen={viewer.isOpen}
+        document={viewer.document}
+        previewUrl={viewer.previewUrl}
+        isLoading={viewer.isLoading}
+        error={viewer.error}
+        onClose={viewer.closePreview}
+        onDownload={viewer.downloadDocument}
+      />
     </div>
   )
 }

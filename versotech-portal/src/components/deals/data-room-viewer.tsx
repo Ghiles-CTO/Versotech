@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import {
   ChevronDown,
@@ -25,6 +24,10 @@ import {
   Eye,
   Loader2
 } from 'lucide-react'
+import { useDocumentViewer } from '@/hooks/useDocumentViewer'
+import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
+import { DocumentReference } from '@/types/document-viewer.types'
+import { getFileTypeCategory } from '@/constants/document-preview.constants'
 
 export interface DataRoomDocument {
   id: string
@@ -76,48 +79,40 @@ function formatDate(dateString: string): string {
   })
 }
 
-// Check if file type supports preview
-function isPreviewableType(mimeType: string): boolean {
-  return (
-    mimeType.includes('pdf') ||
-    mimeType.includes('image') ||
-    mimeType.includes('text') ||
-    mimeType.includes('video')
-  )
+// Check if file type supports in-app preview
+function isPreviewableType(mimeType: string, fileName?: string): boolean {
+  const category = getFileTypeCategory(fileName, mimeType)
+  return category !== 'unsupported'
 }
 
 // Document row component with download/preview functionality
 function DocumentRow({
   document,
   dealId,
-  hasAccess
+  hasAccess,
+  onPreview
 }: {
   document: DataRoomDocument
   dealId: string
   hasAccess: boolean
+  onPreview: (doc: DataRoomDocument) => void
 }) {
   const [isDownloading, setIsDownloading] = useState(false)
-  const [isPreviewing, setIsPreviewing] = useState(false)
   const FileIcon = getFileIcon(document.file_type)
   const isExternal = !!document.external_link
-  const canPreview = isPreviewableType(document.file_type)
+  const canPreview = isPreviewableType(document.file_type, document.file_name)
 
-  const handleDocumentAction = useCallback(async (mode: 'download' | 'preview') => {
+  const handleDownload = useCallback(async () => {
     if (isExternal && document.external_link) {
       window.open(document.external_link, '_blank', 'noopener,noreferrer')
       return
     }
 
-    const isPreview = mode === 'preview'
-    if (isPreview) {
-      setIsPreviewing(true)
-    } else {
-      setIsDownloading(true)
-    }
+    setIsDownloading(true)
 
     try {
       const response = await fetch(
-        `/api/deals/${dealId}/documents/${document.id}/download?mode=${mode}`
+        `/api/deals/${dealId}/documents/${document.id}/download?mode=download`
       )
 
       if (!response.ok) {
@@ -142,27 +137,13 @@ function DocumentRow({
         return
       }
 
-      // Open in new tab
       window.open(url, '_blank', 'noopener,noreferrer')
-
-      // Show success toast with watermark info
-      if (data.watermark) {
-        toast.success(
-          isPreview ? 'Document opened for preview' : 'Download started',
-          {
-            description: `Link expires in ${Math.floor(data.expires_in_seconds / 60)} minutes`,
-            duration: 4000
-          }
-        )
-      } else {
-        toast.success(isPreview ? 'Document opened' : 'Download started')
-      }
+      toast.success('Download started')
     } catch (error) {
-      console.error('Document action error:', error)
+      console.error('Document download error:', error)
       toast.error('Failed to access document. Please try again.')
     } finally {
       setIsDownloading(false)
-      setIsPreviewing(false)
     }
   }, [dealId, document.id, document.external_link, isExternal])
 
@@ -196,27 +177,22 @@ function DocumentRow({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => handleDocumentAction('preview')}
+              onClick={() => window.open(document.external_link!, '_blank', 'noopener,noreferrer')}
             >
               <ExternalLink className="h-4 w-4 mr-1" />
               Open
             </Button>
           ) : (
             <>
-              {/* Preview button for supported file types */}
+              {/* In-app preview button for supported file types */}
               {canPreview && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleDocumentAction('preview')}
-                  disabled={isPreviewing}
+                  onClick={() => onPreview(document)}
                   className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                 >
-                  {isPreviewing ? (
-                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  ) : (
-                    <Eye className="h-4 w-4 mr-1" />
-                  )}
+                  <Eye className="h-4 w-4 mr-1" />
                   Preview
                 </Button>
               )}
@@ -224,7 +200,7 @@ function DocumentRow({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => handleDocumentAction('download')}
+                onClick={handleDownload}
                 disabled={isDownloading}
               >
                 {isDownloading ? (
@@ -248,13 +224,15 @@ function FolderSection({
   documents,
   dealId,
   hasAccess,
-  defaultOpen = false
+  defaultOpen = false,
+  onPreview
 }: {
   folderName: string
   documents: DataRoomDocument[]
   dealId: string
   hasAccess: boolean
   defaultOpen?: boolean
+  onPreview: (doc: DataRoomDocument) => void
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
 
@@ -286,6 +264,7 @@ function FolderSection({
               document={doc}
               dealId={dealId}
               hasAccess={hasAccess}
+              onPreview={onPreview}
             />
           ))}
         </div>
@@ -301,6 +280,19 @@ export function DataRoomViewer({
   dealId,
   onRequestAccess
 }: DataRoomViewerProps) {
+  const viewer = useDocumentViewer()
+
+  // Handle in-app preview for a data room document
+  const handlePreview = useCallback((doc: DataRoomDocument) => {
+    const docRef: DocumentReference = {
+      id: doc.id,
+      file_name: doc.file_name,
+      mime_type: doc.file_type,
+      file_size_bytes: doc.file_size,
+    }
+    viewer.openPreview(docRef, dealId)
+  }, [viewer.openPreview, dealId])
+
   // Group documents by folder with featured section
   const { featured, folders } = useMemo(() => {
     const featured: DataRoomDocument[] = []
@@ -394,6 +386,7 @@ export function DataRoomViewer({
                 document={doc}
                 dealId={dealId}
                 hasAccess={hasAccess}
+                onPreview={handlePreview}
               />
             ))}
           </CardContent>
@@ -419,11 +412,23 @@ export function DataRoomViewer({
               documents={docs}
               dealId={dealId}
               hasAccess={hasAccess}
-              defaultOpen={index === 0} // Open first folder by default
+              defaultOpen={index === 0}
+              onPreview={handlePreview}
             />
           ))}
         </CardContent>
       </Card>
+
+      {/* In-app Document Preview */}
+      <DocumentViewerFullscreen
+        isOpen={viewer.isOpen}
+        document={viewer.document}
+        previewUrl={viewer.previewUrl}
+        isLoading={viewer.isLoading}
+        error={viewer.error}
+        onClose={viewer.closePreview}
+        onDownload={viewer.downloadDocument}
+      />
     </div>
   )
 }

@@ -3,8 +3,22 @@
  * Defines limits and supported types for the document preview system
  */
 
+export type FileTypeCategory = 'pdf' | 'image' | 'video' | 'audio' | 'excel' | 'docx' | 'text' | 'unsupported'
+
+/** Per-type size limits in bytes */
+export const SIZE_LIMITS: Record<FileTypeCategory, number> = {
+  pdf: 10 * 1024 * 1024,       // 10MB
+  image: 10 * 1024 * 1024,     // 10MB
+  video: 100 * 1024 * 1024,    // 100MB
+  audio: 50 * 1024 * 1024,     // 50MB
+  excel: 25 * 1024 * 1024,     // 25MB
+  docx: 25 * 1024 * 1024,      // 25MB
+  text: 10 * 1024 * 1024,      // 10MB
+  unsupported: 0,
+}
+
 export const PREVIEW_CONFIG = {
-  /** Maximum file size for preview (10MB) */
+  /** Maximum file size for preview (10MB) - legacy default */
   MAX_FILE_SIZE_BYTES: 10 * 1024 * 1024,
 
   /** Timeout for iframe loading (30 seconds) */
@@ -19,6 +33,16 @@ export const PREVIEW_CONFIG = {
     'image/gif',
     'image/webp',
     'text/plain',
+    'video/mp4',
+    'video/webm',
+    'audio/mpeg',
+    'audio/wav',
+    'audio/mp3',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-excel',
+    'text/csv',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/msword',
   ] as const,
 
   /** Supported file extensions for preview */
@@ -31,6 +55,14 @@ export const PREVIEW_CONFIG = {
     'webp',
     'txt',
     'text',
+    'mp4',
+    'webm',
+    'mp3',
+    'wav',
+    'xlsx',
+    'xls',
+    'csv',
+    'docx',
   ] as const,
 } as const
 
@@ -38,7 +70,7 @@ export const PREVIEW_CONFIG = {
  * User-friendly error messages for document preview
  */
 export const PREVIEW_ERROR_MESSAGES = {
-  FILE_TOO_LARGE: 'File is too large for preview (maximum 10MB). Please download to view.',
+  FILE_TOO_LARGE: 'File is too large for preview. Please download to view.',
   UNSUPPORTED_TYPE: 'Preview not supported for this file type. Please download to view.',
   LOAD_FAILED: 'Failed to load document preview. Please try downloading instead.',
   UNAUTHORIZED: 'You do not have permission to view this document.',
@@ -47,6 +79,37 @@ export const PREVIEW_ERROR_MESSAGES = {
   INVALID_URL: 'Invalid preview URL received. Please try again.',
   TIMEOUT: 'Preview loading timed out. The file may be too large or your connection too slow.',
 } as const
+
+/**
+ * Determine the file type category from a filename and/or MIME type
+ */
+export function getFileTypeCategory(fileName?: string | null, mimeType?: string | null): FileTypeCategory {
+  const ext = fileName?.split('.').pop()?.toLowerCase() || ''
+  const mime = (mimeType || '').toLowerCase()
+
+  // PDF
+  if (ext === 'pdf' || mime === 'application/pdf') return 'pdf'
+
+  // Images
+  if (['png', 'jpeg', 'jpg', 'gif', 'webp'].includes(ext) || mime.startsWith('image/')) return 'image'
+
+  // Video
+  if (['mp4', 'webm'].includes(ext) || mime.startsWith('video/')) return 'video'
+
+  // Audio
+  if (['mp3', 'wav'].includes(ext) || mime.startsWith('audio/')) return 'audio'
+
+  // Excel / CSV
+  if (['xlsx', 'xls', 'csv'].includes(ext) || mime.includes('spreadsheet') || mime.includes('ms-excel') || mime === 'text/csv') return 'excel'
+
+  // Word documents
+  if (['docx'].includes(ext) || mime.includes('wordprocessingml')) return 'docx'
+
+  // Plain text
+  if (['txt', 'text'].includes(ext) || mime === 'text/plain') return 'text'
+
+  return 'unsupported'
+}
 
 /**
  * Check if a file extension is supported for preview
@@ -66,8 +129,19 @@ export function isPreviewableMimeType(mimeType: string): boolean {
 }
 
 /**
- * Check if a file is within size limits for preview
+ * Check if a file is within size limits for preview (category-aware)
  */
-export function isWithinSizeLimit(sizeBytes: number): boolean {
-  return sizeBytes <= PREVIEW_CONFIG.MAX_FILE_SIZE_BYTES
+export function isWithinSizeLimit(sizeBytes: number, fileName?: string | null, mimeType?: string | null): boolean {
+  const category = getFileTypeCategory(fileName, mimeType)
+  const limit = SIZE_LIMITS[category] || PREVIEW_CONFIG.MAX_FILE_SIZE_BYTES
+  return sizeBytes <= limit
+}
+
+/**
+ * Get a human-readable size limit for a file type category
+ */
+export function getSizeLimitLabel(category: FileTypeCategory): string {
+  const bytes = SIZE_LIMITS[category]
+  if (bytes >= 1024 * 1024) return `${bytes / (1024 * 1024)}MB`
+  return `${bytes / 1024}KB`
 }
