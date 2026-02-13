@@ -38,6 +38,10 @@ import {
   MapPin,
   Globe,
   FileText,
+  FileSpreadsheet,
+  FileImage,
+  Presentation,
+  File,
   Download,
   Eye,
   Lock,
@@ -51,14 +55,14 @@ import {
   MessageSquare,
   Tag,
   FolderOpen,
-  Loader2,
-  Star
+  Loader2
 } from 'lucide-react'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import type { DocumentReference } from '@/types/document-viewer.types'
 import { usePersona } from '@/contexts/persona-context'
 import { useProxyMode } from '@/components/commercial-partner'
 import { getAccountStatusCopy, formatKycStatusLabel } from '@/lib/account-approval-status'
+import { isPreviewableExtension } from '@/constants/document-preview.constants'
 import { toast } from 'sonner'
 
 interface Document {
@@ -338,39 +342,58 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function FeaturedDocRow({ doc, dealId, iconColor }: {
-  doc: { id: string; file_name: string; file_size: number; external_link?: string | null }
-  dealId: string
-  iconColor: string
-}) {
-  const [downloading, setDownloading] = useState(false)
+function getDocIcon(fileName: string, fileType: string, isExternal: boolean) {
+  if (isExternal) return { Icon: ExternalLink, color: 'text-blue-500' }
+  // Check mime type first (more reliable), then fall back to extension
+  if (fileType) {
+    if (fileType.includes('pdf')) return { Icon: FileText, color: 'text-red-500' }
+    if (fileType.includes('spreadsheet') || fileType.includes('excel') || fileType.includes('csv')) return { Icon: FileSpreadsheet, color: 'text-emerald-500' }
+    if (fileType.includes('presentation') || fileType.includes('powerpoint')) return { Icon: Presentation, color: 'text-orange-500' }
+    if (fileType.includes('word') || fileType.includes('document')) return { Icon: FileText, color: 'text-blue-500' }
+    if (fileType.includes('image')) return { Icon: FileImage, color: 'text-purple-500' }
+  }
+  // Extension fallback
+  const ext = fileName.split('.').pop()?.toLowerCase() || ''
+  if (ext === 'pdf') return { Icon: FileText, color: 'text-red-500' }
+  if (['xlsx', 'xls', 'csv'].includes(ext)) return { Icon: FileSpreadsheet, color: 'text-emerald-500' }
+  if (['pptx', 'ppt'].includes(ext)) return { Icon: Presentation, color: 'text-orange-500' }
+  if (['doc', 'docx'].includes(ext)) return { Icon: FileText, color: 'text-blue-500' }
+  if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext)) return { Icon: FileImage, color: 'text-purple-500' }
+  return { Icon: File, color: 'text-muted-foreground' }
+}
 
-  const handleClick = async () => {
+function FeaturedDocRow({ doc, dealId }: {
+  doc: { id: string; file_name: string; file_size: number; file_type: string; external_link?: string | null }
+  dealId: string
+}) {
+  const [loading, setLoading] = useState<'preview' | 'download' | null>(null)
+  const { Icon, color } = getDocIcon(doc.file_name, doc.file_type, !!doc.external_link)
+  const canPreview = !doc.external_link && isPreviewableExtension(doc.file_name)
+
+  const handleAction = async (mode: 'preview' | 'download') => {
     if (doc.external_link) {
       window.open(doc.external_link, '_blank', 'noopener,noreferrer')
       return
     }
-    setDownloading(true)
+    setLoading(mode)
     try {
-      const response = await fetch(`/api/deals/${dealId}/documents/${doc.id}/download?mode=preview`)
-      if (!response.ok) throw new Error('Failed to get download link')
+      const response = await fetch(`/api/deals/${dealId}/documents/${doc.id}/download?mode=${mode}`)
+      if (!response.ok) throw new Error('Failed to get link')
       const data = await response.json()
       window.open(data.download_url, '_blank')
     } catch {
-      toast.error('Failed to open document')
+      toast.error(`Failed to ${mode} document`)
     } finally {
-      setDownloading(false)
+      setLoading(null)
     }
   }
 
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border hover:bg-muted transition-colors">
+    <div className="flex items-center justify-between py-2.5 px-3 hover:bg-muted/50 rounded-lg transition-colors group">
       <div className="flex items-center gap-3 min-w-0">
-        {doc.external_link ? (
-          <ExternalLink className={`h-4 w-4 ${iconColor} flex-shrink-0`} />
-        ) : (
-          <FileText className={`h-4 w-4 ${iconColor} flex-shrink-0`} />
-        )}
+        <div className="flex items-center justify-center p-2 rounded-lg bg-muted/60 flex-shrink-0">
+          <Icon className={`h-4 w-4 ${color}`} />
+        </div>
         <div className="min-w-0">
           <p className="text-sm font-medium truncate text-foreground">{doc.file_name}</p>
           {doc.file_size > 0 && (
@@ -378,27 +401,52 @@ function FeaturedDocRow({ doc, dealId, iconColor }: {
           )}
         </div>
       </div>
-      <Button
-        variant="outline"
-        size="sm"
-        className="gap-1.5 flex-shrink-0 ml-3"
-        onClick={handleClick}
-        disabled={downloading}
-      >
-        {downloading ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        ) : doc.external_link ? (
-          <>
-            <ExternalLink className="h-3.5 w-3.5" />
-            View
-          </>
+      <div className="flex items-center gap-1 flex-shrink-0 ml-3">
+        {doc.external_link ? (
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 text-blue-600"
+            title="Open link"
+            onClick={() => handleAction('preview')}
+          >
+            <ExternalLink className="h-4 w-4" />
+          </Button>
         ) : (
           <>
-            <Download className="h-3.5 w-3.5" />
-            Download
+            {canPreview && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950"
+                title="Preview"
+                onClick={() => handleAction('preview')}
+                disabled={loading !== null}
+              >
+                {loading === 'preview' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </Button>
+            )}
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              title="Download"
+              onClick={() => handleAction('download')}
+              disabled={loading !== null}
+            >
+              {loading === 'download' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+            </Button>
           </>
         )}
-      </Button>
+      </div>
     </div>
   )
 }
@@ -1084,41 +1132,19 @@ export default function OpportunityDetailPage() {
           {opportunity.access_controls?.can_view_data_room !== false &&
             opportunity.data_room.featured_documents &&
             opportunity.data_room.featured_documents.length > 0 && (
-            <Card className="border-border">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Star className="h-5 w-5 text-amber-500" />
-                  Featured Documents
-                </CardTitle>
-                <CardDescription>
-                  Key documents available for review
-                </CardDescription>
+            <Card>
+              <CardHeader>
+                <CardTitle>Featured Documents</CardTitle>
+                <CardDescription>Key documents available for review</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {opportunity.data_room.featured_documents.map((doc) => {
-                    const fileName = doc.file_name || ''
-                    const ext = fileName.split('.').pop()?.toLowerCase() || ''
-                    const iconColor = doc.external_link
-                      ? 'text-blue-500'
-                      : ext === 'pdf'
-                        ? 'text-red-400'
-                        : ['xlsx', 'xls', 'csv'].includes(ext)
-                          ? 'text-emerald-400'
-                          : ['doc', 'docx'].includes(ext)
-                            ? 'text-blue-400'
-                            : 'text-muted-foreground'
-
-                    return (
-                      <FeaturedDocRow
-                        key={doc.id}
-                        doc={doc}
-                        dealId={opportunity.id}
-                        iconColor={iconColor}
-                      />
-                    )
-                  })}
-                </div>
+              <CardContent className="space-y-1">
+                {opportunity.data_room.featured_documents.map((doc) => (
+                  <FeaturedDocRow
+                    key={doc.id}
+                    doc={doc}
+                    dealId={opportunity.id}
+                  />
+                ))}
               </CardContent>
             </Card>
           )}
