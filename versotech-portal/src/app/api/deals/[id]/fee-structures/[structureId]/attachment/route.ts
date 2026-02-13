@@ -222,23 +222,27 @@ export async function GET(
   })
 }
 
+const ATTACHMENT_BUCKET = 'deal-documents'
+const MAX_ATTACHMENT_FILE_SIZE = 50 * 1024 * 1024 // 50MB
 const ALLOWED_MIME_TYPES = new Set([
   'application/pdf',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/msword'
 ])
+const ALLOWED_EXTENSIONS = new Set(['pdf', 'doc', 'docx'])
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string; structureId: string }> }
-) {
-  const { id: dealId, structureId } = await params
-
+async function authenticateStaffUser() {
   const clientSupabase = await createClient()
-  const { data: { user }, error: authError } = await clientSupabase.auth.getUser()
+  const {
+    data: { user },
+    error: authError
+  } = await clientSupabase.auth.getUser()
 
   if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return {
+      error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
+      user: null
+    } as const
   }
 
   const { data: profile } = await clientSupabase
@@ -248,26 +252,20 @@ export async function POST(
     .single()
 
   if (!(profile?.role?.startsWith('staff_') || profile?.role === 'ceo')) {
-    return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
+    return {
+      error: NextResponse.json({ error: 'Staff access required' }, { status: 403 }),
+      user: null
+    } as const
   }
 
-  const formData = await request.formData()
-  const file = formData.get('file') as File | null
+  return { error: null, user } as const
+}
 
-  if (!file) {
-    return NextResponse.json({ error: 'File is required' }, { status: 400 })
-  }
-
-  if (!ALLOWED_MIME_TYPES.has(file.type)) {
-    return NextResponse.json(
-      { error: 'Unsupported file type. Upload a PDF or DOCX term sheet.' },
-      { status: 400 }
-    )
-  }
-
-  const serviceSupabase = createServiceClient()
-
-  // Fetch existing record to remove previous attachment if necessary
+async function getFeeStructure(
+  serviceSupabase: ReturnType<typeof createServiceClient>,
+  dealId: string,
+  structureId: string
+) {
   const { data: feeStructure, error: fetchError } = await serviceSupabase
     .from('deal_fee_structures')
     .select('term_sheet_attachment_key')
@@ -276,20 +274,123 @@ export async function POST(
     .single()
 
   if (fetchError || !feeStructure) {
-    return NextResponse.json({ error: 'Term sheet not found' }, { status: 404 })
+    return {
+      error: NextResponse.json({ error: 'Term sheet not found' }, { status: 404 }),
+      feeStructure: null
+    } as const
   }
 
-  // Term sheets are stored in 'deal-documents' bucket
-  const bucket = 'deal-documents'
-  const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-  const fileKey = `term-sheets/${dealId}/${structureId}/${sanitizedName}`
+  return { error: null, feeStructure } as const
+}
+
+function isAllowedAttachment(fileName: string, mimeType?: string | null) {
+  const extension = fileName.split('.').pop()?.toLowerCase() ?? ''
+  if (ALLOWED_EXTENSIONS.has(extension)) return true
+  if (mimeType && ALLOWED_MIME_TYPES.has(mimeType)) return true
+  return false
+}
+
+function buildAttachmentFileKey(dealId: string, structureId: string, fileName: string) {
+  const timestamp = Date.now()
+  const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_')
+  return `term-sheets/${dealId}/${structureId}/${timestamp}-${sanitizedName}`
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string; structureId: string }> }
+) {
+  const { id: dealId, structureId } = await params
+
+  const auth = await authenticateStaffUser()
+  if (auth.error) return auth.error
+  const user = auth.user
+
+  const serviceSupabase = createServiceClient()
+  const feeStructureResult = await getFeeStructure(serviceSupabase, dealId, structureId)
+  if (feeStructureResult.error) return feeStructureResult.error
+  const feeStructure = feeStructureResult.feeStructure
+
+  const contentType = request.headers.get('content-type') || ''
+
+  // Presigned flow: JSON metadata only.
+  if (contentType.includes('application/json')) {
+    const body = await request.json()
+    const { fileName, fileSize, contentType: fileContentType } = body as {
+      fileName?: string
+      fileSize?: number
+      contentType?: string
+    }
+
+    if (!fileName) {
+      return NextResponse.json({ error: 'fileName is required' }, { status: 400 })
+    }
+
+    if (!isAllowedAttachment(fileName, fileContentType ?? null)) {
+      return NextResponse.json(
+        { error: 'Unsupported file type. Upload a PDF, DOC, or DOCX term sheet.' },
+        { status: 400 }
+      )
+    }
+
+    if (fileSize && fileSize > MAX_ATTACHMENT_FILE_SIZE) {
+      return NextResponse.json(
+        { error: 'File size too large. Maximum size is 50MB' },
+        { status: 400 }
+      )
+    }
+
+    const fileKey = buildAttachmentFileKey(dealId, structureId, fileName)
+
+    const { data, error } = await serviceSupabase.storage
+      .from(ATTACHMENT_BUCKET)
+      .createSignedUploadUrl(fileKey)
+
+    if (error) {
+      console.error('Failed to create term sheet attachment upload URL', error)
+      return NextResponse.json(
+        { error: 'Failed to create attachment upload URL' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      signedUrl: data.signedUrl,
+      fileKey,
+      token: data.token
+    })
+  }
+
+  // Legacy fallback: direct multipart upload through API.
+  const formData = await request.formData()
+  const file = formData.get('file') as File | null
+
+  if (!file) {
+    return NextResponse.json({ error: 'File is required' }, { status: 400 })
+  }
+
+  if (!isAllowedAttachment(file.name, file.type || null)) {
+    return NextResponse.json(
+      { error: 'Unsupported file type. Upload a PDF, DOC, or DOCX term sheet.' },
+      { status: 400 }
+    )
+  }
+
+  if (file.size > MAX_ATTACHMENT_FILE_SIZE) {
+    return NextResponse.json(
+      { error: 'File size too large. Maximum size is 50MB' },
+      { status: 400 }
+    )
+  }
+
+  const fileKey = buildAttachmentFileKey(dealId, structureId, file.name)
 
   try {
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
     const { error: uploadError } = await serviceSupabase.storage
-      .from(bucket)
+      .from(ATTACHMENT_BUCKET)
       .upload(fileKey, buffer, {
         contentType: file.type,
         upsert: false
@@ -315,7 +416,7 @@ export async function POST(
     if (updateError) {
       console.error('Failed to update deal_fee_structures with attachment', updateError)
       // Clean up uploaded file
-      await serviceSupabase.storage.from(bucket).remove([fileKey])
+      await serviceSupabase.storage.from(ATTACHMENT_BUCKET).remove([fileKey])
       return NextResponse.json(
         { error: 'Failed to update term sheet record' },
         { status: 500 }
@@ -323,7 +424,7 @@ export async function POST(
     }
 
     if (feeStructure.term_sheet_attachment_key && feeStructure.term_sheet_attachment_key !== fileKey) {
-      await serviceSupabase.storage.from(bucket).remove([feeStructure.term_sheet_attachment_key])
+      await serviceSupabase.storage.from(ATTACHMENT_BUCKET).remove([feeStructure.term_sheet_attachment_key])
     }
 
     await auditLogger.log({
@@ -351,4 +452,92 @@ export async function POST(
       { status: 500 }
     )
   }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string; structureId: string }> }
+) {
+  const { id: dealId, structureId } = await params
+
+  const auth = await authenticateStaffUser()
+  if (auth.error) return auth.error
+  const user = auth.user
+
+  const serviceSupabase = createServiceClient()
+  const feeStructureResult = await getFeeStructure(serviceSupabase, dealId, structureId)
+  if (feeStructureResult.error) return feeStructureResult.error
+  const feeStructure = feeStructureResult.feeStructure
+
+  const body = await request.json()
+  const { fileKey, fileName, fileSize, mimeType } = body as {
+    fileKey?: string
+    fileName?: string
+    fileSize?: number
+    mimeType?: string
+  }
+
+  if (!fileKey || !fileName) {
+    return NextResponse.json({ error: 'fileKey and fileName are required' }, { status: 400 })
+  }
+
+  if (!fileKey.startsWith(`term-sheets/${dealId}/${structureId}/`)) {
+    return NextResponse.json({ error: 'Invalid file key for term sheet' }, { status: 400 })
+  }
+
+  if (!isAllowedAttachment(fileName, mimeType ?? null)) {
+    return NextResponse.json(
+      { error: 'Unsupported file type. Upload a PDF, DOC, or DOCX term sheet.' },
+      { status: 400 }
+    )
+  }
+
+  if (fileSize && fileSize > MAX_ATTACHMENT_FILE_SIZE) {
+    return NextResponse.json(
+      { error: 'File size too large. Maximum size is 50MB' },
+      { status: 400 }
+    )
+  }
+
+  const { error: updateError } = await serviceSupabase
+    .from('deal_fee_structures')
+    .update({
+      term_sheet_attachment_key: fileKey,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', structureId)
+    .eq('deal_id', dealId)
+
+  if (updateError) {
+    console.error('Failed to confirm term sheet attachment', updateError)
+    await serviceSupabase.storage.from(ATTACHMENT_BUCKET).remove([fileKey])
+    return NextResponse.json(
+      { error: 'Failed to update term sheet record' },
+      { status: 500 }
+    )
+  }
+
+  if (feeStructure.term_sheet_attachment_key && feeStructure.term_sheet_attachment_key !== fileKey) {
+    await serviceSupabase.storage.from(ATTACHMENT_BUCKET).remove([feeStructure.term_sheet_attachment_key])
+  }
+
+  await auditLogger.log({
+    actor_user_id: user.id,
+    action: AuditActions.UPDATE,
+    entity: AuditEntities.DEALS,
+    entity_id: structureId,
+    metadata: {
+      type: 'term_sheet_attachment_uploaded',
+      deal_id: dealId,
+      storage_key: fileKey,
+      file_name: fileName,
+      file_size: fileSize ?? 0,
+      upload_method: 'presigned'
+    }
+  })
+
+  return NextResponse.json({
+    success: true,
+    term_sheet_attachment_key: fileKey
+  })
 }

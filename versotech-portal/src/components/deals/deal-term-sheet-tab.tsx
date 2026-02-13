@@ -533,20 +533,57 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
     setAttachmentError(null)
     setUploadingAttachmentId(structureId)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const response = await fetch(
+      // Step 1: Request presigned upload URL (JSON only, no file body)
+      const presignRes = await fetch(
         `/api/deals/${dealId}/fee-structures/${structureId}/attachment`,
         {
           method: 'POST',
-          body: formData
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileName: file.name,
+            contentType: file.type || 'application/octet-stream',
+            fileSize: file.size
+          })
         }
       )
 
-      const payload = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw new Error(payload?.error || 'Failed to upload attachment')
+      if (!presignRes.ok) {
+        const payload = await presignRes.json().catch(() => ({}))
+        throw new Error(payload?.error || 'Failed to prepare attachment upload')
+      }
+
+      const { signedUrl, fileKey, token } = await presignRes.json()
+
+      // Step 2: Upload file directly to storage
+      const uploadRes = await fetch(signedUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        body: file
+      })
+
+      if (!uploadRes.ok) {
+        throw new Error('Failed to upload attachment file to storage')
+      }
+
+      // Step 3: Confirm upload and update term sheet record
+      const confirmRes = await fetch(
+        `/api/deals/${dealId}/fee-structures/${structureId}/attachment`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileKey,
+            token,
+            fileName: file.name,
+            fileSize: file.size,
+            mimeType: file.type || 'application/octet-stream'
+          })
+        }
+      )
+
+      const payload = await confirmRes.json().catch(() => ({}))
+      if (!confirmRes.ok) {
+        throw new Error(payload?.error || 'Failed to confirm attachment upload')
       }
 
       const nextItems = items.map(item =>
