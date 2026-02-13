@@ -74,17 +74,66 @@ export function DataRoomDocumentVersions({
 
     setUploading(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const response = await fetch(`/api/deals/${dealId}/documents/${documentId}/versions`, {
+      // Step 1: Request presigned upload URL (JSON only, no file body)
+      const presignRes = await fetch(`/api/deals/${dealId}/documents/${documentId}/versions`, {
         method: 'POST',
-        body: formData
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName: file.name,
+          contentType: file.type || 'application/octet-stream',
+          fileSize: file.size
+        })
       })
 
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Failed to upload new version')
+      if (!presignRes.ok) {
+        let message = 'Failed to prepare version upload'
+        try {
+          const data = await presignRes.json()
+          message = data.error || message
+        } catch {
+          // Handle non-JSON errors (e.g. gateway 413 pages)
+          const text = await presignRes.text()
+          if (text) message = text
+        }
+        throw new Error(message)
+      }
+
+      const { signedUrl, fileKey, token } = await presignRes.json()
+
+      // Step 2: Upload file directly to Supabase Storage
+      const uploadRes = await fetch(signedUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        body: file
+      })
+
+      if (!uploadRes.ok) {
+        throw new Error('Failed to upload new version file to storage')
+      }
+
+      // Step 3: Confirm upload and create replacement version record
+      const confirmRes = await fetch(`/api/deals/${dealId}/documents/${documentId}/versions`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileKey,
+          token,
+          fileName: file.name,
+          fileSize: file.size,
+          mimeType: file.type || 'application/octet-stream'
+        })
+      })
+
+      if (!confirmRes.ok) {
+        let message = 'Failed to create new version record'
+        try {
+          const data = await confirmRes.json()
+          message = data.error || message
+        } catch {
+          const text = await confirmRes.text()
+          if (text) message = text
+        }
+        throw new Error(message)
       }
 
       toast.success('New version uploaded successfully')
@@ -255,4 +304,3 @@ export function DataRoomDocumentVersions({
     </Dialog>
   )
 }
-
