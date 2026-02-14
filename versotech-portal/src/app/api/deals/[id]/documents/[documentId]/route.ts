@@ -11,7 +11,7 @@ const updateSchema = z.object({
   visible_to_investors: z.boolean().optional(),
   is_featured: z.boolean().optional(),
   tags: z.array(z.string()).optional(),
-  document_notes: z.string().optional(),
+  document_notes: z.string().optional().nullable(),
   document_expires_at: z.string().datetime().optional().nullable(),
   external_link: z.string().url().optional().or(z.literal('')).nullable()
 })
@@ -84,6 +84,7 @@ export async function PATCH(
       .from('deal_data_room_documents')
       .update({
         ...updates,
+        ...(updates.is_featured ? { visible_to_investors: true } : {}),
         updated_at: new Date().toISOString()
       })
       .eq('id', documentId)

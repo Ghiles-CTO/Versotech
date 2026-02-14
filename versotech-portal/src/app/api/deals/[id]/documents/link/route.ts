@@ -61,7 +61,7 @@ export async function POST(
         external_link: external_link,
         file_name: file_name,
         folder: folder || 'Misc',
-        visible_to_investors: visible_to_investors || false,
+        visible_to_investors: (is_featured || false) ? true : (visible_to_investors || false),
         is_featured: is_featured || false,
         file_key: null, // No file uploaded for external links
         created_by: user.id,
