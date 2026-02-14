@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, type ReactNode } from 'react'
+import { useState, useEffect, useMemo, type ReactNode } from 'react'
 import { usePersona } from '@/contexts/persona-context'
 import { useTheme } from '@/components/theme-provider'
 import { cn } from '@/lib/utils'
@@ -11,20 +11,15 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
 import {
   Search,
-  BookOpen,
-  KeyRound,
-  Compass,
   Mail,
   HelpCircle,
   ListChecks,
   ArrowUpRight,
   MessageCircleQuestion,
-  Sparkles,
 } from 'lucide-react'
 import {
   type PersonaType,
   PERSONA_HELP_MAP,
-  GETTING_STARTED,
   FAQ_CONTENT,
   HOW_TO_CONTENT,
   filterByPersonas,
@@ -32,28 +27,25 @@ import {
 } from '@/lib/help/help-content'
 
 // ---------------------------------------------------------------------------
-// Shared card style — matches enhanced-staff-dashboard glassCard pattern
+// Shared card style — clean, professional
 // ---------------------------------------------------------------------------
 
-/** Matches the dashboard KPI card styling exactly for both modes */
 function cardStyle(isDark: boolean) {
   return isDark
-    ? "bg-zinc-900/40 backdrop-blur-md border border-white/5 shadow-xl hover:shadow-2xl hover:shadow-black/50 hover:border-white/10 transition-all duration-300"
-    : "bg-white/80 backdrop-blur-md border border-gray-200 shadow-lg hover:shadow-xl hover:border-gray-300 transition-all duration-300"
+    ? "bg-zinc-900 border border-zinc-800 shadow-sm"
+    : "bg-white border border-gray-200 shadow-sm"
 }
 
-/** Accordion items — no hover shadow shift, just open state */
 function accordionCardStyle(isDark: boolean) {
   return isDark
-    ? "bg-zinc-900/40 backdrop-blur-md border border-white/5 shadow-lg transition-all duration-300 data-[state=open]:border-white/10 data-[state=open]:shadow-xl data-[state=open]:shadow-black/30"
-    : "bg-white/80 backdrop-blur-md border border-gray-200 shadow-sm transition-all duration-300 data-[state=open]:border-blue-200/60 data-[state=open]:shadow-md"
+    ? "bg-zinc-900 border border-zinc-800 data-[state=open]:border-zinc-700"
+    : "bg-white border border-gray-200 data-[state=open]:border-blue-200"
 }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-const GETTING_STARTED_ICONS = [KeyRound, Compass, BookOpen] as const
 
 function renderBoldText(text: string): ReactNode[] {
   const parts: ReactNode[] = []
@@ -81,47 +73,27 @@ function renderBoldText(text: string): ReactNode[] {
 }
 
 // ---------------------------------------------------------------------------
-// Category badge colour mapping
+// Category badge colour mapping — 6 color families
 // ---------------------------------------------------------------------------
 
 function getCategoryStyle(category: string, isDark: boolean) {
+  const blue   = { light: 'bg-blue-50 text-blue-700 border-blue-200/60',       dark: 'bg-blue-950 text-blue-400 border-blue-800/40' }
+  const violet = { light: 'bg-violet-50 text-violet-700 border-violet-200/60', dark: 'bg-violet-950 text-violet-400 border-violet-800/40' }
+  const green  = { light: 'bg-emerald-50 text-emerald-700 border-emerald-200/60', dark: 'bg-emerald-950 text-emerald-400 border-emerald-800/40' }
+  const rose   = { light: 'bg-rose-50 text-rose-700 border-rose-200/60',       dark: 'bg-rose-950 text-rose-400 border-rose-800/40' }
+  const amber  = { light: 'bg-amber-50 text-amber-700 border-amber-200/60',   dark: 'bg-amber-950 text-amber-400 border-amber-800/40' }
+  const slate  = { light: 'bg-gray-50 text-gray-600 border-gray-200/60',       dark: 'bg-zinc-800 text-zinc-400 border-zinc-700/40' }
+
   const map: Record<string, { light: string; dark: string }> = {
-    Approvals:        { light: 'bg-amber-50 text-amber-700 border-amber-200/60',    dark: 'bg-amber-900/30 text-amber-400 border-amber-700/40' },
-    Compliance:       { light: 'bg-rose-50 text-rose-700 border-rose-200/60',        dark: 'bg-rose-900/30 text-rose-400 border-rose-700/40' },
-    Deals:            { light: 'bg-blue-50 text-blue-700 border-blue-200/60',        dark: 'bg-blue-900/30 text-blue-400 border-blue-700/40' },
-    Administration:   { light: 'bg-slate-100 text-slate-700 border-slate-200/60',    dark: 'bg-zinc-800/50 text-zinc-300 border-zinc-600/40' },
-    Finance:          { light: 'bg-emerald-50 text-emerald-700 border-emerald-200/60', dark: 'bg-emerald-900/30 text-emerald-400 border-emerald-700/40' },
-    Subscriptions:    { light: 'bg-violet-50 text-violet-700 border-violet-200/60',  dark: 'bg-violet-900/30 text-violet-400 border-violet-700/40' },
-    Documents:        { light: 'bg-sky-50 text-sky-700 border-sky-200/60',           dark: 'bg-sky-900/30 text-sky-400 border-sky-700/40' },
-    Funding:          { light: 'bg-teal-50 text-teal-700 border-teal-200/60',        dark: 'bg-teal-900/30 text-teal-400 border-teal-700/40' },
-    Portfolio:        { light: 'bg-indigo-50 text-indigo-700 border-indigo-200/60',  dark: 'bg-indigo-900/30 text-indigo-400 border-indigo-700/40' },
-    Vehicles:         { light: 'bg-cyan-50 text-cyan-700 border-cyan-200/60',        dark: 'bg-cyan-900/30 text-cyan-400 border-cyan-700/40' },
-    Fees:             { light: 'bg-orange-50 text-orange-700 border-orange-200/60',  dark: 'bg-orange-900/30 text-orange-400 border-orange-700/40' },
-    Distribution:     { light: 'bg-purple-50 text-purple-700 border-purple-200/60',  dark: 'bg-purple-900/30 text-purple-400 border-purple-700/40' },
-    Commissions:      { light: 'bg-lime-50 text-lime-700 border-lime-200/60',        dark: 'bg-lime-900/30 text-lime-400 border-lime-700/40' },
-    Onboarding:       { light: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200/60', dark: 'bg-fuchsia-900/30 text-fuchsia-400 border-fuchsia-700/40' },
-    Invoicing:        { light: 'bg-amber-50 text-amber-700 border-amber-200/60',    dark: 'bg-amber-900/30 text-amber-400 border-amber-700/40' },
-    Referrals:        { light: 'bg-pink-50 text-pink-700 border-pink-200/60',        dark: 'bg-pink-900/30 text-pink-400 border-pink-700/40' },
-    Transactions:     { light: 'bg-blue-50 text-blue-700 border-blue-200/60',        dark: 'bg-blue-900/30 text-blue-400 border-blue-700/40' },
-    Agreements:       { light: 'bg-violet-50 text-violet-700 border-violet-200/60',  dark: 'bg-violet-900/30 text-violet-400 border-violet-700/40' },
-    Investing:        { light: 'bg-emerald-50 text-emerald-700 border-emerald-200/60', dark: 'bg-emerald-900/30 text-emerald-400 border-emerald-700/40' },
-    Assignments:      { light: 'bg-slate-100 text-slate-700 border-slate-200/60',    dark: 'bg-zinc-800/50 text-zinc-300 border-zinc-600/40' },
-    Certificates:     { light: 'bg-sky-50 text-sky-700 border-sky-200/60',           dark: 'bg-sky-900/30 text-sky-400 border-sky-700/40' },
-    'Subscription Packs': { light: 'bg-violet-50 text-violet-700 border-violet-200/60', dark: 'bg-violet-900/30 text-violet-400 border-violet-700/40' },
-    'Fee Plans':      { light: 'bg-orange-50 text-orange-700 border-orange-200/60',  dark: 'bg-orange-900/30 text-orange-400 border-orange-700/40' },
-    'Data Room':      { light: 'bg-cyan-50 text-cyan-700 border-cyan-200/60',        dark: 'bg-cyan-900/30 text-cyan-400 border-cyan-700/40' },
-    'Legal Review':   { light: 'bg-slate-100 text-slate-700 border-slate-200/60',    dark: 'bg-zinc-800/50 text-zinc-300 border-zinc-600/40' },
-    Network:          { light: 'bg-indigo-50 text-indigo-700 border-indigo-200/60',  dark: 'bg-indigo-900/30 text-indigo-400 border-indigo-700/40' },
-    Clients:          { light: 'bg-blue-50 text-blue-700 border-blue-200/60',        dark: 'bg-blue-900/30 text-blue-400 border-blue-700/40' },
-    Introductions:    { light: 'bg-pink-50 text-pink-700 border-pink-200/60',        dark: 'bg-pink-900/30 text-pink-400 border-pink-700/40' },
+    Deals: blue, Distribution: blue, Investing: blue, 'Data Room': blue, Transactions: blue, Clients: blue,
+    Subscriptions: violet, 'Subscription Packs': violet, Documents: violet, Certificates: violet, Agreements: violet,
+    Finance: green, Funding: green, Commissions: green, Invoicing: green, 'Fee Plans': green, Fees: green, Portfolio: green,
+    Compliance: rose, Onboarding: rose,
+    Approvals: amber, Administration: amber, Assignments: amber,
+    Network: slate, Referrals: slate, 'Legal Review': slate, Introductions: slate,
   }
 
-  const style = map[category]
-  if (!style) {
-    return isDark
-      ? 'bg-zinc-800/50 text-zinc-400 border-zinc-600/40'
-      : 'bg-gray-50 text-gray-600 border-gray-200/60'
-  }
+  const style = map[category] ?? slate
   return isDark ? style.dark : style.light
 }
 
@@ -157,37 +129,76 @@ function PersonaIndicators({ itemPersonas, allPersonaTypes, isDark }: {
 }
 
 // ---------------------------------------------------------------------------
+// Loading skeleton
+// ---------------------------------------------------------------------------
+
+function LoadingSkeleton() {
+  return (
+    <div className="mx-auto max-w-4xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="space-y-4">
+        <div className="flex items-start gap-4">
+          <div className="h-11 w-11 shrink-0 animate-pulse rounded-xl bg-zinc-200 dark:bg-zinc-800" />
+          <div className="flex-1 space-y-2">
+            <div className="h-7 w-48 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+            <div className="h-4 w-64 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+          </div>
+        </div>
+        <div className="h-10 animate-pulse rounded-xl bg-zinc-200 dark:bg-zinc-800" />
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {[0, 1, 2].map(i => (
+          <div key={i} className="h-32 animate-pulse rounded-2xl bg-zinc-200 dark:bg-zinc-800" />
+        ))}
+      </div>
+      <div className="space-y-2">
+        {[0, 1, 2, 3].map(i => (
+          <div key={i} className="h-14 animate-pulse rounded-xl bg-zinc-200 dark:bg-zinc-800" />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
 export function HelpPageClient() {
   const [searchQuery, setSearchQuery] = useState('')
-  const { activePersona, personas } = usePersona()
+  const [filterPersona, setFilterPersona] = useState<PersonaType | null>(null)
+  const { activePersona, personas, isLoading } = usePersona()
   const { theme } = useTheme()
 
-  const isDark = theme === 'staff-dark'
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+  const isDark = mounted && theme === 'staff-dark'
 
   const allPersonaTypes: PersonaType[] = useMemo(() => {
     const types = personas.map(p => p.persona_type as PersonaType)
     return [...new Set(types)]
   }, [personas])
 
-  const activeType = (activePersona?.persona_type ?? 'investor') as PersonaType
+  const activeType = filterPersona ?? (activePersona?.persona_type ?? allPersonaTypes[0] ?? 'investor') as PersonaType
   const helpConfig = PERSONA_HELP_MAP[activeType]
 
+  const visiblePersonas: PersonaType[] = useMemo(() => {
+    return filterPersona ? [filterPersona] : allPersonaTypes
+  }, [filterPersona, allPersonaTypes])
+
   const filteredFaqs = useMemo(() => {
-    const personaFiltered = filterByPersonas(FAQ_CONTENT, allPersonaTypes)
+    const personaFiltered = filterByPersonas(FAQ_CONTENT, visiblePersonas)
     return searchHelpItems(personaFiltered, searchQuery)
-  }, [allPersonaTypes, searchQuery])
+  }, [visiblePersonas, searchQuery])
 
   const filteredHowTos = useMemo(() => {
-    const personaFiltered = filterByPersonas(HOW_TO_CONTENT, allPersonaTypes)
+    const personaFiltered = filterByPersonas(HOW_TO_CONTENT, visiblePersonas)
     return searchHelpItems(personaFiltered, searchQuery)
-  }, [allPersonaTypes, searchQuery])
+  }, [visiblePersonas, searchQuery])
 
-  const filteredGettingStarted = useMemo(() => {
-    return searchHelpItems(GETTING_STARTED, searchQuery)
-  }, [searchQuery])
+
+  if (isLoading || !mounted) {
+    return <LoadingSkeleton />
+  }
 
   return (
     <div className="mx-auto max-w-4xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
@@ -196,10 +207,10 @@ export function HelpPageClient() {
       <header className="space-y-4">
         <div className="flex items-start gap-4">
           <div className={cn(
-            "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
+            "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border",
             isDark
-              ? "bg-gradient-to-br from-blue-500/20 to-blue-600/5 border border-white/10"
-              : "bg-gradient-to-br from-blue-50 to-blue-100/60 border border-blue-200/60"
+              ? "bg-zinc-800 border-zinc-700"
+              : "bg-blue-50 border-blue-200"
           )}>
             <HelpCircle className={cn(
               "h-5 w-5",
@@ -225,27 +236,29 @@ export function HelpPageClient() {
               {' '}&middot; {helpConfig.subtitle}
             </p>
 
-            {/* Persona badges */}
+            {/* Persona badges — clickable filter */}
             {allPersonaTypes.length > 1 && (
               <div className="flex flex-wrap gap-1.5">
                 {allPersonaTypes.map(pt => {
                   const isActive = pt === activeType
                   return (
-                    <span
+                    <button
                       key={pt}
+                      type="button"
+                      onClick={() => setFilterPersona(prev => prev === pt ? null : pt)}
                       className={cn(
-                        "inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium border transition-colors",
+                        "inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium border transition-colors cursor-pointer",
                         isActive
                           ? isDark
                             ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
                             : "bg-blue-50 text-blue-700 border-blue-200"
                           : isDark
-                            ? "bg-zinc-800/60 text-zinc-400 border-zinc-700/60"
-                            : "bg-gray-50 text-gray-500 border-gray-200/80"
+                            ? "bg-zinc-800/60 text-zinc-400 border-zinc-700/60 hover:bg-zinc-800 hover:text-zinc-300"
+                            : "bg-gray-50 text-gray-500 border-gray-200/80 hover:bg-gray-100 hover:text-gray-700"
                       )}
                     >
                       {PERSONA_HELP_MAP[pt].displayName}
-                    </span>
+                    </button>
                   )
                 })}
               </div>
@@ -266,90 +279,20 @@ export function HelpPageClient() {
             className={cn(
               "pl-10 rounded-xl transition-all duration-200",
               isDark
-                ? "border-white/10 bg-zinc-900/60 placeholder:text-zinc-600 focus:border-white/20 focus:bg-zinc-900/80"
+                ? "border-zinc-800 bg-zinc-900 placeholder:text-zinc-600 focus:border-zinc-700"
                 : "border-gray-200 bg-white placeholder:text-gray-400 focus:border-blue-200 focus:shadow-sm"
             )}
           />
         </div>
       </header>
 
-      {/* -- Getting Started ----------------------------------------------- */}
-      {filteredGettingStarted.length > 0 && !searchQuery && (
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Sparkles className={cn(
-              "h-4 w-4",
-              isDark ? "text-amber-400/70" : "text-amber-500"
-            )} />
-            <h2 className={cn(
-              "text-sm font-semibold uppercase tracking-wider",
-              isDark ? "text-zinc-300" : "text-gray-700"
-            )}>
-              Getting Started
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {filteredGettingStarted.map((item, idx) => {
-              const Icon = GETTING_STARTED_ICONS[idx] ?? BookOpen
-              return (
-                <Card key={item.id} className={cn(
-                  "group relative overflow-hidden rounded-2xl hover:-translate-y-0.5",
-                  cardStyle(isDark)
-                )}>
-                  {/* Gradient hover overlay */}
-                  <div className={cn(
-                    "pointer-events-none absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity duration-500 group-hover:opacity-100",
-                    isDark
-                      ? "from-blue-500/10 via-transparent to-transparent"
-                      : "from-blue-50/60 via-transparent to-transparent"
-                  )} />
-                  {/* Top accent bar */}
-                  <div className={cn(
-                    "absolute inset-x-0 top-0 h-0.5",
-                    isDark ? "bg-blue-500/40" : "bg-blue-500/20"
-                  )} />
-                  <CardHeader className="relative pb-2 pt-5">
-                    <div className={cn(
-                      "mb-3 flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-300",
-                      isDark
-                        ? "bg-blue-500/15 group-hover:bg-blue-500/25"
-                        : "bg-blue-50 group-hover:bg-blue-100"
-                    )}>
-                      <Icon className={cn(
-                        "h-[18px] w-[18px] transition-transform duration-300 group-hover:scale-110",
-                        isDark ? "text-blue-400" : "text-blue-600"
-                      )} />
-                    </div>
-                    <CardTitle className={cn(
-                      "text-sm font-semibold",
-                      isDark ? "text-white" : "text-gray-900"
-                    )}>
-                      {item.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="relative pb-5">
-                    <p className={cn(
-                      "text-[13px] leading-relaxed",
-                      isDark ? "text-zinc-400" : "text-gray-500"
-                    )}>
-                      {item.content}
-                    </p>
-                  </CardContent>
-                </Card>
-              )
-            })}
-          </div>
-        </section>
-      )}
-
       {/* -- Tabs: FAQ + How-To -------------------------------------------- */}
       <Tabs defaultValue="faq" className="space-y-6">
         <TabsList className={cn(
           "h-auto gap-1 rounded-xl p-1",
           isDark
-            ? "bg-zinc-900/60 backdrop-blur-md border border-white/5"
-            : "bg-white/90 backdrop-blur-md border border-gray-200 shadow-sm"
+            ? "bg-zinc-900 border border-zinc-800"
+            : "bg-gray-50 border border-gray-200"
         )}>
           <TabsTrigger value="faq" className="gap-1.5 px-3 sm:px-4">
             <MessageCircleQuestion className="h-3.5 w-3.5" />
@@ -440,17 +383,10 @@ export function HelpPageClient() {
             <div className="grid grid-cols-1 gap-4">
               {filteredHowTos.map((howto) => (
                 <Card key={howto.id} className={cn(
-                  "group relative overflow-hidden rounded-2xl",
+                  "group relative overflow-hidden rounded-2xl transition-colors",
                   cardStyle(isDark)
                 )}>
-                  {/* Gradient hover overlay */}
-                  <div className={cn(
-                    "pointer-events-none absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity duration-500 group-hover:opacity-100",
-                    isDark
-                      ? "from-blue-500/10 via-transparent to-transparent"
-                      : "from-blue-50/60 via-transparent to-transparent"
-                  )} />
-                  <CardHeader className="relative pb-3">
+                  <CardHeader className="pb-3">
                     <div className="flex items-center justify-between gap-4">
                       <CardTitle className={cn(
                         "text-sm font-semibold",
@@ -479,7 +415,7 @@ export function HelpPageClient() {
                       {howto.category}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="relative pb-5">
+                  <CardContent className="pb-5">
                     <ol className="space-y-2.5">
                       {howto.content.split('\n').map((line, i) => {
                         const stepMatch = line.match(/^(\d+)\.\s+(.*)$/)
@@ -498,10 +434,10 @@ export function HelpPageClient() {
                         return (
                           <li key={i} className="flex items-start gap-3">
                             <span className={cn(
-                              "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold tabular-nums transition-colors duration-300",
+                              "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold tabular-nums",
                               isDark
-                                ? "bg-blue-500/20 text-blue-400 border border-blue-500/30 group-hover:bg-blue-500/30"
-                                : "bg-blue-50 text-blue-700 border border-blue-200/60 group-hover:bg-blue-100"
+                                ? "bg-blue-950 text-blue-400 border border-blue-800/40"
+                                : "bg-blue-50 text-blue-700 border border-blue-200/60"
                             )}>
                               {num}
                             </span>
@@ -526,33 +462,24 @@ export function HelpPageClient() {
       {/* -- Contact CTA --------------------------------------------------- */}
       {!searchQuery && (
         <a
-          href="mailto:support@versoholdings.com"
+          href="mailto:contact@versotech.com"
           className={cn(
-            "group relative flex items-center gap-4 overflow-hidden rounded-2xl p-5",
+            "group flex items-center gap-4 rounded-2xl p-5 transition-colors",
             isDark
-              ? "bg-zinc-900/40 backdrop-blur-md border border-white/5 shadow-xl hover:shadow-2xl hover:shadow-black/50 hover:border-emerald-500/20 transition-all duration-300"
-              : "bg-white/80 backdrop-blur-md border border-gray-200 shadow-lg hover:shadow-xl hover:border-emerald-200 transition-all duration-300"
+              ? "bg-zinc-900 border border-zinc-800 hover:border-zinc-700"
+              : "bg-white border border-gray-200 shadow-sm hover:border-blue-200"
           )}
         >
-          {/* Gradient hover overlay */}
           <div className={cn(
-            "pointer-events-none absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity duration-500 group-hover:opacity-100",
-            isDark
-              ? "from-emerald-500/10 via-transparent to-transparent"
-              : "from-emerald-50/60 via-transparent to-transparent"
-          )} />
-          <div className={cn(
-            "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-300",
-            isDark
-              ? "bg-emerald-500/15 group-hover:bg-emerald-500/25"
-              : "bg-emerald-50 group-hover:bg-emerald-100"
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+            isDark ? "bg-blue-950" : "bg-blue-50"
           )}>
             <Mail className={cn(
-              "h-5 w-5 transition-transform duration-300 group-hover:scale-110",
-              isDark ? "text-emerald-400" : "text-emerald-600"
+              "h-5 w-5",
+              isDark ? "text-blue-400" : "text-blue-600"
             )} />
           </div>
-          <div className="relative min-w-0 flex-1">
+          <div className="min-w-0 flex-1">
             <p className={cn(
               "text-sm font-semibold",
               isDark ? "text-white" : "text-gray-900"
@@ -566,16 +493,16 @@ export function HelpPageClient() {
               Reach us at{' '}
               <span className={cn(
                 "font-medium",
-                isDark ? "text-emerald-400" : "text-emerald-600"
+                isDark ? "text-blue-400" : "text-blue-600"
               )}>
-                support@versoholdings.com
+                contact@versotech.com
               </span>
               <span className="mx-1.5">&middot;</span>
               Response within 24 business hours
             </p>
           </div>
           <ArrowUpRight className={cn(
-            "relative h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5",
+            "h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5",
             isDark ? "text-zinc-600 group-hover:text-zinc-400" : "text-gray-300 group-hover:text-gray-500"
           )} />
         </a>
