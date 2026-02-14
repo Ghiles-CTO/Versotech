@@ -154,6 +154,19 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // Do not clear expiry on retry webhooks:
+  // if expires_at is missing in payload, keep existing expiry or default to 7 days.
+  const { data: existingAccess } = await serviceSupabase
+    .from('deal_data_room_access')
+    .select('expires_at')
+    .eq('deal_id', deal_id)
+    .eq('investor_id', investor_id)
+    .maybeSingle()
+
+  const resolvedAccessExpiry = expires_at
+    ? new Date(expires_at).toISOString()
+    : (existingAccess?.expires_at ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString())
+
   const accessInsert = await serviceSupabase
     .from('deal_data_room_access')
     .upsert(
@@ -161,7 +174,7 @@ export async function POST(request: NextRequest) {
         deal_id,
         investor_id,
         auto_granted: true,
-        expires_at: expires_at ? new Date(expires_at).toISOString() : null,
+        expires_at: resolvedAccessExpiry,
         granted_by: null,
         granted_at: new Date().toISOString(),
         revoked_at: null,
@@ -266,7 +279,7 @@ export async function POST(request: NextRequest) {
           instructions: {
             type: 'subscription_prepare',
             deal_id,
-            expires_at: expires_at ?? null
+            expires_at: resolvedAccessExpiry
           }
         })
       }
