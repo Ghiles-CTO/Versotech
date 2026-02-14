@@ -314,7 +314,7 @@ export function DealDocumentsTab({ dealId, documents, onRefresh }: DealDocuments
                           id: doc.id,
                           file_name: doc.file_name || doc.file_key?.split('/').pop(),
                           file_size_bytes: doc.file_size_bytes,
-                          mime_type: doc.file_type,
+                          mime_type: doc.mime_type,
                         }, dealId)}
                         disabled={bulkDeleting}
                       >
