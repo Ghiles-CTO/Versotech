@@ -217,8 +217,11 @@ export function DealDataRoomAccessTab({
     setErrorMessage(null)
   }
 
-  const openCreateDialog = () => {
+  const openCreateDialog = (investorId?: string) => {
     resetForm()
+    if (investorId) {
+      setFormValues(prev => ({ ...prev, investorId }))
+    }
     setIsDialogOpen(true)
   }
 
@@ -248,6 +251,58 @@ export function DealDataRoomAccessTab({
     const data = await response.json()
     setItems(data.access ?? [])
   }
+
+  const latestAccessByInvestor = useMemo(() => {
+    const map = new Map<string, Record<string, any>>()
+    ;(items ?? []).forEach(record => {
+      const investorId = record?.investor_id
+      if (!investorId) return
+
+      const existing = map.get(investorId)
+      if (!existing) {
+        map.set(investorId, record)
+        return
+      }
+
+      const existingGrantedAt = existing?.granted_at ? new Date(existing.granted_at).getTime() : 0
+      const currentGrantedAt = record?.granted_at ? new Date(record.granted_at).getTime() : 0
+      if (currentGrantedAt > existingGrantedAt) {
+        map.set(investorId, record)
+      }
+    })
+    return map
+  }, [items])
+
+  const memberAccessRows = useMemo(() => {
+    const rows: Array<{
+      investorId: string
+      investorName: string
+      accessRecord: Record<string, any> | null
+    }> = []
+    const seen = new Set<string>()
+
+    ;(memberships ?? []).forEach(member => {
+      const investorId = member?.investor_id
+      if (!investorId || seen.has(investorId)) return
+      seen.add(investorId)
+      rows.push({
+        investorId,
+        investorName: member?.investors?.legal_name || 'Unknown investor',
+        accessRecord: latestAccessByInvestor.get(investorId) ?? null
+      })
+    })
+
+    for (const [investorId, accessRecord] of latestAccessByInvestor.entries()) {
+      if (seen.has(investorId)) continue
+      rows.push({
+        investorId,
+        investorName: accessRecord?.investors?.legal_name || 'Unknown investor',
+        accessRecord
+      })
+    }
+
+    return rows.sort((a, b) => a.investorName.localeCompare(b.investorName))
+  }, [memberships, latestAccessByInvestor])
 
   const submitForm = async () => {
     if (!formValues.investorId) {
@@ -615,7 +670,7 @@ export function DealDataRoomAccessTab({
               Manage NDA-cleared investors, extend access windows, and keep visibility in sync with documentation.
             </CardDescription>
           </div>
-          <Button onClick={openCreateDialog} className="gap-2" disabled={isSubmitting}>
+          <Button onClick={() => openCreateDialog()} className="gap-2" disabled={isSubmitting}>
             <KeyRound className="h-4 w-4" />
             Grant Access
           </Button>
@@ -638,49 +693,98 @@ export function DealDataRoomAccessTab({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items?.length ? (
-                items.map(record => {
-                  const isRevoked = Boolean(record.revoked_at)
-                  const expiresSoon = !record.revoked_at && record.expires_at && new Date(record.expires_at) < new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+              {memberAccessRows.length ? (
+                memberAccessRows.map(({ investorId, investorName, accessRecord }) => {
+                  const record = accessRecord
+                  const isRevoked = Boolean(record?.revoked_at)
+                  const isExpired = Boolean(
+                    !isRevoked &&
+                    record?.expires_at &&
+                    new Date(record.expires_at) <= new Date()
+                  )
+                  const expiresSoon = Boolean(
+                    !isRevoked &&
+                    !isExpired &&
+                    record?.expires_at &&
+                    new Date(record.expires_at) < new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+                  )
+
+                  const statusLabel = !record
+                    ? 'NOT GRANTED'
+                    : isRevoked
+                      ? 'REVOKED'
+                      : isExpired
+                        ? 'EXPIRED'
+                        : expiresSoon
+                          ? 'EXPIRING'
+                          : 'ACTIVE'
+
+                  const statusClass = !record
+                    ? 'border border-slate-300/50 bg-slate-500/10 text-slate-700 dark:text-slate-300'
+                    : isRevoked
+                      ? 'border border-rose-300/50 bg-rose-500/10 text-rose-700 dark:text-rose-300'
+                      : isExpired
+                        ? 'border border-rose-300/50 bg-rose-500/10 text-rose-700 dark:text-rose-300'
+                        : expiresSoon
+                          ? 'border border-amber-300/50 bg-amber-500/10 text-amber-700 dark:text-amber-300'
+                          : 'border border-emerald-300/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+
                   return (
-                    <TableRow key={record.id}>
+                    <TableRow key={record?.id ?? `investor-${investorId}`}>
                       <TableCell className="font-medium">
-                        {record.investors?.legal_name || 'Unknown investor'}
+                        {investorName}
                       </TableCell>
                       <TableCell>
-                        {record.granted_at ? format(new Date(record.granted_at), 'dd MMM yyyy HH:mm') : '—'}
+                        {record?.granted_at ? format(new Date(record.granted_at), 'dd MMM yyyy HH:mm') : 'Not granted'}
                       </TableCell>
                       <TableCell>
-                        {record.expires_at
-                          ? `${format(new Date(record.expires_at), 'dd MMM yyyy HH:mm')} (${formatDistanceToNow(new Date(record.expires_at), { addSuffix: true })})`
-                          : 'No expiry'}
+                        {!record
+                          ? '—'
+                          : record.expires_at
+                            ? `${format(new Date(record.expires_at), 'dd MMM yyyy HH:mm')} (${formatDistanceToNow(new Date(record.expires_at), { addSuffix: true })})`
+                            : 'No expiry'}
                       </TableCell>
                       <TableCell>
-                        <Badge className={isRevoked ? 'bg-rose-500/20 text-rose-100' : expiresSoon ? 'bg-amber-500/20 text-amber-100' : 'bg-emerald-500/20 text-emerald-100'}>
-                          {isRevoked ? 'REVOKED' : expiresSoon ? 'EXPIRING' : 'ACTIVE'}
+                        <Badge className={statusClass}>
+                          {statusLabel}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-2"
-                          onClick={() => openEditDialog(record)}
-                          disabled={isSubmitting || isRevoked}
-                        >
-                          <Clock className="h-4 w-4" />
-                          Extend
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-2 text-rose-300"
-                          onClick={() => revokeAccess(record)}
-                          disabled={isSubmitting || isRevoked}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Revoke
-                        </Button>
+                        {!record ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                            onClick={() => openCreateDialog(investorId)}
+                            disabled={isSubmitting}
+                          >
+                            <Plus className="h-4 w-4" />
+                            Grant
+                          </Button>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                              onClick={() => openEditDialog(record)}
+                              disabled={isSubmitting || isRevoked}
+                            >
+                              <Clock className="h-4 w-4" />
+                              Extend
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-2 text-rose-300"
+                              onClick={() => revokeAccess(record)}
+                              disabled={isSubmitting || isRevoked}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Revoke
+                            </Button>
+                          </>
+                        )}
                       </TableCell>
                     </TableRow>
                   )
