@@ -1,0 +1,18 @@
+severity,check,vehicle,row_ref,details
+fail,commission_row_rate_missing_in_db,IN103,IN3:8,investor=Sherri Lipton Grace 2020 Irrevocable Family Trust introducer=Anand basis=performance_fee_tier1 dashboard_rates=[850] db_rates=[]
+fail,commission_row_rate_missing_in_db,IN103,IN3:7,investor=Elizabeth GRACE introducer=Anand basis=performance_fee_tier1 dashboard_rates=[850] db_rates=[]
+fail,commission_row_rate_missing_in_db,IN103,IN3:4,investor=Wymo Finance Limited introducer=Anand basis=performance_fee_tier1 dashboard_rates=[850] db_rates=[]
+fail,commission_row_rate_missing_in_db,IN103,IN3:5,investor=HASSBRO Investments Limited introducer=Anand basis=performance_fee_tier1 dashboard_rates=[850] db_rates=[]
+fail,commission_row_amount_mismatch,IN103,IN3:3,investor=Zandera (Holdco) Limited introducer=Altras+Andrew basis=invested_amount dashboard=30000.0 db=15000.0 delta=-15000.0
+fail,commission_row_amount_mismatch,IN103,IN3:3,investor=Zandera (Holdco) Limited introducer=Altras+Andrew basis=spread dashboard=349998.06 db=174999.03 delta=-174999.03
+fail,commission_row_rate_mismatch,IN103,IN3:3,investor=Zandera (Holdco) Limited introducer=Altras+Andrew basis=spread dashboard_rates=[290] db_rates=[3500]
+fail,commission_row_amount_mismatch,IN103,IN3:3,investor=Zandera (Holdco) Limited introducer=Anand basis=invested_amount dashboard=10000.0 db=5000.0 delta=-5000.0
+fail,commission_row_rate_missing_in_db,IN103,IN3:3,investor=Zandera (Holdco) Limited introducer=Anand basis=performance_fee_tier1 dashboard_rates=[850] db_rates=[]
+fail,commission_row_amount_mismatch,IN103,IN3:3,investor=Zandera (Holdco) Limited introducer=Anand basis=spread dashboard=149999.17 db=74999.58 delta=-74999.59
+fail,commission_row_rate_mismatch,IN103,IN3:3,investor=Zandera (Holdco) Limited introducer=Anand basis=spread dashboard_rates=[124] db_rates=[1500]
+fail,commission_row_rate_missing_in_db,IN103,IN3:10,investor=Jeremy LOWY introducer=Anand basis=performance_fee_tier1 dashboard_rates=[850] db_rates=[]
+fail,commission_row_rate_missing_in_db,IN103,IN3:6,investor=N SQUARE PATEL LLC introducer=Anand basis=performance_fee_tier1 dashboard_rates=[850] db_rates=[]
+fail,commission_row_rate_missing_in_db,IN106,IN6:3,investor=Wymo Finance Limited introducer=SET CAP basis=performance_fee_tier1 dashboard_rates=[1700] db_rates=[]
+warn,commission_totals_ruled_diff_invested_amount,IN102,,dashboard=74881.5498 db=0.0 delta=-74881.5498 expected=-74881.5498
+warn,commission_totals_ruled_diff_invested_amount,IN103,,dashboard=65000.0 db=45000.0 delta=-20000.0 expected=-20000.0
+warn,commission_totals_ruled_diff_spread,IN103,,dashboard=499997.22284 db=249998.61 delta=-249998.61284 expected=-249998.61284

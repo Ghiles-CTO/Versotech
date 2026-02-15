@@ -1,0 +1,6 @@
+severity,check,vehicle,row_ref,details
+fail,commission_totals_mismatch_invested_amount,VC122,,dashboard=1500.0 db=0.0 delta=-1500.0
+fail,commission_row_missing_in_db,VC122,VC22:12,investor=LF GROUP SARL introducer=Pierre Paumier basis=invested_amount dashboard=1500.0 db=0.0
+warn,commission_totals_ruled_diff_spread,VC106,,dashboard=6326296.752 db=6326296.81 delta=0.058 expected=0.058
+warn,commission_totals_ruled_diff_spread,VC113,,dashboard=963887.6075 db=963887.62 delta=0.0125 expected=0.0125
+warn,commission_totals_ruled_diff_spread,VC114,,dashboard=0.4 db=0.0 delta=-0.4 expected=-0.4

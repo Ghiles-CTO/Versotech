@@ -1,0 +1,100 @@
+{
+  "generated_at_utc": "2026-02-14T20:15:45.069101+00:00",
+  "run_folder": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/output/global/run_20260214_201530",
+  "total_fail_count": 0,
+  "total_warning_count": 40,
+  "all_scopes_pass": true,
+  "scopes": [
+    {
+      "scope": "vc1",
+      "run_dir": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/vc1/output/run_20260214_211536",
+      "run_id": "run_20260214_211536",
+      "report_json": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/vc1/output/run_20260214_211536/audit_report.json",
+      "report_md": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/vc1/output/run_20260214_211536/audit_summary.md",
+      "issues_csv": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/vc1/output/run_20260214_211536/audit_issues.csv",
+      "fail_count": 0,
+      "warning_count": 3,
+      "fail_by_check": {},
+      "warn_by_check": {
+        "commission_totals_ruled_diff_spread": 3
+      },
+      "rules_version": "2026-02-13.2",
+      "scope_vehicle_codes": [
+        "VC102",
+        "VC106",
+        "VC111",
+        "VC112",
+        "VC113",
+        "VC114",
+        "VC118",
+        "VC121",
+        "VC122",
+        "VC123",
+        "VC124",
+        "VC125",
+        "VC126"
+      ],
+      "log_path": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/output/global/run_20260214_201530/vc1.log"
+    },
+    {
+      "scope": "vc2",
+      "run_dir": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/vc2/output/run_20260214_211541",
+      "run_id": "run_20260214_211541",
+      "report_json": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/vc2/output/run_20260214_211541/audit_report.json",
+      "report_md": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/vc2/output/run_20260214_211541/audit_summary.md",
+      "issues_csv": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/vc2/output/run_20260214_211541/audit_issues.csv",
+      "fail_count": 0,
+      "warning_count": 30,
+      "fail_by_check": {},
+      "warn_by_check": {
+        "commission_totals_ruled_diff_invested_amount": 4,
+        "commission_combined_ruled_removed": 9,
+        "commission_row_ruled_dashboard_override": 5,
+        "commission_row_ruled_removed": 11,
+        "introducer_warning_only_present": 1
+      },
+      "rules_version": "2026-02-14.1",
+      "scope_vehicle_codes": [
+        "VC201",
+        "VC202",
+        "VC203",
+        "VC206",
+        "VC207",
+        "VC209",
+        "VC210",
+        "VC211",
+        "VC215",
+        "VCL001",
+        "VCL002"
+      ],
+      "log_path": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/output/global/run_20260214_201530/vc2.log"
+    },
+    {
+      "scope": "in",
+      "run_dir": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/in/output/run_20260214_211545",
+      "run_id": "run_20260214_211545",
+      "report_json": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/in/output/run_20260214_211545/audit_report.json",
+      "report_md": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/in/output/run_20260214_211545/audit_summary.md",
+      "issues_csv": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/in/output/run_20260214_211545/audit_issues.csv",
+      "fail_count": 0,
+      "warning_count": 7,
+      "fail_by_check": {},
+      "warn_by_check": {
+        "commission_totals_ruled_diff_invested_amount": 2,
+        "commission_totals_ruled_diff_spread": 1,
+        "commission_row_ruled_dashboard_override": 4
+      },
+      "rules_version": "2026-02-14.1",
+      "scope_vehicle_codes": [
+        "IN101",
+        "IN102",
+        "IN103",
+        "IN106",
+        "IN109",
+        "IN110",
+        "IN111"
+      ],
+      "log_path": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/output/global/run_20260214_201530/in.log"
+    }
+  ]
+}

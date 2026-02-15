@@ -1,0 +1,749 @@
+{
+  "summary": {
+    "rules_version": "2026-02-11.2",
+    "scope_vehicle_codes": [
+      "VC201",
+      "VC202",
+      "VC203",
+      "VC206",
+      "VC207",
+      "VC209",
+      "VC210",
+      "VC211",
+      "VC215",
+      "VCL001",
+      "VCL002"
+    ],
+    "dashboard_active_rows": 105,
+    "dashboard_zero_rows": 5,
+    "db_subscriptions": 105,
+    "db_positions": 94,
+    "db_introductions": 88,
+    "db_commissions": 264,
+    "contacts_checked_rows": 123,
+    "contacts_red_rows_excluded": [
+      10,
+      13
+    ],
+    "fail_count": 89,
+    "warning_count": 11,
+    "fail_by_check": {
+      "vehicle_totals_mismatch": 3,
+      "row_unmatched_dashboard": 2,
+      "row_unmatched_db": 2,
+      "row_numeric_mismatch": 21,
+      "commission_row_missing_in_dashboard": 60,
+      "commission_row_missing_in_db": 1
+    },
+    "warn_by_check": {
+      "dashboard_combined_introducer_name": 5,
+      "commission_totals_ruled_diff_invested_amount": 4,
+      "commission_row_warning_only_present": 1,
+      "introducer_warning_only_present": 1
+    }
+  },
+  "failures": [
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "cost_per_share: dashboard=1183.56023 db=903.5602299999998 delta=-280.0000000000002"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "spread_per_share: dashboard=139.56227 db=419.56227000000007 delta=280.00000000000006"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "spread_fee: dashboard=5855431.1565000005 db=8079471.1565000005 delta=2224040.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_unmatched_dashboard",
+      "vehicle": "VC203",
+      "row_ref": "VC203:21",
+      "details": "investor=Robert C. VOGT IV commitment=100000.0 shares=2222.0 date=2025-04-15"
+    },
+    {
+      "severity": "fail",
+      "check": "row_unmatched_dashboard",
+      "vehicle": "VC215",
+      "row_ref": "VC215:21",
+      "details": "investor=Georges CHEN commitment=1456000.0 shares=5600.0 date=2025-12-24"
+    },
+    {
+      "severity": "fail",
+      "check": "row_unmatched_db",
+      "vehicle": "VC203",
+      "row_ref": "",
+      "details": "investor=Robert VOGT IV commitment=100000.0 shares=2222.0 date=2025-04-15 sub_id=d9faf913-318f-45c7-a1c1-fd7530737b4c"
+    },
+    {
+      "severity": "fail",
+      "check": "row_unmatched_db",
+      "vehicle": "VC215",
+      "row_ref": "",
+      "details": "investor=George Guoying CHEN commitment=1456000.0 shares=5600.0 date=2025-12-24 sub_id=3189f4cc-4923-43df-b426-b61b169d887e"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:21",
+      "details": "investor=PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:21",
+      "details": "investor=PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC metric=spread_per_share dashboard=-7.0 db=33.0 delta=40.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:21",
+      "details": "investor=PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC metric=spread_fee dashboard=-280742.0 db=1323498.0 delta=1604240.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:23",
+      "details": "investor=Kartik Kumar ATTULURI metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:23",
+      "details": "investor=Kartik Kumar ATTULURI metric=spread_per_share dashboard=2.0 db=42.0 delta=40.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:23",
+      "details": "investor=Kartik Kumar ATTULURI metric=spread_fee dashboard=2598.0 db=54558.0 delta=51960.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:26",
+      "details": "investor=MADISON TRUST COMPANY (on behalf of Edward Bendickson) metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:26",
+      "details": "investor=MADISON TRUST COMPANY (on behalf of Edward Bendickson) metric=spread_per_share dashboard=2.0 db=42.0 delta=40.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:26",
+      "details": "investor=MADISON TRUST COMPANY (on behalf of Edward Bendickson) metric=spread_fee dashboard=3896.0 db=81816.0 delta=77920.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:27",
+      "details": "investor=FRONTIERX VIII, LP metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:27",
+      "details": "investor=FRONTIERX VIII, LP metric=spread_per_share dashboard=3.0 db=43.0 delta=40.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:27",
+      "details": "investor=FRONTIERX VIII, LP metric=spread_fee dashboard=27900.0 db=399900.0 delta=372000.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:25",
+      "details": "investor=Julien MACHOT metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:25",
+      "details": "investor=Julien MACHOT metric=spread_per_share dashboard=-35.0 db=5.0 delta=40.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:25",
+      "details": "investor=Julien MACHOT metric=spread_fee dashboard=-35000.0 db=5000.0 delta=40000.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:24",
+      "details": "investor=Prabhakar Somana KONGANDA metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:24",
+      "details": "investor=Prabhakar Somana KONGANDA metric=spread_per_share dashboard=2.0 db=42.0 delta=40.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:24",
+      "details": "investor=Prabhakar Somana KONGANDA metric=spread_fee dashboard=2598.0 db=54558.0 delta=51960.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:22",
+      "details": "investor=Mohan SASANAPURI metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:22",
+      "details": "investor=Mohan SASANAPURI metric=spread_per_share dashboard=2.0 db=42.0 delta=40.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:22",
+      "details": "investor=Mohan SASANAPURI metric=spread_fee dashboard=1298.0 db=27258.0 delta=25960.0 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC202",
+      "row_ref": "aa70686d-2d67-4e95-92a9-ba81c56840d3",
+      "details": "investor=SPLENDID HEIGHT HOLDINGS LIMITED introducer=Bromley Capital Partners basis=invested_amount dashboard=0.0 db=80000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC202",
+      "row_ref": "3e428d0b-755e-4284-81fc-99232ea5d0b7",
+      "details": "investor=SESR INVESTMENTS PTE LTD introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=25000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC203",
+      "row_ref": "aeec11e6-347d-45b6-bbd2-d622e2fd5691",
+      "details": "investor=PEGASUS TECH VENTURES COMPANY VIII, L.P. introducer=Astral Global Limited basis=invested_amount dashboard=0.0 db=15000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC203",
+      "row_ref": "de3ba541-0a4b-4a35-ba10-127843ed319e",
+      "details": "investor=DOMINARI SECURITIES LLC introducer=Dimensional Advisors basis=invested_amount dashboard=0.0 db=49999.5"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC203",
+      "row_ref": "6f32b8d4-cacd-4228-b038-3a99108b24e9",
+      "details": "investor=Tobias ENSELE introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=26250.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC203",
+      "row_ref": "e86fd7b6-7f02-4a7c-b7ad-2a33c73c4250",
+      "details": "investor=Tobias ENSELE introducer=Old City Securities LLC basis=invested_amount dashboard=0.0 db=26250.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC203",
+      "row_ref": "33129a8c-d50e-4cf8-8d8d-5caeffd3e3ee",
+      "details": "investor=EVERLASTING HOLDINGS LLC introducer=Sakal Advisory, LLC basis=invested_amount dashboard=0.0 db=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC203",
+      "row_ref": "411513a9-437e-4614-bcc5-7b27fbbc3e2c",
+      "details": "investor=EVERLASTING HOLDINGS LLC introducer=Astral Global Limited basis=invested_amount dashboard=0.0 db=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC203",
+      "row_ref": "d83b40da-e34f-45cd-a2e8-f5648395f477",
+      "details": "investor=INCRED GLOBAL WEALTH PTE LTD introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=26250.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC203",
+      "row_ref": "000be7ef-dd4e-4e62-8517-14103f2327e9",
+      "details": "investor=INCRED GLOBAL WEALTH PTE LTD introducer=Old City Securities LLC basis=invested_amount dashboard=0.0 db=26250.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC203",
+      "row_ref": "6c16228c-0e30-46f6-a86d-e91eb6a5ce63",
+      "details": "investor=INS NEVADA LLC introducer=Rainmaker Securities basis=invested_amount dashboard=0.0 db=25000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC203",
+      "row_ref": "a4d00592-a18a-41c1-a68d-a19d066f46ac",
+      "details": "investor=MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=25000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC203",
+      "row_ref": "82b5bc1b-7b96-4ced-9893-e626b994aec6",
+      "details": "investor=MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP introducer=Oliver Little basis=invested_amount dashboard=0.0 db=25000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC206",
+      "row_ref": "12d13748-8907-4782-a1d3-daad5c8e4075",
+      "details": "investor=AAF D Boral Mstr SPV LLC, Ser III OpenAI introducer=AEON INC basis=invested_amount dashboard=0.0 db=58806.25"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC206",
+      "row_ref": "a04cef30-0e9d-48bb-ab7b-1fe30f26265c",
+      "details": "investor=AI DIRECT OPPORTUNITIES FUND SCSP introducer=Dimensional Advisors basis=invested_amount dashboard=0.0 db=11860.14"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC206",
+      "row_ref": "f18f9b81-dc49-496b-8520-e5a61f4a18b9",
+      "details": "investor=AI DIRECT OPPORTUNITIES FUND SCSP introducer=Venture Spring basis=invested_amount dashboard=0.0 db=11860.14"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC206",
+      "row_ref": "97bc594f-f004-497b-865a-251880e0eb35",
+      "details": "investor=Anuroop ARORA introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=3240.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC206",
+      "row_ref": "b32e17aa-4e00-4930-8a06-291302c95576",
+      "details": "investor=REDPOINT OMEGA ASSOCIATES V, LLC introducer=Visual Sectors basis=invested_amount dashboard=0.0 db=60000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC206",
+      "row_ref": "6d02f3e2-ebdc-4ebc-b12d-ff4b01299808",
+      "details": "investor=Bharath RAM introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=3000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC206",
+      "row_ref": "7c11edc5-5f4b-4693-ab9e-d6f1e7ef38bf",
+      "details": "investor=PUTHAN N.C. MENON AND/OR SOBHA MENON RAGHAVANNAIR introducer=Mervyn Pereira basis=invested_amount dashboard=0.0 db=100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC206",
+      "row_ref": "de75d4f7-2e40-46db-872e-0e22e10cbb12",
+      "details": "investor=Jyotsna HEDGE introducer=Mervyn Pereira basis=invested_amount dashboard=0.0 db=20000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC206",
+      "row_ref": "d36c5fd2-d123-4720-ba5c-f0cbf8e3398b",
+      "details": "investor=KIWI INNOVATIONS LIMITED introducer=Bromley Capital Partners basis=invested_amount dashboard=0.0 db=30000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC206",
+      "row_ref": "aadad175-eefb-48b5-acf7-22fa1d4ff4de",
+      "details": "investor=REDPOINT OMEGA V, L.P. introducer=Astral Global Limited basis=invested_amount dashboard=0.0 db=90000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC206",
+      "row_ref": "bee4fe86-73ba-485e-ac94-4870a064a8b5",
+      "details": "investor=REDPOINT OMEGA V, L.P. introducer=Visual Sectors basis=invested_amount dashboard=0.0 db=82000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC206",
+      "row_ref": "a90fc3f6-5d4a-4699-8a04-b923a4a8775a",
+      "details": "investor=Rishabh MITTAL introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=3000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC207",
+      "row_ref": "a1571598-45e2-4abb-bb6f-df0f20f055ef",
+      "details": "investor=AGP ALTERNATIVE INVESTMENT QP FUND - SERIES 4 introducer=Alliance Global Partners LLC basis=invested_amount dashboard=0.0 db=93478.4"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC207",
+      "row_ref": "a5e73cd7-4d65-4f2f-90cd-3ed80a783207",
+      "details": "investor=ABHINEET MISHRA introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=375.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC207",
+      "row_ref": "b3488e10-450a-4763-8f08-9b71f46955ee",
+      "details": "investor=ANKUR SRIVASTAVA introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=750.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC207",
+      "row_ref": "feaac506-d995-4f6e-96bb-ba4bcc4f2b58",
+      "details": "investor=Anuroop ARORA introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=1500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC207",
+      "row_ref": "33afc933-3edc-44ae-a00b-ce689bff7015",
+      "details": "investor=ASHUTOSH CHETAL introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=375.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC207",
+      "row_ref": "fad5825f-8004-4b3c-9e79-02e95f39dafa",
+      "details": "investor=Bharath RAM introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=1500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC207",
+      "row_ref": "105714af-dd92-4005-95cf-57a6f73c0e06",
+      "details": "investor=SPARKLABS GLOBAL CAPITAL X LLC introducer=Elena VYSOTSKAIA basis=invested_amount dashboard=0.0 db=11565.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC207",
+      "row_ref": "f3390b9c-c2a1-43ff-8a1d-2a1645d13cf5",
+      "details": "investor=DIVYA SRIDHAR and SHRIVATSAN VASUDHEVAN introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=1500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC207",
+      "row_ref": "757e3614-c6a5-4961-87de-35e7d163117b",
+      "details": "investor=VIDHYA GOVINDARAJAN introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=1500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC207",
+      "row_ref": "14a50e15-e8fc-4c5b-b039-c4892a3db5e8",
+      "details": "investor=GURPREET SINGH introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=750.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC207",
+      "row_ref": "957f875c-ea16-4e7c-9c47-db53a4a1ede6",
+      "details": "investor=Rishabh MITTAL introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=1000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC207",
+      "row_ref": "fb994ff2-1cf5-418d-b7f7-13d849987cf3",
+      "details": "investor=VARUN SEMBIUM VARADARAJAN introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=1500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC209",
+      "row_ref": "17d70a5c-1e74-481c-b1bf-4a45445942a2",
+      "details": "investor=PVPL FUND LLC SERIES 3 introducer=Visual Sectors basis=invested_amount dashboard=0.0 db=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC209",
+      "row_ref": "ffb66b53-99dd-42d7-bd9d-0d0b0c3d35cc",
+      "details": "investor=PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC introducer=Rubix Holdings Limited basis=invested_amount dashboard=0.0 db=272720.8"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC209",
+      "row_ref": "a5a08c8b-74dd-48eb-980a-7add8a47416c",
+      "details": "investor=D. BORAL MASTER SPV, SERIES IV XAI introducer=AEON INC basis=invested_amount dashboard=0.0 db=58466.25"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC209",
+      "row_ref": "a3c725d1-c37b-4c0f-9da0-713ab43b8084",
+      "details": "investor=JRF INVESTMENTS DMCC introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=29200.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC209",
+      "row_ref": "5acfcc64-5fc1-43b3-aebb-f999a372b532",
+      "details": "investor=MOBILITY INNOVATION FUND LLC introducer=Jeffrey Wan basis=invested_amount dashboard=0.0 db=30927.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC209",
+      "row_ref": "b352595b-4314-4905-8d44-f44b1e1ba403",
+      "details": "investor=Georgi GEORGIEV introducer=Robin Doble basis=invested_amount dashboard=0.0 db=22500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC209",
+      "row_ref": "55048041-7213-4278-9e08-65721e6de14f",
+      "details": "investor=SINO SUISSE LLC introducer=Bromley Capital Partners basis=invested_amount dashboard=0.0 db=18849.42"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC210",
+      "row_ref": "3e90e90b-6eb2-446b-8bd9-14cd11b9e88b",
+      "details": "investor=Hailey ORR introducer=ANIM basis=invested_amount dashboard=0.0 db=3412.44"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC210",
+      "row_ref": "131f6131-356b-4d13-a146-1fef2ea17bf2",
+      "details": "investor=Marvin HAZELL introducer=ANIM basis=invested_amount dashboard=0.0 db=426.56"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC211",
+      "row_ref": "d4dfe397-2881-44f5-878f-0a8e27badaea",
+      "details": "investor=Anton POLETAEV introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=3622.5"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC215",
+      "row_ref": "f6065fdd-4112-47c4-834b-3c7adcdd1124",
+      "details": "investor=Ved NIRANJANBHAI ANTANI introducer=Infinyte Club Private Limited basis=invested_amount dashboard=0.0 db=747.56"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC215",
+      "row_ref": "112371d6-b1d3-448b-8d8a-a4a29d7bdee2",
+      "details": "investor=Anthropic Compartment, HAG Private Markets SARL introducer=Hottinger AG basis=invested_amount dashboard=0.0 db=687753.5"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC215",
+      "row_ref": "147d1ac0-4269-4921-9cdf-d3a1c9c5d104",
+      "details": "investor=Anuroop ARORA introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=1718.84"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC215",
+      "row_ref": "3d0219ac-9c68-40f3-90f8-9043c9b60d9e",
+      "details": "investor=CARTA INVESTMENTS LLC introducer=Infinyte Club Private Limited basis=invested_amount dashboard=0.0 db=508.36"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC215",
+      "row_ref": "4e456962-9e95-4ca7-a3fb-4c10b5b9f666",
+      "details": "investor=Gourav KAKKAR introducer=Infinyte Club Private Limited basis=invested_amount dashboard=0.0 db=461.3"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC215",
+      "row_ref": "a0d0a155-9c53-4fd6-927f-d42870a71a2b",
+      "details": "investor=Rajagopalan MADHUSUDAN introducer=Infinyte Club Private Limited basis=invested_amount dashboard=0.0 db=365.57"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC215",
+      "row_ref": "6f86f1b2-89c0-4a01-aa9c-6f533b211310",
+      "details": "investor=Mahesh NALLAPATI introducer=Infinyte Club Private Limited basis=invested_amount dashboard=0.0 db=318.17"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_db",
+      "vehicle": "VC215",
+      "row_ref": "VC215:10",
+      "details": "investor=STELLATRION PARTNERS introducer=Bromley Capital basis=spread dashboard=18004.8 db=0.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC215",
+      "row_ref": "f2a7cec4-cce2-4f31-90f3-6e1fee993047",
+      "details": "investor=STELLATRION PARTNERS introducer=Set Cap basis=spread dashboard=0.0 db=18004.8"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC215",
+      "row_ref": "d4ee4243-4faa-464f-8d21-5eb27de6429b",
+      "details": "investor=VARUN SEMBIUM VARADARAJAN introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=1082.61"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VCL001",
+      "row_ref": "da88fe4d-e5ad-45bb-8d32-00153499226b",
+      "details": "investor=AGP Alternative Investment Fund VI- Series 2 introducer=Alliance Global Partners LLC basis=invested_amount dashboard=0.0 db=16426.09"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VCL001",
+      "row_ref": "3301235b-ba53-468f-9d62-48eb40d3ddfc",
+      "details": "investor=AGP Alternative Investment QP introducer=Alliance Global Partners LLC basis=invested_amount dashboard=0.0 db=91954.34"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VCL002",
+      "row_ref": "8a29498b-e430-460d-8f4f-f08ed0de7e97",
+      "details": "investor=AGP Alternative Investment Fund VI- Series 2 introducer=Alliance Global Partners LLC basis=invested_amount dashboard=0.0 db=18426.91"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VCL002",
+      "row_ref": "7dbc37f1-e47c-4d8a-a3b5-955133eee1d5",
+      "details": "investor=AGP Alternative Investment QF introducer=Alliance Global Partners LLC basis=invested_amount dashboard=0.0 db=3561.69"
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC215",
+      "row_ref": "VC215:4",
+      "details": "sheet=VC215 row=4 introducer='Bromley Capital + Infinyte Club' invested=0.0 spread=725.33"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC215",
+      "row_ref": "VC215:5",
+      "details": "sheet=VC215 row=5 introducer='Bromley Capital + Infinyte Club' invested=0.0 spread=574.05"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC215",
+      "row_ref": "VC215:6",
+      "details": "sheet=VC215 row=6 introducer='Bromley Capital + Infinyte Club' invested=0.0 spread=1175.26"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC215",
+      "row_ref": "VC215:7",
+      "details": "sheet=VC215 row=7 introducer='Bromley Capital + Infinyte Club' invested=0.0 spread=500.36"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC215",
+      "row_ref": "VC215:9",
+      "details": "sheet=VC215 row=9 introducer='Bromley Capital + Infinyte Club' invested=0.0 spread=4675.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "VC203",
+      "row_ref": "",
+      "details": "dashboard=320673.26 db=259999.5 delta=-60673.76 expected=-60673.76"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "VC207",
+      "row_ref": "",
+      "details": "dashboard=141932.1 db=115793.4 delta=-26138.7 expected=-26138.7"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "dashboard=704343.97 db=451663.47 delta=-252680.5 expected=-252680.5"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "VC215",
+      "row_ref": "",
+      "details": "dashboard=834528.32 db=692955.91 delta=-141572.41 expected=-141572.41"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_warning_only_present",
+      "vehicle": "VC209",
+      "row_ref": "3ccfd579-a96f-4448-92a6-a36814093bb8",
+      "details": "investor=Jamel CHANDOUL introducer=Bright Views Holdings basis=invested_amount dashboard=0.0 db=9000.0"
+    },
+    {
+      "severity": "warn",
+      "check": "introducer_warning_only_present",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "Bright Views Holdings rows=3 amount=9000.0"
+    }
+  ]
+}

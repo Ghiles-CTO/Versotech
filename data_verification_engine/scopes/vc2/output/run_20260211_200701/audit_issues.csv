@@ -1,0 +1,57 @@
+severity,check,vehicle,row_ref,details
+fail,vehicle_totals_mismatch,VC209,,cost_per_share: dashboard=1183.56023 db=903.5602299999998 delta=-280.0000000000002
+fail,vehicle_totals_mismatch,VC209,,spread_per_share: dashboard=139.56227 db=419.56227000000007 delta=280.00000000000006
+fail,vehicle_totals_mismatch,VC209,,spread_fee: dashboard=5855431.1565000005 db=8079471.1565000005 delta=2224040.0
+fail,row_numeric_mismatch,VC209,VC209:21,"investor=PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0 mode=exact_date"
+fail,row_numeric_mismatch,VC209,VC209:21,"investor=PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC metric=spread_per_share dashboard=-7.0 db=33.0 delta=40.0 mode=exact_date"
+fail,row_numeric_mismatch,VC209,VC209:21,"investor=PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC metric=spread_fee dashboard=-280742.0 db=1323498.0 delta=1604240.0 mode=exact_date"
+fail,row_numeric_mismatch,VC209,VC209:23,investor=Kartik Kumar ATTULURI metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0 mode=exact_date
+fail,row_numeric_mismatch,VC209,VC209:23,investor=Kartik Kumar ATTULURI metric=spread_per_share dashboard=2.0 db=42.0 delta=40.0 mode=exact_date
+fail,row_numeric_mismatch,VC209,VC209:23,investor=Kartik Kumar ATTULURI metric=spread_fee dashboard=2598.0 db=54558.0 delta=51960.0 mode=exact_date
+fail,row_numeric_mismatch,VC209,VC209:26,investor=MADISON TRUST COMPANY (on behalf of Edward Bendickson) metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0 mode=exact_date
+fail,row_numeric_mismatch,VC209,VC209:26,investor=MADISON TRUST COMPANY (on behalf of Edward Bendickson) metric=spread_per_share dashboard=2.0 db=42.0 delta=40.0 mode=exact_date
+fail,row_numeric_mismatch,VC209,VC209:26,investor=MADISON TRUST COMPANY (on behalf of Edward Bendickson) metric=spread_fee dashboard=3896.0 db=81816.0 delta=77920.0 mode=exact_date
+fail,row_numeric_mismatch,VC209,VC209:27,"investor=FRONTIERX VIII, LP metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0 mode=exact_date"
+fail,row_numeric_mismatch,VC209,VC209:27,"investor=FRONTIERX VIII, LP metric=spread_per_share dashboard=3.0 db=43.0 delta=40.0 mode=exact_date"
+fail,row_numeric_mismatch,VC209,VC209:27,"investor=FRONTIERX VIII, LP metric=spread_fee dashboard=27900.0 db=399900.0 delta=372000.0 mode=exact_date"
+fail,row_numeric_mismatch,VC209,VC209:25,investor=Julien MACHOT metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0 mode=exact_date
+fail,row_numeric_mismatch,VC209,VC209:25,investor=Julien MACHOT metric=spread_per_share dashboard=-35.0 db=5.0 delta=40.0 mode=exact_date
+fail,row_numeric_mismatch,VC209,VC209:25,investor=Julien MACHOT metric=spread_fee dashboard=-35000.0 db=5000.0 delta=40000.0 mode=exact_date
+fail,row_numeric_mismatch,VC209,VC209:24,investor=Prabhakar Somana KONGANDA metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0 mode=exact_date
+fail,row_numeric_mismatch,VC209,VC209:24,investor=Prabhakar Somana KONGANDA metric=spread_per_share dashboard=2.0 db=42.0 delta=40.0 mode=exact_date
+fail,row_numeric_mismatch,VC209,VC209:24,investor=Prabhakar Somana KONGANDA metric=spread_fee dashboard=2598.0 db=54558.0 delta=51960.0 mode=exact_date
+fail,row_numeric_mismatch,VC209,VC209:22,investor=Mohan SASANAPURI metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0 mode=exact_date
+fail,row_numeric_mismatch,VC209,VC209:22,investor=Mohan SASANAPURI metric=spread_per_share dashboard=2.0 db=42.0 delta=40.0 mode=exact_date
+fail,row_numeric_mismatch,VC209,VC209:22,investor=Mohan SASANAPURI metric=spread_fee dashboard=1298.0 db=27258.0 delta=25960.0 mode=exact_date
+warn,dashboard_combined_introducer_name,VC203,VC203:4,sheet=VC203 row=4 introducer='Dimensional Advisors + R. F. Lafferty & Co. Inc.' invested=96110.15 spread=0.0
+warn,dashboard_combined_introducer_name,VC203,VC203:9,sheet=VC203 row=9 introducer='Sakal Advisory + Astra Global Limited' invested=15000.0 spread=0.0
+warn,dashboard_combined_introducer_name,VC203,VC203:10,sheet=VC203 row=10 introducer='Old City Capital + Renaissance' invested=52500.0 spread=0.0
+warn,dashboard_combined_introducer_name,VC203,VC203:13,sheet=VC203 row=13 introducer='Old City Capital + Renaissance' invested=52500.0 spread=0.0
+warn,dashboard_combined_introducer_name,VC203,VC203:15,sheet=VC203 row=15 introducer='Renaissance Bridge Capital LLC + Oliver Little' invested=50000.0 spread=0.0
+warn,dashboard_combined_introducer_name,VC206,VC206:5,sheet=VC206 row=5 introducer='Venture Spring\n Dimensional Advisors' invested=23720.29 spread=0.0
+warn,dashboard_combined_introducer_name,VC206,VC206:15,sheet=VC206 row=15 introducer='Visual Sectors + Astra Global' invested=172000.0 spread=0.0
+warn,dashboard_combined_introducer_name,VC209,VC209:20,sheet=VC209 row=20 introducer='Lafferty+Visual Sectors' invested=110000.0 spread=0.0
+warn,dashboard_combined_introducer_name,VC215,VC215:4,sheet=VC215 row=4 introducer='Bromley Capital + Infinyte Club' invested=747.82 spread=0.0
+warn,dashboard_combined_introducer_name,VC215,VC215:5,sheet=VC215 row=5 introducer='Bromley Capital + Infinyte Club' invested=592.64 spread=0.0
+warn,dashboard_combined_introducer_name,VC215,VC215:6,sheet=VC215 row=6 introducer='Bromley Capital + Infinyte Club' invested=1211.89 spread=0.0
+warn,dashboard_combined_introducer_name,VC215,VC215:7,sheet=VC215 row=7 introducer='Bromley Capital + Infinyte Club' invested=515.79 spread=0.0
+warn,dashboard_combined_introducer_name,VC215,VC215:8,sheet=VC215 row=8 introducer='Bromley Capital + Renaissance' invested=2144.0 spread=0.0
+warn,dashboard_combined_introducer_name,VC215,VC215:9,sheet=VC215 row=9 introducer='Bromley Capital + Infinyte Club' invested=2191.74 spread=0.0
+warn,dashboard_combined_introducer_name,VC215,VC215:15,sheet=VC215 row=15 introducer='Bromley Capital + Renaissance' invested=2786.44 spread=0.0
+warn,dashboard_combined_introducer_name,VC215,VC215:17,sheet=VC215 row=17 introducer='Hottinger AG + Bromley Capital' invested=786004.0 spread=0.0
+warn,commission_totals_ruled_diff_invested_amount,VC203,,dashboard=320673.26 db=259999.5 delta=-60673.76 expected=-60673.76
+warn,commission_totals_ruled_diff_invested_amount,VC207,,dashboard=141932.1 db=115793.4 delta=-26138.7 expected=-26138.7
+warn,commission_totals_ruled_diff_invested_amount,VC209,,dashboard=704343.97 db=451663.47 delta=-252680.5 expected=-252680.5
+warn,commission_totals_ruled_diff_invested_amount,VC215,,dashboard=834528.32 db=692955.91 delta=-141572.41 expected=-141572.41
+warn,commission_row_ruled_removed,VC203,VC203:8,investor=Sebastian LATTUGA introducer=R. F. Lafferty & Co. Inc. basis=invested_amount dashboard=14563.11 db=0.0
+warn,commission_row_ruled_removed,VC207,VC207:21,investor=AEON INC. introducer=Lafferty basis=invested_amount dashboard=26138.7 db=0.0
+warn,commission_row_ruled_removed,VC209,VC209:13,"investor=STP CAP V, A SERIES OF CGF2021 LLC, SYDECAR LLC introducer=Lafferty basis=invested_amount dashboard=29677.5 db=0.0"
+warn,commission_row_ruled_removed,VC209,VC209:10,"investor=CBH Compagnie Bancaire Helvétique SA, introducer=Lafferty basis=invested_amount dashboard=123003.0 db=0.0"
+warn,commission_row_ruled_removed,VC215,VC215:12,"investor=ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC introducer=Bromley Capital basis=invested_amount dashboard=12742.5 db=0.0"
+warn,commission_row_ruled_removed,VC215,VC215:16,investor=AEON INC introducer=Bromley Capital basis=invested_amount dashboard=4263.0 db=0.0
+warn,commission_row_ruled_removed,VC215,VC215:20,investor=Keir BENBOW introducer=Bromley Capital basis=invested_amount dashboard=670.5 db=0.0
+warn,commission_row_ruled_removed,VC215,VC215:21,investor=Georges CHEN introducer=Bromley Capital basis=invested_amount dashboard=8400.0 db=0.0
+warn,commission_row_ruled_removed,VC215,VC215:18,investor=LF GROUP SARL introducer=Bromley Capital basis=invested_amount dashboard=937.5 db=0.0
+warn,commission_row_ruled_removed,VC215,VC215:3,investor=Julien MACHOT introducer=Bromley Capital basis=invested_amount dashboard=8416.5 db=0.0
+warn,commission_row_ruled_removed,VC215,VC215:10,investor=STELLATRION PARTNERS introducer=Bromley Capital basis=invested_amount dashboard=2904.0 db=0.0
+warn,introducer_warning_only_present,VC209,,Bright Views Holdings rows=3 amount=9000.0

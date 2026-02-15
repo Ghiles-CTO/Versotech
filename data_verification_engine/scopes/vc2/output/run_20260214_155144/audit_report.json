@@ -1,0 +1,277 @@
+{
+  "summary": {
+    "rules_version": "2026-02-14.1",
+    "scope_vehicle_codes": [
+      "VC201",
+      "VC202",
+      "VC203",
+      "VC206",
+      "VC207",
+      "VC209",
+      "VC210",
+      "VC211",
+      "VC215",
+      "VCL001",
+      "VCL002"
+    ],
+    "dashboard_active_rows": 105,
+    "dashboard_zero_rows": 5,
+    "db_subscriptions": 105,
+    "db_positions": 94,
+    "db_introductions": 88,
+    "db_commissions": 264,
+    "contacts_checked_rows": 123,
+    "contacts_red_rows_excluded": [
+      10,
+      13
+    ],
+    "fail_count": 17,
+    "warning_count": 16,
+    "fail_by_check": {
+      "commission_combined_amount_mismatch": 9,
+      "commission_row_amount_mismatch": 1,
+      "commission_row_rate_mismatch": 1,
+      "commission_row_rate_missing_in_dashboard": 6
+    },
+    "warn_by_check": {
+      "commission_totals_ruled_diff_invested_amount": 4,
+      "commission_row_ruled_removed": 11,
+      "introducer_warning_only_present": 1
+    }
+  },
+  "failures": [
+    {
+      "severity": "fail",
+      "check": "commission_combined_amount_mismatch",
+      "vehicle": "VC203",
+      "row_ref": "VC203:4",
+      "details": "investor=DOMINARI SECURITIES LLC introducer_label=Dimensional Advisors + R. F. Lafferty & Co. Inc. basis=invested_amount dashboard=96110.15 db_total=49999.5 delta=-46110.65"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_combined_amount_mismatch",
+      "vehicle": "VC215",
+      "row_ref": "VC215:4",
+      "details": "investor=Gourav KAKKAR introducer_label=Bromley Capital + Infinyte Club basis=invested_amount dashboard=747.82 db_total=461.3 delta=-286.52"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_combined_amount_mismatch",
+      "vehicle": "VC215",
+      "row_ref": "VC215:5",
+      "details": "investor=Rajagopalan MADHUSUDAN introducer_label=Bromley Capital + Infinyte Club basis=invested_amount dashboard=592.64 db_total=365.57 delta=-227.07"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_combined_amount_mismatch",
+      "vehicle": "VC215",
+      "row_ref": "VC215:6",
+      "details": "investor=Ved NIRANJANBHAI ANTANI introducer_label=Bromley Capital + Infinyte Club basis=invested_amount dashboard=1211.89 db_total=747.56 delta=-464.33"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_combined_amount_mismatch",
+      "vehicle": "VC215",
+      "row_ref": "VC215:7",
+      "details": "investor=Mahesh NALLAPATI introducer_label=Bromley Capital + Infinyte Club basis=invested_amount dashboard=515.79 db_total=318.17 delta=-197.62"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_combined_amount_mismatch",
+      "vehicle": "VC215",
+      "row_ref": "VC215:8",
+      "details": "investor=Varun SEMBIUM VARADARAJAN introducer_label=Bromley Capital + Renaissance basis=invested_amount dashboard=2144.0 db_total=1082.61 delta=-1061.39"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_combined_amount_mismatch",
+      "vehicle": "VC215",
+      "row_ref": "VC215:9",
+      "details": "investor=CARTA INVESTMENTS LLC introducer_label=Bromley Capital + Infinyte Club basis=invested_amount dashboard=2191.74 db_total=508.36 delta=-1683.38"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_combined_amount_mismatch",
+      "vehicle": "VC215",
+      "row_ref": "VC215:15",
+      "details": "investor=Anuroop ARORA introducer_label=Bromley Capital + Renaissance basis=invested_amount dashboard=2786.44 db_total=1718.84 delta=-1067.6"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_combined_amount_mismatch",
+      "vehicle": "VC215",
+      "row_ref": "VC215:17",
+      "details": "investor=Anthropic Compartment, HAG Private Markets SARL introducer_label=Hottinger AG + Bromley Capital basis=invested_amount dashboard=786004.0 db_total=687753.5 delta=-98250.5"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_amount_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:20",
+      "details": "investor=PVPL FUND LLC SERIES 3 introducer=Lafferty+Visual Sectors basis=invested_amount dashboard=110000.0 db=10000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_rate_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "VC209:20",
+      "details": "investor=PVPL FUND LLC SERIES 3 introducer=Lafferty+Visual Sectors basis=invested_amount dashboard_rates=[110] db_rates=[10]"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_rate_missing_in_dashboard",
+      "vehicle": "VC215",
+      "row_ref": "VC215:6",
+      "details": "investor=Ved NIRANJANBHAI ANTANI introducer=Anand basis=spread dashboard_rates=[] db_rates=[250]"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_rate_missing_in_dashboard",
+      "vehicle": "VC215",
+      "row_ref": "VC215:9",
+      "details": "investor=CARTA INVESTMENTS LLC introducer=Anand basis=spread dashboard_rates=[] db_rates=[550]"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_rate_missing_in_dashboard",
+      "vehicle": "VC215",
+      "row_ref": "VC215:4",
+      "details": "investor=Gourav KAKKAR introducer=Anand basis=spread dashboard_rates=[] db_rates=[250]"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_rate_missing_in_dashboard",
+      "vehicle": "VC215",
+      "row_ref": "VC215:5",
+      "details": "investor=Rajagopalan MADHUSUDAN introducer=Anand basis=spread dashboard_rates=[] db_rates=[250]"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_rate_missing_in_dashboard",
+      "vehicle": "VC215",
+      "row_ref": "VC215:7",
+      "details": "investor=Mahesh NALLAPATI introducer=Anand basis=spread dashboard_rates=[] db_rates=[250]"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_rate_missing_in_dashboard",
+      "vehicle": "VC215",
+      "row_ref": "VC215:10",
+      "details": "investor=STELLATRION PARTNERS introducer=Anand basis=spread dashboard_rates=[] db_rates=[300]"
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "VC203",
+      "row_ref": "",
+      "details": "dashboard=320673.26 db=259999.5 delta=-60673.76 expected=-60673.76"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "VC207",
+      "row_ref": "",
+      "details": "dashboard=141932.1 db=115793.4 delta=-26138.7 expected=-26138.7"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "dashboard=704343.97 db=451663.47 delta=-252680.5 expected=-252680.5"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "VC215",
+      "row_ref": "",
+      "details": "dashboard=834528.32 db=692955.91 delta=-141572.41 expected=-141572.41"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC203",
+      "row_ref": "VC203:8",
+      "details": "investor=Sebastian LATTUGA introducer=R. F. Lafferty & Co. Inc. basis=invested_amount dashboard=14563.11 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC207",
+      "row_ref": "VC207:21",
+      "details": "investor=AEON INC. introducer=Lafferty basis=invested_amount dashboard=26138.7 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC209",
+      "row_ref": "VC209:13",
+      "details": "investor=STP CAP V, A SERIES OF CGF2021 LLC, SYDECAR LLC introducer=Lafferty basis=invested_amount dashboard=29677.5 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC209",
+      "row_ref": "VC209:10",
+      "details": "investor=CBH Compagnie Bancaire Helv\u00e9tique SA, introducer=Lafferty basis=invested_amount dashboard=123003.0 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:12",
+      "details": "investor=ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC introducer=Bromley Capital basis=invested_amount dashboard=12742.5 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:16",
+      "details": "investor=AEON INC introducer=Bromley Capital basis=invested_amount dashboard=4263.0 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:20",
+      "details": "investor=Keir BENBOW introducer=Bromley Capital basis=invested_amount dashboard=670.5 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:21",
+      "details": "investor=Georges CHEN introducer=Bromley Capital basis=invested_amount dashboard=8400.0 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:18",
+      "details": "investor=LF GROUP SARL introducer=Bromley Capital basis=invested_amount dashboard=937.5 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:3",
+      "details": "investor=Julien MACHOT introducer=Bromley Capital basis=invested_amount dashboard=8416.5 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:10",
+      "details": "investor=STELLATRION PARTNERS introducer=Bromley Capital basis=invested_amount dashboard=2904.0 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "introducer_warning_only_present",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "Bright Views Holdings rows=3 amount=9000.0"
+    }
+  ]
+}

@@ -1,0 +1,156 @@
+{
+  "summary": {
+    "rules_version": "2026-02-14.1",
+    "scope_vehicle_codes": [
+      "IN101",
+      "IN102",
+      "IN103",
+      "IN106",
+      "IN109",
+      "IN110",
+      "IN111"
+    ],
+    "dashboard_active_rows": 26,
+    "dashboard_zero_rows": 5,
+    "db_subscriptions": 26,
+    "db_positions": 23,
+    "db_introductions": 15,
+    "db_commissions": 30,
+    "contacts_checked_rows": 0,
+    "contacts_red_rows_excluded": [],
+    "fail_count": 14,
+    "warning_count": 3,
+    "fail_by_check": {
+      "commission_row_rate_missing_in_db": 8,
+      "commission_row_amount_mismatch": 4,
+      "commission_row_rate_mismatch": 2
+    },
+    "warn_by_check": {
+      "commission_totals_ruled_diff_invested_amount": 2,
+      "commission_totals_ruled_diff_spread": 1
+    }
+  },
+  "failures": [
+    {
+      "severity": "fail",
+      "check": "commission_row_rate_missing_in_db",
+      "vehicle": "IN103",
+      "row_ref": "IN3:8",
+      "details": "investor=Sherri Lipton Grace 2020 Irrevocable Family Trust introducer=Anand basis=performance_fee_tier1 dashboard_rates=[850] db_rates=[]"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_rate_missing_in_db",
+      "vehicle": "IN103",
+      "row_ref": "IN3:7",
+      "details": "investor=Elizabeth GRACE introducer=Anand basis=performance_fee_tier1 dashboard_rates=[850] db_rates=[]"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_rate_missing_in_db",
+      "vehicle": "IN103",
+      "row_ref": "IN3:4",
+      "details": "investor=Wymo Finance Limited introducer=Anand basis=performance_fee_tier1 dashboard_rates=[850] db_rates=[]"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_rate_missing_in_db",
+      "vehicle": "IN103",
+      "row_ref": "IN3:5",
+      "details": "investor=HASSBRO Investments Limited introducer=Anand basis=performance_fee_tier1 dashboard_rates=[850] db_rates=[]"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_amount_mismatch",
+      "vehicle": "IN103",
+      "row_ref": "IN3:3",
+      "details": "investor=Zandera (Holdco) Limited introducer=Altras+Andrew basis=invested_amount dashboard=30000.0 db=15000.0 delta=-15000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_amount_mismatch",
+      "vehicle": "IN103",
+      "row_ref": "IN3:3",
+      "details": "investor=Zandera (Holdco) Limited introducer=Altras+Andrew basis=spread dashboard=349998.06 db=174999.03 delta=-174999.03"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_rate_mismatch",
+      "vehicle": "IN103",
+      "row_ref": "IN3:3",
+      "details": "investor=Zandera (Holdco) Limited introducer=Altras+Andrew basis=spread dashboard_rates=[290] db_rates=[3500]"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_amount_mismatch",
+      "vehicle": "IN103",
+      "row_ref": "IN3:3",
+      "details": "investor=Zandera (Holdco) Limited introducer=Anand basis=invested_amount dashboard=10000.0 db=5000.0 delta=-5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_rate_missing_in_db",
+      "vehicle": "IN103",
+      "row_ref": "IN3:3",
+      "details": "investor=Zandera (Holdco) Limited introducer=Anand basis=performance_fee_tier1 dashboard_rates=[850] db_rates=[]"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_amount_mismatch",
+      "vehicle": "IN103",
+      "row_ref": "IN3:3",
+      "details": "investor=Zandera (Holdco) Limited introducer=Anand basis=spread dashboard=149999.17 db=74999.58 delta=-74999.59"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_rate_mismatch",
+      "vehicle": "IN103",
+      "row_ref": "IN3:3",
+      "details": "investor=Zandera (Holdco) Limited introducer=Anand basis=spread dashboard_rates=[124] db_rates=[1500]"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_rate_missing_in_db",
+      "vehicle": "IN103",
+      "row_ref": "IN3:10",
+      "details": "investor=Jeremy LOWY introducer=Anand basis=performance_fee_tier1 dashboard_rates=[850] db_rates=[]"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_rate_missing_in_db",
+      "vehicle": "IN103",
+      "row_ref": "IN3:6",
+      "details": "investor=N SQUARE PATEL LLC introducer=Anand basis=performance_fee_tier1 dashboard_rates=[850] db_rates=[]"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_rate_missing_in_db",
+      "vehicle": "IN106",
+      "row_ref": "IN6:3",
+      "details": "investor=Wymo Finance Limited introducer=SET CAP basis=performance_fee_tier1 dashboard_rates=[1700] db_rates=[]"
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "IN102",
+      "row_ref": "",
+      "details": "dashboard=74881.5498 db=0.0 delta=-74881.5498 expected=-74881.5498"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "IN103",
+      "row_ref": "",
+      "details": "dashboard=65000.0 db=45000.0 delta=-20000.0 expected=-20000.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "IN103",
+      "row_ref": "",
+      "details": "dashboard=499997.22284 db=249998.61 delta=-249998.61284 expected=-249998.61284"
+    }
+  ]
+}

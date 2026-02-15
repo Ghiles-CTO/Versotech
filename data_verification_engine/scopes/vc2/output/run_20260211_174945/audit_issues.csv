@@ -1,0 +1,5 @@
+severity,check,vehicle,row_ref,details
+fail,vehicle_totals_mismatch,VC209,,spread_fee: dashboard=5855431.1565000005 db=8079471.1565000005 delta=2224040.0
+fail,specific_commission_missing,VC206,,"investor=REDPOINT OMEGA V, L.P. introducer=Visual Sectors Holdings Ltd. basis=invested_amount"
+fail,specific_commission_missing,VC209,,investor=PVPL FUND LLC SERIES 3 introducer=Visual Sectors Holdings Ltd. basis=invested_amount
+warn,introducer_warning_only_present,VC209,,Bright Views Holdings rows=3 amount=9000.0

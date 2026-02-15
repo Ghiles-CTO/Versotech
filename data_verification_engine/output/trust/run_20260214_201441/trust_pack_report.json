@@ -1,0 +1,52 @@
+{
+  "generated_at_utc": "2026-02-14T20:14:41.501832+00:00",
+  "status": "FAIL",
+  "policy_version": "2026-02-14.1",
+  "global_report_json": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/output/global/run_20260214_201426/global_audit_report.json",
+  "scopes": [
+    {
+      "scope": "vc1",
+      "summary_fail_count": 0,
+      "summary_warn_count": 3,
+      "issues_csv_rows": 3,
+      "verdict": "PASS",
+      "report_json": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/vc1/output/run_20260214_211433/audit_report.json",
+      "issues_csv": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/vc1/output/run_20260214_211433/audit_issues.csv"
+    },
+    {
+      "scope": "vc2",
+      "summary_fail_count": 0,
+      "summary_warn_count": 30,
+      "issues_csv_rows": 30,
+      "verdict": "FAIL",
+      "report_json": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/vc2/output/run_20260214_211438/audit_report.json",
+      "issues_csv": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/vc2/output/run_20260214_211438/audit_issues.csv"
+    },
+    {
+      "scope": "in",
+      "summary_fail_count": 0,
+      "summary_warn_count": 7,
+      "issues_csv_rows": 7,
+      "verdict": "FAIL",
+      "report_json": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/in/output/run_20260214_211441/audit_report.json",
+      "issues_csv": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/in/output/run_20260214_211441/audit_issues.csv"
+    }
+  ],
+  "findings": [
+    {
+      "scope": "vc2",
+      "code": "unexpected_warning_check",
+      "message": "commission_combined_ruled_removed (count=9) not in allow-list"
+    },
+    {
+      "scope": "vc2",
+      "code": "unexpected_warning_check",
+      "message": "commission_row_ruled_dashboard_override (count=5) not in allow-list"
+    },
+    {
+      "scope": "in",
+      "code": "unexpected_warning_check",
+      "message": "commission_row_ruled_dashboard_override (count=4) not in allow-list"
+    }
+  ]
+}

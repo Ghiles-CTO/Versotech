@@ -1,0 +1,109 @@
+severity,check,vehicle,row_ref,details
+fail,vehicle_totals_mismatch,IN101,,ownership: dashboard=38881.0 db=0.0 delta=-38881.0
+fail,vehicle_totals_mismatch,IN102,,ownership: dashboard=603.0 db=0.0 delta=-603.0
+fail,vehicle_totals_mismatch,IN103,,count: dashboard=10.0 db=7.0 delta=-3.0
+fail,vehicle_totals_mismatch,IN103,,cost_per_share: dashboard=49.6308 db=37.2231 delta=-12.407699999999998
+fail,vehicle_totals_mismatch,IN103,,commitment: dashboard=3250000.0 db=1750000.0 delta=-1500000.0
+fail,vehicle_totals_mismatch,IN103,,price_per_share: dashboard=57.9026 db=37.2231 delta=-20.679499999999997
+fail,vehicle_totals_mismatch,IN103,,shares: dashboard=544013.0 db=302229.0 delta=-241784.0
+fail,vehicle_totals_mismatch,IN103,,ownership: dashboard=544013.0 db=0.0 delta=-544013.0
+fail,vehicle_totals_mismatch,IN103,,spread_per_share: dashboard=8.2718 db=0.0 delta=-8.2718
+fail,vehicle_totals_mismatch,IN103,,spread_fee: dashboard=499997.2228 db=0.0 delta=-499997.2228
+fail,vehicle_totals_mismatch,IN103,,sub_fee_percent: dashboard=0.2 db=0.1 delta=-0.1
+fail,vehicle_totals_mismatch,IN103,,sub_fee: dashboard=65000.0 db=15000.0 delta=-50000.0
+fail,vehicle_totals_mismatch,IN103,,perf1_percent: dashboard=1.9999999999999998 db=1.4 delta=-0.5999999999999999
+fail,vehicle_totals_mismatch,IN103,,bd_fee: dashboard=5000.0 db=0.08 delta=-4999.92
+fail,vehicle_totals_mismatch,IN105,,count: dashboard=6.0 db=0.0 delta=-6.0
+fail,vehicle_totals_mismatch,IN105,,cost_per_share: dashboard=60000.0 db=0.0 delta=-60000.0
+fail,vehicle_totals_mismatch,IN105,,commitment: dashboard=700000.0 db=0.0 delta=-700000.0
+fail,vehicle_totals_mismatch,IN105,,price_per_share: dashboard=60000.0 db=0.0 delta=-60000.0
+fail,vehicle_totals_mismatch,IN105,,shares: dashboard=70.0 db=0.0 delta=-70.0
+fail,vehicle_totals_mismatch,IN105,,ownership: dashboard=70.0 db=0.0 delta=-70.0
+fail,vehicle_totals_mismatch,IN106,,ownership: dashboard=2004.0 db=0.0 delta=-2004.0
+fail,vehicle_totals_mismatch,IN108,,count: dashboard=1.0 db=0.0 delta=-1.0
+fail,vehicle_totals_mismatch,IN108,,cost_per_share: dashboard=1.0 db=0.0 delta=-1.0
+fail,vehicle_totals_mismatch,IN108,,commitment: dashboard=750000.0 db=0.0 delta=-750000.0
+fail,vehicle_totals_mismatch,IN108,,price_per_share: dashboard=1.0 db=0.0 delta=-1.0
+fail,vehicle_totals_mismatch,IN108,,shares: dashboard=750000.0 db=0.0 delta=-750000.0
+fail,vehicle_totals_mismatch,IN108,,ownership: dashboard=750000.0 db=0.0 delta=-750000.0
+fail,vehicle_totals_mismatch,IN109,,ownership: dashboard=6071.0 db=0.0 delta=-6071.0
+fail,vehicle_totals_mismatch,IN109,,management_fee_percent: dashboard=0.0 db=0.02 delta=0.02
+fail,vehicle_totals_mismatch,IN110,,commitment: dashboard=0.0 db=75.0 delta=75.0
+fail,vehicle_totals_mismatch,IN110,,ownership: dashboard=255000.0 db=0.0 delta=-255000.0
+fail,vehicle_totals_mismatch,IN110,,sub_fee: dashboard=0.0 db=1.0 delta=1.0
+fail,vehicle_totals_mismatch,IN111,,price_per_share: dashboard=292.0 db=292.48 delta=0.4800000000000182
+fail,vehicle_totals_mismatch,IN111,,ownership: dashboard=77447.0 db=0.0 delta=-77447.0
+fail,row_unmatched_dashboard,IN102,IN2:6,investor=Christopher Alan PAULSEN commitment=500000.0 shares=120.0 date=2021-07-30
+fail,row_unmatched_dashboard,IN102,IN2:8,investor=Dan BAUMSLAG commitment=4139.39 shares=1.0 date=2021-07-30
+fail,row_unmatched_dashboard,IN102,IN2:10,investor=Benjamin Lee JONES commitment=296051.66 shares=71.0 date=2021-08-17
+fail,row_unmatched_dashboard,IN102,IN2:7,investor=Gary David HALL commitment=200000.0 shares=48.0 date=2021-07-30
+fail,row_unmatched_dashboard,IN103,IN3:4,investor=Wymo Finance Limited commitment=500000.0 shares=120892.0 date=2022-01-24
+fail,row_unmatched_dashboard,IN103,IN3:3,investor=Zandera (Holdco) Limited commitment=500000.0 shares=60446.0 date=2022-01-24
+fail,row_unmatched_dashboard,IN103,IN3:9,investor=Zandera (Holdco) Limited commitment=500000.0 shares=60446.0 date=2022-02-24
+fail,row_unmatched_dashboard,IN105,IN5:5,investor=Improvitae B.V. commitment=100000.0 shares=10.0 date=2022-05-10
+fail,row_unmatched_dashboard,IN105,IN5:6,investor=François-Xavier GIRAUD commitment=50000.0 shares=5.0 date=2022-11-10
+fail,row_unmatched_dashboard,IN105,IN5:3,investor=Tom GATZ commitment=100000.0 shares=10.0 date=2022-09-28
+fail,row_unmatched_dashboard,IN105,IN5:4,investor=VERSO Holdings S.à r.l. commitment=250000.0 shares=25.0 date=2022-10-20
+fail,row_unmatched_dashboard,IN105,IN5:7,investor=Star of the Sea Limited commitment=150000.0 shares=15.0 date=2022-10-27
+fail,row_unmatched_dashboard,IN105,IN5:8,investor=Nicolas WYDLER commitment=50000.0 shares=5.0 date=2022-10-24
+fail,row_unmatched_dashboard,IN108,IN8:3,investor=Anand SETHIA commitment=750000.0 shares=750000.0 date=2022-11-22
+fail,row_unmatched_dashboard,IN110,IN10:5,investor=Naweed AHMED commitment=0.0 shares=44000.0 date=2023-06-30
+fail,row_unmatched_dashboard,IN110,IN10:4,investor=Eddie BEARNOT commitment=0.0 shares=36000.0 date=2023-06-30
+fail,row_unmatched_dashboard,IN110,IN10:7,investor=Sarah DAVIES commitment=0.0 shares=60000.0 date=2023-06-30
+fail,row_unmatched_dashboard,IN110,IN10:6,investor=Robin DOBLE commitment=0.0 shares=100000.0 date=2023-06-30
+fail,row_unmatched_dashboard,IN110,IN10:3,investor=William TOYE commitment=0.0 shares=60000.0 date=2023-06-30
+fail,row_unmatched_db,IN102,,investor=Daniel BAUMSLAG commitment=4139.39 shares=1.0 date=2021-07-30 sub_id=c0cb4da7-31c8-446a-bd90-38e949ce3ec1
+fail,row_unmatched_db,IN102,,investor=Benjamin JONES commitment=296051.66 shares=71.0 date=2021-08-17 sub_id=0ab23c45-f811-418f-832c-b74a813a6152
+fail,row_unmatched_db,IN102,,investor=Christopher PAULSEN commitment=500000.0 shares=120.0 date=2021-07-30 sub_id=5e2c74f3-db9a-4005-841a-d75f6ba7923c
+fail,row_unmatched_db,IN102,,investor=Gary HALL commitment=200000.0 shares=48.0 date=2021-07-30 sub_id=cb989ee9-de6b-41b0-bcbd-3b4b1d913c57
+fail,row_unmatched_db,IN110,,investor=Naweed AHMED commitment=11.0 shares=44000.0 date=2023-06-30 sub_id=1062775b-861d-4e3d-a72c-31c663403c9e
+fail,row_unmatched_db,IN110,,investor=Eddie BEARNOT commitment=9.0 shares=36000.0 date=2023-06-30 sub_id=3e2a8bfa-04fb-4536-af87-99f535b11b30
+fail,row_unmatched_db,IN110,,investor=Sarah DAVIES commitment=15.0 shares=60000.0 date=2023-06-30 sub_id=aec7a626-972c-48c1-b5a3-36b6c04c8ff7
+fail,row_unmatched_db,IN110,,investor=Robin DOBLE commitment=25.0 shares=100000.0 date=2023-06-30 sub_id=a48c6049-54b7-44bc-a98d-f4a668a74ec8
+fail,row_unmatched_db,IN110,,investor=William TOYE commitment=15.0 shares=60000.0 date=2023-06-30 sub_id=38012446-37be-4526-bb86-4a30ea50a38a
+fail,row_numeric_mismatch,IN101,IN1:3,investor=Innovatech 1 metric=ownership dashboard=38881.0 db=0.0 delta=-38881.0 mode=exact_date
+fail,row_numeric_mismatch,IN102,IN2:4,investor=1982772 Ontario Ltd metric=ownership dashboard=120.0 db=0.0 delta=-120.0 mode=exact_date
+fail,row_numeric_mismatch,IN102,IN2:5,investor=Albert NOCCIOLINO metric=ownership dashboard=120.0 db=0.0 delta=-120.0 mode=exact_date
+fail,row_numeric_mismatch,IN102,IN2:3,investor=David HOLDEN metric=ownership dashboard=120.0 db=0.0 delta=-120.0 mode=exact_date
+fail,row_numeric_mismatch,IN102,IN2:9,investor=Julien MACHOT metric=ownership dashboard=3.0 db=0.0 delta=-3.0 mode=exact_date
+fail,row_numeric_mismatch,IN103,IN3:8,investor=Sherri Lipton Grace 2020 Irrevocable Family Trust metric=ownership dashboard=12089.0 db=0.0 delta=-12089.0 mode=exact_date
+fail,row_numeric_mismatch,IN103,IN3:8,investor=Sherri Lipton Grace 2020 Irrevocable Family Trust metric=bd_fee dashboard=1000.0 db=0.02 delta=-999.98 mode=exact_date
+fail,row_numeric_mismatch,IN103,IN3:7,investor=Elizabeth GRACE metric=ownership dashboard=12089.0 db=0.0 delta=-12089.0 mode=exact_date
+fail,row_numeric_mismatch,IN103,IN3:7,investor=Elizabeth GRACE metric=bd_fee dashboard=1000.0 db=0.02 delta=-999.98 mode=exact_date
+fail,row_numeric_mismatch,IN103,IN3:5,investor=HASSBRO Investments Limited metric=ownership dashboard=120892.0 db=0.0 delta=-120892.0 mode=exact_date
+fail,row_numeric_mismatch,IN103,IN3:10,investor=Jeremy LOWY metric=ownership dashboard=12089.0 db=0.0 delta=-12089.0 mode=exact_date
+fail,row_numeric_mismatch,IN103,IN3:10,investor=Jeremy LOWY metric=bd_fee dashboard=1000.0 db=0.02 delta=-999.98 mode=exact_date
+fail,row_numeric_mismatch,IN103,IN3:6,investor=N SQUARE PATEL LLC metric=ownership dashboard=24178.0 db=0.0 delta=-24178.0 mode=exact_date
+fail,row_numeric_mismatch,IN103,IN3:6,investor=N SQUARE PATEL LLC metric=bd_fee dashboard=2000.0 db=0.02 delta=-1999.98 mode=exact_date
+fail,row_numeric_mismatch,IN103,IN3:11,investor=Michael RYAN metric=ownership dashboard=60446.0 db=0.0 delta=-60446.0 mode=exact_date
+fail,row_numeric_mismatch,IN103,IN3:12,investor=Michael RYAN metric=ownership dashboard=60446.0 db=0.0 delta=-60446.0 mode=exact_date
+fail,row_numeric_mismatch,IN106,IN6:4,investor=Neville TATA metric=ownership dashboard=2004.0 db=0.0 delta=-2004.0 mode=exact_date
+fail,row_numeric_mismatch,IN109,IN9:3,investor=L1 SC Invest 6 metric=ownership dashboard=6071.0 db=0.0 delta=-6071.0 mode=exact_date
+fail,row_numeric_mismatch,IN109,IN9:3,investor=L1 SC Invest 6 metric=management_fee_percent dashboard=0.0 db=0.02 delta=0.02 mode=exact_date
+fail,row_numeric_mismatch,IN111,IN11:5,investor=Boris IPPOLITOV metric=ownership dashboard=2344.0 db=0.0 delta=-2344.0 mode=exact_date
+fail,row_numeric_mismatch,IN111,IN11:4,investor=Boris IPPOLITOV metric=price_per_share dashboard=290.0 db=290.48 delta=0.48 mode=exact_date
+fail,row_numeric_mismatch,IN111,IN11:4,investor=Boris IPPOLITOV metric=ownership dashboard=103.0 db=0.0 delta=-103.0 mode=exact_date
+fail,row_numeric_mismatch,IN111,IN11:3,investor=Boris IPPOLITOV metric=ownership dashboard=75000.0 db=0.0 delta=-75000.0 mode=exact_date
+fail,position_vs_dashboard_ownership,IN103,,positions=302229.0 dashboard=544013.0
+fail,position_vs_dashboard_ownership,IN105,,positions=0.0 dashboard=70.0
+fail,position_vs_dashboard_ownership,IN108,,positions=0.0 dashboard=750000.0
+fail,commission_duplicate_exact,IN103,,"count=2 key=('b661243f-e6b4-41f1-b239-de4b197a689a', '7c9a8651-b09c-4fa1-a92c-deaba2e8106b', '02e7a81c-d5bf-4839-9776-f89ae320b586', '37748431-2903-42eb-96d0-9dc2414cde02', 'spread', None, 1500, 'None', '74999.58')"
+fail,commission_duplicate_exact,IN103,,"count=2 key=('55b67690-c83d-4406-a2b4-935032d22739', '7c9a8651-b09c-4fa1-a92c-deaba2e8106b', '02e7a81c-d5bf-4839-9776-f89ae320b586', '5ed598a6-5760-4bc0-b84b-78cf4425767c', 'invested_amount', None, 300, 'None', '15000.0')"
+fail,commission_duplicate_exact,IN103,,"count=2 key=('b661243f-e6b4-41f1-b239-de4b197a689a', '7c9a8651-b09c-4fa1-a92c-deaba2e8106b', '02e7a81c-d5bf-4839-9776-f89ae320b586', '37748431-2903-42eb-96d0-9dc2414cde02', 'invested_amount', None, 100, 'None', '5000.0')"
+fail,commission_duplicate_exact,IN103,,"count=2 key=('55b67690-c83d-4406-a2b4-935032d22739', '7c9a8651-b09c-4fa1-a92c-deaba2e8106b', '02e7a81c-d5bf-4839-9776-f89ae320b586', '5ed598a6-5760-4bc0-b84b-78cf4425767c', 'spread', None, 3500, 'None', '174999.03')"
+fail,commission_totals_mismatch_invested_amount,IN102,,dashboard=74881.5498 db=0.0 delta=-74881.5498
+fail,commission_totals_mismatch_invested_amount,IN106,,dashboard=6600.0 db=3300.0 delta=-3300.0
+fail,commission_row_missing_in_db,IN103,IN3:8,investor=Sherri Lipton Grace 2020 Irrevocable Family Trust introducer=Andrew basis=invested_amount dashboard=500.0 db=0.0
+fail,commission_row_missing_in_dashboard,IN103,66cd48ee-e9a5-4f02-9879-50b33ae79862,investor=Sherri Lipton Grace 2020 Irrevocable Family Trust introducer=Andrew Stewart basis=invested_amount dashboard=0.0 db=500.0
+fail,commission_row_missing_in_db,IN103,IN3:7,investor=Elizabeth GRACE introducer=Andrew basis=invested_amount dashboard=500.0 db=0.0
+fail,commission_row_missing_in_dashboard,IN103,4e468c07-3ad6-42e3-bbad-3b6e9623198b,investor=Elizabeth GRACE introducer=Andrew Stewart basis=invested_amount dashboard=0.0 db=500.0
+fail,commission_row_missing_in_db,IN103,IN3:4,investor=Wymo Finance Limited introducer=Andrew basis=invested_amount dashboard=5000.0 db=0.0
+fail,commission_row_missing_in_dashboard,IN103,3594db0f-5ddf-42c2-b925-2a1199e7e96b,investor=Wymo Finance Limited introducer=Andrew Stewart basis=invested_amount dashboard=0.0 db=5000.0
+fail,commission_row_missing_in_db,IN103,IN3:5,investor=HASSBRO Investments Limited introducer=Andrew basis=invested_amount dashboard=5000.0 db=0.0
+fail,commission_row_missing_in_dashboard,IN103,c55c12a5-a7d9-43ff-9294-aa1dea8e6421,investor=HASSBRO Investments Limited introducer=Andrew Stewart basis=invested_amount dashboard=0.0 db=5000.0
+fail,commission_row_missing_in_db,IN103,IN3:10,investor=Jeremy LOWY introducer=Andrew basis=invested_amount dashboard=500.0 db=0.0
+fail,commission_row_missing_in_dashboard,IN103,981371f6-e802-4838-8a6d-cb71c85d929d,investor=Jeremy LOWY introducer=Andrew Stewart basis=invested_amount dashboard=0.0 db=500.0
+fail,commission_row_missing_in_db,IN103,IN3:6,investor=N SQUARE PATEL LLC introducer=Andrew basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_dashboard,IN103,17036043-491e-499b-a8d7-d76ee81f72bc,investor=N SQUARE PATEL LLC introducer=Andrew Stewart basis=invested_amount dashboard=0.0 db=1000.0
+warn,dashboard_combined_introducer_name,IN103,IN3:3,sheet=IN3 row=3 introducer='Altras+Andrew' invested=15000.0 spread=174999.03
+warn,dashboard_combined_introducer_name,IN103,IN3:9,sheet=IN3 row=9 introducer='Altras+Andrew' invested=15000.0 spread=174999.03

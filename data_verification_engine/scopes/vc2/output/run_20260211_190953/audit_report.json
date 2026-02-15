@@ -1,0 +1,246 @@
+{
+  "summary": {
+    "rules_version": "2026-02-11.2",
+    "scope_vehicle_codes": [
+      "VC201",
+      "VC202",
+      "VC203",
+      "VC206",
+      "VC207",
+      "VC209",
+      "VC210",
+      "VC211",
+      "VC215",
+      "VCL001",
+      "VCL002"
+    ],
+    "dashboard_active_rows": 105,
+    "dashboard_zero_rows": 5,
+    "db_subscriptions": 105,
+    "db_positions": 94,
+    "db_introductions": 88,
+    "db_commissions": 264,
+    "contacts_checked_rows": 123,
+    "contacts_red_rows_excluded": [
+      10,
+      13
+    ],
+    "fail_count": 24,
+    "warning_count": 5,
+    "fail_by_check": {
+      "vehicle_totals_mismatch": 3,
+      "row_numeric_mismatch": 21
+    },
+    "warn_by_check": {
+      "commission_totals_ruled_diff_invested_amount": 4,
+      "introducer_warning_only_present": 1
+    }
+  },
+  "failures": [
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "cost_per_share: dashboard=1183.56023 db=903.5602299999998 delta=-280.0000000000002"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "spread_per_share: dashboard=139.56227 db=419.56227000000007 delta=280.00000000000006"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "spread_fee: dashboard=5855431.1565000005 db=8079471.1565000005 delta=2224040.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 40000.0, 1000.0, '2025-03-12') metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 40000.0, 1000.0, '2025-03-12') metric=spread_per_share dashboard=-35.0 db=5.0 delta=40.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 40000.0, 1000.0, '2025-03-12') metric=spread_fee dashboard=-35000.0 db=5000.0 delta=40000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 50000.0, 649.0, '2025-11-12') metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 50000.0, 649.0, '2025-11-12') metric=spread_per_share dashboard=2.0 db=42.0 delta=40.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 50000.0, 649.0, '2025-11-12') metric=spread_fee dashboard=1298.0 db=27258.0 delta=25960.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 100023.0, 1299.0, '2025-11-12') metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 100023.0, 1299.0, '2025-11-12') metric=spread_per_share dashboard=2.0 db=42.0 delta=40.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 100023.0, 1299.0, '2025-11-12') metric=spread_fee dashboard=2598.0 db=54558.0 delta=51960.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 100023.0, 1299.0, '2025-12-16') metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 100023.0, 1299.0, '2025-12-16') metric=spread_per_share dashboard=2.0 db=42.0 delta=40.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 100023.0, 1299.0, '2025-12-16') metric=spread_fee dashboard=2598.0 db=54558.0 delta=51960.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 150000.0, 1948.0, '2025-12-19') metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 150000.0, 1948.0, '2025-12-19') metric=spread_per_share dashboard=2.0 db=42.0 delta=40.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 150000.0, 1948.0, '2025-12-19') metric=spread_fee dashboard=3896.0 db=81816.0 delta=77920.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 725400.0, 9300.0, '2025-12-29') metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 725400.0, 9300.0, '2025-12-29') metric=spread_per_share dashboard=3.0 db=43.0 delta=40.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 725400.0, 9300.0, '2025-12-29') metric=spread_fee dashboard=27900.0 db=399900.0 delta=372000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 2727208.0, 40106.0, '2025-01-12') metric=cost_per_share dashboard=75.0 db=35.0 delta=-40.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 2727208.0, 40106.0, '2025-01-12') metric=spread_per_share dashboard=-7.0 db=33.0 delta=40.0"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "key=('VC209', 2727208.0, 40106.0, '2025-01-12') metric=spread_fee dashboard=-280742.0 db=1323498.0 delta=1604240.0"
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "VC203",
+      "row_ref": "",
+      "details": "dashboard=320673.26 db=259999.5 delta=-60673.76 expected=-60673.76"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "VC207",
+      "row_ref": "",
+      "details": "dashboard=141932.1 db=115793.4 delta=-26138.7 expected=-26138.7"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "dashboard=704343.97 db=451663.47 delta=-252680.5 expected=-252680.5"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "VC215",
+      "row_ref": "",
+      "details": "dashboard=834528.32 db=692955.91 delta=-141572.41 expected=-141572.41"
+    },
+    {
+      "severity": "warn",
+      "check": "introducer_warning_only_present",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "Bright Views Holdings rows=3 amount=9000.0"
+    }
+  ]
+}

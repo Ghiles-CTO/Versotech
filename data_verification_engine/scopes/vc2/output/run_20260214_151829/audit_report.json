@@ -1,0 +1,265 @@
+{
+  "summary": {
+    "rules_version": "2026-02-11.2",
+    "scope_vehicle_codes": [
+      "VC201",
+      "VC202",
+      "VC203",
+      "VC206",
+      "VC207",
+      "VC209",
+      "VC210",
+      "VC211",
+      "VC215",
+      "VCL001",
+      "VCL002"
+    ],
+    "dashboard_active_rows": 105,
+    "dashboard_zero_rows": 5,
+    "db_subscriptions": 105,
+    "db_positions": 94,
+    "db_introductions": 88,
+    "db_commissions": 264,
+    "contacts_checked_rows": 123,
+    "contacts_red_rows_excluded": [
+      10,
+      13
+    ],
+    "fail_count": 0,
+    "warning_count": 32,
+    "fail_by_check": {},
+    "warn_by_check": {
+      "dashboard_combined_introducer_name": 16,
+      "commission_totals_ruled_diff_invested_amount": 4,
+      "commission_row_ruled_removed": 11,
+      "introducer_warning_only_present": 1
+    }
+  },
+  "failures": [],
+  "warnings": [
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC203",
+      "row_ref": "VC203:4",
+      "details": "sheet=VC203 row=4 introducer='Dimensional Advisors + R. F. Lafferty & Co. Inc.' invested=96110.15 spread=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC203",
+      "row_ref": "VC203:9",
+      "details": "sheet=VC203 row=9 introducer='Sakal Advisory + Astra Global Limited' invested=15000.0 spread=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC203",
+      "row_ref": "VC203:10",
+      "details": "sheet=VC203 row=10 introducer='Old City Capital + Renaissance' invested=52500.0 spread=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC203",
+      "row_ref": "VC203:13",
+      "details": "sheet=VC203 row=13 introducer='Old City Capital + Renaissance' invested=52500.0 spread=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC203",
+      "row_ref": "VC203:15",
+      "details": "sheet=VC203 row=15 introducer='Renaissance Bridge Capital LLC + Oliver Little' invested=50000.0 spread=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC206",
+      "row_ref": "VC206:5",
+      "details": "sheet=VC206 row=5 introducer='Venture Spring\\n Dimensional Advisors' invested=23720.29 spread=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC206",
+      "row_ref": "VC206:15",
+      "details": "sheet=VC206 row=15 introducer='Visual Sectors + Astra Global' invested=172000.0 spread=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC209",
+      "row_ref": "VC209:20",
+      "details": "sheet=VC209 row=20 introducer='Lafferty+Visual Sectors' invested=110000.0 spread=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC215",
+      "row_ref": "VC215:4",
+      "details": "sheet=VC215 row=4 introducer='Bromley Capital + Infinyte Club' invested=747.82 spread=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC215",
+      "row_ref": "VC215:5",
+      "details": "sheet=VC215 row=5 introducer='Bromley Capital + Infinyte Club' invested=592.64 spread=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC215",
+      "row_ref": "VC215:6",
+      "details": "sheet=VC215 row=6 introducer='Bromley Capital + Infinyte Club' invested=1211.89 spread=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC215",
+      "row_ref": "VC215:7",
+      "details": "sheet=VC215 row=7 introducer='Bromley Capital + Infinyte Club' invested=515.79 spread=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC215",
+      "row_ref": "VC215:8",
+      "details": "sheet=VC215 row=8 introducer='Bromley Capital + Renaissance' invested=2144.0 spread=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC215",
+      "row_ref": "VC215:9",
+      "details": "sheet=VC215 row=9 introducer='Bromley Capital + Infinyte Club' invested=2191.74 spread=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC215",
+      "row_ref": "VC215:15",
+      "details": "sheet=VC215 row=15 introducer='Bromley Capital + Renaissance' invested=2786.44 spread=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "VC215",
+      "row_ref": "VC215:17",
+      "details": "sheet=VC215 row=17 introducer='Hottinger AG + Bromley Capital' invested=786004.0 spread=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "VC203",
+      "row_ref": "",
+      "details": "dashboard=320673.26 db=259999.5 delta=-60673.76 expected=-60673.76"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "VC207",
+      "row_ref": "",
+      "details": "dashboard=141932.1 db=115793.4 delta=-26138.7 expected=-26138.7"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "dashboard=704343.97 db=451663.47 delta=-252680.5 expected=-252680.5"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "VC215",
+      "row_ref": "",
+      "details": "dashboard=834528.32 db=692955.91 delta=-141572.41 expected=-141572.41"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC203",
+      "row_ref": "VC203:8",
+      "details": "investor=Sebastian LATTUGA introducer=R. F. Lafferty & Co. Inc. basis=invested_amount dashboard=14563.11 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC207",
+      "row_ref": "VC207:21",
+      "details": "investor=AEON INC. introducer=Lafferty basis=invested_amount dashboard=26138.7 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC209",
+      "row_ref": "VC209:13",
+      "details": "investor=STP CAP V, A SERIES OF CGF2021 LLC, SYDECAR LLC introducer=Lafferty basis=invested_amount dashboard=29677.5 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC209",
+      "row_ref": "VC209:10",
+      "details": "investor=CBH Compagnie Bancaire Helv\u00e9tique SA, introducer=Lafferty basis=invested_amount dashboard=123003.0 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:12",
+      "details": "investor=ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC introducer=Bromley Capital basis=invested_amount dashboard=12742.5 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:16",
+      "details": "investor=AEON INC introducer=Bromley Capital basis=invested_amount dashboard=4263.0 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:20",
+      "details": "investor=Keir BENBOW introducer=Bromley Capital basis=invested_amount dashboard=670.5 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:21",
+      "details": "investor=Georges CHEN introducer=Bromley Capital basis=invested_amount dashboard=8400.0 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:18",
+      "details": "investor=LF GROUP SARL introducer=Bromley Capital basis=invested_amount dashboard=937.5 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:3",
+      "details": "investor=Julien MACHOT introducer=Bromley Capital basis=invested_amount dashboard=8416.5 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:10",
+      "details": "investor=STELLATRION PARTNERS introducer=Bromley Capital basis=invested_amount dashboard=2904.0 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "introducer_warning_only_present",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "Bright Views Holdings rows=3 amount=9000.0"
+    }
+  ]
+}

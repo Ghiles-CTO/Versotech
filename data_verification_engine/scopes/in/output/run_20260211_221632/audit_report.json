@@ -1,0 +1,343 @@
+{
+  "summary": {
+    "rules_version": "2026-02-11.1",
+    "scope_vehicle_codes": [
+      "IN101",
+      "IN102",
+      "IN103",
+      "IN105",
+      "IN106",
+      "IN108",
+      "IN109",
+      "IN110",
+      "IN111"
+    ],
+    "dashboard_active_rows": 33,
+    "dashboard_zero_rows": 8,
+    "db_subscriptions": 26,
+    "db_positions": 23,
+    "db_introductions": 15,
+    "db_commissions": 34,
+    "contacts_checked_rows": 0,
+    "contacts_red_rows_excluded": [],
+    "fail_count": 41,
+    "warning_count": 2,
+    "fail_by_check": {
+      "vehicle_totals_mismatch": 14,
+      "row_unmatched_dashboard": 7,
+      "row_numeric_mismatch": 5,
+      "position_vs_dashboard_ownership_by_investor": 7,
+      "position_vs_dashboard_ownership": 2,
+      "commission_duplicate_exact": 4,
+      "commission_totals_mismatch_invested_amount": 2
+    },
+    "warn_by_check": {
+      "dashboard_combined_introducer_name": 2
+    }
+  },
+  "failures": [
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "IN103",
+      "row_ref": "",
+      "details": "bd_fee: dashboard=5000.0 db=0.08 delta=-4999.92"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "IN105",
+      "row_ref": "",
+      "details": "count: dashboard=6.0 db=0.0 delta=-6.0"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "IN105",
+      "row_ref": "",
+      "details": "cost_per_share: dashboard=60000.0 db=0.0 delta=-60000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "IN105",
+      "row_ref": "",
+      "details": "commitment: dashboard=700000.0 db=0.0 delta=-700000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "IN105",
+      "row_ref": "",
+      "details": "price_per_share: dashboard=60000.0 db=0.0 delta=-60000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "IN105",
+      "row_ref": "",
+      "details": "shares: dashboard=70.0 db=0.0 delta=-70.0"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "IN105",
+      "row_ref": "",
+      "details": "ownership: dashboard=70.0 db=0.0 delta=-70.0"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "IN108",
+      "row_ref": "",
+      "details": "count: dashboard=1.0 db=0.0 delta=-1.0"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "IN108",
+      "row_ref": "",
+      "details": "cost_per_share: dashboard=1.0 db=0.0 delta=-1.0"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "IN108",
+      "row_ref": "",
+      "details": "commitment: dashboard=750000.0 db=0.0 delta=-750000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "IN108",
+      "row_ref": "",
+      "details": "price_per_share: dashboard=1.0 db=0.0 delta=-1.0"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "IN108",
+      "row_ref": "",
+      "details": "shares: dashboard=750000.0 db=0.0 delta=-750000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "IN108",
+      "row_ref": "",
+      "details": "ownership: dashboard=750000.0 db=0.0 delta=-750000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "IN111",
+      "row_ref": "",
+      "details": "price_per_share: dashboard=292.0 db=292.48 delta=0.4800000000000182"
+    },
+    {
+      "severity": "fail",
+      "check": "row_unmatched_dashboard",
+      "vehicle": "IN105",
+      "row_ref": "IN5:5",
+      "details": "investor=Improvitae B.V. commitment=100000.0 shares=10.0 date=2022-05-10"
+    },
+    {
+      "severity": "fail",
+      "check": "row_unmatched_dashboard",
+      "vehicle": "IN105",
+      "row_ref": "IN5:6",
+      "details": "investor=Fran\u00e7ois-Xavier GIRAUD commitment=50000.0 shares=5.0 date=2022-11-10"
+    },
+    {
+      "severity": "fail",
+      "check": "row_unmatched_dashboard",
+      "vehicle": "IN105",
+      "row_ref": "IN5:3",
+      "details": "investor=Tom GATZ commitment=100000.0 shares=10.0 date=2022-09-28"
+    },
+    {
+      "severity": "fail",
+      "check": "row_unmatched_dashboard",
+      "vehicle": "IN105",
+      "row_ref": "IN5:4",
+      "details": "investor=VERSO Holdings S.\u00e0 r.l. commitment=250000.0 shares=25.0 date=2022-10-20"
+    },
+    {
+      "severity": "fail",
+      "check": "row_unmatched_dashboard",
+      "vehicle": "IN105",
+      "row_ref": "IN5:7",
+      "details": "investor=Star of the Sea Limited commitment=150000.0 shares=15.0 date=2022-10-27"
+    },
+    {
+      "severity": "fail",
+      "check": "row_unmatched_dashboard",
+      "vehicle": "IN105",
+      "row_ref": "IN5:8",
+      "details": "investor=Nicolas WYDLER commitment=50000.0 shares=5.0 date=2022-10-24"
+    },
+    {
+      "severity": "fail",
+      "check": "row_unmatched_dashboard",
+      "vehicle": "IN108",
+      "row_ref": "IN8:3",
+      "details": "investor=Anand SETHIA commitment=750000.0 shares=750000.0 date=2022-11-22"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "IN103",
+      "row_ref": "IN3:8",
+      "details": "investor=Sherri Lipton Grace 2020 Irrevocable Family Trust metric=bd_fee dashboard=1000.0 db=0.02 delta=-999.98 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "IN103",
+      "row_ref": "IN3:7",
+      "details": "investor=Elizabeth GRACE metric=bd_fee dashboard=1000.0 db=0.02 delta=-999.98 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "IN103",
+      "row_ref": "IN3:10",
+      "details": "investor=Jeremy LOWY metric=bd_fee dashboard=1000.0 db=0.02 delta=-999.98 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "IN103",
+      "row_ref": "IN3:6",
+      "details": "investor=N SQUARE PATEL LLC metric=bd_fee dashboard=2000.0 db=0.02 delta=-1999.98 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "IN111",
+      "row_ref": "IN11:4",
+      "details": "investor=Boris IPPOLITOV metric=price_per_share dashboard=290.0 db=290.48 delta=0.48 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "position_vs_dashboard_ownership_by_investor",
+      "vehicle": "IN105",
+      "row_ref": "",
+      "details": "investor_key=bimprovitaev dashboard=10.0 db=0.0 delta=-10.0"
+    },
+    {
+      "severity": "fail",
+      "check": "position_vs_dashboard_ownership_by_investor",
+      "vehicle": "IN105",
+      "row_ref": "",
+      "details": "investor_key=frangiraudoisxavier dashboard=5.0 db=0.0 delta=-5.0"
+    },
+    {
+      "severity": "fail",
+      "check": "position_vs_dashboard_ownership_by_investor",
+      "vehicle": "IN105",
+      "row_ref": "",
+      "details": "investor_key=gatztom dashboard=10.0 db=0.0 delta=-10.0"
+    },
+    {
+      "severity": "fail",
+      "check": "position_vs_dashboard_ownership_by_investor",
+      "vehicle": "IN105",
+      "row_ref": "",
+      "details": "investor_key=holdinglrsverso dashboard=25.0 db=0.0 delta=-25.0"
+    },
+    {
+      "severity": "fail",
+      "check": "position_vs_dashboard_ownership_by_investor",
+      "vehicle": "IN105",
+      "row_ref": "",
+      "details": "investor_key=limitedofseastarthe dashboard=15.0 db=0.0 delta=-15.0"
+    },
+    {
+      "severity": "fail",
+      "check": "position_vs_dashboard_ownership_by_investor",
+      "vehicle": "IN105",
+      "row_ref": "",
+      "details": "investor_key=nicolawydler dashboard=5.0 db=0.0 delta=-5.0"
+    },
+    {
+      "severity": "fail",
+      "check": "position_vs_dashboard_ownership_by_investor",
+      "vehicle": "IN108",
+      "row_ref": "",
+      "details": "investor_key=anandsethia dashboard=750000.0 db=0.0 delta=-750000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "position_vs_dashboard_ownership",
+      "vehicle": "IN105",
+      "row_ref": "",
+      "details": "positions=0.0 dashboard=70.0"
+    },
+    {
+      "severity": "fail",
+      "check": "position_vs_dashboard_ownership",
+      "vehicle": "IN108",
+      "row_ref": "",
+      "details": "positions=0.0 dashboard=750000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_duplicate_exact",
+      "vehicle": "IN103",
+      "row_ref": "",
+      "details": "count=2 key=('b661243f-e6b4-41f1-b239-de4b197a689a', '7c9a8651-b09c-4fa1-a92c-deaba2e8106b', '02e7a81c-d5bf-4839-9776-f89ae320b586', '37748431-2903-42eb-96d0-9dc2414cde02', 'spread', None, 1500, 'None', '74999.58')"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_duplicate_exact",
+      "vehicle": "IN103",
+      "row_ref": "",
+      "details": "count=2 key=('55b67690-c83d-4406-a2b4-935032d22739', '7c9a8651-b09c-4fa1-a92c-deaba2e8106b', '02e7a81c-d5bf-4839-9776-f89ae320b586', '5ed598a6-5760-4bc0-b84b-78cf4425767c', 'invested_amount', None, 300, 'None', '15000.0')"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_duplicate_exact",
+      "vehicle": "IN103",
+      "row_ref": "",
+      "details": "count=2 key=('b661243f-e6b4-41f1-b239-de4b197a689a', '7c9a8651-b09c-4fa1-a92c-deaba2e8106b', '02e7a81c-d5bf-4839-9776-f89ae320b586', '37748431-2903-42eb-96d0-9dc2414cde02', 'invested_amount', None, 100, 'None', '5000.0')"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_duplicate_exact",
+      "vehicle": "IN103",
+      "row_ref": "",
+      "details": "count=2 key=('55b67690-c83d-4406-a2b4-935032d22739', '7c9a8651-b09c-4fa1-a92c-deaba2e8106b', '02e7a81c-d5bf-4839-9776-f89ae320b586', '5ed598a6-5760-4bc0-b84b-78cf4425767c', 'spread', None, 3500, 'None', '174999.03')"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_totals_mismatch_invested_amount",
+      "vehicle": "IN102",
+      "row_ref": "",
+      "details": "dashboard=74881.5498 db=0.0 delta=-74881.5498"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_totals_mismatch_invested_amount",
+      "vehicle": "IN106",
+      "row_ref": "",
+      "details": "dashboard=6600.0 db=3300.0 delta=-3300.0"
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "IN103",
+      "row_ref": "IN3:3",
+      "details": "sheet=IN3 row=3 introducer='Altras+Andrew' invested=15000.0 spread=174999.03"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "IN103",
+      "row_ref": "IN3:9",
+      "details": "sheet=IN3 row=9 introducer='Altras+Andrew' invested=15000.0 spread=174999.03"
+    }
+  ]
+}

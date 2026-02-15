@@ -1,0 +1,312 @@
+{
+  "name": "vc2_audit_rules",
+  "version": "2026-02-14.2",
+  "effective_checkpoint": "VC2_CHECKPOINT_2026-02-10_BROKER_INTRODUCER.md",
+  "documentation_conflicts_resolved_by_latest_checkpoint": true,
+  "scope_dashboard_sheets": [
+    "VC201",
+    "VC202",
+    "VC203",
+    "VC206",
+    "VC207",
+    "VC209",
+    "VC210",
+    "VC211",
+    "VC215"
+  ],
+  "scope_vehicle_codes": [
+    "VC201",
+    "VC202",
+    "VC203",
+    "VC206",
+    "VC207",
+    "VC209",
+    "VC210",
+    "VC211",
+    "VC215",
+    "VCL001",
+    "VCL002"
+  ],
+  "dashboard_vehicle_alias": {
+    "VCS001": "VC203",
+    "VCS002": "VC203"
+  },
+  "checks": {
+    "zero_ownership_must_not_be_loaded": true,
+    "status_must_be_funded": true,
+    "funded_amount_equals_commitment": true,
+    "positions_units_no_zero_rows": true,
+    "position_unique_per_investor_vehicle": true,
+    "max_introducers_per_subscription": 2,
+    "commission_exact_duplicate_check": true,
+    "commission_fk_introduction_check": true,
+    "commission_status_must_be_paid": true,
+    "currency_must_match_dashboard_when_present": true,
+    "specific_rule_assertions": true,
+    "subscription_deal_id_required": true,
+    "subscription_deal_vehicle_consistency": true,
+    "investor_identity_duplicate_check": true
+  },
+  "allowed_commission_statuses": [
+    "paid"
+  ],
+  "dashboard_currency_header_candidates": [
+    "Currency",
+    "Deal Currency",
+    "CCY",
+    "Curr"
+  ],
+  "name_aliases": {
+    "anandrathi": "Set Cap",
+    "anand": "Set Cap",
+    "Anand": "Set Cap",
+    "setcapdanielbaumslag": "Set Cap",
+    "garsonlevy": "Garson Brandon LEVY",
+    "odileandgeorgesmradandfenergi": "Odile and Georges Abou MRAD and FENERGI",
+    "liudmilaandalexeyromanovaromanov": "Liudmila and Alexey ROMANOV",
+    "renbridge": "Renaissance Bridge Capital LLC",
+    "renaissance": "Renaissance Bridge Capital LLC",
+    "Renaissance": "Renaissance Bridge Capital LLC",
+    "allianceglobalpartners": "Alliance Global Partners LLC",
+    "headwallagp": "Alliance Global Partners LLC",
+    "Headwall / AGP": "Alliance Global Partners LLC",
+    "aeon": "AEON INC",
+    "Aeon": "AEON INC",
+    "astragloballimited": "Astral Global Limited",
+    "Astra Global Limited": "Astral Global Limited",
+    "bromleycapital": "Bromley Capital Partners",
+    "bromleypartners": "Bromley Capital Partners",
+    "Bromley Capital": "Bromley Capital Partners",
+    "Bromley Partners": "Bromley Capital Partners",
+    "lafferty": "R. F. Lafferty & Co. Inc.",
+    "Lafferty": "R. F. Lafferty & Co. Inc.",
+    "brightviews": "Bright Views Holdings",
+    "Bright Views": "Bright Views Holdings",
+    "robertcvogtiv": "Robert VOGT IV",
+    "Robert C. VOGT IV": "Robert VOGT IV",
+    "georgeschen": "George Guoying CHEN",
+    "Georges CHEN": "George Guoying CHEN",
+    "Old City Capital": "Old City Securities LLC",
+    "Astra Global": "Astral Global Limited",
+    "Lafferty+Visual Sectors": "Visual Sectors",
+    "Lafferty + Visual Sectors": "Visual Sectors",
+    "Dimensional Advisors + Lafferty": "Dimensional Advisors",
+    "Anand+Dan": "Set Cap"
+  },
+  "brokers_table_expected": [
+    "Bromley Capital Partners",
+    "Elevation Securities",
+    "Old City Securities LLC",
+    "R. F. Lafferty & Co. Inc."
+  ],
+  "broker_like_introducers_forbidden_global": [
+    "R. F. Lafferty & Co. Inc."
+  ],
+  "broker_like_introducers_forbidden_by_vehicle": {
+    "VC215": [
+      "Bromley Capital Partners"
+    ]
+  },
+  "allowed_dual_role_introducers": [
+    "Old City Securities LLC",
+    "Bromley Capital Partners"
+  ],
+  "forbidden_in_introducers_master": [
+    "R. F. Lafferty & Co. Inc."
+  ],
+  "forbidden_in_introductions_global": [
+    "R. F. Lafferty & Co. Inc."
+  ],
+  "specific_commission_expectations": [
+    {
+      "vehicle": "VC203",
+      "investor": "EVERLASTING HOLDINGS LLC",
+      "introducer": "Sakal Advisory, LLC",
+      "basis_type": "invested_amount",
+      "amount": 5000.0,
+      "rate_bps": 50
+    },
+    {
+      "vehicle": "VC203",
+      "investor": "EVERLASTING HOLDINGS LLC",
+      "introducer": "Astral Global Limited",
+      "basis_type": "invested_amount",
+      "amount": 10000.0,
+      "rate_bps": 100
+    },
+    {
+      "vehicle": "VC206",
+      "investor": "REDPOINT OMEGA V, L.P.",
+      "introducer": "Visual Sectors",
+      "basis_type": "invested_amount",
+      "amount": 82000.0,
+      "rate_bps": 111
+    },
+    {
+      "vehicle": "VC206",
+      "investor": "REDPOINT OMEGA V, L.P.",
+      "introducer": "Astral Global Limited",
+      "basis_type": "invested_amount",
+      "amount": 90000.0,
+      "rate_bps": 122
+    },
+    {
+      "vehicle": "VC209",
+      "investor": "PVPL FUND LLC SERIES 3",
+      "introducer": "Visual Sectors",
+      "basis_type": "invested_amount",
+      "amount": 10000.0,
+      "rate_bps": 10
+    },
+    {
+      "vehicle": "VC202",
+      "investor": "SPLENDID HEIGHT HOLDINGS LIMITED",
+      "introducer": "Bromley Capital Partners",
+      "basis_type": "invested_amount",
+      "amount": 80000.0,
+      "rate_bps": 80
+    },
+    {
+      "vehicle": "VC206",
+      "investor": "KIWI INNOVATIONS LIMITED",
+      "introducer": "Bromley Capital Partners",
+      "basis_type": "invested_amount",
+      "amount": 30000.0,
+      "rate_bps": 150
+    },
+    {
+      "vehicle": "VC209",
+      "investor": "SINO SUISSE LLC",
+      "introducer": "Bromley Capital Partners",
+      "basis_type": "invested_amount",
+      "amount": 18849.42,
+      "rate_bps": 196
+    }
+  ],
+  "forbidden_commission_pairs": [
+    {
+      "vehicle": "VC215",
+      "introducer": "Bromley Capital Partners"
+    },
+    {
+      "vehicle": "VC203",
+      "introducer": "R. F. Lafferty & Co. Inc."
+    },
+    {
+      "vehicle": "VC207",
+      "introducer": "R. F. Lafferty & Co. Inc."
+    },
+    {
+      "vehicle": "VC209",
+      "introducer": "R. F. Lafferty & Co. Inc."
+    }
+  ],
+  "set_cap_vc215_spread_only_check": {
+    "vehicle": "VC215",
+    "introducer": "Set Cap",
+    "invested_amount_must_be_zero": true
+  },
+  "warnings_only_introducers": [
+    "Bright Views Holdings"
+  ],
+  "dashboard_files": {
+    "main": "verso_capital_2_data/VERSO DASHBOARD_V1.0.xlsx",
+    "contacts": "verso_capital_2_data/VERSO Capital 2 SCSp Emails and Contacts.xlsx"
+  },
+  "dashboard_commission_columns": {
+    "default": {
+      "invested_amount": [
+        35,
+        45,
+        55
+      ],
+      "spread": [
+        41,
+        51,
+        61
+      ]
+    },
+    "by_sheet": {
+      "VC203": {
+        "invested_amount": [
+          36,
+          46,
+          56
+        ],
+        "spread": [
+          42,
+          52,
+          62
+        ]
+      }
+    }
+  },
+  "dashboard_commission_name_columns": {
+    "default": [
+      43,
+      53
+    ],
+    "by_sheet": {
+      "VC203": [
+        44,
+        54
+      ]
+    }
+  },
+  "dashboard_commission_slots": {
+    "default": [
+      {
+        "name_col": 43,
+        "invested_amount_col": 45,
+        "spread_col": 51
+      },
+      {
+        "name_col": 53,
+        "invested_amount_col": 55,
+        "spread_col": 61
+      }
+    ],
+    "by_sheet": {
+      "VC203": [
+        {
+          "name_col": 44,
+          "invested_amount_col": 46,
+          "spread_col": 52
+        },
+        {
+          "name_col": 54,
+          "invested_amount_col": 56,
+          "spread_col": 62
+        }
+      ]
+    }
+  },
+  "commission_match_basis_types": [
+    "invested_amount",
+    "spread",
+    "performance_fee_tier1",
+    "performance_fee_tier2"
+  ],
+  "commission_totals_exclude_vehicle_codes": [
+    "VCL001",
+    "VCL002"
+  ],
+  "commission_total_ruled_diffs_invested_amount": {
+    "VC203": -60673.76,
+    "VC207": -26138.7,
+    "VC209": -252680.5,
+    "VC215": -141572.41
+  },
+  "combined_introducer_name_policy": "ignore",
+  "dashboard_dynamic_commission_slots": true,
+  "dashboard_commission_name_header_candidates": [
+    "name",
+    "names",
+    "partner",
+    "partners",
+    "bi",
+    "verso",
+    "introducer",
+    "introducers"
+  ]
+}

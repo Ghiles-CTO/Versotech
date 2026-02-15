@@ -1,0 +1,303 @@
+{
+  "name": "vc1_audit_rules",
+  "version": "2026-02-14.3",
+  "scope_dashboard_sheets": [
+    "VC2",
+    "VC6",
+    "VC11",
+    "VC12",
+    "VC13",
+    "VC14",
+    "VC18",
+    "VC21",
+    "VC22",
+    "VC23",
+    "VC24",
+    "VC25",
+    "VC26"
+  ],
+  "scope_vehicle_codes": [
+    "VC102",
+    "VC106",
+    "VC111",
+    "VC112",
+    "VC113",
+    "VC114",
+    "VC118",
+    "VC121",
+    "VC122",
+    "VC123",
+    "VC124",
+    "VC125",
+    "VC126"
+  ],
+  "restrict_to_db_vehicles_with_data": true,
+  "dashboard_vehicle_alias": {
+    "VC1": "VC101",
+    "VC2": "VC102",
+    "VC3": "VC103",
+    "VC4": "VC104",
+    "VC5": "VC105",
+    "VC6": "VC106",
+    "VC7": "VC107",
+    "VC8": "VC108",
+    "VC9": "VC109",
+    "VC10": "VC110",
+    "VC11": "VC111",
+    "VC12": "VC112",
+    "VC13": "VC113",
+    "VC14": "VC114",
+    "VC15": "VC115",
+    "VC16": "VC116",
+    "VC17": "VC117",
+    "VC18": "VC118",
+    "VC19": "VC119",
+    "VC20": "VC120",
+    "VC21": "VC121",
+    "VC22": "VC122",
+    "VC23": "VC123",
+    "VC24": "VC124",
+    "VC25": "VC125",
+    "VC26": "VC126",
+    "VC27": "VC127"
+  },
+  "dashboard_ownership_fallback_to_shares_if_missing": true,
+  "dashboard_optional_numeric_fields": [
+    "management_fee_percent",
+    "bd_fee_percent",
+    "bd_fee",
+    "finra_shares",
+    "finra_fee"
+  ],
+  "checks": {
+    "zero_ownership_must_not_be_loaded": true,
+    "status_must_be_funded": true,
+    "funded_amount_equals_commitment": true,
+    "fallback_match_is_failure": false,
+    "warn_safe_fallback_matches": false,
+    "warn_ruled_fallback_matches": false,
+    "position_mapping_coverage": true,
+    "positions_units_no_zero_rows": true,
+    "position_unique_per_investor_vehicle": true,
+    "max_introducers_per_subscription": 3,
+    "commission_exact_duplicate_check": true,
+    "commission_fk_introduction_check": true,
+    "commission_status_must_be_paid": true,
+    "currency_must_match_dashboard_when_present": true,
+    "specific_rule_assertions": false
+  },
+  "allowed_commission_statuses": [
+    "paid"
+  ],
+  "dashboard_currency_header_candidates": [
+    "Currency",
+    "Deal Currency",
+    "CCY",
+    "Curr"
+  ],
+  "combined_introducer_name_policy": "fail",
+  "name_aliases": {
+    "anandrathi": "Set Cap",
+    "anandrathia": "Set Cap",
+    "anand": "Set Cap",
+    "anandsethia": "Set Cap",
+    "setcap": "Set Cap",
+    "setcapdanielbaumslag": "Set Cap",
+    "danbaumslag": "Daniel BAUMSLAG",
+    "mickaelryan": "Michael RYAN",
+    "ericpascalleseigneur": "Eric LE SEIGNEUR",
+    "hossienhakimijavid": "Hossein JAVID",
+    "danjeanbaumslagdutil": "Daniel BAUMSLAG",
+    "mrsandmrbeatricemarcelknopf": "Beatrice and Marcel KNOPF",
+    "mrsnaliniyogamraranjameswilletts": "Nalini Yoga and Aran James WILLETTS",
+    "luizeduardofonteswilliams": "Eduardo Luiz FONTES WILLIAMS",
+    "terrafinancial": "Terra Financial & Management Services SA",
+    "simone": "Manna Capital",
+    "garsonlevy": "Garson Brandon LEVY",
+    "odileandgeorgesmradandfenergi": "Odile and Georges Abou MRAD and FENERGI",
+    "liudmilaandalexeyromanovaromanov": "Liudmila and Alexey ROMANOV",
+    "leegrandgroup": "Lee Rant Group",
+    "hedgebaysecuritiesllc": "Hedgebay Securities LLC",
+    "altrasandrew": "Altras Capital Financing Broker",
+    "altrasandrewstewart": "Altras Capital Financing Broker",
+    "renbridge": "Renaissance Bridge Capital LLC",
+    "ericlepascalseigneur": "Eric LE SEIGNEUR",
+    "hakimihossienjavid": "Hossein JAVID",
+    "hossienjavid": "Hossein JAVID",
+    "terra": "Terra Financial & Management Services SA",
+    "terrafinancialmanagementservicessa": "Terra Financial & Management Services SA",
+    "dan": "Daniel BAUMSLAG",
+    "robin": "Robin Doble",
+    "rick": "Altras Capital Financing Broker",
+    "sandro": "GEMERA Consulting Pte Ltd",
+    "gemera": "GEMERA Consulting Pte Ltd",
+    "denis": "Denis Matthey",
+    "julien": "Julien MACHOT",
+    "aux": "AUX Business Support Ltd",
+    "john": "Moore & Moore Investments Ltd",
+    "sandrogemera": "GEMERA Consulting Pte Ltd",
+    "enguerrand": "Enguerrand Elbaz",
+    "alpha gaia": "Alpha Gaia ALPHA GAIA CAPITAL FZE",
+    "alphagaia": "Alpha Gaia ALPHA GAIA CAPITAL FZE",
+    "gaiacapital": "Alpha Gaia ALPHA GAIA CAPITAL FZE",
+    "set cap": "Set Cap",
+    "gio": "Giovanni SALADINO",
+    "deyandmihov": "Deyan D MIHOV",
+    "oeplimitedtransferfromasadvisorydwcllc": "OEP LIMITED",
+    "oep limited transfer from as advisory dwc llc": "OEP LIMITED",
+    "leerantgroup": "Lee Rant Group",
+    "Rick + Andrew": "Altras Capital Financing Broker",
+    "Rick+Andrew": "Altras Capital Financing Broker",
+    "Stableton+Terra": "Terra Financial & Management Services SA",
+    "Anand+Dan": "Set Cap"
+  },
+  "run_broker_checks": false,
+  "brokers_table_expected": [
+    "Bromley Capital Partners",
+    "Elevation Securities",
+    "Old City Securities LLC",
+    "R. F. Lafferty & Co. Inc."
+  ],
+  "broker_like_introducers_forbidden_global": [],
+  "broker_like_introducers_forbidden_by_vehicle": {},
+  "allowed_dual_role_introducers": [],
+  "forbidden_in_introducers_master": [],
+  "forbidden_in_introductions_global": [],
+  "specific_commission_expectations": [],
+  "forbidden_commission_pairs": [],
+  "warnings_only_introducers": [],
+  "dashboard_files": {
+    "main": "verso_capital_2_data/VERSO DASHBOARD_V1.0.xlsx",
+    "contacts": "verso_capital_2_data/VERSO Capital 2 SCSp Emails and Contacts.xlsx"
+  },
+  "run_contacts_checks": false,
+  "dashboard_commission_columns": {
+    "default": {
+      "invested_amount": [
+        35,
+        45,
+        55
+      ],
+      "spread": [
+        41,
+        51,
+        61
+      ]
+    },
+    "by_sheet": {}
+  },
+  "dashboard_commission_name_columns": {
+    "default": [
+      43,
+      53
+    ],
+    "by_sheet": {}
+  },
+  "dashboard_commission_slots": {
+    "default": [],
+    "by_sheet": {}
+  },
+  "commission_match_basis_types": [
+    "invested_amount",
+    "spread"
+  ],
+  "row_compare_skip_metrics": [
+    "ownership"
+  ],
+  "row_blank_value_skip_metrics": [
+    "cost_per_share"
+  ],
+  "vehicle_totals_skip_metrics": [
+    "cost_per_share",
+    "ownership",
+    "sub_fee_percent",
+    "management_fee_percent",
+    "perf1_percent",
+    "perf2_percent",
+    "bd_fee_percent"
+  ],
+  "commission_totals_exclude_vehicle_codes": [],
+  "commission_total_ruled_diffs_invested_amount": {},
+  "commission_total_ruled_diffs_spread": {
+    "VC106": 0.058,
+    "VC113": 0.0125,
+    "VC114": -0.4
+  },
+  "dashboard_header_row_by_sheet": {
+    "VC6": 3
+  },
+  "dashboard_data_start_row_by_sheet": {
+    "VC6": 4
+  },
+  "dashboard_dynamic_commission_slots": true,
+  "dashboard_commission_name_header_candidates": [
+    "name",
+    "names",
+    "partner",
+    "partners",
+    "bi",
+    "verso",
+    "introducer",
+    "introducers"
+  ],
+  "ignore_contract_date_if_missing": true,
+  "dashboard_blank_ownership_as_active_by_sheet": [
+    "VC22"
+  ],
+  "metric_tolerance_overrides": {
+    "commitment": 1.0
+  },
+  "percent_compare_rules": {
+    "sub_fee_percent": {
+      "mode": "fraction_or_percent_strict",
+      "allow_divide_if_abs_gte": 100
+    },
+    "management_fee_percent": {
+      "mode": "fraction_or_percent_strict",
+      "allow_divide_if_abs_gte": 100
+    },
+    "perf1_percent": {
+      "mode": "fraction_or_percent_strict",
+      "allow_divide_if_abs_gte": 100
+    },
+    "perf2_percent": {
+      "mode": "fraction_or_percent_strict",
+      "allow_divide_if_abs_gte": 100
+    },
+    "bd_fee_percent": {
+      "mode": "fraction_or_percent_strict",
+      "allow_divide_if_abs_gte": 100
+    }
+  },
+  "investor_aliases_by_vehicle": {
+    "VC111": {
+      "Zandera (Finco) Limited": "Michael RYAN"
+    },
+    "VC113": {
+      "Zandera (Finco) Limited": "Zandera (Holdco) Limited"
+    }
+  },
+  "fallback_ruled_name_pairs": [
+    { "vehicle": "VC106", "dash_investor": "Hedgebay Securities LLC", "db_investor": "Sheetal HARIA" },
+    { "vehicle": "VC106", "dash_investor": "Hedgebay Securities LLC", "db_investor": "Tapan SHAH" },
+    { "vehicle": "VC106", "dash_investor": "Hedgebay Securities LLC", "db_investor": "Lakin HARIA" },
+    { "vehicle": "VC106", "dash_investor": "Hedgebay Securities LLC", "db_investor": "Aaron RIKHYE" },
+    { "vehicle": "VC106", "dash_investor": "LEE RAND GROUP", "db_investor": "Ekta DATT" },
+    { "vehicle": "VC106", "dash_investor": "LEE RAND GROUP", "db_investor": "Rasika KULKARNI" },
+    { "vehicle": "VC106", "dash_investor": "LEE RAND GROUP", "db_investor": "Nidhi GANERIWALA" },
+    { "vehicle": "VC106", "dash_investor": "LEE RAND GROUP", "db_investor": "Rajiv KAPOOR" },
+    { "vehicle": "VC106", "dash_investor": "LEE RAND GROUP", "db_investor": "Atima HARALALKA" },
+    { "vehicle": "VC106", "dash_investor": "LEE RAND GROUP", "db_investor": "Rajesh SUD" },
+    { "vehicle": "VC122", "dash_investor": "OEP Ltd", "db_investor": "Julien MACHOT" },
+    { "vehicle": "VC106", "dash_investor": "OEP Ltd", "db_investor": "Julien MACHOT" },
+    { "vehicle": "VC112", "dash_investor": "OEP Ltd", "db_investor": "Julien MACHOT" },
+    { "vehicle": "VC113", "dash_investor": "OEP Ltd", "db_investor": "Julien MACHOT" },
+    { "vehicle": "VC124", "dash_investor": "OEP Ltd", "db_investor": "Julien MACHOT" },
+    { "vehicle": "VC125", "dash_investor": "OEP Ltd", "db_investor": "Julien MACHOT" },
+    { "vehicle": "VC126", "dash_investor": "OEP Ltd", "db_investor": "Julien MACHOT" },
+    { "vehicle": "VC106", "dash_investor": "Mrs and Mr KARKUN", "db_investor": "Anisha Bansal and Rahul KARKUN" },
+    { "vehicle": "VC106", "dash_investor": "Mrs & Mr Subbiah SUBRAMANIAN", "db_investor": "Nilakantan MAHESWARI & Subbiah SUBRAMANIAN" },
+    { "vehicle": "VC106", "dash_investor": "Imrat HAYAT", "db_investor": "Imran HAYAT" },
+    { "vehicle": "VC122", "dash_investor": "INNOVATECH COMPARTMENT 8", "db_investor": "Anand SETHA" }
+  ]
+}

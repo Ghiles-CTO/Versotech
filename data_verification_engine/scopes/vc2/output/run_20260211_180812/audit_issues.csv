@@ -1,0 +1,10 @@
+severity,check,vehicle,row_ref,details
+fail,vehicle_totals_mismatch,VC209,,spread_fee: dashboard=5855431.1565000005 db=8079471.1565000005 delta=2224040.0
+fail,row_numeric_mismatch,VC209,,"key=('VC209', 40000.0, 1000.0, '2025-03-12') metric=spread_fee dashboard=-35000.0 db=5000.0 delta=40000.0"
+fail,row_numeric_mismatch,VC209,,"key=('VC209', 50000.0, 649.0, '2025-11-12') metric=spread_fee dashboard=1298.0 db=27258.0 delta=25960.0"
+fail,row_numeric_mismatch,VC209,,"key=('VC209', 100023.0, 1299.0, '2025-11-12') metric=spread_fee dashboard=2598.0 db=54558.0 delta=51960.0"
+fail,row_numeric_mismatch,VC209,,"key=('VC209', 100023.0, 1299.0, '2025-12-16') metric=spread_fee dashboard=2598.0 db=54558.0 delta=51960.0"
+fail,row_numeric_mismatch,VC209,,"key=('VC209', 150000.0, 1948.0, '2025-12-19') metric=spread_fee dashboard=3896.0 db=81816.0 delta=77920.0"
+fail,row_numeric_mismatch,VC209,,"key=('VC209', 725400.0, 9300.0, '2025-12-29') metric=spread_fee dashboard=27900.0 db=399900.0 delta=372000.0"
+fail,row_numeric_mismatch,VC209,,"key=('VC209', 2727208.0, 40106.0, '2025-01-12') metric=spread_fee dashboard=-280742.0 db=1323498.0 delta=1604240.0"
+warn,introducer_warning_only_present,VC209,,Bright Views Holdings rows=3 amount=9000.0

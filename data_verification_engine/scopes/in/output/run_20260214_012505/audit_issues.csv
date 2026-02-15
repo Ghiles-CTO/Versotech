@@ -1,0 +1,7 @@
+severity,check,vehicle,row_ref,details
+warn,dashboard_combined_introducer_name,IN103,IN3:3,sheet=IN3 row=3 introducer='Altras+Andrew' invested=15000.0 spread=174999.03
+warn,dashboard_combined_introducer_name,IN103,IN3:9,sheet=IN3 row=9 introducer='Altras+Andrew' invested=15000.0 spread=174999.03
+warn,commission_totals_ruled_diff_invested_amount,IN102,,dashboard=74881.5498 db=0.0 delta=-74881.5498 expected=-74881.5498
+warn,commission_totals_ruled_diff_invested_amount,IN103,,dashboard=65000.0 db=45000.0 delta=-20000.0 expected=-20000.0
+warn,commission_totals_ruled_diff_spread,IN103,,dashboard=499997.22284 db=249998.61 delta=-249998.61284 expected=-249998.61284
+warn,commission_totals_ruled_diff_invested_amount,IN106,,dashboard=6600.0 db=3300.0 delta=-3300.0 expected=-3300.0

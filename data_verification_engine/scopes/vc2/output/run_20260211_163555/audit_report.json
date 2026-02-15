@@ -1,0 +1,147 @@
+{
+  "summary": {
+    "rules_version": "2026-02-11",
+    "scope_vehicle_codes": [
+      "VC201",
+      "VC202",
+      "VC203",
+      "VC206",
+      "VC207",
+      "VC209",
+      "VC210",
+      "VC211",
+      "VC215",
+      "VCL001",
+      "VCL002"
+    ],
+    "dashboard_active_rows": 105,
+    "dashboard_zero_rows": 5,
+    "db_subscriptions": 105,
+    "db_positions": 94,
+    "db_introductions": 88,
+    "db_commissions": 264,
+    "contacts_checked_rows": 123,
+    "contacts_red_rows_excluded": [
+      10,
+      13
+    ],
+    "fail_count": 13,
+    "warning_count": 2,
+    "fail_by_check": {
+      "vehicle_totals_mismatch": 13
+    },
+    "warn_by_check": {
+      "brokers_unexpected": 1,
+      "introducer_warning_only_present": 1
+    }
+  },
+  "failures": [
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC201",
+      "row_ref": "",
+      "details": "sub_fee: dashboard=0.0309278350515464 db=11512.5 delta=11512.469072164948"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC202",
+      "row_ref": "",
+      "details": "sub_fee: dashboard=0.04 db=324993.779 delta=324993.739"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC203",
+      "row_ref": "",
+      "details": "sub_fee: dashboard=0.13999999999999999 db=75235.27 delta=75235.13"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC206",
+      "row_ref": "",
+      "details": "sub_fee: dashboard=0.15 db=116680.575 delta=116680.425"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC206",
+      "row_ref": "",
+      "details": "bd_fee: dashboard=0.025 db=2500.0 delta=2499.975"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC207",
+      "row_ref": "",
+      "details": "sub_fee: dashboard=0.9150000000000001 db=169996.2 delta=169995.285"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC207",
+      "row_ref": "",
+      "details": "bd_fee: dashboard=0.05 db=5008.75 delta=5008.7"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "spread_fee: dashboard=5855431.1565000005 db=8079471.1565000005 delta=2224040.0"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "sub_fee: dashboard=0.1 db=80266.66 delta=80266.56"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC210",
+      "row_ref": "",
+      "details": "sub_fee: dashboard=0.06 db=1350.0 delta=1349.94"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC211",
+      "row_ref": "",
+      "details": "sub_fee: dashboard=0.03 db=9450.0 delta=9449.97"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC215",
+      "row_ref": "",
+      "details": "sub_fee: dashboard=0.36999999999999994 db=381503.5 delta=381503.13"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC215",
+      "row_ref": "",
+      "details": "bd_fee: dashboard=0.05 db=25606.8 delta=25606.75"
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "warn",
+      "check": "brokers_unexpected",
+      "vehicle": "",
+      "row_ref": "",
+      "details": "['Old City Securities LLC']"
+    },
+    {
+      "severity": "warn",
+      "check": "introducer_warning_only_present",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "Bright Views Holdings rows=3 amount=9000.0"
+    }
+  ]
+}

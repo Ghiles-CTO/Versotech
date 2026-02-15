@@ -1,0 +1,180 @@
+severity,check,vehicle,row_ref,details
+fail,vehicle_totals_mismatch,VC106,,cost_per_share: dashboard=3404.5 db=3516.58269 delta=112.08269000000018
+fail,vehicle_totals_mismatch,VC106,,ownership: dashboard=1969517.0 db=1964970.0 delta=-4547.0
+fail,vehicle_totals_mismatch,VC106,,finra_shares: dashboard=15.575600000000003 db=10.0 delta=-5.575600000000003
+fail,vehicle_totals_mismatch,VC114,,ownership: dashboard=860000.0 db=530000.0 delta=-330000.0
+fail,vehicle_totals_mismatch,VC122,,price_per_share: dashboard=8.62533 db=1.6514199999999999 delta=-6.97391
+fail,vehicle_totals_mismatch,VC122,,sub_fee: dashboard=7199.993 db=3199.993 delta=-4000.0000000000005
+fail,vehicle_totals_mismatch,VC126,,bd_fee: dashboard=1250.0 db=0.05 delta=-1249.95
+fail,row_numeric_mismatch,VC106,VC6:166,investor=Nicki ASQUITH metric=perf1_percent dashboard=0.0 db=20.0 delta=20.0 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:101,investor=David BACHELIER metric=perf1_percent dashboard=0.0 db=20.0 delta=20.0 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:41,investor=Craig BROWN metric=finra_shares dashboard=2.0 db=0.0 delta=-2.0 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:162,investor=REVERY CAPITAL Limited metric=perf1_percent dashboard=0.0 db=20.0 delta=20.0 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:167,investor=Isabella CHANDRIS metric=perf1_percent dashboard=0.0 db=20.0 delta=20.0 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:159,investor=Damien KRAUSER metric=perf1_percent dashboard=0.1 db=20.0 delta=19.9 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:215,investor=Luiz Eduardo FONTES WILLIAMS metric=cost_per_share dashboard=0.0 db=17.18269 delta=17.18269 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:158,investor=Eric SARASIN metric=cost_per_share dashboard=0.0 db=16.0 delta=16.0 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:161,investor=Scott FLETCHER metric=cost_per_share dashboard=0.0 db=20.0 delta=20.0 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:214,investor=Samuel GRANDCHAMP metric=cost_per_share dashboard=0.0 db=17.0 delta=17.0 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:220,investor=Julien MACHOT metric=cost_per_share dashboard=0.0 db=19.5 delta=19.5 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:218,investor=Julien MACHOT metric=cost_per_share dashboard=0.0 db=11.2 delta=11.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:217,investor=Julien MACHOT metric=cost_per_share dashboard=0.0 db=11.2 delta=11.2 mode=exact_date
+fail,row_contract_date_mismatch,VC111,VC11:12,"investor=Dan
+Jean BAUMSLAG
+DUTIL dashboard=2021-09-16 db=2021-11-04 mode=relaxed"
+fail,row_numeric_mismatch,VC111,VC11:12,"investor=Dan
+Jean BAUMSLAG
+DUTIL metric=sub_fee dashboard=0.0 db=2000.0 delta=2000.0 mode=relaxed"
+fail,row_numeric_mismatch,VC111,VC11:22,investor=FINALMA SUISSE SA metric=sub_fee dashboard=2000.0 db=0.0 delta=-2000.0 mode=relaxed
+fail,row_numeric_mismatch,VC122,VC22:4,investor=AS ADVISORY DWC LLC metric=price_per_share dashboard=1.0 db=0.0 delta=-1.0 mode=relaxed
+fail,row_numeric_mismatch,VC122,VC22:6,investor=Sheikh Yousef AL SABAH metric=price_per_share dashboard=1.0 db=0.0 delta=-1.0 mode=relaxed
+fail,row_numeric_mismatch,VC122,VC22:6,investor=Sheikh Yousef AL SABAH metric=sub_fee dashboard=1000.0 db=0.0 delta=-1000.0 mode=relaxed
+fail,row_numeric_mismatch,VC122,VC22:8,investor=VERSO CAPITAL ESTABLISHMENT metric=price_per_share dashboard=1.0 db=0.0 delta=-1.0 mode=relaxed
+fail,row_numeric_mismatch,VC122,VC22:5,investor=Deyan D MIHOV metric=price_per_share dashboard=1.0 db=0.0 delta=-1.0 mode=relaxed
+fail,row_numeric_mismatch,VC122,VC22:5,investor=Deyan D MIHOV metric=sub_fee dashboard=1500.0 db=0.0 delta=-1500.0 mode=relaxed
+fail,row_numeric_mismatch,VC122,VC22:11,investor=Erich GRAF metric=price_per_share dashboard=0.62533 db=0.0 delta=-0.62533 mode=exact_date
+fail,row_numeric_mismatch,VC122,VC22:12,investor=LF GROUP SARL metric=price_per_share dashboard=1.0 db=0.0 delta=-1.0 mode=relaxed
+fail,row_numeric_mismatch,VC122,VC22:12,investor=LF GROUP SARL metric=sub_fee dashboard=1500.0 db=0.0 delta=-1500.0 mode=relaxed
+fail,row_numeric_mismatch,VC122,VC22:3,investor=Julien MACHOT metric=price_per_share dashboard=1.0 db=0.40076 delta=-0.59924 mode=exact_date
+fail,row_numeric_mismatch,VC126,VC26:25,investor=Amanda RYZOWY metric=bd_fee dashboard=625.0 db=0.025 delta=-624.975 mode=exact_date
+fail,row_numeric_mismatch,VC126,VC26:20,investor=Garson Brandon LEVY metric=bd_fee dashboard=625.0 db=0.025 delta=-624.975 mode=exact_date
+fail,row_numeric_mismatch,VC122,VC22:7,investor=Anke Skoludek RICE metric=price_per_share dashboard=1.0 db=0.62533 delta=-0.37467 mode=fallback_loose_name_amounts
+fail,row_numeric_mismatch,VC106,VC6:58,investor=Hedgebay Securities LLC metric=finra_shares dashboard=0.71 db=0.0 delta=-0.71 mode=fallback_amounts_date
+fail,row_numeric_mismatch,VC106,VC6:59,investor=Hedgebay Securities LLC metric=finra_shares dashboard=0.71 db=0.0 delta=-0.71 mode=fallback_amounts_date
+fail,row_numeric_mismatch,VC106,VC6:57,investor=Hedgebay Securities LLC metric=finra_shares dashboard=0.71 db=0.0 delta=-0.71 mode=fallback_amounts_date
+fail,row_numeric_mismatch,VC106,VC6:56,investor=Hedgebay Securities LLC metric=finra_shares dashboard=0.71 db=0.0 delta=-0.71 mode=fallback_amounts_date
+fail,row_numeric_mismatch,VC106,VC6:94,investor=Imrat HAYAT metric=finra_shares dashboard=0.7356 db=0.0 delta=-0.7356 mode=fallback_amounts_date
+fail,row_numeric_mismatch,VC122,VC22:9,investor=INNOVATECH COMPARTMENT 8 metric=price_per_share dashboard=1.0 db=0.62533 delta=-0.37467 mode=fallback_amounts_date
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=julienmachot dashboard=112057.0 db=107510.0 delta=-4547.0
+fail,position_vs_dashboard_ownership_by_investor,VC114,,investor_key=julienmachot dashboard=530000.0 db=200000.0 delta=-330000.0
+fail,zero_ownership_loaded,VC111,,"zero_key=('VC111', 'michaelryan', 571428.57, 100000.0, '2021-11-11') dashboard_zero=1 db_exact=0 db_relaxed=1"
+fail,subscription_missing_deal_id,,,subscription_id=1b6470b3-8901-4643-af73-b60fdd1809fe
+fail,subscription_missing_deal_id,,,subscription_id=3ae974dc-1b2b-459a-b23f-768600e942c8
+fail,subscription_missing_deal_id,,,subscription_id=41dd0670-8554-45ca-9e7e-e280679e832b
+fail,subscription_missing_deal_id,,,subscription_id=82f25861-904f-426a-86bb-57f579e886c8
+fail,subscription_missing_deal_id,,,subscription_id=948fc893-8c88-46d7-adf8-97f6afc9f338
+fail,subscription_missing_deal_id,,,subscription_id=a69bf46b-90e2-420f-9ec1-c2a7e6ea339c
+fail,subscription_missing_deal_id,,,subscription_id=b3eb0c64-ee39-4f15-a0c5-3f67d19c30df
+fail,subscription_missing_deal_id,,,subscription_id=d04fc9d4-d5f7-4d16-8b32-d9bfb0b7dec6
+fail,subscription_missing_deal_id,,,subscription_id=d6d99baf-978c-4953-997c-25356b4c782d
+fail,subscription_missing_deal_id,,,subscription_id=e7e2ff36-892b-49b5-b411-d6ed5984aaa3
+fail,subscription_missing_deal_id,,,subscription_id=f91884ba-dc5c-4666-84eb-eb6e126c9c36
+fail,subscription_missing_deal_id,,,subscription_id=fb696d65-92bb-4e46-8b68-d161222ca0e8
+fail,position_vs_dashboard_ownership,VC106,,positions=1964970.0 dashboard=1969517.0
+fail,position_vs_dashboard_ownership,VC114,,positions=530000.0 dashboard=860000.0
+fail,commission_duplicate_exact,VC106,,"count=2 key=('d5e08d13-ebdf-4d8c-a218-ee50e2117c6f', '07eff085-9f1d-4e02-b1e2-d717817503f1', 'e78f40f3-7e17-44cd-af46-a01a2f195f3e', '279d437e-2992-45b2-8075-2569e380a345', 'spread', None, 536, '100000.0', '5356.26')"
+fail,commission_duplicate_exact,VC106,,"count=2 key=('d5e08d13-ebdf-4d8c-a218-ee50e2117c6f', '07eff085-9f1d-4e02-b1e2-d717817503f1', '69075b7c-5dfd-4bd5-b8f7-e0757fe28d64', 'd3de9759-f6fa-4689-a1ba-f62c59a08f6a', 'spread', None, 0, '500000.0', '0.0')"
+fail,commission_duplicate_exact,VC113,,"count=2 key=('b661243f-e6b4-41f1-b239-de4b197a689a', '1e4061bd-6e36-4298-8e98-9fd55ab6a448', '53b54fb5-b965-4bcd-888a-8bfb98791ba5', '469d0eab-88fb-4675-83c8-c81885f05dfc', 'invested_amount', None, 200, 'None', '20000.0')"
+fail,commission_duplicate_exact,VC126,,"count=2 key=('b661243f-e6b4-41f1-b239-de4b197a689a', 'e2d649da-f1e9-49ca-b426-dd8ade244f12', '69075b7c-5dfd-4bd5-b8f7-e0757fe28d64', 'a7a47938-9243-4b31-a519-3b50ffa12167', 'performance_fee', None, 200, 'None', '0.0')"
+fail,commission_duplicate_exact,VC113,,"count=2 key=('1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d', '1e4061bd-6e36-4298-8e98-9fd55ab6a448', 'b65f05da-0ba0-42c3-ac7a-b5bc31084f53', 'cb6a77e9-e270-4364-a217-860bf603d38d', 'performance_fee', None, 200, 'None', '0.0')"
+fail,commission_duplicate_exact,VC106,,"count=2 key=('d5e08d13-ebdf-4d8c-a218-ee50e2117c6f', '07eff085-9f1d-4e02-b1e2-d717817503f1', 'e78f40f3-7e17-44cd-af46-a01a2f195f3e', '279d437e-2992-45b2-8075-2569e380a345', 'performance_fee', 1, 500, '100000.0', '0.0')"
+fail,commission_duplicate_exact,VC106,,"count=2 key=('d5e08d13-ebdf-4d8c-a218-ee50e2117c6f', '07eff085-9f1d-4e02-b1e2-d717817503f1', '69075b7c-5dfd-4bd5-b8f7-e0757fe28d64', 'd3de9759-f6fa-4689-a1ba-f62c59a08f6a', 'invested_amount', None, 0, '500000.0', '0.0')"
+fail,commission_duplicate_exact,VC113,,"count=2 key=('736a31b2-b8a6-4a0e-8abe-ed986014d0c4', '1e4061bd-6e36-4298-8e98-9fd55ab6a448', '20951004-4990-4398-8890-c2a538d55bfa', '43827c09-e37a-4cc0-9e3a-8ec84e82ac8e', 'performance_fee', None, 500, 'None', '0.0')"
+fail,commission_duplicate_exact,VC106,,"count=2 key=('98fdce26-5a61-486e-a450-8e13dd4cfbf4', '07eff085-9f1d-4e02-b1e2-d717817503f1', 'e78f40f3-7e17-44cd-af46-a01a2f195f3e', 'eba108bb-f651-4e80-94ea-4ca20fc6128d', 'spread', None, 0, '100000.0', '0.0')"
+fail,commission_duplicate_exact,VC106,,"count=2 key=('98fdce26-5a61-486e-a450-8e13dd4cfbf4', '07eff085-9f1d-4e02-b1e2-d717817503f1', 'e78f40f3-7e17-44cd-af46-a01a2f195f3e', 'eba108bb-f651-4e80-94ea-4ca20fc6128d', 'performance_fee', 1, 1000, '100000.0', '0.0')"
+fail,commission_duplicate_exact,VC126,,"count=2 key=('bcaaab40-eef5-4a3c-92d7-101f498489ac', 'e2d649da-f1e9-49ca-b426-dd8ade244f12', 'ea6fe379-59c1-4f21-b2aa-a64162bc65fe', '60b90208-fe5e-41ec-87fc-8cc08eb358c2', 'spread', None, 151, 'None', '15096.13')"
+fail,commission_totals_mismatch_spread,VC106,,dashboard=6326296.752 db=6326296.81 delta=0.058
+fail,commission_totals_mismatch_spread,VC113,,dashboard=963887.6075 db=963887.62 delta=0.0125
+fail,commission_totals_mismatch_spread,VC114,,dashboard=0.4 db=0.0 delta=-0.4
+fail,commission_totals_mismatch_invested_amount,VC122,,dashboard=150000.0 db=1500.0 delta=-148500.0
+fail,commission_totals_mismatch_invested_amount,VC125,,dashboard=8914.2776 db=5000.0 delta=-3914.2776
+fail,commission_totals_mismatch_spread,VC126,,dashboard=658310.131311 db=1203092.76 delta=544782.628689
+fail,commission_row_count_mismatch,VC106,VC6:25,investor=Sandra KOHLER CABIAN introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=2
+fail,commission_row_count_mismatch,VC106,VC6:21,investor=OEP Ltd introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=6
+fail,commission_row_missing_in_dashboard,VC122,d934c229-2597-40ae-b916-d915d7256b5b,investor=LF GROUP SARL introducer=Pierre Paumier basis=invested_amount dashboard=0.0 db=1500.0
+fail,commission_row_missing_in_db,VC125,VC25:20,investor=DALINGA HOLDING AG introducer=Dan basis=invested_amount dashboard=599.14 db=0.0
+fail,commission_row_missing_in_db,VC125,VC25:20,investor=DALINGA HOLDING AG introducer=TERRA basis=invested_amount dashboard=599.14 db=0.0
+fail,commission_row_missing_in_db,VC125,VC25:22,investor=MA GROUP AG introducer=Dan basis=invested_amount dashboard=358.0 db=0.0
+fail,commission_row_missing_in_db,VC125,VC25:22,investor=MA GROUP AG introducer=TERRA basis=invested_amount dashboard=358.0 db=0.0
+fail,commission_row_missing_in_db,VC125,VC25:36,investor=LF GROUP SARL introducer=Pierre Paumier basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_amount_mismatch,VC126,VC26:14,investor=SC TBC INVEST 3 introducer=Anand basis=spread dashboard=200343.0 db=400686.0 delta=200343.0
+fail,commission_row_count_mismatch,VC126,VC26:14,investor=SC TBC INVEST 3 introducer=Anand basis=spread dashboard_rows=1 db_rows=2
+fail,commission_row_amount_mismatch,VC126,VC26:4,investor=AS Advisory DWC-LLC introducer=Anand basis=spread dashboard=760.0 db=1520.0 delta=760.0
+fail,commission_row_count_mismatch,VC126,VC26:4,investor=AS Advisory DWC-LLC introducer=Anand basis=spread dashboard_rows=1 db_rows=2
+fail,commission_row_amount_mismatch,VC126,VC26:15,investor=ODIN (ANIM X II LP) introducer=Anand basis=spread dashboard=55106.4 db=110212.8 delta=55106.4
+fail,commission_row_count_mismatch,VC126,VC26:15,investor=ODIN (ANIM X II LP) introducer=Anand basis=spread dashboard_rows=2 db_rows=4
+fail,commission_row_amount_mismatch,VC126,VC26:31,investor=GESTIO CAPITAL LTD introducer=Anand basis=spread dashboard=25200.0 db=50399.99 delta=25199.99
+fail,commission_row_count_mismatch,VC126,VC26:31,investor=GESTIO CAPITAL LTD introducer=Anand basis=spread dashboard_rows=1 db_rows=2
+fail,commission_row_amount_mismatch,VC126,VC26:7,investor=Anand RATHI introducer=Anand basis=spread dashboard=4030.0 db=15864.03 delta=11834.03
+fail,commission_row_count_mismatch,VC126,VC26:7,investor=Anand RATHI introducer=Anand basis=spread dashboard_rows=1 db_rows=3
+fail,commission_row_missing_in_dashboard,VC126,d6e41bb3-f844-46cf-ac26-b51d9ab33bdd,investor=Anand RATHI introducer=Giovanni SALADINO basis=spread dashboard=0.0 db=3774.03
+fail,commission_row_missing_in_dashboard,VC126,6f6c330a-c5fe-419a-8178-37069b41a853,investor=CLOUDSAFE HOLDINGS LIMITED introducer=Daniel Baumslag basis=spread dashboard=0.0 db=12210.0
+fail,commission_row_amount_mismatch,VC126,VC26:5,investor=Scott FLETCHER introducer=Anand basis=spread dashboard=154572.92 db=309145.84 delta=154572.92
+fail,commission_row_count_mismatch,VC126,VC26:5,investor=Scott FLETCHER introducer=Anand basis=spread dashboard_rows=2 db_rows=4
+fail,commission_row_amount_mismatch,VC126,VC26:8,investor=Tuygan GOKER introducer=Anand basis=spread dashboard=63456.13 db=126912.26 delta=63456.13
+fail,commission_row_count_mismatch,VC126,VC26:8,investor=Tuygan GOKER introducer=Anand basis=spread dashboard_rows=1 db_rows=2
+fail,commission_row_amount_mismatch,VC126,VC26:8,investor=Tuygan GOKER introducer=Gio basis=spread dashboard=15096.13 db=30192.26 delta=15096.13
+fail,commission_row_count_mismatch,VC126,VC26:8,investor=Tuygan GOKER introducer=Gio basis=spread dashboard_rows=1 db_rows=2
+fail,commission_row_amount_mismatch,VC126,VC26:9,investor=Julien MACHOT introducer=Anand basis=spread dashboard=890.0 db=4090.0 delta=3200.0
+fail,commission_row_count_mismatch,VC126,VC26:9,investor=Julien MACHOT introducer=Anand basis=spread dashboard_rows=1 db_rows=5
+fail,commission_row_missing_in_db,VC126,VC26:12,investor=OEP Ltd introducer=Anand basis=spread dashboard=770.0 db=0.0
+fail,max_introducers_per_subscription_exceeded,VC126,,investor=Anand RATHI deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introducers=3 max=2
+fail,max_introducers_per_subscription_exceeded,VC106,,investor=Julien MACHOT deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introducers=3 max=2
+fail,max_introducers_per_subscription_exceeded,VC126,,investor=CLOUDSAFE HOLDINGS LIMITED deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introducers=3 max=2
+warn,row_fallback_match,VC106,VC6:141,mode=fallback_loose_name_amounts dash_investor=Aatif N. HASSAN db_investor=Aatif HASSAN commitment=100000.0 shares=4251.0 dash_date=2021-05-11 db_date=2021-05-11 sub_id=373e8d77-d242-4453-ad81-15874839fdbc
+warn,row_fallback_match,VC106,VC6:121,mode=fallback_loose_name_amounts dash_investor=Adil Arshed KHAWAJA db_investor=Adil KHAWAJA commitment=250000.0 shares=10629.0 dash_date=2021-04-25 db_date=2021-04-25 sub_id=b117ad58-bb16-4606-983f-1c7b632cb4e8
+warn,row_fallback_match,VC106,VC6:146,mode=fallback_loose_name_amounts dash_investor=Anke Skoludek RICE db_investor=Anke RICE commitment=85000.0 shares=3863.0 dash_date=2021-05-13 db_date=2021-05-13 sub_id=1e6057a5-fe6b-4a27-9505-09b2946c8a53
+warn,row_fallback_match,VC106,VC6:76,mode=fallback_loose_name_amounts dash_investor=Barnaby John MOORE db_investor=Barnaby MOORE commitment=150000.0 shares=6550.0 dash_date=2021-03-04 db_date=2021-03-04 sub_id=b36a0d0b-feee-449d-a4f4-f3c0e21241b7
+warn,row_fallback_match,VC106,VC6:181,mode=fallback_loose_name_amounts dash_investor=Bernard Henri DUFAURE db_investor=Bernard DUFAURE commitment=100000.0 shares=4251.0 dash_date=2021-06-22 db_date=2021-06-22 sub_id=71a6730d-297c-4483-bbd4-81a5070957b7
+warn,row_fallback_match,VC106,VC6:122,mode=fallback_loose_name_amounts dash_investor=Bharat Kumar JATANIA db_investor=Bharat JATANIA commitment=100000.0 shares=4251.0 dash_date=2021-04-20 db_date=2021-04-20 sub_id=918b3d4d-320c-4116-b788-4c08c80f7b01
+warn,row_fallback_match,VC106,VC6:138,mode=fallback_loose_name_amounts dash_investor=Bhikhu C. K. PATEL db_investor=Bhikhu PATEL commitment=250000.0 shares=10629.0 dash_date=2021-05-21 db_date=2021-05-21 sub_id=38053f95-00e0-4d94-9a4f-dcf23f1bfafe
+warn,row_fallback_match,VC106,VC6:8,mode=fallback_loose_name_amounts dash_investor=Chang Yong NGAN db_investor=Chang NGAN commitment=100800.0 shares=5600.0 dash_date=2021-01-08 db_date=2021-01-08 sub_id=55e193e5-611f-4092-8edc-e0ebd36b1d19
+warn,row_fallback_match,VC106,VC6:14,mode=fallback_loose_name_amounts dash_investor=Daphne Marie CHANDRA db_investor=Daphne CHANDRA commitment=30040.0 shares=1756.0 dash_date=2021-01-09 db_date=2021-01-09 sub_id=18a62e22-eba0-4e6a-928d-e02bae74fcf1
+warn,row_fallback_match,VC106,VC6:15,mode=fallback_loose_name_amounts dash_investor=Daryl PAK YONGJIE db_investor=Daryl YONGJIE commitment=165006.0 shares=9167.0 dash_date=2020-12-24 db_date=2020-12-24 sub_id=bfca0c0d-88f8-43a4-a71a-b103df2711f9
+warn,row_fallback_match,VC106,VC6:179,mode=fallback_loose_name_amounts dash_investor=David Jean ROSSIER db_investor=David ROSSIER commitment=200000.0 shares=8503.0 dash_date=2021-06-22 db_date=2021-06-22 sub_id=b4572a9a-a02c-45eb-8c16-18136b8c3a5f
+warn,row_fallback_match,VC106,VC6:175,mode=fallback_loose_name_amounts dash_investor=Georges Sylvain CYTRON db_investor=Georges CYTRON commitment=100000.0 shares=4251.0 dash_date=2021-06-22 db_date=2021-06-22 sub_id=641d487d-bb4a-4cce-8e76-c22ca4d755cf
+warn,row_fallback_match,VC106,VC6:149,mode=fallback_loose_name_amounts dash_investor=James A. HARTSHORN db_investor=James HARTSHORN commitment=100000.0 shares=4251.0 dash_date=2021-05-20 db_date=2021-05-20 sub_id=81781c2f-4496-47f6-9efa-e490790e3f3d
+warn,row_fallback_match,VC106,VC6:24,mode=fallback_loose_name_amounts dash_investor=Johann Markus AKERMANN db_investor=Johann AKERMANN commitment=225200.0 shares=10000.0 dash_date=2021-01-27 db_date=2021-01-27 sub_id=c916379f-b94b-4ab8-a490-38e0066658c6
+warn,row_fallback_match,VC106,VC6:191,mode=fallback_loose_name_amounts dash_investor=Kian Mohammad Hakimi JAVID db_investor=Kian JAVID commitment=24978.24 shares=1062.0 dash_date=2021-09-07 db_date=2021-09-07 sub_id=173e4213-f138-4e3d-8abc-bbf3faeb4ec0
+warn,row_fallback_match,VC106,VC6:79,mode=fallback_loose_name_amounts dash_investor=Lesli Ann SCHUTTE db_investor=Lesli SCHUTTE commitment=50000.0 shares=2125.0 dash_date=2021-03-03 db_date=2021-03-03 sub_id=871f02ed-b66d-4717-bcef-898ba088b599
+warn,row_fallback_match,VC106,VC6:123,mode=fallback_loose_name_amounts dash_investor=Lubna M. A. QUNASH db_investor=Lubna QUNASH commitment=100000.0 shares=4251.0 dash_date=2021-06-02 db_date=2021-06-02 sub_id=1cd65fca-826b-43ef-85e0-efa4fe819b1c
+warn,row_fallback_match,VC106,VC6:80,mode=fallback_loose_name_amounts dash_investor=Manraj Singh SEKHON db_investor=Manraj SEKHON commitment=400000.0 shares=17006.0 dash_date=2021-03-24 db_date=2021-03-24 sub_id=9e78a743-3d0a-4b77-a1bc-ed054d345272
+warn,row_fallback_match,VC106,VC6:19,mode=fallback_loose_name_amounts dash_investor=Matteo Massimo MARTINI db_investor=Matteo MARTINI commitment=100000.0 shares=5025.0 dash_date=2021-01-20 db_date=2021-01-20 sub_id=b08d9c78-a53a-414c-bada-03229c121169
+warn,row_fallback_match,VC106,VC6:109,mode=fallback_loose_name_amounts dash_investor=Mayuriben Chetan Kumar JOGANI db_investor=Mayuriben JOGANI commitment=100000.0 shares=4251.0 dash_date=2021-04-08 db_date=2021-04-08 sub_id=e1f47d87-7f86-4377-b32c-78534b41bd0f
+warn,row_fallback_match,VC106,VC6:134,mode=fallback_loose_name_amounts dash_investor=Michel Louis GUERIN db_investor=Michel GUERIN commitment=200000.0 shares=8503.0 dash_date=2021-04-30 db_date=2021-04-30 sub_id=f5c1690a-bf76-46e8-b8a1-15b1647cbe2b
+warn,row_fallback_match,VC106,VC6:48,mode=fallback_loose_name_amounts dash_investor=Mohamad Ismail BIN MOHAMED db_investor=Mohamad BIN MOHAMED commitment=199994.0 shares=10526.0 dash_date=2021-02-15 db_date=2021-02-15 sub_id=c41fba0a-d819-4d13-9784-5355fa2c350d
+warn,row_fallback_match,VC106,VC6:61,mode=fallback_loose_name_amounts dash_investor=Mohammed Abdulaziz AL ABBASI db_investor=Mohammed AL ABBASI commitment=241300.0 shares=12700.0 dash_date=2021-02-19 db_date=2021-02-19 sub_id=c5feeba0-e9f2-4597-a4ae-e8d0e89c202d
+warn,row_fallback_match,VC106,VC6:192,mode=fallback_loose_name_amounts dash_investor=Salman Raza HUSSAIN db_investor=Salman HUSSAIN commitment=49980.0 shares=2125.0 dash_date=2021-09-07 db_date=2021-09-07 sub_id=71956d1d-0e5f-4e54-8cdd-2c910e07e21a
+warn,row_fallback_match,VC106,VC6:70,mode=fallback_loose_name_amounts dash_investor=Steve J MANNING db_investor=Steve MANNING commitment=50000.0 shares=2125.0 dash_date=2021-06-07 db_date=2021-06-07 sub_id=c5086865-9c60-4d55-ac4b-205644cbc787
+warn,row_fallback_match,VC106,VC6:17,mode=fallback_loose_name_amounts dash_investor=Tan Sor GEOK db_investor=Tan GEOK commitment=80064.0 shares=4448.0 dash_date=2020-12-24 db_date=2020-12-24 sub_id=86d84bf5-f760-45c7-8d02-e59727807acc
+warn,row_fallback_match,VC106,VC6:139,mode=fallback_loose_name_amounts dash_investor=Vijaykumar C. K. PATEL db_investor=Vijaykumar PATEL commitment=750000.0 shares=31887.0 dash_date=2021-05-21 db_date=2021-05-21 sub_id=fffcb0d5-c719-4439-94ad-6e8767a28c30
+warn,row_fallback_match,VC111,VC11:21,mode=fallback_loose_name_amounts dash_investor=Alberto Attilio RAVANO db_investor=Alberto RAVANO commitment=100000.0 shares=100000.0 dash_date=2021-11-04 db_date=2021-11-04 sub_id=186d2159-0653-4c3b-8728-0717d88a9a7a
+warn,row_fallback_match,VC111,VC11:25,mode=fallback_loose_name_amounts dash_investor=Antonio Bruno PERONACE db_investor=Antonio PERONACE commitment=70000.0 shares=70000.0 dash_date=2021-12-05 db_date=2021-12-05 sub_id=0d8fd4f0-f048-4306-b0fd-cbc2c4ba35fb
+warn,row_fallback_match,VC111,VC11:19,mode=fallback_loose_name_amounts dash_investor=Johann Markus AKERMANN db_investor=Johann AKERMANN commitment=100000.0 shares=100000.0 dash_date=2021-03-25 db_date=2021-03-25 sub_id=1dab1ec6-554b-46fd-9888-132c269da20b
+warn,row_fallback_match,VC112,VC12:21,mode=fallback_loose_name_amounts dash_investor=Giovanni Antonio Alberto ALBERTINI db_investor=Giovanni ALBERTINI commitment=50000.0 shares=4093.0 dash_date=2022-10-28 db_date=2022-10-28 sub_id=a3ac1c10-012e-43da-92d6-3266e03ab8f4
+warn,row_fallback_match,VC112,VC12:14,mode=fallback_loose_name_amounts dash_investor=Robert Jan DETTMEIJER db_investor=Robert DETTMEIJER commitment=20000.0 shares=13096.0 dash_date=2021-10-19 db_date=2021-10-19 sub_id=162089a4-0b2d-4f58-8b18-0fdc32c9701c
+warn,row_fallback_match,VC113,VC13:74,mode=fallback_loose_name_amounts dash_investor=Abhie Shreyas SHAH db_investor=Abhie SHAH commitment=100000.0 shares=3389.0 dash_date=2022-03-17 db_date=2022-03-17 sub_id=fbb833f6-d07e-42fa-939b-036936f6f362
+warn,row_fallback_match,VC113,VC13:42,mode=fallback_loose_name_amounts dash_investor=Gielke Jan BURGMANS db_investor=Gielke BURGMANS commitment=100000.0 shares=3726.0 dash_date=2021-08-24 db_date=2021-08-24 sub_id=48ec1752-e7c2-4a81-bac1-a3fd174410ec
+warn,row_fallback_match,VC113,VC13:47,mode=fallback_loose_name_amounts dash_investor=Hong Bao NGOC LE db_investor=Hong NGOC LE commitment=10000.0 shares=372.0 dash_date=2021-06-09 db_date=2021-06-09 sub_id=c75af4c1-52ae-4d56-a94d-64091f6cc022
+warn,row_fallback_match,VC113,VC13:35,mode=fallback_loose_name_amounts dash_investor=Mayuriben Chetan K. JOGANI db_investor=Mayuriben JOGANI commitment=100000.0 shares=3726.0 dash_date=2021-09-07 db_date=2021-09-07 sub_id=1b1c39af-8403-4040-9cbf-e3fd6146902d
+warn,row_fallback_match,VC113,VC13:55,mode=fallback_loose_name_amounts dash_investor=Robert Jan DETTMEIJER db_investor=Robert DETTMEIJER commitment=25000.0 shares=3653.0 dash_date=2021-11-17 db_date=2021-11-17 sub_id=c24a6861-6e3e-4b7f-8bfc-a3470b7a86fb
+warn,row_fallback_match,VC113,VC13:18,mode=fallback_loose_name_amounts dash_investor=Scott Ikott TOMMEY db_investor=Scott TOMMEY commitment=150000.0 shares=3750.0 dash_date=2021-07-06 db_date=2021-07-06 sub_id=7977046b-cf27-438f-a1e6-7b7ca9a7a781
+warn,row_fallback_match,VC114,VC14:6,mode=fallback_loose_name_amounts dash_investor=Manraj Singh SEKHON db_investor=Manraj SEKHON commitment=200000.0 shares=200000.0 dash_date=2021-08-23 db_date=2021-08-23 sub_id=b426a4cb-d56a-42e6-a757-2bd5afa1e21b
+warn,row_fallback_match,VC122,VC22:7,mode=fallback_loose_name_amounts dash_investor=Anke Skoludek RICE db_investor=Anke RICE commitment=60000.0 shares=95949.0 dash_date=2022-11-24 db_date=2022-11-24 sub_id=32cbe26f-4e2e-4dab-bb6f-82ad06d3549b
+warn,row_fallback_match_loose_name_amounts,,,matched_pairs=40
+warn,row_fallback_match_ruled,VC106,VC6:58,mode=fallback_amounts_date dash_investor=Hedgebay Securities LLC db_investor=Sheetal HARIA commitment=24978.24 shares=1062.0 dash_date=2021-03-05 db_date=2021-03-05 sub_id=d55172f3-92a3-4484-8f32-c58e9732936b
+warn,row_fallback_match_ruled,VC106,VC6:59,mode=fallback_amounts_date dash_investor=Hedgebay Securities LLC db_investor=Tapan SHAH commitment=24978.24 shares=1062.0 dash_date=2021-03-05 db_date=2021-03-05 sub_id=82125323-a138-4014-af99-ec513c208510
+warn,row_fallback_match_ruled,VC106,VC6:57,mode=fallback_amounts_date dash_investor=Hedgebay Securities LLC db_investor=Lakin HARIA commitment=24978.24 shares=1062.0 dash_date=2021-03-09 db_date=2021-03-09 sub_id=7aeec746-b471-420a-a644-3397dc85a022
+warn,row_fallback_match_ruled,VC106,VC6:47,mode=fallback_amounts_date dash_investor=LEE RAND GROUP db_investor=Ekta DATT commitment=24985.0 shares=1315.0 dash_date=2021-02-15 db_date=2021-02-15 sub_id=b587c756-0e1b-4167-be71-5723a1371d8e
+warn,row_fallback_match_ruled,VC106,VC6:53,mode=fallback_amounts_date dash_investor=LEE RAND GROUP db_investor=Rasika KULKARNI commitment=24985.0 shares=1315.0 dash_date=2021-02-16 db_date=2021-02-16 sub_id=54a1e954-b373-434c-9525-9da4feb16f0c
+warn,row_fallback_match_ruled,VC106,VC6:49,mode=fallback_amounts_date dash_investor=LEE RAND GROUP db_investor=Nidhi GANERIWALA commitment=34998.0 shares=1842.0 dash_date=2021-02-16 db_date=2021-02-16 sub_id=620c6086-6150-44d7-ae23-9d4d89c71a66
+warn,row_fallback_match_ruled,VC106,VC6:52,mode=fallback_amounts_date dash_investor=LEE RAND GROUP db_investor=Rajiv KAPOOR commitment=49989.0 shares=2631.0 dash_date=2021-02-15 db_date=2021-02-15 sub_id=28d58594-1451-4f06-90ad-de41a9e8eaac
+warn,row_fallback_match_ruled,VC106,VC6:46,mode=fallback_amounts_date dash_investor=LEE RAND GROUP db_investor=Atima HARALALKA commitment=49989.0 shares=2631.0 dash_date=2021-02-16 db_date=2021-02-16 sub_id=756b3528-4cca-4a55-8d33-05deaa2dbbd8
+warn,row_fallback_match_ruled,VC106,VC6:51,mode=fallback_amounts_date dash_investor=LEE RAND GROUP db_investor=Rajesh SUD commitment=49989.0 shares=2631.0 dash_date=2021-02-16 db_date=2021-02-16 sub_id=a4ca7357-ceeb-422d-9ff5-c17cb474819c
+warn,row_fallback_match,VC106,VC6:40,mode=fallback_amounts_date dash_investor=Mrs and Mr KARKUN db_investor=Anisha Bansal and Rahul KARKUN commitment=50000.0 shares=2272.0 dash_date=2021-02-07 db_date=2021-02-07 sub_id=c2af5e61-6305-43d8-967e-091ecea78d75
+warn,row_fallback_match_ruled,VC106,VC6:56,mode=fallback_amounts_date dash_investor=Hedgebay Securities LLC db_investor=Aaron RIKHYE commitment=100007.04 shares=4252.0 dash_date=2021-03-06 db_date=2021-03-06 sub_id=7af9e289-52d2-4a71-af1e-e99ec7076978
+warn,row_fallback_match,VC106,VC6:44,mode=fallback_amounts_date dash_investor=Mrs & Mr Subbiah SUBRAMANIAN db_investor=Nilakantan MAHESWARI & Subbiah SUBRAMANIAN commitment=155000.0 shares=6733.0 dash_date=2021-02-12 db_date=2021-02-12 sub_id=58ab5fe1-0022-443c-843f-61fca7110e12
+warn,row_fallback_match,VC106,VC6:94,mode=fallback_amounts_date dash_investor=Imrat HAYAT db_investor=Imran HAYAT commitment=245200.0 shares=10000.0 dash_date=2021-04-02 db_date=2021-04-02 sub_id=8517d572-b71c-4903-b04c-548b903b7b5d
+warn,row_fallback_match,VC106,VC6:21,mode=fallback_amounts_date dash_investor=OEP Ltd db_investor=Julien MACHOT commitment=250000.0 shares=11905.0 dash_date=2022-01-01 db_date=2022-01-01 sub_id=39501ec9-f240-440b-af27-ab8c1ae330f8
+warn,row_fallback_match,VC112,VC12:27,mode=fallback_amounts_date dash_investor=OEP Ltd db_investor=Julien MACHOT commitment=2.2 shares=21972.0 dash_date=None db_date=None sub_id=f61a1150-1c72-4d28-beba-6ef065bf1814
+warn,row_fallback_match,VC112,VC12:11,mode=fallback_amounts_date dash_investor=OEP Ltd db_investor=Julien MACHOT commitment=50000.0 shares=32741.0 dash_date=2021-10-16 db_date=2021-10-16 sub_id=277022db-880b-4eae-b005-458d98fe4e1f
+warn,row_fallback_match,VC113,VC13:62,mode=fallback_amounts_date dash_investor=OEP Ltd db_investor=Julien MACHOT commitment=100000.0 shares=14615.0 dash_date=2021-11-17 db_date=2021-11-17 sub_id=e45cf8fd-996b-42a9-9942-ef8522f0959d
+warn,row_fallback_match,VC122,VC22:9,mode=fallback_amounts_date dash_investor=INNOVATECH COMPARTMENT 8 db_investor=Anand SETHA commitment=25000.0 shares=39978.0 dash_date=2023-10-01 db_date=2023-10-01 sub_id=eb82dd2c-6ef3-4910-a186-f21ff2628ea2
+warn,row_fallback_match,VC124,VC24:10,mode=fallback_amounts_date dash_investor=OEP Ltd db_investor=Julien MACHOT commitment=2500.0 shares=86430.0 dash_date=2023-10-10 db_date=2023-10-10 sub_id=a7ed79de-5f21-495c-aa26-f608f6058a93
+warn,row_fallback_match,VC124,VC24:4,mode=fallback_amounts_date dash_investor=OEP Ltd db_investor=Julien MACHOT commitment=50000.0 shares=4125.0 dash_date=2021-12-29 db_date=2021-12-29 sub_id=d72d5202-03a9-4539-bedf-2a59a6c33f71
+warn,row_fallback_match,VC125,VC25:14,mode=fallback_amounts_date dash_investor=OEP LTD db_investor=Julien MACHOT commitment=100000.0 shares=564.0 dash_date=2021-12-28 db_date=2021-12-28 sub_id=000ab8e0-bbf5-4fbc-8019-41e372cbf996
+warn,row_fallback_match_amounts_date,,,matched_pairs=21
+warn,row_fallback_match,VC124,VC24:12,mode=fallback_investor_shares_date dash_investor=Julien MACHOT db_investor=Julien MACHOT commitment=8352.0 shares=288716.0 dash_date=2023-02-10 db_date=2023-02-10 sub_id=1bd785f5-63ee-4ddb-aad5-c118cb2c4a29
+warn,row_fallback_match_investor_shares_date,,,matched_pairs=1
+warn,row_fallback_match,VC112,VC12:4,mode=fallback_amounts_no_date dash_investor=OEP Ltd db_investor=Julien MACHOT commitment=50000.0 shares=100704.0 dash_date=None db_date=2021-10-16 sub_id=a3a74599-3919-47b8-90bb-3c74cc9a3a68
+warn,row_fallback_match_amounts_no_date,,,matched_pairs=1

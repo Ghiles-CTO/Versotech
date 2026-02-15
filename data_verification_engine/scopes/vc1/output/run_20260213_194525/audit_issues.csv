@@ -1,0 +1,14 @@
+severity,check,vehicle,row_ref,details
+fail,commission_totals_mismatch_invested_amount,VC122,,dashboard=150000.0 db=0.0 delta=-150000.0
+fail,commission_row_missing_in_db,VC113,VC13:15,investor=Zandera (Finco) Limited introducer=Rick basis=spread dashboard=389281.0 db=0.0
+fail,commission_row_missing_in_db,VC113,VC13:15,investor=Zandera (Finco) Limited introducer=Anand basis=invested_amount dashboard=40000.0 db=0.0
+fail,commission_row_missing_in_db,VC113,VC13:15,investor=Zandera (Finco) Limited introducer=Anand basis=spread dashboard=158751.27 db=0.0
+fail,commission_row_amount_mismatch,VC113,VC13:70,investor=Zandera (Holdco) Limited introducer=Rick basis=spread dashboard=204572.0 db=593853.0 delta=389281.0
+fail,commission_row_count_mismatch,VC113,VC13:70,investor=Zandera (Holdco) Limited introducer=Rick basis=spread dashboard_rows=2 db_rows=4
+fail,commission_row_missing_in_dashboard,VC113,9390646c-b70a-451b-8b6e-16a11a397833,investor=Zandera (Holdco) Limited introducer=Set Cap basis=invested_amount dashboard=0.0 db=40000.0
+fail,commission_row_amount_mismatch,VC113,VC13:70,investor=Zandera (Holdco) Limited introducer=Anand basis=spread dashboard=88253.33 db=247004.61 delta=158751.28
+fail,commission_row_count_mismatch,VC113,VC13:70,investor=Zandera (Holdco) Limited introducer=Anand basis=spread dashboard_rows=2 db_rows=4
+warn,dashboard_commission_amount_without_name,VC122,VC22:12,sheet=VC22 row=12 name_col=59 invested=150000.0 spread=0.0
+warn,commission_totals_ruled_diff_spread,VC106,,dashboard=6326296.752 db=6326296.81 delta=0.058 expected=0.058
+warn,commission_totals_ruled_diff_spread,VC113,,dashboard=963887.6075 db=963887.62 delta=0.0125 expected=0.0125
+warn,commission_totals_ruled_diff_spread,VC114,,dashboard=0.4 db=0.0 delta=-0.4 expected=-0.4

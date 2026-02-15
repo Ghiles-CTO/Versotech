@@ -1,0 +1,35 @@
+{
+  "version": "2026-02-14.2",
+  "allowed_warning_checks_by_scope": {
+    "vc1": [
+      "commission_totals_ruled_diff_spread"
+    ],
+    "vc2": [
+      "dashboard_combined_introducer_name",
+      "commission_combined_ruled_removed",
+      "commission_totals_ruled_diff_invested_amount",
+      "commission_row_ruled_dashboard_override",
+      "commission_row_ruled_removed",
+      "introducer_warning_only_present"
+    ],
+    "in": [
+      "dashboard_combined_introducer_name",
+      "commission_totals_ruled_diff_invested_amount",
+      "commission_totals_ruled_diff_spread",
+      "commission_row_ruled_dashboard_override"
+    ]
+  },
+  "forbidden_check_substrings": [
+    "fallback",
+    "unresolved",
+    "missing_in_db",
+    "missing_in_dashboard",
+    "row_count_mismatch",
+    "numeric_mismatch",
+    "vehicle_totals_mismatch",
+    "duplicate",
+    "zero_ownership_loaded",
+    "max_introducers_per_subscription_exceeded"
+  ],
+  "require_dashboard_rows_equal_db_subscriptions": true
+}

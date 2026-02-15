@@ -1,0 +1,30 @@
+# Global Audit Summary
+
+- Generated at: `2026-02-14T20:15:45.069101+00:00`
+- Run folder: `data_verification_engine/output/global/run_20260214_201530`
+- Total fails: `0`
+- Total warnings: `40`
+- All scopes pass: `true`
+
+| Scope | Fails | Warnings | Run ID | Report |
+|---|---:|---:|---|---|
+| `vc1` | 0 | 3 | `run_20260214_211536` | `data_verification_engine/scopes/vc1/output/run_20260214_211536/audit_report.json` |
+| `vc2` | 0 | 30 | `run_20260214_211541` | `data_verification_engine/scopes/vc2/output/run_20260214_211541/audit_report.json` |
+| `in` | 0 | 7 | `run_20260214_211545` | `data_verification_engine/scopes/in/output/run_20260214_211545/audit_report.json` |
+
+## Warning Breakdown
+
+### `vc1`
+- `commission_totals_ruled_diff_spread`: 3
+
+### `vc2`
+- `commission_combined_ruled_removed`: 9
+- `commission_row_ruled_dashboard_override`: 5
+- `commission_row_ruled_removed`: 11
+- `commission_totals_ruled_diff_invested_amount`: 4
+- `introducer_warning_only_present`: 1
+
+### `in`
+- `commission_row_ruled_dashboard_override`: 4
+- `commission_totals_ruled_diff_invested_amount`: 2
+- `commission_totals_ruled_diff_spread`: 1

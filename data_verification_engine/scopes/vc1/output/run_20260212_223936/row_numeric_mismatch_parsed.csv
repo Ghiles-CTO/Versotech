@@ -1,0 +1,146 @@
+vehicle,row_ref,sheet,sheet_row,investor,metric,dashboard,db,delta,mode
+VC106,VC6:22,VC6,22,MA GROUP AG,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:23,VC6,23,KRANA INVESTMENTS PTE. LTD.,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:25,VC6,25,Sandra KOHLER CABIAN,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:26,VC6,26,Dario SCIMONE,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:28,VC6,28,Elidon Estate Inc,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:29,VC6,29,Adam Smith Singapore Pte Ltd,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:34,VC6,34,Mrs and Mr Beatrice & Marcel KNOPF,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:35,VC6,35,VOLF Trust,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:38,VC6,38,Heinz & Barbara WINZ,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:39,VC6,39,Sabrina WINZ,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:41,VC6,41,Craig BROWN,bd_fee_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:41,VC6,41,Craig BROWN,finra_shares,2.0,0.0,-2.0,exact_date
+VC106,VC6:42,VC6,42,TRUE INVESTMENTS 4 LLC,bd_fee_percent,0.02,0.0,-0.02,exact_date
+VC106,VC6:43,VC6,43,ROSEN INVEST HOLDINGS Inc,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:44,VC6,44,Mrs & Mr Subbiah SUBRAMANIAN,perf1_percent,0.1,0.0,-0.1,fallback_amounts_date
+VC106,VC6:56,VC6,56,Hedgebay Securities LLC,finra_shares,0.71,0.0,-0.71,fallback_amounts_date
+VC106,VC6:57,VC6,57,Hedgebay Securities LLC,finra_shares,0.71,0.0,-0.71,fallback_amounts_date
+VC106,VC6:58,VC6,58,Hedgebay Securities LLC,finra_shares,0.71,0.0,-0.71,fallback_amounts_date
+VC106,VC6:59,VC6,59,Hedgebay Securities LLC,finra_shares,0.71,0.0,-0.71,fallback_amounts_date
+VC106,VC6:60,VC6,60,ONC Limited,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:62,VC6,62,Patrick CORR,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:63,VC6,63,Stephen JORDAN,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:64,VC6,64,FigTree Family Office Ltd,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:66,VC6,66,Emile VAN DEN BOL,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:67,VC6,67,Mark MATTHEWS,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:68,VC6,68,Matthew HAYCOX,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:69,VC6,69,John ACKERLEY,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:70,VC6,70,Steve J MANNING,perf1_percent,0.2,0.0,-0.2,fallback_loose_name_amounts
+VC106,VC6:72,VC6,72,Gregory BROOKS,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:74,VC6,74,Stephane DAHAN,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:75,VC6,75,Jean DUTIL,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:78,VC6,78,Sudon Carlop Holdings Limited,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:79,VC6,79,Lesli Ann SCHUTTE,perf1_percent,0.2,0.0,-0.2,fallback_loose_name_amounts
+VC106,VC6:83,VC6,83,Erich GRAF,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:84,VC6,84,TERRA Financial & Management Services SA,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:90,VC6,90,CLOUDSAFE HOLDINGS LTD,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:91,VC6,91,David HOLDEN,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:94,VC6,94,Imrat HAYAT,bd_fee_percent,0.03,0.0,-0.03,fallback_amounts_date
+VC106,VC6:94,VC6,94,Imrat HAYAT,finra_shares,0.7356,0.0,-0.7356,fallback_amounts_date
+VC106,VC6:101,VC6,101,David BACHELIER,perf1_percent,0.0,20.0,20.0,exact_date
+VC106,VC6:103,VC6,103,Ashish KOTHARI,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:105,VC6,105,Fawad MUKHTAR,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:106,VC6,106,KABELLA LTD,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:107,VC6,107,SOUTH SOUND LTD,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:110,VC6,110,CINCORIA LIMITED,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:112,VC6,112,Mrs Nalini Yoga & Mr Aran James WILLETTS,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:113,VC6,113,Emma Graham-Taylor & Gregory SOMMERVILLE,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:115,VC6,115,Kim LUND,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:116,VC6,116,Ivan BELGA,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:118,VC6,118,Karthic JAYARAMAN,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:119,VC6,119,Imran HAKIM,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:120,VC6,120,Kenilworth Ltd,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:121,VC6,121,Adil Arshed KHAWAJA,perf1_percent,0.2,0.0,-0.2,fallback_loose_name_amounts
+VC106,VC6:123,VC6,123,Lubna M. A. QUNASH,perf1_percent,0.2,0.0,-0.2,fallback_loose_name_amounts
+VC106,VC6:124,VC6,124,Bank SYZ AG,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:125,VC6,125,Bank SYZ AG,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:126,VC6,126,Bank SYZ AG,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:127,VC6,127,Bank SYZ AG,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:128,VC6,128,Bank SYZ AG,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:129,VC6,129,Bank SYZ AG,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:130,VC6,130,Bank SYZ AG,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:131,VC6,131,Bank SYZ AG,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:132,VC6,132,Damien KRAUSER,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:134,VC6,134,Michel Louis GUERIN,perf1_percent,0.2,0.0,-0.2,fallback_loose_name_amounts
+VC106,VC6:135,VC6,135,Eric Pascal LE SEIGNEUR,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:137,VC6,137,Phaena Advisory Ltd,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:140,VC6,140,POTASSIUM Capital,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:141,VC6,141,Aatif N. HASSAN,perf1_percent,0.2,0.0,-0.2,fallback_loose_name_amounts
+VC106,VC6:142,VC6,142,Kevin FOSTER WILTSHIRE,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:143,VC6,143,GTV Partners SA,perf1_percent,0.15,0.0,-0.15,exact_date
+VC106,VC6:144,VC6,144,LENN Participations SARL,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:145,VC6,145,WEALTH TRAIN LIMITED,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:147,VC6,147,TERSANE INTERNATIONAL LTD,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:148,VC6,148,Brahma Finance (BVI) Ltd,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:158,VC6,158,Eric SARASIN,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:159,VC6,159,Damien KRAUSER,perf1_percent,0.1,20.0,19.9,exact_date
+VC106,VC6:162,VC6,162,REVERY CAPITAL Limited,perf1_percent,0.0,20.0,20.0,exact_date
+VC106,VC6:163,VC6,163,Sandra KOHLER CABIAN,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:166,VC6,166,Nicki ASQUITH,perf1_percent,0.0,20.0,20.0,exact_date
+VC106,VC6:167,VC6,167,Isabella CHANDRIS,perf1_percent,0.0,20.0,20.0,exact_date
+VC106,VC6:169,VC6,169,Herve STEIMES,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:171,VC6,171,Frederic SAMAMA,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:172,VC6,172,Denis MATTHEY,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:173,VC6,173,SWISS TRUSTEES OF GENEVA SA as Trustees of the LUTEPIN TRUST,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:174,VC6,174,Laurent CUDRE-MAUROUX,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:175,VC6,175,Georges Sylvain CYTRON,perf1_percent,0.2,0.0,-0.2,fallback_loose_name_amounts
+VC106,VC6:176,VC6,176,Rosario RIENZO,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:177,VC6,177,Raphael GHESQUIERES,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:178,VC6,178,Guillaume SAMAMA,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:179,VC6,179,David Jean ROSSIER,perf1_percent,0.2,0.0,-0.2,fallback_loose_name_amounts
+VC106,VC6:180,VC6,180,MARSAULT INTERNATIONAL LTD,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:181,VC6,181,Bernard Henri DUFAURE,perf1_percent,0.2,0.0,-0.2,fallback_loose_name_amounts
+VC106,VC6:183,VC6,183,Scott FLETCHER,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:185,VC6,185,Charles DE BAVIER,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:188,VC6,188,Hossien Hakimi JAVID,bd_fee_percent,0.03,0.0,-0.03,exact_date
+VC106,VC6:189,VC6,189,Kamyar BADII,bd_fee_percent,0.03,0.0,-0.03,exact_date
+VC106,VC6:190,VC6,190,Shaham SOLOUKI,bd_fee_percent,0.03,0.0,-0.03,exact_date
+VC106,VC6:191,VC6,191,Kian Mohammad Hakimi JAVID,bd_fee_percent,0.03,0.0,-0.03,fallback_loose_name_amounts
+VC106,VC6:192,VC6,192,Salman Raza HUSSAIN,bd_fee_percent,0.03,0.0,-0.03,fallback_loose_name_amounts
+VC106,VC6:193,VC6,193,Juan TONELLI BANFI,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:198,VC6,198,Banco BTG Pactual S.A. Client 36003,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:200,VC6,200,Banco BTG Pactual S.A. Client 36957,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:201,VC6,201,Banco BTG Pactual S.A. Client 80738,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:202,VC6,202,Banco BTG Pactual S.A. Client 80772,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:203,VC6,203,Banco BTG Pactual S.A. Client 80775,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:204,VC6,204,Banco BTG Pactual S.A. Client 80776,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:205,VC6,205,Banco BTG Pactual S.A. Client 80840,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:206,VC6,206,Banco BTG Pactual S.A. Client 80862,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:207,VC6,207,Banco BTG Pactual S.A. Client 80873,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:208,VC6,208,Banco BTG Pactual S.A. Client 80890,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:209,VC6,209,Banco BTG Pactual S.A. Client 80910,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:210,VC6,210,Banco BTG Pactual S.A. Client 81022,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:211,VC6,211,Banco BTG Pactual S.A. Client 515,perf1_percent,0.2,0.0,-0.2,exact_date
+VC106,VC6:212,VC6,212,RLABS HOLDINGS LTD,perf1_percent,0.1,0.0,-0.1,exact_date
+VC106,VC6:214,VC6,214,Samuel GRANDCHAMP,perf1_percent,0.2,0.0,-0.2,exact_date
+VC111,VC11:12,VC11,12,Dan Jean BAUMSLAG DUTIL,perf1_percent,0.1,0.2,0.1,relaxed
+VC111,VC11:12,VC11,12,Dan Jean BAUMSLAG DUTIL,sub_fee,0.0,2000.0,2000.0,relaxed
+VC111,VC11:12,VC11,12,Dan Jean BAUMSLAG DUTIL,sub_fee_percent,0.0,0.04,0.04,relaxed
+VC111,VC11:22,VC11,22,FINALMA SUISSE SA,perf1_percent,0.2,0.1,-0.1,relaxed
+VC111,VC11:22,VC11,22,FINALMA SUISSE SA,sub_fee,2000.0,0.0,-2000.0,relaxed
+VC111,VC11:22,VC11,22,FINALMA SUISSE SA,sub_fee_percent,0.04,0.0,-0.04,relaxed
+VC113,VC13:53,VC13,53,Julien MACHOT,perf1_percent,0.0,0.1,0.1,exact_date
+VC113,VC13:62,VC13,62,OEP Ltd,perf1_percent,0.1,0.0,-0.1,fallback_amounts_date
+VC122,VC22:3,VC22,3,Julien MACHOT,price_per_share,1.0,0.40076,-0.59924,exact_date
+VC122,VC22:4,VC22,4,AS ADVISORY DWC LLC,perf1_percent,0.1,0.0,-0.1,relaxed
+VC122,VC22:4,VC22,4,AS ADVISORY DWC LLC,price_per_share,1.0,0.0,-1.0,relaxed
+VC122,VC22:5,VC22,5,Deyan D MIHOV,perf1_percent,0.2,0.0,-0.2,relaxed
+VC122,VC22:5,VC22,5,Deyan D MIHOV,price_per_share,1.0,0.0,-1.0,relaxed
+VC122,VC22:5,VC22,5,Deyan D MIHOV,sub_fee,1500.0,0.0,-1500.0,relaxed
+VC122,VC22:5,VC22,5,Deyan D MIHOV,sub_fee_percent,0.02,0.0,-0.02,relaxed
+VC122,VC22:6,VC22,6,Sheikh Yousef AL SABAH,perf1_percent,0.2,0.0,-0.2,relaxed
+VC122,VC22:6,VC22,6,Sheikh Yousef AL SABAH,price_per_share,1.0,0.0,-1.0,relaxed
+VC122,VC22:6,VC22,6,Sheikh Yousef AL SABAH,sub_fee,1000.0,0.0,-1000.0,relaxed
+VC122,VC22:6,VC22,6,Sheikh Yousef AL SABAH,sub_fee_percent,0.02,0.0,-0.02,relaxed
+VC122,VC22:7,VC22,7,Anke Skoludek RICE,price_per_share,1.0,0.62533,-0.37467,fallback_loose_name_amounts
+VC122,VC22:8,VC22,8,VERSO CAPITAL ESTABLISHMENT,perf1_percent,0.1,0.0,-0.1,relaxed
+VC122,VC22:8,VC22,8,VERSO CAPITAL ESTABLISHMENT,price_per_share,1.0,0.0,-1.0,relaxed
+VC122,VC22:9,VC22,9,INNOVATECH COMPARTMENT 8,price_per_share,1.0,0.62533,-0.37467,fallback_amounts_date
+VC122,VC22:11,VC22,11,Erich GRAF,price_per_share,0.62533,0.0,-0.62533,exact_date
+VC122,VC22:12,VC22,12,LF GROUP SARL,perf1_percent,0.2,0.0,-0.2,relaxed
+VC122,VC22:12,VC22,12,LF GROUP SARL,price_per_share,1.0,0.0,-1.0,relaxed
+VC122,VC22:12,VC22,12,LF GROUP SARL,sub_fee,1500.0,0.0,-1500.0,relaxed
+VC122,VC22:12,VC22,12,LF GROUP SARL,sub_fee_percent,0.02,0.0,-0.02,relaxed
+VC126,VC26:20,VC26,20,Garson Brandon LEVY,bd_fee,625.0,0.025,-624.975,exact_date
+VC126,VC26:25,VC26,25,Amanda RYZOWY,bd_fee,625.0,0.025,-624.975,exact_date

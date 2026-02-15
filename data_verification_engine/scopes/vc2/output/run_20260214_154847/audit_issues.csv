@@ -1,0 +1,251 @@
+severity,check,vehicle,row_ref,details
+fail,dashboard_combined_introducer_name,VC203,VC203:4,sheet=VC203 row=4 introducer='Dimensional Advisors + R. F. Lafferty & Co. Inc.' invested=96110.15 spread=0.0
+fail,dashboard_combined_introducer_name,VC203,VC203:9,sheet=VC203 row=9 introducer='Sakal Advisory + Astra Global Limited' invested=15000.0 spread=0.0
+fail,dashboard_combined_introducer_name,VC203,VC203:10,sheet=VC203 row=10 introducer='Old City Capital + Renaissance' invested=52500.0 spread=0.0
+fail,dashboard_combined_introducer_name,VC203,VC203:13,sheet=VC203 row=13 introducer='Old City Capital + Renaissance' invested=52500.0 spread=0.0
+fail,dashboard_combined_introducer_name,VC203,VC203:15,sheet=VC203 row=15 introducer='Renaissance Bridge Capital LLC + Oliver Little' invested=50000.0 spread=0.0
+fail,dashboard_combined_introducer_name,VC206,VC206:15,sheet=VC206 row=15 introducer='Visual Sectors + Astra Global' invested=172000.0 spread=0.0
+fail,dashboard_combined_introducer_name,VC215,VC215:4,sheet=VC215 row=4 introducer='Bromley Capital + Infinyte Club' invested=747.82 spread=0.0
+fail,dashboard_combined_introducer_name,VC215,VC215:5,sheet=VC215 row=5 introducer='Bromley Capital + Infinyte Club' invested=592.64 spread=0.0
+fail,dashboard_combined_introducer_name,VC215,VC215:6,sheet=VC215 row=6 introducer='Bromley Capital + Infinyte Club' invested=1211.89 spread=0.0
+fail,dashboard_combined_introducer_name,VC215,VC215:7,sheet=VC215 row=7 introducer='Bromley Capital + Infinyte Club' invested=515.79 spread=0.0
+fail,dashboard_combined_introducer_name,VC215,VC215:8,sheet=VC215 row=8 introducer='Bromley Capital + Renaissance' invested=2144.0 spread=0.0
+fail,dashboard_combined_introducer_name,VC215,VC215:9,sheet=VC215 row=9 introducer='Bromley Capital + Infinyte Club' invested=2191.74 spread=0.0
+fail,dashboard_combined_introducer_name,VC215,VC215:15,sheet=VC215 row=15 introducer='Bromley Capital + Renaissance' invested=2786.44 spread=0.0
+fail,dashboard_combined_introducer_name,VC215,VC215:17,sheet=VC215 row=17 introducer='Hottinger AG + Bromley Capital' invested=786004.0 spread=0.0
+fail,commission_row_rate_missing_in_dashboard,VC202,431b8555-ce8d-4bc5-99e9-bb753fd866e0,investor=SPLENDID HEIGHT HOLDINGS LIMITED introducer=Bromley Capital Partners basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC202,e2189e8b-3e77-45ec-a2bc-ab6a778e72ca,investor=SPLENDID HEIGHT HOLDINGS LIMITED introducer=Bromley Capital Partners basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC202,595db259-799e-4f97-9a3e-5425bd766dfa,investor=SESR INVESTMENTS PTE LTD introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC202,f493d9a5-decb-4960-adc4-3b5318208a1d,investor=SESR INVESTMENTS PTE LTD introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC203,3d6cb805-8ecb-4f01-8b6a-0e6c83f2d6fd,"investor=PEGASUS TECH VENTURES COMPANY VIII, L.P. introducer=Astral Global Limited basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC203,09c91a9b-cb47-4579-aedb-f503c9cc5255,"investor=PEGASUS TECH VENTURES COMPANY VIII, L.P. introducer=Astral Global Limited basis=spread dashboard_rates=[] db_rates=[0]"
+fail,commission_row_missing_in_dashboard,VC203,de3ba541-0a4b-4a35-ba10-127843ed319e,investor=DOMINARI SECURITIES LLC introducer=Dimensional Advisors basis=invested_amount dashboard=0.0 db=49999.5
+fail,commission_row_rate_missing_in_dashboard,VC203,594a11de-33f6-4a0e-be28-c44622d16375,investor=DOMINARI SECURITIES LLC introducer=Dimensional Advisors basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC203,89a3b746-affc-43cd-be00-992107b2ffcf,investor=DOMINARI SECURITIES LLC introducer=Dimensional Advisors basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_missing_in_dashboard,VC203,6f32b8d4-cacd-4228-b038-3a99108b24e9,investor=Tobias ENSELE introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=26250.0
+fail,commission_row_rate_missing_in_dashboard,VC203,c8488fb9-7c80-484f-ae22-7b88677bc78a,investor=Tobias ENSELE introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC203,7d8e1675-b91c-4a58-ba27-89ad2abff7f2,investor=Tobias ENSELE introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_missing_in_dashboard,VC203,e86fd7b6-7f02-4a7c-b7ad-2a33c73c4250,investor=Tobias ENSELE introducer=Old City Securities LLC basis=invested_amount dashboard=0.0 db=26250.0
+fail,commission_row_rate_missing_in_dashboard,VC203,911363ba-30a1-4c52-b57e-2afab3b60496,investor=Tobias ENSELE introducer=Old City Securities LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC203,2d6aa561-f1be-44db-b384-caed535471db,investor=Tobias ENSELE introducer=Old City Securities LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_missing_in_dashboard,VC203,33129a8c-d50e-4cf8-8d8d-5caeffd3e3ee,"investor=EVERLASTING HOLDINGS LLC introducer=Sakal Advisory, LLC basis=invested_amount dashboard=0.0 db=5000.0"
+fail,commission_row_rate_missing_in_dashboard,VC203,8fe5ef69-9463-4bc2-a1b4-3b4592b8e354,"investor=EVERLASTING HOLDINGS LLC introducer=Sakal Advisory, LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC203,4e9339cf-a8fb-4986-a3a7-61ec824df702,"investor=EVERLASTING HOLDINGS LLC introducer=Sakal Advisory, LLC basis=spread dashboard_rates=[] db_rates=[0]"
+fail,commission_row_missing_in_dashboard,VC203,411513a9-437e-4614-bcc5-7b27fbbc3e2c,investor=EVERLASTING HOLDINGS LLC introducer=Astral Global Limited basis=invested_amount dashboard=0.0 db=10000.0
+fail,commission_row_rate_missing_in_dashboard,VC203,bc1075d4-ecb1-49b5-b90b-dc0600a262e0,investor=EVERLASTING HOLDINGS LLC introducer=Astral Global Limited basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC203,5ed4efbb-9056-4af8-a3ef-8670135949c0,investor=EVERLASTING HOLDINGS LLC introducer=Astral Global Limited basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_missing_in_dashboard,VC203,d83b40da-e34f-45cd-a2e8-f5648395f477,investor=INCRED GLOBAL WEALTH PTE LTD introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=26250.0
+fail,commission_row_rate_missing_in_dashboard,VC203,a63672cd-c7e1-4ed8-94d7-a245ff963dac,investor=INCRED GLOBAL WEALTH PTE LTD introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC203,07307674-c0ca-48ff-8f0d-a3ef4329527b,investor=INCRED GLOBAL WEALTH PTE LTD introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_missing_in_dashboard,VC203,000be7ef-dd4e-4e62-8517-14103f2327e9,investor=INCRED GLOBAL WEALTH PTE LTD introducer=Old City Securities LLC basis=invested_amount dashboard=0.0 db=26250.0
+fail,commission_row_rate_missing_in_dashboard,VC203,8b957ccd-261b-4614-8e89-493b1fe2f4d4,investor=INCRED GLOBAL WEALTH PTE LTD introducer=Old City Securities LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC203,88c4c791-7105-4872-835b-fd1372a316c6,investor=INCRED GLOBAL WEALTH PTE LTD introducer=Old City Securities LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC203,ecb424d2-2584-4b14-a497-ab38e4b20f01,investor=INS NEVADA LLC introducer=Rainmaker Securities basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC203,edabf1b9-1913-4cb1-b322-79761a5dc2dc,investor=INS NEVADA LLC introducer=Rainmaker Securities basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_missing_in_dashboard,VC203,a4d00592-a18a-41c1-a68d-a19d066f46ac,investor=MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=25000.0
+fail,commission_row_rate_missing_in_dashboard,VC203,4e68ff42-111c-4243-89f1-050cd73fa10b,investor=MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC203,ff0a1e72-0d44-42cb-ba1b-0aa34560abee,investor=MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_missing_in_dashboard,VC203,82b5bc1b-7b96-4ced-9893-e626b994aec6,investor=MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP introducer=Oliver Little basis=invested_amount dashboard=0.0 db=25000.0
+fail,commission_row_rate_missing_in_dashboard,VC203,bbc012f2-2a23-4654-a53e-82e1870e9cc5,investor=MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP introducer=Oliver Little basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC203,8b98ee99-084d-469b-b272-48608b423d09,investor=MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP introducer=Oliver Little basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC203,4f5d12bd-aab1-4317-9643-687e67064be6,investor=Robert VOGT IV introducer=Alliance Global Partners LLC basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC203,0eaef07c-599e-4f6e-ac77-487e5227fce2,investor=Robert VOGT IV introducer=Alliance Global Partners LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC203,3764fbed-bb35-4bb5-a360-1aafb91fa2c6,investor=Robert VOGT IV introducer=Alliance Global Partners LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC203,436bbe13-e2b4-4fe9-9bf2-79462602e122,investor=Julien MACHOT introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC203,9059a5f7-1f24-45f8-9237-93e8a5fd87d0,investor=Julien MACHOT introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC203,b439f2f4-5292-4968-983b-de133cc2130d,investor=Julien MACHOT introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC206,da5faf0e-934f-4ed3-8773-5a4453ab2e7b,"investor=ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC introducer=Visual Sectors basis=invested_amount dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC206,73f21d56-2179-4e01-8b1f-625cd618f6a4,"investor=ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC introducer=Visual Sectors basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC206,52f7704f-4547-4954-9a6b-c873d5d714ea,"investor=ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC introducer=Visual Sectors basis=spread dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC206,31c77c7f-068a-468f-a06e-ed913e0fd590,"investor=AAF D Boral Mstr SPV LLC, Ser III OpenAI introducer=AEON INC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC206,c6d3fbc8-31a8-4904-b322-2f17bb60443e,"investor=AAF D Boral Mstr SPV LLC, Ser III OpenAI introducer=AEON INC basis=spread dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC206,3c7a9dc6-41a8-457b-99e2-63ca54d20cec,investor=AEON INC introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC206,cd1c292b-523d-4f8d-aa37-009d485fe9a2,investor=AEON INC introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC206,577dedd6-769a-4b28-8c22-161f46588d03,investor=AEON INC introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_missing_in_dashboard,VC206,a04cef30-0e9d-48bb-ab7b-1fe30f26265c,investor=AI DIRECT OPPORTUNITIES FUND SCSP introducer=Dimensional Advisors basis=invested_amount dashboard=0.0 db=11860.14
+fail,commission_row_rate_missing_in_dashboard,VC206,e9abc84e-5223-4e27-b7d5-f8db25f769d8,investor=AI DIRECT OPPORTUNITIES FUND SCSP introducer=Dimensional Advisors basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC206,f6b68fd5-4045-4460-9dd2-e43f2eecd8e6,investor=AI DIRECT OPPORTUNITIES FUND SCSP introducer=Dimensional Advisors basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_amount_mismatch,VC206,VC206:5,"investor=AI DIRECT OPPORTUNITIES FUND SCSP introducer=Venture Spring
+ Dimensional Advisors basis=invested_amount dashboard=23720.29 db=11860.14 delta=-11860.15"
+fail,commission_row_rate_missing_in_dashboard,VC206,2372de26-78ad-4d92-8650-1cce615366c1,investor=AI DIRECT OPPORTUNITIES FUND SCSP introducer=Venture Spring basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC206,f8c1b7e7-de3d-41ba-a83d-9c96e634cfbd,investor=AI DIRECT OPPORTUNITIES FUND SCSP introducer=Venture Spring basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC206,6198fcd9-96c4-43d7-ad9f-03984e7f9e19,investor=Anuroop ARORA introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC206,403af34c-3174-4537-be78-d6ed2bcae242,investor=Anuroop ARORA introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC206,3e466927-5193-4e17-adf0-6dfe26dcae93,"investor=REDPOINT OMEGA ASSOCIATES V, LLC introducer=Visual Sectors basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC206,4943a981-3080-44a6-adee-118044ba6cbe,"investor=REDPOINT OMEGA ASSOCIATES V, LLC introducer=Visual Sectors basis=spread dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC206,bd013213-8921-4f09-95ed-c8552a2f8045,investor=Bharath RAM introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC206,c2787ac6-0a71-4feb-80d2-0c5c08941631,investor=Bharath RAM introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC206,6302aee1-9ffc-4a52-8ce5-5242fe2f27bd,investor=PUTHAN N.C. MENON AND/OR SOBHA MENON RAGHAVANNAIR introducer=Mervyn Pereira basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC206,c7216a18-75f4-4ea0-a16b-73483f50ae7e,investor=PUTHAN N.C. MENON AND/OR SOBHA MENON RAGHAVANNAIR introducer=Mervyn Pereira basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC206,ca495148-5717-412e-8587-bb77996bcc32,investor=Jyotsna HEDGE introducer=Mervyn Pereira basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC206,a31a4c3d-a8e9-4888-81d5-f2639f245a22,investor=Jyotsna HEDGE introducer=Mervyn Pereira basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC206,fd10f596-9456-4f15-9634-4abe3f470f79,investor=KIWI INNOVATIONS LIMITED introducer=Bromley Capital Partners basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC206,badd9972-e39f-4d40-b05e-e6b3324135f9,investor=KIWI INNOVATIONS LIMITED introducer=Bromley Capital Partners basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_missing_in_dashboard,VC206,aadad175-eefb-48b5-acf7-22fa1d4ff4de,"investor=REDPOINT OMEGA V, L.P. introducer=Astral Global Limited basis=invested_amount dashboard=0.0 db=90000.0"
+fail,commission_row_rate_missing_in_dashboard,VC206,54672e3c-2911-4748-af59-498b6ca7f9b1,"investor=REDPOINT OMEGA V, L.P. introducer=Astral Global Limited basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC206,3ff2e0a6-ae9e-4e25-8aa4-26fcfe7cac01,"investor=REDPOINT OMEGA V, L.P. introducer=Astral Global Limited basis=spread dashboard_rates=[] db_rates=[0]"
+fail,commission_row_missing_in_dashboard,VC206,bee4fe86-73ba-485e-ac94-4870a064a8b5,"investor=REDPOINT OMEGA V, L.P. introducer=Visual Sectors basis=invested_amount dashboard=0.0 db=82000.0"
+fail,commission_row_rate_missing_in_dashboard,VC206,a111ff66-b49a-41ec-86fb-8dad6d969a3f,"investor=REDPOINT OMEGA V, L.P. introducer=Visual Sectors basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC206,5a84219e-0080-4910-8f23-1f6b4d26d05f,"investor=REDPOINT OMEGA V, L.P. introducer=Visual Sectors basis=spread dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC206,affae329-ba94-492e-972f-b6321863cebc,investor=Rishabh MITTAL introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC206,805a1d8d-00ec-4053-97d2-f17b8ffb4fe6,investor=Rishabh MITTAL introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,9af43e8f-a5c4-425d-873e-f38989fb3407,investor=AGP ALTERNATIVE INVESTMENT QP FUND - SERIES 4 introducer=Alliance Global Partners LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,811c7b14-9c1a-419e-b425-df9de3478ad4,investor=AGP ALTERNATIVE INVESTMENT QP FUND - SERIES 4 introducer=Alliance Global Partners LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,3274540a-de95-4d07-8ce1-dc0ae3e29ce9,investor=ABHINEET MISHRA introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,e4e53175-b8cf-46b0-a87f-6608f91e7af9,investor=ABHINEET MISHRA introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,0984cd74-6b8e-46f4-a674-b7979e489a77,investor=ANKUR SRIVASTAVA introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,ebca11a3-8101-4307-91e0-c8f24774cdc6,investor=ANKUR SRIVASTAVA introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,bb0d66c9-a74d-4ddf-a009-371f0d9b7e96,investor=Anuroop ARORA introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,2559e533-989a-4a2f-ae1b-e88e325060f0,investor=Anuroop ARORA introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,90738952-1092-4acf-888e-441ddbafecca,investor=ASHUTOSH CHETAL introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,2c637452-5881-4ec3-86bd-5c89714f60a6,investor=ASHUTOSH CHETAL introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,fdc3ee38-4839-43b9-9c3e-ae50c54a7e86,investor=Bharath RAM introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,d223f540-8439-4331-9183-0c3beb7eaac6,investor=Bharath RAM introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,8b64cee2-9576-41d3-a32e-bea8101ed82b,investor=SPARKLABS GLOBAL CAPITAL X LLC introducer=Elena VYSOTSKAIA basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,4780c931-dbe2-4894-8098-e006ae86da73,investor=SPARKLABS GLOBAL CAPITAL X LLC introducer=Elena VYSOTSKAIA basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,aa9e3b35-f583-44ce-96df-4877e56b9fd5,investor=DIVYA SRIDHAR and SHRIVATSAN VASUDHEVAN introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,bb5db6b8-c3a6-4aed-b940-804e40969aa8,investor=DIVYA SRIDHAR and SHRIVATSAN VASUDHEVAN introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,7678b072-70d9-4a9b-b51c-b8f5e4e00be6,investor=VIDHYA GOVINDARAJAN introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,2d52a670-1e09-43a7-81af-0afbca1ea634,investor=VIDHYA GOVINDARAJAN introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,a7533d26-27e3-4518-a32c-5e034b41dba0,investor=GURPREET SINGH introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,d14a716f-4460-4d56-9227-65c156670796,investor=GURPREET SINGH introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,b92120bb-a8a3-4041-90e7-bde471de18a0,investor=Julien MACHOT introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,83a3146d-4abf-49db-b6a5-3ea5e03371d9,investor=Julien MACHOT introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,a3d4b08d-4a89-496a-a777-ac87c1d084d1,investor=Julien MACHOT introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,ffdac3cb-d083-48fc-be12-898ef77e3e72,investor=Rishabh MITTAL introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,ad60d448-8e0f-4e7d-a0b3-477fbb79550b,investor=Rishabh MITTAL introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,3cdaa285-804c-431d-b09d-a951ff7bb8ed,investor=VARUN SEMBIUM VARADARAJAN introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC207,bc4afa20-c002-4f10-994c-7b8bd1f905d7,investor=VARUN SEMBIUM VARADARAJAN introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_amount_mismatch,VC209,VC209:20,investor=PVPL FUND LLC SERIES 3 introducer=Lafferty+Visual Sectors basis=invested_amount dashboard=110000.0 db=10000.0 delta=-100000.0
+fail,commission_row_rate_mismatch,VC209,VC209:20,investor=PVPL FUND LLC SERIES 3 introducer=Lafferty+Visual Sectors basis=invested_amount dashboard_rates=[110] db_rates=[10]
+fail,commission_row_rate_missing_in_dashboard,VC209,911f1a65-1265-4f6f-a085-296af22fbe03,investor=PVPL FUND LLC SERIES 3 introducer=Visual Sectors basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,71a2f696-c4fa-4729-aecf-311139a709fc,investor=PVPL FUND LLC SERIES 3 introducer=Visual Sectors basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,30a72088-327d-4423-9d11-8d36f333c51f,"investor=SPACEFARING VENTURES FUND 9, LLC introducer=Jeffrey Wan basis=invested_amount dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC209,66bd1bdb-5e63-4f0c-97e5-bdcbd2961eb3,"investor=SPACEFARING VENTURES FUND 9, LLC introducer=Jeffrey Wan basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC209,2cce5916-5e8f-4322-8f0a-07a4b08d0704,"investor=SPACEFARING VENTURES FUND 9, LLC introducer=Jeffrey Wan basis=spread dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC209,5f02a9a5-3284-4b13-b191-21c471a9a783,"investor=PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC introducer=Rubix Holdings Limited basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC209,0e362ed3-1179-4254-9264-271ec962aa45,"investor=PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC introducer=Rubix Holdings Limited basis=spread dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC209,130cef08-09cd-4c9f-a6e1-35b997398eb9,investor=MRS ANISHA BANSAL AND MR RAHUL KARKUN introducer=Jeffrey Wan basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,60b2394e-2271-4b31-8d0e-82acd279d434,investor=MRS ANISHA BANSAL AND MR RAHUL KARKUN introducer=Jeffrey Wan basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,a3868ee8-650d-4395-872a-f6069c073377,investor=MRS ANISHA BANSAL AND MR RAHUL KARKUN introducer=Jeffrey Wan basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,3267e421-05e9-415f-863c-d1123d9efb6f,investor=Kartik Kumar ATTULURI introducer=Rubix Holdings Limited basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,4c102743-f6d4-4272-99f5-32239406ea07,investor=Kartik Kumar ATTULURI introducer=Rubix Holdings Limited basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,fe0248b9-815d-41da-9585-e3533763f0df,investor=Kartik Kumar ATTULURI introducer=Rubix Holdings Limited basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,c4157669-27e1-4767-b6e5-856cd41b8d26,investor=MADISON TRUST COMPANY (on behalf of Edward Bendickson) introducer=Rubix Holdings Limited basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,35f14d45-0aad-4e65-b726-a8d0673a3e37,investor=MADISON TRUST COMPANY (on behalf of Edward Bendickson) introducer=Rubix Holdings Limited basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,7db1c5f8-3555-42b3-8f3c-b61b14966815,investor=MADISON TRUST COMPANY (on behalf of Edward Bendickson) introducer=Rubix Holdings Limited basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,04d69fc7-7077-4a8c-94fe-d7ee7065b198,"investor=D. BORAL MASTER SPV, SERIES IV XAI introducer=AEON INC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC209,0d92f3cc-42f4-4140-a832-12914e17f8ac,"investor=D. BORAL MASTER SPV, SERIES IV XAI introducer=AEON INC basis=spread dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC209,5a143db1-2d67-4433-b1f6-6bf2a4484ef1,investor=Jamel CHANDOUL introducer=Bright Views Holdings basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,2938b3b4-a976-44f1-8ec9-c6a81c644d5d,investor=Jamel CHANDOUL introducer=Bright Views Holdings basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,f215e45a-02d3-4a7e-a3be-af9739e7363c,investor=JRF INVESTMENTS DMCC introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,2dc7a9b2-949f-420e-afab-73a1b2caf110,investor=JRF INVESTMENTS DMCC introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,0fde5b17-f44e-4c48-8ca6-cc859f9700d0,"investor=FRONTIERX VIII, LP introducer=Rubix Holdings Limited basis=invested_amount dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC209,39387542-7f49-41da-b3c4-f61be8a189e4,"investor=FRONTIERX VIII, LP introducer=Rubix Holdings Limited basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC209,207dc4b6-6147-4a4f-a916-7cad90194d75,"investor=FRONTIERX VIII, LP introducer=Rubix Holdings Limited basis=spread dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC209,37793f01-da23-42ad-abe6-ee1d84ef22ed,investor=U.S. HMC SERIES FUND LP - SERIES II introducer=Jeffrey Wan basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,19514cb0-c3d6-4b61-8c77-62f88073d593,investor=U.S. HMC SERIES FUND LP - SERIES II introducer=Jeffrey Wan basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,c5180d38-ec84-4320-b667-da9b67086c62,investor=U.S. HMC SERIES FUND LP - SERIES II introducer=Jeffrey Wan basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,2043e5c6-d488-45d0-9a53-a45d7160e344,investor=MOBILITY INNOVATION FUND LLC introducer=Jeffrey Wan basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,631f9ba4-8168-4e4b-be14-298cdde20754,investor=MOBILITY INNOVATION FUND LLC introducer=Jeffrey Wan basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,cc15b79e-adb1-4fa0-ba18-e1e9b645bd7b,investor=Georgi GEORGIEV introducer=Robin Doble basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,ab5cd625-5328-4162-99e8-492936f6d1d3,investor=Georgi GEORGIEV introducer=Robin Doble basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,7686b0b4-870e-455d-9eaa-1c254d74c6a2,investor=Julien MACHOT introducer=Rubix Holdings Limited basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,fa074ce4-fbe9-4a0c-aa5b-7cfca2e6be33,investor=Julien MACHOT introducer=Rubix Holdings Limited basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,dc1b07b8-33d9-416a-a6fd-c89f8a9302c9,investor=Julien MACHOT introducer=Rubix Holdings Limited basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,a733d25b-fd26-4f1e-9b4b-c35276621657,investor=Prabhakar Somana KONGANDA introducer=Rubix Holdings Limited basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,488535b2-1d15-499a-bce7-af7974b0e3a1,investor=Prabhakar Somana KONGANDA introducer=Rubix Holdings Limited basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,d30f41db-494a-484a-bb6d-fa729fa2f6da,investor=Prabhakar Somana KONGANDA introducer=Rubix Holdings Limited basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,aed52f63-5433-4413-8de1-d616e588c9f9,investor=SINO SUISSE LLC introducer=Bromley Capital Partners basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,55b3ef67-be54-4bfb-b799-7a52cbdaa9a0,investor=SINO SUISSE LLC introducer=Bromley Capital Partners basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,7a56833a-23bb-45ce-80cf-1a054ce65677,investor=Mohan SASANAPURI introducer=Rubix Holdings Limited basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,c4b820d5-4682-4acd-9082-cbd0769bb959,investor=Mohan SASANAPURI introducer=Rubix Holdings Limited basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC209,64c922e1-71b0-4260-b028-5b9ca49a02b7,investor=Mohan SASANAPURI introducer=Rubix Holdings Limited basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC210,9f3e511a-f061-432e-829b-b03c1ceb1a1b,investor=Hailey ORR introducer=ANIM basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC210,09da7c72-bc59-498c-b60a-160a5b2f2d05,investor=Hailey ORR introducer=ANIM basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC210,40a318c0-e5d3-4ce4-bae1-2ab0cc6f805d,investor=Marvin HAZELL introducer=ANIM basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC210,90e770f4-07b1-478a-895a-0d4c9746152f,investor=Marvin HAZELL introducer=ANIM basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC211,65ec78f0-0867-4df9-8c35-1383b13aab64,investor=Anton POLETAEV introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC211,33d92ed6-a4e2-45f1-8114-a56cd644e351,investor=Anton POLETAEV introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,91633139-259e-44be-ab2d-c976d3a2fe0c,"investor=ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC introducer=Set Cap basis=invested_amount dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC215,de7b0071-c6e6-49ff-a02c-e4bd1a3d071b,"investor=ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC introducer=Set Cap basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC215,55ec9e80-fa87-4f0c-8648-3b10cf93d43a,"investor=ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC introducer=Set Cap basis=spread dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC215,90a9a072-5921-4b17-9f37-7d46af1284e8,investor=AEON INC introducer=Set Cap basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,d3d4be00-98f2-4c35-a32c-f3acbb5e0885,investor=AEON INC introducer=Set Cap basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,9278d390-8807-4097-b61a-d56b3670f7d7,investor=AEON INC introducer=Set Cap basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,14ee37ef-a79d-4081-969c-c61599592676,investor=Ved NIRANJANBHAI ANTANI introducer=Set Cap basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,0ca7fdbb-8416-413d-8a5a-49d5babccbc9,investor=Ved NIRANJANBHAI ANTANI introducer=Set Cap basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,VC215:6,investor=Ved NIRANJANBHAI ANTANI introducer=Anand basis=spread dashboard_rates=[] db_rates=[250]
+fail,commission_row_missing_in_dashboard,VC215,f6065fdd-4112-47c4-834b-3c7adcdd1124,investor=Ved NIRANJANBHAI ANTANI introducer=Infinyte Club Private Limited basis=invested_amount dashboard=0.0 db=747.56
+fail,commission_row_rate_missing_in_dashboard,VC215,7f4ec13a-5950-421a-801e-1385970a80a8,investor=Ved NIRANJANBHAI ANTANI introducer=Infinyte Club Private Limited basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,20dc5557-b526-4bb1-93e8-30aad9815aea,investor=Ved NIRANJANBHAI ANTANI introducer=Infinyte Club Private Limited basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_missing_in_dashboard,VC215,112371d6-b1d3-448b-8d8a-a4a29d7bdee2,"investor=Anthropic Compartment, HAG Private Markets SARL introducer=Hottinger AG basis=invested_amount dashboard=0.0 db=687753.5"
+fail,commission_row_rate_missing_in_dashboard,VC215,1e128fc0-5db4-4698-b2e0-4b26f5615e4b,"investor=Anthropic Compartment, HAG Private Markets SARL introducer=Hottinger AG basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC215,c48a0bdf-8ab0-417a-ab49-19f86a397b3f,"investor=Anthropic Compartment, HAG Private Markets SARL introducer=Hottinger AG basis=spread dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC215,60b832b4-05b6-4de5-8c60-9084800f83c1,"investor=Anthropic Compartment, HAG Private Markets SARL introducer=Set Cap basis=invested_amount dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC215,cdda331a-3f3b-4874-9877-272c35db58e8,"investor=Anthropic Compartment, HAG Private Markets SARL introducer=Set Cap basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]"
+fail,commission_row_rate_missing_in_dashboard,VC215,fde65e28-8ffe-4c6d-bddd-0554c774a565,"investor=Anthropic Compartment, HAG Private Markets SARL introducer=Set Cap basis=spread dashboard_rates=[] db_rates=[0]"
+fail,commission_row_missing_in_dashboard,VC215,147d1ac0-4269-4921-9cdf-d3a1c9c5d104,investor=Anuroop ARORA introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=1718.84
+fail,commission_row_rate_missing_in_dashboard,VC215,fb4ed62f-edec-40bd-b624-6e2196eaba87,investor=Anuroop ARORA introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,25884b52-909c-42c2-ad45-f5755baf38f1,investor=Anuroop ARORA introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,11140324-0f01-479d-a666-2d17b7e2c6c1,investor=Anuroop ARORA introducer=Set Cap basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,4f93156b-9fe9-4a2f-a836-6657a34eb328,investor=Anuroop ARORA introducer=Set Cap basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,117c5550-4a88-40c1-a854-b85441792890,investor=Anuroop ARORA introducer=Set Cap basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,2c4f0dc2-bc41-4fc7-be46-be705d6980df,investor=Keir BENBOW introducer=Set Cap basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,d6a524e3-83ce-4bfd-a099-00a7b3973e94,investor=Keir BENBOW introducer=Set Cap basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,86037f7e-3ae1-48ea-86c5-337cd91d4afb,investor=Keir BENBOW introducer=Set Cap basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,fb646eb7-b18f-423f-8ad7-498338484f22,investor=CARTA INVESTMENTS LLC introducer=Set Cap basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,586a3706-c165-49f5-9476-087b71d265bb,investor=CARTA INVESTMENTS LLC introducer=Set Cap basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,VC215:9,investor=CARTA INVESTMENTS LLC introducer=Anand basis=spread dashboard_rates=[] db_rates=[550]
+fail,commission_row_missing_in_dashboard,VC215,3d0219ac-9c68-40f3-90f8-9043c9b60d9e,investor=CARTA INVESTMENTS LLC introducer=Infinyte Club Private Limited basis=invested_amount dashboard=0.0 db=508.36
+fail,commission_row_rate_missing_in_dashboard,VC215,6d39799a-39c3-421b-af13-2aa0c6a82b7a,investor=CARTA INVESTMENTS LLC introducer=Infinyte Club Private Limited basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,ef812ec2-c850-4af5-b794-8f32a9e60be0,investor=CARTA INVESTMENTS LLC introducer=Infinyte Club Private Limited basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,7811cd03-a591-4229-a51f-afb1dcf8ddf1,investor=George Guoying CHEN introducer=Set Cap basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,078f25c9-54e7-4b10-8360-86eca28ca7a6,investor=George Guoying CHEN introducer=Set Cap basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,c2597d28-2774-401d-ba12-431f13152f23,investor=George Guoying CHEN introducer=Set Cap basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,a888aeb0-d665-4099-ab1e-66c3f918ff20,investor=Gourav KAKKAR introducer=Set Cap basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,8f43b86b-1e32-4dcb-b773-cc8f39920086,investor=Gourav KAKKAR introducer=Set Cap basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,VC215:4,investor=Gourav KAKKAR introducer=Anand basis=spread dashboard_rates=[] db_rates=[250]
+fail,commission_row_missing_in_dashboard,VC215,4e456962-9e95-4ca7-a3fb-4c10b5b9f666,investor=Gourav KAKKAR introducer=Infinyte Club Private Limited basis=invested_amount dashboard=0.0 db=461.3
+fail,commission_row_rate_missing_in_dashboard,VC215,b995e97b-d949-4781-a3cb-ee56bb33a508,investor=Gourav KAKKAR introducer=Infinyte Club Private Limited basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,f05deba1-5aa4-4173-8ef1-b63ed785aa2a,investor=Gourav KAKKAR introducer=Infinyte Club Private Limited basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,864bd30b-611a-460e-8ea1-b30ec01e4881,investor=LF GROUP SARL introducer=Set Cap basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,01827107-84d1-4483-bae6-934eb1934701,investor=LF GROUP SARL introducer=Set Cap basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,c4cae172-9086-4473-8078-ece3312bc3b5,investor=LF GROUP SARL introducer=Set Cap basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,e7e83040-b67f-44ab-876e-27dd01f5a306,investor=Rajagopalan MADHUSUDAN introducer=Set Cap basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,72c9152c-e190-40b2-8b56-78c669a5b98a,investor=Rajagopalan MADHUSUDAN introducer=Set Cap basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,VC215:5,investor=Rajagopalan MADHUSUDAN introducer=Anand basis=spread dashboard_rates=[] db_rates=[250]
+fail,commission_row_missing_in_dashboard,VC215,a0d0a155-9c53-4fd6-927f-d42870a71a2b,investor=Rajagopalan MADHUSUDAN introducer=Infinyte Club Private Limited basis=invested_amount dashboard=0.0 db=365.57
+fail,commission_row_rate_missing_in_dashboard,VC215,d27c35a3-cebe-40ca-88f7-c5a8e90015b1,investor=Rajagopalan MADHUSUDAN introducer=Infinyte Club Private Limited basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,edeb6e62-121f-4bdb-a801-fff0a9273d9d,investor=Rajagopalan MADHUSUDAN introducer=Infinyte Club Private Limited basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,3efb738a-f4e3-46ef-8770-179ea124f2ad,investor=Mahesh NALLAPATI introducer=Set Cap basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,5e4c723c-e1e2-4716-a7ff-4d2a82353d1e,investor=Mahesh NALLAPATI introducer=Set Cap basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,VC215:7,investor=Mahesh NALLAPATI introducer=Anand basis=spread dashboard_rates=[] db_rates=[250]
+fail,commission_row_missing_in_dashboard,VC215,6f86f1b2-89c0-4a01-aa9c-6f533b211310,investor=Mahesh NALLAPATI introducer=Infinyte Club Private Limited basis=invested_amount dashboard=0.0 db=318.17
+fail,commission_row_rate_missing_in_dashboard,VC215,61c92b37-d67e-455f-ae42-06b465043cb4,investor=Mahesh NALLAPATI introducer=Infinyte Club Private Limited basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,60516ed9-90b1-477c-a458-437ee5296a3d,investor=Mahesh NALLAPATI introducer=Infinyte Club Private Limited basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,55794cc2-dade-4648-83ad-06585507df4b,investor=STELLATRION PARTNERS introducer=Set Cap basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,1877711e-8b9e-4b3e-a347-bf61ff67b903,investor=STELLATRION PARTNERS introducer=Set Cap basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,VC215:10,investor=STELLATRION PARTNERS introducer=Anand basis=spread dashboard_rates=[] db_rates=[300]
+fail,commission_row_missing_in_dashboard,VC215,d4ee4243-4faa-464f-8d21-5eb27de6429b,investor=VARUN SEMBIUM VARADARAJAN introducer=Renaissance Bridge Capital LLC basis=invested_amount dashboard=0.0 db=1082.61
+fail,commission_row_rate_missing_in_dashboard,VC215,8dab97e3-6fe4-444b-9b9e-a3885cb0c4e1,investor=VARUN SEMBIUM VARADARAJAN introducer=Renaissance Bridge Capital LLC basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,c6783eeb-49ed-4fef-91a9-735301bdc172,investor=VARUN SEMBIUM VARADARAJAN introducer=Renaissance Bridge Capital LLC basis=spread dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,426b8730-cff0-488a-b4bb-b80d37fa077f,investor=VARUN SEMBIUM VARADARAJAN introducer=Set Cap basis=invested_amount dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,6308854a-58fd-46ec-b97f-5d4ce6f48e85,investor=VARUN SEMBIUM VARADARAJAN introducer=Set Cap basis=performance_fee_tier1 dashboard_rates=[] db_rates=[0]
+fail,commission_row_rate_missing_in_dashboard,VC215,a6a5f58b-2286-491d-b073-45a274527e3d,investor=VARUN SEMBIUM VARADARAJAN introducer=Set Cap basis=spread dashboard_rates=[] db_rates=[0]
+warn,commission_totals_ruled_diff_invested_amount,VC203,,dashboard=320673.26 db=259999.5 delta=-60673.76 expected=-60673.76
+warn,commission_totals_ruled_diff_invested_amount,VC207,,dashboard=141932.1 db=115793.4 delta=-26138.7 expected=-26138.7
+warn,commission_totals_ruled_diff_invested_amount,VC209,,dashboard=704343.97 db=451663.47 delta=-252680.5 expected=-252680.5
+warn,commission_totals_ruled_diff_invested_amount,VC215,,dashboard=834528.32 db=692955.91 delta=-141572.41 expected=-141572.41
+warn,commission_row_ruled_removed,VC203,VC203:8,investor=Sebastian LATTUGA introducer=R. F. Lafferty & Co. Inc. basis=invested_amount dashboard=14563.11 db=0.0
+warn,commission_row_ruled_removed,VC207,VC207:21,investor=AEON INC. introducer=Lafferty basis=invested_amount dashboard=26138.7 db=0.0
+warn,commission_row_ruled_removed,VC209,VC209:13,"investor=STP CAP V, A SERIES OF CGF2021 LLC, SYDECAR LLC introducer=Lafferty basis=invested_amount dashboard=29677.5 db=0.0"
+warn,commission_row_ruled_removed,VC209,VC209:10,"investor=CBH Compagnie Bancaire Helvétique SA, introducer=Lafferty basis=invested_amount dashboard=123003.0 db=0.0"
+warn,commission_row_ruled_removed,VC215,VC215:12,"investor=ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC introducer=Bromley Capital basis=invested_amount dashboard=12742.5 db=0.0"
+warn,commission_row_ruled_removed,VC215,VC215:16,investor=AEON INC introducer=Bromley Capital basis=invested_amount dashboard=4263.0 db=0.0
+warn,commission_row_ruled_removed,VC215,VC215:20,investor=Keir BENBOW introducer=Bromley Capital basis=invested_amount dashboard=670.5 db=0.0
+warn,commission_row_ruled_removed,VC215,VC215:21,investor=Georges CHEN introducer=Bromley Capital basis=invested_amount dashboard=8400.0 db=0.0
+warn,commission_row_ruled_removed,VC215,VC215:18,investor=LF GROUP SARL introducer=Bromley Capital basis=invested_amount dashboard=937.5 db=0.0
+warn,commission_row_ruled_removed,VC215,VC215:3,investor=Julien MACHOT introducer=Bromley Capital basis=invested_amount dashboard=8416.5 db=0.0
+warn,commission_row_ruled_removed,VC215,VC215:10,investor=STELLATRION PARTNERS introducer=Bromley Capital basis=invested_amount dashboard=2904.0 db=0.0
+warn,introducer_warning_only_present,VC209,,Bright Views Holdings rows=3 amount=9000.0

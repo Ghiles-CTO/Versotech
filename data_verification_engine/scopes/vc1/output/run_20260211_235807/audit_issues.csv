@@ -1,0 +1,952 @@
+severity,check,vehicle,row_ref,details
+fail,dashboard_columns_missing,VC2,,missing columns in sheet VC2
+fail,vehicle_totals_mismatch,VC102,,count: dashboard=0.0 db=7.0 delta=7.0
+fail,vehicle_totals_mismatch,VC102,,cost_per_share: dashboard=0.0 db=604.001 delta=604.001
+fail,vehicle_totals_mismatch,VC102,,commitment: dashboard=0.0 db=575003.0 delta=575003.0
+fail,vehicle_totals_mismatch,VC102,,price_per_share: dashboard=0.0 db=604.001 delta=604.001
+fail,vehicle_totals_mismatch,VC102,,shares: dashboard=0.0 db=279000.0 delta=279000.0
+fail,vehicle_totals_mismatch,VC102,,ownership: dashboard=0.0 db=154000.0 delta=154000.0
+fail,vehicle_totals_mismatch,VC102,,sub_fee_percent: dashboard=0.0 db=0.02 delta=0.02
+fail,vehicle_totals_mismatch,VC102,,sub_fee: dashboard=0.0 db=1000.0 delta=1000.0
+fail,vehicle_totals_mismatch,VC102,,perf1_percent: dashboard=0.0 db=0.30000000000000004 delta=0.30000000000000004
+fail,vehicle_totals_mismatch,VC106,,cost_per_share: dashboard=3404.5 db=3516.58269 delta=112.08269000000018
+fail,vehicle_totals_mismatch,VC106,,ownership: dashboard=1969517.0 db=1964970.0 delta=-4547.0
+fail,vehicle_totals_mismatch,VC106,,perf1_percent: dashboard=19.749999999999968 db=420.0 delta=400.25000000000006
+fail,vehicle_totals_mismatch,VC106,,bd_fee_percent: dashboard=0.8000000000000002 db=50.0 delta=49.2
+fail,vehicle_totals_mismatch,VC106,,finra_shares: dashboard=15.575600000000003 db=10.0 delta=-5.575600000000003
+fail,vehicle_totals_mismatch,VC111,,count: dashboard=38.0 db=37.0 delta=-1.0
+fail,vehicle_totals_mismatch,VC111,,cost_per_share: dashboard=47.0 db=46.0 delta=-1.0
+fail,vehicle_totals_mismatch,VC111,,commitment: dashboard=8792857.14 db=8221428.57 delta=-571428.5700000003
+fail,vehicle_totals_mismatch,VC111,,price_per_share: dashboard=56.0 db=46.0 delta=-10.0
+fail,vehicle_totals_mismatch,VC111,,shares: dashboard=7850000.0 db=7750000.0 delta=-100000.0
+fail,vehicle_totals_mismatch,VC111,,ownership: dashboard=7850000.0 db=6750000.0 delta=-1100000.0
+fail,vehicle_totals_mismatch,VC111,,spread_per_share: dashboard=4.2857143 db=0.0 delta=-4.2857143
+fail,vehicle_totals_mismatch,VC111,,spread_fee: dashboard=428571.43 db=0.0 delta=-428571.43
+fail,vehicle_totals_mismatch,VC111,,sub_fee_percent: dashboard=1.0900000000000003 db=1.0500000000000003 delta=-0.040000000000000036
+fail,vehicle_totals_mismatch,VC111,,sub_fee: dashboard=187000.0 db=147000.0 delta=-40000.0
+fail,vehicle_totals_mismatch,VC111,,perf1_percent: dashboard=6.150000000000003 db=5.950000000000002 delta=-0.20000000000000107
+fail,vehicle_totals_mismatch,VC114,,ownership: dashboard=860000.0 db=530000.0 delta=-330000.0
+fail,vehicle_totals_mismatch,VC122,,count: dashboard=4.0 db=9.0 delta=5.0
+fail,vehicle_totals_mismatch,VC122,,commitment: dashboard=284999.65 db=609999.65 delta=325000.0
+fail,vehicle_totals_mismatch,VC122,,price_per_share: dashboard=3.62533 db=1.6514199999999999 delta=-1.97391
+fail,vehicle_totals_mismatch,VC124,,commitment: dashboard=611772.2 db=611772.7 delta=0.5
+fail,vehicle_totals_mismatch,VC126,,bd_fee: dashboard=1250.0 db=0.05 delta=-1249.95
+fail,row_unmatched_dashboard,VC106,VC6:141,investor=Aatif N. HASSAN commitment=100000.0 shares=4251.0 date=2021-05-11
+fail,row_unmatched_dashboard,VC106,VC6:61,investor=Mohammed Abdulaziz AL ABBASI commitment=241300.0 shares=12700.0 date=2021-02-19
+fail,row_unmatched_dashboard,VC106,VC6:121,investor=Adil Arshed KHAWAJA commitment=250000.0 shares=10629.0 date=2021-04-25
+fail,row_unmatched_dashboard,VC106,VC6:149,investor=James A. HARTSHORN commitment=100000.0 shares=4251.0 date=2021-05-20
+fail,row_unmatched_dashboard,VC106,VC6:24,investor=Johann Markus AKERMANN commitment=225200.0 shares=10000.0 date=2021-01-27
+fail,row_unmatched_dashboard,VC106,VC6:11,investor=Sheikh Yousef AL SABAH commitment=50000.0 shares=2631.0 date=2020-12-31
+fail,row_unmatched_dashboard,VC106,VC6:123,investor=Lubna M. A. QUNASH commitment=100000.0 shares=4251.0 date=2021-06-02
+fail,row_unmatched_dashboard,VC106,VC6:146,investor=Anke Skoludek RICE commitment=85000.0 shares=3863.0 date=2021-05-13
+fail,row_unmatched_dashboard,VC106,VC6:79,investor=Lesli Ann SCHUTTE commitment=50000.0 shares=2125.0 date=2021-03-03
+fail,row_unmatched_dashboard,VC106,VC6:76,investor=Barnaby John MOORE commitment=150000.0 shares=6550.0 date=2021-03-04
+fail,row_unmatched_dashboard,VC106,VC6:181,investor=Bernard Henri DUFAURE commitment=100000.0 shares=4251.0 date=2021-06-22
+fail,row_unmatched_dashboard,VC106,VC6:122,investor=Bharat Kumar JATANIA commitment=100000.0 shares=4251.0 date=2021-04-20
+fail,row_unmatched_dashboard,VC106,VC6:138,investor=Bhikhu C. K. PATEL commitment=250000.0 shares=10629.0 date=2021-05-21
+fail,row_unmatched_dashboard,VC106,VC6:48,investor=Mohamad Ismail BIN MOHAMED commitment=199994.0 shares=10526.0 date=2021-02-15
+fail,row_unmatched_dashboard,VC106,VC6:25,investor=Sandra KOHLER CABIAN commitment=50000.0 shares=2512.0 date=2021-01-27
+fail,row_unmatched_dashboard,VC106,VC6:102,investor=Talal Chamsi PASHA commitment=7236.0 shares=452.0 date=2021-05-21
+fail,row_unmatched_dashboard,VC106,VC6:14,investor=Daphne Marie CHANDRA commitment=30040.0 shares=1756.0 date=2021-01-09
+fail,row_unmatched_dashboard,VC106,VC6:8,investor=Chang Yong NGAN commitment=100800.0 shares=5600.0 date=2021-01-08
+fail,row_unmatched_dashboard,VC106,VC6:109,investor=Mayuriben Chetan Kumar JOGANI commitment=100000.0 shares=4251.0 date=2021-04-08
+fail,row_unmatched_dashboard,VC106,VC6:139,investor=Vijaykumar C. K. PATEL commitment=750000.0 shares=31887.0 date=2021-05-21
+fail,row_unmatched_dashboard,VC106,VC6:175,investor=Georges Sylvain CYTRON commitment=100000.0 shares=4251.0 date=2021-06-22
+fail,row_unmatched_dashboard,VC106,VC6:15,investor=Daryl PAK YONGJIE commitment=165006.0 shares=9167.0 date=2020-12-24
+fail,row_unmatched_dashboard,VC106,VC6:179,investor=David Jean ROSSIER commitment=200000.0 shares=8503.0 date=2021-06-22
+fail,row_unmatched_dashboard,VC106,VC6:135,investor=Eric Pascal LE SEIGNEUR commitment=100000.0 shares=4251.0 date=2021-04-30
+fail,row_unmatched_dashboard,VC106,VC6:160,investor=Eric Pascal LE SEIGNEUR commitment=100000.0 shares=4251.0 date=2021-04-30
+fail,row_unmatched_dashboard,VC106,VC6:17,investor=Tan Sor GEOK commitment=80064.0 shares=4448.0 date=2020-12-24
+fail,row_unmatched_dashboard,VC106,VC6:47,investor=LEE RAND GROUP commitment=24985.0 shares=1315.0 date=2021-02-15
+fail,row_unmatched_dashboard,VC106,VC6:53,investor=LEE RAND GROUP commitment=24985.0 shares=1315.0 date=2021-02-16
+fail,row_unmatched_dashboard,VC106,VC6:49,investor=LEE RAND GROUP commitment=34998.0 shares=1842.0 date=2021-02-16
+fail,row_unmatched_dashboard,VC106,VC6:52,investor=LEE RAND GROUP commitment=49989.0 shares=2631.0 date=2021-02-15
+fail,row_unmatched_dashboard,VC106,VC6:46,investor=LEE RAND GROUP commitment=49989.0 shares=2631.0 date=2021-02-16
+fail,row_unmatched_dashboard,VC106,VC6:51,investor=LEE RAND GROUP commitment=49989.0 shares=2631.0 date=2021-02-16
+fail,row_unmatched_dashboard,VC106,VC6:134,investor=Michel Louis GUERIN commitment=200000.0 shares=8503.0 date=2021-04-30
+fail,row_unmatched_dashboard,VC106,VC6:188,investor=Hossien Hakimi JAVID commitment=49980.0 shares=2125.0 date=2021-09-07
+fail,row_unmatched_dashboard,VC106,VC6:191,investor=Kian Mohammad Hakimi JAVID commitment=24978.24 shares=1062.0 date=2021-09-07
+fail,row_unmatched_dashboard,VC106,VC6:94,investor=Imrat HAYAT commitment=245200.0 shares=10000.0 date=2021-04-02
+fail,row_unmatched_dashboard,VC106,VC6:58,investor=Hedgebay Securities LLC commitment=24978.24 shares=1062.0 date=2021-03-05
+fail,row_unmatched_dashboard,VC106,VC6:59,investor=Hedgebay Securities LLC commitment=24978.24 shares=1062.0 date=2021-03-05
+fail,row_unmatched_dashboard,VC106,VC6:57,investor=Hedgebay Securities LLC commitment=24978.24 shares=1062.0 date=2021-03-09
+fail,row_unmatched_dashboard,VC106,VC6:56,investor=Hedgebay Securities LLC commitment=100007.04 shares=4252.0 date=2021-03-06
+fail,row_unmatched_dashboard,VC106,VC6:192,investor=Salman Raza HUSSAIN commitment=49980.0 shares=2125.0 date=2021-09-07
+fail,row_unmatched_dashboard,VC106,VC6:70,investor=Steve J MANNING commitment=50000.0 shares=2125.0 date=2021-06-07
+fail,row_unmatched_dashboard,VC106,VC6:40,investor=Mrs and Mr KARKUN commitment=50000.0 shares=2272.0 date=2021-02-07
+fail,row_unmatched_dashboard,VC106,VC6:21,investor=OEP Ltd commitment=250000.0 shares=11905.0 date=2022-01-01
+fail,row_unmatched_dashboard,VC106,VC6:80,investor=Manraj Singh SEKHON commitment=400000.0 shares=17006.0 date=2021-03-24
+fail,row_unmatched_dashboard,VC106,VC6:19,investor=Matteo Massimo MARTINI commitment=100000.0 shares=5025.0 date=2021-01-20
+fail,row_unmatched_dashboard,VC106,VC6:44,investor=Mrs & Mr Subbiah SUBRAMANIAN commitment=155000.0 shares=6733.0 date=2021-02-12
+fail,row_unmatched_dashboard,VC111,VC11:9,"investor=OEP LIMITED
+(Transfer from AS ADVISORY DWC LLC) commitment=50000.0 shares=50000.0 date=2021-03-23"
+fail,row_unmatched_dashboard,VC111,VC11:19,investor=Johann Markus AKERMANN commitment=100000.0 shares=100000.0 date=2021-03-25
+fail,row_unmatched_dashboard,VC111,VC11:21,investor=Alberto Attilio RAVANO commitment=100000.0 shares=100000.0 date=2021-11-04
+fail,row_unmatched_dashboard,VC111,VC11:25,investor=Antonio Bruno PERONACE commitment=70000.0 shares=70000.0 date=2021-12-05
+fail,row_unmatched_dashboard,VC111,VC11:4,investor=Dan BAUMSLAG commitment=150000.0 shares=150000.0 date=2021-12-05
+fail,row_unmatched_dashboard,VC111,VC11:12,"investor=Dan
+Jean BAUMSLAG
+DUTIL commitment=50000.0 shares=50000.0 date=2021-09-16"
+fail,row_unmatched_dashboard,VC111,VC11:37,investor=Zandera (Finco) Limited commitment=571428.57 shares=100000.0 date=2021-11-11
+fail,row_unmatched_dashboard,VC112,VC12:21,investor=Giovanni Antonio Alberto ALBERTINI commitment=50000.0 shares=4093.0 date=2022-10-28
+fail,row_unmatched_dashboard,VC112,VC12:18,investor=Liudmila and Alexey ROMANOV commitment=500000.0 shares=40931.0 date=2022-08-25
+fail,row_unmatched_dashboard,VC112,VC12:10,investor=Dan BAUMSLAG commitment=25000.0 shares=16370.0 date=None
+fail,row_unmatched_dashboard,VC112,VC12:6,investor=Dan BAUMSLAG commitment=25000.0 shares=50352.0 date=2021-05-13
+fail,row_unmatched_dashboard,VC112,VC12:14,investor=Robert Jan DETTMEIJER commitment=20000.0 shares=13096.0 date=2021-10-19
+fail,row_unmatched_dashboard,VC112,VC12:27,investor=OEP Ltd commitment=2.2 shares=21972.0 date=None
+fail,row_unmatched_dashboard,VC112,VC12:11,investor=OEP Ltd commitment=50000.0 shares=32741.0 date=2021-10-16
+fail,row_unmatched_dashboard,VC112,VC12:4,investor=OEP Ltd commitment=50000.0 shares=100704.0 date=None
+fail,row_unmatched_dashboard,VC113,VC13:74,investor=Abhie Shreyas SHAH commitment=100000.0 shares=3389.0 date=2022-03-17
+fail,row_unmatched_dashboard,VC113,VC13:47,investor=Hong Bao NGOC LE commitment=10000.0 shares=372.0 date=2021-06-09
+fail,row_unmatched_dashboard,VC113,VC13:42,investor=Gielke Jan BURGMANS commitment=100000.0 shares=3726.0 date=2021-08-24
+fail,row_unmatched_dashboard,VC113,VC13:35,investor=Mayuriben Chetan K. JOGANI commitment=100000.0 shares=3726.0 date=2021-09-07
+fail,row_unmatched_dashboard,VC113,VC13:55,investor=Robert Jan DETTMEIJER commitment=25000.0 shares=3653.0 date=2021-11-17
+fail,row_unmatched_dashboard,VC113,VC13:18,investor=Scott Ikott TOMMEY commitment=150000.0 shares=3750.0 date=2021-07-06
+fail,row_unmatched_dashboard,VC113,VC13:62,investor=OEP Ltd commitment=100000.0 shares=14615.0 date=2021-11-17
+fail,row_unmatched_dashboard,VC114,VC14:6,investor=Manraj Singh SEKHON commitment=200000.0 shares=200000.0 date=2021-08-23
+fail,row_unmatched_dashboard,VC122,VC22:9,investor=INNOVATECH COMPARTMENT 8 commitment=25000.0 shares=39978.0 date=2023-10-01
+fail,row_unmatched_dashboard,VC122,VC22:7,investor=Anke Skoludek RICE commitment=60000.0 shares=95949.0 date=2022-11-24
+fail,row_unmatched_dashboard,VC124,VC24:7,investor=Dan BAUMSLAG commitment=9971.2 shares=822.0 date=2022-01-24
+fail,row_unmatched_dashboard,VC124,VC24:12,investor=Julien MACHOT commitment=8352.0 shares=288716.0 date=2023-02-10
+fail,row_unmatched_dashboard,VC124,VC24:10,investor=OEP Ltd commitment=2500.0 shares=86430.0 date=2023-10-10
+fail,row_unmatched_dashboard,VC124,VC24:4,investor=OEP Ltd commitment=50000.0 shares=4125.0 date=2021-12-29
+fail,row_unmatched_dashboard,VC125,VC25:27,investor=Dan BAUMSLAG commitment=25000.0 shares=141.0 date=2022-02-23
+fail,row_unmatched_dashboard,VC125,VC25:14,investor=OEP LTD commitment=100000.0 shares=564.0 date=2021-12-28
+fail,row_unmatched_db,VC102,,investor=KRISTINA & CHENG-LIN SUTKAITYTE & HSU commitment=50000.0 shares=50000.0 date=2024-11-21 sub_id=1d5b189a-451b-40ac-b4e7-ac2a60b0c36e
+fail,row_unmatched_db,VC102,,investor=LF GROUP SARL commitment=50000.0 shares=50000.0 date=2024-04-15 sub_id=0b48d694-044b-46e9-b83f-be334dc0bce5
+fail,row_unmatched_db,VC102,,investor=Julien MACHOT commitment=3.0 shares=3000.0 date=2019-09-20 sub_id=104c4d9c-a3f6-4475-86a4-962b2185f3cd
+fail,row_unmatched_db,VC102,,investor=Julien MACHOT commitment=150000.0 shares=500.0 date=2019-07-12 sub_id=9cd10468-ef19-4046-bcf8-509a31d91f3e
+fail,row_unmatched_db,VC102,,investor=Julien MACHOT commitment=150000.0 shares=500.0 date=2020-02-28 sub_id=a74be7a6-a84f-40f6-b108-bbe56779e7c1
+fail,row_unmatched_db,VC102,,investor=Julien MACHOT commitment=150000.0 shares=150000.0 date=2020-09-28 sub_id=2d6429bb-2ed8-4392-9463-11c8e3a0b5df
+fail,row_unmatched_db,VC102,,investor=Pierre PAUMIER commitment=25000.0 shares=25000.0 date=2024-04-15 sub_id=01d7eb2b-9311-46da-a0db-afa79a725f5c
+fail,row_unmatched_db,VC106,,investor=Aaron RIKHYE commitment=100007.04 shares=4252.0 date=2021-03-06 sub_id=7af9e289-52d2-4a71-af1e-e99ec7076978
+fail,row_unmatched_db,VC106,,investor=Aatif HASSAN commitment=100000.0 shares=4251.0 date=2021-05-11 sub_id=373e8d77-d242-4453-ad81-15874839fdbc
+fail,row_unmatched_db,VC106,,investor=Mohammed AL ABBASI commitment=241300.0 shares=12700.0 date=2021-02-19 sub_id=c5feeba0-e9f2-4597-a4ae-e8d0e89c202d
+fail,row_unmatched_db,VC106,,investor=Adil KHAWAJA commitment=250000.0 shares=10629.0 date=2021-04-25 sub_id=b117ad58-bb16-4606-983f-1c7b632cb4e8
+fail,row_unmatched_db,VC106,,investor=Johann AKERMANN commitment=225200.0 shares=10000.0 date=2021-01-27 sub_id=c916379f-b94b-4ab8-a490-38e0066658c6
+fail,row_unmatched_db,VC106,,investor=Sheikh AL SABAH commitment=50000.0 shares=2631.0 date=2020-12-31 sub_id=5cc24031-8d87-4775-87b7-f400e1800d28
+fail,row_unmatched_db,VC106,,investor=Anisha Bansal and Rahul KARKUN commitment=50000.0 shares=2272.0 date=2021-02-07 sub_id=c2af5e61-6305-43d8-967e-091ecea78d75
+fail,row_unmatched_db,VC106,,investor=Anke RICE commitment=85000.0 shares=3863.0 date=2021-05-13 sub_id=1e6057a5-fe6b-4a27-9505-09b2946c8a53
+fail,row_unmatched_db,VC106,,investor=Atima HARALALKA commitment=49989.0 shares=2631.0 date=2021-02-16 sub_id=756b3528-4cca-4a55-8d33-05deaa2dbbd8
+fail,row_unmatched_db,VC106,,investor=Barnaby MOORE commitment=150000.0 shares=6550.0 date=2021-03-04 sub_id=b36a0d0b-feee-449d-a4f4-f3c0e21241b7
+fail,row_unmatched_db,VC106,,investor=Bernard DUFAURE commitment=100000.0 shares=4251.0 date=2021-06-22 sub_id=71a6730d-297c-4483-bbd4-81a5070957b7
+fail,row_unmatched_db,VC106,,investor=Bharat JATANIA commitment=100000.0 shares=4251.0 date=2021-04-20 sub_id=918b3d4d-320c-4116-b788-4c08c80f7b01
+fail,row_unmatched_db,VC106,,investor=Bhikhu PATEL commitment=250000.0 shares=10629.0 date=2021-05-21 sub_id=38053f95-00e0-4d94-9a4f-dcf23f1bfafe
+fail,row_unmatched_db,VC106,,investor=Mohamad BIN MOHAMED commitment=199994.0 shares=10526.0 date=2021-02-15 sub_id=c41fba0a-d819-4d13-9784-5355fa2c350d
+fail,row_unmatched_db,VC106,,investor=Sandra CABIAN commitment=50000.0 shares=2512.0 date=2021-01-27 sub_id=46bdb469-6d5b-4329-a910-9347b9d657dc
+fail,row_unmatched_db,VC106,,investor=Daphne CHANDRA commitment=30040.0 shares=1756.0 date=2021-01-09 sub_id=18a62e22-eba0-4e6a-928d-e02bae74fcf1
+fail,row_unmatched_db,VC106,,investor=Chang NGAN commitment=100800.0 shares=5600.0 date=2021-01-08 sub_id=55e193e5-611f-4092-8edc-e0ebd36b1d19
+fail,row_unmatched_db,VC106,,investor=Georges CYTRON commitment=100000.0 shares=4251.0 date=2021-06-22 sub_id=641d487d-bb4a-4cce-8e76-c22ca4d755cf
+fail,row_unmatched_db,VC106,,investor=Daryl YONGJIE commitment=165006.0 shares=9167.0 date=2020-12-24 sub_id=bfca0c0d-88f8-43a4-a71a-b103df2711f9
+fail,row_unmatched_db,VC106,,investor=Ekta DATT commitment=24985.0 shares=1315.0 date=2021-02-15 sub_id=b587c756-0e1b-4167-be71-5723a1371d8e
+fail,row_unmatched_db,VC106,,investor=David ROSSIER commitment=200000.0 shares=8503.0 date=2021-06-22 sub_id=b4572a9a-a02c-45eb-8c16-18136b8c3a5f
+fail,row_unmatched_db,VC106,,investor=Eric LE SEIGNEUR commitment=100000.0 shares=4251.0 date=2021-04-30 sub_id=63254fd9-338d-4869-bd1e-a5e3731d7525
+fail,row_unmatched_db,VC106,,investor=Eric LE SEIGNEUR commitment=100000.0 shares=4251.0 date=2021-04-30 sub_id=f0dc32a8-eaad-4f70-a0d8-f6154f0cfea1
+fail,row_unmatched_db,VC106,,investor=Nidhi GANERIWALA commitment=34998.0 shares=1842.0 date=2021-02-16 sub_id=620c6086-6150-44d7-ae23-9d4d89c71a66
+fail,row_unmatched_db,VC106,,investor=Tan GEOK commitment=80064.0 shares=4448.0 date=2020-12-24 sub_id=86d84bf5-f760-45c7-8d02-e59727807acc
+fail,row_unmatched_db,VC106,,investor=Michel GUERIN commitment=200000.0 shares=8503.0 date=2021-04-30 sub_id=f5c1690a-bf76-46e8-b8a1-15b1647cbe2b
+fail,row_unmatched_db,VC106,,investor=Lakin HARIA commitment=24978.24 shares=1062.0 date=2021-03-09 sub_id=7aeec746-b471-420a-a644-3397dc85a022
+fail,row_unmatched_db,VC106,,investor=Sheetal HARIA commitment=24978.24 shares=1062.0 date=2021-03-05 sub_id=d55172f3-92a3-4484-8f32-c58e9732936b
+fail,row_unmatched_db,VC106,,investor=James HARTSHORN commitment=100000.0 shares=4251.0 date=2021-05-20 sub_id=81781c2f-4496-47f6-9efa-e490790e3f3d
+fail,row_unmatched_db,VC106,,investor=Imran HAYAT commitment=245200.0 shares=10000.0 date=2021-04-02 sub_id=8517d572-b71c-4903-b04c-548b903b7b5d
+fail,row_unmatched_db,VC106,,investor=Hossein JAVID commitment=49980.0 shares=2125.0 date=2021-09-07 sub_id=cfd7a10c-333f-44cb-9a0f-0c39263b9fe9
+fail,row_unmatched_db,VC106,,investor=Salman HUSSAIN commitment=49980.0 shares=2125.0 date=2021-09-07 sub_id=71956d1d-0e5f-4e54-8cdd-2c910e07e21a
+fail,row_unmatched_db,VC106,,investor=Kian JAVID commitment=24978.24 shares=1062.0 date=2021-09-07 sub_id=173e4213-f138-4e3d-8abc-bbf3faeb4ec0
+fail,row_unmatched_db,VC106,,investor=Mayuriben JOGANI commitment=100000.0 shares=4251.0 date=2021-04-08 sub_id=e1f47d87-7f86-4377-b32c-78534b41bd0f
+fail,row_unmatched_db,VC106,,investor=Julien MACHOT commitment=250000.0 shares=11905.0 date=2022-01-01 sub_id=39501ec9-f240-440b-af27-ab8c1ae330f8
+fail,row_unmatched_db,VC106,,investor=Rajiv KAPOOR commitment=49989.0 shares=2631.0 date=2021-02-15 sub_id=28d58594-1451-4f06-90ad-de41a9e8eaac
+fail,row_unmatched_db,VC106,,investor=Rasika KULKARNI commitment=24985.0 shares=1315.0 date=2021-02-16 sub_id=54a1e954-b373-434c-9525-9da4feb16f0c
+fail,row_unmatched_db,VC106,,investor=Lesli SCHUTTE commitment=50000.0 shares=2125.0 date=2021-03-03 sub_id=871f02ed-b66d-4717-bcef-898ba088b599
+fail,row_unmatched_db,VC106,,investor=Lubna QUNASH commitment=100000.0 shares=4251.0 date=2021-06-02 sub_id=1cd65fca-826b-43ef-85e0-efa4fe819b1c
+fail,row_unmatched_db,VC106,,investor=Nilakantan MAHESWARI & Subbiah SUBRAMANIAN commitment=155000.0 shares=6733.0 date=2021-02-12 sub_id=58ab5fe1-0022-443c-843f-61fca7110e12
+fail,row_unmatched_db,VC106,,investor=Steve MANNING commitment=50000.0 shares=2125.0 date=2021-06-07 sub_id=c5086865-9c60-4d55-ac4b-205644cbc787
+fail,row_unmatched_db,VC106,,investor=Manraj SEKHON commitment=400000.0 shares=17006.0 date=2021-03-24 sub_id=9e78a743-3d0a-4b77-a1bc-ed054d345272
+fail,row_unmatched_db,VC106,,investor=Matteo MARTINI commitment=100000.0 shares=5025.0 date=2021-01-20 sub_id=b08d9c78-a53a-414c-bada-03229c121169
+fail,row_unmatched_db,VC106,,investor=Talal PASHA commitment=7236.0 shares=452.0 date=2021-05-21 sub_id=0d2e595e-e74e-4992-9472-dcb0c8c9ebc3
+fail,row_unmatched_db,VC106,,investor=Vijaykumar PATEL commitment=750000.0 shares=31887.0 date=2021-05-21 sub_id=fffcb0d5-c719-4439-94ad-6e8767a28c30
+fail,row_unmatched_db,VC106,,investor=Rajesh SUD commitment=49989.0 shares=2631.0 date=2021-02-16 sub_id=a4ca7357-ceeb-422d-9ff5-c17cb474819c
+fail,row_unmatched_db,VC106,,investor=Tapan SHAH commitment=24978.24 shares=1062.0 date=2021-03-05 sub_id=82125323-a138-4014-af99-ec513c208510
+fail,row_unmatched_db,VC111,,investor=Johann AKERMANN commitment=100000.0 shares=100000.0 date=2021-03-25 sub_id=1dab1ec6-554b-46fd-9888-132c269da20b
+fail,row_unmatched_db,VC111,,investor=Alberto RAVANO commitment=100000.0 shares=100000.0 date=2021-11-04 sub_id=186d2159-0653-4c3b-8728-0717d88a9a7a
+fail,row_unmatched_db,VC111,,investor=Antonio PERONACE commitment=70000.0 shares=70000.0 date=2021-12-05 sub_id=0d8fd4f0-f048-4306-b0fd-cbc2c4ba35fb
+fail,row_unmatched_db,VC111,,investor=Daniel BAUMSLAG commitment=50000.0 shares=50000.0 date=2021-11-04 sub_id=19d2133a-8593-44f6-b8c4-d1b67d7e3c80
+fail,row_unmatched_db,VC111,,investor=Daniel BAUMSLAG commitment=150000.0 shares=150000.0 date=2021-12-05 sub_id=ed92ac9c-f0f0-49d0-8f0b-0792ba1db0e7
+fail,row_unmatched_db,VC111,,investor=OEP LIMITED commitment=50000.0 shares=50000.0 date=2021-03-23 sub_id=a69bf46b-90e2-420f-9ec1-c2a7e6ea339c
+fail,row_unmatched_db,VC112,,investor=Giovanni ALBERTINI commitment=50000.0 shares=4093.0 date=2022-10-28 sub_id=a3ac1c10-012e-43da-92d6-3266e03ab8f4
+fail,row_unmatched_db,VC112,,investor=Liudmila ROMANOVA and Alexey ROMANOV commitment=500000.0 shares=40931.0 date=2022-08-25 sub_id=f453a4f6-ffdf-4363-8f40-cb16fc31a630
+fail,row_unmatched_db,VC112,,investor=Daniel BAUMSLAG commitment=25000.0 shares=16370.0 date=None sub_id=df3ac382-be56-4267-ae06-7af7042b9fc9
+fail,row_unmatched_db,VC112,,investor=Daniel BAUMSLAG commitment=25000.0 shares=50352.0 date=2021-05-13 sub_id=e3db6bd2-0562-473e-8a39-99235e676d33
+fail,row_unmatched_db,VC112,,investor=Robert DETTMEIJER commitment=20000.0 shares=13096.0 date=2021-10-19 sub_id=162089a4-0b2d-4f58-8b18-0fdc32c9701c
+fail,row_unmatched_db,VC112,,investor=Julien MACHOT commitment=2.2 shares=21972.0 date=None sub_id=f61a1150-1c72-4d28-beba-6ef065bf1814
+fail,row_unmatched_db,VC112,,investor=Julien MACHOT commitment=50000.0 shares=32741.0 date=2021-10-16 sub_id=277022db-880b-4eae-b005-458d98fe4e1f
+fail,row_unmatched_db,VC112,,investor=Julien MACHOT commitment=50000.0 shares=100704.0 date=2021-10-16 sub_id=a3a74599-3919-47b8-90bb-3c74cc9a3a68
+fail,row_unmatched_db,VC113,,investor=Abhie SHAH commitment=100000.0 shares=3389.0 date=2022-03-17 sub_id=fbb833f6-d07e-42fa-939b-036936f6f362
+fail,row_unmatched_db,VC113,,investor=Gielke BURGMANS commitment=100000.0 shares=3726.0 date=2021-08-24 sub_id=48ec1752-e7c2-4a81-bac1-a3fd174410ec
+fail,row_unmatched_db,VC113,,investor=Robert DETTMEIJER commitment=25000.0 shares=3653.0 date=2021-11-17 sub_id=c24a6861-6e3e-4b7f-8bfc-a3470b7a86fb
+fail,row_unmatched_db,VC113,,investor=Hong NGOC LE commitment=10000.0 shares=372.0 date=2021-06-09 sub_id=c75af4c1-52ae-4d56-a94d-64091f6cc022
+fail,row_unmatched_db,VC113,,investor=Mayuriben JOGANI commitment=100000.0 shares=3726.0 date=2021-09-07 sub_id=1b1c39af-8403-4040-9cbf-e3fd6146902d
+fail,row_unmatched_db,VC113,,investor=Julien MACHOT commitment=100000.0 shares=14615.0 date=2021-11-17 sub_id=e45cf8fd-996b-42a9-9942-ef8522f0959d
+fail,row_unmatched_db,VC113,,investor=Scott TOMMEY commitment=150000.0 shares=3750.0 date=2021-07-06 sub_id=7977046b-cf27-438f-a1e6-7b7ca9a7a781
+fail,row_unmatched_db,VC114,,investor=Manraj SEKHON commitment=200000.0 shares=200000.0 date=2021-08-23 sub_id=b426a4cb-d56a-42e6-a757-2bd5afa1e21b
+fail,row_unmatched_db,VC122,,investor=AS ADVISORY DWC LLC commitment=100000.0 shares=0.0 date=None sub_id=b3eb0c64-ee39-4f15-a0c5-3f67d19c30df
+fail,row_unmatched_db,VC122,,investor=Sheikh Yousef AL SABAH commitment=50000.0 shares=0.0 date=None sub_id=948fc893-8c88-46d7-adf8-97f6afc9f338
+fail,row_unmatched_db,VC122,,investor=Anand SETHA commitment=25000.0 shares=39978.0 date=2023-10-01 sub_id=eb82dd2c-6ef3-4910-a186-f21ff2628ea2
+fail,row_unmatched_db,VC122,,investor=Anke RICE commitment=60000.0 shares=95949.0 date=2022-11-24 sub_id=32cbe26f-4e2e-4dab-bb6f-82ad06d3549b
+fail,row_unmatched_db,VC122,,investor=VERSO CAPITAL ESTABLISHMENT commitment=25000.0 shares=0.0 date=None sub_id=3ae974dc-1b2b-459a-b23f-768600e942c8
+fail,row_unmatched_db,VC122,,investor=Deyan D MIHOV commitment=75000.0 shares=0.0 date=None sub_id=1b6470b3-8901-4643-af73-b60fdd1809fe
+fail,row_unmatched_db,VC122,,investor=LF GROUP SARL commitment=75000.0 shares=0.0 date=None sub_id=d6d99baf-978c-4953-997c-25356b4c782d
+fail,row_unmatched_db,VC124,,investor=Daniel BAUMSLAG commitment=9971.2 shares=822.0 date=2022-01-24 sub_id=c50e6832-115a-4619-8836-5535b3da32c1
+fail,row_unmatched_db,VC124,,investor=Julien MACHOT commitment=2500.0 shares=86430.0 date=2023-10-10 sub_id=a7ed79de-5f21-495c-aa26-f608f6058a93
+fail,row_unmatched_db,VC124,,investor=Julien MACHOT commitment=8352.5 shares=288716.0 date=2023-02-10 sub_id=1bd785f5-63ee-4ddb-aad5-c118cb2c4a29
+fail,row_unmatched_db,VC124,,investor=Julien MACHOT commitment=50000.0 shares=4125.0 date=2021-12-29 sub_id=d72d5202-03a9-4539-bedf-2a59a6c33f71
+fail,row_unmatched_db,VC125,,investor=Daniel BAUMSLAG commitment=25000.0 shares=141.0 date=2022-02-23 sub_id=a6b6962c-5603-4981-be4d-d7da1965d6f9
+fail,row_unmatched_db,VC125,,investor=Julien MACHOT commitment=100000.0 shares=564.0 date=2021-12-28 sub_id=000ab8e0-bbf5-4fbc-8019-41e372cbf996
+fail,row_numeric_mismatch,VC106,VC6:195,investor=Banco BTG Pactual S.A. Client 12279 metric=perf1_percent dashboard=0.2 db=20.0 delta=19.8 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:196,investor=Banco BTG Pactual S.A. Client 34658 metric=perf1_percent dashboard=0.2 db=20.0 delta=19.8 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:197,investor=Banco BTG Pactual S.A. Client 34924 metric=perf1_percent dashboard=0.2 db=20.0 delta=19.8 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:198,investor=Banco BTG Pactual S.A. Client 36003 metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:199,investor=Banco BTG Pactual S.A. Client 36749 metric=perf1_percent dashboard=0.2 db=20.0 delta=19.8 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:200,investor=Banco BTG Pactual S.A. Client 36957 metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:42,investor=TRUE INVESTMENTS 4 LLC metric=bd_fee_percent dashboard=0.02 db=0.0 delta=-0.02 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:211,investor=Banco BTG Pactual S.A. Client 515 metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:201,investor=Banco BTG Pactual S.A. Client 80738 metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:202,investor=Banco BTG Pactual S.A. Client 80772 metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:203,investor=Banco BTG Pactual S.A. Client 80775 metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:204,investor=Banco BTG Pactual S.A. Client 80776 metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:205,investor=Banco BTG Pactual S.A. Client 80840 metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:206,investor=Banco BTG Pactual S.A. Client 80862 metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:207,investor=Banco BTG Pactual S.A. Client 80873 metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:208,investor=Banco BTG Pactual S.A. Client 80890 metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:209,investor=Banco BTG Pactual S.A. Client 80910 metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:210,investor=Banco BTG Pactual S.A. Client 81022 metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:69,investor=John ACKERLEY metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:29,investor=Adam Smith Singapore Pte Ltd metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:137,investor=Phaena Advisory Ltd metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:13,investor=Rajiv AGARWALA metric=bd_fee_percent dashboard=0.1 db=10.0 delta=9.9 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:129,investor=Bank SYZ AG metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:131,investor=Bank SYZ AG metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:126,investor=Bank SYZ AG metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:127,investor=Bank SYZ AG metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:125,investor=Bank SYZ AG metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:128,investor=Bank SYZ AG metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:130,investor=Bank SYZ AG metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:124,investor=Bank SYZ AG metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:18,investor=DALINGA HOLDING AG metric=perf1_percent dashboard=0.1 db=10.0 delta=9.9 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:22,investor=MA GROUP AG metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:112,investor=Mrs Nalini Yoga & Mr Aran James WILLETTS metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:173,investor=SWISS TRUSTEES OF GENEVA SA as Trustees of the LUTEPIN TRUST metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:103,investor=Ashish KOTHARI metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:166,investor=Nicki ASQUITH metric=perf1_percent dashboard=0.0 db=20.0 delta=20.0 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:101,investor=David BACHELIER metric=perf1_percent dashboard=0.0 db=20.0 delta=20.0 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:189,investor=Kamyar BADII metric=bd_fee_percent dashboard=0.03 db=0.0 delta=-0.03 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:193,investor=Juan TONELLI BANFI metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:38,investor=Heinz & Barbara WINZ metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:185,investor=Charles DE BAVIER metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:34,investor=Mrs and Mr Beatrice & Marcel KNOPF metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:116,investor=Ivan BELGA metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:5,investor=Blaine ROLLINS metric=bd_fee_percent dashboard=0.1 db=10.0 delta=9.9 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:4,investor=Blaine ROLLINS metric=bd_fee_percent dashboard=0.1 db=10.0 delta=9.9 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:66,investor=Emile VAN DEN BOL metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:148,investor=Brahma Finance (BVI) Ltd metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:133,investor=Bright Phoenix Holdings Limited metric=perf1_percent dashboard=0.2 db=20.0 delta=19.8 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:72,investor=Gregory BROOKS metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:41,investor=Craig BROWN metric=bd_fee_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:41,investor=Craig BROWN metric=finra_shares dashboard=2.0 db=0.0 delta=-2.0 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:163,investor=Sandra KOHLER CABIAN metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:162,investor=REVERY CAPITAL Limited metric=perf1_percent dashboard=0.0 db=20.0 delta=20.0 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:140,investor=POTASSIUM Capital metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:78,investor=Sudon Carlop Holdings Limited metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:167,investor=Isabella CHANDRIS metric=perf1_percent dashboard=0.0 db=20.0 delta=20.0 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:7,investor=Laurence CHANG metric=bd_fee_percent dashboard=0.1 db=10.0 delta=9.9 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:6,investor=Laurence CHANG metric=bd_fee_percent dashboard=0.1 db=10.0 delta=9.9 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:110,investor=CINCORIA LIMITED metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:90,investor=CLOUDSAFE HOLDINGS LTD metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:108,investor=Constantin-Octavian PATRASCU metric=perf1_percent dashboard=0.2 db=20.0 delta=19.8 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:62,investor=Patrick CORR metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:174,investor=Laurent CUDRE-MAUROUX metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:187,investor=Jeremie CYROT metric=perf1_percent dashboard=0.2 db=20.0 delta=19.8 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:74,investor=Stephane DAHAN metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:132,investor=Damien KRAUSER metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:159,investor=Damien KRAUSER metric=perf1_percent dashboard=0.1 db=20.0 delta=19.9 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:26,investor=Dario SCIMONE metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:91,investor=David HOLDEN metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:172,investor=Denis MATTHEY metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:75,investor=Jean DUTIL metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:215,investor=Luiz Eduardo FONTES WILLIAMS metric=cost_per_share dashboard=0.0 db=17.18269 delta=17.18269 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:28,investor=Elidon Estate Inc metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:113,investor=Emma Graham-Taylor & Gregory SOMMERVILLE metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:83,investor=Erich GRAF metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:158,investor=Eric SARASIN metric=cost_per_share dashboard=0.0 db=16.0 delta=16.0 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:158,investor=Eric SARASIN metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:104,investor=Fabien ROTH metric=perf1_percent dashboard=0.2 db=20.0 delta=19.8 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:64,investor=FigTree Family Office Ltd metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:105,investor=Fawad MUKHTAR metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:84,investor=TERRA Financial & Management Services SA metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:161,investor=Scott FLETCHER metric=cost_per_share dashboard=0.0 db=20.0 delta=20.0 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:183,investor=Scott FLETCHER metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:142,investor=Kevin FOSTER WILTSHIRE metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:171,investor=Frederic SAMAMA metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:177,investor=Raphael GHESQUIERES metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:214,investor=Samuel GRANDCHAMP metric=cost_per_share dashboard=0.0 db=17.0 delta=17.0 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:214,investor=Samuel GRANDCHAMP metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:143,investor=GTV Partners SA metric=perf1_percent dashboard=0.15 db=0.0 delta=-0.15 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:178,investor=Guillaume SAMAMA metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:119,investor=Imran HAKIM metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:68,investor=Matthew HAYCOX metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:111,investor=Hayden RUSHTON metric=perf1_percent dashboard=0.2 db=20.0 delta=19.8 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:169,investor=Herve STEIMES metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:43,investor=ROSEN INVEST HOLDINGS Inc metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:212,investor=RLABS HOLDINGS LTD metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:180,investor=MARSAULT INTERNATIONAL LTD metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:147,investor=TERSANE INTERNATIONAL LTD metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:23,investor=KRANA INVESTMENTS PTE. LTD. metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:118,investor=Karthic JAYARAMAN metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:63,investor=Stephen JORDAN metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:220,investor=Julien MACHOT metric=cost_per_share dashboard=0.0 db=19.5 delta=19.5 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:218,investor=Julien MACHOT metric=cost_per_share dashboard=0.0 db=11.2 delta=11.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:217,investor=Julien MACHOT metric=cost_per_share dashboard=0.0 db=11.2 delta=11.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:170,investor=Julien SERRA metric=perf1_percent dashboard=0.2 db=20.0 delta=19.8 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:106,investor=KABELLA LTD metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:120,investor=Kenilworth Ltd metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:115,investor=Kim LUND metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:144,investor=LENN Participations SARL metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:60,investor=ONC Limited metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:145,investor=WEALTH TRAIN LIMITED metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:107,investor=SOUTH SOUND LTD metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:67,investor=Mark MATTHEWS metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:65,investor=Oliver WRIGHT metric=perf1_percent dashboard=0.2 db=20.0 delta=19.8 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:176,investor=Rosario RIENZO metric=perf1_percent dashboard=0.2 db=0.0 delta=-0.2 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:39,investor=Sabrina WINZ metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:190,investor=Shaham SOLOUKI metric=bd_fee_percent dashboard=0.03 db=0.0 delta=-0.03 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:35,investor=VOLF Trust metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 mode=exact_date
+fail,row_contract_date_mismatch,VC111,VC11:31,investor=BenSkyla AG dashboard=2021-07-27 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:7,investor=DALINGA HOLDING AG dashboard=2021-03-30 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:30,investor=Beatrice and Marcel KNOPF dashboard=2021-09-27 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:27,investor=BRAHMA FINANCE dashboard=2021-12-05 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:24,investor=Bright Phoenix Holdings LTD dashboard=2021-04-30 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:14,investor=Bruce HAWKINS dashboard=2021-03-29 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:16,investor=James BURCH dashboard=2021-11-04 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:18,investor=Sandra KOHLER CABIAN dashboard=2021-03-30 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:13,investor=Stephane DAHAN dashboard=2021-03-30 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:10,investor=David HOLDEN dashboard=2021-08-04 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:29,investor=Denis MATTHEY dashboard=2021-09-07 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:20,investor=Erich GRAF dashboard=2021-04-04 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:22,investor=FINALMA SUISSE SA dashboard=2021-11-04 db=None mode=relaxed
+fail,row_numeric_mismatch,VC111,VC11:22,investor=FINALMA SUISSE SA metric=sub_fee_percent dashboard=0.04 db=0.0 delta=-0.04 mode=relaxed
+fail,row_numeric_mismatch,VC111,VC11:22,investor=FINALMA SUISSE SA metric=sub_fee dashboard=2000.0 db=0.0 delta=-2000.0 mode=relaxed
+fail,row_numeric_mismatch,VC111,VC11:22,investor=FINALMA SUISSE SA metric=perf1_percent dashboard=0.2 db=0.1 delta=-0.1 mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:33,investor=Wymo Finance Limited dashboard=2021-02-11 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:38,investor=TERRA Financial & Management Services SA dashboard=2021-10-15 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:11,investor=TERRA Financial & Management Services SA dashboard=2021-03-30 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:28,investor=GTV Partners SA dashboard=2021-08-07 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:36,investor=Vladimir GUSEV dashboard=2021-10-14 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:35,investor=Vladimir GUSEV dashboard=2021-09-30 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:34,investor=HASSBRO Investments Limited dashboard=2021-02-11 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:32,investor=Peter HOGLAND dashboard=2021-09-28 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:5,investor=ROSEN INVEST HOLDINGS INC dashboard=2021-03-25 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:39,investor=LPP Investment Holdings Ltd dashboard=2024-11-21 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:6,investor=STRUCTURED ISSUANCE Ltd dashboard=2021-03-31 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:3,investor=Julien MACHOT dashboard=2021-12-05 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:26,investor=Julien MACHOT dashboard=2021-05-25 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:23,investor=MONFIN LTD dashboard=2021-04-26 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:17,investor=Mark MATTHEWS dashboard=2021-03-30 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:8,investor=Tartrifuge SA dashboard=2021-03-30 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC111,VC11:15,investor=VOLF Trust dashboard=2021-03-30 db=None mode=relaxed
+fail,row_contract_date_mismatch,VC113,VC13:46,investor=Tuygan GOKER dashboard=ISIN db=None mode=relaxed
+fail,row_numeric_mismatch,VC113,VC13:53,investor=Julien MACHOT metric=perf1_percent dashboard=0.0 db=0.1 delta=0.1 mode=exact_date
+fail,row_contract_date_mismatch,VC113,VC13:31,investor=SAFE dashboard=ISIN db=None mode=relaxed
+fail,row_numeric_mismatch,VC122,VC22:11,investor=Erich GRAF metric=price_per_share dashboard=0.62533 db=0.0 delta=-0.62533 mode=exact_date
+fail,row_numeric_mismatch,VC122,VC22:3,investor=Julien MACHOT metric=price_per_share dashboard=1.0 db=0.40076 delta=-0.59924 mode=exact_date
+fail,row_numeric_mismatch,VC126,VC26:25,investor=Amanda RYZOWY metric=bd_fee dashboard=625.0 db=0.025 delta=-624.975 mode=exact_date
+fail,row_numeric_mismatch,VC126,VC26:20,investor=Garson Brandon LEVY metric=bd_fee dashboard=625.0 db=0.025 delta=-624.975 mode=exact_date
+fail,position_vs_dashboard_ownership_by_investor,VC102,,investor_key=chenghsukristinalinsutkaityte dashboard=0.0 db=50000.0 delta=50000.0
+fail,position_vs_dashboard_ownership_by_investor,VC102,,investor_key=grouplfsarl dashboard=0.0 db=50000.0 delta=50000.0
+fail,position_vs_dashboard_ownership_by_investor,VC102,,investor_key=julienmachot dashboard=0.0 db=29000.0 delta=29000.0
+fail,position_vs_dashboard_ownership_by_investor,VC102,,investor_key=paumierpierre dashboard=0.0 db=25000.0 delta=25000.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=aaronrikhye dashboard=0.0 db=4252.0 delta=4252.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=aatifhassan dashboard=0.0 db=4251.0 delta=4251.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=aatifhassann dashboard=4251.0 db=0.0 delta=-4251.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=abbasiabdulazizalmohammed dashboard=12700.0 db=0.0 delta=-12700.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=abbasialmohammed dashboard=0.0 db=12700.0 delta=12700.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=adilarshedkhawaja dashboard=10629.0 db=0.0 delta=-10629.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=adilkhawaja dashboard=0.0 db=10629.0 delta=10629.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=ahartshornjame dashboard=4251.0 db=0.0 delta=-4251.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=akermannjohann dashboard=0.0 db=10000.0 delta=10000.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=akermannjohannmarku dashboard=10000.0 db=0.0 delta=-10000.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=alsabahsheikh dashboard=0.0 db=2631.0 delta=2631.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=alsabahsheikhyousef dashboard=2631.0 db=0.0 delta=-2631.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=alubnaqunash dashboard=4251.0 db=0.0 delta=-4251.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=anishabansalkarkunrahul dashboard=0.0 db=2272.0 delta=2272.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=ankerice dashboard=0.0 db=3863.0 delta=3863.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=ankericeskoludek dashboard=3863.0 db=0.0 delta=-3863.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=annleslischutte dashboard=2125.0 db=0.0 delta=-2125.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=atimaharalalka dashboard=0.0 db=2631.0 delta=2631.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=barnabyjohnmoore dashboard=6550.0 db=0.0 delta=-6550.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=barnabymoore dashboard=0.0 db=6550.0 delta=6550.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=bernarddufaure dashboard=0.0 db=4251.0 delta=4251.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=bernarddufaurehenri dashboard=4251.0 db=0.0 delta=-4251.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=bharatjatania dashboard=0.0 db=4251.0 delta=4251.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=bharatjataniakumar dashboard=4251.0 db=0.0 delta=-4251.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=bhikhuckpatel dashboard=10629.0 db=0.0 delta=-10629.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=bhikhupatel dashboard=0.0 db=10629.0 delta=10629.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=binismailmohamadmohamed dashboard=10526.0 db=0.0 delta=-10526.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=binmohamadmohamed dashboard=0.0 db=10526.0 delta=10526.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=cabiankohlersandra dashboard=4637.0 db=2125.0 delta=-2512.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=cabiansandra dashboard=0.0 db=2512.0 delta=2512.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=chamsipashatalal dashboard=452.0 db=0.0 delta=-452.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=chandradaphne dashboard=0.0 db=1756.0 delta=1756.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=chandradaphnemarie dashboard=1756.0 db=0.0 delta=-1756.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=changngan dashboard=0.0 db=5600.0 delta=5600.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=changnganyong dashboard=5600.0 db=0.0 delta=-5600.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=chetanjoganikumarmayuriben dashboard=4251.0 db=0.0 delta=-4251.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=ckpatelvijaykumar dashboard=31887.0 db=0.0 delta=-31887.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=cytrongeorge dashboard=0.0 db=4251.0 delta=4251.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=cytrongeorgesylvain dashboard=4251.0 db=0.0 delta=-4251.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=darylpakyongjie dashboard=9167.0 db=0.0 delta=-9167.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=darylyongjie dashboard=0.0 db=9167.0 delta=9167.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=dattekta dashboard=0.0 db=1315.0 delta=1315.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=davidjeanrossier dashboard=8503.0 db=0.0 delta=-8503.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=davidrossier dashboard=0.0 db=8503.0 delta=8503.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=ericlepascalseigneur dashboard=8502.0 db=0.0 delta=-8502.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=ericleseigneur dashboard=0.0 db=8502.0 delta=8502.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=ganeriwalanidhi dashboard=0.0 db=1842.0 delta=1842.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=geoksortan dashboard=4448.0 db=0.0 delta=-4448.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=geoktan dashboard=0.0 db=4448.0 delta=4448.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=groupleerand dashboard=12365.0 db=0.0 delta=-12365.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=guerinlouimichel dashboard=8503.0 db=0.0 delta=-8503.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=guerinmichel dashboard=0.0 db=8503.0 delta=8503.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=hakimihossienjavid dashboard=2125.0 db=0.0 delta=-2125.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=hakimijavidkianmohammad dashboard=1062.0 db=0.0 delta=-1062.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=harialakin dashboard=0.0 db=1062.0 delta=1062.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=hariasheetal dashboard=0.0 db=1062.0 delta=1062.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=hartshornjame dashboard=0.0 db=4251.0 delta=4251.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=hayatimran dashboard=0.0 db=10000.0 delta=10000.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=hayatimrat dashboard=10000.0 db=0.0 delta=-10000.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=hedgebayllcsecuritie dashboard=7438.0 db=0.0 delta=-7438.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=hosseinjavid dashboard=0.0 db=2125.0 delta=2125.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=hussainrazasalman dashboard=2125.0 db=0.0 delta=-2125.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=hussainsalman dashboard=0.0 db=2125.0 delta=2125.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=javidkian dashboard=0.0 db=1062.0 delta=1062.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=jmanningsteve dashboard=2125.0 db=0.0 delta=-2125.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=joganimayuriben dashboard=0.0 db=4251.0 delta=4251.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=julienmachot dashboard=100152.0 db=107510.0 delta=7358.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=kapoorrajiv dashboard=0.0 db=2631.0 delta=2631.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=karkun dashboard=2272.0 db=0.0 delta=-2272.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=kulkarnirasika dashboard=0.0 db=1315.0 delta=1315.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=leslischutte dashboard=0.0 db=2125.0 delta=2125.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=ltdoep dashboard=11905.0 db=0.0 delta=-11905.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=lubnaqunash dashboard=0.0 db=4251.0 delta=4251.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=maheswarinilakantansubbiahsubramanian dashboard=0.0 db=6733.0 delta=6733.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=manningsteve dashboard=0.0 db=2125.0 delta=2125.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=manrajsekhon dashboard=0.0 db=17006.0 delta=17006.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=manrajsekhonsingh dashboard=17006.0 db=0.0 delta=-17006.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=martinimassimomatteo dashboard=5025.0 db=0.0 delta=-5025.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=martinimatteo dashboard=0.0 db=5025.0 delta=5025.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=pashatalal dashboard=0.0 db=452.0 delta=452.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=patelvijaykumar dashboard=0.0 db=31887.0 delta=31887.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=rajeshsud dashboard=0.0 db=2631.0 delta=2631.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=shahtapan dashboard=0.0 db=1062.0 delta=1062.0
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=subbiahsubramanian dashboard=6733.0 db=0.0 delta=-6733.0
+fail,position_vs_dashboard_ownership_by_investor,VC111,,investor_key=advisoryasdwcfromlimitedllcoeptransfer dashboard=50000.0 db=0.0 delta=-50000.0
+fail,position_vs_dashboard_ownership_by_investor,VC111,,investor_key=akermannjohann dashboard=0.0 db=100000.0 delta=100000.0
+fail,position_vs_dashboard_ownership_by_investor,VC111,,investor_key=akermannjohannmarku dashboard=100000.0 db=0.0 delta=-100000.0
+fail,position_vs_dashboard_ownership_by_investor,VC111,,investor_key=albertoattilioravano dashboard=100000.0 db=0.0 delta=-100000.0
+fail,position_vs_dashboard_ownership_by_investor,VC111,,investor_key=albertoravano dashboard=0.0 db=100000.0 delta=100000.0
+fail,position_vs_dashboard_ownership_by_investor,VC111,,investor_key=antoniobrunoperonace dashboard=70000.0 db=0.0 delta=-70000.0
+fail,position_vs_dashboard_ownership_by_investor,VC111,,investor_key=antonioperonace dashboard=0.0 db=70000.0 delta=70000.0
+fail,position_vs_dashboard_ownership_by_investor,VC111,,investor_key=baumslagdan dashboard=150000.0 db=0.0 delta=-150000.0
+fail,position_vs_dashboard_ownership_by_investor,VC111,,investor_key=baumslagdandutiljean dashboard=50000.0 db=0.0 delta=-50000.0
+fail,position_vs_dashboard_ownership_by_investor,VC111,,investor_key=baumslagdaniel dashboard=0.0 db=200000.0 delta=200000.0
+fail,position_vs_dashboard_ownership_by_investor,VC111,,investor_key=financelimitedwymo dashboard=500000.0 db=250000.0 delta=-250000.0
+fail,position_vs_dashboard_ownership_by_investor,VC111,,investor_key=fincolimitedzandera dashboard=100000.0 db=0.0 delta=-100000.0
+fail,position_vs_dashboard_ownership_by_investor,VC111,,investor_key=hassbroinvestmentlimited dashboard=500000.0 db=250000.0 delta=-250000.0
+fail,position_vs_dashboard_ownership_by_investor,VC111,,investor_key=julienmachot dashboard=910000.0 db=410000.0 delta=-500000.0
+fail,position_vs_dashboard_ownership_by_investor,VC111,,investor_key=limitedoep dashboard=0.0 db=50000.0 delta=50000.0
+fail,position_vs_dashboard_ownership_by_investor,VC112,,investor_key=albertinialbertoantoniogiovanni dashboard=4093.0 db=0.0 delta=-4093.0
+fail,position_vs_dashboard_ownership_by_investor,VC112,,investor_key=albertinigiovanni dashboard=0.0 db=4093.0 delta=4093.0
+fail,position_vs_dashboard_ownership_by_investor,VC112,,investor_key=alexeyliudmilaromanov dashboard=40931.0 db=0.0 delta=-40931.0
+fail,position_vs_dashboard_ownership_by_investor,VC112,,investor_key=alexeyliudmilaromanovromanova dashboard=0.0 db=40931.0 delta=40931.0
+fail,position_vs_dashboard_ownership_by_investor,VC112,,investor_key=baumslagdan dashboard=66722.0 db=0.0 delta=-66722.0
+fail,position_vs_dashboard_ownership_by_investor,VC112,,investor_key=baumslagdaniel dashboard=0.0 db=66722.0 delta=66722.0
+fail,position_vs_dashboard_ownership_by_investor,VC112,,investor_key=dettmeijerjanrobert dashboard=13096.0 db=0.0 delta=-13096.0
+fail,position_vs_dashboard_ownership_by_investor,VC112,,investor_key=dettmeijerrobert dashboard=0.0 db=13096.0 delta=13096.0
+fail,position_vs_dashboard_ownership_by_investor,VC112,,investor_key=julienmachot dashboard=1166621.0 db=1322038.0 delta=155417.0
+fail,position_vs_dashboard_ownership_by_investor,VC112,,investor_key=ltdoep dashboard=155417.0 db=0.0 delta=-155417.0
+fail,position_vs_dashboard_ownership_by_investor,VC113,,investor_key=abhieshah dashboard=0.0 db=3389.0 delta=3389.0
+fail,position_vs_dashboard_ownership_by_investor,VC113,,investor_key=abhieshahshreya dashboard=3389.0 db=0.0 delta=-3389.0
+fail,position_vs_dashboard_ownership_by_investor,VC113,,investor_key=baohonglengoc dashboard=372.0 db=0.0 delta=-372.0
+fail,position_vs_dashboard_ownership_by_investor,VC113,,investor_key=burgmangielke dashboard=0.0 db=3726.0 delta=3726.0
+fail,position_vs_dashboard_ownership_by_investor,VC113,,investor_key=burgmangielkejan dashboard=3726.0 db=0.0 delta=-3726.0
+fail,position_vs_dashboard_ownership_by_investor,VC113,,investor_key=chetanjoganikmayuriben dashboard=3726.0 db=0.0 delta=-3726.0
+fail,position_vs_dashboard_ownership_by_investor,VC113,,investor_key=dettmeijerjanrobert dashboard=3653.0 db=0.0 delta=-3653.0
+fail,position_vs_dashboard_ownership_by_investor,VC113,,investor_key=dettmeijerrobert dashboard=0.0 db=3653.0 delta=3653.0
+fail,position_vs_dashboard_ownership_by_investor,VC113,,investor_key=honglengoc dashboard=0.0 db=372.0 delta=372.0
+fail,position_vs_dashboard_ownership_by_investor,VC113,,investor_key=ikottscotttommey dashboard=3750.0 db=0.0 delta=-3750.0
+fail,position_vs_dashboard_ownership_by_investor,VC113,,investor_key=joganimayuriben dashboard=0.0 db=3726.0 delta=3726.0
+fail,position_vs_dashboard_ownership_by_investor,VC113,,investor_key=julienmachot dashboard=283952.0 db=298567.0 delta=14615.0
+fail,position_vs_dashboard_ownership_by_investor,VC113,,investor_key=ltdoep dashboard=14615.0 db=0.0 delta=-14615.0
+fail,position_vs_dashboard_ownership_by_investor,VC113,,investor_key=scotttommey dashboard=0.0 db=3750.0 delta=3750.0
+fail,position_vs_dashboard_ownership_by_investor,VC114,,investor_key=julienmachot dashboard=530000.0 db=200000.0 delta=-330000.0
+fail,position_vs_dashboard_ownership_by_investor,VC114,,investor_key=manrajsekhon dashboard=0.0 db=200000.0 delta=200000.0
+fail,position_vs_dashboard_ownership_by_investor,VC114,,investor_key=manrajsekhonsingh dashboard=200000.0 db=0.0 delta=-200000.0
+fail,position_vs_dashboard_ownership_by_investor,VC122,,investor_key=8compartmentinnovatech dashboard=39978.0 db=0.0 delta=-39978.0
+fail,position_vs_dashboard_ownership_by_investor,VC122,,investor_key=anandsetha dashboard=0.0 db=39978.0 delta=39978.0
+fail,position_vs_dashboard_ownership_by_investor,VC122,,investor_key=ankerice dashboard=0.0 db=95949.0 delta=95949.0
+fail,position_vs_dashboard_ownership_by_investor,VC122,,investor_key=ankericeskoludek dashboard=95949.0 db=0.0 delta=-95949.0
+fail,position_vs_dashboard_ownership_by_investor,VC124,,investor_key=baumslagdan dashboard=822.0 db=0.0 delta=-822.0
+fail,position_vs_dashboard_ownership_by_investor,VC124,,investor_key=baumslagdaniel dashboard=0.0 db=822.0 delta=822.0
+fail,position_vs_dashboard_ownership_by_investor,VC124,,investor_key=julienmachot dashboard=288716.0 db=379271.0 delta=90555.0
+fail,position_vs_dashboard_ownership_by_investor,VC124,,investor_key=ltdoep dashboard=90555.0 db=0.0 delta=-90555.0
+fail,position_vs_dashboard_ownership_by_investor,VC125,,investor_key=baumslagdan dashboard=141.0 db=0.0 delta=-141.0
+fail,position_vs_dashboard_ownership_by_investor,VC125,,investor_key=baumslagdaniel dashboard=0.0 db=141.0 delta=141.0
+fail,position_vs_dashboard_ownership_by_investor,VC125,,investor_key=julienmachot dashboard=2102.0 db=2666.0 delta=564.0
+fail,position_vs_dashboard_ownership_by_investor,VC125,,investor_key=ltdoep dashboard=564.0 db=0.0 delta=-564.0
+fail,zero_ownership_loaded,VC122,,"zero_key=('VC122', 'advisoryasdwcllc', 100000.0, 0.0, '2022-10-28') dashboard_zero=1 db_exact=0 db_relaxed=1"
+fail,zero_ownership_loaded,VC122,,"zero_key=('VC122', 'ddeyanmihov', 75000.0, 0.0, '2022-10-28') dashboard_zero=1 db_exact=0 db_relaxed=1"
+fail,zero_ownership_loaded,VC122,,"zero_key=('VC122', 'alsabahsheikhyousef', 50000.0, 0.0, '2022-01-11') dashboard_zero=1 db_exact=0 db_relaxed=1"
+fail,zero_ownership_loaded,VC122,,"zero_key=('VC122', 'capitalestablishmentverso', 25000.0, 0.0, '2022-03-11') dashboard_zero=1 db_exact=0 db_relaxed=1"
+fail,zero_ownership_loaded,VC122,,"zero_key=('VC122', 'grouplfsarl', 75000.0, 0.0, '2024-01-27') dashboard_zero=1 db_exact=0 db_relaxed=1"
+fail,position_vs_dashboard_ownership,VC102,,positions=154000.0 dashboard=0.0
+fail,position_vs_dashboard_ownership,VC106,,positions=1964970.0 dashboard=1969517.0
+fail,position_vs_dashboard_ownership,VC111,,positions=6750000.0 dashboard=7850000.0
+fail,position_vs_dashboard_ownership,VC114,,positions=530000.0 dashboard=860000.0
+fail,commission_duplicate_exact,VC106,,"count=2 key=('d5e08d13-ebdf-4d8c-a218-ee50e2117c6f', '07eff085-9f1d-4e02-b1e2-d717817503f1', 'e78f40f3-7e17-44cd-af46-a01a2f195f3e', '279d437e-2992-45b2-8075-2569e380a345', 'spread', None, 536, '100000.0', '5356.26')"
+fail,commission_duplicate_exact,VC106,,"count=2 key=('d5e08d13-ebdf-4d8c-a218-ee50e2117c6f', '07eff085-9f1d-4e02-b1e2-d717817503f1', '69075b7c-5dfd-4bd5-b8f7-e0757fe28d64', 'd3de9759-f6fa-4689-a1ba-f62c59a08f6a', 'spread', None, 0, '500000.0', '0.0')"
+fail,commission_duplicate_exact,VC113,,"count=2 key=('b661243f-e6b4-41f1-b239-de4b197a689a', '1e4061bd-6e36-4298-8e98-9fd55ab6a448', '53b54fb5-b965-4bcd-888a-8bfb98791ba5', '469d0eab-88fb-4675-83c8-c81885f05dfc', 'invested_amount', None, 200, 'None', '20000.0')"
+fail,commission_duplicate_exact,VC126,,"count=2 key=('b661243f-e6b4-41f1-b239-de4b197a689a', 'e2d649da-f1e9-49ca-b426-dd8ade244f12', '69075b7c-5dfd-4bd5-b8f7-e0757fe28d64', 'a7a47938-9243-4b31-a519-3b50ffa12167', 'performance_fee', None, 200, 'None', '0.0')"
+fail,commission_duplicate_exact,VC113,,"count=2 key=('1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d', '1e4061bd-6e36-4298-8e98-9fd55ab6a448', 'b65f05da-0ba0-42c3-ac7a-b5bc31084f53', 'cb6a77e9-e270-4364-a217-860bf603d38d', 'performance_fee', None, 200, 'None', '0.0')"
+fail,commission_duplicate_exact,VC106,,"count=2 key=('d5e08d13-ebdf-4d8c-a218-ee50e2117c6f', '07eff085-9f1d-4e02-b1e2-d717817503f1', 'e78f40f3-7e17-44cd-af46-a01a2f195f3e', '279d437e-2992-45b2-8075-2569e380a345', 'performance_fee', 1, 500, '100000.0', '0.0')"
+fail,commission_duplicate_exact,VC106,,"count=2 key=('d5e08d13-ebdf-4d8c-a218-ee50e2117c6f', '07eff085-9f1d-4e02-b1e2-d717817503f1', '69075b7c-5dfd-4bd5-b8f7-e0757fe28d64', 'd3de9759-f6fa-4689-a1ba-f62c59a08f6a', 'invested_amount', None, 0, '500000.0', '0.0')"
+fail,commission_duplicate_exact,VC113,,"count=2 key=('736a31b2-b8a6-4a0e-8abe-ed986014d0c4', '1e4061bd-6e36-4298-8e98-9fd55ab6a448', '20951004-4990-4398-8890-c2a538d55bfa', '43827c09-e37a-4cc0-9e3a-8ec84e82ac8e', 'performance_fee', None, 500, 'None', '0.0')"
+fail,commission_duplicate_exact,VC106,,"count=2 key=('98fdce26-5a61-486e-a450-8e13dd4cfbf4', '07eff085-9f1d-4e02-b1e2-d717817503f1', 'e78f40f3-7e17-44cd-af46-a01a2f195f3e', 'eba108bb-f651-4e80-94ea-4ca20fc6128d', 'spread', None, 0, '100000.0', '0.0')"
+fail,commission_duplicate_exact,VC106,,"count=2 key=('98fdce26-5a61-486e-a450-8e13dd4cfbf4', '07eff085-9f1d-4e02-b1e2-d717817503f1', 'e78f40f3-7e17-44cd-af46-a01a2f195f3e', 'eba108bb-f651-4e80-94ea-4ca20fc6128d', 'performance_fee', 1, 1000, '100000.0', '0.0')"
+fail,commission_duplicate_exact,VC126,,"count=2 key=('bcaaab40-eef5-4a3c-92d7-101f498489ac', 'e2d649da-f1e9-49ca-b426-dd8ade244f12', 'ea6fe379-59c1-4f21-b2aa-a64162bc65fe', '60b90208-fe5e-41ec-87fc-8cc08eb358c2', 'spread', None, 151, 'None', '15096.13')"
+fail,commission_totals_mismatch_invested_amount,VC102,,dashboard=0.0 db=1000.0 delta=1000.0
+fail,commission_totals_mismatch_invested_amount,VC106,,dashboard=0.0 db=508335.75 delta=508335.75
+fail,commission_totals_mismatch_spread,VC106,,dashboard=0.0 db=6326296.81 delta=6326296.81
+fail,commission_totals_mismatch_invested_amount,VC111,,dashboard=0.0 db=122825.0 delta=122825.0
+fail,commission_totals_mismatch_spread,VC111,,dashboard=0.0 db=401542.86 delta=401542.86
+fail,commission_totals_mismatch_invested_amount,VC112,,dashboard=0.0 db=26000.0 delta=26000.0
+fail,commission_totals_mismatch_invested_amount,VC113,,dashboard=0.0 db=193995.0 delta=193995.0
+fail,commission_totals_mismatch_spread,VC113,,dashboard=0.0 db=963887.62 delta=963887.62
+fail,commission_totals_mismatch_spread,VC114,,dashboard=0.4 db=0.0 delta=-0.4
+fail,commission_totals_mismatch_invested_amount,VC118,,dashboard=69225.75 db=30000.0 delta=-39225.75
+fail,commission_totals_mismatch_spread,VC118,,dashboard=0.0 db=69225.75 delta=69225.75
+fail,commission_totals_mismatch_invested_amount,VC122,,dashboard=0.0 db=1500.0 delta=1500.0
+fail,commission_totals_mismatch_spread,VC122,,dashboard=150000.0 db=0.0 delta=-150000.0
+fail,commission_totals_mismatch_invested_amount,VC125,,dashboard=0.0 db=5000.0 delta=5000.0
+fail,commission_totals_mismatch_invested_amount,VC126,,dashboard=557248.44776 db=16000.0 delta=-541248.44776
+fail,commission_totals_mismatch_spread,VC126,,dashboard=0.62 db=1203092.76 delta=1203092.14
+fail,commission_row_missing_in_dashboard,VC102,e74929ad-8173-4d88-a624-db2334f3c960,investor=LF GROUP SARL introducer=Pierre Paumier basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_dashboard,VC106,4b4ea3c4-4f8f-4812-83c0-31609aefc8dc,investor=Aaron RIKHYE introducer=VERSO BI basis=spread dashboard=0.0 db=8716.6
+fail,commission_row_missing_in_dashboard,VC106,b8a13467-2c95-4003-afe4-e375c0b9c140,investor=Aatif HASSAN introducer=VERSO BI basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_dashboard,VC106,f2820a43-fae4-46a6-9938-71f69a6c955f,investor=Aatif HASSAN introducer=VERSO BI basis=spread dashboard=0.0 db=1317.81
+fail,commission_row_missing_in_dashboard,VC106,6c84deaa-9472-43dc-ab96-07a0c3b733ce,investor=Aatif HASSAN introducer=VERSO PARTNER basis=spread dashboard=0.0 db=4697.36
+fail,commission_row_missing_in_db,VC106,VC6:141,investor=Aatif N. HASSAN introducer=VERSO BI basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:141,investor=Aatif N. HASSAN introducer=VERSO BI basis=spread dashboard=1317.81 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:141,investor=Aatif N. HASSAN introducer=VERSO PARTNER basis=spread dashboard=4697.35 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:61,investor=Mohammed Abdulaziz AL ABBASI introducer=VERSO BI basis=spread dashboard=31750.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,b3760456-9334-405f-9101-820085981f1b,investor=Mohammed AL ABBASI introducer=VERSO BI basis=spread dashboard=0.0 db=31750.0
+fail,commission_row_missing_in_db,VC106,VC6:121,investor=Adil Arshed KHAWAJA introducer=VERSO BI basis=invested_amount dashboard=2500.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:121,investor=Adil Arshed KHAWAJA introducer=VERSO PARTNER basis=invested_amount dashboard=1250.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:121,investor=Adil Arshed KHAWAJA introducer=VERSO PARTNER basis=spread dashboard=13392.54 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,8b8d9e58-5a8b-4dc1-b2bf-7a9deca6aca0,investor=Adil KHAWAJA introducer=VERSO BI basis=invested_amount dashboard=0.0 db=2500.0
+fail,commission_row_missing_in_dashboard,VC106,e564b947-67c3-44e2-969d-455a0ae965e7,investor=Adil KHAWAJA introducer=VERSO PARTNER basis=invested_amount dashboard=0.0 db=1250.0
+fail,commission_row_missing_in_dashboard,VC106,b98ff613-c691-4aae-a7ee-d92adcb33f26,investor=Adil KHAWAJA introducer=VERSO PARTNER basis=spread dashboard=0.0 db=13392.54
+fail,commission_row_missing_in_db,VC106,VC6:149,investor=James A. HARTSHORN introducer=VERSO PARTNER basis=spread dashboard=5356.26 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,7d707cd5-13c8-4be7-a935-ddfed8825541,investor=Johann AKERMANN introducer=VERSO BI basis=spread dashboard=0.0 db=15000.0
+fail,commission_row_missing_in_dashboard,VC106,df35a411-1705-4215-bfd8-5d2744d33c35,investor=Johann AKERMANN introducer=VERSO PARTNER basis=invested_amount dashboard=0.0 db=2252.0
+fail,commission_row_missing_in_dashboard,VC106,76b25e5f-a5c7-49a9-a737-c251c1a9b55a,investor=Johann AKERMANN introducer=VERSO PARTNER basis=spread dashboard=0.0 db=30000.0
+fail,commission_row_missing_in_db,VC106,VC6:24,investor=Johann Markus AKERMANN introducer=VERSO BI basis=spread dashboard=15000.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:24,investor=Johann Markus AKERMANN introducer=VERSO PARTNER basis=invested_amount dashboard=2252.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:24,investor=Johann Markus AKERMANN introducer=VERSO PARTNER basis=spread dashboard=30000.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:123,investor=Lubna M. A. QUNASH introducer=VERSO BI basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:123,investor=Lubna M. A. QUNASH introducer=VERSO PARTNER basis=invested_amount dashboard=500.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:123,investor=Lubna M. A. QUNASH introducer=VERSO PARTNER basis=spread dashboard=5356.26 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,6a0268a8-750c-4198-8634-504c9906be26,investor=Anisha Bansal and Rahul KARKUN introducer=VERSO BI basis=spread dashboard=0.0 db=9088.0
+fail,commission_row_missing_in_db,VC106,VC6:79,investor=Lesli Ann SCHUTTE introducer=VERSO BI basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:79,investor=Lesli Ann SCHUTTE introducer=VERSO BI basis=spread dashboard=1317.5 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:79,investor=Lesli Ann SCHUTTE introducer=VERSO PARTNER basis=spread dashboard=6162.5 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,7f5326cc-6715-4e69-9662-128173bc0a7a,investor=Atima HARALALKA introducer=VERSO PARTNER basis=spread dashboard=0.0 db=4604.25
+fail,commission_row_missing_in_db,VC106,VC6:36,investor=Bahama Global Towers Limited introducer=Anand Sethia basis=spread dashboard=18687.5 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,1712b3a6-7568-47fc-b261-8e58bca1ab53,investor=Bahama Global Towers Limited introducer=Set Cap basis=spread dashboard=0.0 db=18687.5
+fail,commission_row_missing_in_db,VC106,VC6:76,investor=Barnaby John MOORE introducer=VERSO PARTNER basis=spread dashboard=18995.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,033c48f1-4fa4-442c-968b-6e2486fb8f22,investor=Barnaby MOORE introducer=VERSO PARTNER basis=spread dashboard=0.0 db=18995.0
+fail,commission_row_missing_in_dashboard,VC106,99946c62-1df4-4e8c-b3b2-d85b2be11f55,investor=Beatrice and Marcel KNOPF introducer=Terra Financial & Management Services SA basis=spread dashboard=0.0 db=3330.0
+fail,commission_row_missing_in_db,VC106,VC6:34,investor=Mrs and Mr Beatrice & Marcel KNOPF introducer=TERRA Financial basis=spread dashboard=3330.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,c80574c1-623a-4d0c-a834-94f92d9a545b,investor=Bernard DUFAURE introducer=VERSO BI basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_dashboard,VC106,2204b5fb-27be-41b1-991f-f00a45527e09,investor=Bernard DUFAURE introducer=VERSO PARTNER basis=invested_amount dashboard=0.0 db=500.0
+fail,commission_row_missing_in_dashboard,VC106,cbe41cdf-9b8b-4325-b722-8ac25d3d785f,investor=Bernard DUFAURE introducer=VERSO PARTNER basis=spread dashboard=0.0 db=5356.26
+fail,commission_row_missing_in_db,VC106,VC6:181,investor=Bernard Henri DUFAURE introducer=VERSO BI basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:181,investor=Bernard Henri DUFAURE introducer=VERSO PARTNER basis=invested_amount dashboard=500.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:181,investor=Bernard Henri DUFAURE introducer=VERSO PARTNER basis=spread dashboard=5356.26 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,96002e9c-3524-4a03-90ca-0cc76006c76e,investor=Bharat JATANIA introducer=VERSO BI basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_dashboard,VC106,22295438-9d4f-4402-8a1e-74e7e75c5564,investor=Bharat JATANIA introducer=VERSO BI basis=spread dashboard=0.0 db=1317.81
+fail,commission_row_missing_in_dashboard,VC106,37fdb6cb-b789-4c94-afd5-6ef94adc1c64,investor=Bharat JATANIA introducer=VERSO PARTNER basis=invested_amount dashboard=0.0 db=500.0
+fail,commission_row_missing_in_dashboard,VC106,7934729e-b728-4833-b06e-6d1e96fa9647,investor=Bharat JATANIA introducer=VERSO PARTNER basis=spread dashboard=0.0 db=4697.36
+fail,commission_row_missing_in_db,VC106,VC6:122,investor=Bharat Kumar JATANIA introducer=VERSO BI basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:122,investor=Bharat Kumar JATANIA introducer=VERSO BI basis=spread dashboard=1317.81 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:122,investor=Bharat Kumar JATANIA introducer=VERSO PARTNER basis=invested_amount dashboard=500.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:122,investor=Bharat Kumar JATANIA introducer=VERSO PARTNER basis=spread dashboard=4697.35 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:138,investor=Bhikhu C. K. PATEL introducer=VERSO BI basis=invested_amount dashboard=5000.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:138,investor=Bhikhu C. K. PATEL introducer=VERSO BI basis=spread dashboard=13392.54 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,74a1e7cf-722a-48f2-a662-ca9095e10268,investor=Bhikhu PATEL introducer=VERSO BI basis=invested_amount dashboard=0.0 db=5000.0
+fail,commission_row_missing_in_dashboard,VC106,fead6dd1-0827-4bc4-938b-96111b77809a,investor=Bhikhu PATEL introducer=VERSO BI basis=spread dashboard=0.0 db=13392.54
+fail,commission_row_missing_in_db,VC106,VC6:48,investor=Mohamad Ismail BIN MOHAMED introducer=VERSO PARTNER basis=spread dashboard=18420.5 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,50e6c898-86d4-4bb0-ac99-f346dbf0cf7a,investor=Mohamad BIN MOHAMED introducer=VERSO PARTNER basis=spread dashboard=0.0 db=18420.5
+fail,commission_row_missing_in_db,VC106,VC6:25,investor=Sandra KOHLER CABIAN introducer=VERSO BI basis=spread dashboard=3768.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:25,investor=Sandra KOHLER CABIAN introducer=VERSO PARTNER basis=invested_amount dashboard=500.0 db=0.0
+fail,commission_row_amount_mismatch,VC106,VC6:25,investor=Sandra KOHLER CABIAN introducer=VERSO PARTNER basis=spread dashboard=7701.5 db=2677.5 delta=-5024.0
+fail,commission_row_missing_in_dashboard,VC106,f0b4770c-7a68-451a-a9b1-dcb8a6f2845c,investor=Sandra CABIAN introducer=VERSO BI basis=spread dashboard=0.0 db=3768.0
+fail,commission_row_missing_in_dashboard,VC106,2f39ca15-95ce-4d14-8afa-38d875e64ed7,investor=Sandra CABIAN introducer=VERSO PARTNER basis=invested_amount dashboard=0.0 db=500.0
+fail,commission_row_missing_in_dashboard,VC106,ea474371-4278-4d75-8511-d7e312ede7a6,investor=Sandra CABIAN introducer=VERSO PARTNER basis=spread dashboard=0.0 db=5024.0
+fail,commission_row_missing_in_dashboard,VC106,09c4403c-4ee5-4607-a390-2c16abbf2b7d,investor=Daphne CHANDRA introducer=VERSO BI basis=invested_amount dashboard=0.0 db=23542.2
+fail,commission_row_missing_in_db,VC106,VC6:14,investor=Daphne Marie CHANDRA introducer=VERSO BI basis=invested_amount dashboard=23542.2 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,26a9e0d2-b0b0-4b50-907f-690e17197928,investor=Chang NGAN introducer=VERSO BI basis=spread dashboard=0.0 db=5040.0
+fail,commission_row_missing_in_db,VC106,VC6:8,investor=Chang Yong NGAN introducer=VERSO BI basis=spread dashboard=5040.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:109,investor=Mayuriben Chetan Kumar JOGANI introducer=VERSO BI basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:109,investor=Mayuriben Chetan Kumar JOGANI introducer=VERSO PARTNER basis=invested_amount dashboard=500.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:109,investor=Mayuriben Chetan Kumar JOGANI introducer=VERSO PARTNER basis=spread dashboard=5356.26 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:139,investor=Vijaykumar C. K. PATEL introducer=VERSO BI basis=invested_amount dashboard=15000.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:139,investor=Vijaykumar C. K. PATEL introducer=VERSO BI basis=spread dashboard=40177.62 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,05e2825e-04a4-4a7a-98d6-84527478627d,investor=Georges CYTRON introducer=VERSO BI basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_dashboard,VC106,fea172ea-1c3a-4bd2-8e3d-9e78e5513f70,investor=Georges CYTRON introducer=VERSO PARTNER basis=invested_amount dashboard=0.0 db=500.0
+fail,commission_row_missing_in_dashboard,VC106,aae92f79-dc55-4371-a25d-2d606f9775a9,investor=Georges CYTRON introducer=VERSO PARTNER basis=spread dashboard=0.0 db=5356.26
+fail,commission_row_missing_in_db,VC106,VC6:175,investor=Georges Sylvain CYTRON introducer=VERSO BI basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:175,investor=Georges Sylvain CYTRON introducer=VERSO PARTNER basis=invested_amount dashboard=500.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:175,investor=Georges Sylvain CYTRON introducer=VERSO PARTNER basis=spread dashboard=5356.26 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:15,investor=Daryl PAK YONGJIE introducer=VERSO BI basis=spread dashboard=8250.3 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,1490b5aa-c0b5-43ad-b6c4-00e48d410b3d,investor=Daryl YONGJIE introducer=VERSO BI basis=spread dashboard=0.0 db=8250.3
+fail,commission_row_missing_in_dashboard,VC106,68deb9eb-345d-441e-9dc4-495099deb010,investor=Ekta DATT introducer=VERSO PARTNER basis=spread dashboard=0.0 db=2301.25
+fail,commission_row_missing_in_db,VC106,VC6:179,investor=David Jean ROSSIER introducer=VERSO BI basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:179,investor=David Jean ROSSIER introducer=VERSO PARTNER basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:179,investor=David Jean ROSSIER introducer=VERSO PARTNER basis=spread dashboard=10713.78 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,613c5093-6dab-4f67-9430-df12a2076da6,investor=David ROSSIER introducer=VERSO BI basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_dashboard,VC106,f94d0b8c-c196-44ab-ad94-5ab28ac66d6d,investor=David ROSSIER introducer=VERSO PARTNER basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_dashboard,VC106,3d3c7a65-db10-4b34-adb4-fde47bdfdaeb,investor=David ROSSIER introducer=VERSO PARTNER basis=spread dashboard=0.0 db=10713.78
+fail,commission_row_missing_in_dashboard,VC106,692c343f-cdee-445e-b964-9ec42a699fc7,investor=Eduardo Luiz FONTES WILLIAMS introducer=Manna Capital basis=spread dashboard=0.0 db=8196.78
+fail,commission_row_missing_in_db,VC106,VC6:215,investor=Luiz Eduardo FONTES WILLIAMS introducer=Simone basis=spread dashboard=8196.78 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:135,investor=Eric Pascal LE SEIGNEUR introducer=VERSO BI basis=invested_amount dashboard=3000.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:135,investor=Eric Pascal LE SEIGNEUR introducer=VERSO PARTNER basis=invested_amount dashboard=6000.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:135,investor=Eric Pascal LE SEIGNEUR introducer=VERSO PARTNER basis=spread dashboard=10712.52 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,23e9d2a1-3bdb-4732-b00a-530fdf49a52f,investor=Eric LE SEIGNEUR introducer=VERSO BI basis=invested_amount dashboard=0.0 db=3000.0
+fail,commission_row_missing_in_dashboard,VC106,6edba3ee-dc67-4705-8129-7d0449e6efa3,investor=Eric LE SEIGNEUR introducer=VERSO PARTNER basis=invested_amount dashboard=0.0 db=6000.0
+fail,commission_row_missing_in_dashboard,VC106,0a2d380e-6612-43db-a437-07f3ab3b7966,investor=Eric LE SEIGNEUR introducer=VERSO PARTNER basis=spread dashboard=0.0 db=10712.52
+fail,commission_row_missing_in_dashboard,VC106,57b84bd7-91b7-4d63-8c2b-3b197df4a944,investor=Nidhi GANERIWALA introducer=VERSO PARTNER basis=spread dashboard=0.0 db=3223.5
+fail,commission_row_missing_in_db,VC106,VC6:17,investor=Tan Sor GEOK introducer=VERSO BI basis=spread dashboard=4003.2 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,485665b8-cd6d-46a3-9182-78f1ee0955c6,investor=Tan GEOK introducer=VERSO BI basis=spread dashboard=0.0 db=4003.2
+fail,commission_row_missing_in_db,VC106,VC6:46,investor=LEE RAND GROUP introducer=VERSO PARTNER basis=spread dashboard=21638.75 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:134,investor=Michel Louis GUERIN introducer=VERSO BI basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:134,investor=Michel Louis GUERIN introducer=VERSO PARTNER basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:134,investor=Michel Louis GUERIN introducer=VERSO PARTNER basis=spread dashboard=10713.78 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,813f4bff-4678-4a22-9f78-624990c88134,investor=Michel GUERIN introducer=VERSO BI basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_dashboard,VC106,64e35c20-7c48-4732-a462-b448267ab11e,investor=Michel GUERIN introducer=VERSO PARTNER basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_dashboard,VC106,7e83c37d-0e22-4fcc-b187-4f7a21d17fe2,investor=Michel GUERIN introducer=VERSO PARTNER basis=spread dashboard=0.0 db=10713.78
+fail,commission_row_missing_in_db,VC106,VC6:188,investor=Hossien Hakimi JAVID introducer=VERSO BI basis=invested_amount dashboard=999.6 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:188,investor=Hossien Hakimi JAVID introducer=VERSO BI basis=spread dashboard=2677.5 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:191,investor=Kian Mohammad Hakimi JAVID introducer=VERSO BI basis=invested_amount dashboard=499.56 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:191,investor=Kian Mohammad Hakimi JAVID introducer=VERSO BI basis=spread dashboard=1338.12 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,090ef52b-bb9e-487a-b03c-b38d266a43e6,investor=Lakin HARIA introducer=VERSO BI basis=spread dashboard=0.0 db=2177.1
+fail,commission_row_missing_in_dashboard,VC106,2e95927e-0efd-4f84-9f2d-b44013fed143,investor=Sheetal HARIA introducer=VERSO BI basis=spread dashboard=0.0 db=2177.1
+fail,commission_row_missing_in_dashboard,VC106,83d01fc6-83e6-44c0-beba-5876a0490d65,investor=James HARTSHORN introducer=VERSO PARTNER basis=spread dashboard=0.0 db=5356.26
+fail,commission_row_missing_in_dashboard,VC106,95106de4-ac4a-4993-8b13-1bb102e8ab85,investor=Imran HAYAT introducer=VERSO BI basis=invested_amount dashboard=0.0 db=4904.0
+fail,commission_row_missing_in_dashboard,VC106,b5cf6900-163f-411e-a89d-f7c9de53526b,investor=Imran HAYAT introducer=VERSO BI basis=spread dashboard=0.0 db=25200.0
+fail,commission_row_missing_in_dashboard,VC106,7fc442b5-dd4c-4a7c-9cdf-2451d6d7a552,investor=Imran HAYAT introducer=VERSO PARTNER basis=spread dashboard=0.0 db=10000.0
+fail,commission_row_missing_in_db,VC106,VC6:94,investor=Imrat HAYAT introducer=VERSO BI basis=invested_amount dashboard=4904.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:94,investor=Imrat HAYAT introducer=VERSO BI basis=spread dashboard=25200.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:94,investor=Imrat HAYAT introducer=VERSO PARTNER basis=spread dashboard=10000.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:56,investor=Hedgebay Securities LLC introducer=VERSO BI basis=spread dashboard=15247.9 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,4a6a95d1-5157-48ae-a539-6238fa1626e3,investor=Hossein JAVID introducer=VERSO BI basis=invested_amount dashboard=0.0 db=999.6
+fail,commission_row_missing_in_dashboard,VC106,aee3dccf-ec23-4ba4-9840-ff4946b6e41b,investor=Hossein JAVID introducer=VERSO BI basis=spread dashboard=0.0 db=2677.5
+fail,commission_row_missing_in_db,VC106,VC6:192,investor=Salman Raza HUSSAIN introducer=VERSO BI basis=invested_amount dashboard=999.6 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:192,investor=Salman Raza HUSSAIN introducer=VERSO BI basis=spread dashboard=2677.5 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,6e3052e5-b5d4-4a59-a35d-248e7b840eff,investor=Salman HUSSAIN introducer=VERSO BI basis=invested_amount dashboard=0.0 db=999.6
+fail,commission_row_missing_in_dashboard,VC106,56bb3b66-60c2-4248-ba84-bc0260e550e8,investor=Salman HUSSAIN introducer=VERSO BI basis=spread dashboard=0.0 db=2677.5
+fail,commission_row_missing_in_db,VC106,VC6:45,investor=JIMENEZ TRADING INC introducer=Anand Sethia basis=spread dashboard=994968.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,c9ec2805-9386-4ad2-9f56-af948ec7cdd6,investor=JIMENEZ TRADING INC introducer=Set Cap basis=spread dashboard=0.0 db=994968.0
+fail,commission_row_missing_in_dashboard,VC106,ce5b998a-0b52-466c-bf44-0ab1130c2718,investor=Kian JAVID introducer=VERSO BI basis=invested_amount dashboard=0.0 db=499.56
+fail,commission_row_missing_in_dashboard,VC106,84b13b68-e751-4665-9252-80310cf5827a,investor=Kian JAVID introducer=VERSO BI basis=spread dashboard=0.0 db=1338.12
+fail,commission_row_missing_in_db,VC106,VC6:70,investor=Steve J MANNING introducer=VERSO BI basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:70,investor=Steve J MANNING introducer=VERSO BI basis=spread dashboard=1317.5 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:70,investor=Steve J MANNING introducer=VERSO PARTNER basis=spread dashboard=6162.5 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,ab046455-acb6-400f-8856-477b894016fd,investor=Mayuriben JOGANI introducer=VERSO BI basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_dashboard,VC106,1208e249-d609-45b7-b821-47ca13fb03b2,investor=Mayuriben JOGANI introducer=VERSO PARTNER basis=invested_amount dashboard=0.0 db=500.0
+fail,commission_row_missing_in_dashboard,VC106,103c3af7-75d8-4aea-8a5c-8f14cbc7a28b,investor=Mayuriben JOGANI introducer=VERSO PARTNER basis=spread dashboard=0.0 db=5356.26
+fail,commission_row_missing_in_dashboard,VC106,a3a44641-43c2-451d-9551-1c5edd0ae45e,investor=Julien MACHOT introducer=VERSO BI basis=spread dashboard=0.0 db=35715.0
+fail,commission_row_missing_in_dashboard,VC106,26f1f0a0-fb3a-4fdf-8b79-ef2b5bbbf154,investor=Julien MACHOT introducer=VERSO PARTNER basis=spread dashboard=0.0 db=35715.0
+fail,commission_row_missing_in_dashboard,VC106,6048d2ca-f0ca-46e8-93d7-75ca56bacedf,investor=Rajiv KAPOOR introducer=VERSO PARTNER basis=spread dashboard=0.0 db=4604.25
+fail,commission_row_missing_in_db,VC106,VC6:40,investor=Mrs and Mr KARKUN introducer=VERSO BI basis=spread dashboard=9088.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,1d1df909-f676-49ad-a2da-7ae827ce1440,investor=Rasika KULKARNI introducer=VERSO PARTNER basis=spread dashboard=0.0 db=2301.25
+fail,commission_row_missing_in_dashboard,VC106,d61caf98-7f24-47e5-9461-91fc12535a7e,investor=Lesli SCHUTTE introducer=VERSO BI basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_dashboard,VC106,60365391-063b-40ab-ad1a-f548be8410ce,investor=Lesli SCHUTTE introducer=VERSO BI basis=spread dashboard=0.0 db=1317.5
+fail,commission_row_missing_in_dashboard,VC106,260941c4-4bca-4fc8-a315-95c3aeb6f93d,investor=Lesli SCHUTTE introducer=VERSO PARTNER basis=spread dashboard=0.0 db=6162.5
+fail,commission_row_missing_in_db,VC106,VC6:21,investor=OEP Ltd introducer=VERSO BI basis=spread dashboard=35715.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:21,investor=OEP Ltd introducer=VERSO PARTNER basis=spread dashboard=35715.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,30b07ba7-fef4-4204-a435-d4a4b0cb8a04,investor=Lubna QUNASH introducer=VERSO BI basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_dashboard,VC106,4311c02b-70fa-4715-bd66-47dbea01213d,investor=Lubna QUNASH introducer=VERSO PARTNER basis=invested_amount dashboard=0.0 db=500.0
+fail,commission_row_missing_in_dashboard,VC106,4831ab6f-6d9d-4b8c-b03e-eac0ff875708,investor=Lubna QUNASH introducer=VERSO PARTNER basis=spread dashboard=0.0 db=5356.26
+fail,commission_row_missing_in_dashboard,VC106,bef18ceb-2273-4fb4-8820-3e5a393ef3b8,investor=Nilakantan MAHESWARI & Subbiah SUBRAMANIAN introducer=VERSO BI basis=spread dashboard=0.0 db=10321.69
+fail,commission_row_missing_in_dashboard,VC106,b34e6b69-4108-481d-9612-c2b1603c474f,investor=Nilakantan MAHESWARI & Subbiah SUBRAMANIAN introducer=VERSO PARTNER basis=spread dashboard=0.0 db=20199.0
+fail,commission_row_missing_in_dashboard,VC106,6e275180-d0bb-4793-b172-f03f24900d5f,investor=Steve MANNING introducer=VERSO BI basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_dashboard,VC106,b93fd24c-9f5d-4778-b662-bdbaa7d8f31d,investor=Steve MANNING introducer=VERSO BI basis=spread dashboard=0.0 db=1317.5
+fail,commission_row_missing_in_dashboard,VC106,36e34923-c665-4477-ba14-4a11c44e3426,investor=Steve MANNING introducer=VERSO PARTNER basis=spread dashboard=0.0 db=6162.5
+fail,commission_row_missing_in_dashboard,VC106,ae7a3dd7-d855-4b4f-92f2-6c2e9b8e2992,investor=Manraj SEKHON introducer=VERSO BI basis=spread dashboard=0.0 db=29930.56
+fail,commission_row_missing_in_dashboard,VC106,f49b90ec-8f5b-4d09-9c4c-431949f9e8a7,investor=Manraj SEKHON introducer=VERSO PARTNER basis=spread dashboard=0.0 db=29930.56
+fail,commission_row_missing_in_db,VC106,VC6:80,investor=Manraj Singh SEKHON introducer=VERSO BI basis=spread dashboard=29930.56 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:80,investor=Manraj Singh SEKHON introducer=VERSO PARTNER basis=spread dashboard=29930.56 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:19,investor=Matteo Massimo MARTINI introducer=VERSO BI basis=spread dashboard=7537.5 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:19,investor=Matteo Massimo MARTINI introducer=VERSO PARTNER basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:19,investor=Matteo Massimo MARTINI introducer=VERSO PARTNER basis=spread dashboard=10050.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,d003a601-8148-4eff-b222-c9825289c91c,investor=Matteo MARTINI introducer=VERSO BI basis=spread dashboard=0.0 db=7537.5
+fail,commission_row_missing_in_dashboard,VC106,69ec2b8b-3125-4151-9a53-abf1237d4f38,investor=Matteo MARTINI introducer=VERSO PARTNER basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_dashboard,VC106,2807da1f-e910-475c-b940-e4247dc530e0,investor=Matteo MARTINI introducer=VERSO PARTNER basis=spread dashboard=0.0 db=10050.0
+fail,commission_row_missing_in_dashboard,VC106,9a0e1e1c-2c4a-46eb-b9db-e6ad2d11d464,investor=Vijaykumar PATEL introducer=VERSO BI basis=invested_amount dashboard=0.0 db=15000.0
+fail,commission_row_missing_in_dashboard,VC106,7f795757-9cde-401e-b2b2-e3ec54fed17b,investor=Vijaykumar PATEL introducer=VERSO BI basis=spread dashboard=0.0 db=40177.62
+fail,commission_row_missing_in_dashboard,VC106,ed375bea-dc89-49c5-8263-986d3e1a2a92,investor=Rajesh SUD introducer=VERSO PARTNER basis=spread dashboard=0.0 db=4604.25
+fail,commission_row_missing_in_dashboard,VC106,8d89581b-0a6b-4ca9-abbd-cbb3d38bcba7,investor=Tapan SHAH introducer=VERSO BI basis=spread dashboard=0.0 db=2177.1
+fail,commission_row_missing_in_db,VC106,VC6:44,investor=Mrs & Mr Subbiah SUBRAMANIAN introducer=VERSO BI basis=spread dashboard=10321.69 db=0.0
+fail,commission_row_missing_in_db,VC106,VC6:44,investor=Mrs & Mr Subbiah SUBRAMANIAN introducer=VERSO PARTNER basis=spread dashboard=20199.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC106,a374a369-3bd5-47e5-8755-10e4ced62f0c,investor=VOLF Trust introducer=Terra Financial & Management Services SA basis=spread dashboard=0.0 db=16651.5
+fail,commission_row_missing_in_db,VC106,VC6:35,investor=VOLF Trust introducer=TERRA Financial basis=spread dashboard=16651.5 db=0.0
+fail,commission_row_missing_in_db,VC111,VC11:31,investor=BenSkyla AG introducer=Julien basis=invested_amount dashboard=4000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC111,c2fc3cfb-a0d8-445c-a020-90c28d204e66,investor=BenSkyla AG introducer=Julien Machot basis=invested_amount dashboard=0.0 db=4000.0
+fail,commission_row_missing_in_dashboard,VC111,582f39c3-9c1c-4058-960a-353b782ca949,investor=DALINGA HOLDING AG introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=2300.0
+fail,commission_row_missing_in_db,VC111,VC11:7,investor=DALINGA HOLDING AG introducer=Terra basis=invested_amount dashboard=2300.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC111,9bbca01c-2578-4e1f-9610-6bfc91d63e39,investor=Johann AKERMANN introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_dashboard,VC111,c88c9bb2-6252-4393-9b1e-a960c8647c77,investor=Johann AKERMANN introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_db,VC111,VC11:19,investor=Johann Markus AKERMANN introducer=Daniel Baumslag basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_db,VC111,VC11:19,investor=Johann Markus AKERMANN introducer=Terra basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_db,VC111,VC11:21,investor=Alberto Attilio RAVANO introducer=AUX basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_db,VC111,VC11:21,investor=Alberto Attilio RAVANO introducer=Daniel Baumslag basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC111,11e36910-676f-42c6-b2e3-edd7f24d8884,investor=Alberto RAVANO introducer=AUX Business Support Ltd basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_dashboard,VC111,25c6fbc1-a1a0-4ac0-a1da-6cee60274da6,investor=Alberto RAVANO introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_db,VC111,VC11:25,investor=Antonio Bruno PERONACE introducer=AUX basis=invested_amount dashboard=2100.0 db=0.0
+fail,commission_row_missing_in_db,VC111,VC11:25,investor=Antonio Bruno PERONACE introducer=VERSO PARTNER basis=invested_amount dashboard=350.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC111,448c32d3-bc1a-44ac-a660-aee16bb2585a,investor=Antonio PERONACE introducer=AUX Business Support Ltd basis=invested_amount dashboard=0.0 db=2100.0
+fail,commission_row_missing_in_dashboard,VC111,051ba337-d686-44b6-80aa-35c6b99d29a8,investor=Antonio PERONACE introducer=VERSO PARTNER basis=invested_amount dashboard=0.0 db=350.0
+fail,commission_row_missing_in_db,VC111,VC11:30,investor=Beatrice and Marcel KNOPF introducer=Julien basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC111,12368da3-2882-4798-87be-13ac64f8fe56,investor=Beatrice and Marcel KNOPF introducer=Julien Machot basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_dashboard,VC111,b3bc7056-8333-4332-a4ae-6d4502d243ee,investor=Bright Phoenix Holdings LTD introducer=GEMERA Consulting Pte Ltd basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_db,VC111,VC11:24,investor=Bright Phoenix Holdings LTD introducer=Gemera basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC111,d96f0c70-909e-4e4b-a8f7-5518fc29c8a0,investor=Bruce HAWKINS introducer=Moore & Moore Investments Ltd basis=invested_amount dashboard=0.0 db=2500.0
+fail,commission_row_missing_in_db,VC111,VC11:14,investor=Bruce HAWKINS introducer=John basis=invested_amount dashboard=2500.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC111,24b0eca0-a772-4ddf-b730-e73af21ca67a,investor=James BURCH introducer=Moore & Moore Investments Ltd basis=invested_amount dashboard=0.0 db=1250.0
+fail,commission_row_missing_in_db,VC111,VC11:16,investor=James BURCH introducer=John basis=invested_amount dashboard=1250.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC111,abd0a30d-c2d9-4777-b76c-596883b99327,investor=Stephane DAHAN introducer=Moore & Moore Investments Ltd basis=invested_amount dashboard=0.0 db=1875.0
+fail,commission_row_missing_in_db,VC111,VC11:13,investor=Stephane DAHAN introducer=John basis=invested_amount dashboard=1875.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC111,ef5b2890-9756-4ced-b9f9-20a6b4d38cc5,investor=David HOLDEN introducer=Moore & Moore Investments Ltd basis=invested_amount dashboard=0.0 db=5000.0
+fail,commission_row_missing_in_db,VC111,VC11:10,investor=David HOLDEN introducer=John basis=invested_amount dashboard=5000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC111,9ea60565-7ffc-447f-8558-d1406a07cb3e,investor=Erich GRAF introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_db,VC111,VC11:20,investor=Erich GRAF introducer=Terra basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_db,VC111,VC11:22,investor=FINALMA SUISSE SA introducer=AUX basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC111,180db970-d413-46f2-9cb2-dd554ce80bbb,investor=FINALMA SUISSE SA introducer=AUX Business Support Ltd basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_dashboard,VC111,91ad8687-e4be-4418-bf34-6557e7cc54da,investor=Vladimir GUSEV introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=3000.0
+fail,commission_row_missing_in_db,VC111,VC11:35,investor=Vladimir GUSEV introducer=Terra basis=invested_amount dashboard=3000.0 db=0.0
+fail,commission_row_missing_in_db,VC111,VC11:32,investor=Peter HOGLAND introducer=Julien basis=invested_amount dashboard=3000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC111,62e89de5-3bce-455e-b75d-2c2f6f346284,investor=Peter HOGLAND introducer=Julien Machot basis=invested_amount dashboard=0.0 db=3000.0
+fail,commission_row_missing_in_dashboard,VC111,a768e7e7-7fa1-4ef6-b3e6-148bafffd866,investor=ROSEN INVEST HOLDINGS Inc introducer=GEMERA Consulting Pte Ltd basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_db,VC111,VC11:5,investor=ROSEN INVEST HOLDINGS INC introducer=Gemera basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_db,VC111,VC11:23,investor=MONFIN LTD introducer=AUX basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC111,8cf18c88-7d1e-4bc1-8365-598e7d377eb9,investor=MONFIN LTD introducer=AUX Business Support Ltd basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_dashboard,VC111,6b89d826-6dac-426c-a12f-7052d2aec433,investor=Mark MATTHEWS introducer=Moore & Moore Investments Ltd basis=invested_amount dashboard=0.0 db=5000.0
+fail,commission_row_missing_in_db,VC111,VC11:17,investor=Mark MATTHEWS introducer=John basis=invested_amount dashboard=5000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC111,818a7352-cb8a-4372-8d21-f4870a662aba,investor=Tartrifuge SA introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_db,VC111,VC11:8,investor=Tartrifuge SA introducer=Terra basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC111,fc75ae46-c051-406e-af71-eedd180d8db5,investor=VOLF Trust introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_db,VC111,VC11:15,investor=VOLF Trust introducer=Terra basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_db,VC112,VC12:21,investor=Giovanni Antonio Alberto ALBERTINI introducer=FINSA basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC112,1af9d2c7-e529-48d0-b6c5-9b5872de0e46,investor=Giovanni ALBERTINI introducer=FINSA basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_db,VC112,VC12:18,investor=Liudmila and Alexey ROMANOV introducer=TERRA basis=invested_amount dashboard=20000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC112,6df8a532-e2d9-4f22-b767-553189f2f719,investor=Liudmila ROMANOVA and Alexey ROMANOV introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=20000.0
+fail,commission_row_missing_in_dashboard,VC112,aebaf36f-6ed5-492f-8f31-0c93e70cb42a,investor=Beatrice and Marcel KNOPF introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=4000.0
+fail,commission_row_missing_in_db,VC112,VC12:17,investor=Beatrice and Marcel KNOPF introducer=TERRA basis=invested_amount dashboard=4000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,ed9e2168-0f21-43fb-a6a3-b76b4f606197,investor=Abhie SHAH introducer=Robin Doble basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_db,VC113,VC13:74,investor=Abhie Shreyas SHAH introducer=Robin basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,82c8ef54-1b38-4df1-9cbc-9b800eeb3a0d,investor=Dalinga AG introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=1650.0
+fail,commission_row_missing_in_db,VC113,VC13:7,investor=Dalinga AG introducer=Dan basis=invested_amount dashboard=1650.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,5ae686d3-2589-4513-b923-bbeac50978dd,investor=Dalinga AG introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=3300.0
+fail,commission_row_missing_in_db,VC113,VC13:7,investor=Dalinga AG introducer=Terra basis=invested_amount dashboard=3300.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,ecb096b9-1f1f-41de-a54d-b66f836a3b27,investor=Markus AKERMANN introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=375.0
+fail,commission_row_missing_in_db,VC113,VC13:6,investor=Markus AKERMANN introducer=Dan basis=invested_amount dashboard=375.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,1986810c-b9e4-4d70-93ed-7c2fc5241be7,investor=Markus AKERMANN introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=750.0
+fail,commission_row_missing_in_db,VC113,VC13:6,investor=Markus AKERMANN introducer=Terra basis=invested_amount dashboard=750.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,d830c06f-86aa-4a83-bd23-96d76b82ab9f,investor=Liudmila ROMANOVA and Alexey ROMANOV introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=4000.0
+fail,commission_row_missing_in_db,VC113,VC13:9,investor=Liudmila Romanova and Alexey ROMANOV introducer=Dan basis=invested_amount dashboard=4000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,0d1547b5-8252-4c72-9241-726700314a99,investor=Liudmila ROMANOVA and Alexey ROMANOV introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=8000.0
+fail,commission_row_missing_in_db,VC113,VC13:9,investor=Liudmila Romanova and Alexey ROMANOV introducer=Terra basis=invested_amount dashboard=8000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,44dcbbf2-9f51-47ee-b3cf-d1298aacc8d2,investor=Philip ALGAR introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=500.0
+fail,commission_row_missing_in_db,VC113,VC13:26,investor=Philip ALGAR introducer=Dan basis=invested_amount dashboard=500.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,2b285491-ba5e-4527-a715-a389a44727e0,investor=Philip ALGAR introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_db,VC113,VC13:26,investor=Philip ALGAR introducer=Terra basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,a50023c5-0f2b-4fa0-a88f-09406028d05a,investor=Andrew MEYER introducer=Robin Doble basis=invested_amount dashboard=0.0 db=4000.0
+fail,commission_row_missing_in_db,VC113,VC13:73,investor=Andrew MEYER introducer=Robin basis=invested_amount dashboard=4000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,e54ed41d-ce4d-46dc-811f-88967faf5456,investor=Andrey GORYAINOV introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_db,VC113,VC13:11,investor=Andrey GORYAINOV introducer=Dan basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,76ca1fec-9982-4abb-aa7f-75498672c163,investor=Andrey GORYAINOV introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_db,VC113,VC13:11,investor=Andrey GORYAINOV introducer=Terra basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,0bda390f-bbf3-468d-9dd2-dc386b912d2d,investor=Shrai and Aparna MADHVANI introducer=Altras Capital Financing Broker basis=spread dashboard=0.0 db=17500.0
+fail,commission_row_missing_in_db,VC113,VC13:22,investor=Shrai and Aparna MADHVANI introducer=Rick basis=spread dashboard=17500.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,c58ca1c9-d277-4170-b307-815c96bce8dc,investor=Barbara and Heinz WINZ introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_db,VC113,VC13:4,investor=Barbara and Heinz WINZ introducer=Dan basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,32b41bd6-e767-4917-9baf-23139e6a24b5,investor=Barbara and Heinz WINZ introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_db,VC113,VC13:4,investor=Barbara and Heinz WINZ introducer=Terra basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,a10da587-c549-4f47-938c-7a53bdd915b0,investor=Beatrice and Marcel KNOPF introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_db,VC113,VC13:17,investor=Beatrice and Marcel KNOPF introducer=Dan basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,dd5d3ecb-c1cd-4b03-a6f4-158337c93615,investor=Beatrice and Marcel KNOPF introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_db,VC113,VC13:17,investor=Beatrice and Marcel KNOPF introducer=Terra basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,335ab382-216c-4b7c-b6fb-78094d15dbdb,investor=Bright Phoenix Holdings LTD introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_dashboard,VC113,66dbc3f5-0c27-4cac-8988-8de5307e5a86,investor=Bright Phoenix Holdings LTD introducer=GEMERA Consulting Pte Ltd basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_db,VC113,VC13:24,investor=Bright Phoenix Holdings Ltd introducer=Dan basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_db,VC113,VC13:24,investor=Bright Phoenix Holdings Ltd introducer=Sandro basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,9a446a38-87c2-42db-92c4-1ea76926ca8d,investor=Sandra KOHLER CABIAN introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=750.0
+fail,commission_row_missing_in_db,VC113,VC13:5,investor=Sandra KOHLER CABIAN introducer=Dan basis=invested_amount dashboard=750.0 db=0.0
+fail,commission_row_missing_in_db,VC113,VC13:35,investor=Mayuriben Chetan K. JOGANI introducer=Denis basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,d82cf8e5-6f0b-4f9e-98b1-b4208b9ecc29,investor=Jeremie COMEL introducer=Enguerrand Elbaz basis=invested_amount dashboard=0.0 db=400.0
+fail,commission_row_missing_in_db,VC113,VC13:40,investor=Jeremie COMEL introducer=Enguerrand basis=invested_amount dashboard=400.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,1c5f95d1-ff36-42b8-bcdd-9ef40ea50031,investor=Rosario Teresa HIQUIANA-TANEJA & Deepak TANEJA introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=1100.0
+fail,commission_row_missing_in_dashboard,VC113,99bcedbf-50a0-4982-a90f-b5839b6c8b8e,investor=Rosario Teresa HIQUIANA-TANEJA & Deepak TANEJA introducer=GEMERA Consulting Pte Ltd basis=invested_amount dashboard=0.0 db=2200.0
+fail,commission_row_missing_in_db,VC113,VC13:30,investor=Mrs Rosario Teresa & Mr Deepak HIQUIANA-TANEJA & TANEJA introducer=Dan basis=invested_amount dashboard=1100.0 db=0.0
+fail,commission_row_missing_in_db,VC113,VC13:30,investor=Mrs Rosario Teresa & Mr Deepak HIQUIANA-TANEJA & TANEJA introducer=Sandro basis=invested_amount dashboard=2200.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,7b3a5030-1cc9-40ef-b5b4-373d6f3557e7,investor=Ivan DE introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=500.0
+fail,commission_row_missing_in_db,VC113,VC13:23,investor=Ivan DE introducer=Dan basis=invested_amount dashboard=500.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,6f317d28-7cc9-40d6-a890-efde150198cd,investor=Ivan DE introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_db,VC113,VC13:23,investor=Ivan DE introducer=Terra basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,b7dbd304-65e1-4741-b422-45e04449bac0,investor=Halim EL MOGHAZI introducer=Enguerrand Elbaz basis=invested_amount dashboard=0.0 db=520.0
+fail,commission_row_missing_in_db,VC113,VC13:43,investor=Halim EL MOGHAZI introducer=Enguerrand basis=invested_amount dashboard=520.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,071bc841-13c6-485d-b6a9-9d05760926cd,investor=Erich GRAF introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_db,VC113,VC13:21,investor=Erich GRAF introducer=Dan basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,a4ab3e95-213f-4a39-a9a3-f41721345013,investor=Erich GRAF introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_db,VC113,VC13:21,investor=Erich GRAF introducer=Terra basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_db,VC113,VC13:37,investor=Erwan TAROUILLY introducer=Denis basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,220ef28d-3ad0-4f48-a985-f060693806ce,investor=Erwan Tarouilly introducer=Denis Matthey basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_dashboard,VC113,45c06722-d598-4392-8ff0-4f93330e95c0,investor=NEWBRIDGE FINANCE SPF introducer=Enguerrand Elbaz basis=invested_amount dashboard=0.0 db=14000.0
+fail,commission_row_missing_in_db,VC113,VC13:34,investor=NEWBRIDGE FINANCE SPF introducer=Enguerrand basis=invested_amount dashboard=14000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,20086ba8-4200-47bc-a0e1-8f433361aa07,investor=Zandera (Finco) Limited introducer=Altras Capital Financing Broker basis=spread dashboard=0.0 db=389281.0
+fail,commission_row_missing_in_db,VC113,VC13:15,investor=Zandera (Finco) Limited introducer=Rick basis=spread dashboard=389281.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,6a51435d-820e-452c-8b69-0e3bfdb7d430,investor=FRALIS SPF introducer=Enguerrand Elbaz basis=invested_amount dashboard=0.0 db=10000.0
+fail,commission_row_missing_in_db,VC113,VC13:32,investor=FRALIS SPF introducer=Enguerrand basis=invested_amount dashboard=10000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,29361590-0d92-40d0-81cc-168c663893cf,investor=TEKAPO Group Limited introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_dashboard,VC113,52f6f2de-5e95-462e-ae36-7fa8ac39f0a7,investor=TEKAPO Group Limited introducer=GEMERA Consulting Pte Ltd basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_db,VC113,VC13:25,investor=TEKAPO Group Limited introducer=Dan basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_db,VC113,VC13:25,investor=TEKAPO Group Limited introducer=Sandro basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,d9797d58-e22e-41da-9fda-08b973e529ce,investor=Mark HAYWARD introducer=Altras Capital Financing Broker basis=invested_amount dashboard=0.0 db=3200.0
+fail,commission_row_missing_in_dashboard,VC113,1c49940a-ef1f-4b39-9587-c654a444b4fc,investor=Mark HAYWARD introducer=Altras Capital Financing Broker basis=spread dashboard=0.0 db=22750.0
+fail,commission_row_missing_in_db,VC113,VC13:69,investor=Mark HAYWARD introducer=Rick basis=invested_amount dashboard=3200.0 db=0.0
+fail,commission_row_missing_in_db,VC113,VC13:16,investor=Mark HAYWARD introducer=Rick basis=spread dashboard=22750.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,662f2b92-10c5-47bd-9362-761daef04dcf,investor=Zandera (Holdco) Limited introducer=Altras Capital Financing Broker basis=invested_amount dashboard=0.0 db=44000.0
+fail,commission_row_missing_in_dashboard,VC113,2b48f3a6-0b51-4624-b236-805a9759d180,investor=Zandera (Holdco) Limited introducer=Altras Capital Financing Broker basis=spread dashboard=0.0 db=204572.0
+fail,commission_row_missing_in_db,VC113,VC13:70,investor=Zandera (Holdco) Limited introducer=Rick basis=invested_amount dashboard=44000.0 db=0.0
+fail,commission_row_missing_in_db,VC113,VC13:70,investor=Zandera (Holdco) Limited introducer=Rick basis=spread dashboard=204572.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,d36e99b3-0bfa-4269-a0cd-37bea6abb11d,investor=ROSEN INVEST HOLDINGS Inc introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_dashboard,VC113,9ce9a6a4-ad06-4880-8910-a59e7b9771af,investor=ROSEN INVEST HOLDINGS Inc introducer=GEMERA Consulting Pte Ltd basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_db,VC113,VC13:14,investor=Rosen Invest Holdings Inc introducer=Dan basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_db,VC113,VC13:14,investor=Rosen Invest Holdings Inc introducer=Gemera basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,761ca573-de34-4224-a8e8-c1f6b266a4aa,investor=Liubov and Igor ZINKEVICH introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_db,VC113,VC13:12,investor=Liubov and Igor ZINKEVICH introducer=Dan basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,bde10bd0-e8d2-493b-b286-e23e6feb550f,investor=Liubov and Igor ZINKEVICH introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_db,VC113,VC13:12,investor=Liubov and Igor ZINKEVICH introducer=Terra basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_db,VC113,VC13:18,investor=Scott Ikott TOMMEY introducer=Anand basis=invested_amount dashboard=3000.0 db=0.0
+fail,commission_row_missing_in_db,VC113,VC13:18,investor=Scott Ikott TOMMEY introducer=Anand basis=spread dashboard=12196.88 db=0.0
+fail,commission_row_missing_in_db,VC113,VC13:18,investor=Scott Ikott TOMMEY introducer=Rick basis=spread dashboard=26250.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,5a21a0aa-97f7-4429-ac82-623c0fa0ab05,investor=Mayuriben JOGANI introducer=Denis Matthey basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_dashboard,VC113,f91f1a02-0bac-4833-8d35-ce93dda064e5,investor=SHEILA and KAMLESH MADHVANI introducer=Altras Capital Financing Broker basis=spread dashboard=0.0 db=17500.0
+fail,commission_row_missing_in_db,VC113,VC13:13,investor=Sheila and Kamlesh MADHVANI introducer=Rick basis=spread dashboard=17500.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,eb0da86e-b5d7-4869-957b-7a76d83f0a57,investor=Signet Logistics Ltd introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_db,VC113,VC13:20,investor=Signet Logistics Ltd introducer=Dan basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,c038cc01-c6cc-4ac0-aed4-58a6050bba64,investor=Signet Logistics Ltd introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_db,VC113,VC13:20,investor=Signet Logistics Ltd introducer=Terra basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,bee09dc8-acef-4440-8e1e-80aceb40a7e5,investor=Nilakantan MAHESWARI & Subbiah SUBRAMANIAN introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=1050.0
+fail,commission_row_missing_in_dashboard,VC113,8f88ce95-1fae-4346-b619-096231ea8555,investor=Nilakantan MAHESWARI & Subbiah SUBRAMANIAN introducer=GEMERA Consulting Pte Ltd basis=invested_amount dashboard=0.0 db=2100.0
+fail,commission_row_missing_in_db,VC113,VC13:29,investor=Mrs Nilakantan & Mr Subbiah MAHESWARI & SUBRAMANIAN introducer=Dan basis=invested_amount dashboard=1050.0 db=0.0
+fail,commission_row_missing_in_db,VC113,VC13:29,investor=Mrs Nilakantan & Mr Subbiah MAHESWARI & SUBRAMANIAN introducer=Sandro basis=invested_amount dashboard=2100.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,96f948de-55aa-40cf-a1a0-2b41c3018150,investor=Sebastian MERIDA introducer=Enguerrand Elbaz basis=invested_amount dashboard=0.0 db=600.0
+fail,commission_row_missing_in_db,VC113,VC13:27,investor=Sebastian MERIDA introducer=Enguerrand basis=invested_amount dashboard=600.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,81d14cb5-da4c-42c1-85e2-c660eacd8a1d,investor=SAFE introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=5000.0
+fail,commission_row_missing_in_db,VC113,VC13:31,investor=SAFE introducer=Dan basis=invested_amount dashboard=5000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC113,55cbff28-83c9-435f-8db9-f545f7f0f0f6,investor=Scott TOMMEY introducer=Altras Capital Financing Broker basis=spread dashboard=0.0 db=26250.0
+fail,commission_row_missing_in_dashboard,VC113,6f1441e0-d8df-46b7-980b-1429d29c96c2,investor=Scott TOMMEY introducer=Set Cap basis=invested_amount dashboard=0.0 db=3000.0
+fail,commission_row_missing_in_dashboard,VC113,2855a83d-06c6-4b61-87ad-118a2c38b9a2,investor=Scott TOMMEY introducer=Set Cap basis=spread dashboard=0.0 db=12196.88
+fail,commission_row_missing_in_dashboard,VC113,60ac3135-186a-45aa-a021-a15741bb6b5a,investor=Thierry ULDRY introducer=Enguerrand Elbaz basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_db,VC113,VC13:38,investor=Thierry ULDRY introducer=Enguerrand basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC118,82a91e58-55e2-45b1-8ed3-c5a9b2f265a0,investor=Markus AKERMANN introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=1500.0
+fail,commission_row_missing_in_dashboard,VC118,e181a98a-677c-460f-adea-f673dd4f9cc6,investor=Markus AKERMANN introducer=Daniel Baumslag basis=spread dashboard=0.0 db=10383.75
+fail,commission_row_missing_in_db,VC118,VC18:7,investor=Markus AKERMANN introducer=Dan basis=invested_amount dashboard=1500.0 db=0.0
+fail,commission_row_missing_in_db,VC118,VC18:7,investor=Markus AKERMANN introducer=Dan basis=spread dashboard=10383.75 db=0.0
+fail,commission_row_missing_in_dashboard,VC118,b4cec022-5c52-40c8-a96b-b49b565baa5d,investor=Markus AKERMANN introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=3000.0
+fail,commission_row_missing_in_db,VC118,VC18:7,investor=Markus AKERMANN introducer=TERRA basis=invested_amount dashboard=3000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC118,62318250-d868-4a63-9ab5-6bc01869925f,investor=Liudmila ROMANOVA and Alexey ROMANOV introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=5000.0
+fail,commission_row_missing_in_dashboard,VC118,974243bc-76f6-475e-b68d-27c373a6e7db,investor=Liudmila ROMANOVA and Alexey ROMANOV introducer=Daniel Baumslag basis=spread dashboard=0.0 db=34614.0
+fail,commission_row_missing_in_db,VC118,VC18:5,investor=Liudmila and Alexey ROMANOVA & ROMANOV introducer=Dan basis=invested_amount dashboard=5000.0 db=0.0
+fail,commission_row_missing_in_db,VC118,VC18:5,investor=Liudmila and Alexey ROMANOVA & ROMANOV introducer=Dan basis=spread dashboard=34614.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC118,71795c56-57eb-465a-a686-f7eb6e07e3e4,investor=Liudmila ROMANOVA and Alexey ROMANOV introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=10000.0
+fail,commission_row_missing_in_db,VC118,VC18:5,investor=Liudmila and Alexey ROMANOVA & ROMANOV introducer=TERRA basis=invested_amount dashboard=10000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC118,2dfd41b9-99b2-489b-9788-ff62a945e98c,investor=Signet Logistics Ltd introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=1000.0
+fail,commission_row_missing_in_dashboard,VC118,34582f88-83b3-4044-9b33-f2ead1218c15,investor=Signet Logistics Ltd introducer=Daniel Baumslag basis=spread dashboard=0.0 db=6921.0
+fail,commission_row_missing_in_db,VC118,VC18:6,investor=SIGNET LOGISTICS Ltd introducer=Dan basis=invested_amount dashboard=1000.0 db=0.0
+fail,commission_row_missing_in_db,VC118,VC18:6,investor=SIGNET LOGISTICS Ltd introducer=Dan basis=spread dashboard=6921.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC118,9fe2b1c3-0e51-4491-8e02-91a9bb8651ba,investor=Signet Logistics Ltd introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=2000.0
+fail,commission_row_missing_in_db,VC118,VC18:6,investor=SIGNET LOGISTICS Ltd introducer=TERRA basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC118,53e98fe2-3413-4c71-8f7d-ff2c11f83694,investor=VOLF Trust introducer=Daniel Baumslag basis=invested_amount dashboard=0.0 db=2500.0
+fail,commission_row_missing_in_dashboard,VC118,8eb43789-f5b4-44c2-a94f-d0a0e643cd1e,investor=VOLF Trust introducer=Daniel Baumslag basis=spread dashboard=0.0 db=17307.0
+fail,commission_row_missing_in_db,VC118,VC18:4,investor=VOLF TRUST introducer=Dan basis=invested_amount dashboard=2500.0 db=0.0
+fail,commission_row_missing_in_db,VC118,VC18:4,investor=VOLF TRUST introducer=Dan basis=spread dashboard=17307.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC118,64e388b5-c53c-4f00-baa4-cd7577fcc2ec,investor=VOLF Trust introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=5000.0
+fail,commission_row_missing_in_db,VC118,VC18:4,investor=VOLF TRUST introducer=TERRA basis=invested_amount dashboard=5000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC122,d934c229-2597-40ae-b916-d915d7256b5b,investor=LF GROUP SARL introducer=Pierre Paumier basis=invested_amount dashboard=0.0 db=1500.0
+fail,commission_row_missing_in_db,VC125,VC25:20,investor=DALINGA HOLDING AG introducer=Dan basis=invested_amount dashboard=599.14 db=0.0
+fail,commission_row_missing_in_db,VC125,VC25:20,investor=DALINGA HOLDING AG introducer=TERRA basis=invested_amount dashboard=599.14 db=0.0
+fail,commission_row_missing_in_db,VC125,VC25:22,investor=MA GROUP AG introducer=Dan basis=invested_amount dashboard=358.0 db=0.0
+fail,commission_row_missing_in_db,VC125,VC25:22,investor=MA GROUP AG introducer=TERRA basis=invested_amount dashboard=358.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC125,415fe58c-fe17-4690-8021-9cd12f6f47f9,investor=Eric SARASIN introducer=Terra Financial & Management Services SA basis=invested_amount dashboard=0.0 db=5000.0
+fail,commission_row_missing_in_db,VC125,VC25:9,investor=Eric SARASIN introducer=TERRA basis=invested_amount dashboard=5000.0 db=0.0
+fail,commission_row_missing_in_db,VC125,VC25:36,investor=LF GROUP SARL introducer=Pierre Paumier basis=invested_amount dashboard=2000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC126,2dbf9894-4a75-49f2-a9f5-063679151bc0,investor=SC TBC INVEST 3 introducer=Manna Capital basis=spread dashboard=0.0 db=12142.0
+fail,commission_row_amount_mismatch,VC126,VC26:14,investor=SC TBC INVEST 3 introducer=Anand basis=spread dashboard=200343.0 db=400686.0 delta=200343.0
+fail,commission_row_missing_in_db,VC126,VC26:14,investor=SC TBC INVEST 3 introducer=Simone basis=spread dashboard=12142.0 db=0.0
+fail,commission_row_missing_in_db,VC126,VC26:28,investor=Odile and Georges Abou MRAD and FENERGI introducer=Alpha Gaia basis=invested_amount dashboard=3000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC126,35f1fa5d-c318-427a-804e-8aadb3956ac6,investor=Odile and Georges Abou MRAD and FENERGI introducer=Gaia Capital basis=invested_amount dashboard=0.0 db=3000.0
+fail,commission_row_amount_mismatch,VC126,VC26:4,investor=AS Advisory DWC-LLC introducer=Anand basis=spread dashboard=760.0 db=1520.0 delta=760.0
+fail,commission_row_missing_in_dashboard,VC126,a21eb414-e033-459f-b374-dadbbb48b2bc,investor=Alexandre BARBARANELLI introducer=Manna Capital basis=spread dashboard=0.0 db=882.0
+fail,commission_row_missing_in_db,VC126,VC26:23,investor=Alexandre BARBARANELLI introducer=Simone basis=spread dashboard=882.0 db=0.0
+fail,commission_row_missing_in_db,VC126,VC26:30,investor=Anatoliy KOGAN introducer=Alpha Gaia basis=invested_amount dashboard=3000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC126,bca4501f-338c-4277-8775-d03e154b22e4,investor=Anatoliy KOGAN introducer=Gaia Capital basis=invested_amount dashboard=0.0 db=3000.0
+fail,commission_row_missing_in_dashboard,VC126,457b5cf9-7030-4db7-9053-5efea7d9bf33,investor=ODIN (ANIM X II LP) introducer=Manna Capital basis=spread dashboard=0.0 db=9870.0
+fail,commission_row_amount_mismatch,VC126,VC26:15,investor=ODIN (ANIM X II LP) introducer=Anand basis=spread dashboard=55106.4 db=110212.8 delta=55106.4
+fail,commission_row_missing_in_db,VC126,VC26:15,investor=ODIN (ANIM X II LP) introducer=Simone basis=spread dashboard=9870.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC126,c4420d99-4eac-43d7-ac97-1806e1aa692f,investor=Anisha Bansal and Rahul KARKUN introducer=Manna Capital basis=spread dashboard=0.0 db=734.0
+fail,commission_row_missing_in_db,VC126,VC26:21,investor=Mrs Anisha Bansal and Mr Rahul KARKUN introducer=Simone basis=spread dashboard=734.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC126,411c06f2-3022-428a-886a-64e4b8c44833,investor=Serge AURIER introducer=Manna Capital basis=spread dashboard=0.0 db=1298.0
+fail,commission_row_missing_in_db,VC126,VC26:16,investor=Serge AURIER introducer=Simone basis=spread dashboard=1298.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC126,8eaf5b11-3bb6-4dbc-a6dc-a3dab98ef8ec,investor=John BARROWMAN introducer=Manna Capital basis=spread dashboard=0.0 db=1470.0
+fail,commission_row_missing_in_db,VC126,VC26:17,investor=John BARROWMAN introducer=Simone basis=spread dashboard=1470.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC126,1b56672d-ea01-49fb-8eff-75e547c525f4,investor=Garson Brandon LEVY introducer=Manna Capital basis=spread dashboard=0.0 db=734.0
+fail,commission_row_missing_in_db,VC126,VC26:20,investor=Garson Brandon LEVY introducer=Simone basis=spread dashboard=734.0 db=0.0
+fail,commission_row_amount_mismatch,VC126,VC26:31,investor=GESTIO CAPITAL LTD introducer=Anand basis=spread dashboard=25200.0 db=50399.99 delta=25199.99
+fail,commission_row_missing_in_dashboard,VC126,cf08d5c3-cade-4b82-8661-9bd5e0532363,investor=Anand RATHI introducer=Manna Capital basis=spread dashboard=0.0 db=7352.0
+fail,commission_row_amount_mismatch,VC126,VC26:7,investor=Anand RATHI introducer=Anand basis=spread dashboard=4030.0 db=15864.03 delta=11834.03
+fail,commission_row_missing_in_dashboard,VC126,d6e41bb3-f844-46cf-ac26-b51d9ab33bdd,investor=Anand RATHI introducer=Giovanni SALADINO basis=spread dashboard=0.0 db=3774.03
+fail,commission_row_missing_in_db,VC126,VC26:18,investor=Anand RATHI introducer=Simone basis=spread dashboard=7352.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC126,06d9de15-1340-4939-9f02-6f417f96e3b5,investor=CLOUDSAFE HOLDINGS LIMITED introducer=Moore & Moore Investments Ltd basis=invested_amount dashboard=0.0 db=6000.0
+fail,commission_row_missing_in_db,VC126,VC26:3,investor=CLOUDSAFE HOLDINGS LIMITED introducer=John basis=invested_amount dashboard=6000.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC126,88b85a00-ff18-4784-bcb1-b3863cfa7dc0,investor=DRussell Goman RD LLC introducer=Manna Capital basis=spread dashboard=0.0 db=734.0
+fail,commission_row_missing_in_db,VC126,VC26:19,investor=DRussell Goman RD LLC introducer=Simone basis=spread dashboard=734.0 db=0.0
+fail,commission_row_amount_mismatch,VC126,VC26:5,investor=Scott FLETCHER introducer=Anand basis=spread dashboard=154572.92 db=309145.84 delta=154572.92
+fail,commission_row_missing_in_db,VC126,VC26:5,investor=Scott FLETCHER introducer=Gio basis=spread dashboard=22653.56 db=0.0
+fail,commission_row_missing_in_dashboard,VC126,4806d831-94dc-4606-b823-450c256be09d,investor=Scott FLETCHER introducer=Giovanni SALADINO basis=spread dashboard=0.0 db=22653.55
+fail,commission_row_amount_mismatch,VC126,VC26:8,investor=Tuygan GOKER introducer=Anand basis=spread dashboard=63456.13 db=126912.26 delta=63456.13
+fail,commission_row_missing_in_db,VC126,VC26:8,investor=Tuygan GOKER introducer=Gio basis=spread dashboard=15096.13 db=0.0
+fail,commission_row_missing_in_dashboard,VC126,b1947ad4-1291-40b3-ac99-9efff0cfd4f0,investor=Tuygan GOKER introducer=Giovanni SALADINO basis=spread dashboard=0.0 db=30192.26
+fail,commission_row_amount_mismatch,VC126,VC26:9,investor=Julien MACHOT introducer=Anand basis=spread dashboard=890.0 db=4090.0 delta=3200.0
+fail,commission_row_missing_in_db,VC126,VC26:12,investor=OEP Ltd introducer=Anand basis=spread dashboard=770.0 db=0.0
+fail,commission_row_missing_in_dashboard,VC126,c4665ee5-d49a-4866-b626-372350c02ef0,investor=Mathieu MARIOTTI introducer=Manna Capital basis=spread dashboard=0.0 db=3676.0
+fail,commission_row_missing_in_db,VC126,VC26:22,investor=Mathieu MARIOTTI introducer=Simone basis=spread dashboard=3676.0 db=0.0
+fail,max_introducers_per_subscription_exceeded,VC126,,investor=Anand RATHI deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introducers=3 max=2
+fail,max_introducers_per_subscription_exceeded,VC106,,investor=Julien MACHOT deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introducers=3 max=2
+fail,max_introducers_per_subscription_exceeded,VC126,,investor=CLOUDSAFE HOLDINGS LIMITED deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introducers=3 max=2
+warn,dashboard_combined_introducer_name,VC111,VC11:6,sheet=VC11 row=6 introducer='Stableton+Terra' invested=7500.0 spread=0.0
+warn,dashboard_combined_introducer_name,VC111,VC11:37,sheet=VC11 row=37 introducer='Rick + Andrew' invested=20000.0 spread=330114.29
+warn,dashboard_commission_header_check,VC14,,invested_amount_col=45 header='Performance fees 1'
+warn,dashboard_commission_header_check,VC14,,invested_amount_col=55 header='Threshold 1'
+warn,dashboard_commission_header_check,VC14,,spread_col=51 header=''
+warn,dashboard_commission_header_check,VC14,,spread_col=61 header='CHECK'
+warn,dashboard_combined_introducer_name,VC126,VC26:3,sheet=VC26 row=3 introducer='Anand+Dan' invested=0.0 spread=21090.0

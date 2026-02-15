@@ -1,0 +1,78 @@
+{
+  "summary": {
+    "rules_version": "2026-02-11.1",
+    "scope_vehicle_codes": [
+      "IN101",
+      "IN102",
+      "IN103",
+      "IN106",
+      "IN109",
+      "IN110",
+      "IN111"
+    ],
+    "dashboard_active_rows": 26,
+    "dashboard_zero_rows": 5,
+    "db_subscriptions": 26,
+    "db_positions": 23,
+    "db_introductions": 15,
+    "db_commissions": 30,
+    "contacts_checked_rows": 0,
+    "contacts_red_rows_excluded": [],
+    "fail_count": 2,
+    "warning_count": 4,
+    "fail_by_check": {
+      "commission_totals_mismatch_invested_amount": 1,
+      "commission_totals_mismatch_spread": 1
+    },
+    "warn_by_check": {
+      "dashboard_combined_introducer_name": 2,
+      "commission_totals_ruled_diff_invested_amount": 2
+    }
+  },
+  "failures": [
+    {
+      "severity": "fail",
+      "check": "commission_totals_mismatch_invested_amount",
+      "vehicle": "IN103",
+      "row_ref": "",
+      "details": "dashboard=65000.0 db=45000.0 delta=-20000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_totals_mismatch_spread",
+      "vehicle": "IN103",
+      "row_ref": "",
+      "details": "dashboard=499997.22284 db=249998.61 delta=-249998.61284"
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "IN103",
+      "row_ref": "IN3:3",
+      "details": "sheet=IN3 row=3 introducer='Altras+Andrew' invested=15000.0 spread=174999.03"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_combined_introducer_name",
+      "vehicle": "IN103",
+      "row_ref": "IN3:9",
+      "details": "sheet=IN3 row=9 introducer='Altras+Andrew' invested=15000.0 spread=174999.03"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "IN102",
+      "row_ref": "",
+      "details": "dashboard=74881.5498 db=0.0 delta=-74881.5498 expected=-74881.5498"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "IN106",
+      "row_ref": "",
+      "details": "dashboard=6600.0 db=3300.0 delta=-3300.0 expected=-3300.0"
+    }
+  ]
+}

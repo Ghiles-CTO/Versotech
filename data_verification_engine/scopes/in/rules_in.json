@@ -1,0 +1,340 @@
+{
+  "name": "in_audit_rules",
+  "version": "2026-02-14.2",
+  "scope_dashboard_sheets": [
+    "IN1",
+    "IN2",
+    "IN3",
+    "IN4",
+    "IN5",
+    "IN6",
+    "IN7",
+    "IN8",
+    "IN9",
+    "IN10",
+    "IN11"
+  ],
+  "scope_vehicle_codes": [
+    "IN101",
+    "IN102",
+    "IN103",
+    "IN105",
+    "IN106",
+    "IN108",
+    "IN109",
+    "IN110",
+    "IN111"
+  ],
+  "restrict_to_db_vehicles_with_data": true,
+  "dashboard_vehicle_alias": {
+    "IN1": "IN101",
+    "IN2": "IN102",
+    "IN3": "IN103",
+    "IN4": "IN104",
+    "IN5": "IN105",
+    "IN6": "IN106",
+    "IN7": "IN107",
+    "IN8": "IN108",
+    "IN9": "IN109",
+    "IN10": "IN110",
+    "IN11": "IN111"
+  },
+  "dashboard_vehicle_alias_by_sheet": {
+    "IN11": "IN111"
+  },
+  "dashboard_ownership_fallback_to_shares_if_missing": true,
+  "dashboard_optional_numeric_fields": [
+    "management_fee_percent"
+  ],
+  "checks": {
+    "zero_ownership_must_not_be_loaded": true,
+    "status_must_be_funded": true,
+    "funded_amount_equals_commitment": true,
+    "positions_units_no_zero_rows": true,
+    "position_unique_per_investor_vehicle": true,
+    "max_introducers_per_subscription": 2,
+    "commission_exact_duplicate_check": true,
+    "commission_fk_introduction_check": true,
+    "commission_status_must_be_paid": true,
+    "currency_must_match_dashboard_when_present": true,
+    "specific_rule_assertions": false,
+    "subscription_deal_id_required": true,
+    "subscription_deal_vehicle_consistency": true,
+    "investor_identity_duplicate_check": true
+  },
+  "allowed_commission_statuses": [
+    "paid"
+  ],
+  "dashboard_currency_header_candidates": [
+    "Currency",
+    "Deal Currency",
+    "CCY",
+    "Curr"
+  ],
+  "name_aliases": {
+    "anand": "Set Cap",
+    "setcap": "Set Cap",
+    "setcapdanielbaumslag": "Set Cap",
+    "altrasandrew": "Altras Capital Financing Broker",
+    "altrasandrewstewart": "Altras Capital Financing Broker",
+    "altrasandrewstewartaltrascapitalfinancingbroker": "Altras Capital Financing Broker",
+    "renbridge": "Renaissance Bridge Capital LLC",
+    "mickaelryan": "Michael RYAN",
+    "baumslagdan": "Daniel BAUMSLAG",
+    "alanchristopherpaulsen": "Christopher PAULSEN",
+    "benjaminjonelee": "Benjamin JONES",
+    "davidgaryhall": "Gary HALL",
+    "andrew": "Andrew Stewart",
+    "Old City Capital": "Old City Securities LLC",
+    "Astra Global": "Astral Global Limited",
+    "Lafferty+Visual Sectors": "Visual Sectors",
+    "Lafferty + Visual Sectors": "Visual Sectors",
+    "Dimensional Advisors + Lafferty": "Dimensional Advisors",
+    "Anand+Dan": "Set Cap"
+  },
+  "brokers_table_expected": [
+    "Bromley Capital Partners",
+    "Elevation Securities",
+    "Old City Securities LLC",
+    "R. F. Lafferty & Co. Inc."
+  ],
+  "run_broker_checks": false,
+  "broker_like_introducers_forbidden_global": [],
+  "broker_like_introducers_forbidden_by_vehicle": {},
+  "allowed_dual_role_introducers": [],
+  "forbidden_in_introducers_master": [],
+  "forbidden_in_introductions_global": [],
+  "specific_commission_expectations": [
+    {
+      "vehicle": "IN103",
+      "investor": "Zandera (Holdco) Limited",
+      "introducer": "Altras Capital Financing Broker",
+      "basis_type": "invested_amount",
+      "amount": 15000.0
+    },
+    {
+      "vehicle": "IN103",
+      "investor": "Zandera (Holdco) Limited",
+      "introducer": "Altras Capital Financing Broker",
+      "basis_type": "spread",
+      "amount": 174999.03
+    },
+    {
+      "vehicle": "IN103",
+      "investor": "Zandera (Holdco) Limited",
+      "introducer": "Set Cap",
+      "basis_type": "invested_amount",
+      "amount": 5000.0
+    },
+    {
+      "vehicle": "IN103",
+      "investor": "Zandera (Holdco) Limited",
+      "introducer": "Set Cap",
+      "basis_type": "spread",
+      "amount": 74999.58
+    }
+  ],
+  "forbidden_commission_pairs": [],
+  "warnings_only_introducers": [],
+  "dashboard_files": {
+    "main": "VERSO/datafixing/INNOVATECH DASHBOARD_V1.xlsx",
+    "contacts": "verso_capital_2_data/VERSO Capital 2 SCSp Emails and Contacts.xlsx"
+  },
+  "run_contacts_checks": false,
+  "dashboard_commission_columns": {
+    "default": {
+      "invested_amount": [
+        35,
+        45,
+        55
+      ],
+      "spread": [
+        41,
+        51,
+        61
+      ]
+    },
+    "by_sheet": {
+      "IN2": {
+        "invested_amount": [
+          36,
+          45,
+          54
+        ],
+        "spread": [
+          42,
+          51,
+          60
+        ]
+      },
+      "IN3": {
+        "invested_amount": [
+          37,
+          47,
+          57
+        ],
+        "spread": [
+          43,
+          53,
+          63
+        ]
+      },
+      "IN5": {
+        "invested_amount": [
+          41,
+          53,
+          63
+        ],
+        "spread": [
+          47,
+          59,
+          69
+        ]
+      },
+      "IN6": {
+        "invested_amount": [
+          36,
+          46,
+          56
+        ],
+        "spread": [
+          42,
+          52,
+          62
+        ]
+      },
+      "IN10": {
+        "invested_amount": [
+          36,
+          46,
+          56
+        ],
+        "spread": [
+          42,
+          52,
+          62
+        ]
+      }
+    }
+  },
+  "dashboard_commission_name_columns": {
+    "default": [
+      43,
+      53
+    ],
+    "by_sheet": {
+      "IN2": [],
+      "IN3": [
+        45,
+        55
+      ],
+      "IN5": [
+        51,
+        61
+      ],
+      "IN6": [
+        44,
+        54
+      ],
+      "IN10": [
+        44,
+        54
+      ]
+    }
+  },
+  "dashboard_commission_slots": {
+    "default": [
+      {
+        "name_col": 43,
+        "invested_amount_col": 45,
+        "spread_col": 51
+      },
+      {
+        "name_col": 53,
+        "invested_amount_col": 55,
+        "spread_col": 61
+      }
+    ],
+    "by_sheet": {
+      "IN2": [],
+      "IN3": [
+        {
+          "name_col": 45,
+          "invested_amount_col": 47,
+          "spread_col": 53
+        },
+        {
+          "name_col": 55,
+          "invested_amount_col": 57,
+          "spread_col": 63
+        }
+      ],
+      "IN5": [
+        {
+          "name_col": 51,
+          "invested_amount_col": 53,
+          "spread_col": 59
+        },
+        {
+          "name_col": 61,
+          "invested_amount_col": 63,
+          "spread_col": 69
+        }
+      ],
+      "IN6": [
+        {
+          "name_col": 44,
+          "invested_amount_col": 46,
+          "spread_col": 52
+        },
+        {
+          "name_col": 54,
+          "invested_amount_col": 56,
+          "spread_col": 62
+        }
+      ],
+      "IN10": [
+        {
+          "name_col": 44,
+          "invested_amount_col": 46,
+          "spread_col": 52
+        },
+        {
+          "name_col": 54,
+          "invested_amount_col": 56,
+          "spread_col": 62
+        }
+      ]
+    }
+  },
+  "commission_match_basis_types": [
+    "invested_amount",
+    "spread",
+    "performance_fee_tier1",
+    "performance_fee_tier2"
+  ],
+  "row_compare_skip_metrics": [
+    "ownership"
+  ],
+  "commission_totals_exclude_vehicle_codes": [],
+  "commission_total_ruled_diffs_invested_amount": {
+    "IN102": -74881.5498,
+    "IN103": -20000.0,
+    "IN106": -3300.0
+  },
+  "commission_total_ruled_diffs_spread": {
+    "IN103": -249998.61284
+  },
+  "combined_introducer_name_policy": "ignore",
+  "dashboard_dynamic_commission_slots": true,
+  "dashboard_commission_name_header_candidates": [
+    "name",
+    "names",
+    "partner",
+    "partners",
+    "bi",
+    "verso",
+    "introducer",
+    "introducers"
+  ]
+}

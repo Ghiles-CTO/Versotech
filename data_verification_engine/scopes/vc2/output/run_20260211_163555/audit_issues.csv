@@ -1,0 +1,16 @@
+severity,check,vehicle,row_ref,details
+fail,vehicle_totals_mismatch,VC201,,sub_fee: dashboard=0.0309278350515464 db=11512.5 delta=11512.469072164948
+fail,vehicle_totals_mismatch,VC202,,sub_fee: dashboard=0.04 db=324993.779 delta=324993.739
+fail,vehicle_totals_mismatch,VC203,,sub_fee: dashboard=0.13999999999999999 db=75235.27 delta=75235.13
+fail,vehicle_totals_mismatch,VC206,,sub_fee: dashboard=0.15 db=116680.575 delta=116680.425
+fail,vehicle_totals_mismatch,VC206,,bd_fee: dashboard=0.025 db=2500.0 delta=2499.975
+fail,vehicle_totals_mismatch,VC207,,sub_fee: dashboard=0.9150000000000001 db=169996.2 delta=169995.285
+fail,vehicle_totals_mismatch,VC207,,bd_fee: dashboard=0.05 db=5008.75 delta=5008.7
+fail,vehicle_totals_mismatch,VC209,,spread_fee: dashboard=5855431.1565000005 db=8079471.1565000005 delta=2224040.0
+fail,vehicle_totals_mismatch,VC209,,sub_fee: dashboard=0.1 db=80266.66 delta=80266.56
+fail,vehicle_totals_mismatch,VC210,,sub_fee: dashboard=0.06 db=1350.0 delta=1349.94
+fail,vehicle_totals_mismatch,VC211,,sub_fee: dashboard=0.03 db=9450.0 delta=9449.97
+fail,vehicle_totals_mismatch,VC215,,sub_fee: dashboard=0.36999999999999994 db=381503.5 delta=381503.13
+fail,vehicle_totals_mismatch,VC215,,bd_fee: dashboard=0.05 db=25606.8 delta=25606.75
+warn,brokers_unexpected,,,['Old City Securities LLC']
+warn,introducer_warning_only_present,VC209,,Bright Views Holdings rows=3 amount=9000.0

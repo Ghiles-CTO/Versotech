@@ -1,0 +1,121 @@
+{
+  "summary": {
+    "rules_version": "2026-02-13.2",
+    "scope_vehicle_codes": [
+      "VC102",
+      "VC106",
+      "VC111",
+      "VC112",
+      "VC113",
+      "VC114",
+      "VC118",
+      "VC121",
+      "VC122",
+      "VC123",
+      "VC124",
+      "VC125",
+      "VC126"
+    ],
+    "dashboard_active_rows": 426,
+    "dashboard_zero_rows": 55,
+    "db_subscriptions": 426,
+    "db_positions": 352,
+    "db_introductions": 487,
+    "db_commissions": 1012,
+    "contacts_checked_rows": 0,
+    "contacts_red_rows_excluded": [],
+    "fail_count": 7,
+    "warning_count": 4,
+    "fail_by_check": {
+      "vehicle_totals_mismatch": 2,
+      "position_vs_dashboard_ownership_by_investor": 2,
+      "position_vs_dashboard_ownership": 2,
+      "commission_totals_mismatch_invested_amount": 1
+    },
+    "warn_by_check": {
+      "dashboard_commission_amount_without_name": 1,
+      "commission_totals_ruled_diff_spread": 3
+    }
+  },
+  "failures": [
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "ownership: dashboard=1969517.0 db=1964970.0 delta=-4547.0"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC114",
+      "row_ref": "",
+      "details": "ownership: dashboard=860000.0 db=530000.0 delta=-330000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "position_vs_dashboard_ownership_by_investor",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "investor_key=julienmachot dashboard=112057.0 db=107510.0 delta=-4547.0"
+    },
+    {
+      "severity": "fail",
+      "check": "position_vs_dashboard_ownership_by_investor",
+      "vehicle": "VC114",
+      "row_ref": "",
+      "details": "investor_key=julienmachot dashboard=530000.0 db=200000.0 delta=-330000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "position_vs_dashboard_ownership",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "positions=1964970.0 dashboard=1969517.0"
+    },
+    {
+      "severity": "fail",
+      "check": "position_vs_dashboard_ownership",
+      "vehicle": "VC114",
+      "row_ref": "",
+      "details": "positions=530000.0 dashboard=860000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_totals_mismatch_invested_amount",
+      "vehicle": "VC122",
+      "row_ref": "",
+      "details": "dashboard=150000.0 db=0.0 delta=-150000.0"
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "warn",
+      "check": "dashboard_commission_amount_without_name",
+      "vehicle": "VC122",
+      "row_ref": "VC22:12",
+      "details": "sheet=VC22 row=12 name_col=59 invested=150000.0 spread=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "dashboard=6326296.752 db=6326296.81 delta=0.058 expected=0.058"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "dashboard=963887.6075 db=963887.62 delta=0.0125 expected=0.0125"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC114",
+      "row_ref": "",
+      "details": "dashboard=0.4 db=0.0 delta=-0.4 expected=-0.4"
+    }
+  ]
+}

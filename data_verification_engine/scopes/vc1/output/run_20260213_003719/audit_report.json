@@ -1,0 +1,444 @@
+{
+  "summary": {
+    "rules_version": "2026-02-12.6",
+    "scope_vehicle_codes": [
+      "VC102",
+      "VC106",
+      "VC111",
+      "VC112",
+      "VC113",
+      "VC114",
+      "VC118",
+      "VC121",
+      "VC122",
+      "VC123",
+      "VC124",
+      "VC125",
+      "VC126"
+    ],
+    "dashboard_active_rows": 426,
+    "dashboard_zero_rows": 55,
+    "db_subscriptions": 426,
+    "db_positions": 352,
+    "db_introductions": 487,
+    "db_commissions": 1009,
+    "contacts_checked_rows": 0,
+    "contacts_red_rows_excluded": [],
+    "fail_count": 55,
+    "warning_count": 1,
+    "fail_by_check": {
+      "vehicle_totals_mismatch": 4,
+      "row_numeric_mismatch": 16,
+      "row_contract_date_mismatch": 1,
+      "position_vs_dashboard_ownership_by_investor": 2,
+      "zero_ownership_loaded": 1,
+      "position_vs_dashboard_ownership": 2,
+      "commission_totals_mismatch_spread": 4,
+      "commission_totals_mismatch_invested_amount": 3,
+      "commission_row_count_mismatch": 6,
+      "commission_row_amount_mismatch": 4,
+      "commission_row_missing_in_dashboard": 3,
+      "commission_row_missing_in_db": 6,
+      "max_introducers_per_subscription_exceeded": 3
+    },
+    "warn_by_check": {
+      "dashboard_commission_amount_without_name": 1
+    }
+  },
+  "failures": [
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "cost_per_share: dashboard=3404.5 db=3516.58269 delta=112.08269000000018"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "ownership: dashboard=1969517.0 db=1964970.0 delta=-4547.0"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC114",
+      "row_ref": "",
+      "details": "ownership: dashboard=860000.0 db=530000.0 delta=-330000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC122",
+      "row_ref": "",
+      "details": "price_per_share: dashboard=8.62533 db=7.27675 delta=-1.3485800000000001"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "VC6:166",
+      "details": "dash_investor=Nicki ASQUITH db_investor=Nicki ASQUITH metric=perf1_percent dashboard=0.0 db=20.0 delta=20.0 sub_id=76239795-5f38-4ea7-a24b-9eb31ec54451 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "VC6:101",
+      "details": "dash_investor=David BACHELIER db_investor=David BACHELIER metric=perf1_percent dashboard=0.0 db=20.0 delta=20.0 sub_id=95256d5e-64a2-4e0a-a6a6-03aca746ec99 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "VC6:162",
+      "details": "dash_investor=REVERY CAPITAL Limited db_investor=REVERY CAPITAL Limited metric=perf1_percent dashboard=0.0 db=20.0 delta=20.0 sub_id=c6fcc1ff-998c-41d2-bba8-480131af0ace mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "VC6:167",
+      "details": "dash_investor=Isabella CHANDRIS db_investor=Isabella CHANDRIS metric=perf1_percent dashboard=0.0 db=20.0 delta=20.0 sub_id=9faea79e-d03d-45bb-88bb-94432459d639 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "VC6:159",
+      "details": "dash_investor=Damien KRAUSER db_investor=Damien Krauser metric=perf1_percent dashboard=0.1 db=20.0 delta=19.9 sub_id=980533ed-1dd7-4c0d-ad58-dd92d898bbba mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_contract_date_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "VC11:12",
+      "details": "dash_investor=Dan\nJean BAUMSLAG\nDUTIL db_investor=Daniel BAUMSLAG dashboard=2021-09-16 db=2021-11-04 sub_id=19d2133a-8593-44f6-b8c4-d1b67d7e3c80 mode=relaxed"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "VC11:12",
+      "details": "dash_investor=Dan\nJean BAUMSLAG\nDUTIL db_investor=Daniel BAUMSLAG metric=sub_fee_percent dashboard=0.0 db=0.04 delta=0.04 sub_id=19d2133a-8593-44f6-b8c4-d1b67d7e3c80 mode=relaxed"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "VC11:12",
+      "details": "dash_investor=Dan\nJean BAUMSLAG\nDUTIL db_investor=Daniel BAUMSLAG metric=sub_fee dashboard=0.0 db=2000.0 delta=2000.0 sub_id=19d2133a-8593-44f6-b8c4-d1b67d7e3c80 mode=relaxed"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "VC11:12",
+      "details": "dash_investor=Dan\nJean BAUMSLAG\nDUTIL db_investor=Daniel BAUMSLAG metric=perf1_percent dashboard=0.1 db=0.2 delta=0.1 sub_id=19d2133a-8593-44f6-b8c4-d1b67d7e3c80 mode=relaxed"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "VC11:22",
+      "details": "dash_investor=FINALMA SUISSE SA db_investor=FINALMA SUISSE SA metric=sub_fee_percent dashboard=0.04 db=0.0 delta=-0.04 sub_id=035f1055-d811-4078-aee9-423af75f15fc mode=relaxed"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "VC11:22",
+      "details": "dash_investor=FINALMA SUISSE SA db_investor=FINALMA SUISSE SA metric=sub_fee dashboard=2000.0 db=0.0 delta=-2000.0 sub_id=035f1055-d811-4078-aee9-423af75f15fc mode=relaxed"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "VC11:22",
+      "details": "dash_investor=FINALMA SUISSE SA db_investor=FINALMA SUISSE SA metric=perf1_percent dashboard=0.2 db=0.1 delta=-0.1 sub_id=035f1055-d811-4078-aee9-423af75f15fc mode=relaxed"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "VC13:53",
+      "details": "dash_investor=Julien MACHOT db_investor=Julien MACHOT metric=perf1_percent dashboard=0.0 db=0.1 delta=0.1 sub_id=88817172-c22c-49c4-931a-1b8821bc1908 mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC122",
+      "row_ref": "VC22:3",
+      "details": "dash_investor=Julien MACHOT db_investor=Julien MACHOT metric=price_per_share dashboard=1.0 db=0.40076 delta=-0.59924 sub_id=811458af-9fda-4b9f-92e9-cc7429b2b9df mode=exact_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC122",
+      "row_ref": "VC22:7",
+      "details": "dash_investor=Anke Skoludek RICE db_investor=Anke RICE metric=price_per_share dashboard=1.0 db=0.62533 delta=-0.37467 sub_id=32cbe26f-4e2e-4dab-bb6f-82ad06d3549b mode=fallback_loose_name_amounts"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "VC13:62",
+      "details": "dash_investor=OEP Ltd db_investor=Julien MACHOT metric=perf1_percent dashboard=0.1 db=0.0 delta=-0.1 sub_id=e45cf8fd-996b-42a9-9942-ef8522f0959d mode=fallback_amounts_date"
+    },
+    {
+      "severity": "fail",
+      "check": "row_numeric_mismatch",
+      "vehicle": "VC122",
+      "row_ref": "VC22:9",
+      "details": "dash_investor=INNOVATECH COMPARTMENT 8 db_investor=Anand SETHA metric=price_per_share dashboard=1.0 db=0.62533 delta=-0.37467 sub_id=eb82dd2c-6ef3-4910-a186-f21ff2628ea2 mode=fallback_amounts_date"
+    },
+    {
+      "severity": "fail",
+      "check": "position_vs_dashboard_ownership_by_investor",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "investor_key=julienmachot dashboard=112057.0 db=107510.0 delta=-4547.0"
+    },
+    {
+      "severity": "fail",
+      "check": "position_vs_dashboard_ownership_by_investor",
+      "vehicle": "VC114",
+      "row_ref": "",
+      "details": "investor_key=julienmachot dashboard=530000.0 db=200000.0 delta=-330000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "zero_ownership_loaded",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "zero_key=('VC111', 'michaelryan', 571428.57, 100000.0, '2021-11-11') dashboard_zero=1 db_exact=0 db_relaxed=1"
+    },
+    {
+      "severity": "fail",
+      "check": "position_vs_dashboard_ownership",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "positions=1964970.0 dashboard=1969517.0"
+    },
+    {
+      "severity": "fail",
+      "check": "position_vs_dashboard_ownership",
+      "vehicle": "VC114",
+      "row_ref": "",
+      "details": "positions=530000.0 dashboard=860000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_totals_mismatch_spread",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "dashboard=6326296.752 db=6320940.55 delta=-5356.202"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_totals_mismatch_invested_amount",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "dashboard=193995.0 db=173995.0 delta=-20000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_totals_mismatch_spread",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "dashboard=963887.6075 db=963887.62 delta=0.0125"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_totals_mismatch_spread",
+      "vehicle": "VC114",
+      "row_ref": "",
+      "details": "dashboard=0.4 db=0.0 delta=-0.4"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_totals_mismatch_invested_amount",
+      "vehicle": "VC122",
+      "row_ref": "",
+      "details": "dashboard=150000.0 db=1500.0 delta=-148500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_totals_mismatch_invested_amount",
+      "vehicle": "VC125",
+      "row_ref": "",
+      "details": "dashboard=8914.2776 db=5000.0 delta=-3914.2776"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_totals_mismatch_spread",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "dashboard=658310.131311 db=682868.19 delta=24558.058689"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_count_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "VC6:25",
+      "details": "investor=Sandra KOHLER CABIAN introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=2"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "VC6:135",
+      "details": "investor=Eric Pascal LE SEIGNEUR introducer=VERSO PARTNER basis=spread dashboard=10712.52 db=5356.26 delta=-5356.26"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_count_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "VC6:135",
+      "details": "investor=Eric Pascal LE SEIGNEUR introducer=VERSO PARTNER basis=spread dashboard_rows=2 db_rows=1"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_count_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "VC6:21",
+      "details": "investor=OEP Ltd introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=6"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "VC13:15",
+      "details": "investor=Zandera (Finco) Limited introducer=Anand basis=invested_amount dashboard=40000.0 db=20000.0 delta=-20000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_count_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "VC13:15",
+      "details": "investor=Zandera (Finco) Limited introducer=Anand basis=invested_amount dashboard_rows=2 db_rows=1"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC122",
+      "row_ref": "d934c229-2597-40ae-b916-d915d7256b5b",
+      "details": "investor=LF GROUP SARL introducer=Pierre Paumier basis=invested_amount dashboard=0.0 db=1500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_db",
+      "vehicle": "VC125",
+      "row_ref": "VC25:20",
+      "details": "investor=DALINGA HOLDING AG introducer=Dan basis=invested_amount dashboard=599.14 db=0.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_db",
+      "vehicle": "VC125",
+      "row_ref": "VC25:20",
+      "details": "investor=DALINGA HOLDING AG introducer=TERRA basis=invested_amount dashboard=599.14 db=0.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_db",
+      "vehicle": "VC125",
+      "row_ref": "VC25:22",
+      "details": "investor=MA GROUP AG introducer=Dan basis=invested_amount dashboard=358.0 db=0.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_db",
+      "vehicle": "VC125",
+      "row_ref": "VC25:22",
+      "details": "investor=MA GROUP AG introducer=TERRA basis=invested_amount dashboard=358.0 db=0.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_db",
+      "vehicle": "VC125",
+      "row_ref": "VC25:36",
+      "details": "investor=LF GROUP SARL introducer=Pierre Paumier basis=invested_amount dashboard=2000.0 db=0.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_amount_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "VC26:7",
+      "details": "investor=Anand RATHI introducer=Anand basis=spread dashboard=4030.0 db=11834.03 delta=7804.03"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_count_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "VC26:7",
+      "details": "investor=Anand RATHI introducer=Anand basis=spread dashboard_rows=1 db_rows=2"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC126",
+      "row_ref": "d6e41bb3-f844-46cf-ac26-b51d9ab33bdd",
+      "details": "investor=Anand RATHI introducer=Giovanni SALADINO basis=spread dashboard=0.0 db=3774.03"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC126",
+      "row_ref": "6f6c330a-c5fe-419a-8178-37069b41a853",
+      "details": "investor=CLOUDSAFE HOLDINGS LIMITED introducer=Daniel Baumslag basis=spread dashboard=0.0 db=12210.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_amount_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "VC26:9",
+      "details": "investor=Julien MACHOT introducer=Anand basis=spread dashboard=890.0 db=2430.0 delta=1540.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_count_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "VC26:9",
+      "details": "investor=Julien MACHOT introducer=Anand basis=spread dashboard_rows=1 db_rows=3"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_db",
+      "vehicle": "VC126",
+      "row_ref": "VC26:12",
+      "details": "investor=OEP Ltd introducer=Anand basis=spread dashboard=770.0 db=0.0"
+    },
+    {
+      "severity": "fail",
+      "check": "max_introducers_per_subscription_exceeded",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "investor=Anand RATHI deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introducers=3 max=2"
+    },
+    {
+      "severity": "fail",
+      "check": "max_introducers_per_subscription_exceeded",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "investor=Julien MACHOT deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introducers=3 max=2"
+    },
+    {
+      "severity": "fail",
+      "check": "max_introducers_per_subscription_exceeded",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "investor=CLOUDSAFE HOLDINGS LIMITED deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introducers=3 max=2"
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "warn",
+      "check": "dashboard_commission_amount_without_name",
+      "vehicle": "VC122",
+      "row_ref": "VC22:12",
+      "details": "sheet=VC22 row=12 name_col=59 invested=150000.0 spread=0.0"
+    }
+  ]
+}

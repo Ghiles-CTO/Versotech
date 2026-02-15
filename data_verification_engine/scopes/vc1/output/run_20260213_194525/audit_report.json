@@ -1,0 +1,136 @@
+{
+  "summary": {
+    "rules_version": "2026-02-13.2",
+    "scope_vehicle_codes": [
+      "VC102",
+      "VC106",
+      "VC111",
+      "VC112",
+      "VC113",
+      "VC114",
+      "VC118",
+      "VC121",
+      "VC122",
+      "VC123",
+      "VC124",
+      "VC125",
+      "VC126"
+    ],
+    "dashboard_active_rows": 426,
+    "dashboard_zero_rows": 55,
+    "db_subscriptions": 426,
+    "db_positions": 352,
+    "db_introductions": 485,
+    "db_commissions": 1012,
+    "contacts_checked_rows": 0,
+    "contacts_red_rows_excluded": [],
+    "fail_count": 9,
+    "warning_count": 4,
+    "fail_by_check": {
+      "commission_totals_mismatch_invested_amount": 1,
+      "commission_row_missing_in_db": 3,
+      "commission_row_amount_mismatch": 2,
+      "commission_row_count_mismatch": 2,
+      "commission_row_missing_in_dashboard": 1
+    },
+    "warn_by_check": {
+      "dashboard_commission_amount_without_name": 1,
+      "commission_totals_ruled_diff_spread": 3
+    }
+  },
+  "failures": [
+    {
+      "severity": "fail",
+      "check": "commission_totals_mismatch_invested_amount",
+      "vehicle": "VC122",
+      "row_ref": "",
+      "details": "dashboard=150000.0 db=0.0 delta=-150000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_db",
+      "vehicle": "VC113",
+      "row_ref": "VC13:15",
+      "details": "investor=Zandera (Finco) Limited introducer=Rick basis=spread dashboard=389281.0 db=0.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_db",
+      "vehicle": "VC113",
+      "row_ref": "VC13:15",
+      "details": "investor=Zandera (Finco) Limited introducer=Anand basis=invested_amount dashboard=40000.0 db=0.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_db",
+      "vehicle": "VC113",
+      "row_ref": "VC13:15",
+      "details": "investor=Zandera (Finco) Limited introducer=Anand basis=spread dashboard=158751.27 db=0.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "VC13:70",
+      "details": "investor=Zandera (Holdco) Limited introducer=Rick basis=spread dashboard=204572.0 db=593853.0 delta=389281.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_count_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "VC13:70",
+      "details": "investor=Zandera (Holdco) Limited introducer=Rick basis=spread dashboard_rows=2 db_rows=4"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_dashboard",
+      "vehicle": "VC113",
+      "row_ref": "9390646c-b70a-451b-8b6e-16a11a397833",
+      "details": "investor=Zandera (Holdco) Limited introducer=Set Cap basis=invested_amount dashboard=0.0 db=40000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "VC13:70",
+      "details": "investor=Zandera (Holdco) Limited introducer=Anand basis=spread dashboard=88253.33 db=247004.61 delta=158751.28"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_count_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "VC13:70",
+      "details": "investor=Zandera (Holdco) Limited introducer=Anand basis=spread dashboard_rows=2 db_rows=4"
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "warn",
+      "check": "dashboard_commission_amount_without_name",
+      "vehicle": "VC122",
+      "row_ref": "VC22:12",
+      "details": "sheet=VC22 row=12 name_col=59 invested=150000.0 spread=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "dashboard=6326296.752 db=6326296.81 delta=0.058 expected=0.058"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "dashboard=963887.6075 db=963887.62 delta=0.0125 expected=0.0125"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC114",
+      "row_ref": "",
+      "details": "dashboard=0.4 db=0.0 delta=-0.4 expected=-0.4"
+    }
+  ]
+}

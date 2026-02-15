@@ -1,0 +1,30 @@
+severity,check,vehicle,row_ref,details
+fail,vehicle_totals_mismatch,VC106,,cost_per_share: dashboard=3404.5 db=3516.58269 delta=112.08269000000018
+fail,vehicle_totals_mismatch,VC106,,ownership: dashboard=1969517.0 db=1964970.0 delta=-4547.0
+fail,vehicle_totals_mismatch,VC114,,ownership: dashboard=860000.0 db=530000.0 delta=-330000.0
+fail,row_numeric_mismatch,VC106,VC6:166,dash_investor=Nicki ASQUITH db_investor=Nicki ASQUITH metric=perf1_percent dashboard=0.0 db=20.0 delta=20.0 sub_id=76239795-5f38-4ea7-a24b-9eb31ec54451 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:101,dash_investor=David BACHELIER db_investor=David BACHELIER metric=perf1_percent dashboard=0.0 db=20.0 delta=20.0 sub_id=95256d5e-64a2-4e0a-a6a6-03aca746ec99 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:162,dash_investor=REVERY CAPITAL Limited db_investor=REVERY CAPITAL Limited metric=perf1_percent dashboard=0.0 db=20.0 delta=20.0 sub_id=c6fcc1ff-998c-41d2-bba8-480131af0ace mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:167,dash_investor=Isabella CHANDRIS db_investor=Isabella CHANDRIS metric=perf1_percent dashboard=0.0 db=20.0 delta=20.0 sub_id=9faea79e-d03d-45bb-88bb-94432459d639 mode=exact_date
+fail,row_numeric_mismatch,VC106,VC6:159,dash_investor=Damien KRAUSER db_investor=Damien Krauser metric=perf1_percent dashboard=0.1 db=20.0 delta=19.9 sub_id=980533ed-1dd7-4c0d-ad58-dd92d898bbba mode=exact_date
+fail,position_vs_dashboard_ownership_by_investor,VC106,,investor_key=julienmachot dashboard=112057.0 db=107510.0 delta=-4547.0
+fail,position_vs_dashboard_ownership_by_investor,VC114,,investor_key=julienmachot dashboard=530000.0 db=200000.0 delta=-330000.0
+fail,zero_ownership_loaded,VC111,,"zero_key=('VC111', 'michaelryan', 571428.57, 100000.0, '2021-11-11') dashboard_zero=1 db_exact=0 db_relaxed=1"
+fail,position_vs_dashboard_ownership,VC106,,positions=1964970.0 dashboard=1969517.0
+fail,position_vs_dashboard_ownership,VC114,,positions=530000.0 dashboard=860000.0
+fail,commission_duplicate_exact,VC106,,"count=2 key=('d5e08d13-ebdf-4d8c-a218-ee50e2117c6f', '07eff085-9f1d-4e02-b1e2-d717817503f1', 'e78f40f3-7e17-44cd-af46-a01a2f195f3e', '279d437e-2992-45b2-8075-2569e380a345', 'spread', None, 536, '100000.0', '5356.26')"
+fail,commission_duplicate_exact,VC113,,"count=2 key=('b661243f-e6b4-41f1-b239-de4b197a689a', '1e4061bd-6e36-4298-8e98-9fd55ab6a448', '53b54fb5-b965-4bcd-888a-8bfb98791ba5', '469d0eab-88fb-4675-83c8-c81885f05dfc', 'invested_amount', None, 200, 'None', '20000.0')"
+fail,commission_totals_mismatch_spread,VC106,,dashboard=6326296.752 db=6326296.81 delta=0.058
+fail,commission_totals_mismatch_invested_amount,VC122,,dashboard=150000.0 db=0.0 delta=-150000.0
+fail,commission_row_count_mismatch,VC106,VC6:21,investor=OEP Ltd introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=6
+fail,commission_row_count_mismatch,VC125,VC25:20,investor=DALINGA HOLDING AG introducer=Dan basis=invested_amount dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC125,VC25:20,investor=DALINGA HOLDING AG introducer=TERRA basis=invested_amount dashboard_rows=2 db_rows=1
+fail,commission_row_amount_mismatch,VC126,VC26:9,investor=Julien MACHOT introducer=Anand basis=spread dashboard=890.0 db=1660.0 delta=770.0
+fail,commission_row_count_mismatch,VC126,VC26:9,investor=Julien MACHOT introducer=Anand basis=spread dashboard_rows=1 db_rows=2
+fail,commission_row_missing_in_db,VC126,VC26:12,investor=OEP Ltd introducer=Anand basis=spread dashboard=770.0 db=0.0
+fail,max_introducers_per_subscription_exceeded,VC126,,investor=Anand RATHI deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introducers=3 max=2
+fail,max_introducers_per_subscription_exceeded,VC106,,investor=Julien MACHOT deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introducers=3 max=2
+fail,max_introducers_per_subscription_exceeded,VC126,,investor=CLOUDSAFE HOLDINGS LIMITED deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introducers=3 max=2
+warn,dashboard_commission_amount_without_name,VC122,VC22:12,sheet=VC22 row=12 name_col=59 invested=150000.0 spread=0.0
+warn,commission_totals_ruled_diff_spread,VC113,,dashboard=963887.6075 db=963887.62 delta=0.0125 expected=0.0125
+warn,commission_totals_ruled_diff_spread,VC114,,dashboard=0.4 db=0.0 delta=-0.4 expected=-0.4
