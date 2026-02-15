@@ -58,6 +58,7 @@ export function ContentGrid({ searchQuery = '', className }: ContentGridProps) {
     openPreview,
     closePreview,
     downloadDocument: downloadFromPreview,
+    watermark: previewWatermark,
   } = useDocumentViewer()
 
   // ---------------------------------------------------------------------------
@@ -261,6 +262,7 @@ export function ContentGrid({ searchQuery = '', className }: ContentGridProps) {
           error={previewError}
           onClose={closePreview}
           onDownload={downloadFromPreview}
+          watermark={previewWatermark}
         />
       </>
     )
@@ -303,6 +305,7 @@ export function ContentGrid({ searchQuery = '', className }: ContentGridProps) {
         error={previewError}
         onClose={closePreview}
         onDownload={downloadFromPreview}
+        watermark={previewWatermark}
       />
     </>
   )

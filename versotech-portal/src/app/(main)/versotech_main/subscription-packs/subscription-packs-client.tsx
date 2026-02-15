@@ -153,6 +153,7 @@ export function SubscriptionPacksClient({ entityInfo, subscriptions }: Subscript
     openPreview,
     closePreview,
     downloadDocument: downloadFromPreview,
+    watermark: previewWatermark,
   } = useDocumentViewer()
 
   // Compute unique investors and deals for dropdown options
@@ -941,6 +942,7 @@ export function SubscriptionPacksClient({ entityInfo, subscriptions }: Subscript
         error={previewError}
         onClose={closePreview}
         onDownload={downloadFromPreview}
+        watermark={previewWatermark}
       />
     </div>
   )

@@ -527,6 +527,7 @@ export function CategorizedDocumentsClient({
         error={documentViewer.error}
         onClose={documentViewer.closePreview}
         onDownload={documentViewer.downloadDocument}
+        watermark={documentViewer.watermark}
       />
     </div>
   )

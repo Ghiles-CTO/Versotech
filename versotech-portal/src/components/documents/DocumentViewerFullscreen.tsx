@@ -20,6 +20,7 @@ interface DocumentViewerFullscreenProps {
   onClose: () => void
   onDownload: () => void
   hideDownload?: boolean
+  watermark?: Record<string, any> | null
 }
 
 /**
@@ -63,6 +64,7 @@ export function DocumentViewerFullscreen({
   onClose,
   onDownload,
   hideDownload = false,
+  watermark: watermarkProp,
 }: DocumentViewerFullscreenProps) {
   const [contentError, setContentError] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -302,8 +304,9 @@ export function DocumentViewerFullscreen({
 
         {/* Per-user repeating diagonal watermark overlay — always renders when content is visible */}
         {showContent && (() => {
-          const line1 = document?.watermark?.viewer_email || 'CONFIDENTIAL'
-          const line2 = document?.watermark?.entity_name || document?.watermark?.viewer_name || ''
+          const wm = watermarkProp || document?.watermark
+          const line1 = wm?.viewer_email || 'CONFIDENTIAL'
+          const line2 = wm?.entity_name || wm?.viewer_name || ''
           return (
             <div
               className="absolute inset-0 pointer-events-none overflow-hidden select-none"

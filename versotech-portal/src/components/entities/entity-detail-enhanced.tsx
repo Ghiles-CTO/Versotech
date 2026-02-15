@@ -2797,6 +2797,7 @@ export function EntityDetailEnhanced({
         error={documentViewer.error}
         onClose={documentViewer.closePreview}
         onDownload={documentViewer.downloadDocument}
+        watermark={documentViewer.watermark}
       />
 
       {/* Edit Subscription Modal - New */}

@@ -167,6 +167,7 @@ export function DataRoomDocuments({ documents }: DataRoomDocumentsProps) {
         error={viewer.error}
         onClose={viewer.closePreview}
         onDownload={viewer.downloadDocument}
+        watermark={viewer.watermark}
       />
     </div>
   )

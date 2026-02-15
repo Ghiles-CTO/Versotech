@@ -743,7 +743,8 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     error: previewError,
     openPreview,
     closePreview,
-    downloadDocument: downloadFromPreview
+    downloadDocument: downloadFromPreview,
+    watermark: previewWatermark
   } = useDocumentViewer()
 
   // Get vehicle object from ID
@@ -2681,6 +2682,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
         error={previewError}
         onClose={closePreview}
         onDownload={downloadFromPreview}
+        watermark={previewWatermark}
       />
     </div>
   )

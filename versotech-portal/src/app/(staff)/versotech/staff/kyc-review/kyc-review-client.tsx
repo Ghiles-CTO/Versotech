@@ -198,7 +198,8 @@ export function KYCReviewClient() {
     error: previewError,
     openPreview,
     closePreview,
-    downloadDocument: downloadFromPreview
+    downloadDocument: downloadFromPreview,
+    watermark: previewWatermark
   } = useDocumentViewer()
 
   // Questionnaire viewer state
@@ -936,6 +937,7 @@ export function KYCReviewClient() {
         error={previewError}
         onClose={closePreview}
         onDownload={downloadFromPreview}
+        watermark={previewWatermark}
       />
 
       {/* Questionnaire Viewer */}

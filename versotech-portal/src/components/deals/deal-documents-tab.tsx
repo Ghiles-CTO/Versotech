@@ -394,6 +394,7 @@ export function DealDocumentsTab({ dealId, documents, onRefresh }: DealDocuments
         error={viewer.error}
         onClose={viewer.closePreview}
         onDownload={viewer.downloadDocument}
+        watermark={viewer.watermark}
       />
     </div>
   )

@@ -43,6 +43,7 @@ export function SearchResults({ className }: SearchResultsProps) {
     openPreview,
     closePreview,
     downloadDocument: downloadFromPreview,
+    watermark: previewWatermark,
   } = useDocumentViewer()
 
   // ---------------------------------------------------------------------------
@@ -259,6 +260,7 @@ export function SearchResults({ className }: SearchResultsProps) {
         error={previewError}
         onClose={closePreview}
         onDownload={downloadFromPreview}
+        watermark={previewWatermark}
       />
     </>
   )

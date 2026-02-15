@@ -58,7 +58,8 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
     error: viewerError,
     openPreview,
     closePreview,
-    downloadDocument
+    downloadDocument,
+    watermark: viewerWatermark
   } = useDocumentViewer()
 
   const statusColors: Record<string, string> = {
@@ -633,6 +634,7 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
         error={viewerError}
         onClose={closePreview}
         onDownload={downloadDocument}
+        watermark={viewerWatermark}
       />
 
       {/* Signatory Selection Dialog */}

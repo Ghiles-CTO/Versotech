@@ -49,7 +49,8 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
     error: previewError,
     openPreview,
     closePreview,
-    downloadDocument
+    downloadDocument,
+    watermark
   } = useDocumentViewer()
 
   // Separate featured and regular documents
@@ -340,6 +341,7 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
         error={previewError}
         onClose={closePreview}
         onDownload={downloadDocument}
+        watermark={watermark}
       />
     </div>
   )

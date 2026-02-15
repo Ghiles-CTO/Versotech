@@ -22,6 +22,7 @@ export function useDocumentViewer() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [watermark, setWatermark] = useState<Record<string, any> | null>(null)
 
   /**
    * Validate if document can be previewed
@@ -98,8 +99,9 @@ export function useDocumentViewer() {
         ? await DocumentService.getDealDocumentPreviewUrl(dealId, doc.id)
         : await DocumentService.getPreviewUrl(doc.id)
 
-      // Set preview URL
+      // Set preview URL and watermark data (separate state to avoid race conditions)
       setPreviewUrl(response.download_url)
+      setWatermark(response.watermark || null)
       setIsLoading(false)
     } catch (err) {
       console.error('Failed to load document preview:', err)
@@ -128,6 +130,7 @@ export function useDocumentViewer() {
       setPreviewUrl(null)
       setError(null)
       setIsLoading(false)
+      setWatermark(null)
     }, 300)
   }, [])
 
@@ -166,6 +169,7 @@ export function useDocumentViewer() {
     previewUrl,
     isLoading,
     error,
+    watermark,
 
     // Methods
     openPreview,

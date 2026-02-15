@@ -34,6 +34,9 @@ export interface DocumentUrlResponse {
     uploaded_by?: string
     uploaded_at?: string
     document_classification?: string
+    viewer_email?: string
+    viewer_name?: string
+    entity_name?: string
     [key: string]: any
   }
   expires_in_seconds: number
