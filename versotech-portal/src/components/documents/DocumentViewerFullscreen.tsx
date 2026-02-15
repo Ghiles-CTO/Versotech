@@ -300,14 +300,15 @@ export function DocumentViewerFullscreen({
           />
         )}
 
-        {/* Per-user repeating diagonal watermark overlay */}
-        {document?.watermark && !isLoading && !error && !contentError && (() => {
-          const line1 = document.watermark?.viewer_email || 'CONFIDENTIAL'
-          const line2 = document.watermark?.entity_name || document.watermark?.viewer_name || ''
+        {/* Per-user repeating diagonal watermark overlay — always renders when content is visible */}
+        {showContent && (() => {
+          const line1 = document?.watermark?.viewer_email || 'CONFIDENTIAL'
+          const line2 = document?.watermark?.entity_name || document?.watermark?.viewer_name || ''
           return (
             <div
-              className="absolute inset-0 z-50 pointer-events-none overflow-hidden select-none"
+              className="absolute inset-0 pointer-events-none overflow-hidden select-none"
               aria-hidden="true"
+              style={{ zIndex: 9999 }}
             >
               <div
                 style={{
