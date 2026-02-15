@@ -63,6 +63,7 @@ import { usePersona } from '@/contexts/persona-context'
 import { useProxyMode } from '@/components/commercial-partner'
 import { getAccountStatusCopy, formatKycStatusLabel } from '@/lib/account-approval-status'
 import { isPreviewableExtension } from '@/constants/document-preview.constants'
+import { DocumentService } from '@/services/document.service'
 import { toast } from 'sonner'
 
 interface Document {
@@ -362,9 +363,10 @@ function getDocIcon(fileName: string, fileType: string, isExternal: boolean) {
   return { Icon: File, color: 'text-muted-foreground' }
 }
 
-function FeaturedDocRow({ doc, dealId }: {
+function FeaturedDocRow({ doc, dealId, onPreview }: {
   doc: { id: string; file_name: string; file_size: number; file_type: string; external_link?: string | null }
   dealId: string
+  onPreview?: (doc: { id: string; file_name: string; file_size: number; file_type: string }) => void
 }) {
   const [loading, setLoading] = useState<'preview' | 'download' | null>(null)
   const { Icon, color } = getDocIcon(doc.file_name, doc.file_type, !!doc.external_link)
@@ -373,6 +375,11 @@ function FeaturedDocRow({ doc, dealId }: {
   const handleAction = async (mode: 'preview' | 'download') => {
     if (doc.external_link) {
       window.open(doc.external_link, '_blank', 'noopener,noreferrer')
+      return
+    }
+    // For preview mode, use the shared viewer if available
+    if (mode === 'preview' && onPreview) {
+      onPreview(doc)
       return
     }
     setLoading(mode)
@@ -483,6 +490,7 @@ export default function OpportunityDetailPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewError, setPreviewError] = useState<string | null>(null)
   const [previewDocument, setPreviewDocument] = useState<DocumentReference | null>(null)
+  const [previewWatermark, setPreviewWatermark] = useState<Record<string, any> | null>(null)
   const { isProxyMode, selectedClient } = useProxyMode()
 
   useEffect(() => {
@@ -1143,6 +1151,30 @@ export default function OpportunityDetailPage() {
                     key={doc.id}
                     doc={doc}
                     dealId={opportunity.id}
+                    onPreview={(d) => {
+                      const docRef: DocumentReference = {
+                        id: d.id,
+                        file_name: d.file_name,
+                        mime_type: d.file_type,
+                        file_size_bytes: d.file_size,
+                      }
+                      setPreviewDocument(docRef)
+                      setPreviewOpen(true)
+                      setPreviewLoading(true)
+                      setPreviewError(null)
+                      setPreviewUrl(null)
+
+                      DocumentService.getDealDocumentPreviewUrl(opportunity.id, d.id)
+                        .then((res) => {
+                          setPreviewUrl(res.download_url)
+                          setPreviewWatermark(res.watermark || null)
+                        })
+                        .catch((err) => {
+                          console.error('Error loading featured doc preview:', err)
+                          setPreviewError(err instanceof Error ? err.message : 'Failed to load preview')
+                        })
+                        .finally(() => setPreviewLoading(false))
+                    }}
                   />
                 ))}
               </CardContent>
@@ -1708,7 +1740,7 @@ export default function OpportunityDetailPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Term Sheet Preview - Fullscreen Viewer */}
+      {/* Term Sheet / Featured Doc Preview - Fullscreen Viewer */}
       <DocumentViewerFullscreen
         isOpen={previewOpen}
         document={previewDocument}
@@ -1720,12 +1752,15 @@ export default function OpportunityDetailPage() {
           setPreviewUrl(null)
           setPreviewError(null)
           setPreviewDocument(null)
+          setPreviewWatermark(null)
         }}
         onDownload={() => {
           if (previewUrl) {
             window.open(previewUrl, '_blank')
           }
         }}
+        watermark={previewWatermark}
+        hideDownload
       />
     </div>
   )

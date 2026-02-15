@@ -8,8 +8,7 @@ let pdfjsPromise: Promise<typeof import('pdfjs-dist')> | null = null
 function loadPdfjs() {
   if (!pdfjsPromise) {
     pdfjsPromise = import('pdfjs-dist').then((lib) => {
-      lib.GlobalWorkerOptions.workerSrc =
-        `https://unpkg.com/pdfjs-dist@${lib.version}/build/pdf.worker.min.mjs`
+      lib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
       return lib
     })
   }
