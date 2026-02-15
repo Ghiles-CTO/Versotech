@@ -5,11 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { toast } from 'sonner'
 import {
   ChevronDown,
   ChevronRight,
-  Download,
   ExternalLink,
   File,
   FileText,
@@ -19,10 +17,8 @@ import {
   Presentation,
   Folder,
   FolderOpen,
-  Star,
   Lock,
   Eye,
-  Loader2
 } from 'lucide-react'
 import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
@@ -97,55 +93,9 @@ function DocumentRow({
   hasAccess: boolean
   onPreview: (doc: DataRoomDocument) => void
 }) {
-  const [isDownloading, setIsDownloading] = useState(false)
   const FileIcon = getFileIcon(document.file_type)
   const isExternal = !!document.external_link
   const canPreview = isPreviewableType(document.file_type, document.file_name)
-
-  const handleDownload = useCallback(async () => {
-    if (isExternal && document.external_link) {
-      window.open(document.external_link, '_blank', 'noopener,noreferrer')
-      return
-    }
-
-    setIsDownloading(true)
-
-    try {
-      const response = await fetch(
-        `/api/deals/${dealId}/documents/${document.id}/download?mode=download`
-      )
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        if (response.status === 401) {
-          toast.error('Please sign in to access documents')
-        } else if (response.status === 403) {
-          toast.error(errorData.error || 'Access denied to this document')
-        } else if (response.status === 404) {
-          toast.error('Document not found')
-        } else {
-          toast.error(errorData.error || 'Failed to access document')
-        }
-        return
-      }
-
-      const data = await response.json()
-      const url = data.download_url || data.url
-
-      if (!url) {
-        toast.error('Failed to generate document link')
-        return
-      }
-
-      window.open(url, '_blank', 'noopener,noreferrer')
-      toast.success('Download started')
-    } catch (error) {
-      console.error('Document download error:', error)
-      toast.error('Failed to access document. Please try again.')
-    } finally {
-      setIsDownloading(false)
-    }
-  }, [dealId, document.id, document.external_link, isExternal])
 
   return (
     <div className="flex items-center justify-between py-3 px-4 hover:bg-muted rounded-lg transition-colors group">
@@ -196,20 +146,6 @@ function DocumentRow({
                   Preview
                 </Button>
               )}
-              {/* Download button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleDownload}
-                disabled={isDownloading}
-              >
-                {isDownloading ? (
-                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                ) : (
-                  <Download className="h-4 w-4 mr-1" />
-                )}
-                Download
-              </Button>
             </>
           )}
         </div>
@@ -367,33 +303,7 @@ export function DataRoomViewer({
 
   return (
     <div className="space-y-6">
-      {/* Featured Documents Section */}
-      {featured.length > 0 && (
-        <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-900/10">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2 text-amber-700 dark:text-amber-300">
-              <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
-              Featured Documents
-            </CardTitle>
-            <CardDescription className="text-amber-600/80 dark:text-amber-400/80">
-              Key documents highlighted by the deal team
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0 space-y-1">
-            {featured.map((doc) => (
-              <DocumentRow
-                key={doc.id}
-                document={doc}
-                dealId={dealId}
-                hasAccess={hasAccess}
-                onPreview={handlePreview}
-              />
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Folders Section */}
+      {/* Folders Section — Featured docs are shown on Overview tab only */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
@@ -428,6 +338,7 @@ export function DataRoomViewer({
         error={viewer.error}
         onClose={viewer.closePreview}
         onDownload={viewer.downloadDocument}
+        hideDownload
       />
     </div>
   )

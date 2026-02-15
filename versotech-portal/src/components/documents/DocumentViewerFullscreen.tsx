@@ -9,6 +9,7 @@ import { DocumentReference } from '@/types/document-viewer.types'
 import { getFileTypeCategory, type FileTypeCategory } from '@/constants/document-preview.constants'
 import { ExcelPreview } from './ExcelPreview'
 import { DocxPreview } from './DocxPreview'
+import { PdfCanvasViewer } from './PdfCanvasViewer'
 
 interface DocumentViewerFullscreenProps {
   isOpen: boolean
@@ -18,14 +19,7 @@ interface DocumentViewerFullscreenProps {
   error: string | null
   onClose: () => void
   onDownload: () => void
-}
-
-/**
- * Append PDF viewer parameters to URL to fix browser rendering issues
- */
-function getPdfViewerUrl(url: string): string {
-  if (url.includes('#')) return url
-  return `${url}#navpanes=0&view=FitH&pagemode=none`
+  hideDownload?: boolean
 }
 
 /**
@@ -68,6 +62,7 @@ export function DocumentViewerFullscreen({
   error,
   onClose,
   onDownload,
+  hideDownload = false,
 }: DocumentViewerFullscreenProps) {
   const [contentError, setContentError] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -85,12 +80,7 @@ export function DocumentViewerFullscreen({
     return getFileTypeCategory(fileName, mimeType)
   }, [document])
 
-  // Compute the final URL with PDF parameters if needed
-  const viewerUrl = useMemo(() => {
-    if (!previewUrl) return null
-    if (fileType === 'pdf') return getPdfViewerUrl(previewUrl)
-    return previewUrl
-  }, [previewUrl, fileType])
+  const viewerUrl = previewUrl ?? null
 
   const ToolbarIcon = getToolbarIcon(fileType)
 
@@ -102,7 +92,7 @@ export function DocumentViewerFullscreen({
       }
       if (e.ctrlKey && e.key === 'd') {
         e.preventDefault()
-        onDownload()
+        if (!hideDownload) onDownload()
       }
     }
 
@@ -157,14 +147,16 @@ export function DocumentViewerFullscreen({
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          <Button
-            size="sm"
-            onClick={onDownload}
-            className="gap-2"
-          >
-            <Download className="h-4 w-4" />
-            Download
-          </Button>
+          {!hideDownload && (
+            <Button
+              size="sm"
+              onClick={onDownload}
+              className="gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Download
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -204,14 +196,16 @@ export function DocumentViewerFullscreen({
                 <AlertCircle className="h-16 w-16 text-red-400" />
                 <h3 className="text-xl font-semibold">Failed to Load Preview</h3>
                 <p className="text-gray-300 text-center">{error}</p>
-                <Button
-                  onClick={onDownload}
-                  variant="secondary"
-                  className="gap-2 mt-4"
-                >
-                  <Download className="h-4 w-4" />
-                  Download Instead
-                </Button>
+                {!hideDownload && (
+                  <Button
+                    onClick={onDownload}
+                    variant="secondary"
+                    className="gap-2 mt-4"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download Instead
+                  </Button>
+                )}
               </div>
             )}
 
@@ -222,14 +216,16 @@ export function DocumentViewerFullscreen({
                 <p className="text-gray-300 text-center">
                   This document cannot be previewed in your browser.
                 </p>
-                <Button
-                  onClick={onDownload}
-                  variant="secondary"
-                  className="gap-2 mt-4"
-                >
-                  <Download className="h-4 w-4" />
-                  Download to View
-                </Button>
+                {!hideDownload && (
+                  <Button
+                    onClick={onDownload}
+                    variant="secondary"
+                    className="gap-2 mt-4"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download to View
+                  </Button>
+                )}
               </div>
             )}
           </div>
@@ -237,10 +233,8 @@ export function DocumentViewerFullscreen({
 
         {/* Content area - conditional rendering by file type */}
         {showContent && fileType === 'pdf' && (
-          <iframe
-            src={viewerUrl}
-            className="w-full h-full border-0"
-            title="Document Preview"
+          <PdfCanvasViewer
+            url={viewerUrl}
             onError={() => setContentError(true)}
           />
         )}
@@ -306,40 +300,91 @@ export function DocumentViewerFullscreen({
           />
         )}
 
-        {/* CONFIDENTIAL Watermark Overlay for watermarked documents */}
-        {document?.watermark && !isLoading && !error && !contentError && (
-          <div
-            className="absolute inset-0 pointer-events-none overflow-hidden"
-            aria-hidden="true"
-          >
-            {/* Diagonal watermark text */}
-            <div className="absolute inset-0 flex items-center justify-center">
+        {/* Per-user repeating diagonal watermark overlay */}
+        {document?.watermark && !isLoading && !error && !contentError && (() => {
+          const line1 = document.watermark?.viewer_email || 'CONFIDENTIAL'
+          const line2 = document.watermark?.entity_name || document.watermark?.viewer_name || ''
+          return (
+            <div
+              className="absolute inset-0 z-50 pointer-events-none overflow-hidden select-none"
+              aria-hidden="true"
+            >
               <div
-                className="text-[100px] md:text-[140px] font-bold text-gray-400 whitespace-nowrap select-none"
                 style={{
-                  transform: 'rotate(-45deg)',
-                  opacity: 0.08,
-                  textShadow: '0 0 10px rgba(0,0,0,0.1)',
+                  position: 'absolute',
+                  top: '-50%',
+                  left: '-50%',
+                  width: '200%',
+                  height: '200%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  gap: '120px',
+                  transform: 'rotate(-35deg)',
                 }}
               >
-                CONFIDENTIAL
+                {Array.from({ length: 8 }).map((_, row) => (
+                  <div
+                    key={row}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-around',
+                      gap: '80px',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {Array.from({ length: 5 }).map((_, col) => (
+                      <div
+                        key={col}
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          opacity: 0.12,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            fontWeight: 700,
+                            color: '#666',
+                            textShadow: '0 0 6px rgba(0,0,0,0.15), 0 0 12px rgba(255,255,255,0.15)',
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          {line1}
+                        </span>
+                        {line2 && (
+                          <span
+                            style={{
+                              fontSize: '14px',
+                              fontWeight: 600,
+                              color: '#666',
+                              textShadow: '0 0 6px rgba(0,0,0,0.15), 0 0 12px rgba(255,255,255,0.15)',
+                              lineHeight: 1.2,
+                              marginTop: '2px',
+                            }}
+                          >
+                            {line2}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ))}
               </div>
             </div>
-            {/* Footer attribution */}
-            <div className="absolute bottom-4 right-4 text-xs text-gray-400/50 bg-black/20 px-2 py-1 rounded select-none">
-              V E R S O • {document.watermark.uploaded_at
-                ? new Date(document.watermark.uploaded_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-                : 'Confidential Document'}
-            </div>
-          </div>
-        )}
+          )
+        })()}
       </div>
 
       {/* Footer hint */}
       {!isLoading && !error && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-sm bg-black/50 px-4 py-2 rounded-full">
           Press <kbd className="px-2 py-1 bg-white/10 rounded mx-1">ESC</kbd> to close
-          or <kbd className="px-2 py-1 bg-white/10 rounded mx-1">Ctrl+D</kbd> to download
+          {!hideDownload && (
+            <> or <kbd className="px-2 py-1 bg-white/10 rounded mx-1">Ctrl+D</kbd> to download</>
+          )}
         </div>
       )}
     </div>
