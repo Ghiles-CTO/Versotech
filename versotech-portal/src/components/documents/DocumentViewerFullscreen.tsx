@@ -302,11 +302,12 @@ export function DocumentViewerFullscreen({
           />
         )}
 
-        {/* Per-user repeating diagonal watermark overlay — always renders when content is visible */}
+        {/* Per-user repeating diagonal watermark overlay — only renders when watermark data is available */}
         {showContent && (() => {
           const wm = watermarkProp || document?.watermark
-          const line1 = wm?.viewer_email || 'CONFIDENTIAL'
-          const line2 = wm?.entity_name || wm?.viewer_name || ''
+          if (!wm?.viewer_email) return null
+          const line1 = wm.viewer_email
+          const line2 = wm.entity_name || wm.viewer_name || ''
           return (
             <div
               className="absolute inset-0 pointer-events-none overflow-hidden select-none"
