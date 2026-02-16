@@ -136,6 +136,7 @@ export function subscribeToConversationUpdates(
   conversationId: string,
   callbacks: {
     onMessage?: (message: ConversationMessage) => void
+    onMessageUpdate?: (message: ConversationMessage) => void
     onUpdate?: () => void
     onParticipantRead?: (userId: string, lastReadAt: string) => void
   }
@@ -157,6 +158,20 @@ export function subscribeToConversationUpdates(
           callbacks.onMessage?.(normalizeMessage(payload.new))
         }
         callbacks.onUpdate?.()
+      }
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'messages',
+        filter: `conversation_id=eq.${conversationId}`,
+      },
+      (payload) => {
+        if (payload.eventType === 'UPDATE') {
+          callbacks.onMessageUpdate?.(normalizeMessage(payload.new))
+        }
       }
     )
     .on(

@@ -3,6 +3,7 @@
 import type { ConversationSummary, ConversationMessage } from '@/types/messaging'
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { fetchConversationMessages, markConversationRead, subscribeToConversationUpdates, getClientSupabase } from '@/lib/messaging'
+import { extractFirstUrl } from '@/lib/messaging/url-utils'
 import { groupMessages, getInitials, formatRelativeTime, getDateDivider, shouldShowDateDivider } from '@/lib/messaging/utils'
 import { MessageBubble } from '@/components/messaging/shared/message-bubble'
 import { MessageSkeleton } from '@/components/messaging/message-skeleton'
@@ -473,7 +474,21 @@ export function ConversationView({
           console.error('[ConversationView] Failed to trigger agent reply', error)
         })
       }
-      
+
+      // Fire-and-forget: fetch OG link preview for the sent message
+      if (result?.message?.id && composerMessage) {
+        const firstUrl = extractFirstUrl(composerMessage)
+        if (firstUrl) {
+          void fetch('/api/link-preview', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message_id: result.message.id, url: firstUrl }),
+          }).catch((error) => {
+            console.error('[ConversationView] Link preview fetch failed', error)
+          })
+        }
+      }
+
       setComposerMessage('')
     } catch (error: any) {
       console.error('[ConversationView] Send error:', error)
@@ -499,6 +514,11 @@ export function ConversationView({
           return [...prev, newMessage]
         })
         markConversationRead(conversation.id).catch(console.error)
+      },
+      onMessageUpdate: (updatedMessage) => {
+        setMessages(prev =>
+          prev.map(m => m.id === updatedMessage.id ? { ...m, metadata: updatedMessage.metadata } : m)
+        )
       },
       onParticipantRead: (userId, lastReadAt) => {
         setLiveReadAt(prev => {

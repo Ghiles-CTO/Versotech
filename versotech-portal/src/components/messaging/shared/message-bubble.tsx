@@ -1,12 +1,51 @@
 'use client'
 
+import { useMemo } from 'react'
 import type { ConversationMessage } from '@/types/messaging'
+import type { LinkPreview } from '@/lib/messaging/url-utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatRelativeTime, formatFullTimestamp, getInitials } from '@/lib/messaging/utils'
+import { LinkPreviewCard } from '@/components/messaging/shared/link-preview-card'
 import { CheckCheck, Check, Trash2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+
+const URL_REGEX_GLOBAL = /https?:\/\/[^\s<>"{}|\\^`[\]]+/gi
+
+function linkifyBody(text: string, isSelf: boolean) {
+  const parts: (string | React.ReactElement)[] = []
+  let lastIndex = 0
+
+  for (const match of text.matchAll(URL_REGEX_GLOBAL)) {
+    const url = match[0]
+    const start = match.index!
+    if (start > lastIndex) {
+      parts.push(text.slice(lastIndex, start))
+    }
+    parts.push(
+      <a
+        key={start}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={cn(
+          'underline break-all',
+          isSelf ? 'text-primary-foreground/90 hover:text-primary-foreground' : 'text-primary hover:text-primary/80'
+        )}
+      >
+        {url}
+      </a>
+    )
+    lastIndex = start + url.length
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex))
+  }
+
+  return parts.length > 0 ? parts : [text]
+}
 
 interface MessageBubbleProps {
   message: ConversationMessage
@@ -120,9 +159,15 @@ export function MessageBubble({
         >
           <div className="flex flex-col">
             <p className="whitespace-pre-wrap break-words">
-              {message.body}
+              {message.body ? linkifyBody(message.body, isSelf) : null}
             </p>
-            
+
+            {/* Link Preview Card */}
+            {(() => {
+              const lp = (message.metadata as Record<string, unknown>)?.link_preview as LinkPreview | undefined
+              return lp?.url ? <LinkPreviewCard preview={lp} isSelf={isSelf} /> : null
+            })()}
+
             {/* Inline metadata (WhatsApp style - time in corner) */}
             <div className={cn(
               'flex items-center gap-1 mt-1 justify-end select-none',
