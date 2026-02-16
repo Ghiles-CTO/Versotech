@@ -133,6 +133,25 @@ export async function GET(
       }, { status: 500 })
     }
 
+    // Resolve investor entity name for watermark (non-staff only)
+    let entityName: string | null = null
+    if (!isStaff) {
+      const { data: investorUsers } = await serviceSupabase
+        .from('investor_users')
+        .select('investor_id')
+        .eq('user_id', user.id)
+
+      if (investorUsers && investorUsers.length > 0) {
+        const { data: investor } = await serviceSupabase
+          .from('investors')
+          .select('legal_name')
+          .eq('id', investorUsers[0].investor_id)
+          .maybeSingle()
+
+        entityName = investor?.legal_name || null
+      }
+    }
+
     // Create watermark information
     const watermarkInfo = {
       downloaded_by: profile?.display_name || user.email,
@@ -141,7 +160,10 @@ export async function GET(
       document_id: document.id,
       deal_id: dealId,
       access_token: crypto.randomBytes(16).toString('hex'),
-      data_room_access: true
+      data_room_access: true,
+      viewer_email: user.email,
+      viewer_name: profile?.display_name || null,
+      entity_name: entityName,
     }
 
     // Log document access for audit trail
