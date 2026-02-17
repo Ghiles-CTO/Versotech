@@ -107,15 +107,7 @@ export function DocumentUploadDialog({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
-      'application/pdf': ['.pdf'],
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
-      'text/plain': ['.txt'],
-      'image/jpeg': ['.jpg', '.jpeg'],
-      'image/png': ['.png']
-    },
-    maxSize: 50 * 1024 * 1024, // 50MB
+    maxSize: 1024 * 1024 * 1024, // 1GB
     disabled: uploading
   })
 
@@ -136,7 +128,7 @@ export function DocumentUploadDialog({
     let failedCount = 0
     const totalFiles = files.length
 
-    // Determine upload mode based on data room
+    // Both paths now use presigned uploads to bypass Vercel 4.5MB body limit
     const isDataRoomUpload = !!dataRoomDealId
 
     try {
@@ -149,8 +141,7 @@ export function DocumentUploadDialog({
 
         try {
           if (isDataRoomUpload) {
-            // Presigned upload flow — bypasses Vercel 4.5MB body limit
-            // Step 1: Get presigned URL (only JSON metadata)
+            // Data room presigned upload flow
             const presignRes = await fetch(`/api/deals/${dataRoomDealId}/documents/presigned-upload`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -169,7 +160,6 @@ export function DocumentUploadDialog({
 
             const { signedUrl, fileKey, token } = await presignRes.json()
 
-            // Step 2: Upload file directly to Supabase Storage
             const uploadRes = await fetch(signedUrl, {
               method: 'PUT',
               headers: { 'Content-Type': file.type || 'application/octet-stream' },
@@ -180,7 +170,6 @@ export function DocumentUploadDialog({
               throw new Error('Failed to upload to storage')
             }
 
-            // Step 3: Confirm upload and create DB record
             const confirmRes = await fetch(`/api/deals/${dataRoomDealId}/documents/presigned-upload`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
@@ -200,22 +189,59 @@ export function DocumentUploadDialog({
               throw new Error('Failed to create document record')
             }
           } else {
-            // Regular document upload — FormData through serverless function
-            const formData = new FormData()
-            formData.append('file', file)
-            formData.append('type', documentType)
-            formData.append('tags', tags)
-            formData.append('description', description)
-            if (selectedFolderId) formData.append('folder_id', selectedFolderId)
-            if (vehicleId) formData.append('vehicle_id', vehicleId)
-
-            const response = await fetch('/api/documents/upload', {
+            // Regular document presigned upload flow — bypasses Vercel 4.5MB limit
+            // Step 1: Get presigned URL
+            const presignRes = await fetch('/api/documents/presigned-upload', {
               method: 'POST',
-              body: formData
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                fileName: file.name,
+                documentType,
+                contentType: file.type || 'application/octet-stream',
+                fileSize: file.size
+              })
             })
 
-            if (!response.ok) {
-              throw new Error('Upload failed')
+            if (!presignRes.ok) {
+              const err = await presignRes.json()
+              throw new Error(err.error || 'Failed to prepare upload')
+            }
+
+            const { signedUrl, fileKey } = await presignRes.json()
+
+            // Step 2: Upload file directly to Supabase Storage
+            const uploadRes = await fetch(signedUrl, {
+              method: 'PUT',
+              headers: { 'Content-Type': file.type || 'application/octet-stream' },
+              body: file
+            })
+
+            if (!uploadRes.ok) {
+              throw new Error('Failed to upload to storage')
+            }
+
+            // Step 3: Confirm upload and create DB record
+            const confirmRes = await fetch('/api/documents/presigned-upload', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                fileKey,
+                fileName: file.name,
+                fileSize: file.size,
+                mimeType: file.type || 'application/octet-stream',
+                documentType,
+                documentName: file.name.replace(/\.[^/.]+$/, ''),
+                description,
+                folderId: selectedFolderId,
+                vehicleId,
+                tags,
+                confidential: false,
+              })
+            })
+
+            if (!confirmRes.ok) {
+              const err = await confirmRes.json()
+              throw new Error(err.error || 'Failed to create document record')
             }
           }
 
@@ -302,7 +328,7 @@ export function DocumentUploadDialog({
                   Drag & drop files here, or click to select
                 </p>
                 <p className="text-xs text-gray-500">
-                  Supported: PDF, DOCX, XLSX, TXT, JPG, PNG (max 50MB each)
+                  Supports all file types — PDF, DOCX, XLSX, MP4, ZIP, and more (max 1GB each)
                 </p>
               </>
             )}

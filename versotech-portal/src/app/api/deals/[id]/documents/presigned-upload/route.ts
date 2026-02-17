@@ -47,11 +47,11 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid folder path' }, { status: 400 })
     }
 
-    // Validate file size (50MB max)
-    const maxSize = 50 * 1024 * 1024
+    // Validate file size (1GB max)
+    const maxSize = 1024 * 1024 * 1024
     if (fileSize && fileSize > maxSize) {
       return NextResponse.json({
-        error: 'File size too large. Maximum size is 50MB'
+        error: 'File size too large. Maximum size is 1GB'
       }, { status: 400 })
     }
 

@@ -108,26 +108,11 @@ export async function POST(request: NextRequest) {
     // Parse tags
     const tagArray = tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : []
 
-    // Validate file type and size
-    const allowedTypes = [
-      'application/pdf',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'text/plain',
-      'image/jpeg',
-      'image/png'
-    ]
-
-    if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ 
-        error: 'Invalid file type. Allowed types: PDF, DOCX, XLSX, TXT, JPG, PNG' 
-      }, { status: 400 })
-    }
-
-    const maxSize = 50 * 1024 * 1024 // 50MB
+    // Validate file size (300MB max — presigned upload preferred for large files)
+    const maxSize = 1024 * 1024 * 1024 // 1GB
     if (file.size > maxSize) {
-      return NextResponse.json({ 
-        error: 'File size too large. Maximum size is 50MB' 
+      return NextResponse.json({
+        error: 'File size too large. Maximum size is 1GB'
       }, { status: 400 })
     }
 

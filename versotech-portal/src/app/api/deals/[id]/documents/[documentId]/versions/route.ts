@@ -3,7 +3,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
-const MAX_VERSION_FILE_SIZE = 50 * 1024 * 1024 // 50MB
+const MAX_VERSION_FILE_SIZE = 1024 * 1024 * 1024 // 1GB
 
 async function authenticateStaffUser() {
   const clientSupabase = await createClient()
@@ -151,7 +151,7 @@ export async function POST(
 
       if (fileSize && fileSize > MAX_VERSION_FILE_SIZE) {
         return NextResponse.json(
-          { error: 'File size too large. Maximum size is 50MB' },
+          { error: 'File size too large. Maximum size is 1GB' },
           { status: 400 }
         )
       }
@@ -186,7 +186,7 @@ export async function POST(
 
     if (file.size > MAX_VERSION_FILE_SIZE) {
       return NextResponse.json(
-        { error: 'File size too large. Maximum size is 50MB' },
+        { error: 'File size too large. Maximum size is 1GB' },
         { status: 400 }
       )
     }
@@ -294,7 +294,7 @@ export async function PUT(
 
     if (fileSize && fileSize > MAX_VERSION_FILE_SIZE) {
       return NextResponse.json(
-        { error: 'File size too large. Maximum size is 50MB' },
+        { error: 'File size too large. Maximum size is 1GB' },
         { status: 400 }
       )
     }

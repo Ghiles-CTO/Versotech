@@ -38,17 +38,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Allowed file types
-    const allowedTypes = [
-      'application/pdf',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'text/plain',
-      'image/jpeg',
-      'image/png'
-    ]
-
-    const maxSize = 50 * 1024 * 1024 // 50MB per file
+    const maxSize = 1024 * 1024 * 1024 // 1GB per file
     const results: UploadResult[] = []
     const storageBucket = process.env.NEXT_PUBLIC_STORAGE_BUCKET_NAME || 'documents'
 
@@ -62,22 +52,12 @@ export async function POST(request: NextRequest) {
     // Process each file
     for (const file of files) {
       try {
-        // Validate file type
-        if (!allowedTypes.includes(file.type)) {
-          results.push({
-            success: false,
-            file_name: file.name,
-            error: 'Invalid file type'
-          })
-          continue
-        }
-
         // Validate file size
         if (file.size > maxSize) {
           results.push({
             success: false,
             file_name: file.name,
-            error: 'File too large (max 50MB)'
+            error: 'File too large (max 1GB)'
           })
           continue
         }

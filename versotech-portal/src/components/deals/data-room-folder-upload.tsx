@@ -146,8 +146,8 @@ interface DealFolder {
   folder_type: string
 }
 
-const MAX_FOLDER_TOTAL_BYTES = 500 * 1024 * 1024 // 500 MB
-const MAX_FOLDER_FILE_COUNT = 200
+const MAX_FOLDER_TOTAL_BYTES = 1024 * 1024 * 1024 // 1 GB
+const MAX_FOLDER_FILE_COUNT = 500
 
 export function DataRoomFolderUpload({ dealId, onUploadComplete, trigger }: FolderUploadProps) {
   const router = useRouter()
