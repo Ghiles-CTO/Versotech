@@ -2818,7 +2818,7 @@ export default async function AgentsPage({
 
     const screenedName = readText('screened_name')
     if (!screenedName) {
-      redirect('/versotech_admin/agents?tab=blacklist&error=Missing%20screened%20name')
+      redirect('/versotech_admin/agents?tab=risk&error=Missing%20screened%20name')
     }
 
     const screenedEntityType = readText('screened_entity_type') || 'investor'
@@ -2833,7 +2833,7 @@ export default async function AgentsPage({
     const supabase = createServiceClient()
     const returnTo = formData.get('return_to')
     const redirectTarget =
-      typeof returnTo === 'string' && returnTo.length ? returnTo : '/versotech_admin/agents?tab=blacklist'
+      typeof returnTo === 'string' && returnTo.length ? returnTo : '/versotech_admin/agents?tab=risk'
     const separator = redirectTarget.includes('?') ? '&' : '?'
 
     if (reportUrlInput && !reportUrl && !reportBlob) {
@@ -2949,7 +2949,7 @@ export default async function AgentsPage({
           investor_id: null,
           title: 'OFAC match detected',
           message: `${screenedName} matched the OFAC list and was added to the blacklist.`,
-          link: '/versotech_admin/agents?tab=blacklist',
+          link: '/versotech_admin/agents?tab=risk',
           type: 'general',
           agent_id: agentId,
           data: {
@@ -3427,19 +3427,14 @@ export default async function AgentsPage({
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-center gap-3">
-                        <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                        <Avatar className="h-12 w-12">
                           {agent.avatar_url ? (
-                            <img
-                              src={agent.avatar_url}
-                              alt={agent.name}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-sm font-semibold text-muted-foreground">
-                              {initials || <UserCircle2 className="h-6 w-6" />}
-                            </span>
-                          )}
-                        </div>
+                            <AvatarImage src={agent.avatar_url} alt={agent.name} />
+                          ) : null}
+                          <AvatarFallback className="text-sm font-semibold text-muted-foreground">
+                            {initials || <UserCircle2 className="h-6 w-6" />}
+                          </AvatarFallback>
+                        </Avatar>
                         <div>
                           <CardTitle className="text-lg">{agent.name}</CardTitle>
                           <CardDescription>{agent.role}</CardDescription>
@@ -4703,7 +4698,7 @@ export default async function AgentsPage({
                     <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
 	                      <tr>
 	                        <th className="px-3 py-2 text-left">Conversation</th>
-	                        <th className="px-3 py-2 text-left">Investor</th>
+                        <th className="px-3 py-2 text-left">Participants</th>
 	                        <th className="px-3 py-2 text-left">Assigned agent</th>
 	                        <th className="px-3 py-2 text-left">Status</th>
 	                        <th className="px-3 py-2 text-left">First contact</th>
@@ -4721,11 +4716,11 @@ export default async function AgentsPage({
                           <td className="px-3 py-3 text-muted-foreground">{row.participants}</td>
                           <td className="px-3 py-3 text-muted-foreground">
                             <div className="flex items-center gap-1.5">
-                              <Avatar className="h-5 w-5">
+                              <Avatar className="h-6 w-6">
                                 {row.assignedAgentAvatarUrl && (
                                   <AvatarImage src={row.assignedAgentAvatarUrl} alt={row.assignedAgent} />
                                 )}
-                                <AvatarFallback className="text-[8px]">
+                                <AvatarFallback className="text-[9px]">
                                   {row.assignedAgent.split(' ').map((w: string) => w[0]).join('').slice(0, 2)}
                                 </AvatarFallback>
                               </Avatar>
@@ -4851,11 +4846,11 @@ export default async function AgentsPage({
                             </td>
                             <td className="px-3 py-3 text-muted-foreground">
                               <div className="flex items-center gap-1.5">
-                                <Avatar className="h-5 w-5">
+                                <Avatar className="h-6 w-6">
                                   {assignedAgent?.avatar_url && (
                                     <AvatarImage src={assignedAgent.avatar_url} alt={assignedAgent.name} />
                                   )}
-                                  <AvatarFallback className="text-[8px]">
+                                  <AvatarFallback className="text-[9px]">
                                     {(assignedAgent?.name || 'WO').split(' ').map((w: string) => w[0]).join('').slice(0, 2)}
                                   </AvatarFallback>
                                 </Avatar>
@@ -5077,11 +5072,11 @@ export default async function AgentsPage({
                           <td className="px-3 py-3 text-muted-foreground">
                             {row.agent !== '—' ? (
                               <div className="flex items-center gap-1.5">
-                                <Avatar className="h-5 w-5">
+                                <Avatar className="h-6 w-6">
                                   {row.agentAvatarUrl && (
                                     <AvatarImage src={row.agentAvatarUrl} alt={row.agent} />
                                   )}
-                                  <AvatarFallback className="text-[8px]">
+                                  <AvatarFallback className="text-[9px]">
                                     {row.agent.split(' ').map((w: string) => w[0]).join('').slice(0, 2)}
                                   </AvatarFallback>
                                 </Avatar>

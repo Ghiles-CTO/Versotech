@@ -20,10 +20,16 @@ type ConversationContextItem = {
   isAi: boolean
 }
 
+type DocumentContextItem = {
+  citation: string
+  snippet: string
+}
+
 type GenerateComplianceReplyInput = {
   latestUserMessage: string
   conversationContext: ConversationContextItem[]
   knowledgeContext?: string[]
+  documentContext?: DocumentContextItem[]
   systemPrompt?: string | null
 }
 
@@ -95,12 +101,24 @@ function buildUserPrompt(input: GenerateComplianceReplyInput): string {
     .slice(0, 12)
     .join('\n- ')
 
+  const documentEvidence = (input.documentContext || [])
+    .slice(0, 5)
+    .map((item) => {
+      const citation = item.citation.trim()
+      const snippet = item.snippet.trim().replace(/\s+/g, ' ')
+      return `- Source: ${citation}\n  Evidence: ${snippet}`
+    })
+    .join('\n')
+
   return [
     'Conversation history:',
     history || '(no prior context)',
     '',
     'Approved compliance reference notes:',
     knowledge ? `- ${knowledge}` : '- (none provided)',
+    '',
+    'KYC document evidence (investor scope only):',
+    documentEvidence || '- (no readable KYC evidence found)',
     '',
     'Latest user message:',
     input.latestUserMessage,
@@ -109,6 +127,7 @@ function buildUserPrompt(input: GenerateComplianceReplyInput): string {
     '- Keep to 3-6 short sentences.',
     '- Give concrete next steps when possible.',
     '- If action is required by compliance staff, say so directly.',
+    '- If you used KYC evidence, end with a source line in plain text: Source: <file name and type>.',
     '- No markdown, no bullet points.'
   ].join('\n')
 }
@@ -280,21 +299,31 @@ async function runAnthropic(systemPrompt: string, userPrompt: string): Promise<{
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY is missing')
 
   const model = process.env.COMPLIANCE_AI_ANTHROPIC_MODEL || 'claude-sonnet-4-5'
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 500,
-      temperature: 0.2,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }],
-    }),
-  })
+  const timeoutMs = Number(process.env.COMPLIANCE_AI_ANTHROPIC_TIMEOUT_MS || 12_000)
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
+  let response: Response
+  try {
+    response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 500,
+        temperature: 0.2,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+      }),
+      signal: controller.signal,
+    })
+  } finally {
+    clearTimeout(timeoutId)
+  }
 
   if (!response.ok) {
     const body = await response.text()

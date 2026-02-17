@@ -5,6 +5,7 @@ import {
   readAgentChatMetadata,
   resolveComplianceChatAgent,
 } from '@/lib/compliance/agent-chat'
+import { buildKycContextForConversation, type KycContextDocument } from '@/lib/compliance/kyc-context'
 
 type ServiceClient = any
 
@@ -15,6 +16,8 @@ const DEFAULT_COMPLIANCE_KNOWLEDGE = [
   'High-risk or uncertain topics must be escalated to a human compliance officer.',
 ]
 
+const KYC_CONTEXT_ENABLED = process.env.COMPLIANCE_CHAT_KYC_CONTEXT_ENABLED !== 'false'
+
 function asRecord(value: unknown): Record<string, any> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
   return value as Record<string, any>
@@ -24,16 +27,57 @@ function safeTrim(value: unknown) {
   return typeof value === 'string' ? value.trim() : ''
 }
 
-function normalizeAgentName(value: unknown) {
-  const source = safeTrim(value)
-  if (!source) return ''
-  return source
-    .normalize('NFKD')
-    .replace(/[’`]/g, "'")
-    .replace(/[^a-zA-Z0-9'\s]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase()
+function citationList(docs: KycContextDocument[]) {
+  return docs.slice(0, 2).map((doc) => doc.citation)
+}
+
+function ensureCitedReply(reply: string, docs: KycContextDocument[]) {
+  if (docs.length === 0) return reply
+  if (/source:/i.test(reply)) return reply
+  const citations = citationList(docs)
+  if (citations.length === 0) return reply
+  return `${reply.trim()} Source: ${citations.join('; ')}`
+}
+
+async function loadScopedComplianceEvents(
+  supabase: ServiceClient,
+  params: {
+    conversationId: string
+    investorIds: string[]
+  }
+) {
+  const { data: byConversation } = await supabase
+    .from('compliance_activity_log')
+    .select('id, event_type, description, created_at')
+    .contains('metadata', { conversation_id: params.conversationId })
+    .order('created_at', { ascending: false })
+    .limit(8)
+
+  let byInvestor: Array<{ id: string; event_type: string | null; description: string | null; created_at: string | null }> = []
+  if (params.investorIds.length > 0) {
+    const { data } = await supabase
+      .from('compliance_activity_log')
+      .select('id, event_type, description, created_at')
+      .in('related_investor_id', params.investorIds)
+      .order('created_at', { ascending: false })
+      .limit(8)
+    byInvestor = data || []
+  }
+
+  const merged = new Map<string, any>()
+  ;[...(byConversation || []), ...byInvestor].forEach((item) => {
+    if (item?.id && !merged.has(item.id)) {
+      merged.set(item.id, item)
+    }
+  })
+
+  return Array.from(merged.values())
+    .sort((a: any, b: any) => {
+      const aTime = a?.created_at ? new Date(a.created_at).getTime() : 0
+      const bTime = b?.created_at ? new Date(b.created_at).getTime() : 0
+      return bTime - aTime
+    })
+    .slice(0, 8)
 }
 
 function fallbackReplyMessage(latestMessage: string) {
@@ -62,7 +106,7 @@ export async function processAgentChatReply(
 ) {
   const { data: conversation, error: conversationError } = await supabase
     .from('conversations')
-    .select('id, metadata')
+    .select('id, metadata, created_by')
     .eq('id', params.conversationId)
     .maybeSingle()
 
@@ -77,7 +121,6 @@ export async function processAgentChatReply(
 
   const agentChatMeta = readAgentChatMetadata(metadataRoot)
   const assignedAgentIdFromMetadata = agentChatMeta?.agent_id || null
-  const assignedAgentNameFromMetadata = normalizeAgentName(agentChatMeta?.agent_name)
 
   let sourceMessage: any = null
   if (params.triggerMessageId) {
@@ -128,6 +171,22 @@ export async function processAgentChatReply(
     return { ok: true, status: 'already_replied' as const }
   }
 
+  const kycContext = KYC_CONTEXT_ENABLED
+    ? await buildKycContextForConversation(supabase, {
+        conversationId: params.conversationId,
+        question: safeTrim(sourceMessage.body),
+        fallbackUserIds: [sourceMessage.sender_id, conversation.created_by, params.actorUserId].filter(
+          (value): value is string => typeof value === 'string' && value.length > 0
+        ),
+      })
+    : {
+        investorIds: [] as string[],
+        documents: [] as KycContextDocument[],
+        inspectedDocuments: 0,
+        skippedDocuments: 0,
+        errors: [] as string[],
+      }
+
   const agent = await resolveComplianceChatAgent(supabase, { requireActive: true })
   if (!agent) {
     const assistantName = agentChatMeta?.agent_name || "Wayne O'Connor"
@@ -150,6 +209,12 @@ export async function processAgentChatReply(
         fallback: true,
         error: 'Compliance agent is inactive',
         reply_to_message_id: sourceMessage.id,
+        kyc_context_used: kycContext.documents.length > 0,
+        kyc_context_docs: kycContext.documents.map((doc) => ({
+          document_id: doc.documentId,
+          submission_id: doc.submissionId,
+          citation: doc.citation,
+        })),
       },
     })
 
@@ -224,11 +289,10 @@ export async function processAgentChatReply(
     })
     .filter((item: { body: string }) => item.body.length > 0)
 
-  const { data: recentComplianceEvents } = await supabase
-    .from('compliance_activity_log')
-    .select('event_type, description, created_at')
-    .order('created_at', { ascending: false })
-    .limit(8)
+  const recentComplianceEvents = await loadScopedComplianceEvents(supabase, {
+    conversationId: params.conversationId,
+    investorIds: kycContext.investorIds,
+  })
 
   const knowledgeContext = [
     ...DEFAULT_COMPLIANCE_KNOWLEDGE,
@@ -238,12 +302,19 @@ export async function processAgentChatReply(
       if (!description) return `Recent ${eventType} event recorded.`
       return `Recent ${eventType}: ${description}`
     }),
+    ...(kycContext.documents.length === 0
+      ? ['No readable investor KYC evidence was found for this thread.']
+      : []),
   ]
 
   const aiResult = await generateComplianceReply({
     latestUserMessage: safeTrim(sourceMessage.body),
     conversationContext,
     knowledgeContext,
+    documentContext: kycContext.documents.map((doc) => ({
+      citation: doc.citation,
+      snippet: doc.snippet,
+    })),
     systemPrompt: agent.system_prompt || null,
   })
 
@@ -265,6 +336,13 @@ export async function processAgentChatReply(
         fallback: true,
         error: aiResult.error || 'No reply generated',
         reply_to_message_id: sourceMessage.id,
+        kyc_context_used: kycContext.documents.length > 0,
+        kyc_context_docs: kycContext.documents.map((doc) => ({
+          document_id: doc.documentId,
+          submission_id: doc.submissionId,
+          citation: doc.citation,
+        })),
+        kyc_citations_count: citationList(kycContext.documents).length,
       },
     })
 
@@ -290,11 +368,13 @@ export async function processAgentChatReply(
     }
   }
 
+  const replyBody = ensureCitedReply(aiResult.reply, kycContext.documents)
+
   const { error: aiInsertError } = await supabase.from('messages').insert({
     conversation_id: params.conversationId,
     sender_id: null,
     message_type: 'system',
-    body: aiResult.reply,
+    body: replyBody,
     metadata: {
       ai_generated: true,
       assistant_name: agent.name,
@@ -307,6 +387,14 @@ export async function processAgentChatReply(
       escalation_reason: aiResult.escalationReason,
       reply_to_message_id: sourceMessage.id,
       knowledge_context_count: knowledgeContext.length,
+      kyc_context_used: kycContext.documents.length > 0,
+      kyc_context_docs: kycContext.documents.map((doc) => ({
+        document_id: doc.documentId,
+        submission_id: doc.submissionId,
+        citation: doc.citation,
+      })),
+      kyc_citations_count: citationList(kycContext.documents).length,
+      kyc_context_errors: kycContext.errors,
     },
   })
 
