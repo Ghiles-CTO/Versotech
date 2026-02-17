@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
 import { DocumentService } from '@/services/document.service'
 import { DocumentReference, DocumentError } from '@/types/document-viewer.types'
@@ -23,6 +23,11 @@ export function useDocumentViewer() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [watermark, setWatermark] = useState<Record<string, any> | null>(null)
+
+  // Refs for stable callbacks (avoid recreating on every state change)
+  const previewUrlRef = useRef<string | null>(null)
+  const dealIdRef = useRef<string | undefined>(undefined)
+  const documentRef = useRef<DocumentReference | null>(null)
 
   /**
    * Validate if document can be previewed
@@ -77,9 +82,17 @@ export function useDocumentViewer() {
    * Open document preview
    */
   const openPreview = useCallback(async (doc: DocumentReference, dealId?: string) => {
+    // Revoke previous blob URL if any
+    if (previewUrlRef.current?.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrlRef.current)
+    }
+
     // Reset state
     setError(null)
     setPreviewUrl(null)
+    previewUrlRef.current = null
+    dealIdRef.current = dealId
+    documentRef.current = doc
 
     // Validate document
     const validationError = validateDocument(doc)
@@ -101,6 +114,7 @@ export function useDocumentViewer() {
 
       // Set preview URL and watermark data (separate state to avoid race conditions)
       setPreviewUrl(response.download_url)
+      previewUrlRef.current = response.download_url
       setWatermark(response.watermark || null)
       setIsLoading(false)
     } catch (err) {
@@ -124,13 +138,20 @@ export function useDocumentViewer() {
    */
   const closePreview = useCallback(() => {
     setIsOpen(false)
+    const urlToRevoke = previewUrlRef.current
     // Delay cleanup to allow closing animation
     setTimeout(() => {
       setDocument(null)
+      if (urlToRevoke?.startsWith('blob:')) {
+        URL.revokeObjectURL(urlToRevoke)
+      }
       setPreviewUrl(null)
+      previewUrlRef.current = null
       setError(null)
       setIsLoading(false)
       setWatermark(null)
+      dealIdRef.current = undefined
+      documentRef.current = null
     }, 300)
   }, [])
 
@@ -138,17 +159,45 @@ export function useDocumentViewer() {
    * Download document from preview
    */
   const downloadDocument = useCallback(async () => {
-    if (!document) return
+    const doc = documentRef.current
+    if (!doc) return
 
     try {
-      // Use previewUrl if available (already fetched)
-      if (previewUrl) {
-        window.open(previewUrl, '_blank')
+      // For deal documents with a blob preview URL, reuse it (already watermarked)
+      if (dealIdRef.current && previewUrlRef.current?.startsWith('blob:')) {
+        const a = window.document.createElement('a')
+        a.href = previewUrlRef.current
+        a.download = doc.file_name || doc.name || 'document.pdf'
+        a.click()
+        return
+      }
+
+      // For deal documents without a blob preview (non-PDF), fetch download URL
+      if (dealIdRef.current) {
+        const response = await DocumentService.getDealDocumentDownloadUrl(
+          dealIdRef.current,
+          doc.id
+        )
+        if (response.download_url.startsWith('blob:')) {
+          const a = window.document.createElement('a')
+          a.href = response.download_url
+          a.download = doc.file_name || doc.name || 'document.pdf'
+          a.click()
+          setTimeout(() => URL.revokeObjectURL(response.download_url), 1000)
+          return
+        }
+        window.open(response.download_url, '_blank')
+        return
+      }
+
+      // Non-deal docs: use previewUrl if available
+      if (previewUrlRef.current) {
+        window.open(previewUrlRef.current, '_blank')
         return
       }
 
       // Otherwise fetch download URL
-      const response = await DocumentService.getDownloadUrl(document.id)
+      const response = await DocumentService.getDownloadUrl(doc.id)
       window.open(response.download_url, '_blank')
     } catch (err) {
       console.error('Failed to download document:', err)
@@ -160,7 +209,7 @@ export function useDocumentViewer() {
 
       toast.error(errorMessage)
     }
-  }, [document, previewUrl])
+  }, [])
 
   return {
     // State

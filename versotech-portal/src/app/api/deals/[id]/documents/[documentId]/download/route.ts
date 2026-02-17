@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
+import { applyPdfWatermark } from '@/lib/documents/pdf-watermark'
 import crypto from 'crypto'
+
+function isPdf(fileName: string | null | undefined): boolean {
+  return !!fileName && fileName.toLowerCase().endsWith('.pdf')
+}
 
 export async function GET(
   request: NextRequest,
@@ -110,27 +115,12 @@ export async function GET(
       }
     }
 
-    // Generate pre-signed URL with 2-minute expiry for deal documents
-    const expiresIn = 120 // 2 minutes for deal data room documents
     const bucket = process.env.DEAL_DOCUMENTS_BUCKET || 'deal-documents'
 
     if (!document.file_key) {
       return NextResponse.json({
         error: 'Document file is not available'
       }, { status: 404 })
-    }
-
-    const { data: signedUrl, error: urlError } = await serviceSupabase.storage
-      .from(bucket)
-      .createSignedUrl(document.file_key, expiresIn, {
-        download: mode === 'download' // Only force download when mode is explicitly 'download'
-      })
-
-    if (urlError || !signedUrl) {
-      console.error('Error creating signed URL:', urlError)
-      return NextResponse.json({
-        error: 'Failed to generate download link'
-      }, { status: 500 })
     }
 
     // Resolve investor entity name for watermark (non-staff only)
@@ -156,7 +146,6 @@ export async function GET(
     const watermarkInfo = {
       downloaded_by: profile?.display_name || user.email,
       downloaded_at: new Date().toISOString(),
-      expires_at: new Date(Date.now() + (expiresIn * 1000)).toISOString(),
       document_id: document.id,
       deal_id: dealId,
       access_token: crypto.randomBytes(16).toString('hex'),
@@ -178,16 +167,70 @@ export async function GET(
         file_name: document.file_name,
         folder: document.folder,
         user_role: profile?.role,
-        access_method: 'pre_signed_url',
-        expiry_seconds: expiresIn,
+        access_method: isPdf(document.file_name) ? 'watermarked_pdf' : 'pre_signed_url',
         deal_name: document.deals?.name,
         is_staff: isStaff
       }
     })
 
+    // --- PDF path: fetch bytes, watermark, stream back ---
+    if (isPdf(document.file_name)) {
+      try {
+        const { data: fileBlob, error: downloadError } = await serviceSupabase.storage
+          .from(bucket)
+          .download(document.file_key)
+
+        if (downloadError || !fileBlob) {
+          throw new Error(downloadError?.message || 'Storage download failed')
+        }
+
+        const rawBytes = new Uint8Array(await fileBlob.arrayBuffer())
+
+        const watermarkedBytes = await applyPdfWatermark(rawBytes, {
+          line1: user.email || 'Unknown',
+          line2: entityName || undefined,
+        })
+
+        const disposition = mode === 'download' ? 'attachment' : 'inline'
+        const safeFileName = (document.file_name || 'document.pdf').replace(/[^\w.\-_ ]/g, '_')
+
+        return new Response(Buffer.from(watermarkedBytes), {
+          headers: {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `${disposition}; filename="${safeFileName}"`,
+            'Content-Length': String(watermarkedBytes.byteLength),
+            'Cache-Control': 'no-store',
+            // Pass watermark metadata in headers so the client can use it for CSS overlay
+            'X-Watermark-Email': user.email || '',
+            'X-Watermark-Entity': entityName || '',
+            'X-Watermark-Name': profile?.display_name || '',
+            'X-Document-Id': document.id,
+          },
+        })
+      } catch (watermarkError) {
+        // Fallback: if watermarking fails (corrupted PDF, etc.), serve via pre-signed URL
+        console.error('PDF watermarking failed, falling back to signed URL:', watermarkError)
+      }
+    }
+
+    // --- Non-PDF path: pre-signed URL (existing behavior) ---
+    const expiresIn = 120 // 2 minutes
+    const { data: signedUrl, error: urlError } = await serviceSupabase.storage
+      .from(bucket)
+      .createSignedUrl(document.file_key, expiresIn, {
+        download: mode === 'download'
+      })
+
+    if (urlError || !signedUrl) {
+      console.error('Error creating signed URL:', urlError)
+      return NextResponse.json({
+        error: 'Failed to generate download link'
+      }, { status: 500 })
+    }
+
     return NextResponse.json({
       download_url: signedUrl.signedUrl,
-      mode: mode, // Include the mode in response
+      mode: mode,
       document: {
         id: document.id,
         name: document.file_name,

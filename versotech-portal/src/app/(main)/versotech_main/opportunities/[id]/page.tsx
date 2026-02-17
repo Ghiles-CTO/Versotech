@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/accordion'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
 import { InvestorJourneyBar } from '@/components/deals/investor-journey-bar'
 import { DataRoomViewer, type DataRoomDocument } from '@/components/deals/data-room-viewer'
@@ -55,7 +56,10 @@ import {
   MessageSquare,
   Tag,
   FolderOpen,
-  Loader2
+  Loader2,
+  DollarSign,
+  ShieldCheck,
+  ArrowUpRight
 } from 'lucide-react'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import type { DocumentReference } from '@/types/document-viewer.types'
@@ -65,6 +69,7 @@ import { getAccountStatusCopy, formatKycStatusLabel } from '@/lib/account-approv
 import { isPreviewableExtension } from '@/constants/document-preview.constants'
 import { DocumentService } from '@/services/document.service'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 interface Document {
   id: string
@@ -477,6 +482,8 @@ export default function OpportunityDetailPage() {
   const [showNdaDialog, setShowNdaDialog] = useState(false)
   const [showSubscribeDialog, setShowSubscribeDialog] = useState(false)
   const [subscribeAmount, setSubscribeAmount] = useState('')
+  const [subscribeBankConfirm, setSubscribeBankConfirm] = useState(true)
+  const [subscribeNotes, setSubscribeNotes] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
   const [ndaRequestOpen, setNdaRequestOpen] = useState(false)
   const [ndaRequestSubject, setNdaRequestSubject] = useState('')
@@ -621,6 +628,19 @@ export default function OpportunityDetailPage() {
   // This function has been removed - NDA documents are generated and sent
   // via the approval workflow, not triggered directly by investors
 
+  // Format a raw number string with thousand separators
+  const formatAmountDisplay = (raw: string) => {
+    const cleaned = raw.replace(/[^0-9.]/g, '')
+    if (!cleaned) return ''
+    const parts = cleaned.split('.')
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    return parts.length > 1 ? `${parts[0]}.${parts[1]}` : parts[0]
+  }
+
+  const parseDisplayAmount = (display: string): number => {
+    return parseFloat(display.replace(/,/g, '')) || 0
+  }
+
   const handleSubscribe = async () => {
     if (!subscribeAmount || !opportunity) return
 
@@ -635,7 +655,7 @@ export default function OpportunityDetailPage() {
           body: JSON.stringify({
             deal_id: dealId,
             client_investor_id: selectedClient.id,
-            commitment: parseFloat(subscribeAmount),
+            commitment: parseDisplayAmount(subscribeAmount),
             stock_type: opportunity.stock_type || 'common',
             notes: `Submitted in proxy mode by commercial partner`
           })
@@ -647,9 +667,10 @@ export default function OpportunityDetailPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             payload: {
-              amount: parseFloat(subscribeAmount),
+              amount: parseDisplayAmount(subscribeAmount),
               currency: opportunity.currency,
-              bank_confirmation: false
+              bank_confirmation: subscribeBankConfirm,
+              notes: subscribeNotes.trim() || null
             },
             subscription_type: 'personal'
           })
@@ -672,11 +693,15 @@ export default function OpportunityDetailPage() {
       setOpportunity(data.opportunity)
       setShowSubscribeDialog(false)
       setSubscribeAmount('')
+      setSubscribeBankConfirm(true)
+      setSubscribeNotes('')
 
-      alert('Subscription submitted for review. The VERSO team will follow up shortly.')
+      toast.success('Subscription submitted for review', {
+        description: 'The VERSO team will follow up shortly.'
+      })
     } catch (err: any) {
       console.error('Error subscribing:', err)
-      alert(err.message || 'Failed to submit subscription')
+      toast.error(err.message || 'Failed to submit subscription')
     } finally {
       setActionLoading(false)
     }
@@ -1220,6 +1245,9 @@ export default function OpportunityDetailPage() {
 
             const closePreview = () => {
               setPreviewOpen(false)
+              if (previewUrl?.startsWith('blob:')) {
+                URL.revokeObjectURL(previewUrl)
+              }
               setPreviewUrl(null)
               setPreviewError(null)
               setPreviewDocument(null)
@@ -1682,31 +1710,89 @@ export default function OpportunityDetailPage() {
 
       {/* Subscribe to Investment Opportunity Dialog */}
       <Dialog open={showSubscribeDialog} onOpenChange={setShowSubscribeDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Subscribe to Investment Opportunity</DialogTitle>
-            <DialogDescription>
-              Enter your commitment amount to submit a subscription request for {opportunity.name}. Once reviewed,
-              you&apos;ll receive the subscription documents to sign.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="amount">Commitment Amount ({opportunity.currency})</Label>
-              <Input
-                id="amount"
-                type="number"
-                placeholder={`Min: ${formatCurrency(opportunity.minimum_investment, opportunity.currency)}`}
-                value={subscribeAmount}
-                onChange={(e) => setSubscribeAmount(e.target.value)}
+        <DialogContent className="sm:max-w-[480px] p-0 gap-0 border-0 shadow-[0_25px_60px_-12px_rgba(0,0,0,0.35)] dark:shadow-[0_25px_60px_-12px_rgba(0,0,0,0.7)]" showCloseButton={false}>
+          {/* Gold accent bar */}
+          <div className="h-[3px]" style={{ background: 'linear-gradient(90deg, hsl(43 74% 66%) 0%, hsl(43 74% 56%) 50%, hsl(43 74% 66%) 100%)' }} />
+
+          {/* Header */}
+          <div className="relative px-8 pt-8 pb-6 overflow-hidden">
+            <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full opacity-[0.06] dark:opacity-[0.10]" style={{ background: 'radial-gradient(circle, hsl(43 74% 66%), transparent 65%)' }} />
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+
+            <div className="relative flex items-start gap-4">
+              <DealLogo
+                src={opportunity.company_logo_url}
+                alt={opportunity.company_name || opportunity.name}
+                size={48}
+                rounded="lg"
               />
-              {opportunity.minimum_investment && opportunity.maximum_investment && (
-                <p className="text-sm text-muted-foreground">
-                  Range: {formatCurrency(opportunity.minimum_investment, opportunity.currency)} - {formatCurrency(opportunity.maximum_investment, opportunity.currency)}
-                </p>
+              <div className="min-w-0 flex-1">
+                <DialogHeader className="pb-0 space-y-0">
+                  <DialogTitle className="text-lg font-semibold tracking-tight leading-tight">
+                    Subscribe to Investment Opportunity
+                  </DialogTitle>
+                </DialogHeader>
+                <DialogDescription className="text-[13px] text-muted-foreground/80 leading-relaxed mt-1.5">
+                  Enter your commitment amount to submit a subscription request for {opportunity.name}. Once reviewed, you&apos;ll receive the subscription documents to sign.
+                </DialogDescription>
+              </div>
+            </div>
+          </div>
+
+          {/* Amount Section */}
+          <div className="mx-5 rounded-xl border border-border/80 bg-muted/40 dark:bg-black/20 overflow-hidden">
+            <div className="px-5 pt-4 pb-1">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
+                  Commitment Amount ({opportunity.currency})
+                </span>
+                {opportunity.minimum_investment && opportunity.maximum_investment && (
+                  <span className="text-[10px] tabular-nums text-muted-foreground/40 font-medium">
+                    Range: {formatCurrency(opportunity.minimum_investment, opportunity.currency)} &ndash; {formatCurrency(opportunity.maximum_investment, opportunity.currency)}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-baseline gap-3">
+                <span className="text-lg font-bold text-muted-foreground/50 select-none shrink-0" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                  {opportunity.currency}
+                </span>
+                <input
+                  id="amount"
+                  type="text"
+                  inputMode="decimal"
+                  autoFocus
+                  className="w-full bg-transparent border-0 outline-none text-3xl font-bold tracking-tight placeholder:text-muted-foreground/20 text-foreground"
+                  style={{ fontVariantNumeric: 'tabular-nums' }}
+                  placeholder="0"
+                  value={subscribeAmount}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/[^0-9.]/g, '')
+                    setSubscribeAmount(formatAmountDisplay(raw))
+                  }}
+                />
+              </div>
+            </div>
+            <div className="px-5 py-2.5 border-t border-border/50 bg-muted/30 dark:bg-black/10 flex items-center justify-between min-h-[36px]">
+              {subscribeAmount && parseDisplayAmount(subscribeAmount) > 0 ? (
+                <>
+                  <span className="text-xs tabular-nums text-muted-foreground font-medium">
+                    {formatCurrency(parseDisplayAmount(subscribeAmount), opportunity.currency)}
+                  </span>
+                  {opportunity.minimum_investment !== null && parseDisplayAmount(subscribeAmount) < opportunity.minimum_investment && (
+                    <span className="text-[11px] font-medium text-amber-500 dark:text-amber-400 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      Below minimum
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="text-xs text-muted-foreground/30">Enter your commitment amount</span>
               )}
             </div>
+          </div>
 
+          <div className="px-5 pt-5 space-y-5">
+            {/* Signatories notice */}
             {opportunity.signatories.length > 0 && (
               <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                 <div className="flex items-start gap-3">
@@ -1725,18 +1811,92 @@ export default function OpportunityDetailPage() {
                 </div>
               </div>
             )}
+
+            {/* KYC Toggle Card */}
+            <button
+              type="button"
+              onClick={() => setSubscribeBankConfirm(!subscribeBankConfirm)}
+              className={cn(
+                'w-full rounded-xl p-4 text-left transition-all duration-300 cursor-pointer border-2',
+                subscribeBankConfirm
+                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40'
+                  : 'border-border/60 bg-card hover:bg-muted/40 hover:border-border'
+              )}
+            >
+              <div className="flex items-center gap-4">
+                <div className={cn(
+                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-all duration-300',
+                  subscribeBankConfirm
+                    ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30'
+                    : 'bg-muted border-2 border-border'
+                )}>
+                  {subscribeBankConfirm && (
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="drop-shadow-sm">
+                      <path d="M2.5 7.5L5.5 10.5L11.5 3.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
+                <span className={cn(
+                  'text-sm font-normal cursor-pointer leading-relaxed flex-1',
+                  subscribeBankConfirm ? 'text-emerald-900 dark:text-emerald-100' : 'text-foreground'
+                )}>
+                  I confirm my bank/KYC documentation is ready for the subscription pack.
+                </span>
+                <ShieldCheck className={cn(
+                  'h-5 w-5 shrink-0 transition-all duration-300',
+                  subscribeBankConfirm
+                    ? 'text-emerald-500 dark:text-emerald-400'
+                    : 'text-muted-foreground/20'
+                )} />
+              </div>
+            </button>
+
+            {/* Notes */}
+            <div className="space-y-2">
+              <Label htmlFor="subscribe-notes">Notes for the team (optional)</Label>
+              <Textarea
+                id="subscribe-notes"
+                value={subscribeNotes}
+                onChange={(e) => setSubscribeNotes(e.target.value)}
+                rows={3}
+                className="resize-none bg-muted/30 dark:bg-black/10 border-border/60"
+                placeholder="Share wiring preferences, co-investor details, or other information."
+              />
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowSubscribeDialog(false)}>
+
+          {/* Footer */}
+          <div className="px-6 py-5 mt-5 border-t border-border/60 bg-muted/30 dark:bg-black/15 flex items-center justify-between gap-3">
+            <Button
+              variant="ghost"
+              onClick={() => setShowSubscribeDialog(false)}
+              className="text-muted-foreground hover:text-foreground h-11 px-5 rounded-lg"
+            >
               Cancel
             </Button>
             <Button
               onClick={handleSubscribe}
-              disabled={actionLoading || !subscribeAmount || (opportunity.minimum_investment !== null && parseFloat(subscribeAmount) < opportunity.minimum_investment)}
+              disabled={actionLoading || !subscribeAmount || (opportunity.minimum_investment !== null && parseDisplayAmount(subscribeAmount) < opportunity.minimum_investment)}
+              className={cn(
+                'h-11 px-8 rounded-lg text-sm font-semibold gap-2 transition-all duration-200',
+                'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white',
+                'shadow-[0_4px_14px_0_rgba(16,185,129,0.25)] hover:shadow-[0_6px_20px_0_rgba(16,185,129,0.35)]',
+                'disabled:opacity-50 disabled:shadow-none'
+              )}
             >
-              {actionLoading ? 'Processing...' : 'Subscribe'}
+              {actionLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  Confirm Interest
+                  <ArrowUpRight className="h-4 w-4" />
+                </>
+              )}
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -1749,6 +1909,9 @@ export default function OpportunityDetailPage() {
         error={previewError}
         onClose={() => {
           setPreviewOpen(false)
+          if (previewUrl?.startsWith('blob:')) {
+            URL.revokeObjectURL(previewUrl)
+          }
           setPreviewUrl(null)
           setPreviewError(null)
           setPreviewDocument(null)

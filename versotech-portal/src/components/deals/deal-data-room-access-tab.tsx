@@ -54,6 +54,7 @@ import { DataRoomFolderUpload } from './data-room-folder-upload'
 import { toast } from 'sonner'
 import { DATA_ROOM_DEFAULT_FOLDERS } from '@/lib/data-room/constants'
 import { cn } from '@/lib/utils'
+import { DocumentService } from '@/services/document.service'
 
 interface DealDataRoomAccessTabProps {
   dealId: string
@@ -365,12 +366,17 @@ export function DealDataRoomAccessTab({
         window.open(doc.external_link, '_blank', 'noopener,noreferrer')
         toast.success('Opening document in new tab')
       } else {
-        const response = await fetch(`/api/deals/${dealId}/documents/${doc.id}/download`)
-        if (!response.ok) {
-          throw new Error('Failed to get download link')
+        const data = await DocumentService.getDealDocumentDownloadUrl(dealId, doc.id)
+
+        if (data.download_url.startsWith('blob:')) {
+          const a = window.document.createElement('a')
+          a.href = data.download_url
+          a.download = doc.file_name || 'document.pdf'
+          a.click()
+          setTimeout(() => URL.revokeObjectURL(data.download_url), 1000)
+        } else {
+          window.open(data.download_url, '_blank')
         }
-        const data = await response.json()
-        window.open(data.download_url, '_blank')
         toast.success('Document download started')
       }
     } catch (error) {

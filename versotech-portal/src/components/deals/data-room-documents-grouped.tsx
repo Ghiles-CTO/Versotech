@@ -17,6 +17,7 @@ import {
 import { DataRoomDocument } from './data-room-documents'
 import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
+import { DocumentService } from '@/services/document.service'
 
 interface DataRoomDocumentsGroupedProps {
   documents: DataRoomDocument[]
@@ -110,23 +111,19 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
         throw new Error('No file available for download')
       }
 
-      // Use secure API route (auth + access checks + signed URL generation)
-      const response = await fetch(
-        `/api/deals/${doc.deal_id}/documents/${doc.id}/download?mode=download`
-      )
+      // Use DocumentService for secure download (handles watermarked PDF blobs)
+      const data = await DocumentService.getDealDocumentDownloadUrl(doc.deal_id, doc.id)
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || 'Failed to generate download link')
+      if (data.download_url.startsWith('blob:')) {
+        // Watermarked PDF: trigger download via anchor element
+        const a = window.document.createElement('a')
+        a.href = data.download_url
+        a.download = doc.file_name || 'document.pdf'
+        a.click()
+        setTimeout(() => URL.revokeObjectURL(data.download_url), 1000)
+      } else {
+        window.open(data.download_url, '_blank', 'noopener,noreferrer')
       }
-
-      const data = await response.json()
-      const url = data.download_url || data.url
-      if (!url) {
-        throw new Error('No download URL received')
-      }
-
-      window.open(url, '_blank', 'noopener,noreferrer')
     } catch (err) {
       console.error('Download error:', err)
       alert(err instanceof Error ? err.message : 'Failed to download document')

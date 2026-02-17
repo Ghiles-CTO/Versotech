@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Download, Folder, Loader2, ExternalLink, Eye } from 'lucide-react'
 import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
+import { DocumentService } from '@/services/document.service'
 import { getFileTypeCategory } from '@/constants/document-preview.constants'
 
 export interface DataRoomDocument {
@@ -49,22 +50,19 @@ export function DataRoomDocuments({ documents }: DataRoomDocumentsProps) {
         return
       }
 
-      // Use API endpoint for secure download with audit logging
-      const response = await fetch(`/api/deals/${doc.deal_id}/documents/${doc.id}/download`)
+      // Use DocumentService for secure download (handles watermarked PDF blobs)
+      const data = await DocumentService.getDealDocumentDownloadUrl(doc.deal_id, doc.id)
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to generate download link')
+      if (data.download_url.startsWith('blob:')) {
+        // Watermarked PDF: trigger download via anchor element
+        const a = window.document.createElement('a')
+        a.href = data.download_url
+        a.download = doc.file_name || 'document.pdf'
+        a.click()
+        setTimeout(() => URL.revokeObjectURL(data.download_url), 1000)
+      } else {
+        window.open(data.download_url, '_blank', 'noopener,noreferrer')
       }
-
-      const data = await response.json()
-
-      if (!data.download_url) {
-        throw new Error('No download URL received')
-      }
-
-      // Open the pre-signed URL
-      window.open(data.download_url, '_blank', 'noopener,noreferrer')
     } catch (err) {
       console.error('Failed to download file', err)
       setError(err instanceof Error ? err.message : 'Unable to download this document right now.')

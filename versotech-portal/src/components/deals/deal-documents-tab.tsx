@@ -13,6 +13,7 @@ import { DataRoomDocumentVersions } from './data-room-document-versions'
 import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import { getFileTypeCategory } from '@/constants/document-preview.constants'
+import { DocumentService } from '@/services/document.service'
 import { toast } from 'sonner'
 
 interface DealDocumentsTabProps {
@@ -71,16 +72,18 @@ export function DealDocumentsTab({ dealId, documents, onRefresh }: DealDocuments
     setDownloading(documentId)
 
     try {
-      const response = await fetch(`/api/deals/${dealId}/documents/${documentId}/download`)
+      const data = await DocumentService.getDealDocumentDownloadUrl(dealId, documentId)
 
-      if (!response.ok) {
-        throw new Error('Failed to generate download link')
+      if (data.download_url.startsWith('blob:')) {
+        const doc = documents.find((d: any) => d.id === documentId)
+        const a = window.document.createElement('a')
+        a.href = data.download_url
+        a.download = doc?.file_name || 'document.pdf'
+        a.click()
+        setTimeout(() => URL.revokeObjectURL(data.download_url), 1000)
+      } else {
+        window.open(data.download_url, '_blank')
       }
-
-      const data = await response.json()
-
-      // Open the signed URL in a new tab
-      window.open(data.download_url, '_blank')
 
       toast.success('Document download started')
     } catch (error) {

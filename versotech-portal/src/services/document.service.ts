@@ -17,19 +17,68 @@ export class DocumentService {
   private static isValidStorageUrl(url: string): boolean {
     if (!url) return false
 
-    // Check if it's a valid HTTPS URL
+    if (url.startsWith('blob:')) return true
     if (!url.startsWith('https://')) return false
 
-    // Check if it's from Supabase storage or a blob URL
     return (
       url.includes('supabase.co/storage') ||
-      url.includes('supabase.com/storage') ||
-      url.startsWith('blob:')
+      url.includes('supabase.com/storage')
     )
   }
 
   /**
-   * Parse and validate API response
+   * Parse a deal document response that may be either:
+   * - application/pdf (watermarked PDF bytes) → create blob URL
+   * - application/json (non-PDF, pre-signed URL) → parse JSON
+   *
+   * Public so data room components doing raw fetch() can reuse this.
+   */
+  static async parseDealDocumentResponse(
+    response: Response
+  ): Promise<DocumentUrlResponse> {
+    if (!response.ok) {
+      let data: any
+      try {
+        data = await response.json()
+      } catch {
+        throw new DocumentError('Failed to load document', response.status)
+      }
+      const errorMessage = data.error || data.message || 'Failed to load document'
+      throw new DocumentError(errorMessage, response.status, data)
+    }
+
+    const contentType = response.headers.get('Content-Type') || ''
+
+    // Watermarked PDF: binary response → blob URL
+    if (contentType.includes('application/pdf')) {
+      const blob = await response.blob()
+      const blobUrl = URL.createObjectURL(blob)
+
+      const watermark: DocumentUrlResponse['watermark'] = {
+        viewer_email: response.headers.get('X-Watermark-Email') || undefined,
+        entity_name: response.headers.get('X-Watermark-Entity') || undefined,
+        viewer_name: response.headers.get('X-Watermark-Name') || undefined,
+      }
+
+      return {
+        download_url: blobUrl,
+        url: blobUrl,
+        document: {
+          id: response.headers.get('X-Document-Id') || '',
+          name: '',
+          type: 'pdf',
+        },
+        watermark,
+        expires_in_seconds: 0, // blob URLs don't expire
+      } as DocumentUrlResponse
+    }
+
+    // Non-PDF: JSON response (existing behavior)
+    return this.parseResponse(response)
+  }
+
+  /**
+   * Parse and validate a JSON API response (non-PDF path)
    */
   private static async parseResponse(
     response: Response
@@ -176,15 +225,10 @@ export class DocumentService {
     try {
       const response = await fetch(
         `/api/deals/${dealId}/documents/${documentId}/download?mode=preview`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+        { method: 'GET' }
       )
 
-      return await this.parseResponse(response)
+      return await this.parseDealDocumentResponse(response)
     } catch (error) {
       if (error instanceof DocumentError) {
         throw error
@@ -208,15 +252,10 @@ export class DocumentService {
     try {
       const response = await fetch(
         `/api/deals/${dealId}/documents/${documentId}/download?mode=download`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+        { method: 'GET' }
       )
 
-      return await this.parseResponse(response)
+      return await this.parseDealDocumentResponse(response)
     } catch (error) {
       if (error instanceof DocumentError) {
         throw error

@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge'
 import { Download, FileText, Loader2, Upload } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
+import { DocumentService } from '@/services/document.service'
 
 interface DocumentVersionsProps {
   dealId: string
@@ -56,10 +57,17 @@ export function DataRoomDocumentVersions({
   const handleDownloadVersion = async (versionId: string) => {
     setDownloadingVersionId(versionId)
     try {
-      const response = await fetch(`/api/deals/${dealId}/documents/${versionId}/download`)
-      if (!response.ok) throw new Error('Failed to generate download link')
-      const data = await response.json()
-      window.open(data.download_url, '_blank')
+      const data = await DocumentService.getDealDocumentDownloadUrl(dealId, versionId)
+
+      if (data.download_url.startsWith('blob:')) {
+        const a = window.document.createElement('a')
+        a.href = data.download_url
+        a.download = versions.find(v => v.id === versionId)?.file_name || 'document.pdf'
+        a.click()
+        setTimeout(() => URL.revokeObjectURL(data.download_url), 1000)
+      } else {
+        window.open(data.download_url, '_blank')
+      }
     } catch (err) {
       console.error('Download error:', err)
       toast.error('Failed to download document version')
