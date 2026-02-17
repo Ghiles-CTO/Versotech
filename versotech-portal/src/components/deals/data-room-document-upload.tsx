@@ -171,7 +171,6 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
             const { signedUrl, fileKey, token } = await presignRes.json()
 
             // Step 2: Upload file directly to Supabase Storage (bypasses Vercel 4.5MB limit)
-            console.log(`[Upload] Step 2: Uploading ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB) to storage...`)
             const uploadRes = await fetch(signedUrl, {
               method: 'PUT',
               headers: { 'Content-Type': file.type || 'application/octet-stream' },
@@ -179,12 +178,9 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
             })
 
             if (!uploadRes.ok) {
-              const errText = await uploadRes.text().catch(() => 'unknown')
-              console.error(`[Upload] Step 2 failed for ${file.name}: ${uploadRes.status} ${errText}`)
               toast.error(`Failed to upload ${file.name} to storage`)
               continue
             }
-            console.log(`[Upload] Step 2 complete for ${file.name}`)
 
             // Step 3: Confirm upload and create DB record (only JSON metadata)
             const confirmRes = await fetch(`/api/deals/${dealId}/documents/presigned-upload`, {
