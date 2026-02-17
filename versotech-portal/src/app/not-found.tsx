@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Building2, AlertCircle } from 'lucide-react'
+import Image from 'next/image'
+import { ArrowLeft, AlertCircle } from 'lucide-react'
 
 export default function NotFound() {
   return (
@@ -18,9 +19,9 @@ export default function NotFound() {
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-16">
-          <Building2 className="h-8 w-8 text-emerald-500" />
-          <span className="text-2xl font-light tracking-wide text-muted-foreground">
-            VERSO <span className="font-bold text-foreground">HOLDINGS</span>
+          <Image src="/versotech-icon.png" alt="Versotech" width={32} height={32} className="h-8 w-8" />
+          <span className="text-2xl font-bold tracking-wide text-foreground" style={{ fontFamily: 'var(--font-spartan), sans-serif' }}>
+            VERSOTECH
           </span>
         </div>
 
@@ -53,7 +54,7 @@ export default function NotFound() {
                   Page Not Found
                 </p>
                 <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                  The resource you&apos;re looking for doesn&apos;t exist or has been moved to a different location.
+                  This page doesn&apos;t exist or may have been moved.
                 </p>
               </div>
 
@@ -77,7 +78,7 @@ export default function NotFound() {
 
         {/* Footer */}
         <div className="mt-16 text-xs text-muted-foreground uppercase tracking-widest">
-          © {new Date().getFullYear()} Verso Holdings Ltd.
+          © {new Date().getFullYear()} Versotech
         </div>
       </div>
     </div>
