@@ -346,7 +346,7 @@ export function DealDetailClient({
       </div>
 
       <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} id={`deal-tabs-${deal.id}`}>
-        <TabsList className="flex flex-wrap gap-2">
+        <TabsList className="flex w-full overflow-x-auto scrollbar-hide gap-1">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="term-sheet">Term Sheets</TabsTrigger>
           <TabsTrigger value="interests">Interests</TabsTrigger>

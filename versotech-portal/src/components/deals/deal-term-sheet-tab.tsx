@@ -28,7 +28,13 @@ function formatUTC(dateStr: string, fmt: string) {
   const d = new Date(dateStr)
   return format(new Date(d.getTime() + d.getTimezoneOffset() * 60000), fmt)
 }
-import { Loader2, Plus, Copy, Rocket, Archive, Pencil, Upload, FileCheck, Users, Building2, Briefcase, Eye, Download, X, SendHorizontal } from 'lucide-react'
+import { Loader2, Plus, Copy, Rocket, Archive, Pencil, Upload, FileCheck, Users, Building2, Briefcase, Eye, Download, X, SendHorizontal, MoreVertical } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import FeePlanEditModal from '@/components/fees/FeePlanEditModal'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import type { DocumentReference } from '@/types/document-viewer.types'
@@ -237,6 +243,15 @@ function formatAmountWithCurrency(amount?: number | null, currency?: string | nu
   const code = (currency || '').trim().toUpperCase()
   if (code.length === 3) return `${code} ${numeric.toLocaleString()}`
   return numeric.toLocaleString()
+}
+
+function FieldValue({ label, value, className }: { label: string; value?: string | number | null; className?: string }) {
+  return (
+    <div className={className}>
+      <dt className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-0.5">{label}</dt>
+      <dd className="text-sm font-medium text-foreground leading-tight">{value || '—'}</dd>
+    </div>
+  )
 }
 
 function buildPayload(values: FormState) {
@@ -719,30 +734,30 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
             Draft, publish, and archive the structured economics that power the investor experience.
           </p>
         </div>
-      <Button
-        onClick={() => openEditor('create')}
-        disabled={isSubmitting}
-        className="gap-2"
-      >
-        <Plus className="h-4 w-4" />
-        New Term Sheet
-      </Button>
-    </div>
+        <Button
+          onClick={() => openEditor('create')}
+          disabled={isSubmitting}
+          className="gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          New Term Sheet
+        </Button>
+      </div>
 
-    {errorMessage && (
-      <Card className="border border-destructive/30 bg-destructive/10">
-        <CardContent className="text-sm text-destructive p-3">
-          {errorMessage}
-        </CardContent>
-      </Card>
-    )}
-    {attachmentError && (
-      <Card className="border border-amber-400/30 bg-amber-500/10">
-        <CardContent className="text-sm text-amber-800 p-3">
-          {attachmentError}
-        </CardContent>
-      </Card>
-    )}
+      {errorMessage && (
+        <Card className="border border-destructive/30 bg-destructive/10">
+          <CardContent className="text-sm text-destructive p-3">
+            {errorMessage}
+          </CardContent>
+        </Card>
+      )}
+      {attachmentError && (
+        <Card className="border border-amber-400/30 bg-amber-500/10">
+          <CardContent className="text-sm text-amber-800 p-3">
+            {attachmentError}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Published Term Sheets Section */}
       {publishedTermSheets.length > 0 && (
@@ -763,319 +778,211 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                       {published.vehicle && <span className="ml-2">• {published.vehicle}</span>}
                     </CardDescription>
                   </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => openEditor('edit', published)}
-                disabled={isSubmitting}
-              >
-                <Pencil className="h-4 w-4" />
-                Edit
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => openEditor('clone', published)}
-                disabled={isSubmitting}
-              >
-                <Copy className="h-4 w-4" />
-                Clone
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => fileInputsRef.current[published.id]?.click()}
-                disabled={uploadingAttachmentId === published.id}
-              >
-                {uploadingAttachmentId === published.id ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="h-4 w-4" />
-                    Upload Attachment
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 border-blue-500/30 hover:bg-blue-500/10"
-                onClick={() => handleGenerateTermsheet(published.id)}
-                disabled={generatingId === published.id}
-              >
-                {generatingId === published.id ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <FileCheck className="h-4 w-4" />
-                    Generate PDF
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 border-amber-500/30 hover:bg-amber-500/10"
-                onClick={() => handleRequestClose(published.id)}
-                disabled={requestingCloseId === published.id || !!published.closed_processed_at}
-                title={published.closed_processed_at ? 'Already processed' : 'Request CEO approval to close this termsheet'}
-              >
-                {requestingCloseId === published.id ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Requesting...
-                  </>
-                ) : (
-                  <>
-                    <SendHorizontal className="h-4 w-4" />
-                    Request Close
-                  </>
-                )}
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="text-xs text-emerald-200">
-                {published.term_sheet_attachment_key
-                  ? 'Attachment available for investors to download.'
-                  : 'No attachment uploaded yet.'}
-              </div>
-              {published.term_sheet_attachment_key && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 border-emerald-500/30 hover:bg-emerald-500/10"
-                  onClick={() => openPreview(published.id)}
-                >
-                  <Eye className="h-4 w-4" />
-                  Preview
-                </Button>
-              )}
-            </div>
-
-            {/* Transaction Details */}
-            <div>
-              <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide mb-3">Transaction Details</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                <div>
-                  <span className="text-muted-foreground block text-xs">Transaction Type</span>
-                  <span className="text-foreground font-medium">{published.transaction_type || '—'}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-xs">Structure</span>
-                  <span className="text-foreground font-medium">{published.structure || '—'}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-xs">Issuer</span>
-                  <span className="text-foreground font-medium">{published.issuer || '—'}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-xs">Vehicle</span>
-                  <span className="text-foreground font-medium">{published.vehicle || '—'}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-xs">Exclusive Arranger</span>
-                  <span className="text-foreground font-medium">{published.exclusive_arranger || '—'}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-xs">Purchaser</span>
-                  <span className="text-foreground font-medium">{published.purchaser || '—'}</span>
-                </div>
-                {published.seller && (
-                <div>
-                  <span className="text-muted-foreground block text-xs">Seller</span>
-                  <span className="text-foreground font-medium">{published.seller}</span>
-                </div>
-                )}
-              </div>
-            </div>
-
-            <Separator className="bg-emerald-400/20" />
-
-            {/* Investment Terms */}
-            <div>
-              <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide mb-3">Investment Terms</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                <div>
-                  <span className="text-muted-foreground block text-xs">Allocation Up To</span>
-                  <span className="text-foreground font-medium">
-                    {formatAmountWithCurrency(published.allocation_up_to, published.currency)}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-xs">Price Per Share</span>
-                  <span className="text-foreground font-medium">{getPricePerShareDisplay(published) || '—'}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-xs">Minimum Ticket</span>
-                  <span className="text-foreground font-medium">
-                    {formatAmountWithCurrency(published.minimum_ticket, published.currency)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <Separator className="bg-emerald-400/20" />
-
-            {/* Fee Structure */}
-            <div>
-              <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide mb-3">Fee Structure</h4>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-                {published.subscription_fee_percent != null && (
-                <div>
-                  <span className="text-muted-foreground block text-xs">Subscription Fee</span>
-                  <span className="text-foreground font-medium">
-                    {published.subscription_fee_percent === 0
-                      ? 'Waived (instead of 2.00%)'
-                      : `${published.subscription_fee_percent}%`}
-                  </span>
-                </div>
-                )}
-                {published.management_fee_percent != null && (
-                <div>
-                  <span className="text-muted-foreground block text-xs">Management Fee</span>
-                  <span className="text-foreground font-medium">
-                    {published.management_fee_percent === 0
-                      ? 'Waived (instead of 2.00% p.a.)'
-                      : `${published.management_fee_percent}% p.a.`}
-                  </span>
-                </div>
-                )}
-                {published.carried_interest_percent != null && (
-                <div>
-                  <span className="text-muted-foreground block text-xs">Carried Interest</span>
-                  <span className="text-foreground font-medium">
-                    {published.carried_interest_percent === 0
-                      ? 'Waived (instead of 20.00%)'
-                      : `${published.carried_interest_percent}% (no hurdle rate)`}
-                  </span>
-                </div>
-                )}
-                {published.legal_counsel && (
-                <div>
-                  <span className="text-muted-foreground block text-xs">Legal Counsel</span>
-                  <span className="text-foreground font-medium">{published.legal_counsel}</span>
-                </div>
-                )}
-              </div>
-            </div>
-
-            <Separator className="bg-emerald-400/20" />
-
-            {/* Timeline */}
-            <div>
-              <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide mb-3">Timeline & Deadlines</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                {published.interest_confirmation_deadline && (
-                <div>
-                  <span className="text-muted-foreground block text-xs">Interest Deadline</span>
-                  <span className="text-foreground font-medium">
-                    {formatUTC(published.interest_confirmation_deadline, 'dd MMM yyyy HH:mm')}
-                  </span>
-                </div>
-                )}
-                <div>
-                  <span className="text-muted-foreground block text-xs">Completion Date</span>
-                  <span className="text-foreground font-medium">
-                    {published.completion_date
-                      ? formatUTC(published.completion_date, 'dd MMM yyyy')
-                      : published.completion_date_text || '—'}
-                  </span>
-                </div>
-                {published.validity_date && (
-                <div>
-                  <span className="text-muted-foreground block text-xs">Validity Date</span>
-                  <span className="text-foreground font-medium">
-                    {formatUTC(published.validity_date, 'dd MMM yyyy HH:mm')}
-                  </span>
-                </div>
-                )}
-              </div>
-            </div>
-
-            {published.term_sheet_html && (
-              <>
-                <Separator className="bg-emerald-400/20" />
-                <div>
-                  <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide mb-3">Opportunity Summary</h4>
-                  <div
-                    className="space-y-2 text-sm text-emerald-50/90 leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: published.term_sheet_html }}
-                  />
-                </div>
-              </>
-            )}
-
-            <Separator className="bg-emerald-400/20" />
-
-            {/* Linked Fee Plans Section */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide flex items-center gap-2">
-                  <FileCheck className="h-4 w-4" />
-                  Linked Fee Plans
-                </h4>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1 text-xs h-7 border-emerald-500/30 hover:bg-emerald-500/10"
-                  onClick={() => openFeePlanModal(published.id)}
-                >
-                  <Plus className="h-3 w-3" />
-                  Create Fee Plan
-                </Button>
-              </div>
-
-              {feePlansLoading ? (
-                <div className="flex items-center gap-2 text-emerald-200/60 text-sm py-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading fee plans...
-                </div>
-              ) : (feePlansByTermSheet[published.id] || []).length === 0 ? (
-                <div className="text-sm text-emerald-200/60 py-2">
-                  No fee plans linked to this term sheet yet. Create one to define commission terms for introducers or partners.
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {(feePlansByTermSheet[published.id] || []).map(fp => {
-                    const entity = getEntityInfo(fp)
-                    return (
-                      <div
-                        key={fp.id}
-                        className="flex items-center justify-between p-2 rounded-md bg-muted/50 border border-emerald-500/10"
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => openEditor('edit', published)}
+                      disabled={isSubmitting}
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Edit
+                    </Button>
+                    <input
+                      type="file"
+                      className="hidden"
+                      ref={element => { fileInputsRef.current[published.id] = element }}
+                      onChange={event => {
+                        const file = event.target.files?.[0]
+                        if (file) handleAttachmentUpload(published.id, file)
+                      }}
+                    />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openEditor('clone', published)} disabled={isSubmitting}>
+                          <Copy className="h-4 w-4 mr-2" />
+                          Clone
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => fileInputsRef.current[published.id]?.click()} disabled={uploadingAttachmentId === published.id}>
+                          <Upload className="h-4 w-4 mr-2" />
+                          {uploadingAttachmentId === published.id ? 'Uploading...' : 'Upload Attachment'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleGenerateTermsheet(published.id)} disabled={generatingId === published.id}>
+                          <FileCheck className="h-4 w-4 mr-2" />
+                          {generatingId === published.id ? 'Generating...' : 'Generate PDF'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleRequestClose(published.id)}
+                          disabled={requestingCloseId === published.id || !!published.closed_processed_at}
+                        >
+                          <SendHorizontal className="h-4 w-4 mr-2" />
+                          {requestingCloseId === published.id ? 'Requesting...' : 'Request Close'}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs text-emerald-200">
+                      {published.term_sheet_attachment_key
+                        ? 'Attachment available for investors to download.'
+                        : 'No attachment uploaded yet.'}
+                    </div>
+                    {published.term_sheet_attachment_key && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 border-emerald-500/30 hover:bg-emerald-500/10"
+                        onClick={() => openPreview(published.id)}
                       >
-                        <div className="flex items-center gap-3">
-                          {entity && (
-                            <div className="flex items-center gap-1 text-xs text-emerald-300/80">
-                              <entity.icon className="h-3.5 w-3.5" />
-                              <span>{entity.type}:</span>
-                              <span className="font-medium text-emerald-100">{entity.name}</span>
-                            </div>
-                          )}
-                          <span className="text-sm text-emerald-100 font-medium">{fp.name}</span>
-                        </div>
-                        <Badge className={`text-xs ${feePlanStatusClasses[fp.status] || feePlanStatusClasses.draft}`}>
-                          {feePlanStatusLabels[fp.status] || fp.status}
-                        </Badge>
+                        <Eye className="h-4 w-4" />
+                        Preview
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Transaction Details */}
+                  <div className="rounded-lg bg-muted/20 border border-border/50 p-4 space-y-3">
+                    <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide">Transaction Details</h4>
+                    <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
+                      <FieldValue label="Transaction Type" value={published.transaction_type} />
+                      <FieldValue label="Structure" value={published.structure} />
+                      <FieldValue label="Issuer" value={published.issuer} />
+                      <FieldValue label="Vehicle" value={published.vehicle} />
+                      <FieldValue label="Exclusive Arranger" value={published.exclusive_arranger} />
+                      <FieldValue label="Purchaser" value={published.purchaser} />
+                      {published.seller && <FieldValue label="Seller" value={published.seller} />}
+                    </dl>
+                  </div>
+
+                  {/* Investment Terms */}
+                  <div className="rounded-lg bg-muted/20 border border-border/50 p-4 space-y-3">
+                    <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide">Investment Terms</h4>
+                    <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
+                      <FieldValue label="Allocation Up To" value={formatAmountWithCurrency(published.allocation_up_to, published.currency)} />
+                      <FieldValue label="Price Per Share" value={getPricePerShareDisplay(published) || '—'} />
+                      <FieldValue label="Minimum Ticket" value={formatAmountWithCurrency(published.minimum_ticket, published.currency)} />
+                    </dl>
+                  </div>
+
+                  {/* Fee Structure */}
+                  <div className="rounded-lg bg-muted/20 border border-border/50 p-4 space-y-3">
+                    <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide">Fee Structure</h4>
+                    <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
+                      {published.subscription_fee_percent != null && (
+                        <FieldValue
+                          label="Subscription Fee"
+                          value={published.subscription_fee_percent === 0 ? 'Waived (instead of 2.00%)' : `${published.subscription_fee_percent}%`}
+                        />
+                      )}
+                      {published.management_fee_percent != null && (
+                        <FieldValue
+                          label="Management Fee"
+                          value={published.management_fee_percent === 0 ? 'Waived (instead of 2.00% p.a.)' : `${published.management_fee_percent}% p.a.`}
+                        />
+                      )}
+                      {published.carried_interest_percent != null && (
+                        <FieldValue
+                          label="Carried Interest"
+                          value={published.carried_interest_percent === 0 ? 'Waived (instead of 20.00%)' : `${published.carried_interest_percent}% (no hurdle rate)`}
+                        />
+                      )}
+                      {published.legal_counsel && <FieldValue label="Legal Counsel" value={published.legal_counsel} />}
+                    </dl>
+                  </div>
+
+                  {/* Timeline */}
+                  <div className="rounded-lg bg-muted/20 border border-border/50 p-4 space-y-3">
+                    <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide">Timeline & Deadlines</h4>
+                    <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
+                      {published.interest_confirmation_deadline && (
+                        <FieldValue label="Interest Deadline" value={formatUTC(published.interest_confirmation_deadline, 'dd MMM yyyy HH:mm')} />
+                      )}
+                      <FieldValue
+                        label="Completion Date"
+                        value={published.completion_date ? formatUTC(published.completion_date, 'dd MMM yyyy') : published.completion_date_text || '—'}
+                      />
+                      {published.validity_date && (
+                        <FieldValue label="Validity Date" value={formatUTC(published.validity_date, 'dd MMM yyyy HH:mm')} />
+                      )}
+                    </dl>
+                  </div>
+
+                  {/* Opportunity Summary */}
+                  {published.term_sheet_html && (
+                    <div className="rounded-lg bg-muted/20 border border-border/50 p-4 space-y-3">
+                      <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide">Opportunity Summary</h4>
+                      <div
+                        className="space-y-2 text-sm text-emerald-50/90 leading-relaxed"
+                        dangerouslySetInnerHTML={{ __html: published.term_sheet_html }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Linked Fee Plans Section */}
+                  <div className="rounded-lg bg-muted/20 border border-border/50 p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide flex items-center gap-2">
+                        <FileCheck className="h-4 w-4" />
+                        Linked Fee Plans
+                      </h4>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1 text-xs h-7 border-emerald-500/30 hover:bg-emerald-500/10"
+                        onClick={() => openFeePlanModal(published.id)}
+                      >
+                        <Plus className="h-3 w-3" />
+                        Create Fee Plan
+                      </Button>
+                    </div>
+
+                    {feePlansLoading ? (
+                      <div className="flex items-center gap-2 text-emerald-200/60 text-sm py-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Loading fee plans...
                       </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                    ) : (feePlansByTermSheet[published.id] || []).length === 0 ? (
+                      <div className="text-sm text-emerald-200/60 py-2">
+                        No fee plans linked to this term sheet yet. Create one to define commission terms for introducers or partners.
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {(feePlansByTermSheet[published.id] || []).map(fp => {
+                          const entity = getEntityInfo(fp)
+                          return (
+                            <div
+                              key={fp.id}
+                              className="flex items-center justify-between p-2 rounded-md bg-muted/50 border border-emerald-500/10"
+                            >
+                              <div className="flex items-center gap-3">
+                                {entity && (
+                                  <div className="flex items-center gap-1 text-xs text-emerald-300/80">
+                                    <entity.icon className="h-3.5 w-3.5" />
+                                    <span>{entity.type}:</span>
+                                    <span className="font-medium text-emerald-100">{entity.name}</span>
+                                  </div>
+                                )}
+                                <span className="text-sm text-emerald-100 font-medium">{fp.name}</span>
+                              </div>
+                              <Badge className={`text-xs ${feePlanStatusClasses[fp.status] || feePlanStatusClasses.draft}`}>
+                                {feePlanStatusLabels[fp.status] || fp.status}
+                              </Badge>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
@@ -1122,185 +1029,96 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   </Button>
                 )}
               </div>
-              {/* Transaction Details */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Transaction Details</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Transaction Type</span>
-                    <span className="text-foreground font-medium">{termSheet.transaction_type || '—'}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Structure</span>
-                    <span className="text-foreground font-medium">{termSheet.structure || '—'}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Issuer</span>
-                    <span className="text-foreground font-medium">{termSheet.issuer || '—'}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Vehicle</span>
-                    <span className="text-foreground font-medium">{termSheet.vehicle || '—'}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Arranger</span>
-                    <span className="text-foreground font-medium">{termSheet.exclusive_arranger || '—'}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Purchaser</span>
-                    <span className="text-foreground font-medium">{termSheet.purchaser || '—'}</span>
-                  </div>
-                  {termSheet.seller && (
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Seller</span>
-                    <span className="text-foreground font-medium">{termSheet.seller}</span>
-                  </div>
-                  )}
-                  {termSheet.legal_counsel && (
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Legal Counsel</span>
-                    <span className="text-foreground font-medium">{termSheet.legal_counsel}</span>
-                  </div>
-                  )}
-                </div>
-              </div>
 
-              <Separator />
+              {/* Transaction Details */}
+              <div className="rounded-lg bg-muted/10 border border-border/50 p-4 space-y-3">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Transaction Details</h4>
+                <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
+                  <FieldValue label="Transaction Type" value={termSheet.transaction_type} />
+                  <FieldValue label="Structure" value={termSheet.structure} />
+                  <FieldValue label="Issuer" value={termSheet.issuer} />
+                  <FieldValue label="Vehicle" value={termSheet.vehicle} />
+                  <FieldValue label="Arranger" value={termSheet.exclusive_arranger} />
+                  <FieldValue label="Purchaser" value={termSheet.purchaser} />
+                  {termSheet.seller && <FieldValue label="Seller" value={termSheet.seller} />}
+                  {termSheet.legal_counsel && <FieldValue label="Legal Counsel" value={termSheet.legal_counsel} />}
+                </dl>
+              </div>
 
               {/* Investment Terms */}
-              <div className="space-y-2">
+              <div className="rounded-lg bg-muted/10 border border-border/50 p-4 space-y-3">
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Investment Terms</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Allocation</span>
-                    <span className="text-foreground font-medium">
-                      {formatAmountWithCurrency(termSheet.allocation_up_to, termSheet.currency)}
-                    </span>
-                  </div>
-                <div>
-                  <span className="text-muted-foreground block text-xs">Price Per Share</span>
-                  <span className="text-foreground font-medium">{getPricePerShareDisplay(termSheet) || '—'}</span>
-                </div>
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Min Ticket</span>
-                    <span className="text-foreground font-medium">
-                      {formatAmountWithCurrency(termSheet.minimum_ticket, termSheet.currency)}
-                    </span>
-                  </div>
-                </div>
+                <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
+                  <FieldValue label="Allocation" value={formatAmountWithCurrency(termSheet.allocation_up_to, termSheet.currency)} />
+                  <FieldValue label="Price Per Share" value={getPricePerShareDisplay(termSheet) || '—'} />
+                  <FieldValue label="Min Ticket" value={formatAmountWithCurrency(termSheet.minimum_ticket, termSheet.currency)} />
+                </dl>
               </div>
-
-              <Separator />
 
               {/* Fee Structure */}
-              <div className="space-y-2">
+              <div className="rounded-lg bg-muted/10 border border-border/50 p-4 space-y-3">
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fee Structure</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
                   {termSheet.subscription_fee_percent != null && (
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Subscription Fee</span>
-                    <span className="text-foreground font-medium">
-                      {termSheet.subscription_fee_percent === 0
-                        ? 'Waived (instead of 2.00%)'
-                        : `${termSheet.subscription_fee_percent}%`}
-                    </span>
-                  </div>
+                    <FieldValue
+                      label="Subscription Fee"
+                      value={termSheet.subscription_fee_percent === 0 ? 'Waived (instead of 2.00%)' : `${termSheet.subscription_fee_percent}%`}
+                    />
                   )}
                   {termSheet.management_fee_percent != null && (
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Management Fee</span>
-                    <span className="text-foreground font-medium">
-                      {termSheet.management_fee_percent === 0
-                        ? 'Waived (instead of 2.00% p.a.)'
-                        : `${termSheet.management_fee_percent}% p.a.`}
-                    </span>
-                  </div>
+                    <FieldValue
+                      label="Management Fee"
+                      value={termSheet.management_fee_percent === 0 ? 'Waived (instead of 2.00% p.a.)' : `${termSheet.management_fee_percent}% p.a.`}
+                    />
                   )}
                   {termSheet.carried_interest_percent != null && (
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Carried Interest</span>
-                    <span className="text-foreground font-medium">
-                      {termSheet.carried_interest_percent === 0
-                        ? 'Waived (instead of 20.00%)'
-                        : `${termSheet.carried_interest_percent}% (no hurdle rate)`}
-                    </span>
-                  </div>
+                    <FieldValue
+                      label="Carried Interest"
+                      value={termSheet.carried_interest_percent === 0 ? 'Waived (instead of 20.00%)' : `${termSheet.carried_interest_percent}% (no hurdle rate)`}
+                    />
                   )}
-                </div>
+                </dl>
               </div>
-
-              <Separator />
 
               {/* Timeline */}
-              <div className="space-y-2">
+              <div className="rounded-lg bg-muted/10 border border-border/50 p-4 space-y-3">
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Timeline</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
                   {termSheet.interest_confirmation_deadline && (
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Interest Deadline</span>
-                    <span className="text-foreground font-medium">
-                      {formatUTC(termSheet.interest_confirmation_deadline, 'dd MMM yyyy HH:mm')}
-                    </span>
-                  </div>
+                    <FieldValue label="Interest Deadline" value={formatUTC(termSheet.interest_confirmation_deadline, 'dd MMM yyyy HH:mm')} />
                   )}
                   {termSheet.validity_date && (
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Validity</span>
-                    <span className="text-foreground font-medium">
-                      {formatUTC(termSheet.validity_date, 'dd MMM yyyy HH:mm')}
-                    </span>
-                  </div>
+                    <FieldValue label="Validity" value={formatUTC(termSheet.validity_date, 'dd MMM yyyy HH:mm')} />
                   )}
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Completion Date</span>
-                    <span className="text-foreground font-medium">
-                      {termSheet.completion_date
-                        ? formatUTC(termSheet.completion_date, 'dd MMM yyyy')
-                        : termSheet.completion_date_text || '—'}
-                    </span>
-                  </div>
-                </div>
+                  <FieldValue
+                    label="Completion Date"
+                    value={termSheet.completion_date ? formatUTC(termSheet.completion_date, 'dd MMM yyyy') : termSheet.completion_date_text || '—'}
+                  />
+                </dl>
               </div>
 
+              {/* Opportunity Summary */}
               {termSheet.term_sheet_html && (
-                <>
-                  <div className="space-y-2 text-sm">
-                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      Opportunity Summary
-                    </h4>
+                <div className="rounded-lg bg-muted/10 border border-border/50 p-4 space-y-3">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Opportunity Summary</h4>
                   <div
                     className="space-y-2 text-sm text-foreground/90 leading-relaxed"
                     dangerouslySetInnerHTML={{ __html: termSheet.term_sheet_html }}
                   />
-                  </div>
-                  <Separator />
-                </>
+                </div>
               )}
-              <div className="flex flex-wrap items-center gap-2">
+
+              {/* Actions */}
+              <div className="flex items-center gap-2">
                 <input
                   type="file"
-                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   className="hidden"
-                  ref={element => {
-                    fileInputsRef.current[termSheet.id] = element
-                  }}
+                  ref={element => { fileInputsRef.current[termSheet.id] = element }}
                   onChange={event => {
                     const file = event.target.files?.[0]
-                    if (file) {
-                      handleAttachmentUpload(termSheet.id, file)
-                    }
+                    if (file) handleAttachmentUpload(termSheet.id, file)
                   }}
                 />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => openEditor('clone', termSheet)}
-                  disabled={isSubmitting}
-                >
-                  <Copy className="h-4 w-4" />
-                  Clone
-                </Button>
                 {termSheet.status === 'draft' && (
                   <Button
                     variant="outline"
@@ -1324,117 +1142,34 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                     Publish
                   </Button>
                 )}
-                {termSheet.status !== 'archived' && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 text-rose-300"
-                    onClick={() => updateStatus(termSheet, 'archived')}
-                    disabled={isSubmitting}
-                  >
-                    <Archive className="h-4 w-4" />
-                    Archive
-                  </Button>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => fileInputsRef.current[termSheet.id]?.click()}
-                  disabled={uploadingAttachmentId === termSheet.id}
-                >
-                  {uploadingAttachmentId === termSheet.id ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-4 w-4" />
-                      Upload Attachment
-                    </>
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => handleGenerateTermsheet(termSheet.id)}
-                  disabled={generatingId === termSheet.id}
-                >
-                  {generatingId === termSheet.id ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <FileCheck className="h-4 w-4" />
-                      Generate PDF
-                    </>
-                  )}
-                </Button>
-              </div>
-
-              {/* Linked Fee Plans - Only show for published term sheets */}
-              {termSheet.status === 'published' && (
-                <>
-                  <Separator />
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-                        <FileCheck className="h-3.5 w-3.5" />
-                        Linked Fee Plans
-                      </h4>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="gap-1 text-xs h-6 px-2"
-                        onClick={() => openFeePlanModal(termSheet.id)}
-                      >
-                        <Plus className="h-3 w-3" />
-                        Add
-                      </Button>
-                    </div>
-
-                    {feePlansLoading ? (
-                      <div className="flex items-center gap-2 text-muted-foreground text-xs py-1">
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        Loading...
-                      </div>
-                    ) : (feePlansByTermSheet[termSheet.id] || []).length === 0 ? (
-                      <div className="text-xs text-muted-foreground py-1">
-                        No fee plans linked yet.
-                      </div>
-                    ) : (
-                      <div className="space-y-1.5">
-                        {(feePlansByTermSheet[termSheet.id] || []).map(fp => {
-                          const entity = getEntityInfo(fp)
-                          return (
-                            <div
-                              key={fp.id}
-                              className="flex items-center justify-between py-1 px-2 rounded bg-muted/50 text-xs"
-                            >
-                              <div className="flex items-center gap-2 min-w-0">
-                                {entity && (
-                                  <span className="flex items-center gap-1 text-muted-foreground shrink-0">
-                                    <entity.icon className="h-3 w-3" />
-                                    {entity.name}
-                                  </span>
-                                )}
-                                <span className="text-foreground truncate">{fp.name}</span>
-                              </div>
-                              <Badge className={`text-[10px] h-5 shrink-0 ${feePlanStatusClasses[fp.status] || feePlanStatusClasses.draft}`}>
-                                {feePlanStatusLabels[fp.status] || fp.status}
-                              </Badge>
-                            </div>
-                          )
-                        })}
-                      </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => openEditor('clone', termSheet)} disabled={isSubmitting}>
+                      <Copy className="h-4 w-4 mr-2" />
+                      Clone
+                    </DropdownMenuItem>
+                    {termSheet.status !== 'archived' && (
+                      <DropdownMenuItem onClick={() => updateStatus(termSheet, 'archived')} disabled={isSubmitting} className="text-rose-300">
+                        <Archive className="h-4 w-4 mr-2" />
+                        Archive
+                      </DropdownMenuItem>
                     )}
-                  </div>
-                </>
-              )}
+                    <DropdownMenuItem onClick={() => fileInputsRef.current[termSheet.id]?.click()} disabled={uploadingAttachmentId === termSheet.id}>
+                      <Upload className="h-4 w-4 mr-2" />
+                      {uploadingAttachmentId === termSheet.id ? 'Uploading...' : 'Upload Attachment'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleGenerateTermsheet(termSheet.id)} disabled={generatingId === termSheet.id}>
+                      <FileCheck className="h-4 w-4 mr-2" />
+                      {generatingId === termSheet.id ? 'Generating...' : 'Generate PDF'}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </CardContent>
           </Card>
         ))}
