@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -20,7 +20,8 @@ import {
   Bell,
   CheckSquare,
   MessageSquare,
-  AlertCircle
+  AlertCircle,
+  CheckCheck
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -60,181 +61,229 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
   const isDark = mounted && theme === 'staff-dark'
 
   // Fetch notifications from multiple sources
-  useEffect(() => {
-    async function fetchNotifications() {
-      if (!activePersona || !mounted) return
+  const fetchNotifications = useCallback(async () => {
+    if (!activePersona || !mounted) return
 
-      setLoading(true)
-      const supabase = createClient()
-      const items: NotificationItem[] = []
+    setLoading(true)
+    const supabase = createClient()
+    const items: NotificationItem[] = []
 
-      try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
 
-        if (userError || !user) {
-          console.warn('[NotificationCenter] No authenticated user found')
-          setNotifications([])
-          return
-        }
+      if (userError || !user) {
+        console.warn('[NotificationCenter] No authenticated user found')
+        setNotifications([])
+        return
+      }
 
-        const userId = user.id
-        const personaType = activePersona.persona_type
+      const userId = user.id
+      const personaType = activePersona.persona_type
 
-        // Passive personas (lawyer, introducer) only receive notifications - no tasks or messages
-        const isPassiveRecipient = personaType === 'lawyer' || personaType === 'introducer'
+      // Passive personas (lawyer, introducer) only receive notifications - no tasks or messages
+      const isPassiveRecipient = personaType === 'lawyer' || personaType === 'introducer'
 
-        // Fetch tasks (skip for passive personas - they don't have tasks page access)
-        if (!isPassiveRecipient) {
-          let taskQuery = supabase
-            .from('tasks')
-            .select('id, title, description, created_at, owner_user_id, owner_investor_id')
-            .in('status', ['pending', 'in_progress'])
-            .order('created_at', { ascending: false })
-            .limit(5)
-
-          if (personaType === 'investor') {
-            taskQuery = taskQuery.or(`owner_user_id.eq.${userId},owner_investor_id.eq.${activePersona.entity_id}`)
-          } else {
-            taskQuery = taskQuery.eq('owner_user_id', userId)
-          }
-
-          const { data: tasks } = await taskQuery
-
-          if (tasks) {
-            tasks.forEach((task: any) => {
-              items.push({
-                id: `task-${task.id}`,
-                type: 'task',
-                title: task.title,
-                description: task.description,
-                href: '/versotech_main/tasks',
-                read: false,
-                created_at: task.created_at
-              })
-            })
-          }
-        }
-
-        // Fetch unread messages (skip for passive personas - they don't have inbox access)
-        if (!isPassiveRecipient) {
-          const { data: participants } = await supabase
-            .from('conversation_participants')
-            .select('conversation_id, last_read_at')
-            .eq('user_id', userId)
-            .limit(50)
-
-          const conversationIds = (participants || [])
-            .map((row: any) => row.conversation_id)
-            .filter(Boolean)
-
-          if (conversationIds.length > 0) {
-            let conversationQuery = supabase
-              .from('conversations')
-              .select('id, subject, preview, last_message_at, created_at, visibility')
-              .in('id', conversationIds)
-              .order('last_message_at', { ascending: false, nullsFirst: false })
-              .limit(10)
-
-            if (personaType !== 'staff') {
-              conversationQuery = conversationQuery.in('visibility', ['investor', 'deal'])
-            }
-
-            const { data: conversations } = await conversationQuery
-
-            const lastReadByConversation = new Map<string, string | null>()
-            ;(participants || []).forEach((row: any) => {
-              if (row.conversation_id) {
-                lastReadByConversation.set(row.conversation_id, row.last_read_at ?? null)
-              }
-            })
-
-            const unreadConversations = (conversations || []).filter((conv: any) => {
-              const lastMessageAt = conv.last_message_at ?? conv.created_at
-              if (!lastMessageAt) return false
-              const lastReadAt = lastReadByConversation.get(conv.id)
-              if (!lastReadAt) return true
-              return new Date(lastMessageAt).getTime() > new Date(lastReadAt).getTime()
-            })
-
-            unreadConversations.slice(0, 5).forEach((conv: any) => {
-              const lastMessageAt = conv.last_message_at ?? conv.created_at
-              items.push({
-                id: `msg-${conv.id}`,
-                type: 'message',
-                title: conv.subject || 'New message',
-                description: conv.preview || 'You have a new message',
-                href: '/versotech_main/inbox?tab=messages',
-                read: false,
-                created_at: lastMessageAt
-              })
-            })
-          }
-        }
-
-        // Fetch notifications for all personas (investor, lawyer, staff, etc.)
-        // Notifications use read_at timestamp (null = unread)
-        const { data: notifs } = await supabase
-          .from('investor_notifications')
-          .select('id, title, message, created_at, read_at, link, agent:agent_id (name, avatar_url)')
-          .eq('user_id', userId)
-          .is('read_at', null)
+      // Fetch tasks (skip for passive personas - they don't have tasks page access)
+      if (!isPassiveRecipient) {
+        let taskQuery = supabase
+          .from('tasks')
+          .select('id, title, description, created_at, owner_user_id, owner_investor_id')
+          .eq('status', 'pending')
           .order('created_at', { ascending: false })
           .limit(5)
 
-        if (notifs) {
-          notifs.forEach((notif: any) => {
+        if (personaType === 'investor') {
+          taskQuery = taskQuery.or(`owner_user_id.eq.${userId},owner_investor_id.eq.${activePersona.entity_id}`)
+        } else {
+          taskQuery = taskQuery.eq('owner_user_id', userId)
+        }
+
+        const { data: tasks } = await taskQuery
+
+        if (tasks) {
+          tasks.forEach((task: any) => {
             items.push({
-              id: `notif-${notif.id}`,
+              id: `task-${task.id}`,
+              type: 'task',
+              title: task.title,
+              description: task.description,
+              href: '/versotech_main/tasks',
+              read: true,
+              created_at: task.created_at
+            })
+          })
+        }
+      }
+
+      // Fetch unread messages (skip for passive personas - they don't have inbox access)
+      if (!isPassiveRecipient) {
+        const { data: participants } = await supabase
+          .from('conversation_participants')
+          .select('conversation_id, last_read_at')
+          .eq('user_id', userId)
+          .limit(50)
+
+        const conversationIds = (participants || [])
+          .map((row: any) => row.conversation_id)
+          .filter(Boolean)
+
+        if (conversationIds.length > 0) {
+          let conversationQuery = supabase
+            .from('conversations')
+            .select('id, subject, preview, last_message_at, created_at, visibility')
+            .in('id', conversationIds)
+            .order('last_message_at', { ascending: false, nullsFirst: false })
+            .limit(10)
+
+          if (personaType !== 'staff') {
+            conversationQuery = conversationQuery.in('visibility', ['investor', 'deal'])
+          }
+
+          const { data: conversations } = await conversationQuery
+
+          const lastReadByConversation = new Map<string, string | null>()
+          ;(participants || []).forEach((row: any) => {
+            if (row.conversation_id) {
+              lastReadByConversation.set(row.conversation_id, row.last_read_at ?? null)
+            }
+          })
+
+          const unreadConversations = (conversations || []).filter((conv: any) => {
+            const lastMessageAt = conv.last_message_at ?? conv.created_at
+            if (!lastMessageAt) return false
+            const lastReadAt = lastReadByConversation.get(conv.id)
+            if (!lastReadAt) return true
+            return new Date(lastMessageAt).getTime() > new Date(lastReadAt).getTime()
+          })
+
+          unreadConversations.slice(0, 5).forEach((conv: any) => {
+            const lastMessageAt = conv.last_message_at ?? conv.created_at
+            items.push({
+              id: `msg-${conv.id}`,
+              type: 'message',
+              title: conv.subject || 'New message',
+              description: conv.preview || 'You have a new message',
+              href: '/versotech_main/inbox?tab=messages',
+              read: false,
+              created_at: lastMessageAt
+            })
+          })
+        }
+      }
+
+      // Fetch notifications for all personas (investor, lawyer, staff, etc.)
+      // Notifications use read_at timestamp (null = unread)
+      const { data: notifs } = await supabase
+        .from('investor_notifications')
+        .select('id, title, message, created_at, read_at, link, agent:agent_id (name, avatar_url)')
+        .eq('user_id', userId)
+        .is('read_at', null)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      if (notifs) {
+        notifs.forEach((notif: any) => {
+          items.push({
+            id: `notif-${notif.id}`,
+            type: 'notification',
+            title: notif.title,
+            description: notif.message,
+            href: notif.link || '/versotech_main/notifications',
+            read: false,
+            created_at: notif.created_at,
+            agent: notif.agent ?? null
+          })
+        })
+      }
+
+      if (personaType === 'lawyer') {
+        const { data: lawyerNotifs } = await supabase
+          .from('notifications')
+          .select('id, title, message, created_at, read, link, agent:agent_id (name, avatar_url)')
+          .eq('user_id', userId)
+          .eq('read', false)
+          .order('created_at', { ascending: false })
+          .limit(5)
+
+        if (lawyerNotifs) {
+          lawyerNotifs.forEach((notif: any) => {
+            items.push({
+              id: `lawyer-notif-${notif.id}`,
               type: 'notification',
               title: notif.title,
               description: notif.message,
               href: notif.link || '/versotech_main/notifications',
-              read: notif.read_at !== null,
+              read: false,
               created_at: notif.created_at,
               agent: notif.agent ?? null
             })
           })
         }
-
-        if (personaType === 'lawyer') {
-          const { data: lawyerNotifs } = await supabase
-            .from('notifications')
-            .select('id, title, message, created_at, read, link, agent:agent_id (name, avatar_url)')
-            .eq('user_id', userId)
-            .eq('read', false)
-            .order('created_at', { ascending: false })
-            .limit(5)
-
-          if (lawyerNotifs) {
-            lawyerNotifs.forEach((notif: any) => {
-              items.push({
-                id: `lawyer-notif-${notif.id}`,
-                type: 'notification',
-                title: notif.title,
-                description: notif.message,
-                href: notif.link || '/versotech_main/notifications',
-                read: !!notif.read,
-                created_at: notif.created_at,
-                agent: notif.agent ?? null
-              })
-            })
-          }
-        }
-
-        // Sort by date and take top 10
-        items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        setNotifications(items.slice(0, 10))
-      } catch (error) {
-        console.error('[NotificationCenter] Error fetching notifications:', error)
-      } finally {
-        setLoading(false)
       }
-    }
 
-    fetchNotifications()
+      // Sort by date and take top 10
+      items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      setNotifications(items.slice(0, 10))
+    } catch (error) {
+      console.error('[NotificationCenter] Error fetching notifications:', error)
+    } finally {
+      setLoading(false)
+    }
   }, [activePersona, mounted])
 
+  useEffect(() => {
+    fetchNotifications()
+  }, [fetchNotifications])
+
   const unreadCount = notifications.filter(n => !n.read).length
+
+  // Extract real DB id from prefixed bell item id
+  function stripIdPrefix(id: string): string {
+    if (id.startsWith('lawyer-notif-')) return id.slice('lawyer-notif-'.length)
+    if (id.startsWith('notif-')) return id.slice('notif-'.length)
+    return id
+  }
+
+  // Mark a single notification as read (optimistic update + API call)
+  async function markNotificationRead(item: NotificationItem) {
+    if (item.type !== 'notification' || item.read) return
+    // Optimistic update
+    setNotifications(prev => prev.map(n => n.id === item.id ? { ...n, read: true } : n))
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [stripIdPrefix(item.id)] })
+      })
+    } catch (e) {
+      console.error('[NotificationCenter] Failed to mark as read:', e)
+    }
+  }
+
+  // Mark all notification-type items as read
+  async function markAllNotificationsRead() {
+    const notifItems = notifications.filter(n => n.type === 'notification' && !n.read)
+    if (notifItems.length === 0) return
+    // Optimistic update
+    setNotifications(prev => prev.map(n =>
+      n.type === 'notification' ? { ...n, read: true } : n
+    ))
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: notifItems.map(n => stripIdPrefix(n.id)) })
+      })
+    } catch (e) {
+      console.error('[NotificationCenter] Failed to mark all as read:', e)
+    }
+  }
+
+  // Refresh data + handle open state
+  function handleOpenChange(newOpen: boolean) {
+    setOpen(newOpen)
+    if (newOpen) fetchNotifications()
+  }
 
   const getIcon = (type: NotificationItem['type']) => {
     switch (type) {
@@ -280,7 +329,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
   }
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
+    <DropdownMenu open={open} onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
@@ -320,11 +369,29 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
           <span className={isDark ? "text-white" : "text-gray-900"}>
             Notifications
           </span>
-          {unreadCount > 0 && (
-            <Badge variant="secondary" className="text-xs">
-              {unreadCount} new
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {unreadCount > 0 && (
+              <>
+                <Badge variant="secondary" className="text-xs">
+                  {unreadCount} new
+                </Badge>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    markAllNotificationsRead()
+                  }}
+                  className={cn(
+                    "text-xs font-medium flex items-center gap-1",
+                    isDark ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-700"
+                  )}
+                >
+                  <CheckCheck className="h-3 w-3" />
+                  Mark all read
+                </button>
+              </>
+            )}
+          </div>
         </DropdownMenuLabel>
 
         <div className="px-3 pb-2">
@@ -377,7 +444,11 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
                     !item.read && (isDark ? "bg-white/5" : "bg-blue-50/50")
                   )}
                 >
-                  <Link href={item.href} className="flex items-start gap-3 w-full">
+                  <Link
+                    href={item.href}
+                    className="flex items-start gap-3 w-full"
+                    onClick={() => markNotificationRead(item)}
+                  >
                     <div className={cn(
                       "h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0",
                       isDark ? "bg-white/10" : "bg-gray-100"

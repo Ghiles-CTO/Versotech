@@ -22,7 +22,6 @@ import {
   BellOff,
   Search,
   Filter,
-  Send,
   Inbox,
   FileText,
   Briefcase,
@@ -79,18 +78,43 @@ interface ComplianceTask {
 }
 
 // Notification type labels and icons
+// Map every real DB type to a display category
 const NOTIFICATION_TYPE_CONFIG: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
-  deal: { label: 'Deal', icon: Briefcase, color: 'bg-blue-100 text-blue-800' },
-  subscription: { label: 'Subscription', icon: FileText, color: 'bg-green-100 text-green-800' },
-  signature: { label: 'Signature', icon: FileText, color: 'bg-purple-100 text-purple-800' },
-  dataroom: { label: 'Dataroom', icon: FileText, color: 'bg-indigo-100 text-indigo-800' },
-  kyc: { label: 'KYC', icon: Users, color: 'bg-orange-100 text-orange-800' },
-  nda: { label: 'NDA', icon: FileText, color: 'bg-teal-100 text-teal-800' },
-  agreement: { label: 'Agreement', icon: FileText, color: 'bg-pink-100 text-pink-800' },
-  proxy_subscription: { label: 'Proxy Subscription', icon: Users, color: 'bg-cyan-100 text-cyan-800' },
-  task: { label: 'Task', icon: CheckCircle2, color: 'bg-yellow-100 text-yellow-800' },
-  reminder: { label: 'Reminder', icon: Clock, color: 'bg-amber-100 text-amber-800' },
-  general: { label: 'General', icon: Bell, color: 'bg-gray-100 text-gray-800' },
+  // Broad categories
+  deal: { label: 'Deal', icon: Briefcase, color: 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300' },
+  subscription: { label: 'Subscription', icon: FileText, color: 'bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-300' },
+  signature: { label: 'Signature', icon: FileText, color: 'bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300' },
+  dataroom: { label: 'Dataroom', icon: FileText, color: 'bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300' },
+  kyc: { label: 'KYC', icon: Users, color: 'bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300' },
+  nda: { label: 'NDA', icon: FileText, color: 'bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300' },
+  agreement: { label: 'Agreement', icon: FileText, color: 'bg-pink-100 dark:bg-pink-950 text-pink-800 dark:text-pink-300' },
+  proxy_subscription: { label: 'Proxy Subscription', icon: Users, color: 'bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-300' },
+  task: { label: 'Task', icon: CheckCircle2, color: 'bg-yellow-100 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-300' },
+  reminder: { label: 'Reminder', icon: Clock, color: 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300' },
+  // Specific DB types → mapped to proper labels
+  signature_required: { label: 'Signature', icon: FileText, color: 'bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300' },
+  introducer_agreement_pending: { label: 'Agreement', icon: FileText, color: 'bg-pink-100 dark:bg-pink-950 text-pink-800 dark:text-pink-300' },
+  introducer_agreement_signed: { label: 'Agreement', icon: FileText, color: 'bg-pink-100 dark:bg-pink-950 text-pink-800 dark:text-pink-300' },
+  approval_granted: { label: 'Approval', icon: CheckCircle2, color: 'bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-300' },
+  certificate_issued: { label: 'Certificate', icon: FileText, color: 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300' },
+  introducer_payment_confirmed: { label: 'Commission', icon: Briefcase, color: 'bg-violet-100 dark:bg-violet-950 text-violet-800 dark:text-violet-300' },
+  introducer_commission_accrued: { label: 'Commission', icon: Briefcase, color: 'bg-violet-100 dark:bg-violet-950 text-violet-800 dark:text-violet-300' },
+  introducer_invoice_sent: { label: 'Commission', icon: Briefcase, color: 'bg-violet-100 dark:bg-violet-950 text-violet-800 dark:text-violet-300' },
+  introducer_invoice_approved: { label: 'Commission', icon: Briefcase, color: 'bg-violet-100 dark:bg-violet-950 text-violet-800 dark:text-violet-300' },
+  payment_confirmed: { label: 'Payment', icon: Briefcase, color: 'bg-violet-100 dark:bg-violet-950 text-violet-800 dark:text-violet-300' },
+  investment_activated: { label: 'Investment', icon: Briefcase, color: 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300' },
+  compliance_question: { label: 'Compliance', icon: AlertCircle, color: 'bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300' },
+  deal_invite: { label: 'Deal', icon: Briefcase, color: 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300' },
+  subscription_pack_ready: { label: 'Subscription', icon: FileText, color: 'bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-300' },
+  nda_modification_request: { label: 'NDA', icon: FileText, color: 'bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300' },
+  profile_approved: { label: 'Profile', icon: Users, color: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300' },
+  info: { label: 'Info', icon: Bell, color: 'bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300' },
+  general: { label: 'General', icon: Bell, color: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300' },
+}
+
+// Human-readable label for the filter dropdown (deduped by display label)
+function getTypeLabel(type: string): string {
+  return NOTIFICATION_TYPE_CONFIG[type]?.label ?? type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
 
 const PERSONA_ROUTE_PREFIXES: Record<string, string[]> = {
@@ -207,7 +231,7 @@ export default function InvestorNotificationsClient({
   const [marking, setMarking] = useState(false)
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
-  const [viewMode, setViewMode] = useState<'inbox' | 'sent' | 'compliance'>('inbox')
+  const [viewMode, setViewMode] = useState<'inbox' | 'compliance'>('inbox')
   const [personaFilter, setPersonaFilter] = useState<string>('all')
 
   useEffect(() => {
@@ -219,15 +243,7 @@ export default function InvestorNotificationsClient({
   const fetchNotifications = async () => {
     setLoading(true)
     try {
-      const params = new URLSearchParams()
-      if (typeFilter !== 'all') {
-        params.set('type', typeFilter)
-      }
-      if (viewMode === 'sent') {
-        params.set('created_by_me', 'true')
-      }
-
-      const response = await fetch(`/api/notifications?${params.toString()}`)
+      const response = await fetch('/api/notifications')
       if (!response.ok) throw new Error('Failed to load notifications')
       const data = await response.json()
       setNotifications(data.notifications ?? [])
@@ -244,10 +260,20 @@ export default function InvestorNotificationsClient({
 
   useEffect(() => {
     fetchNotifications()
-  }, [typeFilter, viewMode])
+  }, [viewMode])
+
+  // Filter by type label client-side (groups multiple DB types under one display label)
+  const typeFilteredNotifications = useMemo(() => {
+    if (typeFilter === 'all') return notifications
+    const selectedLabel = getTypeLabel(typeFilter)
+    return notifications.filter(n => {
+      const label = getTypeLabel(n.type || 'general')
+      return label === selectedLabel
+    })
+  }, [notifications, typeFilter])
 
   // Filter notifications by search
-  const filteredNotifications = notifications.filter(n => {
+  const filteredNotifications = typeFilteredNotifications.filter(n => {
     if (!search) return true
     const searchLower = search.toLowerCase()
     return (
@@ -328,80 +354,105 @@ export default function InvestorNotificationsClient({
   const renderNotification = (notification: Notification) => {
     const typeConfig = NOTIFICATION_TYPE_CONFIG[notification.type || 'general'] || NOTIFICATION_TYPE_CONFIG.general
     const TypeIcon = typeConfig.icon
+    const hasAgent = !!notification.agent?.name
 
     return (
       <Card
         key={notification.id}
         className={cn(
-          'border transition-colors hover:border-primary/50',
-          notification.read_at ? 'bg-white' : 'bg-blue-50/50 border-blue-200'
+          'border transition-all hover:border-primary/50 hover:shadow-sm',
+          notification.read_at
+            ? 'bg-white dark:bg-zinc-900'
+            : 'bg-blue-50/50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800'
         )}
       >
-        <CardHeader className="pb-2">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-3 flex-1 min-w-0">
-              <div className={cn('p-2 rounded-lg shrink-0', typeConfig.color)}>
+        <div className="p-4">
+          <div className="flex items-start gap-4">
+            {/* Leading visual: agent avatar (large) or type icon */}
+            {hasAgent ? (
+              <Avatar className="h-10 w-10 shrink-0 ring-2 ring-white dark:ring-zinc-800 shadow-sm">
+                {notification.agent!.avatar_url && (
+                  <AvatarImage src={notification.agent!.avatar_url} alt={notification.agent!.name} />
+                )}
+                <AvatarFallback className="text-sm font-medium bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
+                  {getInitials(notification.agent!.name)}
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <div className={cn('p-2.5 rounded-lg shrink-0', typeConfig.color)}>
                 <TypeIcon className="h-4 w-4" />
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <CardTitle className="text-base text-gray-900 truncate">
-                    {notification.title}
-                  </CardTitle>
-                  {!notification.read_at && (
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                      New
-                    </Badge>
-                  )}
-                  {notification.type && (
-                    <Badge variant="outline" className="text-xs capitalize">
-                      {typeConfig.label}
-                    </Badge>
-                  )}
-                </div>
-                <CardDescription className="mt-1">
-                  {formatTimeAgo(notification.created_at)}
-                </CardDescription>
-                {notification.agent?.name && (
-                  <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                    <Avatar className="h-6 w-6">
-                      {notification.agent.avatar_url && (
-                        <AvatarImage src={notification.agent.avatar_url} alt={notification.agent.name} />
-                      )}
-                      <AvatarFallback className="text-[10px]">
-                        {getInitials(notification.agent.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span>From {notification.agent.name}</span>
-                  </div>
+            )}
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              {/* Top row: title + badges */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 truncate">
+                  {notification.title}
+                </span>
+                {!notification.read_at && (
+                  <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-[10px] px-1.5 py-0">
+                    New
+                  </Badge>
+                )}
+                {notification.type && notification.type !== 'general' && notification.type !== 'info' && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    {typeConfig.label}
+                  </Badge>
                 )}
               </div>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {!notification.read_at && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => markAsRead(notification.id)}
-                  title="Mark as read"
-                >
-                  <Check className="h-4 w-4" />
-                </Button>
+
+              {/* Agent name line */}
+              {hasAgent && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  From <span className="font-medium text-foreground/70">{notification.agent!.name}</span>
+                </p>
               )}
-              {notification.link && (
-                <Button asChild variant="outline" size="sm">
-                  <Link href={notification.link}>
-                    Open
-                    <ExternalLink className="h-3 w-3 ml-1" />
-                  </Link>
-                </Button>
-              )}
+
+              {/* Message body */}
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1.5 whitespace-pre-wrap leading-relaxed line-clamp-3">
+                {notification.message}
+              </p>
+
+              {/* Bottom row: time + actions */}
+              <div className="flex items-center justify-between mt-3">
+                <span className="text-xs text-muted-foreground">
+                  {formatTimeAgo(notification.created_at)}
+                </span>
+                <div className="flex items-center gap-2">
+                  {!notification.read_at && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => markAsRead(notification.id)}
+                      title="Mark as read"
+                      className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      <Check className="h-3.5 w-3.5 mr-1" />
+                      Read
+                    </Button>
+                  )}
+                  {notification.link && (
+                    <Button asChild variant="outline" size="sm" className="h-7 px-3 text-xs">
+                      <Link
+                        href={notification.link}
+                        onClick={() => {
+                          if (!notification.read_at) {
+                            markAsRead(notification.id)
+                          }
+                        }}
+                      >
+                        Open
+                        <ExternalLink className="h-3 w-3 ml-1" />
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-700 whitespace-pre-wrap">{notification.message}</p>
-        </CardContent>
+        </div>
       </Card>
     )
   }
@@ -428,24 +479,28 @@ export default function InvestorNotificationsClient({
       </div>
 
       {/* Tabs for Inbox/Sent */}
-      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'inbox' | 'sent' | 'compliance')}>
+      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'inbox' | 'compliance')}>
         <div className="flex flex-col md:flex-row gap-4 justify-between">
-          <TabsList>
-            <TabsTrigger value="inbox" className="gap-2">
-              <Inbox className="h-4 w-4" />
-              Inbox
-            </TabsTrigger>
-            <TabsTrigger value="sent" className="gap-2">
-              <Send className="h-4 w-4" />
-              Sent by Me
-            </TabsTrigger>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="sm" className="gap-2">
+              <Link href="/versotech_main/inbox">
+                <Inbox className="h-4 w-4" />
+                Inbox
+              </Link>
+            </Button>
             {isStaff && (
-              <TabsTrigger value="compliance" className="gap-2">
-                <AlertCircle className="h-4 w-4" />
-                Compliance
-              </TabsTrigger>
+              <TabsList>
+                <TabsTrigger value="inbox" className="gap-2">
+                  <Bell className="h-4 w-4" />
+                  Notifications
+                </TabsTrigger>
+                <TabsTrigger value="compliance" className="gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  Compliance
+                </TabsTrigger>
+              </TabsList>
             )}
-          </TabsList>
+          </div>
 
           {/* Filters */}
           <div className="flex gap-3">
@@ -482,14 +537,20 @@ export default function InvestorNotificationsClient({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
-                {availableTypes.map((type) => {
-                  const config = NOTIFICATION_TYPE_CONFIG[type] || NOTIFICATION_TYPE_CONFIG.general
-                  return (
-                    <SelectItem key={type} value={type} className="capitalize">
-                      {config.label}
+                {(() => {
+                  // Deduplicate: group DB types by their display label, pick first type as value
+                  const seen = new Map<string, string>()
+                  for (const type of availableTypes) {
+                    const label = getTypeLabel(type)
+                    if (label === 'General') continue // skip "General" — it's noise
+                    if (!seen.has(label)) seen.set(label, type)
+                  }
+                  return Array.from(seen.entries()).map(([label, type]) => (
+                    <SelectItem key={type} value={type}>
+                      {label}
                     </SelectItem>
-                  )
-                })}
+                  ))
+                })()}
               </SelectContent>
             </Select>
           </div>
@@ -497,15 +558,15 @@ export default function InvestorNotificationsClient({
 
         <TabsContent value="inbox" className="mt-6 space-y-6">
           {loading ? (
-            <div className="flex items-center justify-center py-12 text-gray-500 gap-2">
+            <div className="flex items-center justify-center py-12 text-gray-500 dark:text-gray-400 gap-2">
               <Loader2 className="h-5 w-5 animate-spin" />
               Loading notifications...
             </div>
           ) : personaFilteredNotifications.length === 0 ? (
-            <Card className="border border-gray-200 bg-white">
+            <Card className="border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900">
               <CardContent className="py-12 text-center">
-                <BellOff className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">
+                <BellOff className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <p className="text-gray-500 dark:text-gray-400">
                   {search || typeFilter !== 'all'
                     ? 'No notifications match your filters'
                     : "You're all caught up! New updates will show here."}
@@ -540,30 +601,6 @@ export default function InvestorNotificationsClient({
                 </div>
               )}
             </>
-          )}
-        </TabsContent>
-
-        <TabsContent value="sent" className="mt-6">
-          {loading ? (
-            <div className="flex items-center justify-center py-12 text-gray-500 gap-2">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              Loading sent notifications...
-            </div>
-          ) : personaFilteredNotifications.length === 0 ? (
-            <Card className="border border-gray-200 bg-white">
-              <CardContent className="py-12 text-center">
-                <Send className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">
-                  {search || typeFilter !== 'all'
-                    ? 'No sent notifications match your filters'
-                    : "No notifications sent yet. Notifications you create will appear here."}
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {personaFilteredNotifications.map(renderNotification)}
-            </div>
           )}
         </TabsContent>
 

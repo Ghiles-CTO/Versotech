@@ -26,8 +26,6 @@ import {
   ChevronUp,
   ListChecks,
   TrendingUp,
-  X,
-  Play,
   CheckCheck,
   FileCheck,
   Upload,
@@ -172,37 +170,6 @@ export function TasksPageClient({
     }))
   }
 
-  async function startTask(taskId: string, actionUrl?: string | null) {
-    setIsUpdating(true)
-    const supabase = createClient()
-
-    const { error } = await supabase
-      .from('tasks')
-      .update({
-        status: 'in_progress',
-        started_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', taskId)
-
-    if (error) {
-      console.error('Failed to start task:', error)
-      toast.error('Failed to start task. Please try again.')
-      setIsUpdating(false)
-      return
-    }
-
-    setIsUpdating(false)
-    setSelectedTask(null)
-
-    // Navigate to the action URL if available
-    if (actionUrl) {
-      router.push(actionUrl)
-    } else {
-      await refreshTasks()
-    }
-  }
-
   async function completeTask(taskId: string) {
     setIsUpdating(true)
     const supabase = createClient()
@@ -225,31 +192,6 @@ export function TasksPageClient({
     }
 
     toast.success('Task completed successfully')
-    setIsUpdating(false)
-    setSelectedTask(null)
-    await refreshTasks()
-  }
-
-  async function cancelTask(taskId: string) {
-    setIsUpdating(true)
-    const supabase = createClient()
-
-    const { error } = await supabase
-      .from('tasks')
-      .update({
-        status: 'pending',
-        started_at: null,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', taskId)
-
-    if (error) {
-      console.error('Failed to cancel task:', error)
-      toast.error('Failed to cancel task. Please try again.')
-      setIsUpdating(false)
-      return
-    }
-
     setIsUpdating(false)
     setSelectedTask(null)
     await refreshTasks()
@@ -338,7 +280,6 @@ export function TasksPageClient({
   const getStatusBadge = (status: string) => {
     const configs = {
       pending: { label: 'Pending', className: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700' },
-      in_progress: { label: 'In Progress', className: 'bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' },
       completed: { label: 'Completed', className: 'bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800' },
       overdue: { label: 'Overdue', className: 'bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800' },
       blocked: { label: 'Blocked', className: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-700' }
@@ -408,12 +349,6 @@ export function TasksPageClient({
                   <span>{task.estimated_minutes} min</span>
                 </div>
               )}
-              {task.started_at && !isComplete && (
-                <div className="flex items-center gap-1 text-blue-600">
-                  <Play className="h-3 w-3" />
-                  <span>Started {new Date(task.started_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                </div>
-              )}
             </div>
           </div>
 
@@ -423,8 +358,8 @@ export function TasksPageClient({
         </div>
 
         {!isComplete && (
-          <Button 
-            size="sm" 
+          <Button
+            size="sm"
             onClick={(e) => {
               e.stopPropagation()
               setSelectedTask(task)
@@ -432,7 +367,7 @@ export function TasksPageClient({
             className="ml-3 bg-blue-600 hover:bg-blue-700 text-white"
             disabled={task.status === 'blocked'}
           >
-            {task.status === 'in_progress' ? 'Continue' : 'Start'}
+            Mark Done
             <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
         )}
@@ -528,7 +463,6 @@ export function TasksPageClient({
   const allTasks = [...onboardingTasks, ...staffCreatedTasks, ...generalComplianceTasks, ...signatureTasks, ...tasksByVehicle.flatMap(g => g.tasks)]
   const totalPending = allTasks.filter(t => t.status !== 'completed' && t.status !== 'waived').length
   const totalCompleted = allTasks.filter(t => t.status === 'completed' || t.status === 'waived').length
-  const totalInProgress = allTasks.filter(t => t.status === 'in_progress').length
   const totalOverdue = allTasks.filter(isOverdue).length
   const completionRate = allTasks.length > 0 ? Math.round((totalCompleted / allTasks.length) * 100) : 0
 
@@ -554,7 +488,7 @@ export function TasksPageClient({
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="border border-gray-200 dark:border-zinc-700">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
@@ -572,16 +506,6 @@ export function TasksPageClient({
                   <span className="text-xs font-medium uppercase tracking-wide">Pending</span>
                 </div>
                 <div className="text-2xl font-semibold text-blue-900 dark:text-blue-200">{totalPending}</div>
-              </CardContent>
-            </Card>
-
-            <Card className="border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400 mb-1">
-                  <TrendingUp className="h-4 w-4" />
-                  <span className="text-xs font-medium uppercase tracking-wide">Active</span>
-                </div>
-                <div className="text-2xl font-semibold text-yellow-900 dark:text-yellow-200">{totalInProgress}</div>
               </CardContent>
             </Card>
 
@@ -798,22 +722,6 @@ export function TasksPageClient({
                 </div>
               )}
 
-              {selectedTask?.started_at && (
-                <div>
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Started On</p>
-                  <div className="flex items-center gap-2">
-                    <Play className="h-4 w-4 text-blue-400" />
-                    <span className="text-gray-900 dark:text-gray-100 font-medium">
-                      {new Date(selectedTask.started_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
-                    </span>
-                  </div>
-                </div>
-              )}
-
               {selectedTask?.completed_at && (
                 <div>
                   <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Completed On</p>
@@ -901,45 +809,23 @@ export function TasksPageClient({
             {/* Action Buttons */}
             {selectedTask && selectedTask.status !== 'completed' && selectedTask.status !== 'waived' && (
               <div className="flex items-center gap-3 pt-4 border-t border-gray-200 dark:border-zinc-700">
-                {selectedTask.status === 'pending' ? (
+                {selectedTask.action_url && (
                   <Button
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                    onClick={() => startTask(selectedTask.id, selectedTask.action_url)}
-                    disabled={isUpdating}
+                    onClick={() => router.push(selectedTask.action_url!)}
                   >
-                    <Play className="h-4 w-4 mr-2" />
-                    {selectedTask.action_url ? 'Go to Task' : 'Start Task'}
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Go to Task
                   </Button>
-                ) : (
-                  <>
-                    <Button
-                      variant="outline"
-                      className="border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800"
-                      onClick={() => cancelTask(selectedTask.id)}
-                      disabled={isUpdating}
-                    >
-                      <X className="h-4 w-4 mr-2" />
-                      Cancel
-                    </Button>
-                    {selectedTask.action_url && (
-                      <Button
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                        onClick={() => router.push(selectedTask.action_url!)}
-                      >
-                        <Play className="h-4 w-4 mr-2" />
-                        Continue Task
-                      </Button>
-                    )}
-                    <Button
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                      onClick={() => completeTask(selectedTask.id)}
-                      disabled={isUpdating}
-                    >
-                      <CheckCircle2 className="h-4 w-4 mr-2" />
-                      Complete
-                    </Button>
-                  </>
                 )}
+                <Button
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                  onClick={() => completeTask(selectedTask.id)}
+                  disabled={isUpdating}
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Mark Done
+                </Button>
               </div>
             )}
           </div>
