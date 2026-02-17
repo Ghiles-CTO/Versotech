@@ -23,16 +23,7 @@ import { ChevronRight, Menu, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 
 // File validation constants
-const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'xlsx', 'txt', 'jpg', 'jpeg', 'png']
-const ALLOWED_MIME_TYPES = [
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'text/plain',
-  'image/jpeg',
-  'image/png',
-]
-const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
+const MAX_FILE_SIZE = 1024 * 1024 * 1024 // 1GB
 
 export function StaffDocumentsLayout() {
   const { state, dispatch } = useStaffDocuments()
@@ -50,14 +41,9 @@ export function StaffDocumentsLayout() {
       const invalid: { file: File; reason: string }[] = []
 
       files.forEach((file) => {
-        const ext = file.name.split('.').pop()?.toLowerCase() || ''
-        const isValidType =
-          ALLOWED_EXTENSIONS.includes(ext) || ALLOWED_MIME_TYPES.includes(file.type)
         const isValidSize = file.size <= MAX_FILE_SIZE
 
-        if (!isValidType) {
-          invalid.push({ file, reason: 'type' })
-        } else if (!isValidSize) {
+        if (!isValidSize) {
           invalid.push({ file, reason: 'size' })
         } else {
           valid.push(file)
@@ -123,21 +109,12 @@ export function StaffDocumentsLayout() {
       // Show errors for invalid files
       if (invalid.length > 0) {
         const sizeErrors = invalid.filter((i) => i.reason === 'size')
-        const typeErrors = invalid.filter((i) => i.reason === 'type')
 
         if (sizeErrors.length > 0) {
           toast.error(
-            `${sizeErrors.length} file(s) exceed 50MB limit: ${sizeErrors
+            `${sizeErrors.length} file(s) exceed 1GB limit: ${sizeErrors
               .map((i) => i.file.name)
               .join(', ')}`
-          )
-        }
-
-        if (typeErrors.length > 0) {
-          toast.error(
-            `Unsupported file type(s): ${typeErrors
-              .map((i) => i.file.name)
-              .join(', ')}. Allowed: PDF, DOCX, XLSX, TXT, JPG, PNG`
           )
         }
       }
@@ -320,7 +297,7 @@ export function StaffDocumentsLayout() {
                 Drop files to upload
               </h3>
               <p className="text-sm text-muted-foreground mt-1">
-                PDF, DOCX, XLSX, TXT, JPG, PNG up to 50MB
+                All file types supported (max 1GB each)
               </p>
             </div>
           </div>

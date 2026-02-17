@@ -7,19 +7,19 @@ export type FileTypeCategory = 'pdf' | 'image' | 'video' | 'audio' | 'excel' | '
 
 /** Per-type size limits in bytes */
 export const SIZE_LIMITS: Record<FileTypeCategory, number> = {
-  pdf: 10 * 1024 * 1024,       // 10MB
-  image: 10 * 1024 * 1024,     // 10MB
-  video: 100 * 1024 * 1024,    // 100MB
-  audio: 50 * 1024 * 1024,     // 50MB
-  excel: 25 * 1024 * 1024,     // 25MB
-  docx: 25 * 1024 * 1024,      // 25MB
-  text: 10 * 1024 * 1024,      // 10MB
+  pdf: 100 * 1024 * 1024,       // 100MB
+  image: 50 * 1024 * 1024,      // 50MB
+  video: 1024 * 1024 * 1024,    // 1GB
+  audio: 200 * 1024 * 1024,     // 200MB
+  excel: 50 * 1024 * 1024,      // 50MB
+  docx: 50 * 1024 * 1024,       // 50MB
+  text: 25 * 1024 * 1024,       // 25MB
   unsupported: 0,
 }
 
 export const PREVIEW_CONFIG = {
-  /** Maximum file size for preview (10MB) - legacy default */
-  MAX_FILE_SIZE_BYTES: 10 * 1024 * 1024,
+  /** Maximum file size for preview (100MB) - legacy default */
+  MAX_FILE_SIZE_BYTES: 100 * 1024 * 1024,
 
   /** Timeout for iframe loading (30 seconds) */
   IFRAME_TIMEOUT_MS: 30000,

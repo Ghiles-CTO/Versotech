@@ -223,13 +223,7 @@ export async function GET(
 }
 
 const ATTACHMENT_BUCKET = 'deal-documents'
-const MAX_ATTACHMENT_FILE_SIZE = 50 * 1024 * 1024 // 50MB
-const ALLOWED_MIME_TYPES = new Set([
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/msword'
-])
-const ALLOWED_EXTENSIONS = new Set(['pdf', 'doc', 'docx'])
+const MAX_ATTACHMENT_FILE_SIZE = 1024 * 1024 * 1024 // 1GB
 
 async function authenticateStaffUser() {
   const clientSupabase = await createClient()
@@ -283,11 +277,9 @@ async function getFeeStructure(
   return { error: null, feeStructure } as const
 }
 
-function isAllowedAttachment(fileName: string, mimeType?: string | null) {
-  const extension = fileName.split('.').pop()?.toLowerCase() ?? ''
-  if (ALLOWED_EXTENSIONS.has(extension)) return true
-  if (mimeType && ALLOWED_MIME_TYPES.has(mimeType)) return true
-  return false
+function isAllowedAttachment(_fileName: string, _mimeType?: string | null) {
+  // All file types are now accepted
+  return true
 }
 
 function buildAttachmentFileKey(dealId: string, structureId: string, fileName: string) {
@@ -335,7 +327,7 @@ export async function POST(
 
     if (fileSize && fileSize > MAX_ATTACHMENT_FILE_SIZE) {
       return NextResponse.json(
-        { error: 'File size too large. Maximum size is 50MB' },
+        { error: 'File size too large. Maximum size is 1GB' },
         { status: 400 }
       )
     }
@@ -378,7 +370,7 @@ export async function POST(
 
   if (file.size > MAX_ATTACHMENT_FILE_SIZE) {
     return NextResponse.json(
-      { error: 'File size too large. Maximum size is 50MB' },
+      { error: 'File size too large. Maximum size is 1GB' },
       { status: 400 }
     )
   }
@@ -494,7 +486,7 @@ export async function PUT(
 
   if (fileSize && fileSize > MAX_ATTACHMENT_FILE_SIZE) {
     return NextResponse.json(
-      { error: 'File size too large. Maximum size is 50MB' },
+      { error: 'File size too large. Maximum size is 1GB' },
       { status: 400 }
     )
   }

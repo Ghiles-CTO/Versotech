@@ -107,10 +107,10 @@ export async function POST(
       )
     }
 
-    const maxSize = 50 * 1024 * 1024 // 50MB
+    const maxSize = 1024 * 1024 * 1024 // 1GB
     if (file.size > maxSize) {
       return NextResponse.json(
-        { error: 'File too large. Maximum size: 50MB' },
+        { error: 'File too large. Maximum size: 1GB' },
         { status: 400 }
       )
     }

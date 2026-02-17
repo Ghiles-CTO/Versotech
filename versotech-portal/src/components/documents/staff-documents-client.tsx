@@ -439,29 +439,16 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   }, [selectedDocuments])
 
   // Drag-Drop Upload Constants and Handlers
-  const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'xlsx', 'txt', 'jpg', 'jpeg', 'png']
-  const ALLOWED_MIME_TYPES = [
-    'application/pdf',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'text/plain',
-    'image/jpeg',
-    'image/png'
-  ]
-  const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
+  const MAX_FILE_SIZE = 1024 * 1024 * 1024 // 1GB
 
   const validateDroppedFiles = useCallback((files: File[]): { valid: File[], invalid: { file: File, reason: string }[] } => {
     const valid: File[] = []
     const invalid: { file: File, reason: string }[] = []
 
     files.forEach(file => {
-      const ext = file.name.split('.').pop()?.toLowerCase() || ''
-      const isValidType = ALLOWED_EXTENSIONS.includes(ext) || ALLOWED_MIME_TYPES.includes(file.type)
       const isValidSize = file.size <= MAX_FILE_SIZE
 
-      if (!isValidType) {
-        invalid.push({ file, reason: 'type' })
-      } else if (!isValidSize) {
+      if (!isValidSize) {
         invalid.push({ file, reason: 'size' })
       } else {
         valid.push(file)
@@ -514,11 +501,11 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       const typeErrors = invalid.filter(i => i.reason === 'type')
 
       if (sizeErrors.length > 0) {
-        toast.error(`${sizeErrors.length} file(s) exceed 50MB limit: ${sizeErrors.map(i => i.file.name).join(', ')}`)
+        toast.error(`${sizeErrors.length} file(s) exceed 1GB limit: ${sizeErrors.map(i => i.file.name).join(', ')}`)
       }
 
       if (typeErrors.length > 0) {
-        toast.error(`Unsupported file type(s): ${typeErrors.map(i => i.file.name).join(', ')}. Allowed: PDF, DOCX, XLSX, TXT, JPG, PNG`)
+        toast.error(`Unsupported file type(s): ${typeErrors.map(i => i.file.name).join(', ')}`)
       }
     }
 
@@ -606,11 +593,11 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       const typeErrors = invalid.filter(i => i.reason === 'type')
 
       if (sizeErrors.length > 0) {
-        toast.error(`${sizeErrors.length} file(s) exceed 50MB limit: ${sizeErrors.map(i => i.file.name).join(', ')}`)
+        toast.error(`${sizeErrors.length} file(s) exceed 1GB limit: ${sizeErrors.map(i => i.file.name).join(', ')}`)
       }
 
       if (typeErrors.length > 0) {
-        toast.error(`Unsupported file type(s): ${typeErrors.map(i => i.file.name).join(', ')}. Allowed: PDF, DOCX, XLSX, TXT, JPG, PNG`)
+        toast.error(`Unsupported file type(s): ${typeErrors.map(i => i.file.name).join(', ')}`)
       }
     }
 
@@ -1601,10 +1588,10 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       return
     }
 
-    // Validate file size (50MB max)
-    const maxSize = 50 * 1024 * 1024
+    // Validate file size (1GB max)
+    const maxSize = 1024 * 1024 * 1024
     if (file.size > maxSize) {
-      toast.error('File too large. Maximum size: 50MB')
+      toast.error('File too large. Maximum size: 1GB')
       if (versionFileInputRef.current) {
         versionFileInputRef.current.value = ''
       }
@@ -2358,7 +2345,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
                 <Upload className="h-16 w-16 mx-auto mb-4 text-primary animate-bounce" />
                 <p className="text-lg font-semibold text-foreground">Drop files to upload</p>
                 <p className="text-sm text-muted-foreground mt-2">
-                  PDF, DOCX, XLSX, TXT, JPG, PNG (max 50MB each)
+                  All file types supported (max 1GB each)
                 </p>
               </div>
             </div>
