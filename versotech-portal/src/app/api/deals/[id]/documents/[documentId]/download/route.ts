@@ -2,10 +2,45 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { applyPdfWatermark } from '@/lib/documents/pdf-watermark'
+import { applyImageWatermark } from '@/lib/documents/image-watermark'
 import crypto from 'crypto'
 
 function isPdf(fileName: string | null | undefined): boolean {
   return !!fileName && fileName.toLowerCase().endsWith('.pdf')
+}
+
+function isImage(fileName: string | null | undefined): boolean {
+  if (!fileName) return false
+  return /\.(jpg|jpeg|png|gif|webp|bmp|tiff?)$/i.test(fileName)
+}
+
+function getMimeType(fileName: string | null | undefined): string {
+  if (!fileName) return 'application/octet-stream'
+  const ext = fileName.toLowerCase().split('.').pop()
+  const map: Record<string, string> = {
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    gif: 'image/gif',
+    webp: 'image/webp',
+    bmp: 'image/bmp',
+    tif: 'image/tiff',
+    tiff: 'image/tiff',
+    mp4: 'video/mp4',
+    mov: 'video/quicktime',
+    webm: 'video/webm',
+    avi: 'video/x-msvideo',
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    xls: 'application/vnd.ms-excel',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    doc: 'application/msword',
+    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    ppt: 'application/vnd.ms-powerpoint',
+    txt: 'text/plain',
+    csv: 'text/csv',
+    zip: 'application/zip',
+  }
+  return map[ext ?? ''] ?? 'application/octet-stream'
 }
 
 export async function GET(
@@ -57,6 +92,11 @@ export async function GET(
 
     const isStaff = profile?.role?.startsWith('staff_') || profile?.role === 'ceo'
 
+    // Block investor download mode — investors get preview only
+    if (mode === 'download' && !isStaff) {
+      return NextResponse.json({ error: 'Download not permitted' }, { status: 403 })
+    }
+
     if (!isStaff) {
       const { data: membership } = await serviceSupabase
         .from('deal_memberships')
@@ -78,8 +118,7 @@ export async function GET(
         }, { status: 403 })
       }
 
-      // Featured documents can be downloaded without data room access
-      // (they are shown on the opportunity Overview tab)
+      // Featured documents can be accessed without data room access
       const isFeaturedDoc = document.is_featured === true
 
       if (!isFeaturedDoc) {
@@ -142,7 +181,6 @@ export async function GET(
       }
     }
 
-    // Create watermark information
     const watermarkInfo = {
       downloaded_by: profile?.display_name || user.email,
       downloaded_at: new Date().toISOString(),
@@ -154,6 +192,14 @@ export async function GET(
       viewer_name: profile?.display_name || null,
       entity_name: entityName,
     }
+
+    const fileType = isPdf(document.file_name) ? 'pdf'
+      : isImage(document.file_name) ? 'image'
+      : 'other'
+
+    const accessMethod = fileType === 'pdf' ? 'watermarked_pdf'
+      : fileType === 'image' ? 'watermarked_image'
+      : 'proxied_binary'
 
     // Log document access for audit trail
     await auditLogger.log({
@@ -167,85 +213,82 @@ export async function GET(
         file_name: document.file_name,
         folder: document.folder,
         user_role: profile?.role,
-        access_method: isPdf(document.file_name) ? 'watermarked_pdf' : 'pre_signed_url',
+        access_method: accessMethod,
         deal_name: document.deals?.name,
         is_staff: isStaff
       }
     })
 
-    // --- PDF path: fetch bytes, watermark, stream back ---
-    if (isPdf(document.file_name)) {
-      try {
-        const { data: fileBlob, error: downloadError } = await serviceSupabase.storage
-          .from(bucket)
-          .download(document.file_key)
+    // Download raw bytes from storage (used for all file types)
+    const { data: fileBlob, error: downloadError } = await serviceSupabase.storage
+      .from(bucket)
+      .download(document.file_key)
 
-        if (downloadError || !fileBlob) {
-          throw new Error(downloadError?.message || 'Storage download failed')
-        }
-
-        const rawBytes = new Uint8Array(await fileBlob.arrayBuffer())
-
-        const watermarkedBytes = await applyPdfWatermark(rawBytes, {
-          line1: user.email || 'Unknown',
-          line2: entityName || undefined,
-        })
-
-        const disposition = mode === 'download' ? 'attachment' : 'inline'
-        const safeFileName = (document.file_name || 'document.pdf').replace(/[^\w.\-_ ]/g, '_')
-
-        return new Response(Buffer.from(watermarkedBytes), {
-          headers: {
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': `${disposition}; filename="${safeFileName}"`,
-            'Content-Length': String(watermarkedBytes.byteLength),
-            'Cache-Control': 'no-store',
-            // Pass watermark metadata in headers so the client can use it for CSS overlay
-            'X-Watermark-Email': user.email || '',
-            'X-Watermark-Entity': entityName || '',
-            'X-Watermark-Name': profile?.display_name || '',
-            'X-Document-Id': document.id,
-          },
-        })
-      } catch (watermarkError) {
-        // Fallback: if watermarking fails (corrupted PDF, etc.), serve via pre-signed URL
-        console.error('PDF watermarking failed, falling back to signed URL:', watermarkError)
-      }
+    if (downloadError || !fileBlob) {
+      console.error('Storage download failed:', downloadError)
+      return NextResponse.json({ error: 'Failed to fetch document from storage' }, { status: 500 })
     }
 
-    // --- Non-PDF path: pre-signed URL (existing behavior) ---
-    const expiresIn = 120 // 2 minutes
-    const { data: signedUrl, error: urlError } = await serviceSupabase.storage
-      .from(bucket)
-      .createSignedUrl(document.file_key, expiresIn, {
-        download: mode === 'download'
+    const rawBytes = new Uint8Array(await fileBlob.arrayBuffer())
+    const disposition = mode === 'download' ? 'attachment' : 'inline'
+    const safeFileName = (document.file_name || 'document').replace(/[^\w.\-_ ]/g, '_')
+
+    // --- PDF: watermark then stream ---
+    if (fileType === 'pdf') {
+      const watermarkedBytes = await applyPdfWatermark(rawBytes, {
+        line1: user.email || 'Unknown',
+        line2: entityName || undefined,
       })
 
-    if (urlError || !signedUrl) {
-      console.error('Error creating signed URL:', urlError)
-      return NextResponse.json({
-        error: 'Failed to generate download link'
-      }, { status: 500 })
+      return new Response(Buffer.from(watermarkedBytes), {
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `${disposition}; filename="${safeFileName}"`,
+          'Content-Length': String(watermarkedBytes.byteLength),
+          'Cache-Control': 'no-store',
+          'X-Watermark-Email': user.email || '',
+          'X-Watermark-Entity': entityName || '',
+          'X-Watermark-Name': profile?.display_name || '',
+          'X-Document-Id': document.id,
+        },
+      })
     }
 
-    return NextResponse.json({
-      download_url: signedUrl.signedUrl,
-      mode: mode,
-      document: {
-        id: document.id,
-        name: document.file_name,
-        file_name: document.file_name,
-        file_key: document.file_key,
-        folder: document.folder,
-        created_at: document.created_at
+    // --- Image: watermark then stream ---
+    if (fileType === 'image') {
+      const watermarkedBuffer = await applyImageWatermark(rawBytes, {
+        email: user.email || 'Unknown',
+        entityName: entityName || undefined,
+      })
+      const watermarkedBytes = new Uint8Array(watermarkedBuffer)
+
+      return new Response(watermarkedBytes, {
+        headers: {
+          'Content-Type': 'image/png',
+          'Content-Disposition': `${disposition}; filename="${safeFileName}"`,
+          'Content-Length': String(watermarkedBytes.byteLength),
+          'Cache-Control': 'no-store',
+          'X-Watermark-Email': user.email || '',
+          'X-Watermark-Entity': entityName || '',
+          'X-Watermark-Name': profile?.display_name || '',
+          'X-Document-Id': document.id,
+        },
+      })
+    }
+
+    // --- All other types (video, Excel, DOCX, etc.): proxy bytes, no mutation ---
+    const mimeType = getMimeType(document.file_name)
+    return new Response(Buffer.from(rawBytes), {
+      headers: {
+        'Content-Type': mimeType,
+        'Content-Disposition': `${disposition}; filename="${safeFileName}"`,
+        'Content-Length': String(rawBytes.byteLength),
+        'Cache-Control': 'no-store',
+        'X-Watermark-Email': user.email || '',
+        'X-Watermark-Entity': entityName || '',
+        'X-Watermark-Name': profile?.display_name || '',
+        'X-Document-Id': document.id,
       },
-      watermark: watermarkInfo,
-      expires_in_seconds: expiresIn,
-      instructions: {
-        security_notice: "This document is confidential and part of a secured data room. Unauthorized distribution is prohibited.",
-        expiry_notice: `Download link expires in ${expiresIn / 60} minutes for security.`,
-        audit_notice: "All data room document access is logged for compliance and audit purposes."
-      }
     })
 
   } catch (error) {

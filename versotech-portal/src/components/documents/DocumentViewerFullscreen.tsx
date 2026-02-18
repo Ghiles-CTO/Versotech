@@ -125,7 +125,7 @@ export function DocumentViewerFullscreen({
 
   // Use portal to render at body level, escaping backdrop-blur containing blocks
   const modalContent = (
-    <div className="fixed inset-0 z-[9999] bg-black/95 overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-[9999] bg-black/95 overflow-hidden flex flex-col" onContextMenu={(e) => e.preventDefault()}>
       {/* Toolbar */}
       <div className="h-16 bg-white border-b shadow-md flex items-center justify-between px-6 flex-shrink-0 text-gray-900">
         <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -248,16 +248,20 @@ export function DocumentViewerFullscreen({
               src={viewerUrl}
               alt={document?.file_name || document?.name || 'Image preview'}
               className="max-w-full max-h-full object-contain"
+              draggable={false}
+              onContextMenu={(e) => e.preventDefault()}
               onError={() => setContentError(true)}
             />
           </div>
         )}
 
         {showContent && fileType === 'video' && (
-          <div className="w-full h-full flex items-center justify-center bg-black">
+          <div className="w-full h-full flex items-center justify-center bg-black" onContextMenu={(e) => e.preventDefault()}>
             <video
               src={viewerUrl}
               controls
+              controlsList="nodownload"
+              disablePictureInPicture
               className="max-w-full max-h-full"
               onError={() => setContentError(true)}
             >

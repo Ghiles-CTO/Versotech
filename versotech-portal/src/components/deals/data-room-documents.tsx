@@ -8,6 +8,7 @@ import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import { DocumentService } from '@/services/document.service'
 import { getFileTypeCategory } from '@/constants/document-preview.constants'
+import { usePersona } from '@/contexts/persona-context'
 
 export interface DataRoomDocument {
   id: string
@@ -28,6 +29,7 @@ export function DataRoomDocuments({ documents }: DataRoomDocumentsProps) {
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const viewer = useDocumentViewer()
+  const { isStaff, isCEO } = usePersona()
 
   const documentsByFolder = documents.reduce<Record<string, DataRoomDocument[]>>((acc, doc) => {
     const folder = doc.folder ?? 'General'
@@ -123,30 +125,32 @@ export function DataRoomDocuments({ documents }: DataRoomDocumentsProps) {
                         Preview
                       </Button>
                     )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDownload(doc)}
-                      disabled={downloadingId === doc.id}
-                      className="gap-2 border-blue-600 text-foreground hover:bg-primary/10"
-                    >
-                      {downloadingId === doc.id ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                          {doc.external_link ? 'Opening…' : 'Preparing…'}
-                        </>
-                      ) : doc.external_link ? (
-                        <>
-                          <ExternalLink className="h-4 w-4 text-blue-600" />
-                          View
-                        </>
-                      ) : (
-                        <>
-                          <Download className="h-4 w-4 text-blue-600" />
-                          Download
-                        </>
-                      )}
-                    </Button>
+                    {(isStaff || isCEO) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDownload(doc)}
+                        disabled={downloadingId === doc.id}
+                        className="gap-2 border-blue-600 text-foreground hover:bg-primary/10"
+                      >
+                        {downloadingId === doc.id ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                            {doc.external_link ? 'Opening…' : 'Preparing…'}
+                          </>
+                        ) : doc.external_link ? (
+                          <>
+                            <ExternalLink className="h-4 w-4 text-blue-600" />
+                            View
+                          </>
+                        ) : (
+                          <>
+                            <Download className="h-4 w-4 text-blue-600" />
+                            Download
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </div>
               )

@@ -49,8 +49,19 @@ export class DocumentService {
 
     const contentType = response.headers.get('Content-Type') || ''
 
-    // Watermarked PDF: binary response → blob URL
-    if (contentType.includes('application/pdf')) {
+    // Binary response: PDF, image, video, Office docs → blob URL
+    // Never a Supabase signed URL in the browser.
+    const isBinary = (
+      contentType.includes('application/pdf') ||
+      contentType.startsWith('image/') ||
+      contentType.startsWith('video/') ||
+      contentType.startsWith('audio/') ||
+      contentType.includes('application/vnd.') ||
+      contentType.includes('application/msword') ||
+      contentType.includes('application/octet-stream')
+    )
+
+    if (isBinary) {
       const blob = await response.blob()
       const blobUrl = URL.createObjectURL(blob)
 
@@ -60,20 +71,25 @@ export class DocumentService {
         viewer_name: response.headers.get('X-Watermark-Name') || undefined,
       }
 
+      const docType = contentType.includes('application/pdf') ? 'pdf'
+        : contentType.startsWith('image/') ? 'image'
+        : contentType.startsWith('video/') ? 'video'
+        : 'other'
+
       return {
         download_url: blobUrl,
         url: blobUrl,
         document: {
           id: response.headers.get('X-Document-Id') || '',
           name: '',
-          type: 'pdf',
+          type: docType,
         },
         watermark,
         expires_in_seconds: 0, // blob URLs don't expire
       } as DocumentUrlResponse
     }
 
-    // Non-PDF: JSON response (existing behavior)
+    // JSON response (fallback — should not normally occur for deal documents)
     return this.parseResponse(response)
   }
 
