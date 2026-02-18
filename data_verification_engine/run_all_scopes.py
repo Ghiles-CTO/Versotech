@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from core.rule_resolver import write_rule_registry
 
 ROOT_DIR = Path(__file__).resolve().parent
 DEFAULT_GLOBAL_OUTDIR = ROOT_DIR / "output" / "global"
@@ -164,6 +165,18 @@ def main() -> int:
     run_dir = args.global_outdir / f"run_{stamp}"
     run_dir.mkdir(parents=True, exist_ok=False)
 
+    # Rule governance pre-check: produce deterministic resolved registry and block silent conflicts.
+    rule_registry_path = write_rule_registry(ROOT_DIR.parent)
+    rule_registry = json.loads(rule_registry_path.read_text())
+    conflicts = rule_registry.get("conflicts") or []
+    if conflicts:
+        conflict_path = run_dir / "rule_registry_conflicts.json"
+        conflict_path.write_text(json.dumps(conflicts, indent=2))
+        raise RuntimeError(
+            f"Rule governance conflict detected ({len(conflicts)} conflicts). "
+            f"See {conflict_path} and {rule_registry_path}"
+        )
+
     scope_results = [run_scope(scope, run_dir) for scope in SCOPES]
 
     total_fail = sum(int(r["fail_count"]) for r in scope_results)
@@ -171,6 +184,7 @@ def main() -> int:
     payload = {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "run_folder": str(run_dir),
+        "rule_registry_resolved_json": str(rule_registry_path),
         "total_fail_count": total_fail,
         "total_warning_count": total_warn,
         "all_scopes_pass": all(int(r["fail_count"]) == 0 for r in scope_results),

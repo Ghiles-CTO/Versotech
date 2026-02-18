@@ -24,7 +24,6 @@ import {
   ShieldCheck,
   ShieldAlert,
   Users,
-  FileSignature,
   AlertCircle,
   CheckCircle2,
   Clock,
@@ -38,7 +37,6 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
-import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
 import { PersonalKYCSection, type MemberKYCData } from '@/components/profile/personal-kyc-section'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { IndividualKycDisplay, EntityKYCEditDialog, EntityAddressEditDialog, EntityInfoEditDialog } from '@/components/shared'
@@ -173,9 +171,17 @@ export function ProfilePageClient({
   const handleSubmitEntityKyc = async () => {
     setIsSubmittingEntityKyc(true)
     try {
-      const response = await fetch('/api/investors/me/submit-entity-kyc', {
+      if (!investorInfo?.id) {
+        throw new Error('Investor entity not found')
+      }
+
+      const response = await fetch('/api/me/entity-kyc/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          entityType: 'investor',
+          entityId: investorInfo.id,
+        }),
       })
 
       if (!response.ok) {
@@ -411,10 +417,6 @@ export function ProfilePageClient({
               <TabsTrigger value="entities" className="flex items-center gap-2">
                 <Building2 className="h-4 w-4" />
                 Entities
-              </TabsTrigger>
-              <TabsTrigger value="signature" className="flex items-center gap-2">
-                <FileSignature className="h-4 w-4" />
-                Signature
               </TabsTrigger>
             </>
           )}
@@ -845,38 +847,6 @@ export function ProfilePageClient({
           </TabsContent>
         )}
 
-        {/* Signature Tab */}
-        {hasInvestorEntity && (
-          <TabsContent value="signature" className="space-y-6">
-            {!investorUserInfo?.can_sign ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileSignature className="h-5 w-5" />
-                    Signature Specimen
-                  </CardTitle>
-                  <CardDescription>
-                    You do not have signing permissions for this investor entity
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="border border-dashed border-muted rounded-lg py-8 px-4 text-center">
-                    <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground">
-                      Signing permissions are required to upload a signature specimen.
-                      Contact your entity administrator for access.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <SignatureSpecimenTab
-                entityType="investor"
-                entityId={investorInfo?.id}
-              />
-            )}
-          </TabsContent>
-        )}
 
         {/* Security Tab */}
         <TabsContent value="security" className="space-y-4">

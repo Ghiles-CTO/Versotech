@@ -101,6 +101,8 @@ export default async function ArrangerProfilePage() {
     entityId: arrangerUser.arranger_id,
     userId: user.id,
     userEmail: user.email,
+    defaultFullName: profile?.display_name || user.email || null,
+    createIfMissing: arranger?.type === 'individual',
     context: 'ArrangerProfilePage',
     select: `
       id,

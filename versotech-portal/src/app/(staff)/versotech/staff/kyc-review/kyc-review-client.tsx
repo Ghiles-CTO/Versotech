@@ -590,7 +590,7 @@ export function KYCReviewClient() {
                               {submission.investor?.display_name || submission.investor?.legal_name || 'Unknown'}
                               {submission.investor_id && submission.investor?.id && (
                                 <a
-                                  href={`/versotech/staff/investors/${submission.investor.id}`}
+                                  href={`/versotech_main/investors/${submission.investor.id}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="ml-1 text-muted-foreground hover:text-foreground transition-colors"

@@ -107,9 +107,10 @@ export async function POST(request: Request) {
     const config = ENTITY_CONFIGS[entityType as EntityType]
     const serviceSupabase = createServiceClient()
 
-    // Resolve the member and auto-link when safe:
+    // Resolve the member for submission:
     // - user must belong to the same entity via the persona user bridge table
-    // - member must either already be linked to the user or be uniquely matchable by email
+    // - any authorized entity user can submit KYC for any member in that entity
+    // - if the member matches the current user by email, auto-link for future ownership clarity
     const memberSelect = `
       id,
       ${config.entityIdColumn},
@@ -173,25 +174,11 @@ export async function POST(request: Request) {
 
     let member = rawMember
     const linkedUserId = member.linked_user_id as string | null
+    const memberEmail = typeof member.email === 'string' ? member.email.trim().toLowerCase() : null
+    const userEmail = user.email?.trim().toLowerCase() ?? null
+    const shouldAutoLinkToCurrentUser = !linkedUserId && !!memberEmail && !!userEmail && memberEmail === userEmail
 
-    if (linkedUserId && linkedUserId !== user.id) {
-      return NextResponse.json(
-        { error: 'Member not found or access denied' },
-        { status: 404 }
-      )
-    }
-
-    if (!linkedUserId) {
-      const memberEmail = typeof member.email === 'string' ? member.email.trim().toLowerCase() : null
-      const userEmail = user.email?.trim().toLowerCase() ?? null
-
-      if (!memberEmail || !userEmail || memberEmail !== userEmail) {
-        return NextResponse.json(
-          { error: 'Member not found or access denied' },
-          { status: 404 }
-        )
-      }
-
+    if (shouldAutoLinkToCurrentUser) {
       const { data: linkedMemberData, error: linkError } = await serviceSupabase
         .from(config.memberTable)
         .update({

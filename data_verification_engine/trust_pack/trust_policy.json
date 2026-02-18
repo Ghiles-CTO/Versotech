@@ -1,8 +1,16 @@
 {
-  "version": "2026-02-14.2",
+  "version": "2026-02-15.1",
   "allowed_warning_checks_by_scope": {
     "vc1": [
-      "commission_totals_ruled_diff_spread"
+      "commission_totals_ruled_diff_spread",
+      "introduction_tuple_repeat_ruled",
+      "introduction_missing_date_ruled",
+      "performance_fee_threshold_multiplier_non_zero_ruled",
+      "strikethrough_commission_row_reinstated_ruled",
+      "commission_row_ruled_dashboard_override",
+      "commission_base_amount_vs_funded_amount_ruled",
+      "commission_rate_amount_formula_ruled",
+      "dashboard_formula_error_token"
     ],
     "vc2": [
       "dashboard_combined_introducer_name",
@@ -10,13 +18,25 @@
       "commission_totals_ruled_diff_invested_amount",
       "commission_row_ruled_dashboard_override",
       "commission_row_ruled_removed",
-      "introducer_warning_only_present"
+      "introducer_warning_only_present",
+      "introduction_tuple_repeat_ruled",
+      "introduction_missing_date_ruled",
+      "performance_fee_threshold_multiplier_non_zero_ruled",
+      "commission_base_amount_vs_funded_amount_ruled",
+      "commission_rate_amount_formula_ruled",
+      "dashboard_formula_error_token"
     ],
     "in": [
       "dashboard_combined_introducer_name",
       "commission_totals_ruled_diff_invested_amount",
       "commission_totals_ruled_diff_spread",
-      "commission_row_ruled_dashboard_override"
+      "commission_row_ruled_dashboard_override",
+      "introduction_tuple_repeat_ruled",
+      "introduction_missing_date_ruled",
+      "performance_fee_threshold_multiplier_non_zero_ruled",
+      "commission_base_amount_vs_funded_amount_ruled",
+      "commission_rate_amount_formula_ruled",
+      "dashboard_formula_error_token"
     ]
   },
   "forbidden_check_substrings": [
@@ -31,5 +51,194 @@
     "zero_ownership_loaded",
     "max_introducers_per_subscription_exceeded"
   ],
-  "require_dashboard_rows_equal_db_subscriptions": true
+  "require_dashboard_rows_equal_db_subscriptions": true,
+  "warning_thresholds_by_scope": {
+    "vc1": {
+      "commission_totals_ruled_diff_spread": 10,
+      "introduction_tuple_repeat_ruled": 10,
+      "introduction_missing_date_ruled": 10,
+      "performance_fee_threshold_multiplier_non_zero_ruled": 10,
+      "strikethrough_commission_row_reinstated_ruled": 10,
+      "commission_row_ruled_dashboard_override": 50,
+      "commission_base_amount_vs_funded_amount_ruled": 50,
+      "commission_rate_amount_formula_ruled": 50,
+      "dashboard_formula_error_token": 200
+    },
+    "vc2": {
+      "dashboard_combined_introducer_name": 25,
+      "commission_combined_ruled_removed": 25,
+      "commission_totals_ruled_diff_invested_amount": 10,
+      "commission_row_ruled_dashboard_override": 10,
+      "commission_row_ruled_removed": 25,
+      "introducer_warning_only_present": 5,
+      "introduction_tuple_repeat_ruled": 10,
+      "introduction_missing_date_ruled": 10,
+      "performance_fee_threshold_multiplier_non_zero_ruled": 10,
+      "commission_base_amount_vs_funded_amount_ruled": 50,
+      "commission_rate_amount_formula_ruled": 50,
+      "dashboard_formula_error_token": 200
+    },
+    "in": {
+      "dashboard_combined_introducer_name": 15,
+      "commission_totals_ruled_diff_invested_amount": 10,
+      "commission_totals_ruled_diff_spread": 10,
+      "commission_row_ruled_dashboard_override": 10,
+      "introduction_tuple_repeat_ruled": 10,
+      "introduction_missing_date_ruled": 10,
+      "performance_fee_threshold_multiplier_non_zero_ruled": 10,
+      "commission_base_amount_vs_funded_amount_ruled": 50,
+      "commission_rate_amount_formula_ruled": 50,
+      "dashboard_formula_error_token": 200
+    }
+  },
+  "warning_expiry_by_scope": {
+    "vc1": {
+      "commission_totals_ruled_diff_spread": "2026-12-31",
+      "introduction_tuple_repeat_ruled": "2026-12-31",
+      "introduction_missing_date_ruled": "2026-12-31",
+      "performance_fee_threshold_multiplier_non_zero_ruled": "2026-12-31",
+      "strikethrough_commission_row_reinstated_ruled": "2026-12-31",
+      "commission_row_ruled_dashboard_override": "2026-12-31",
+      "commission_base_amount_vs_funded_amount_ruled": "2026-12-31",
+      "commission_rate_amount_formula_ruled": "2026-12-31",
+      "dashboard_formula_error_token": "2026-12-31"
+    },
+    "vc2": {
+      "dashboard_combined_introducer_name": "2026-12-31",
+      "commission_combined_ruled_removed": "2026-12-31",
+      "commission_totals_ruled_diff_invested_amount": "2026-12-31",
+      "commission_row_ruled_dashboard_override": "2026-12-31",
+      "commission_row_ruled_removed": "2026-12-31",
+      "introducer_warning_only_present": "2026-12-31",
+      "introduction_tuple_repeat_ruled": "2026-12-31",
+      "introduction_missing_date_ruled": "2026-12-31",
+      "performance_fee_threshold_multiplier_non_zero_ruled": "2026-12-31",
+      "commission_base_amount_vs_funded_amount_ruled": "2026-12-31",
+      "commission_rate_amount_formula_ruled": "2026-12-31",
+      "dashboard_formula_error_token": "2026-12-31"
+    },
+    "in": {
+      "dashboard_combined_introducer_name": "2026-12-31",
+      "commission_totals_ruled_diff_invested_amount": "2026-12-31",
+      "commission_totals_ruled_diff_spread": "2026-12-31",
+      "commission_row_ruled_dashboard_override": "2026-12-31",
+      "introduction_tuple_repeat_ruled": "2026-12-31",
+      "introduction_missing_date_ruled": "2026-12-31",
+      "performance_fee_threshold_multiplier_non_zero_ruled": "2026-12-31",
+      "commission_base_amount_vs_funded_amount_ruled": "2026-12-31",
+      "commission_rate_amount_formula_ruled": "2026-12-31",
+      "dashboard_formula_error_token": "2026-12-31"
+    }
+  },
+  "warning_owner_by_scope": {
+    "vc1": {
+      "commission_totals_ruled_diff_spread": "Data Governance",
+      "introduction_tuple_repeat_ruled": "Data Governance",
+      "introduction_missing_date_ruled": "Data Governance",
+      "performance_fee_threshold_multiplier_non_zero_ruled": "Data Governance",
+      "strikethrough_commission_row_reinstated_ruled": "Data Governance",
+      "commission_row_ruled_dashboard_override": "Data Governance",
+      "commission_base_amount_vs_funded_amount_ruled": "Data Governance",
+      "commission_rate_amount_formula_ruled": "Data Governance",
+      "dashboard_formula_error_token": "Data Governance"
+    },
+    "vc2": {
+      "dashboard_combined_introducer_name": "Data Governance",
+      "commission_combined_ruled_removed": "Data Governance",
+      "commission_totals_ruled_diff_invested_amount": "Data Governance",
+      "commission_row_ruled_dashboard_override": "Data Governance",
+      "commission_row_ruled_removed": "Data Governance",
+      "introducer_warning_only_present": "Data Governance",
+      "introduction_tuple_repeat_ruled": "Data Governance",
+      "introduction_missing_date_ruled": "Data Governance",
+      "performance_fee_threshold_multiplier_non_zero_ruled": "Data Governance",
+      "commission_base_amount_vs_funded_amount_ruled": "Data Governance",
+      "commission_rate_amount_formula_ruled": "Data Governance",
+      "dashboard_formula_error_token": "Data Governance"
+    },
+    "in": {
+      "dashboard_combined_introducer_name": "Data Governance",
+      "commission_totals_ruled_diff_invested_amount": "Data Governance",
+      "commission_totals_ruled_diff_spread": "Data Governance",
+      "commission_row_ruled_dashboard_override": "Data Governance",
+      "introduction_tuple_repeat_ruled": "Data Governance",
+      "introduction_missing_date_ruled": "Data Governance",
+      "performance_fee_threshold_multiplier_non_zero_ruled": "Data Governance",
+      "commission_base_amount_vs_funded_amount_ruled": "Data Governance",
+      "commission_rate_amount_formula_ruled": "Data Governance",
+      "dashboard_formula_error_token": "Data Governance"
+    }
+  },
+  "warning_reason_by_scope": {
+    "vc1": {
+      "commission_totals_ruled_diff_spread": "Documented ruled spread deltas",
+      "introduction_tuple_repeat_ruled": "Documented historical duplicate introduction tuples retained by governance decision",
+      "introduction_missing_date_ruled": "Documented historical introduction row with missing date retained by governance decision",
+      "performance_fee_threshold_multiplier_non_zero_ruled": "Documented historical threshold multiplier retained by governance decision",
+      "strikethrough_commission_row_reinstated_ruled": "Source file row is struck through but row is explicitly reinstated by later documented correction",
+      "commission_row_ruled_dashboard_override": "Documented explicit override assertions",
+      "commission_base_amount_vs_funded_amount_ruled": "Documented legacy split/base allocation exception",
+      "commission_rate_amount_formula_ruled": "Documented legacy split/rate formula exception",
+      "dashboard_formula_error_token": "Dashboard formula error token interpreted as zero-equivalent; flagged for visibility"
+    },
+    "vc2": {
+      "dashboard_combined_introducer_name": "Combined labels retained pending canonical split mapping",
+      "commission_combined_ruled_removed": "Documented broker-removal combined deltas",
+      "commission_totals_ruled_diff_invested_amount": "Documented ruled vehicle invested deltas",
+      "commission_row_ruled_dashboard_override": "Documented explicit override assertions",
+      "commission_row_ruled_removed": "Documented ruled removals",
+      "introducer_warning_only_present": "Documented warning-only placeholder introducer",
+      "introduction_tuple_repeat_ruled": "Documented historical duplicate introduction tuples retained by governance decision",
+      "introduction_missing_date_ruled": "Documented historical introduction row with missing date retained by governance decision",
+      "performance_fee_threshold_multiplier_non_zero_ruled": "Documented historical threshold multiplier retained by governance decision",
+      "commission_base_amount_vs_funded_amount_ruled": "Documented legacy split/base allocation exception",
+      "commission_rate_amount_formula_ruled": "Documented legacy split/rate formula exception",
+      "dashboard_formula_error_token": "Dashboard formula error token interpreted as zero-equivalent; flagged for visibility"
+    },
+    "in": {
+      "dashboard_combined_introducer_name": "Combined labels retained pending canonical split mapping",
+      "commission_totals_ruled_diff_invested_amount": "Documented ruled vehicle invested deltas",
+      "commission_totals_ruled_diff_spread": "Documented ruled spread deltas",
+      "commission_row_ruled_dashboard_override": "Documented explicit override assertions",
+      "introduction_tuple_repeat_ruled": "Documented historical duplicate introduction tuples retained by governance decision",
+      "introduction_missing_date_ruled": "Documented historical introduction row with missing date retained by governance decision",
+      "performance_fee_threshold_multiplier_non_zero_ruled": "Documented historical threshold multiplier retained by governance decision",
+      "commission_base_amount_vs_funded_amount_ruled": "Documented legacy split/base allocation exception",
+      "commission_rate_amount_formula_ruled": "Documented legacy split/rate formula exception",
+      "dashboard_formula_error_token": "Dashboard formula error token interpreted as zero-equivalent; flagged for visibility"
+    }
+  },
+  "warning_expiry_by_check": {
+    "vc1": {
+      "dashboard_formula_error_token": "2026-12-31"
+    },
+    "vc2": {
+      "dashboard_formula_error_token": "2026-12-31"
+    },
+    "in": {
+      "dashboard_formula_error_token": "2026-12-31"
+    }
+  },
+  "warning_owner_by_check": {
+    "vc1": {
+      "dashboard_formula_error_token": "Data Governance"
+    },
+    "vc2": {
+      "dashboard_formula_error_token": "Data Governance"
+    },
+    "in": {
+      "dashboard_formula_error_token": "Data Governance"
+    }
+  },
+  "warning_reason_by_check": {
+    "vc1": {
+      "dashboard_formula_error_token": "Dashboard formula error tokens intentionally treated as zero-equivalent with explicit trace"
+    },
+    "vc2": {
+      "dashboard_formula_error_token": "Dashboard formula error tokens intentionally treated as zero-equivalent with explicit trace"
+    },
+    "in": {
+      "dashboard_formula_error_token": "Dashboard formula error tokens intentionally treated as zero-equivalent with explicit trace"
+    }
+  }
 }

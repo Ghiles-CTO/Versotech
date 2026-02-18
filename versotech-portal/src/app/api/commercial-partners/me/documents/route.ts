@@ -58,6 +58,7 @@ export async function GET() {
         mime_type,
         created_at,
         created_by,
+        commercial_partner_member_id,
         profiles:created_by(display_name, email)
       `)
       .eq('commercial_partner_id', cpUser.commercial_partner_id)
@@ -68,16 +69,20 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch documents' }, { status: 500 })
     }
 
-    // Fetch commercial partner members for the member selector
+    // Fetch entity members (directors/UBOs/signatories) for member-level KYC upload
     const { data: members, error: membersError } = await serviceSupabase
-      .from('commercial_partner_users')
+      .from('commercial_partner_members')
       .select(`
-        user_id,
+        id,
+        full_name,
+        first_name,
+        last_name,
         role,
-        is_primary,
-        profiles:user_id(display_name, email)
+        is_signatory
       `)
       .eq('commercial_partner_id', cpUser.commercial_partner_id)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
 
     if (membersError) {
       console.error('Error fetching members:', membersError)
@@ -85,12 +90,15 @@ export async function GET() {
 
     // Transform members for response
     const formattedMembers = members?.map(member => {
-      const profile = member.profiles as unknown as { display_name?: string; email?: string } | null
+      const fullName =
+        member.full_name ||
+        [member.first_name, member.last_name].filter(Boolean).join(' ') ||
+        'Unknown'
       return {
-        id: member.user_id,
-        full_name: profile?.display_name || profile?.email || 'Unknown',
+        id: member.id,
+        full_name: fullName,
         role: member.role,
-        is_primary: member.is_primary
+        is_signatory: member.is_signatory
       }
     }) || []
 
@@ -103,7 +111,8 @@ export async function GET() {
       file_name: doc.name,
       file_size_bytes: doc.file_size_bytes,
       created_at: doc.created_at,
-      created_by: doc.profiles
+      created_by: doc.profiles,
+      commercial_partner_member_id: doc.commercial_partner_member_id
     })) || []
 
     return NextResponse.json({
@@ -157,6 +166,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File
     const documentType = formData.get('type') as string
     const documentName = formData.get('name') as string
+    const commercialPartnerMemberId = formData.get('commercial_partner_member_id') as string | null
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
@@ -164,6 +174,23 @@ export async function POST(request: NextRequest) {
 
     if (!documentType) {
       return NextResponse.json({ error: 'Document type is required' }, { status: 400 })
+    }
+
+    let resolvedCommercialPartnerMemberId: string | null = null
+    if (commercialPartnerMemberId && commercialPartnerMemberId !== 'entity-level') {
+      const { data: memberCheck, error: memberError } = await serviceSupabase
+        .from('commercial_partner_members')
+        .select('id')
+        .eq('id', commercialPartnerMemberId)
+        .eq('commercial_partner_id', commercialPartnerId)
+        .eq('is_active', true)
+        .maybeSingle()
+
+      if (memberError || !memberCheck) {
+        return NextResponse.json({ error: 'Invalid member selected' }, { status: 400 })
+      }
+
+      resolvedCommercialPartnerMemberId = memberCheck.id
     }
 
     // Validate file size
@@ -216,6 +243,7 @@ export async function POST(request: NextRequest) {
         type: documentType,
         file_key: uploadData.path,
         commercial_partner_id: commercialPartnerId,
+        commercial_partner_member_id: resolvedCommercialPartnerMemberId,
         file_size_bytes: file.size,
         mime_type: file.type,
         current_version: 1,
@@ -238,12 +266,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Version-aware KYC submission entry (review queue source of truth)
-    const { data: latestSubmission } = await serviceSupabase
+    let versionQuery = serviceSupabase
       .from('kyc_submissions')
       .select('id, version')
       .eq('commercial_partner_id', commercialPartnerId)
       .eq('document_type', documentType)
-      .is('commercial_partner_member_id', null)
+
+    if (resolvedCommercialPartnerMemberId) {
+      versionQuery = versionQuery.eq('commercial_partner_member_id', resolvedCommercialPartnerMemberId)
+    } else {
+      versionQuery = versionQuery.is('commercial_partner_member_id', null)
+    }
+
+    const { data: latestSubmission } = await versionQuery
       .order('version', { ascending: false })
       .limit(1)
       .maybeSingle()
@@ -255,6 +290,7 @@ export async function POST(request: NextRequest) {
       .from('kyc_submissions')
       .insert({
         commercial_partner_id: commercialPartnerId,
+        commercial_partner_member_id: resolvedCommercialPartnerMemberId,
         document_type: documentType,
         document_id: document.id,
         status: 'pending',
@@ -266,6 +302,7 @@ export async function POST(request: NextRequest) {
           mime_type: file.type,
           original_filename: file.name,
           source: 'commercial_partner_profile_upload',
+          selected_commercial_partner_member_id: resolvedCommercialPartnerMemberId,
           is_reupload: !!latestSubmission,
         }
       })

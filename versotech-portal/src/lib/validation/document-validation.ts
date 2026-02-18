@@ -58,6 +58,7 @@ export interface DocumentValidationInput {
  * These require valid expiry dates and are STRICTLY blocked if expired
  */
 export const ID_DOCUMENT_TYPES = [
+  'passport_id',
   'passport',
   'national_id',
   'drivers_license',
@@ -110,6 +111,12 @@ export const CORPORATE_DOCUMENT_TYPES = [
 
 const VALIDATION_CONFIG: Record<string, DocumentValidationConfig> = {
   // ID Documents - STRICT BLOCK if expired
+  passport_id: {
+    category: 'id_document',
+    requiresExpiry: true,
+    enforcement: 'strict_block',
+    warningDays: 30,
+  },
   passport: {
     category: 'id_document',
     requiresExpiry: true,

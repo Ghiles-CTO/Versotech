@@ -15,7 +15,6 @@ import {
   Building2,
   CheckCircle2,
   AlertCircle,
-  FileSignature,
   Users,
   Briefcase,
   Lock,
@@ -32,7 +31,6 @@ import {
   Send,
 } from 'lucide-react'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
-import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
 import { PasswordChangeForm } from '@/components/profile/password-change-form'
 import { PreferencesEditor } from '@/components/profile/preferences-editor'
 import { GDPRControls } from '@/components/profile/gdpr-controls'
@@ -440,10 +438,6 @@ export function LawyerProfileClient({
             <Shield className="h-4 w-4" />
             KYC
           </TabsTrigger>
-          <TabsTrigger value="signature" className="flex items-center gap-2">
-            <FileSignature className="h-4 w-4" />
-            Signature
-          </TabsTrigger>
           <TabsTrigger value="security" className="flex items-center gap-2">
             <Lock className="h-4 w-4" />
             Security
@@ -805,36 +799,6 @@ export function LawyerProfileClient({
           )}
         </TabsContent>
 
-        {/* Signature Tab */}
-        <TabsContent value="signature" className="space-y-6">
-          {!lawyerUserInfo.can_sign ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileSignature className="h-5 w-5" />
-                  Signature Specimen
-                </CardTitle>
-                <CardDescription>
-                  You do not have signing permissions for this firm
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="border border-dashed border-muted rounded-lg py-8 px-4 text-center">
-                  <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">
-                    Signing permissions are required to upload a signature specimen.
-                    Contact your firm administrator for access.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <SignatureSpecimenTab
-              entityType="lawyer"
-              entityId={lawyerInfo?.id}
-            />
-          )}
-        </TabsContent>
 
         {/* Security Tab */}
         <TabsContent value="security" className="space-y-4">

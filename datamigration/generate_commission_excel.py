@@ -43,6 +43,22 @@ STANDARD_COLUMNS = [
     "Currency",
 ]
 
+SUMMARY_COLUMNS = [
+    "Entity Code",
+    "Introducer",
+    "Investor",
+    "Currency",
+    "Subscription Fee (bps)",
+    "Subscription Fee (%)",
+    "Subscription Fee Amount",
+    "Spread (bps)",
+    "Spread (%)",
+    "Spread Amount",
+    "Performance Fee (bps)",
+    "Performance Fee (%)",
+    "Performance Fee Amount",
+]
+
 
 def _normalize_value(value) -> str:
     if value is None:
@@ -144,6 +160,55 @@ def load_actions_log_lines(log_path: str) -> list[str]:
             lines.append(line)
     return lines
 
+
+def build_summary_rows(data: list[dict]) -> list[dict]:
+    """Aggregate commissions to one row per Entity/Introducer/Investor/Currency."""
+    summary: dict[tuple, dict] = {}
+
+    for row in data:
+        key = (
+            row.get("entity_code"),
+            row.get("introducer"),
+            row.get("investor"),
+            row.get("currency"),
+        )
+        if key not in summary:
+            summary[key] = {
+                "Entity Code": row.get("entity_code"),
+                "Introducer": row.get("introducer"),
+                "Investor": row.get("investor"),
+                "Currency": row.get("currency"),
+                "Subscription Fee (bps)": None,
+                "Subscription Fee (%)": None,
+                "Subscription Fee Amount": None,
+                "Spread (bps)": None,
+                "Spread (%)": None,
+                "Spread Amount": None,
+                "Performance Fee (bps)": None,
+                "Performance Fee (%)": None,
+                "Performance Fee Amount": None,
+            }
+
+        fee_type = row.get("fee_type")
+        rate_bps = row.get("rate_bps")
+        rate_pct = row.get("rate_pct")
+        amount = row.get("commission_amount")
+
+        if fee_type == "invested_amount":
+            summary[key]["Subscription Fee (bps)"] = rate_bps
+            summary[key]["Subscription Fee (%)"] = rate_pct
+            summary[key]["Subscription Fee Amount"] = amount
+        elif fee_type == "spread":
+            summary[key]["Spread (bps)"] = rate_bps
+            summary[key]["Spread (%)"] = rate_pct
+            summary[key]["Spread Amount"] = amount
+        elif fee_type == "performance_fee":
+            summary[key]["Performance Fee (bps)"] = rate_bps
+            summary[key]["Performance Fee (%)"] = rate_pct
+            summary[key]["Performance Fee Amount"] = amount
+
+    return list(summary.values())
+
 def generate_excel(data: list, output_path: str, updated_keys: set[tuple[str, ...]], deleted_keys: set[tuple[str, ...]]):
     """Generate Excel file from data."""
     # Create DataFrame with proper column names
@@ -165,9 +230,17 @@ def generate_excel(data: list, output_path: str, updated_keys: set[tuple[str, ..
     columns = ['Entity Code', 'Introducer', 'Investor', 'Fee Type', 'Rate (bps)', 'Rate (%)', 'Commission Amount', 'Currency']
     df = df[columns]
 
+    summary_rows = build_summary_rows(data)
+    summary_df = pd.DataFrame(summary_rows)
+    if not summary_df.empty:
+        summary_df = summary_df[SUMMARY_COLUMNS]
+
     # Write to Excel
     with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
         df.to_excel(writer, sheet_name='Introducer Commissions', index=False)
+
+        if not summary_df.empty:
+            summary_df.to_excel(writer, sheet_name='Introducer Summary', index=False)
 
         ws = writer.sheets['Introducer Commissions']
         header = [cell.value for cell in ws[1]]

@@ -60,7 +60,20 @@
     "specific_rule_assertions": false,
     "subscription_deal_id_required": true,
     "subscription_deal_vehicle_consistency": true,
-    "investor_identity_duplicate_check": true
+    "investor_identity_duplicate_check": true,
+    "introduction_integrity_check": true,
+    "introduction_date_required": true,
+    "introduction_date_matches_contract_date": true,
+    "subscription_formula_cross_field_check": true,
+    "commission_rate_integrity_check": true,
+    "commission_base_amount_matches_funded_check": true,
+    "mapping_coverage_hard_fail": true,
+    "dual_role_introducer_check": true,
+    "deprecated_introducer_references_check": true,
+    "commission_rate_amount_formula_check": true,
+    "dashboard_commission_header_mismatch_is_failure": true,
+    "dashboard_numeric_parse_check": true,
+    "dashboard_contract_date_parse_check": true
   },
   "allowed_commission_statuses": [
     "paid"
@@ -98,7 +111,7 @@
     "Old City Securities LLC",
     "R. F. Lafferty & Co. Inc."
   ],
-  "run_broker_checks": false,
+  "run_broker_checks": true,
   "broker_like_introducers_forbidden_global": [],
   "broker_like_introducers_forbidden_by_vehicle": {},
   "allowed_dual_role_introducers": [],
@@ -140,7 +153,7 @@
     "main": "VERSO/datafixing/INNOVATECH DASHBOARD_V1.xlsx",
     "contacts": "verso_capital_2_data/VERSO Capital 2 SCSp Emails and Contacts.xlsx"
   },
-  "run_contacts_checks": false,
+  "run_contacts_checks": true,
   "dashboard_commission_columns": {
     "default": {
       "invested_amount": [
@@ -336,5 +349,13 @@
     "verso",
     "introducer",
     "introducers"
-  ]
+  ],
+  "required_dual_role_introducers": [],
+  "deprecated_introducer_ids": [],
+  "subscription_formula_amount_tolerance": 1.0,
+  "allowed_introduction_duplicate_tuples": [],
+  "allowed_introduction_missing_date_ids": [],
+  "allowed_performance_fee_threshold_multiplier_non_zero_ids": [],
+  "commission_base_amount_ruled_keys": [],
+  "commission_rate_formula_ruled_keys": []
 }

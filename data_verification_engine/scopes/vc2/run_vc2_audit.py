@@ -19,6 +19,28 @@ from openpyxl import load_workbook
 
 
 ROOT = Path(__file__).resolve().parents[3]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from data_verification_engine.core.commission_checks import (  # noqa: E402
+    check_amount_from_bps,
+    check_amount_from_percent,
+    looks_like_percent_copied_into_amount,
+    map_commission_basis_for_tier,
+    rate_bps_is_integer,
+)
+from data_verification_engine.core.matcher import build_mapping_coverage  # noqa: E402
+from data_verification_engine.core.normalize import (  # noqa: E402
+    alias_key_variants as _core_alias_key_variants,
+    canonical_name_key as _core_canonical_name_key,
+    compact_name_key as _core_compact_name_key,
+    loose_name_key as _core_loose_name_key,
+    normalize_currency_token as _core_normalize_currency_token,
+    normalize_text as _core_normalize_text,
+    parse_date as _core_parse_date,
+    to_float as _core_to_float,
+)
+
 DEFAULT_RULES = ROOT / "data_verification_engine" / "scopes" / "vc2" / "rules_vc2.json"
 DEFAULT_OUTDIR = ROOT / "data_verification_engine" / "scopes" / "vc2" / "output"
 ENV_PATH = ROOT / ".env.local"
@@ -33,9 +55,20 @@ def to_float(v: Any) -> float:
     s = str(v).strip().replace(",", "")
     if not s:
         return 0.0
+    # Handle forms like "- ETH 11.25" where minus is separated from the number.
+    neg_prefix = bool(re.match(r"^-\s*[A-Za-z$€£¥]*\s*\d", s))
     try:
         return float(s)
     except Exception:
+        m = re.search(r"[-+]?\d*\.?\d+", s)
+        if m:
+            try:
+                out = float(m.group(0))
+                if neg_prefix and not m.group(0).startswith(("-", "+")):
+                    out = -out
+                return out
+            except Exception:
+                return 0.0
         return 0.0
 
 
@@ -128,6 +161,15 @@ def alias_key_variants(s: str) -> set[str]:
         out.add(l)
     return out
 
+# Shared normalization layer (single source of truth).
+parse_date = _core_parse_date
+normalize_text = _core_normalize_text
+normalize_currency_token = _core_normalize_currency_token
+canonical_name_key = _core_canonical_name_key
+compact_name_key = _core_compact_name_key
+loose_name_key = _core_loose_name_key
+alias_key_variants = _core_alias_key_variants
+
 
 def normalize_percent_to_fraction(v: float) -> float:
     # Allow both 0.2 (=20%) and 20 (=20%) representations.
@@ -215,6 +257,18 @@ def find_col(headers: list[Any], candidates: list[str]) -> int | None:
     norm_candidates = [normalize_text(c) for c in candidates]
     for i, h in enumerate(norm_headers, start=1):
         if h in norm_candidates:
+            return i
+    return None
+
+
+def find_ownership_col(headers: list[Any]) -> int | None:
+    idx = find_col(headers, ["OWNERSHIP", "OWNERSHIP POSITION", "Position", "Ownership Position"])
+    if idx:
+        return idx
+    # Some tabs append qualifiers to ownership headers (e.g. "OWNERSHIP POSITION 20/8").
+    norm_headers = [normalize_text(h) if isinstance(h, str) else "" for h in headers]
+    for i, h in enumerate(norm_headers, start=1):
+        if h.startswith("ownership position"):
             return i
     return None
 
@@ -397,6 +451,11 @@ class Auditor:
         combined_commission_skip_keys: set[tuple[str, str, str]] = set()
         totals = defaultdict(lambda: defaultdict(float))
         intro_totals_all_rows = defaultdict(lambda: defaultdict(float))
+        header_mismatch_is_failure = bool(
+            self.rules.get("checks", {}).get("dashboard_commission_header_mismatch_is_failure", True)
+        )
+        strict_numeric_parse = bool(self.rules.get("checks", {}).get("dashboard_numeric_parse_check", True))
+        strict_date_parse = bool(self.rules.get("checks", {}).get("dashboard_contract_date_parse_check", True))
 
         for sheet in wb.sheetnames:
             if sheet not in scope_sheets:
@@ -414,7 +473,7 @@ class Auditor:
                 "amount": find_col(headers, ["Amount invested"]),
                 "price_per_share": find_col(headers, ["Price per Share"]),
                 "shares": find_col(headers, ["Number of shares invested"]),
-                "ownership": find_col(headers, ["OWNERSHIP POSITION"]),
+                "ownership": find_ownership_col(headers),
                 "date": find_col(headers, ["Contract Date"]),
                 "spread_per_share": find_col(headers, ["Spread PPS"]),
                 "spread_fee": find_col(headers, ["Spread PPS Fees"]),
@@ -512,21 +571,21 @@ class Auditor:
                         h = str(headers[cidx - 1] or "")
                         hn = normalize_text(h)
                         if "subscription fees" not in hn or "%" in h:
-                            self.add_warning(
-                                "dashboard_commission_header_check",
-                                sheet,
-                                f"invested_amount_col={cidx} header={h!r}",
-                            )
+                            details = f"invested_amount_col={cidx} header={h!r}"
+                            if header_mismatch_is_failure:
+                                self.add_failure("dashboard_commission_header_check", sheet, details)
+                            else:
+                                self.add_warning("dashboard_commission_header_check", sheet, details)
                 for cidx in spread_cols_for_check:
                     if cidx <= len(headers):
                         h = str(headers[cidx - 1] or "")
                         hn = normalize_text(h)
                         if "spread pps fees" not in hn:
-                            self.add_warning(
-                                "dashboard_commission_header_check",
-                                sheet,
-                                f"spread_col={cidx} header={h!r}",
-                            )
+                            details = f"spread_col={cidx} header={h!r}"
+                            if header_mismatch_is_failure:
+                                self.add_failure("dashboard_commission_header_check", sheet, details)
+                            else:
+                                self.add_warning("dashboard_commission_header_check", sheet, details)
 
             for r_idx, row in enumerate(ws.iter_rows(min_row=3, max_col=120, values_only=True), start=3):
                 raw_v = row[col["vehicle"] - 1] if len(row) >= col["vehicle"] else None
@@ -552,7 +611,47 @@ class Auditor:
                     c = col.get(field)
                     if not c:
                         return 0.0
-                    return to_float(row[c - 1])
+                    raw = row[c - 1]
+                    out = to_float(raw)
+                    if strict_numeric_parse and raw not in (None, ""):
+                        s = str(raw).strip()
+                        if s:
+                            s_comp = s.replace(",", "").replace("%", "")
+                            s_norm = normalize_text(s)
+                            formula_error_token = s.upper() in {"#VALUE!", "#N/A", "#REF!", "#DIV/0!", "#NAME?", "#NUM!"}
+                            if formula_error_token:
+                                self.add_warning(
+                                    "dashboard_formula_error_token",
+                                    mapped_v,
+                                    f"sheet={sheet} row={r_idx} field={field} raw={raw!r}",
+                                    f"{sheet}:{r_idx}",
+                                )
+                            zero_like = (
+                                s_norm in {"na", "n a", "none", "null", "nil", "0x"}
+                                or formula_error_token
+                                or s in {"-", "—", "–"}
+                                or bool(re.fullmatch(r"[A-Za-z$€£¥]{1,6}\s*-\s*", s))
+                                or bool(re.fullmatch(r"[A-Za-z$€£¥]{0,6}\s*[-+]?(?:0+(?:\.0+)?|\.0+)\s*", s_comp))
+                            )
+                            if (not zero_like) and abs(out) < 1e-12 and (re.search(r"\d", s) or ("#" in s) or s.startswith("=")):
+                                self.add_failure(
+                                    "dashboard_numeric_parse_error",
+                                    mapped_v,
+                                    f"sheet={sheet} row={r_idx} field={field} raw={raw!r}",
+                                    f"{sheet}:{r_idx}",
+                                )
+                    return out
+
+                contract_raw = row[col["date"] - 1] if col.get("date") else None
+                contract_date = parse_date(contract_raw) if col.get("date") else None
+                if strict_date_parse and contract_raw not in (None, "") and contract_date is None:
+                    if normalize_text(str(contract_raw)) not in {"check", "todo", "isin", "na", "n a", "voided", "void"}:
+                        self.add_failure(
+                            "dashboard_date_parse_error",
+                            mapped_v,
+                            f"sheet={sheet} row={r_idx} field=contract_date raw={contract_raw!r}",
+                            f"{sheet}:{r_idx}",
+                        )
 
                 shares_val = cell_float("shares")
                 ownership_val = cell_float("ownership")
@@ -571,7 +670,7 @@ class Auditor:
                     price_per_share=cell_float("price_per_share"),
                     shares=shares_val,
                     ownership=ownership_val,
-                    contract_date=parse_date(row[col["date"] - 1]) if col.get("date") else None,
+                    contract_date=contract_date,
                     spread_per_share=cell_float("spread_per_share"),
                     spread_fee=cell_float("spread_fee"),
                     sub_fee_percent=cell_float("sub_fee_percent"),
@@ -812,13 +911,13 @@ class Auditor:
             did_filter = "in.(" + ",".join([f'"{x}"' for x in deal_ids]) + ")"
             intros = api_get_all(
                 "introductions",
-                "id,introducer_id,prospect_investor_id,deal_id,status",
+                "id,introducer_id,prospect_investor_id,deal_id,status,introduced_at",
                 key,
                 {"deal_id": did_filter},
             )
             comms = api_get_all(
                 "introducer_commissions",
-                "id,introducer_id,deal_id,investor_id,introduction_id,basis_type,rate_bps,base_amount,accrual_amount,status,tier_number",
+                "id,introducer_id,deal_id,investor_id,introduction_id,basis_type,rate_bps,base_amount,accrual_amount,status,tier_number,threshold_multiplier",
                 key,
                 {"deal_id": did_filter},
             )
@@ -862,6 +961,8 @@ class Auditor:
         sub_key_counts = Counter()
         sub_null_deal_ids: list[str] = []
         sub_deal_vehicle_mismatch: list[tuple[str, str, str, str]] = []
+        sub_contract_dates_by_deal_investor: dict[tuple[str, str], set[str]] = defaultdict(set)
+        sub_funded_by_deal_investor = defaultdict(float)
         for s in subs_raw:
             vc = vid_to_code.get(s["vehicle_id"], "")
             nm = iid_to_name.get(s["investor_id"], "")
@@ -896,6 +997,10 @@ class Auditor:
                 funded_amount=to_float(s.get("funded_amount")),
             )
             subs.append(rec)
+            if rec.deal_id and rec.investor_id:
+                if rec.contract_date:
+                    sub_contract_dates_by_deal_investor[(rec.deal_id, rec.investor_id)].add(rec.contract_date)
+                sub_funded_by_deal_investor[(rec.deal_id, rec.investor_id)] += rec.funded_amount
             if not rec.deal_id:
                 sub_null_deal_ids.append(rec.id)
             else:
@@ -953,12 +1058,7 @@ class Auditor:
                 except Exception:
                     tier_number = None
 
-            btype = raw_btype
-            if raw_btype == "performance_fee":
-                if tier_number == 2:
-                    btype = "performance_fee_tier2"
-                else:
-                    btype = "performance_fee_tier1"
+            btype = map_commission_basis_for_tier(raw_btype, tier_number)
 
             if btype not in basis_allow:
                 continue
@@ -1024,6 +1124,8 @@ class Auditor:
             "sub_key_counts": sub_key_counts,
             "sub_null_deal_ids": sub_null_deal_ids,
             "sub_deal_vehicle_mismatch": sub_deal_vehicle_mismatch,
+            "sub_contract_dates_by_deal_investor": sub_contract_dates_by_deal_investor,
+            "sub_funded_by_deal_investor": sub_funded_by_deal_investor,
             "positions_raw": pos_raw,
             "pos_units_by_vehicle": pos_units_by_vehicle,
             "pos_dup": pos_dup,
@@ -1092,6 +1194,78 @@ class Auditor:
                 detail = ", ".join([f"{iid}:{cnt}" for iid, cnt in sorted(refs.items())])
                 self.add_failure("investor_identity_duplicate", "", f"investor_key={ik} ids={detail}")
 
+        if bool(self.rules["checks"].get("introduction_integrity_check", True)):
+            allowed_intro_dups = {
+                (
+                    str(x.get("introducer_id") or ""),
+                    str(x.get("prospect_investor_id") or ""),
+                    str(x.get("deal_id") or ""),
+                )
+                for x in self.rules.get("allowed_introduction_duplicate_tuples", [])
+                if isinstance(x, dict)
+            }
+            allowed_missing_intro_date_ids = {
+                str(x) for x in self.rules.get("allowed_introduction_missing_date_ids", [])
+            }
+            intro_dup = Counter(
+                (i.get("introducer_id"), i.get("prospect_investor_id"), i.get("deal_id"))
+                for i in db["introductions"]
+            )
+            for (intro_id, investor_id, deal_id), cnt in intro_dup.items():
+                if cnt > 1:
+                    vc = db["did_to_vehicle"].get(deal_id, "")
+                    if (str(intro_id or ""), str(investor_id or ""), str(deal_id or "")) in allowed_intro_dups:
+                        self.add_warning(
+                            "introduction_tuple_repeat_ruled",
+                            vc,
+                            f"introducer_id={intro_id} investor_id={investor_id} deal_id={deal_id} count={cnt}",
+                        )
+                    else:
+                        self.add_failure(
+                            "introduction_duplicate_tuple",
+                            vc,
+                            f"introducer_id={intro_id} investor_id={investor_id} deal_id={deal_id} count={cnt}",
+                        )
+
+            allowed_intro_statuses = {
+                str(x).strip().lower()
+                for x in self.rules.get("allowed_introduction_statuses", ["allocated"])
+            }
+            require_intro_date = bool(self.rules.get("checks", {}).get("introduction_date_required", False))
+            date_match_tol = bool(self.rules.get("checks", {}).get("introduction_date_matches_contract_date", False))
+            for i in db["introductions"]:
+                vc = db["did_to_vehicle"].get(i.get("deal_id"), "")
+                st = str(i.get("status") or "").strip().lower()
+                if st not in allowed_intro_statuses:
+                    self.add_failure(
+                        "introduction_status_invalid",
+                        vc,
+                        f"introduction_id={i.get('id')} status={st or '<blank>'} allowed={sorted(allowed_intro_statuses)}",
+                    )
+                introduced_at = parse_date(i.get("introduced_at"))
+                if require_intro_date and not introduced_at:
+                    if str(i.get("id") or "") in allowed_missing_intro_date_ids:
+                        self.add_warning(
+                            "introduction_missing_date_ruled",
+                            vc,
+                            f"introduction_id={i.get('id')} deal_id={i.get('deal_id')} investor_id={i.get('prospect_investor_id')}",
+                        )
+                    else:
+                        self.add_failure(
+                            "introduction_missing_date",
+                            vc,
+                            f"introduction_id={i.get('id')} deal_id={i.get('deal_id')} investor_id={i.get('prospect_investor_id')}",
+                        )
+                if date_match_tol and introduced_at:
+                    key = (i.get("deal_id"), i.get("prospect_investor_id"))
+                    sub_dates = db.get("sub_contract_dates_by_deal_investor", {}).get(key, set())
+                    if sub_dates and introduced_at not in sub_dates:
+                        self.add_failure(
+                            "introduction_contract_date_mismatch",
+                            vc,
+                            f"introduction_id={i.get('id')} introduced_at={introduced_at} subscription_dates={sorted(sub_dates)}",
+                        )
+
         # Row-level parity by investor identity (exact first, then relaxed fallback)
         def relaxed_key_dash(r: DashRow) -> tuple[str, str, float, float]:
             return (r.vehicle, r.investor_key, round(r.commitment, 2), round(r.shares, 6))
@@ -1152,6 +1326,9 @@ class Auditor:
                 b.vehicle,
                 f"investor={b.investor_name} commitment={b.commitment} shares={b.shares} date={b.contract_date} sub_id={b.id}",
             )
+
+        name_mapping_applied_count = sum(1 for d, b, _ in matched_pairs if d.investor_key != b.investor_key)
+        row_match_mode_counts = Counter(mode for _, _, mode in matched_pairs)
 
         metric_pairs = (
             ("cost_per_share", "cost_per_share"),
@@ -1249,6 +1426,192 @@ class Auditor:
                         vc,
                         f"commission_id={c.get('id')} status={st or '<blank>'} allowed={sorted(allowed)}",
                     )
+
+        if bool(self.rules["checks"].get("subscription_formula_cross_field_check", True)):
+            formula_tol = float(self.rules.get("subscription_formula_amount_tolerance", 1.0))
+            for s in db["subs"]:
+                if abs(s.bd_fee_percent) > 1e-9 or abs(s.bd_fee) > 1e-9:
+                    res = check_amount_from_percent(s.commitment, s.bd_fee_percent, s.bd_fee, tol=formula_tol)
+                    if not res.ok:
+                        self.add_failure(
+                            "subscription_bd_fee_formula_mismatch",
+                            s.vehicle,
+                            f"sub={s.id} commitment={s.commitment} bd_fee_percent={s.bd_fee_percent} bd_fee={s.bd_fee} expected={round(res.expected,6)}",
+                        )
+                    if looks_like_percent_copied_into_amount(s.bd_fee_percent, s.bd_fee, s.commitment):
+                        self.add_failure(
+                            "subscription_bd_fee_amount_equals_percent_bug",
+                            s.vehicle,
+                            f"sub={s.id} commitment={s.commitment} bd_fee_percent={s.bd_fee_percent} bd_fee={s.bd_fee}",
+                        )
+                if abs(s.sub_fee_percent) > 1e-9 or abs(s.sub_fee) > 1e-9:
+                    res = check_amount_from_percent(s.commitment, s.sub_fee_percent, s.sub_fee, tol=formula_tol)
+                    if not res.ok:
+                        self.add_failure(
+                            "subscription_fee_formula_mismatch",
+                            s.vehicle,
+                            f"sub={s.id} commitment={s.commitment} sub_fee_percent={s.sub_fee_percent} sub_fee={s.sub_fee} expected={round(res.expected,6)}",
+                        )
+                    if looks_like_percent_copied_into_amount(s.sub_fee_percent, s.sub_fee, s.commitment):
+                        self.add_failure(
+                            "subscription_fee_amount_equals_percent_bug",
+                            s.vehicle,
+                            f"sub={s.id} commitment={s.commitment} sub_fee_percent={s.sub_fee_percent} sub_fee={s.sub_fee}",
+                        )
+                if abs(s.spread_per_share) > 1e-9 or abs(s.spread_fee) > 1e-9:
+                    expected_spread_fee = s.spread_per_share * s.shares
+                    if abs(expected_spread_fee - s.spread_fee) > formula_tol:
+                        self.add_failure(
+                            "subscription_spread_fee_formula_mismatch",
+                            s.vehicle,
+                            f"sub={s.id} spread_per_share={s.spread_per_share} shares={s.shares} spread_fee={s.spread_fee} expected={round(expected_spread_fee,6)}",
+                        )
+
+        rate_integrity_enabled = bool(self.rules["checks"].get("commission_rate_integrity_check", True))
+        base_match_enabled = bool(self.rules["checks"].get("commission_base_amount_matches_funded_check", False))
+        if rate_integrity_enabled or base_match_enabled:
+            rate_formula_check = bool(self.rules["checks"].get("commission_rate_amount_formula_check", False))
+            formula_abs_tol = float(self.rules.get("commission_formula_absolute_tolerance", 0.05))
+            formula_rel_tol = float(self.rules.get("commission_formula_relative_tolerance", 0.01))
+            base_ruled_map: dict[tuple[str, str], str] = {}
+            for rule in self.rules.get("commission_base_amount_ruled_keys", []):
+                did = str(rule.get("deal_id") or "").strip()
+                iid = str(rule.get("investor_id") or "").strip()
+                if did and iid:
+                    base_ruled_map[(did, iid)] = str(rule.get("reason") or "").strip()
+            rate_ruled_map: dict[tuple[str, str, int], str] = {}
+            for rule in self.rules.get("commission_rate_formula_ruled_keys", []):
+                did = str(rule.get("deal_id") or "").strip()
+                iid = str(rule.get("investor_id") or "").strip()
+                rb = rule.get("rate_bps")
+                try:
+                    rb_int = int(float(rb))
+                except Exception:
+                    continue
+                if did and iid:
+                    rate_ruled_map[(did, iid, rb_int)] = str(rule.get("reason") or "").strip()
+            allowed_perf_tm_ids = {
+                str(x) for x in self.rules.get("allowed_performance_fee_threshold_multiplier_non_zero_ids", [])
+            }
+            base_by_deal_investor = defaultdict(list)
+            formula_groups = defaultdict(lambda: {"vehicle": "", "base_values": [], "amount_sum": 0.0, "ids": []})
+            for c in db["commissions"]:
+                vc = db["did_to_vehicle"].get(c.get("deal_id"), "")
+                if vc and vc not in set(scope_codes):
+                    continue
+                rb = c.get("rate_bps")
+                if rate_integrity_enabled and not rate_bps_is_integer(rb):
+                    self.add_failure(
+                        "commission_rate_non_integer",
+                        vc,
+                        f"commission_id={c.get('id')} rate_bps={rb}",
+                    )
+                base_amount = to_float(c.get("base_amount"))
+                accrual_amount = to_float(c.get("accrual_amount"))
+                tier_val = c.get("tier_number")
+                tier_num: int | None = None
+                if tier_val not in (None, ""):
+                    try:
+                        tier_num = int(float(tier_val))
+                    except Exception:
+                        tier_num = None
+                mapped_basis = map_commission_basis_for_tier(str(c.get("basis_type") or ""), tier_num)
+                if mapped_basis == "invested_amount":
+                    base_by_deal_investor[(c.get("deal_id"), c.get("investor_id"))].append(base_amount)
+                    # Group formula at investor/deal/rate level to support split rows.
+                    rb_int: int | None = None
+                    if rb not in (None, "") and rate_bps_is_integer(rb):
+                        try:
+                            rb_int = int(float(rb))
+                        except Exception:
+                            rb_int = None
+                    if rate_integrity_enabled and rate_formula_check and rb_int is not None:
+                        gk = (c.get("deal_id"), c.get("investor_id"), mapped_basis, rb_int)
+                        g = formula_groups[gk]
+                        g["vehicle"] = vc
+                        g["base_values"].append(base_amount)
+                        g["amount_sum"] += accrual_amount
+                        g["ids"].append(str(c.get("id")))
+                if rate_integrity_enabled and mapped_basis in {"performance_fee_tier1", "performance_fee_tier2", "performance_fee"}:
+                    if abs(accrual_amount) > 0.01:
+                        self.add_failure(
+                            "performance_fee_non_zero_amount",
+                            vc,
+                            f"commission_id={c.get('id')} basis={mapped_basis} accrual_amount={accrual_amount}",
+                        )
+                    tm = c.get("threshold_multiplier")
+                    tm_val = to_float(tm)
+                    if tm not in (None, "") and abs(tm_val) > 1e-9:
+                        if str(c.get("id") or "") in allowed_perf_tm_ids:
+                            self.add_warning(
+                                "performance_fee_threshold_multiplier_non_zero_ruled",
+                                vc,
+                                f"commission_id={c.get('id')} threshold_multiplier={tm}",
+                            )
+                        else:
+                            self.add_failure(
+                                "performance_fee_threshold_multiplier_non_zero",
+                                vc,
+                                f"commission_id={c.get('id')} threshold_multiplier={tm}",
+                            )
+
+            if rate_integrity_enabled and rate_formula_check:
+                for (deal_id, investor_id, _mapped_basis, rb_int), g in formula_groups.items():
+                    nonzero_bases = [b for b in g["base_values"] if abs(b) > 1e-9]
+                    if not nonzero_bases:
+                        continue
+                    amount_sum = float(g["amount_sum"])
+                    expected_row_sum = sum(nonzero_bases) * rb_int / 10000.0
+                    expected_split_sum = max(nonzero_bases) * rb_int / 10000.0
+                    best_expected = expected_row_sum if abs(amount_sum - expected_row_sum) <= abs(amount_sum - expected_split_sum) else expected_split_sum
+                    tol = max(formula_abs_tol, abs(best_expected) * formula_rel_tol)
+                    if min(abs(amount_sum - expected_row_sum), abs(amount_sum - expected_split_sum)) > tol:
+                        details = (
+                            f"deal_id={deal_id} investor_id={investor_id} rate_bps={rb_int} "
+                            f"amount_sum={round(amount_sum,6)} expected_row_sum={round(expected_row_sum,6)} "
+                            f"expected_split_sum={round(expected_split_sum,6)} tolerance={round(tol,6)} "
+                            f"sample_commission_id={g['ids'][0] if g['ids'] else '<none>'}"
+                        )
+                        rk = (str(deal_id or ""), str(investor_id or ""), int(rb_int))
+                        if rk in rate_ruled_map:
+                            reason = rate_ruled_map.get(rk, "")
+                            if reason:
+                                details += f" reason={reason}"
+                            self.add_warning("commission_rate_amount_formula_ruled", g["vehicle"], details)
+                        else:
+                            self.add_failure("commission_rate_amount_formula_mismatch", g["vehicle"], details)
+
+            if base_match_enabled:
+                funded_map = db.get("sub_funded_by_deal_investor", {})
+                for k, base_values in sorted(base_by_deal_investor.items()):
+                    deal_id, investor_id = k
+                    funded_sum = float(funded_map.get((deal_id, investor_id), 0.0))
+                    # Historical/legacy commission rows can remain when there is no funded subscription.
+                    # Those are governed by other checks and should not fail this base-vs-funded control.
+                    if abs(funded_sum) <= 0.05:
+                        continue
+                    nonzero = [abs(x) for x in base_values if abs(x) > 0.05]
+                    if not nonzero:
+                        continue
+                    unique_vals = sorted({round(x, 6) for x in nonzero})
+                    candidates = set(unique_vals)
+                    candidates.add(round(sum(unique_vals), 6))
+                    candidates.add(round(sum(base_values), 6))
+                    if all(abs(float(cand) - funded_sum) > 0.05 for cand in candidates):
+                        base_sum = sum(base_values)
+                        vc = db["did_to_vehicle"].get(deal_id, "")
+                        details = (
+                            f"deal_id={deal_id} investor_id={investor_id} commission_base_sum={round(base_sum,6)} "
+                            f"funded_sum={round(funded_sum,6)} unique_base_values={unique_vals}"
+                        )
+                        bk = (str(deal_id or ""), str(investor_id or ""))
+                        if bk in base_ruled_map:
+                            reason = base_ruled_map.get(bk, "")
+                            if reason:
+                                details += f" reason={reason}"
+                            self.add_warning("commission_base_amount_vs_funded_amount_ruled", vc, details)
+                        else:
+                            self.add_failure("commission_base_amount_vs_funded_amount_mismatch", vc, details)
 
         # positions
         if self.rules["checks"].get("positions_units_no_zero_rows", False):
@@ -1603,6 +1966,18 @@ class Auditor:
         if extra_brokers:
             self.add_warning("brokers_unexpected", "", f"{extra_brokers}")
 
+        if bool(self.rules["checks"].get("dual_role_introducer_check", True)):
+            intro_actual = {
+                str(i.get("legal_name") or i.get("display_name") or "").strip()
+                for i in db["introducers"]
+            }
+            required_dual = set(self.rules.get("required_dual_role_introducers", []))
+            for nm in sorted(required_dual):
+                if nm not in broker_actual:
+                    self.add_failure("dual_role_broker_side_missing", "", f"introducer={nm} missing_in=brokers")
+                if nm not in intro_actual:
+                    self.add_failure("dual_role_introducer_side_missing", "", f"introducer={nm} missing_in=introducers")
+
         intro_by_id = {i["id"]: str(i.get("legal_name") or i.get("display_name") or "").strip() for i in db["introducers"]}
         forbidden_global = set(self.rules.get("broker_like_introducers_forbidden_global", []))
         forbidden_by_vehicle = self.rules.get("broker_like_introducers_forbidden_by_vehicle", {})
@@ -1621,6 +1996,28 @@ class Auditor:
                 vc = db["did_to_vehicle"].get(i.get("deal_id"), "")
                 inv = db["iid_to_name"].get(i.get("prospect_investor_id"), i.get("prospect_investor_id"))
                 self.add_failure("forbidden_name_in_introductions", vc, f"introducer={iname} investor={inv}")
+
+        if bool(self.rules["checks"].get("deprecated_introducer_references_check", True)):
+            deprecated_ids = set(self.rules.get("deprecated_introducer_ids", []))
+            if deprecated_ids:
+                for i in db["introductions"]:
+                    iid = i.get("introducer_id")
+                    if iid in deprecated_ids:
+                        vc = db["did_to_vehicle"].get(i.get("deal_id"), "")
+                        self.add_failure(
+                            "deprecated_introducer_reference_in_introductions",
+                            vc,
+                            f"introduction_id={i.get('id')} introducer_id={iid}",
+                        )
+                for c in db["commissions"]:
+                    iid = c.get("introducer_id")
+                    if iid in deprecated_ids:
+                        vc = db["did_to_vehicle"].get(c.get("deal_id"), "")
+                        self.add_failure(
+                            "deprecated_introducer_reference_in_commissions",
+                            vc,
+                            f"commission_id={c.get('id')} introducer_id={iid}",
+                        )
 
         # comm aggregates by introducer + vehicle
         agg = defaultdict(lambda: {"rows": 0, "amount": 0.0})
@@ -1733,6 +2130,28 @@ class Auditor:
                             f"introducer={iname} invested_amount_total={round(invested_total,2)}",
                         )
 
+            rate_adj_rules = self.rules.get("vc215_bromley_rate_adjustment_expectations", [])
+            for rule in rate_adj_rules:
+                vc = str(rule.get("vehicle") or "VC215")
+                inv_key = name_key(str(rule.get("investor") or ""), self.aliases)
+                iname = str(rule.get("introducer") or "")
+                btype = str(rule.get("basis_type") or "invested_amount")
+                expected_rate = int(rule.get("rate_bps"))
+                got = comm_by_tuple.get((vc, inv_key, iname, btype))
+                if not got:
+                    self.add_failure(
+                        "vc215_bromley_rate_adjustment_missing_row",
+                        vc,
+                        f"investor={rule.get('investor')} introducer={iname} basis={btype}",
+                    )
+                    continue
+                if expected_rate not in got["rates"]:
+                    self.add_failure(
+                        "vc215_bromley_rate_adjustment_rate_mismatch",
+                        vc,
+                        f"investor={rule.get('investor')} introducer={iname} basis={btype} expected_rate={expected_rate} got_rates={sorted(got['rates'])}",
+                    )
+
         # contacts file sanity checks (non-red VC2/VCL rows only)
         contacts_path = ROOT / self.rules["dashboard_files"]["contacts"]
         wb = load_workbook(contacts_path, data_only=True)
@@ -1772,15 +2191,38 @@ class Auditor:
                         f"row={r} intro={intro1}",
                         f"contacts:{r}",
                     )
-            if role not in (None, "") and str(role).strip().lower() == "broker" and intro1 not in (None, "", "-"):
-                n = normalize_text(str(intro1))
-                if n not in broker_names:
-                    self.add_failure(
-                        "contacts_role_broker_missing_in_brokers_table",
+                if role not in (None, "") and str(role).strip().lower() == "broker" and intro1 not in (None, "", "-"):
+                    n = normalize_text(str(intro1))
+                    if n not in broker_names:
+                        self.add_failure(
+                            "contacts_role_broker_missing_in_brokers_table",
                         s,
                         f"row={r} broker={intro1}",
-                        f"contacts:{r}",
-                    )
+                            f"contacts:{r}",
+                        )
+
+        mapping_coverage = build_mapping_coverage(self.failures, self.warnings, name_mapping_applied_count)
+        mapping_coverage["row_match_modes"] = dict(row_match_mode_counts)
+        if bool(self.rules["checks"].get("mapping_coverage_hard_fail", True)):
+            if mapping_coverage["name_mapping_unresolved_count"] > 0:
+                self.add_failure(
+                    "name_mapping_unresolved_total",
+                    "",
+                    f"count={mapping_coverage['name_mapping_unresolved_count']}",
+                )
+
+        rule_enforcement_summary = {
+            "introduction_integrity_check": bool(self.rules["checks"].get("introduction_integrity_check", True)),
+            "subscription_formula_cross_field_check": bool(self.rules["checks"].get("subscription_formula_cross_field_check", True)),
+            "commission_rate_integrity_check": bool(self.rules["checks"].get("commission_rate_integrity_check", True)),
+            "commission_base_amount_matches_funded_check": bool(
+                self.rules["checks"].get("commission_base_amount_matches_funded_check", True)
+            ),
+            "dual_role_introducer_check": bool(self.rules["checks"].get("dual_role_introducer_check", True)),
+            "deprecated_introducer_references_check": bool(
+                self.rules["checks"].get("deprecated_introducer_references_check", True)
+            ),
+        }
 
         summary = {
             "rules_version": self.rules.get("version"),
@@ -1797,6 +2239,8 @@ class Auditor:
             "warning_count": len(self.warnings),
             "fail_by_check": dict(Counter(x["check"] for x in self.failures)),
             "warn_by_check": dict(Counter(x["check"] for x in self.warnings)),
+            "mapping_coverage": mapping_coverage,
+            "rule_enforcement_summary": rule_enforcement_summary,
         }
         return summary
 
@@ -1808,13 +2252,18 @@ class Auditor:
         out_json = run_dir / "audit_report.json"
         out_csv = run_dir / "audit_issues.csv"
         out_md = run_dir / "audit_summary.md"
+        out_mapping = run_dir / "mapping_coverage.json"
 
         report = {
             "summary": summary,
             "failures": self.failures,
             "warnings": self.warnings,
+            "mapping_coverage": summary.get("mapping_coverage", {}),
+            "rule_enforcement_summary": summary.get("rule_enforcement_summary", {}),
+            "warning_governance_status": "PENDING_TRUST_PACK",
         }
         out_json.write_text(json.dumps(report, indent=2))
+        out_mapping.write_text(json.dumps(summary.get("mapping_coverage", {}), indent=2))
 
         with out_csv.open("w", newline="") as f:
             w = csv.DictWriter(f, fieldnames=["severity", "check", "vehicle", "row_ref", "details"])
@@ -1855,6 +2304,7 @@ class Auditor:
         lines.append("## Artifacts")
         lines.append(f"- `{out_json}`")
         lines.append(f"- `{out_csv}`")
+        lines.append(f"- `{out_mapping}`")
         lines.append(f"- `{out_md}`")
         out_md.write_text("\n".join(lines))
         return run_dir, out_json, out_csv, out_md

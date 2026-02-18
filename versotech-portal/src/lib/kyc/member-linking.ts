@@ -7,6 +7,12 @@ type FetchMemberWithAutoLinkParams = {
   entityId: string
   userId: string
   userEmail?: string | null
+  defaultFullName?: string | null
+  /**
+   * If true, create a minimal member row when no linked or email-matching member exists.
+   * Intended for individual personas where a signed-in user must always have a personal KYC record.
+   */
+  createIfMissing?: boolean
   select: string
   context: string
 }
@@ -28,6 +34,8 @@ export async function fetchMemberWithAutoLink({
   entityId,
   userId,
   userEmail,
+  defaultFullName,
+  createIfMissing = false,
   select,
   context,
 }: FetchMemberWithAutoLinkParams): Promise<FetchMemberWithAutoLinkResult> {
@@ -50,67 +58,178 @@ export async function fetchMemberWithAutoLink({
     return { member: linkedMember, error: null, autoLinked: false }
   }
 
-  const normalizedEmail = userEmail?.trim()
+  const normalizedEmail = userEmail?.trim().toLowerCase()
   if (!normalizedEmail) {
-    return { member: null, error: null, autoLinked: false }
+    if (!createIfMissing) {
+      return { member: null, error: null, autoLinked: false }
+    }
   }
 
-  const { data: candidates, error: candidatesError } = await supabase
-    .from(memberTable)
-    .select(`id, email`)
-    .eq(entityIdColumn, entityId)
-    .eq('is_active', true)
-    .is('linked_user_id', null)
-    .ilike('email', normalizedEmail)
-    .limit(2)
+  if (normalizedEmail) {
+    const { data: candidates, error: candidatesError } = await supabase
+      .from(memberTable)
+      .select(`id, email`)
+      .eq(entityIdColumn, entityId)
+      .eq('is_active', true)
+      .is('linked_user_id', null)
+      .ilike('email', normalizedEmail)
+      .limit(2)
 
-  if (candidatesError) {
-    return { member: null, error: candidatesError, autoLinked: false }
-  }
+    if (candidatesError) {
+      return { member: null, error: candidatesError, autoLinked: false }
+    }
 
-  const safeCandidates = candidates || []
-  if (safeCandidates.length !== 1) {
-    if (safeCandidates.length > 1) {
+    const safeCandidates = candidates || []
+    if (safeCandidates.length === 1) {
+      const candidate = safeCandidates[0]
+      const { data: linkedRow, error: linkError } = await supabase
+        .from(memberTable)
+        .update({ linked_user_id: userId })
+        .eq('id', candidate.id)
+        .is('linked_user_id', null)
+        .select('id')
+        .maybeSingle()
+
+      if (linkError) {
+        return { member: null, error: linkError, autoLinked: false }
+      }
+
+      if (linkedRow) {
+        const { data: fetchedLinked, error: fetchLinkedError } = await baseQuery()
+          .eq('id', candidate.id)
+          .maybeSingle()
+
+        if (fetchLinkedError) {
+          return { member: null, error: fetchLinkedError, autoLinked: false }
+        }
+
+        console.info(`[${context}] Auto-linked member by email`, {
+          memberTable,
+          entityId,
+          memberId: candidate.id,
+          userId,
+        })
+
+        return { member: fetchedLinked || null, error: null, autoLinked: true }
+      }
+    } else if (safeCandidates.length > 1) {
       console.warn(`[${context}] Skipped auto-link: multiple unlinked members matched email`, {
         memberTable,
         entityId,
         userId,
       })
     }
+  }
+
+  if (!createIfMissing) {
     return { member: null, error: null, autoLinked: false }
   }
 
-  const candidate = safeCandidates[0]
-  const { data: linkedRow, error: linkError } = await supabase
+  // Safe fallback: if exactly one active unlinked member exists, link that row.
+  const { data: unlinkedMembers, error: unlinkedError } = await supabase
     .from(memberTable)
-    .update({ linked_user_id: userId })
-    .eq('id', candidate.id)
+    .select('id')
+    .eq(entityIdColumn, entityId)
+    .eq('is_active', true)
     .is('linked_user_id', null)
+    .limit(2)
+
+  if (unlinkedError) {
+    return { member: null, error: unlinkedError, autoLinked: false }
+  }
+
+  const safeUnlinkedMembers = unlinkedMembers || []
+  if (safeUnlinkedMembers.length === 1) {
+    const memberToLink = safeUnlinkedMembers[0]
+    const { data: linkedRow, error: linkError } = await supabase
+      .from(memberTable)
+      .update({
+        linked_user_id: userId,
+        email: normalizedEmail || null,
+      })
+      .eq('id', memberToLink.id)
+      .is('linked_user_id', null)
+      .select('id')
+      .maybeSingle()
+
+    if (linkError) {
+      return { member: null, error: linkError, autoLinked: false }
+    }
+
+    if (linkedRow) {
+      const { data: fetchedLinked, error: fetchLinkedError } = await baseQuery()
+        .eq('id', memberToLink.id)
+        .maybeSingle()
+
+      if (fetchLinkedError) {
+        return { member: null, error: fetchLinkedError, autoLinked: false }
+      }
+
+      console.info(`[${context}] Auto-linked sole unlinked member`, {
+        memberTable,
+        entityId,
+        userId,
+      })
+
+      return { member: fetchedLinked || null, error: null, autoLinked: true }
+    }
+  } else if (safeUnlinkedMembers.length > 1) {
+    console.warn(`[${context}] Skipped member auto-create: multiple unlinked active members exist`, {
+      memberTable,
+      entityId,
+      userId,
+    })
+    return { member: null, error: null, autoLinked: false }
+  }
+
+  const inferredName =
+    defaultFullName?.trim() ||
+    (normalizedEmail ? normalizedEmail.split('@')[0].replace(/[._-]+/g, ' ').trim() : '') ||
+    'Entity Member'
+  const nameParts = inferredName.split(/\s+/).filter(Boolean)
+  const firstName = nameParts[0] || 'Entity'
+  const lastName = nameParts.slice(1).join(' ') || null
+
+  const { data: insertedMember, error: insertError } = await supabase
+    .from(memberTable)
+    .insert({
+      [entityIdColumn]: entityId,
+      linked_user_id: userId,
+      email: normalizedEmail || null,
+      role: 'authorized_signatory',
+      first_name: firstName,
+      last_name: lastName,
+      full_name: inferredName,
+      is_active: true,
+      kyc_status: 'pending',
+      effective_from: new Date().toISOString().split('T')[0],
+      created_by: userId,
+    })
     .select('id')
     .maybeSingle()
 
-  if (linkError) {
-    return { member: null, error: linkError, autoLinked: false }
+  if (insertError) {
+    return { member: null, error: insertError, autoLinked: false }
   }
 
-  if (!linkedRow) {
+  if (!insertedMember?.id) {
     return { member: null, error: null, autoLinked: false }
   }
 
-  const { data: fetchedLinked, error: fetchLinkedError } = await baseQuery()
-    .eq('id', candidate.id)
+  const { data: createdMember, error: createdMemberError } = await baseQuery()
+    .eq('id', insertedMember.id)
     .maybeSingle()
 
-  if (fetchLinkedError) {
-    return { member: null, error: fetchLinkedError, autoLinked: false }
+  if (createdMemberError) {
+    return { member: null, error: createdMemberError, autoLinked: false }
   }
 
-  console.info(`[${context}] Auto-linked member by email`, {
+  console.info(`[${context}] Auto-created member for linked user`, {
     memberTable,
     entityId,
-    memberId: candidate.id,
+    memberId: insertedMember.id,
     userId,
   })
 
-  return { member: fetchedLinked || null, error: null, autoLinked: true }
+  return { member: createdMember || null, error: null, autoLinked: true }
 }

@@ -5,18 +5,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
-  FileText,
   Upload,
   Download,
   CheckCircle2,
   Circle,
   Loader2,
   Shield,
-  AlertCircle
+  AlertCircle,
+  User
 } from 'lucide-react'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { ENTITY_REQUIRED_DOCS } from '@/constants/kyc-document-types'
 
 interface Document {
   id: string
@@ -26,20 +27,28 @@ interface Document {
   file_key: string
   created_at: string
   file_size_bytes?: number
+  lawyer_member_id?: string | null
   created_by?: {
     display_name?: string
     email?: string
   }
 }
 
-// Required KYC documents for lawyers/law firms
-const REQUIRED_DOCUMENTS = [
-  { label: 'Certificate of Incorporation / Registration', value: 'certificate_of_incorporation' },
-  { label: 'Proof of Registered Address', value: 'proof_of_address' },
-  { label: 'Professional License / Bar Registration', value: 'professional_license' },
-  { label: 'Professional Indemnity Insurance', value: 'professional_insurance' },
-  { label: 'Partners/Directors List', value: 'directors_list' },
-  { label: 'Beneficial Ownership Declaration', value: 'beneficial_ownership' },
+interface LawyerMember {
+  id: string
+  full_name: string
+  role: string
+  is_signatory?: boolean
+}
+
+const REQUIRED_DOCUMENTS = ENTITY_REQUIRED_DOCS.map(doc => ({
+  label: doc.label,
+  value: doc.value,
+}))
+
+const MEMBER_DOCUMENTS = [
+  { label: 'Passport / Government ID', value: 'passport' },
+  { label: 'Proof of Address (Utility Bill)', value: 'utility_bill' },
 ]
 
 interface LawyerKYCDocumentsTabProps {
@@ -54,9 +63,10 @@ export function LawyerKYCDocumentsTab({
   kycStatus
 }: LawyerKYCDocumentsTabProps) {
   const [documents, setDocuments] = useState<Document[]>([])
+  const [members, setMembers] = useState<LawyerMember[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState<string | null>(null)
-  const [currentKycStatus, setCurrentKycStatus] = useState(kycStatus)
+  const currentKycStatus = kycStatus
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
 
   const fetchDocuments = useCallback(async () => {
@@ -69,6 +79,7 @@ export function LawyerKYCDocumentsTab({
 
       const data = await response.json()
       setDocuments(data.documents || [])
+      setMembers(data.members || [])
     } catch (error) {
       console.error('Error fetching documents:', error)
       toast.error('Failed to load documents')
@@ -81,7 +92,7 @@ export function LawyerKYCDocumentsTab({
     fetchDocuments()
   }, [fetchDocuments])
 
-  const handleUpload = async (file: File, documentType: string) => {
+  const handleUpload = async (file: File, documentType: string, memberId?: string) => {
     if (!lawyerId) return
 
     const maxSize = 50 * 1024 * 1024
@@ -105,13 +116,17 @@ export function LawyerKYCDocumentsTab({
       return
     }
 
-    setUploading(documentType)
+    const uploadKey = memberId ? `${documentType}_${memberId}` : documentType
+    setUploading(uploadKey)
 
     try {
       const formData = new FormData()
       formData.append('file', file)
       formData.append('type', documentType)
       formData.append('name', file.name.replace(/\.[^/.]+$/, ''))
+      if (memberId && memberId !== 'entity-level') {
+        formData.append('lawyer_member_id', memberId)
+      }
 
       const response = await fetch('/api/lawyers/me/documents', {
         method: 'POST',
@@ -123,7 +138,9 @@ export function LawyerKYCDocumentsTab({
         throw new Error(error.error || 'Upload failed')
       }
 
-      const docTypeLabel = REQUIRED_DOCUMENTS.find(d => d.value === documentType)?.label || documentType
+      const docTypeLabel =
+        [...REQUIRED_DOCUMENTS, ...MEMBER_DOCUMENTS].find(d => d.value === documentType)?.label ||
+        documentType
       toast.success(`${docTypeLabel} uploaded successfully`)
 
       await fetchDocuments()
@@ -132,8 +149,9 @@ export function LawyerKYCDocumentsTab({
       toast.error(error instanceof Error ? error.message : 'Failed to upload document')
     } finally {
       setUploading(null)
-      if (fileInputRefs.current[documentType]) {
-        fileInputRefs.current[documentType]!.value = ''
+      const inputKey = memberId ? `${documentType}_${memberId}` : documentType
+      if (fileInputRefs.current[inputKey]) {
+        fileInputRefs.current[inputKey]!.value = ''
       }
     }
   }
@@ -214,6 +232,9 @@ export function LawyerKYCDocumentsTab({
                 <CardDescription>
                   {lawyerName ? `Compliance documents for ${lawyerName}` : 'Upload required compliance documents'}
                 </CardDescription>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Entity: <span className="font-medium text-foreground">{lawyerName || 'Current lawyer entity'}</span>
+                </p>
               </div>
             </div>
             <div className="text-right">
@@ -251,6 +272,119 @@ export function LawyerKYCDocumentsTab({
           )}
         </CardContent>
       </Card>
+
+      {/* Member KYC Documents */}
+      {members.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Member KYC Documents
+            </CardTitle>
+            <CardDescription>
+              Upload ID and proof of address for each director/member, including members without user accounts.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {members.map((member) => {
+              const memberDocs = documents.filter(d => d.lawyer_member_id === member.id)
+
+              return (
+                <div key={member.id} className="space-y-3">
+                  <div className="flex items-center gap-2 pb-2 border-b">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium text-sm">{member.full_name}</span>
+                    <Badge variant="outline" className="capitalize text-xs">
+                      {member.role}
+                    </Badge>
+                    {member.is_signatory && (
+                      <Badge variant="secondary" className="text-xs">Signatory</Badge>
+                    )}
+                  </div>
+
+                  {MEMBER_DOCUMENTS.map((docType) => {
+                    const uploaded = memberDocs.find(d => d.type === docType.value)
+                    const uploadKey = `${docType.value}_${member.id}`
+                    const isUploading = uploading === uploadKey
+
+                    return (
+                      <div
+                        key={uploadKey}
+                        className={cn(
+                          "flex items-center justify-between gap-4 py-2 px-3 rounded-lg border transition-colors ml-6",
+                          uploaded
+                            ? "border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-900/20"
+                            : "border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800/50"
+                        )}
+                      >
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          {uploaded ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                          ) : (
+                            <Circle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {docType.label}
+                            </p>
+                            {uploaded && (
+                              <p className="text-xs text-muted-foreground truncate">
+                                {uploaded.file_name} • {formatFileSize(uploaded.file_size_bytes)} • {formatDate(uploaded.created_at)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {uploaded ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDownload(uploaded)}
+                              className="h-7 w-7 p-0"
+                              title="Download"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                            </Button>
+                          ) : (
+                            <>
+                              <Input
+                                ref={(el) => { fileInputRefs.current[uploadKey] = el }}
+                                type="file"
+                                className="hidden"
+                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.txt"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0]
+                                  if (file) handleUpload(file, docType.value, member.id)
+                                }}
+                                disabled={isUploading}
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => fileInputRefs.current[uploadKey]?.click()}
+                                disabled={isUploading}
+                                className="h-7 text-xs"
+                              >
+                                {isUploading ? (
+                                  <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                                ) : (
+                                  <Upload className="h-3.5 w-3.5 mr-1" />
+                                )}
+                                Upload
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Required Documents Checklist */}
       <Card>

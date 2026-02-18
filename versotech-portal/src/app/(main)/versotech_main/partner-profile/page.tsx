@@ -61,6 +61,8 @@ export default async function PartnerProfilePage() {
     entityId: partnerUser.partner_id,
     userId: user.id,
     userEmail: user.email,
+    defaultFullName: profile?.full_name || profile?.display_name || user.email || null,
+    createIfMissing: partner?.type === 'individual',
     context: 'PartnerProfilePage',
     select: `
       id,

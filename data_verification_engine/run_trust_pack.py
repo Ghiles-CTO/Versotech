@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from core.governance_checks import evaluate_warning_governance
 
 ROOT_DIR = Path(__file__).resolve().parent
 DEFAULT_POLICY = ROOT_DIR / "trust_pack" / "trust_policy.json"
@@ -97,12 +98,12 @@ def build_md(report: dict[str, Any]) -> str:
     lines.append(f"- Status: `{report['status']}`")
     lines.append(f"- Findings: `{len(report['findings'])}`")
     lines.append("")
-    lines.append("| Scope | Fail | Warn | CSV Rows | Verdict |")
-    lines.append("|---|---:|---:|---:|---|")
+    lines.append("| Scope | Fail | Warn | CSV Rows | Warning Governance | Verdict |")
+    lines.append("|---|---:|---:|---:|---|---|")
     for row in report["scopes"]:
         lines.append(
             f"| `{row['scope']}` | {row['summary_fail_count']} | {row['summary_warn_count']} | "
-            f"{row['issues_csv_rows']} | `{row['verdict']}` |"
+            f"{row['issues_csv_rows']} | `{row.get('warning_governance_status', 'PASS')}` | `{row['verdict']}` |"
         )
 
     if report["findings"]:
@@ -237,6 +238,8 @@ def main() -> int:
                     }
                 )
 
+        findings.extend(evaluate_warning_governance(scope_name, dict(csv_warn_by), policy))
+
         for row in rows:
             check = str(row.get("check") or "").lower()
             for bad in forbidden_substrings:
@@ -273,6 +276,12 @@ def main() -> int:
                 "verdict": "FAIL" if scope_has_findings else "PASS",
                 "report_json": str(report_json_path),
                 "issues_csv": str(issues_csv),
+                "warning_governance_status": "FAIL"
+                if any(
+                    f["scope"] == scope_name and str(f.get("code", "")).startswith("warning_")
+                    for f in findings
+                )
+                else "PASS",
             }
         )
 

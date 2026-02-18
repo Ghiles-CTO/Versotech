@@ -101,6 +101,8 @@ export default async function CommercialPartnerProfilePage() {
     entityId: cpUser.commercial_partner_id,
     userId: user.id,
     userEmail: user.email,
+    defaultFullName: profile?.display_name || user.email || null,
+    createIfMissing: commercialPartner?.type === 'individual',
     context: 'CommercialPartnerProfilePage',
     select: `
       id,

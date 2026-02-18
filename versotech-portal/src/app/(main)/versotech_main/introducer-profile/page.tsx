@@ -109,6 +109,8 @@ export default async function IntroducerProfilePage() {
     entityId: introducerUser.introducer_id,
     userId: user.id,
     userEmail: user.email,
+    defaultFullName: profile?.display_name || user.email || null,
+    createIfMissing: introducer?.type === 'individual',
     context: 'IntroducerProfilePage',
     select: `
       id,

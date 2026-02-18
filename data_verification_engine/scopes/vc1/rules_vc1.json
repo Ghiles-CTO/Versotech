@@ -14,7 +14,16 @@
     "VC23",
     "VC24",
     "VC25",
-    "VC26"
+    "VC26",
+    "VC28",
+    "VC30",
+    "VC31",
+    "VC32",
+    "VC33",
+    "VC38",
+    "VC40",
+    "VC41",
+    "VC43"
   ],
   "scope_vehicle_codes": [
     "VC102",
@@ -29,7 +38,16 @@
     "VC123",
     "VC124",
     "VC125",
-    "VC126"
+    "VC126",
+    "VC128",
+    "VC130",
+    "VC131",
+    "VC132",
+    "VC133",
+    "VC138",
+    "VC140",
+    "VC141",
+    "VC143"
   ],
   "restrict_to_db_vehicles_with_data": true,
   "dashboard_vehicle_alias": {
@@ -59,7 +77,16 @@
     "VC24": "VC124",
     "VC25": "VC125",
     "VC26": "VC126",
-    "VC27": "VC127"
+    "VC27": "VC127",
+    "VC28": "VC128",
+    "VC30": "VC130",
+    "VC31": "VC131",
+    "VC32": "VC132",
+    "VC33": "VC133",
+    "VC38": "VC138",
+    "VC40": "VC140",
+    "VC41": "VC141",
+    "VC43": "VC143"
   },
   "dashboard_ownership_fallback_to_shares_if_missing": true,
   "dashboard_optional_numeric_fields": [
@@ -84,7 +111,21 @@
     "commission_fk_introduction_check": true,
     "commission_status_must_be_paid": true,
     "currency_must_match_dashboard_when_present": true,
-    "specific_rule_assertions": false
+    "specific_rule_assertions": false,
+    "introduction_integrity_check": true,
+    "introduction_date_required": true,
+    "introduction_date_matches_contract_date": true,
+    "subscription_formula_cross_field_check": true,
+    "commission_rate_integrity_check": true,
+    "commission_base_amount_matches_funded_check": true,
+    "strikethrough_commission_delete_check": true,
+    "mapping_coverage_hard_fail": true,
+    "dual_role_introducer_check": true,
+    "deprecated_introducer_references_check": true,
+    "commission_rate_amount_formula_check": true,
+    "dashboard_commission_header_mismatch_is_failure": true,
+    "dashboard_numeric_parse_check": true,
+    "dashboard_contract_date_parse_check": true
   },
   "allowed_commission_statuses": [
     "paid"
@@ -120,6 +161,9 @@
     "hedgebaysecuritiesllc": "Hedgebay Securities LLC",
     "altrasandrew": "Altras Capital Financing Broker",
     "altrasandrewstewart": "Altras Capital Financing Broker",
+    "altrascapitalfinancingbroker": "Altras Capital Financing Broker",
+    "altrasbrokercapitalfinancing": "Altras Capital Financing Broker",
+    "altrasbroker": "Altras Capital Financing Broker",
     "renbridge": "Renaissance Bridge Capital LLC",
     "ericlepascalseigneur": "Eric LE SEIGNEUR",
     "hakimihossienjavid": "Hossein JAVID",
@@ -129,6 +173,11 @@
     "dan": "Daniel BAUMSLAG",
     "robin": "Robin Doble",
     "rick": "Altras Capital Financing Broker",
+    "elevation": "Altras Capital Financing Broker",
+    "elevationsecurities": "Altras Capital Financing Broker",
+    "elevationrick": "Altras Capital Financing Broker",
+    "elevationrickandrew": "Altras Capital Financing Broker",
+    "elevationandrick": "Altras Capital Financing Broker",
     "sandro": "GEMERA Consulting Pte Ltd",
     "gemera": "GEMERA Consulting Pte Ltd",
     "denis": "Denis Matthey",
@@ -151,7 +200,7 @@
     "Stableton+Terra": "Terra Financial & Management Services SA",
     "Anand+Dan": "Set Cap"
   },
-  "run_broker_checks": false,
+  "run_broker_checks": true,
   "brokers_table_expected": [
     "Bromley Capital Partners",
     "Elevation Securities",
@@ -163,14 +212,167 @@
   "allowed_dual_role_introducers": [],
   "forbidden_in_introducers_master": [],
   "forbidden_in_introductions_global": [],
-  "specific_commission_expectations": [],
+  "specific_commission_expectations": [
+    {
+      "vehicle": "VC133",
+      "investor": "777 WALNUT LLC",
+      "introducer": "Elevation",
+      "basis_type": "spread",
+      "amount": 0.0
+    },
+    {
+      "vehicle": "VC133",
+      "investor": "778 WALNUT LLC",
+      "introducer": "Set Cap",
+      "basis_type": "spread",
+      "amount": 2805.0
+    },
+    {
+      "vehicle": "VC133",
+      "investor": "Band Capital Limited",
+      "introducer": "Elevation",
+      "basis_type": "spread",
+      "amount": 53700.0
+    },
+    {
+      "vehicle": "VC133",
+      "investor": "Band Capital Limited",
+      "introducer": "Anand",
+      "basis_type": "spread",
+      "amount": 0.0
+    },
+    {
+      "vehicle": "VC133",
+      "investor": "Charles DE BAVIER",
+      "introducer": "Elevation",
+      "basis_type": "spread",
+      "amount": 9900.0
+    },
+    {
+      "vehicle": "VC133",
+      "investor": "Charles DE BAVIER",
+      "introducer": "Anand",
+      "basis_type": "spread",
+      "amount": 0.0
+    },
+    {
+      "vehicle": "VC133",
+      "investor": "Keir BENBOW",
+      "introducer": "Elevation",
+      "basis_type": "spread",
+      "amount": 5250.0
+    },
+    {
+      "vehicle": "VC133",
+      "investor": "CARTA INVESTMENTS LLC",
+      "introducer": "Elevation",
+      "basis_type": "spread",
+      "amount": 0.0
+    },
+    {
+      "vehicle": "VC133",
+      "investor": "Tuygan GOKER",
+      "introducer": "Elevation",
+      "basis_type": "spread",
+      "amount": 0.0
+    },
+    {
+      "vehicle": "VC133",
+      "investor": "Tuygan GOKER",
+      "introducer": "Anand",
+      "basis_type": "spread",
+      "amount": 0.0
+    },
+    {
+      "vehicle": "VC133",
+      "investor": "Zandera (Holdco) Limited",
+      "introducer": "Elevation+Rick",
+      "basis_type": "spread",
+      "amount": 96750.0
+    },
+    {
+      "vehicle": "VC133",
+      "investor": "Zandera (Holdco) Limited",
+      "introducer": "Anand",
+      "basis_type": "spread",
+      "amount": 0.0
+    },
+    {
+      "vehicle": "VC133",
+      "investor": "JASSQ HOLDING LIMITED",
+      "introducer": "Elevation",
+      "basis_type": "spread",
+      "amount": 30000.0
+    },
+    {
+      "vehicle": "VC133",
+      "investor": "JASSQ HOLDING LIMITED",
+      "introducer": "Anand",
+      "basis_type": "spread",
+      "amount": 0.0
+    },
+    {
+      "vehicle": "VC133",
+      "investor": "Jeremy LOWY",
+      "introducer": "Elevation",
+      "basis_type": "spread",
+      "amount": 0.0
+    },
+    {
+      "vehicle": "VC133",
+      "investor": "Marco JERRENTRUP",
+      "introducer": "Elevation",
+      "basis_type": "spread",
+      "amount": 5250.0
+    },
+    {
+      "vehicle": "VC133",
+      "investor": "Sahejman KAHLON",
+      "introducer": "Elevation",
+      "basis_type": "spread",
+      "amount": 0.0
+    }
+  ],
   "forbidden_commission_pairs": [],
   "warnings_only_introducers": [],
   "dashboard_files": {
     "main": "verso_capital_2_data/VERSO DASHBOARD_V1.0.xlsx",
     "contacts": "verso_capital_2_data/VERSO Capital 2 SCSp Emails and Contacts.xlsx"
   },
-  "run_contacts_checks": false,
+  "strikethrough_commission_source": {
+    "path": "VERSO/datafixing/05_Introducer_Commissions_FD comments.xlsx",
+    "sheet": "Introducer Commissions",
+    "header_row": 1,
+    "data_start_row": 2,
+    "columns": {
+      "vehicle": 1,
+      "introducer": 2,
+      "investor": 3,
+      "basis_type": 4,
+      "rate_bps": 5,
+      "amount": 7
+    },
+    "strike_columns": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ]
+  },
+  "strikethrough_commission_allowed_source_rows": [
+    489,
+    490,
+    494,
+    496,
+    497,
+    500
+  ],
+  "run_contacts_checks": true,
   "dashboard_commission_columns": {
     "default": {
       "invested_amount": [
@@ -217,11 +419,13 @@
     "bd_fee_percent"
   ],
   "commission_totals_exclude_vehicle_codes": [],
+  "commission_row_exclude_vehicle_codes": [],
   "commission_total_ruled_diffs_invested_amount": {},
   "commission_total_ruled_diffs_spread": {
     "VC106": 0.058,
     "VC113": 0.0125,
-    "VC114": -0.4
+    "VC114": -0.4,
+    "VC133": -5212.5
   },
   "dashboard_header_row_by_sheet": {
     "VC6": 3
@@ -278,26 +482,176 @@
     }
   },
   "fallback_ruled_name_pairs": [
-    { "vehicle": "VC106", "dash_investor": "Hedgebay Securities LLC", "db_investor": "Sheetal HARIA" },
-    { "vehicle": "VC106", "dash_investor": "Hedgebay Securities LLC", "db_investor": "Tapan SHAH" },
-    { "vehicle": "VC106", "dash_investor": "Hedgebay Securities LLC", "db_investor": "Lakin HARIA" },
-    { "vehicle": "VC106", "dash_investor": "Hedgebay Securities LLC", "db_investor": "Aaron RIKHYE" },
-    { "vehicle": "VC106", "dash_investor": "LEE RAND GROUP", "db_investor": "Ekta DATT" },
-    { "vehicle": "VC106", "dash_investor": "LEE RAND GROUP", "db_investor": "Rasika KULKARNI" },
-    { "vehicle": "VC106", "dash_investor": "LEE RAND GROUP", "db_investor": "Nidhi GANERIWALA" },
-    { "vehicle": "VC106", "dash_investor": "LEE RAND GROUP", "db_investor": "Rajiv KAPOOR" },
-    { "vehicle": "VC106", "dash_investor": "LEE RAND GROUP", "db_investor": "Atima HARALALKA" },
-    { "vehicle": "VC106", "dash_investor": "LEE RAND GROUP", "db_investor": "Rajesh SUD" },
-    { "vehicle": "VC122", "dash_investor": "OEP Ltd", "db_investor": "Julien MACHOT" },
-    { "vehicle": "VC106", "dash_investor": "OEP Ltd", "db_investor": "Julien MACHOT" },
-    { "vehicle": "VC112", "dash_investor": "OEP Ltd", "db_investor": "Julien MACHOT" },
-    { "vehicle": "VC113", "dash_investor": "OEP Ltd", "db_investor": "Julien MACHOT" },
-    { "vehicle": "VC124", "dash_investor": "OEP Ltd", "db_investor": "Julien MACHOT" },
-    { "vehicle": "VC125", "dash_investor": "OEP Ltd", "db_investor": "Julien MACHOT" },
-    { "vehicle": "VC126", "dash_investor": "OEP Ltd", "db_investor": "Julien MACHOT" },
-    { "vehicle": "VC106", "dash_investor": "Mrs and Mr KARKUN", "db_investor": "Anisha Bansal and Rahul KARKUN" },
-    { "vehicle": "VC106", "dash_investor": "Mrs & Mr Subbiah SUBRAMANIAN", "db_investor": "Nilakantan MAHESWARI & Subbiah SUBRAMANIAN" },
-    { "vehicle": "VC106", "dash_investor": "Imrat HAYAT", "db_investor": "Imran HAYAT" },
-    { "vehicle": "VC122", "dash_investor": "INNOVATECH COMPARTMENT 8", "db_investor": "Anand SETHA" }
+    {
+      "vehicle": "VC106",
+      "dash_investor": "Hedgebay Securities LLC",
+      "db_investor": "Sheetal HARIA"
+    },
+    {
+      "vehicle": "VC106",
+      "dash_investor": "Hedgebay Securities LLC",
+      "db_investor": "Tapan SHAH"
+    },
+    {
+      "vehicle": "VC106",
+      "dash_investor": "Hedgebay Securities LLC",
+      "db_investor": "Lakin HARIA"
+    },
+    {
+      "vehicle": "VC106",
+      "dash_investor": "Hedgebay Securities LLC",
+      "db_investor": "Aaron RIKHYE"
+    },
+    {
+      "vehicle": "VC106",
+      "dash_investor": "LEE RAND GROUP",
+      "db_investor": "Ekta DATT"
+    },
+    {
+      "vehicle": "VC106",
+      "dash_investor": "LEE RAND GROUP",
+      "db_investor": "Rasika KULKARNI"
+    },
+    {
+      "vehicle": "VC106",
+      "dash_investor": "LEE RAND GROUP",
+      "db_investor": "Nidhi GANERIWALA"
+    },
+    {
+      "vehicle": "VC106",
+      "dash_investor": "LEE RAND GROUP",
+      "db_investor": "Rajiv KAPOOR"
+    },
+    {
+      "vehicle": "VC106",
+      "dash_investor": "LEE RAND GROUP",
+      "db_investor": "Atima HARALALKA"
+    },
+    {
+      "vehicle": "VC106",
+      "dash_investor": "LEE RAND GROUP",
+      "db_investor": "Rajesh SUD"
+    },
+    {
+      "vehicle": "VC122",
+      "dash_investor": "OEP Ltd",
+      "db_investor": "Julien MACHOT"
+    },
+    {
+      "vehicle": "VC106",
+      "dash_investor": "OEP Ltd",
+      "db_investor": "Julien MACHOT"
+    },
+    {
+      "vehicle": "VC112",
+      "dash_investor": "OEP Ltd",
+      "db_investor": "Julien MACHOT"
+    },
+    {
+      "vehicle": "VC113",
+      "dash_investor": "OEP Ltd",
+      "db_investor": "Julien MACHOT"
+    },
+    {
+      "vehicle": "VC124",
+      "dash_investor": "OEP Ltd",
+      "db_investor": "Julien MACHOT"
+    },
+    {
+      "vehicle": "VC125",
+      "dash_investor": "OEP Ltd",
+      "db_investor": "Julien MACHOT"
+    },
+    {
+      "vehicle": "VC126",
+      "dash_investor": "OEP Ltd",
+      "db_investor": "Julien MACHOT"
+    },
+    {
+      "vehicle": "VC128",
+      "dash_investor": "OEP Ltd",
+      "db_investor": "Julien MACHOT"
+    },
+    {
+      "vehicle": "VC133",
+      "dash_investor": "ZANDERA (Holdco) Ltd",
+      "db_investor": "Zandera (Holdco) Limited"
+    },
+    {
+      "vehicle": "VC106",
+      "dash_investor": "Mrs and Mr KARKUN",
+      "db_investor": "Anisha Bansal and Rahul KARKUN"
+    },
+    {
+      "vehicle": "VC106",
+      "dash_investor": "Mrs & Mr Subbiah SUBRAMANIAN",
+      "db_investor": "Nilakantan MAHESWARI & Subbiah SUBRAMANIAN"
+    },
+    {
+      "vehicle": "VC106",
+      "dash_investor": "Imrat HAYAT",
+      "db_investor": "Imran HAYAT"
+    },
+    {
+      "vehicle": "VC122",
+      "dash_investor": "INNOVATECH COMPARTMENT 8",
+      "db_investor": "Anand SETHA"
+    }
+  ],
+  "required_dual_role_introducers": [],
+  "deprecated_introducer_ids": [],
+  "subscription_formula_amount_tolerance": 1.0,
+  "allowed_introduction_duplicate_tuples": [
+    {
+      "introducer_id": "d5e08d13-ebdf-4d8c-a218-ee50e2117c6f",
+      "prospect_investor_id": "f3dabc56-d079-4536-9ad5-9e6b543aea21",
+      "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1"
+    },
+    {
+      "introducer_id": "d5e08d13-ebdf-4d8c-a218-ee50e2117c6f",
+      "prospect_investor_id": "996ec13d-5df9-4b46-8581-29bf3880c052",
+      "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1"
+    },
+    {
+      "introducer_id": "b661243f-e6b4-41f1-b239-de4b197a689a",
+      "prospect_investor_id": "f3dabc56-d079-4536-9ad5-9e6b543aea21",
+      "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12"
+    }
+  ],
+  "allowed_introduction_missing_date_ids": [
+    "11673e9c-1afc-4586-a5ae-83b52b7c5e29"
+  ],
+  "allowed_performance_fee_threshold_multiplier_non_zero_ids": [
+    "0eb2ccb5-59d9-44b7-9d5c-07e9710c9ac6"
+  ],
+  "commission_base_amount_ruled_keys": [
+    {
+      "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+      "investor_id": "24c96f5a-0b23-4e40-b562-c0570df12fd8",
+      "reason": "VC106 split-commission legacy base allocation documented in DB_CHANGES_CHECKPOINT_2026-02-11.md Section 21"
+    },
+    {
+      "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+      "investor_id": "996ec13d-5df9-4b46-8581-29bf3880c052",
+      "reason": "VC106 split-commission legacy base allocation documented in DB_CHANGES_CHECKPOINT_2026-02-11.md Section 16/21"
+    },
+    {
+      "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+      "investor_id": "e78f40f3-7e17-44cd-af46-a01a2f195f3e",
+      "reason": "VC106 LE SEIGNEUR two spread rows with one NULL base documented in DB_CHANGES_CHECKPOINT_2026-02-11.md Section 21"
+    },
+    {
+      "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+      "investor_id": "f3dabc56-d079-4536-9ad5-9e6b543aea21",
+      "reason": "VC106 MACHOT multiple split commission rows; base sum intentionally diverges from funded sum per historical migration"
+    }
+  ],
+  "commission_rate_formula_ruled_keys": [
+    {
+      "deal_id": "1e4061bd-6e36-4298-8e98-9fd55ab6a448",
+      "investor_id": "02e7a81c-d5bf-4839-9776-f89ae320b586",
+      "rate_bps": 200,
+      "reason": "VC113 Zandera two invested_amount rows with one NULL base created for dedup in DB_CHANGES_CHECKPOINT_2026-02-11.md Section 21"
+    }
   ]
 }

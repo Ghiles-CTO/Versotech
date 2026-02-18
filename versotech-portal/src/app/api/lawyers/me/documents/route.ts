@@ -58,6 +58,7 @@ export async function GET() {
         mime_type,
         created_at,
         created_by,
+        lawyer_member_id,
         profiles:created_by(display_name, email)
       `)
       .eq('lawyer_id', lawyerUser.lawyer_id)
@@ -68,16 +69,20 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch documents' }, { status: 500 })
     }
 
-    // Fetch lawyer members for the member selector
+    // Fetch entity members (directors/UBOs/signatories) for member-level KYC upload
     const { data: members, error: membersError } = await serviceSupabase
-      .from('lawyer_users')
+      .from('lawyer_members')
       .select(`
-        user_id,
+        id,
+        full_name,
+        first_name,
+        last_name,
         role,
-        is_primary,
-        profiles:user_id(display_name, email)
+        is_signatory
       `)
       .eq('lawyer_id', lawyerUser.lawyer_id)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
 
     if (membersError) {
       console.error('Error fetching members:', membersError)
@@ -85,12 +90,15 @@ export async function GET() {
 
     // Transform members for response
     const formattedMembers = members?.map(member => {
-      const profile = member.profiles as unknown as { display_name?: string; email?: string } | null
+      const fullName =
+        member.full_name ||
+        [member.first_name, member.last_name].filter(Boolean).join(' ') ||
+        'Unknown'
       return {
-        id: member.user_id,
-        full_name: profile?.display_name || profile?.email || 'Unknown',
+        id: member.id,
+        full_name: fullName,
         role: member.role,
-        is_primary: member.is_primary
+        is_signatory: member.is_signatory
       }
     }) || []
 
@@ -103,7 +111,8 @@ export async function GET() {
       file_name: doc.name,
       file_size_bytes: doc.file_size_bytes,
       created_at: doc.created_at,
-      created_by: doc.profiles
+      created_by: doc.profiles,
+      lawyer_member_id: doc.lawyer_member_id
     })) || []
 
     return NextResponse.json({
@@ -157,6 +166,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File
     const documentType = formData.get('type') as string
     const documentName = formData.get('name') as string
+    const lawyerMemberId = formData.get('lawyer_member_id') as string | null
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
@@ -164,6 +174,23 @@ export async function POST(request: NextRequest) {
 
     if (!documentType) {
       return NextResponse.json({ error: 'Document type is required' }, { status: 400 })
+    }
+
+    let resolvedLawyerMemberId: string | null = null
+    if (lawyerMemberId && lawyerMemberId !== 'entity-level') {
+      const { data: memberCheck, error: memberError } = await serviceSupabase
+        .from('lawyer_members')
+        .select('id')
+        .eq('id', lawyerMemberId)
+        .eq('lawyer_id', lawyerId)
+        .eq('is_active', true)
+        .maybeSingle()
+
+      if (memberError || !memberCheck) {
+        return NextResponse.json({ error: 'Invalid member selected' }, { status: 400 })
+      }
+
+      resolvedLawyerMemberId = memberCheck.id
     }
 
     // Validate file size
@@ -216,6 +243,7 @@ export async function POST(request: NextRequest) {
         type: documentType,
         file_key: uploadData.path,
         lawyer_id: lawyerId,
+        lawyer_member_id: resolvedLawyerMemberId,
         file_size_bytes: file.size,
         mime_type: file.type,
         current_version: 1,
@@ -238,12 +266,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Version-aware KYC submission entry (review queue source of truth)
-    const { data: latestSubmission } = await serviceSupabase
+    let versionQuery = serviceSupabase
       .from('kyc_submissions')
       .select('id, version')
       .eq('lawyer_id', lawyerId)
       .eq('document_type', documentType)
-      .is('lawyer_member_id', null)
+
+    if (resolvedLawyerMemberId) {
+      versionQuery = versionQuery.eq('lawyer_member_id', resolvedLawyerMemberId)
+    } else {
+      versionQuery = versionQuery.is('lawyer_member_id', null)
+    }
+
+    const { data: latestSubmission } = await versionQuery
       .order('version', { ascending: false })
       .limit(1)
       .maybeSingle()
@@ -255,6 +290,7 @@ export async function POST(request: NextRequest) {
       .from('kyc_submissions')
       .insert({
         lawyer_id: lawyerId,
+        lawyer_member_id: resolvedLawyerMemberId,
         document_type: documentType,
         document_id: document.id,
         status: 'pending',
@@ -266,6 +302,7 @@ export async function POST(request: NextRequest) {
           mime_type: file.type,
           original_filename: file.name,
           source: 'lawyer_profile_upload',
+          selected_lawyer_member_id: resolvedLawyerMemberId,
           is_reupload: !!latestSubmission,
         }
       })

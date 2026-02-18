@@ -52,6 +52,7 @@ interface NotificationCounts {
   deals: number
   requests: number
   approvals: number
+  kyc_review: number
   notifications: number
   signatures: number
   reconciliation: number
@@ -177,6 +178,7 @@ const staffNavItems: SidebarItem[] = [
     name: 'KYC Review',
     href: '/versotech_main/kyc-review',
     icon: UserCheck,
+    notificationKey: 'kyc_review',
     description: 'KYC compliance review'
   },
   {

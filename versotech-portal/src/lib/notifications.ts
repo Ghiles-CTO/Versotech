@@ -146,6 +146,7 @@ export async function createInvestorNotification(params: CreateNotificationParam
     message: params.message,
     link: params.link ?? null,
     type: params.type,
+    data: params.extraMetadata ?? null,
     created_by: params.createdBy ?? null,
     deal_id: params.dealId ?? null,
     agent_id: agentId

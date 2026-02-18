@@ -4,6 +4,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 const TASK_STATUSES = ['pending', 'in_progress'] as const
 const REQUEST_STATUSES = ['open', 'assigned', 'in_progress', 'awaiting_info'] as const
 const APPROVAL_STATUSES = ['pending'] as const
+const KYC_REVIEW_STATUSES = ['pending', 'under_review', 'unread', 'not_read'] as const
 const CHUNK_SIZE = 50
 
 function chunkArray<T>(items: T[], size: number): T[][] {
@@ -197,6 +198,7 @@ export async function GET() {
 
     let requestCount = 0
     let approvalCount = 0
+    let kycReviewCount = 0
     let signaturesCount = 0
     let reconciliationCount = 0
     let feesCount = 0
@@ -205,6 +207,7 @@ export async function GET() {
       const [
         requestsResult,
         approvalsResult,
+        kycReviewResult,
         signaturesResult,
         reconciliationResult,
         feesResult
@@ -219,6 +222,10 @@ export async function GET() {
           .select('id', { count: 'exact', head: true })
           .in('status', APPROVAL_STATUSES)
           .or(`assigned_to.eq.${user.id},assigned_to.is.null`),
+        serviceSupabase
+          .from('kyc_submissions')
+          .select('id', { count: 'exact', head: true })
+          .in('status', KYC_REVIEW_STATUSES),
         // Signatures: pending signature tasks (countersignature + subscription_pack_signature)
         // Note: VersoSign uses the tasks table, not signature_requests (which doesn't exist)
         serviceSupabase
@@ -248,6 +255,12 @@ export async function GET() {
         console.error('[notifications/counts] Approval count error:', approvalsResult.error)
       } else {
         approvalCount = approvalsResult.count ?? 0
+      }
+
+      if (kycReviewResult.error) {
+        console.error('[notifications/counts] KYC review count error:', kycReviewResult.error)
+      } else {
+        kycReviewCount = kycReviewResult.count ?? 0
       }
 
       if (signaturesResult.error) {
@@ -281,6 +294,7 @@ export async function GET() {
         deals: dealCount,
         requests: requestCount,
         approvals: approvalCount,
+        kyc_review: kycReviewCount,
         notifications: notificationCount,
         signatures: signaturesCount,
         reconciliation: reconciliationCount,

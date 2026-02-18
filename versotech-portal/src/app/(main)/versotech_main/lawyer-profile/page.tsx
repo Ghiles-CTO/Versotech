@@ -96,6 +96,8 @@ export default async function LawyerProfilePage() {
     entityId: lawyerUser.lawyer_id,
     userId: user.id,
     userEmail: user.email,
+    defaultFullName: profile?.display_name || user.email || null,
+    createIfMissing: lawyer?.type === 'individual',
     context: 'LawyerProfilePage',
     select: `
       id,

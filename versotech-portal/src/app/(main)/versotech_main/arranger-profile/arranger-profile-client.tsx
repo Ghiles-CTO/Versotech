@@ -21,7 +21,6 @@ import {
   Briefcase,
   Edit,
   Loader2,
-  PenTool,
   Lock,
   Settings,
   Save,
@@ -38,7 +37,6 @@ import { toast } from 'sonner'
 import Image from 'next/image'
 
 // Import profile components
-import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
 import { PasswordChangeForm } from '@/components/profile/password-change-form'
 import { PreferencesEditor } from '@/components/profile/preferences-editor'
 import { GDPRControls } from '@/components/profile/gdpr-controls'
@@ -674,10 +672,6 @@ export function ArrangerProfileClient({
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">KYC</span>
           </TabsTrigger>
-          <TabsTrigger value="signature" className="flex items-center gap-2 text-xs sm:text-sm">
-            <PenTool className="h-4 w-4" />
-            <span className="hidden sm:inline">Signature</span>
-          </TabsTrigger>
           <TabsTrigger value="security" className="flex items-center gap-2 text-xs sm:text-sm">
             <Lock className="h-4 w-4" />
             <span className="hidden sm:inline">Security</span>
@@ -1047,10 +1041,6 @@ export function ArrangerProfileClient({
           />
         </TabsContent>
 
-        {/* Signature Tab */}
-        <TabsContent value="signature">
-          <SignatureSpecimenTab />
-        </TabsContent>
 
         {/* Security Tab */}
         <TabsContent value="security">

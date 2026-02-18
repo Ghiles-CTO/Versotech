@@ -59,6 +59,7 @@ export async function GET() {
         created_at,
         created_by,
         arranger_user_id,
+        arranger_member_id,
         profiles:created_by(display_name, email)
       `)
       .eq('arranger_entity_id', arrangerUser.arranger_id)
@@ -69,16 +70,21 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch documents' }, { status: 500 })
     }
 
-    // Fetch arranger members for the member selector
+    // Fetch entity members (directors/UBOs/signatories) for member-level KYC upload
     const { data: members, error: membersError } = await serviceSupabase
-      .from('arranger_users')
+      .from('arranger_members')
       .select(`
-        user_id,
+        id,
+        full_name,
+        first_name,
+        last_name,
         role,
-        is_primary,
-        profiles:user_id(display_name, email)
+        is_signatory,
+        linked_user_id
       `)
       .eq('arranger_id', arrangerUser.arranger_id)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
 
     if (membersError) {
       console.error('Error fetching members:', membersError)
@@ -86,10 +92,14 @@ export async function GET() {
 
     // Transform members for response
     const formattedMembers = members?.map(member => ({
-      id: member.user_id,
-      full_name: (member.profiles as any)?.display_name || (member.profiles as any)?.email || 'Unknown',
+      id: member.id,
+      full_name:
+        member.full_name ||
+        [member.first_name, member.last_name].filter(Boolean).join(' ') ||
+        'Unknown',
       role: member.role,
-      is_primary: member.is_primary
+      is_signatory: member.is_signatory,
+      linked_user_id: member.linked_user_id,
     })) || []
 
     // Transform documents for response
@@ -102,7 +112,8 @@ export async function GET() {
       file_size_bytes: doc.file_size_bytes,
       created_at: doc.created_at,
       created_by: doc.profiles,
-      arranger_user_id: doc.arranger_user_id
+      arranger_user_id: doc.arranger_user_id,
+      arranger_member_id: doc.arranger_member_id,
     })) || []
 
     return NextResponse.json({
@@ -156,6 +167,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File
     const documentType = formData.get('type') as string
     const documentName = formData.get('name') as string
+    const arrangerMemberId = formData.get('arranger_member_id') as string | null
     const arrangerUserId = formData.get('arranger_user_id') as string | null
 
     if (!file) {
@@ -166,31 +178,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Document type is required' }, { status: 400 })
     }
 
-    // If arranger_user_id provided, validate it belongs to this arranger
-    if (arrangerUserId && arrangerUserId !== 'entity-level') {
+    let resolvedArrangerMemberId: string | null = null
+    let resolvedArrangerUserId: string | null = null
+
+    // Preferred path: explicit arranger_member_id (supports members without user accounts)
+    if (arrangerMemberId && arrangerMemberId !== 'entity-level') {
       const { data: memberCheck, error: memberError } = await serviceSupabase
-        .from('arranger_users')
-        .select('user_id')
+        .from('arranger_members')
+        .select('id, linked_user_id')
+        .eq('id', arrangerMemberId)
         .eq('arranger_id', arrangerId)
-        .eq('user_id', arrangerUserId)
+        .eq('is_active', true)
         .maybeSingle()
 
       if (memberError || !memberCheck) {
         return NextResponse.json({ error: 'Invalid member selected' }, { status: 400 })
       }
-    }
 
-    let resolvedArrangerMemberId: string | null = null
-    if (arrangerUserId && arrangerUserId !== 'entity-level') {
-      const { data: arrangerMember } = await serviceSupabase
+      resolvedArrangerMemberId = memberCheck.id
+      resolvedArrangerUserId = memberCheck.linked_user_id || null
+    } else if (arrangerUserId && arrangerUserId !== 'entity-level') {
+      // Legacy compatibility: accept arranger_user_id and map it to arranger_member
+      const { data: memberCheck, error: memberError } = await serviceSupabase
         .from('arranger_members')
-        .select('id')
+        .select('id, linked_user_id')
         .eq('arranger_id', arrangerId)
         .eq('linked_user_id', arrangerUserId)
         .eq('is_active', true)
         .maybeSingle()
 
-      resolvedArrangerMemberId = arrangerMember?.id || null
+      if (memberError || !memberCheck) {
+        return NextResponse.json({ error: 'Invalid member selected' }, { status: 400 })
+      }
+
+      resolvedArrangerMemberId = memberCheck.id
+      resolvedArrangerUserId = memberCheck.linked_user_id || arrangerUserId
     }
 
     // Validate file size
@@ -243,7 +265,8 @@ export async function POST(request: NextRequest) {
         type: documentType,
         file_key: uploadData.path,
         arranger_entity_id: arrangerId,
-        arranger_user_id: (arrangerUserId && arrangerUserId !== 'entity-level') ? arrangerUserId : null,
+        arranger_user_id: resolvedArrangerUserId,
+        arranger_member_id: resolvedArrangerMemberId,
         file_size_bytes: file.size,
         mime_type: file.type,
         current_version: 1,
@@ -302,7 +325,8 @@ export async function POST(request: NextRequest) {
           mime_type: file.type,
           original_filename: file.name,
           source: 'arranger_profile_upload',
-          selected_arranger_user_id: arrangerUserId || null,
+          selected_arranger_member_id: resolvedArrangerMemberId,
+          selected_arranger_user_id: resolvedArrangerUserId,
           is_reupload: !!latestSubmission,
         }
       })

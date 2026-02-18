@@ -27,6 +27,7 @@ import {
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { ENTITY_REQUIRED_DOCS } from '@/constants/kyc-document-types'
 
 interface Document {
   id: string
@@ -37,6 +38,7 @@ interface Document {
   created_at: string
   file_size_bytes?: number
   arranger_user_id?: string | null
+  arranger_member_id?: string | null
   created_by?: {
     display_name?: string
     email?: string
@@ -47,23 +49,18 @@ interface ArrangerMember {
   id: string
   full_name: string
   role: string
-  is_primary: boolean
+  is_signatory?: boolean
+  linked_user_id?: string | null
 }
 
-// Required KYC documents for arrangers (entity-level)
-const REQUIRED_DOCUMENTS = [
-  { label: 'Certificate of Incorporation', value: 'certificate_of_incorporation' },
-  { label: 'FCA Authorization Letter / SEC Form ADV', value: 'regulatory_license' },
-  { label: 'Professional Indemnity Insurance', value: 'insurance_certificate' },
-  { label: 'AML/CTF Policy Document', value: 'aml_policy' },
-  { label: 'Latest Financial Statements', value: 'financial_statements' },
-  { label: 'Beneficial Ownership Declaration', value: 'beneficial_ownership' },
-  { label: 'Proof of Registered Address', value: 'proof_of_address' },
-]
+const REQUIRED_DOCUMENTS = ENTITY_REQUIRED_DOCS.map(doc => ({
+  label: doc.label,
+  value: doc.value,
+}))
 
 // Required KYC documents for members (individual-level)
 const MEMBER_DOCUMENTS = [
-  { label: 'ID / Passport', value: 'passport_id' },
+  { label: 'Passport / Government ID', value: 'passport' },
   { label: 'Proof of Address (Utility Bill)', value: 'utility_bill' },
 ]
 
@@ -144,7 +141,7 @@ export function ArrangerKYCDocumentsTab({
       formData.append('type', documentType)
       formData.append('name', file.name.replace(/\.[^/.]+$/, ''))
       if (memberId && memberId !== 'entity-level') {
-        formData.append('arranger_user_id', memberId)
+        formData.append('arranger_member_id', memberId)
       }
 
       const response = await fetch('/api/arrangers/me/documents', {
@@ -276,6 +273,9 @@ export function ArrangerKYCDocumentsTab({
                 <CardDescription>
                   {arrangerName ? `Compliance documents for ${arrangerName}` : 'Upload required compliance documents'}
                 </CardDescription>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Entity: <span className="font-medium text-foreground">{arrangerName || 'Current arranger entity'}</span>
+                </p>
               </div>
             </div>
             <div className="text-right">
@@ -439,7 +439,7 @@ export function ArrangerKYCDocumentsTab({
           </CardHeader>
           <CardContent className="space-y-6">
             {members.map((member) => {
-              const memberDocs = documents.filter(d => d.arranger_user_id === member.id)
+              const memberDocs = documents.filter(d => d.arranger_member_id === member.id)
 
               return (
                 <div key={member.id} className="space-y-3">
@@ -449,8 +449,8 @@ export function ArrangerKYCDocumentsTab({
                     <Badge variant="outline" className="capitalize text-xs">
                       {member.role}
                     </Badge>
-                    {member.is_primary && (
-                      <Badge variant="secondary" className="text-xs">Primary</Badge>
+                    {member.is_signatory && (
+                      <Badge variant="secondary" className="text-xs">Signatory</Badge>
                     )}
                   </div>
 

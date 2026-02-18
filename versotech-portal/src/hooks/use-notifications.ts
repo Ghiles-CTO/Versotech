@@ -9,6 +9,7 @@ interface NotificationCounts {
   deals: number
   requests: number
   approvals: number
+  kyc_review: number
   notifications: number
   signatures: number
   reconciliation: number
@@ -22,6 +23,7 @@ const INITIAL_COUNTS: NotificationCounts = {
   deals: 0,
   requests: 0,
   approvals: 0,
+  kyc_review: 0,
   notifications: 0,
   signatures: 0,
   reconciliation: 0,
@@ -31,8 +33,10 @@ const INITIAL_COUNTS: NotificationCounts = {
 
 const STAFF_REQUEST_STATUSES = ['open', 'assigned', 'in_progress', 'awaiting_info'] as const
 const STAFF_APPROVAL_STATUSES = ['pending'] as const
+const STAFF_KYC_REVIEW_STATUSES = ['pending', 'under_review'] as const
 const STAFF_STATUS_FILTER = STAFF_REQUEST_STATUSES.join(',')
 const STAFF_APPROVAL_FILTER = STAFF_APPROVAL_STATUSES.join(',')
+const STAFF_KYC_REVIEW_FILTER = STAFF_KYC_REVIEW_STATUSES.join(',')
 
 export function useNotifications(userRole: string, userId?: string) {
   const [counts, setCounts] = useState<NotificationCounts>(INITIAL_COUNTS)
@@ -151,6 +155,19 @@ export function useNotifications(userRole: string, userId?: string) {
           .on(
             'postgres_changes',
             { event: '*', schema: 'public', table: 'approvals', filter: `status=in.(${STAFF_APPROVAL_FILTER})` },
+            () => {
+              void fetchCounts(true)
+            }
+          )
+          .subscribe()
+      )
+
+      subscriptions.push(
+        supabaseClient
+          .channel('notifications_kyc_review')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'kyc_submissions', filter: `status=in.(${STAFF_KYC_REVIEW_FILTER})` },
             () => {
               void fetchCounts(true)
             }

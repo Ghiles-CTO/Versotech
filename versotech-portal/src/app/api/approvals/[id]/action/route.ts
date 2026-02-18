@@ -254,7 +254,7 @@ export async function POST(
         .from('investor_notifications')
         .insert({
           user_id: approval.requested_by,
-          title: `${approval.entity_type} ${action}d`,
+          title: `${approval.entity_type} ${action === 'approve' ? 'approved' : 'rejected'}`,
           message: notificationMessage,
           type: action === 'approve' ? 'approval_granted' : 'approval_rejected',
           metadata: {

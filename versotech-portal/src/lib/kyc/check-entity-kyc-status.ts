@@ -61,55 +61,30 @@ const ENTITY_CONFIG: Record<KYCEntityType, EntityConfig> = {
   },
 }
 
+const STANDARD_ENTITY_DOCUMENTS = [
+  'incorporation_certificate',
+  'memo_articles',
+  'register_members',
+  'register_beneficial_owners',
+  'register_directors',
+  'bank_confirmation',
+]
+
 const REQUIRED_ENTITY_DOCUMENTS: Record<KYCEntityType, string[]> = {
-  investor: [
-    'incorporation_certificate',
-    'memo_articles',
-    'register_members',
-    'register_beneficial_owners',
-    'register_directors',
-    'bank_confirmation',
-  ],
-  partner: [
-    'certificate_of_incorporation',
-    'company_registration',
-    'proof_of_address',
-    'beneficial_ownership',
-    'directors_list',
-    'partnership_agreement',
-  ],
-  introducer: [
-    'government_id',
-    'proof_of_address',
-    'professional_qualifications',
-    'bank_account_details',
-    'tax_registration',
-  ],
-  lawyer: [
-    'certificate_of_incorporation',
-    'proof_of_address',
-    'professional_license',
-    'professional_insurance',
-    'directors_list',
-    'beneficial_ownership',
-  ],
-  commercial_partner: [
-    'certificate_of_incorporation',
-    'company_registration',
-    'proof_of_address',
-    'beneficial_ownership',
-    'directors_list',
-    'bank_account_details',
-  ],
-  arranger: [
-    'certificate_of_incorporation',
-    'regulatory_license',
-    'insurance_certificate',
-    'aml_policy',
-    'financial_statements',
-    'beneficial_ownership',
-    'proof_of_address',
-  ],
+  investor: [...STANDARD_ENTITY_DOCUMENTS],
+  partner: [...STANDARD_ENTITY_DOCUMENTS],
+  introducer: [...STANDARD_ENTITY_DOCUMENTS],
+  lawyer: [...STANDARD_ENTITY_DOCUMENTS],
+  commercial_partner: [...STANDARD_ENTITY_DOCUMENTS],
+  arranger: [...STANDARD_ENTITY_DOCUMENTS],
+}
+
+const ENTITY_DOCUMENT_ALIASES: Record<string, string[]> = {
+  incorporation_certificate: ['certificate_of_incorporation'],
+  memo_articles: ['company_registration', 'memorandum_articles'],
+  register_beneficial_owners: ['beneficial_ownership'],
+  register_directors: ['directors_list'],
+  bank_confirmation: ['bank_account_details'],
 }
 
 const ACCOUNT_BLOCKED_STATUSES = new Set(['approved', 'rejected', 'unauthorized', 'blacklisted'])
@@ -124,6 +99,15 @@ type SubmissionRow = {
   lawyer_member_id?: string | null
   commercial_partner_member_id?: string | null
   arranger_member_id?: string | null
+}
+
+type MemberRow = {
+  id: string
+  full_name?: string | null
+  kyc_status?: string | null
+  role?: string | null
+  is_signatory?: boolean | null
+  linked_user_id?: string | null
 }
 
 function getSubmissionEntityColumn(entityType: KYCEntityType) {
@@ -210,6 +194,17 @@ function hasApprovedProofOfAddress(
   })
 }
 
+function hasApprovedEntityDocument(
+  submissions: SubmissionRow[],
+  documentType: string,
+  memberColumn: string
+) {
+  const acceptedDocumentTypes = [documentType, ...(ENTITY_DOCUMENT_ALIASES[documentType] || [])]
+  return acceptedDocumentTypes.some(type =>
+    hasApprovedSubmissionForType(submissions, type, memberColumn, null)
+  )
+}
+
 async function setAccountPendingApprovalIfNeeded(
   supabase: SupabaseClient,
   entityType: KYCEntityType,
@@ -241,6 +236,19 @@ async function resolveRequestedBy(
 ) {
   const config = ENTITY_CONFIG[entityType]
 
+  const { data: primaryUser } = await supabase
+    .from(config.userTable)
+    .select('user_id')
+    .eq(config.entityIdColumn, entityId)
+    .eq('is_primary', true)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  if (primaryUser?.user_id) {
+    return primaryUser.user_id as string
+  }
+
   const { data: memberWithUser } = await supabase
     .from(config.memberTable)
     .select('linked_user_id')
@@ -253,19 +261,6 @@ async function resolveRequestedBy(
 
   if (memberWithUser?.linked_user_id) {
     return memberWithUser.linked_user_id as string
-  }
-
-  const { data: primaryUser } = await supabase
-    .from(config.userTable)
-    .select('user_id')
-    .eq(config.entityIdColumn, entityId)
-    .eq('is_primary', true)
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .maybeSingle()
-
-  if (primaryUser?.user_id) {
-    return primaryUser.user_id as string
   }
 
   const { data: anyUser } = await supabase
@@ -453,10 +448,9 @@ async function createAccountActivationApproval(
  *
  * Rules:
  * - Individual investors: approved ID + approved proof_of_address + approved personal_info
+ * - Individual non-investors: approved personal_info
  * - Entity personas: approved entity_info + required entity docs + all active members approved
- * - Member approval:
- *   - Investor entities: approved personal_info + approved ID + approved proof_of_address
- *   - Non-investor entities: approved personal_info
+ * - Member approval (all personas): approved personal_info + approved ID + approved proof_of_address
  */
 export async function checkAndUpdateEntityKYCStatus(
   supabase: SupabaseClient,
@@ -504,7 +498,7 @@ export async function checkAndUpdateEntityKYCStatus(
 
     const { data: members, error: membersError } = await supabase
       .from(config.memberTable)
-      .select('id, full_name, kyc_status')
+      .select('id, full_name, kyc_status, role, is_signatory, linked_user_id')
       .eq(config.entityIdColumn, entityId)
       .eq('is_active', true)
 
@@ -513,7 +507,8 @@ export async function checkAndUpdateEntityKYCStatus(
       return
     }
 
-    const activeMembers = members || []
+    const activeMembers = (members || []) as MemberRow[]
+    const relevantMembers = activeMembers
     const isIndividual = isIndividualEntity(entityType, entity)
 
     let requirementsMet = false
@@ -530,9 +525,9 @@ export async function checkAndUpdateEntityKYCStatus(
 
       requirementsMet = hasId && hasAddress && hasPersonalInfo
     } else if (isIndividual) {
-      if (activeMembers.length > 0) {
+      if (relevantMembers.length > 0) {
         requirementsMet = true
-        for (const member of activeMembers) {
+        for (const member of relevantMembers) {
           const hasPersonalInfo = hasApprovedSubmissionForType(
             approvedSubmissions,
             'personal_info',
@@ -565,19 +560,22 @@ export async function checkAndUpdateEntityKYCStatus(
       } else {
         const entityDocs = REQUIRED_ENTITY_DOCUMENTS[entityType] || []
         const hasAllEntityDocs = entityDocs.every(documentType =>
-          hasApprovedSubmissionForType(
+          hasApprovedEntityDocument(
             approvedSubmissions,
             documentType,
-            submissionMemberColumn,
-            null
+            submissionMemberColumn
           )
         )
 
         if (!hasAllEntityDocs) {
           requirementsMet = false
         } else {
-          requirementsMet = true
-          for (const member of activeMembers) {
+          if (relevantMembers.length === 0) {
+            requirementsMet = false
+          } else {
+            requirementsMet = true
+          }
+          for (const member of relevantMembers) {
             const hasPersonalInfo = hasApprovedSubmissionForType(
               approvedSubmissions,
               'personal_info',
@@ -586,21 +584,19 @@ export async function checkAndUpdateEntityKYCStatus(
             )
 
             const memberApproved =
-              entityType === 'investor'
-                ? hasPersonalInfo &&
-                  hasApprovedIdDocument(
-                    approvedSubmissions,
-                    submissionMemberColumn,
-                    member.id,
-                    false
-                  ) &&
-                  hasApprovedProofOfAddress(
-                    approvedSubmissions,
-                    submissionMemberColumn,
-                    member.id,
-                    false
-                  )
-                : hasPersonalInfo
+              hasPersonalInfo &&
+              hasApprovedIdDocument(
+                approvedSubmissions,
+                submissionMemberColumn,
+                member.id,
+                false
+              ) &&
+              hasApprovedProofOfAddress(
+                approvedSubmissions,
+                submissionMemberColumn,
+                member.id,
+                false
+              )
 
             if (!memberApproved) {
               requirementsMet = false

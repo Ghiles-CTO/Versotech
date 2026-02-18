@@ -18,7 +18,6 @@ import {
   Clock,
   Users,
   Target,
-  FileSignature,
   Shield,
   Edit,
   Bell,
@@ -27,7 +26,6 @@ import {
 } from 'lucide-react'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { PartnerKYCDocumentsTab } from '@/components/profile/partner-kyc-documents-tab'
-import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
 import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
 import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
 import { PreferencesEditor } from '@/components/profile/preferences-editor'
@@ -218,10 +216,6 @@ export function PartnerProfileClient({
           <TabsTrigger value="kyc" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             KYC Documents
-          </TabsTrigger>
-          <TabsTrigger value="signature" className="flex items-center gap-2">
-            <FileSignature className="h-4 w-4" />
-            Signature
           </TabsTrigger>
           <TabsTrigger value="notices" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
@@ -563,36 +557,6 @@ export function PartnerProfileClient({
           />
         </TabsContent>
 
-        {/* Signature Tab */}
-        <TabsContent value="signature" className="space-y-6">
-          {!partnerUserInfo.can_sign ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileSignature className="h-5 w-5" />
-                  Signature Specimen
-                </CardTitle>
-                <CardDescription>
-                  You do not have signing permissions for this partner entity
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="border border-dashed border-muted rounded-lg py-8 px-4 text-center">
-                  <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">
-                    Signing permissions are required to upload a signature specimen.
-                    Contact your entity administrator for access.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <SignatureSpecimenTab
-              entityType="partner"
-              entityId={partnerInfo?.id}
-            />
-          )}
-        </TabsContent>
 
         {/* Notices Tab */}
         <TabsContent value="notices" className="space-y-4">

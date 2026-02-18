@@ -80,6 +80,7 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to update conversation' }, { status: 500 })
     }
 
+    let auditLogged = true
     if (action === 'flag') {
       try {
         const agentId = await resolveAgentIdForTask(serviceSupabase, 'W001')
@@ -115,11 +116,12 @@ export async function POST(
           await serviceSupabase.from('investor_notifications').insert(notifications)
         }
       } catch (logError) {
+        auditLogged = false
         console.error('[compliance] Failed to log compliance question:', logError)
       }
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, audit_logged: auditLogged })
   } catch (error) {
     console.error('[conversations/compliance] Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

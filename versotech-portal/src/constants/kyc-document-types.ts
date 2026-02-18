@@ -392,7 +392,7 @@ export const INDIVIDUAL_REQUIRED_DOCS = [
   { value: 'drivers_license', label: "Driver's License", description: 'Government-issued driving license' },
   { value: 'residence_permit', label: 'Residence Permit', description: 'Valid residence permit or visa' },
   { value: 'other_government_id', label: 'Other Government ID', description: 'Any other government-issued identification document' },
-  { value: 'utility_bill', label: "Proof of Address (Utility Bill)", description: 'Recent utility bill or bank statement (less than 3 months)' },
+  { value: 'utility_bill', label: "Proof of Address (Utility Bill)", description: 'Recent utility bill, government correspondence, or other proof of address (less than 3 months)' },
 ] as const
 
 /**
@@ -417,7 +417,7 @@ export const MEMBER_REQUIRED_DOCS = [
   { value: 'drivers_license', label: "Driver's License", description: 'Government-issued driving license' },
   { value: 'residence_permit', label: 'Residence Permit', description: 'Valid residence permit or visa' },
   { value: 'other_government_id', label: 'Other Government ID', description: 'Any other government-issued identification document' },
-  { value: 'utility_bill', label: 'Proof of Address', description: 'Utility bill or bank statement (less than 3 months)' },
+  { value: 'utility_bill', label: 'Proof of Address', description: 'Utility bill, government correspondence, or other proof of address (less than 3 months)' },
 ] as const
 
 /**
@@ -460,7 +460,7 @@ export function isPredefinedDocumentType(documentType: string): boolean {
 
 export const DOCUMENT_CATEGORIES = [
   { value: 'proof_of_id', label: 'Proof of Identification', description: 'Passport, National ID, or other government-issued ID' },
-  { value: 'proof_of_address', label: 'Proof of Address', description: 'Utility bill, bank statement, or official letter' },
+  { value: 'proof_of_address', label: 'Proof of Address', description: 'Utility bill, government correspondence, or other' },
   { value: 'custom', label: 'Other (Custom)', description: 'Any other supporting document' },
 ] as const
 
@@ -474,9 +474,8 @@ export const PROOF_OF_ID_DOCS = [
 
 export const PROOF_OF_ADDRESS_DOCS = [
   { value: 'utility_bill', label: 'Utility Bill', description: 'Recent utility bill (less than 3 months old)' },
-  { value: 'bank_statement', label: 'Bank Statement', description: 'Recent bank statement (less than 3 months old)' },
   { value: 'government_correspondence', label: 'Government Correspondence', description: 'Recent letter from government agency with address' },
-  { value: 'council_tax_bill', label: 'Council Tax Bill', description: 'Council tax or property tax statement' },
+  { value: 'other', label: 'Other', description: 'Other proof of address document (less than 3 months old)' },
 ] as const
 
 export function getDocumentsByCategory(category: string) {

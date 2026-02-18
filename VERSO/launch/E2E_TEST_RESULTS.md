@@ -813,3 +813,293 @@ Note: Actual signature submission was not tested to avoid affecting production d
     - `102_e2e_deal_detail_investor.png` - Investment Journey showing Stage 3
     - `103_nda_signing.png` - **Key finding: 0 signatories dialog**
 
+---
+
+## Meeting Issues Testing (Jan 30, 2026)
+
+**Test Date:** 2026-02-01
+**Tester:** Claude Code (Automated)
+**Reference:** MEETING_ISSUES_TESTING_PLAN.md
+**Server:** http://localhost:3000
+
+### Summary of Results
+
+| Issue # | Description | Meeting Lines | Result | Notes |
+|---------|-------------|---------------|--------|-------|
+| **9** | Priority column should be HIDDEN | 247-256 | ✅ **PASS** | No Priority column in Approvals table |
+| **10** | Type label "Data Room Access Request" | 254-258 | ✅ **PASS** | Shows "DATA ROOM ACCESS REQUEST" |
+| **11** | Approvals show deal name and user | 258-268 | ✅ **PASS** | Deal name and user name both visible |
+| **18** | Stock type: "Common and Ordinary" | 520-525 | ✅ **PASS** | Shows "Common and Ordinary Shares" (no slash) |
+| **19** | Vehicle label (not "Entity") | 539-544 | ✅ **PASS** | Label says "Vehicle (Optional)" |
+| **21** | CHF and AED currencies | 579-586 | ✅ **PASS** | Both CHF and AED available in dropdown |
+| **22** | Save as Draft button | 587-603 | ✅ **PASS** | "Save Draft" button visible in Step 3 |
+| **26-27** | Issuer/Vehicle pre-filled | 630-688 | ✅ **PASS** | Issuer: "VERSO Capital 2 SCSP S.à r.l.", Vehicle: "Series 201" |
+| **28** | Free text pre-filled | 707-720 | ✅ **PASS** | "In-Principle Approval Text" pre-filled with default text |
+| **30** | Preview modal close button | 734 | ✅ **PASS** | Close button visible (verified with `is visible` check) |
+| **32** | TO vs Purchaser separate fields | 756-808 | ✅ **PASS** | "To" and "Purchaser" are separate fields |
+| **34** | Two paths (Subscribe + Data Room) | 840-850 | ✅ **PASS** | Both buttons visible: "Subscribe to Investment Opportunity" and "Request Data Room Access" |
+
+---
+
+### Section 3: Approvals Page Tests (Issues #9-11)
+
+**Test Date:** 2026-02-01
+**Login:** `cto@versoholdings.com`
+**URL:** `/versotech_main/approvals`
+
+#### TEST 3.1: Priority Column Hidden (Issue #9)
+
+| Step | Action | Expected | Actual | Status |
+|------|--------|----------|--------|--------|
+| 1 | Login as CEO | Success | Logged in | ✅ |
+| 2 | Navigate to Approvals | Page loads | Table visible with 4 pending approvals | ✅ |
+| 3 | Check table columns | No "Priority" column | Columns: Select, Request Type/User, Deal/Investor, SLA Status, Assigned To, Actions | ✅ **PASS** |
+
+**Result:** ✅ **PASS** - Priority column is NOT visible in the table.
+
+**Screenshot:** `screenshots/01_approvals_page.png`
+
+---
+
+#### TEST 3.2: Type Label "Data Room Access Request" (Issue #10)
+
+| Step | Action | Expected | Actual | Status |
+|------|--------|----------|--------|--------|
+| 1 | View approval rows | Type shows "Data Room Access Request" | First row shows "DATA ROOM ACCESS REQUEST" | ✅ **PASS** |
+| 2 | Check other types | Different types for different requests | Also shows "SALE REQUEST" for sale approvals | ✅ |
+
+**Result:** ✅ **PASS** - Label correctly says "DATA ROOM ACCESS REQUEST" (not "Deal Interest")
+
+---
+
+#### TEST 3.3: Deal Name and User Name Display (Issue #11)
+
+| Step | Action | Expected | Actual | Status |
+|------|--------|----------|--------|--------|
+| 1 | Check "Request Type / User" column | Shows type + user name | Shows "DATA ROOM ACCESS REQUEST", "Ghiles Moussaoui", "12/9/2025" | ✅ |
+| 2 | Check "Deal / Investor" column | Shows deal name + investor | Shows "Ghiless Business Ventures LLC", "SpaceX venture capital", "USD 300" | ✅ **PASS** |
+
+**Result:** ✅ **PASS** - Both deal name and user name are displayed.
+
+---
+
+### Section 5: Deal Creation Tests (Issues #18-24)
+
+**Test Date:** 2026-02-01
+**Login:** `cto@versoholdings.com`
+**URL:** `/versotech_main/deals/new`
+
+#### TEST 5.1: Stock Type Options (Issue #18)
+
+| Step | Action | Expected | Actual | Status |
+|------|--------|----------|--------|--------|
+| 1 | Navigate to Create Deal | Form loads | 3-step wizard loaded | ✅ |
+| 2 | Click Stock Type dropdown | Options appear | Dropdown opens | ✅ |
+| 3 | Check first option | "Common and Ordinary Shares" | "Common and Ordinary Shares" (no forward slash) | ✅ **PASS** |
+
+**All Stock Type Options:**
+- Common and Ordinary Shares ✅
+- Preferred Shares
+- Convertible Notes
+- Warrants
+- Bonds
+- Notes
+- Other
+
+**Result:** ✅ **PASS** - Stock type shows "Common and Ordinary Shares" (not "Common/Ordinary")
+
+**Screenshot:** `screenshots/03_stock_type_options.png`
+
+---
+
+#### TEST 5.2: Vehicle Label (Issue #19)
+
+| Step | Action | Expected | Actual | Status |
+|------|--------|----------|--------|--------|
+| 1 | Check form labels | "Vehicle" not "Entity" | Label shows "Vehicle (Optional)" | ✅ **PASS** |
+
+**Result:** ✅ **PASS** - Label correctly says "Vehicle (Optional)"
+
+**Screenshot:** `screenshots/02_create_deal_form.png`
+
+---
+
+#### TEST 5.3: Currency Options (Issue #21)
+
+| Step | Action | Expected | Actual | Status |
+|------|--------|----------|--------|--------|
+| 1 | Proceed to Step 2 | Currency field visible | Combobox visible | ✅ |
+| 2 | Open Currency dropdown | Options include CHF and AED | Found: USD, EUR, GBP, CHF, AED | ✅ **PASS** |
+
+**All Currency Options:**
+- USD (default)
+- EUR
+- GBP
+- CHF ✅
+- AED ✅
+
+**Result:** ✅ **PASS** - Both CHF and AED are available
+
+**Screenshot:** `screenshots/04_currency_options.png`
+
+---
+
+#### TEST 5.4: Save as Draft Button (Issue #22)
+
+| Step | Action | Expected | Actual | Status |
+|------|--------|----------|--------|--------|
+| 1 | Proceed to Step 3 | Save Draft button visible | Found buttons: "Save Draft", "Create Deal" | ✅ **PASS** |
+
+**Result:** ✅ **PASS** - "Save Draft" button exists in Step 3
+
+**Screenshot:** `screenshots/05_step3_save_draft.png`
+
+---
+
+### Section 6: Term Sheet Tests (Issues #25-32)
+
+**Test Date:** 2026-02-01
+**Login:** `cto@versoholdings.com`
+**URL:** `/versotech_main/deals/{id}` → Term Sheets tab
+
+#### TEST 6.2: Issuer and Vehicle Pre-filled (Issues #26-27)
+
+| Step | Action | Expected | Actual | Status |
+|------|--------|----------|--------|--------|
+| 1 | Navigate to deal | E2E Test Deal - Jan 2026 | Deal loaded | ✅ |
+| 2 | Go to Term Sheets tab | Tab loads | Tab with existing term sheet | ✅ |
+| 3 | Click "New Term Sheet" | Form opens | Dialog opens | ✅ |
+| 4 | Check Issuer field | Pre-filled with "{VehicleName} S.à r.l." | "VERSO Capital 2 SCSP S.à r.l." | ✅ **PASS** |
+| 5 | Check Vehicle field | Pre-filled with "Series XXX" | "Series 201" | ✅ **PASS** |
+
+**Result:** ✅ **PASS** - Both Issuer and Vehicle are pre-filled with correct format
+
+**Screenshot:** `screenshots/06_term_sheet_form.png`
+
+---
+
+#### TEST 6.3: Free Text Pre-filled (Issue #28)
+
+| Step | Action | Expected | Actual | Status |
+|------|--------|----------|--------|--------|
+| 1 | Check "In-Principle Approval Text" | Pre-filled with default | "The Arranger has obtained approval for the present offering from the Issuer" | ✅ **PASS** |
+| 2 | Check "To" field | Pre-filled | "Qualified, Professional and Institutional Investors only" | ✅ |
+
+**Result:** ✅ **PASS** - Free text sections are pre-filled with default values
+
+---
+
+#### TEST 6.4: Preview Modal Close Button (Issue #30)
+
+| Step | Action | Expected | Actual | Status |
+|------|--------|----------|--------|--------|
+| 1 | Generate PDF for existing term sheet | PDF generates | "Generating..." then "Preview" button appears | ✅ |
+| 2 | Click Preview | Modal opens | Modal opens with PDF preview | ✅ |
+| 3 | Check for Close button | Close button visible | "Close" button (e51) found and `is visible` returns `true` | ✅ **PASS** |
+
+**Result:** ✅ **PASS** - Preview modal Close button is visible without needing to hover
+
+**Screenshot:** `screenshots/08_preview_modal_open.png`
+
+---
+
+#### TEST 6.5: TO vs Purchaser Separate Fields (Issue #32)
+
+| Step | Action | Expected | Actual | Status |
+|------|--------|----------|--------|--------|
+| 1 | Check form labels | Both "To" and "Purchaser" labels exist | Found both in form labels | ✅ |
+| 2 | Check "To" field value | Has value | "Qualified, Professional and Institutional Investors only" | ✅ |
+| 3 | Check "Purchaser" field | Separate field | "[empty]" - separate editable field | ✅ **PASS** |
+
+**Result:** ✅ **PASS** - "To" and "Purchaser" are separate fields with independent values
+
+---
+
+### Section 2: Interest/Data Room Flow Tests (Issues #5, #7, #34)
+
+**Test Date:** 2026-02-01
+**Login:** `biz@ghiless.com` (Investor)
+**URL:** `/versotech_main/opportunities`
+
+#### TEST 2.2: Two Paths Available (Issue #34)
+
+| Step | Action | Expected | Actual | Status |
+|------|--------|----------|--------|--------|
+| 1 | Login as investor | Dashboard loads | Logged in as Ghiles Moussaoui | ✅ |
+| 2 | Navigate to opportunities | Deals visible | 11 deals visible | ✅ |
+| 3 | Check for two action buttons | Both paths visible | Found: "Subscribe to Investment Opportunity" AND "Request Data Room Access" | ✅ **PASS** |
+
+**Result:** ✅ **PASS** - Both paths are clearly visible
+
+**Screenshot:** `screenshots/10_investor_opportunities.png`
+
+---
+
+#### TEST 2.1: Request Data Room Access Flow (Issues #5, #7)
+
+| Step | Action | Expected | Actual | Status |
+|------|--------|----------|--------|--------|
+| 1 | Click "Request Data Room Access" | Dialog opens | Dialog opens with title "Request Data Room Access" | ✅ |
+| 2 | Check dialog title | "Request Data Room Access" | ✅ Correct title shown | ✅ **PASS** |
+| 3 | Fill form | Amount and notes | $50,000, "E2E Test for meeting issues" | ✅ |
+| 4 | Click "Request access" | Request submitted | Page shows "Pending interests: 1" | ✅ |
+
+**Dialog Content Verified:**
+- Title: "Request Data Room Access" ✅
+- Description: "Request access to the data room for Perplexity. Once approved, you'll receive the NDA to sign."
+- Button: "Request access" ✅
+
+**Result:** ✅ **PASS** - Dialog terminology is correct ("Request Data Room Access" not "Confirm Interest")
+
+**Screenshots:**
+- `screenshots/13_request_data_room_dialog.png`
+- `screenshots/14_feedback_after_request.png`
+
+---
+
+### Issues Still Pending Testing
+
+| Issue # | Description | Reason Not Tested |
+|---------|-------------|-------------------|
+| **1-4** | Account status blocking | Requires modifying user accounts in DB |
+| **12-15** | NDA field population | Requires n8n workflow running |
+| **20** | Logo cropping to oval | Requires image upload test |
+| **25** | Display text fields removed | Need to verify which fields are "display text" |
+| **29** | Completion date display ("by") | Not found in current form |
+| **31** | Term sheet cache issue | Requires specific reproduction steps |
+| **33** | Journey bar stages | Need to track stage progression |
+
+---
+
+### Screenshot Evidence
+
+All screenshots saved to: `/Users/ghilesmoussaoui/Desktop/Versotech/VERSO/launch/screenshots/`
+
+| # | Filename | Description |
+|---|----------|-------------|
+| 1 | `01_approvals_page.png` | Approvals page - no Priority column |
+| 2 | `02_create_deal_form.png` | Deal creation form Step 1 - Vehicle label |
+| 3 | `03_stock_type_options.png` | Stock type dropdown options |
+| 4 | `04_currency_options.png` | Currency dropdown with CHF/AED |
+| 5 | `05_step3_save_draft.png` | Step 3 with Save Draft button |
+| 6 | `06_term_sheet_form.png` | Term sheet form with pre-filled fields |
+| 7 | `07_preview_modal.png` | PDF generation in progress |
+| 8 | `08_preview_modal_open.png` | Preview modal with Close button |
+| 9 | `09_investor_dashboard.png` | Investor dashboard |
+| 10 | `10_investor_opportunities.png` | Opportunities with both action buttons |
+| 11 | `11_deal_detail_investor.png` | Deal detail page (with subscription) |
+| 12 | `12_deal2_investor.png` | Second deal detail |
+| 13 | `13_request_data_room_dialog.png` | Request Data Room Access dialog |
+| 14 | `14_feedback_after_request.png` | After submitting request |
+
+---
+
+### Overall Meeting Issues Pass Rate
+
+**Tested:** 12 issues
+**Passed:** 12 issues
+**Failed:** 0 issues
+**Pending:** 8 issues (require additional setup)
+
+**Pass Rate: 100% (of tested issues)**
+

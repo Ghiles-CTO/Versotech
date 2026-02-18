@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
+import { useNotifications } from '@/hooks/use-notifications'
 import { cn } from '@/lib/utils'
 import { usePersona, Persona } from '@/contexts/persona-context'
 import { useTheme } from '@/components/theme-provider'
@@ -38,7 +39,8 @@ import {
   ArrowRightLeft,
   UserPlus,
   Scale,
-  PenTool
+  PenTool,
+  HelpCircle
 } from 'lucide-react'
 
 interface NavItem {
@@ -46,7 +48,22 @@ interface NavItem {
   href: string
   icon: React.ComponentType<{ className?: string }>
   badge?: string | number
+  notificationKey?: keyof SidebarNotificationCounts
   description?: string
+}
+
+interface SidebarNotificationCounts {
+  tasks: number
+  messages: number
+  deals: number
+  requests: number
+  approvals: number
+  kyc_review: number
+  notifications: number
+  signatures: number
+  reconciliation: number
+  fees: number
+  totalUnread: number
 }
 
 // Navigation items for each persona type
@@ -77,7 +94,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Fees', href: '/versotech_main/fees', icon: Calculator, description: 'Billing' },
     { name: 'Reconciliation', href: '/versotech_main/reconciliation', icon: Calculator, description: 'Payments' },
     // Compliance
-    { name: 'KYC Review', href: '/versotech_main/kyc-review', icon: UserCheck, description: 'KYC compliance' },
+    { name: 'KYC Review', href: '/versotech_main/kyc-review', icon: UserCheck, notificationKey: 'kyc_review', description: 'KYC compliance' },
     { name: 'Audit', href: '/versotech_main/audit', icon: Shield, description: 'Compliance logs' },
     // Operations
     { name: 'Requests', href: '/versotech_main/requests', icon: ClipboardList, description: 'Service requests' },
@@ -92,6 +109,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Dashboard', href: '/versotech_main/dashboard', icon: LayoutDashboard, description: 'Overview' },
     { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, description: 'Inbox' },
     { name: 'Approvals', href: '/versotech_main/approvals', icon: UserCheck, description: 'Pending approvals' },
+    { name: 'KYC Review', href: '/versotech_main/kyc-review', icon: UserCheck, notificationKey: 'kyc_review', description: 'KYC compliance' },
     { name: 'Deals', href: '/versotech_main/deals', icon: Activity, description: 'Deal management' },
     { name: 'Vehicles', href: '/versotech_main/entities', icon: Building2, description: 'Investment vehicles' },
     { name: 'Investors', href: '/versotech_main/investors', icon: Users, description: 'Investor relations' },
@@ -211,6 +229,51 @@ function mergeNavItems(personas: Persona[]): NavItem[] {
   return merged
 }
 
+function useSidebarNotifications() {
+  const [notificationUser, setNotificationUser] = useState<{ id?: string; role: string }>({
+    role: 'investor',
+  })
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadNotificationUser = async () => {
+      try {
+        const supabase = createClient()
+        const { data: authData } = await supabase.auth.getUser()
+        const user = authData?.user
+        if (!user || !isMounted) return
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle()
+
+        const fallbackRole =
+          typeof user.user_metadata?.role === 'string' ? user.user_metadata.role : 'investor'
+
+        if (isMounted) {
+          setNotificationUser({
+            id: user.id,
+            role: profile?.role ?? fallbackRole,
+          })
+        }
+      } catch (error) {
+        console.warn('Failed to initialize sidebar notification identity', error)
+      }
+    }
+
+    void loadNotificationUser()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  return useNotifications(notificationUser.role, notificationUser.id)
+}
+
 export function PersonaSidebar() {
   // Default expanded on desktop - mobile uses separate Sheet drawer via MobileSidebarContent
   const [collapsed, setCollapsed] = useState(false)
@@ -221,6 +284,7 @@ export function PersonaSidebar() {
 
   const { personas, activePersona } = usePersona()
   const { theme } = useTheme()
+  const { counts, loading: notificationsLoading } = useSidebarNotifications()
 
   // Hydration fix: Only apply theme after component mounts to avoid SSR mismatch
   useEffect(() => {
@@ -363,6 +427,7 @@ export function PersonaSidebar() {
             ? pathname === item.href
             : pathname === item.href || pathname.startsWith(`${item.href}/`)
           const Icon = item.icon
+          const badgeCount = item.notificationKey && !notificationsLoading ? counts[item.notificationKey] : item.badge
 
           // Generate data-tour attribute from item name (lowercase, hyphenated)
           const tourId = `nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`
@@ -387,7 +452,14 @@ export function PersonaSidebar() {
                 )} />
 
                 {!collapsed && (
-                  <span className="flex-1 text-sm font-medium">{item.name}</span>
+                  <>
+                    <span className="flex-1 text-sm font-medium">{item.name}</span>
+                    {badgeCount && Number(badgeCount) > 0 && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400">
+                        {Number(badgeCount) > 99 ? '99+' : badgeCount}
+                      </span>
+                    )}
+                  </>
                 )}
 
                 {/* Active Indicator Bar */}
@@ -408,6 +480,9 @@ export function PersonaSidebar() {
                     : "bg-white border-gray-100 text-gray-900"
                 )}>
                   {item.name}
+                  {badgeCount && Number(badgeCount) > 0 && (
+                    <span className="ml-2 opacity-75">({badgeCount})</span>
+                  )}
                 </div>
               )}
             </Link>
@@ -415,11 +490,41 @@ export function PersonaSidebar() {
         })}
       </div>
 
-      {/* Sign Out */}
+      {/* Help & Sign Out */}
       <div className={cn(
-        "p-4 border-t mt-auto",
+        "p-4 border-t mt-auto space-y-1",
         isDark ? "border-white/5" : "border-gray-100"
       )}>
+        <Link href="/versotech_main/help" className="block group relative">
+          <div className={cn(
+            "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+            pathname === '/versotech_main/help'
+              ? isDark
+                ? "bg-gradient-to-r from-blue-600/20 to-blue-600/5 text-blue-400"
+                : "bg-blue-50 text-blue-700"
+              : isDark
+                ? "text-gray-400 hover:text-white hover:bg-white/5"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+          )}>
+            <HelpCircle className={cn(
+              "h-5 w-5 transition-colors",
+              pathname === '/versotech_main/help'
+                ? isDark ? "text-blue-400" : "text-blue-600"
+                : isDark ? "text-gray-500 group-hover:text-white" : "text-gray-400 group-hover:text-gray-600"
+            )} />
+            {!collapsed && <span className="text-sm font-medium">Help & Support</span>}
+          </div>
+          {collapsed && (
+            <div className={cn(
+              "absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-xl border",
+              isDark
+                ? "bg-zinc-800 border-white/10 text-white"
+                : "bg-white border-gray-100 text-gray-900"
+            )}>
+              Help & Support
+            </div>
+          )}
+        </Link>
         <Button
           variant="ghost"
           onClick={handleSignOut}
@@ -447,6 +552,7 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
   const router = useRouter()
   const { personas, activePersona } = usePersona()
   const { theme } = useTheme()
+  const { counts, loading: notificationsLoading } = useSidebarNotifications()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => { setMounted(true) }, [])
@@ -498,6 +604,7 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
             ? pathname === item.href
             : pathname === item.href || pathname.startsWith(`${item.href}/`)
           const Icon = item.icon
+          const badgeCount = item.notificationKey && !notificationsLoading ? counts[item.notificationKey] : item.badge
           // Generate data-tour attribute from item name (lowercase, hyphenated)
           const tourId = `nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`
 
@@ -524,14 +631,43 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
                   isActive ? (isDark ? "text-blue-400" : "text-blue-600") : ""
                 )} />
                 <span className="flex-1 text-sm font-medium">{item.name}</span>
+                {badgeCount && Number(badgeCount) > 0 && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400">
+                    {Number(badgeCount) > 99 ? '99+' : badgeCount}
+                  </span>
+                )}
               </div>
             </Link>
           )
         })}
       </div>
 
-      {/* Sign Out */}
-      <div className={cn("p-4 border-t mt-auto", isDark ? "border-white/5" : "border-gray-100")}>
+      {/* Help & Sign Out */}
+      <div className={cn("p-4 border-t mt-auto space-y-1", isDark ? "border-white/5" : "border-gray-100")}>
+        <Link
+          href="/versotech_main/help"
+          onClick={onClose}
+          className="block"
+        >
+          <div className={cn(
+            "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+            pathname === '/versotech_main/help'
+              ? isDark
+                ? "bg-gradient-to-r from-blue-600/20 to-blue-600/5 text-blue-400"
+                : "bg-blue-50 text-blue-700"
+              : isDark
+                ? "text-gray-400 hover:text-white hover:bg-white/5"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+          )}>
+            <HelpCircle className={cn(
+              "h-5 w-5",
+              pathname === '/versotech_main/help'
+                ? isDark ? "text-blue-400" : "text-blue-600"
+                : ""
+            )} />
+            <span className="text-sm font-medium">Help & Support</span>
+          </div>
+        </Link>
         <Button
           variant="ghost"
           onClick={handleSignOut}

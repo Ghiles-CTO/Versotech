@@ -151,7 +151,7 @@ export async function PATCH(request: NextRequest) {
 
     const { data: cpUser, error: cpUserError } = await serviceSupabase
       .from('commercial_partner_users')
-      .select('commercial_partner_id, role')
+      .select('commercial_partner_id, role, is_primary')
       .eq('user_id', user.id)
       .maybeSingle()
 
@@ -159,9 +159,9 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Commercial partner profile not found' }, { status: 404 })
     }
 
-    if (cpUser.role !== 'admin') {
+    if (cpUser.role !== 'admin' && !cpUser.is_primary) {
       return NextResponse.json(
-        { error: 'Only admin users can update the commercial partner profile' },
+        { error: 'Only admin or primary users can update the commercial partner profile' },
         { status: 403 }
       )
     }

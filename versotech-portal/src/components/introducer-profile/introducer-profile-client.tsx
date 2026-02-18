@@ -29,7 +29,6 @@ import {
   Camera,
   Globe,
   Calendar,
-  FileSignature,
   AlertCircle,
   Users,
   Bell,
@@ -46,7 +45,6 @@ import { PreferencesEditor } from '@/components/profile/preferences-editor'
 import { GDPRControls } from '@/components/profile/gdpr-controls'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { IntroducerKYCDocumentsTab } from '@/components/profile/introducer-kyc-documents-tab'
-import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
 import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
 import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
 
@@ -521,10 +519,6 @@ export function IntroducerProfileClient({
             <Settings className="h-4 w-4" />
             Preferences
           </TabsTrigger>
-          <TabsTrigger value="signature" className="flex items-center gap-2">
-            <FileSignature className="h-4 w-4" />
-            Signature
-          </TabsTrigger>
           <TabsTrigger value="notices" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
             Notices
@@ -874,36 +868,6 @@ export function IntroducerProfileClient({
           <GDPRControls />
         </TabsContent>
 
-        {/* Signature Tab */}
-        <TabsContent value="signature" className="space-y-6">
-          {!introducerUserInfo.can_sign ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileSignature className="h-5 w-5" />
-                  Signature Specimen
-                </CardTitle>
-                <CardDescription>
-                  You do not have signing permissions for this introducer
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="border border-dashed border-muted rounded-lg py-8 px-4 text-center">
-                  <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">
-                    Signing permissions are required to upload a signature specimen.
-                    Contact your introducer administrator for access.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <SignatureSpecimenTab
-              entityType="introducer"
-              entityId={introducerInfo?.id}
-            />
-          )}
-        </TabsContent>
 
         {/* Notices Tab */}
         <TabsContent value="notices" className="space-y-4">

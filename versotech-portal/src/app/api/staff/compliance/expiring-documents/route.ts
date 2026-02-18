@@ -46,6 +46,8 @@ interface ExpiringDocument {
   is_stale: boolean
 }
 
+type EntityInfo = { type: string; id: string; name: string; memberId: string | null; memberName: string | null }
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
@@ -154,62 +156,62 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch documents' }, { status: 500 })
     }
 
-    // Enrich expiry documents with entity info
-    const enrichedExpiryDocs: ExpiringDocument[] = await Promise.all(
-      (expiryResult.data || []).map(async (doc) => {
-        const entityInfo = await getEntityInfo(serviceClient, doc)
-        const daysUntilExpiry = doc.document_expiry_date
-          ? Math.floor((new Date(doc.document_expiry_date).getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-          : null
-        const daysSinceDocDate = doc.document_date
-          ? Math.floor((today.getTime() - new Date(doc.document_date).getTime()) / (1000 * 60 * 60 * 24))
-          : null
+    // Batch-fetch all entity and member names for both result sets
+    const allDocs = [...(expiryResult.data || []), ...(staleResult.data || [])]
+    const entityMap = await batchFetchEntityInfo(serviceClient, allDocs)
 
-        return {
-          id: doc.id,
-          name: doc.name,
-          type: doc.type,
-          document_expiry_date: doc.document_expiry_date,
-          document_date: doc.document_date,
-          validation_status: doc.validation_status,
-          days_until_expiry: daysUntilExpiry,
-          days_since_document_date: daysSinceDocDate,
-          entity_type: entityInfo.type,
-          entity_id: entityInfo.id,
-          entity_name: entityInfo.name,
-          member_id: entityInfo.memberId,
-          member_name: entityInfo.memberName,
-          is_stale: false,
-        }
-      })
-    )
+    // Enrich expiry documents
+    const enrichedExpiryDocs: ExpiringDocument[] = (expiryResult.data || []).map((doc) => {
+      const entityInfo = entityMap.get(doc.id) || { type: 'unknown', id: '', name: 'Unknown Entity', memberId: null, memberName: null }
+      const daysUntilExpiry = doc.document_expiry_date
+        ? Math.floor((new Date(doc.document_expiry_date).getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+        : null
+      const daysSinceDocDate = doc.document_date
+        ? Math.floor((today.getTime() - new Date(doc.document_date).getTime()) / (1000 * 60 * 60 * 24))
+        : null
 
-    // Enrich stale documents with entity info
-    const enrichedStaleDocs: ExpiringDocument[] = await Promise.all(
-      (staleResult.data || []).map(async (doc) => {
-        const entityInfo = await getEntityInfo(serviceClient, doc)
-        const daysSinceDocDate = doc.document_date
-          ? Math.floor((today.getTime() - new Date(doc.document_date).getTime()) / (1000 * 60 * 60 * 24))
-          : null
+      return {
+        id: doc.id,
+        name: doc.name,
+        type: doc.type,
+        document_expiry_date: doc.document_expiry_date,
+        document_date: doc.document_date,
+        validation_status: doc.validation_status,
+        days_until_expiry: daysUntilExpiry,
+        days_since_document_date: daysSinceDocDate,
+        entity_type: entityInfo.type,
+        entity_id: entityInfo.id,
+        entity_name: entityInfo.name,
+        member_id: entityInfo.memberId,
+        member_name: entityInfo.memberName,
+        is_stale: false,
+      }
+    })
 
-        return {
-          id: doc.id,
-          name: doc.name,
-          type: doc.type,
-          document_expiry_date: doc.document_expiry_date,
-          document_date: doc.document_date,
-          validation_status: doc.validation_status,
-          days_until_expiry: null,
-          days_since_document_date: daysSinceDocDate,
-          entity_type: entityInfo.type,
-          entity_id: entityInfo.id,
-          entity_name: entityInfo.name,
-          member_id: entityInfo.memberId,
-          member_name: entityInfo.memberName,
-          is_stale: true,
-        }
-      })
-    )
+    // Enrich stale documents
+    const enrichedStaleDocs: ExpiringDocument[] = (staleResult.data || []).map((doc) => {
+      const entityInfo = entityMap.get(doc.id) || { type: 'unknown', id: '', name: 'Unknown Entity', memberId: null, memberName: null }
+      const daysSinceDocDate = doc.document_date
+        ? Math.floor((today.getTime() - new Date(doc.document_date).getTime()) / (1000 * 60 * 60 * 24))
+        : null
+
+      return {
+        id: doc.id,
+        name: doc.name,
+        type: doc.type,
+        document_expiry_date: doc.document_expiry_date,
+        document_date: doc.document_date,
+        validation_status: doc.validation_status,
+        days_until_expiry: null,
+        days_since_document_date: daysSinceDocDate,
+        entity_type: entityInfo.type,
+        entity_id: entityInfo.id,
+        entity_name: entityInfo.name,
+        member_id: entityInfo.memberId,
+        member_name: entityInfo.memberName,
+        is_stale: true,
+      }
+    })
 
     // Filter by entity type if specified
     const filteredExpiryDocs = entityType
@@ -246,175 +248,104 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Helper to get entity info from document
-async function getEntityInfo(
+function collectIds(docs: any[], field: string): string[] {
+  const ids = new Set<string>()
+  for (const doc of docs) {
+    if (doc[field]) ids.add(doc[field])
+  }
+  return Array.from(ids)
+}
+
+function resolveMemberName(member: { full_name?: string; first_name?: string; last_name?: string } | null): string | null {
+  if (!member) return null
+  return member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || null
+}
+
+// Batch-fetch entity and member names, returning a Map keyed by document ID
+async function batchFetchEntityInfo(
   supabase: ReturnType<typeof createServiceClient>,
-  doc: any
-): Promise<{ type: string; id: string; name: string; memberId: string | null; memberName: string | null }> {
-  // Determine entity type and ID
-  if (doc.owner_investor_id) {
-    const { data: investor } = await supabase
-      .from('investors')
-      .select('legal_name')
-      .eq('id', doc.owner_investor_id)
-      .single()
+  docs: any[]
+): Promise<Map<string, EntityInfo>> {
+  // Collect unique IDs per entity/member type
+  const investorIds = collectIds(docs, 'owner_investor_id')
+  const arrangerIds = collectIds(docs, 'arranger_entity_id')
+  const partnerIds = collectIds(docs, 'partner_id')
+  const introducerIds = collectIds(docs, 'introducer_id')
+  const lawyerIds = collectIds(docs, 'lawyer_id')
+  const cpIds = collectIds(docs, 'commercial_partner_id')
 
-    let memberName = null
-    if (doc.investor_member_id) {
-      const { data: member } = await supabase
-        .from('investor_members')
-        .select('full_name, first_name, last_name')
-        .eq('id', doc.investor_member_id)
-        .single()
-      memberName = member?.full_name || `${member?.first_name || ''} ${member?.last_name || ''}`.trim()
-    }
+  const investorMemberIds = collectIds(docs, 'investor_member_id')
+  const arrangerMemberIds = collectIds(docs, 'arranger_member_id')
+  const partnerMemberIds = collectIds(docs, 'partner_member_id')
+  const introducerMemberIds = collectIds(docs, 'introducer_member_id')
+  const lawyerMemberIds = collectIds(docs, 'lawyer_member_id')
+  const cpMemberIds = collectIds(docs, 'commercial_partner_member_id')
 
-    return {
-      type: 'investor',
-      id: doc.owner_investor_id,
-      name: investor?.legal_name || 'Unknown Investor',
-      memberId: doc.investor_member_id,
-      memberName,
+  // Fire all batch queries in parallel (only for non-empty ID sets)
+  const [
+    investors, arrangers, partners, introducers, lawyers, cps,
+    investorMembers, arrangerMembers, partnerMembers, introducerMembers, lawyerMembers, cpMembers,
+  ] = await Promise.all([
+    investorIds.length ? supabase.from('investors').select('id, legal_name').in('id', investorIds) : { data: [] },
+    arrangerIds.length ? supabase.from('arranger_entities').select('id, legal_name').in('id', arrangerIds) : { data: [] },
+    partnerIds.length ? supabase.from('partners').select('id, name').in('id', partnerIds) : { data: [] },
+    introducerIds.length ? supabase.from('introducers').select('id, legal_name').in('id', introducerIds) : { data: [] },
+    lawyerIds.length ? supabase.from('lawyers').select('id, firm_name').in('id', lawyerIds) : { data: [] },
+    cpIds.length ? supabase.from('commercial_partners').select('id, name').in('id', cpIds) : { data: [] },
+    investorMemberIds.length ? supabase.from('investor_members').select('id, full_name, first_name, last_name').in('id', investorMemberIds) : { data: [] },
+    arrangerMemberIds.length ? supabase.from('arranger_members').select('id, full_name, first_name, last_name').in('id', arrangerMemberIds) : { data: [] },
+    partnerMemberIds.length ? supabase.from('partner_members').select('id, full_name, first_name, last_name').in('id', partnerMemberIds) : { data: [] },
+    introducerMemberIds.length ? supabase.from('introducer_members').select('id, full_name, first_name, last_name').in('id', introducerMemberIds) : { data: [] },
+    lawyerMemberIds.length ? supabase.from('lawyer_members').select('id, full_name, first_name, last_name').in('id', lawyerMemberIds) : { data: [] },
+    cpMemberIds.length ? supabase.from('commercial_partner_members').select('id, full_name, first_name, last_name').in('id', cpMemberIds) : { data: [] },
+  ])
+
+  // Build lookup maps: id → name
+  const toMap = <T extends { id: string }>(rows: T[] | null, nameKey: keyof T): Map<string, string> => {
+    const m = new Map<string, string>()
+    for (const row of rows || []) m.set(row.id, String(row[nameKey] || ''))
+    return m
+  }
+
+  const investorNames = toMap(investors.data as any[], 'legal_name')
+  const arrangerNames = toMap(arrangers.data as any[], 'legal_name')
+  const partnerNames = toMap(partners.data as any[], 'name')
+  const introducerNames = toMap(introducers.data as any[], 'legal_name')
+  const lawyerNames = toMap(lawyers.data as any[], 'firm_name')
+  const cpNames = toMap(cps.data as any[], 'name')
+
+  const memberNameMap = new Map<string, string | null>()
+  for (const rows of [investorMembers, arrangerMembers, partnerMembers, introducerMembers, lawyerMembers, cpMembers]) {
+    for (const m of (rows.data as any[]) || []) {
+      memberNameMap.set(m.id, resolveMemberName(m))
     }
   }
 
-  if (doc.arranger_entity_id) {
-    const { data: arranger } = await supabase
-      .from('arranger_entities')
-      .select('legal_name')
-      .eq('id', doc.arranger_entity_id)
-      .single()
+  // Map each document to its entity info
+  const result = new Map<string, EntityInfo>()
+  for (const doc of docs) {
+    if (result.has(doc.id)) continue // dedup for docs appearing in both result sets
 
-    let memberName = null
-    if (doc.arranger_member_id) {
-      const { data: member } = await supabase
-        .from('arranger_members')
-        .select('full_name, first_name, last_name')
-        .eq('id', doc.arranger_member_id)
-        .single()
-      memberName = member?.full_name || `${member?.first_name || ''} ${member?.last_name || ''}`.trim()
+    let info: EntityInfo
+    if (doc.owner_investor_id) {
+      info = { type: 'investor', id: doc.owner_investor_id, name: investorNames.get(doc.owner_investor_id) || 'Unknown Investor', memberId: doc.investor_member_id, memberName: memberNameMap.get(doc.investor_member_id) ?? null }
+    } else if (doc.arranger_entity_id) {
+      info = { type: 'arranger', id: doc.arranger_entity_id, name: arrangerNames.get(doc.arranger_entity_id) || 'Unknown Arranger', memberId: doc.arranger_member_id, memberName: memberNameMap.get(doc.arranger_member_id) ?? null }
+    } else if (doc.partner_id) {
+      info = { type: 'partner', id: doc.partner_id, name: partnerNames.get(doc.partner_id) || 'Unknown Partner', memberId: doc.partner_member_id, memberName: memberNameMap.get(doc.partner_member_id) ?? null }
+    } else if (doc.introducer_id) {
+      info = { type: 'introducer', id: doc.introducer_id, name: introducerNames.get(doc.introducer_id) || 'Unknown Introducer', memberId: doc.introducer_member_id, memberName: memberNameMap.get(doc.introducer_member_id) ?? null }
+    } else if (doc.lawyer_id) {
+      info = { type: 'lawyer', id: doc.lawyer_id, name: lawyerNames.get(doc.lawyer_id) || 'Unknown Lawyer', memberId: doc.lawyer_member_id, memberName: memberNameMap.get(doc.lawyer_member_id) ?? null }
+    } else if (doc.commercial_partner_id) {
+      info = { type: 'commercial_partner', id: doc.commercial_partner_id, name: cpNames.get(doc.commercial_partner_id) || 'Unknown Commercial Partner', memberId: doc.commercial_partner_member_id, memberName: memberNameMap.get(doc.commercial_partner_member_id) ?? null }
+    } else {
+      info = { type: 'unknown', id: '', name: 'Unknown Entity', memberId: null, memberName: null }
     }
-
-    return {
-      type: 'arranger',
-      id: doc.arranger_entity_id,
-      name: arranger?.legal_name || 'Unknown Arranger',
-      memberId: doc.arranger_member_id,
-      memberName,
-    }
+    result.set(doc.id, info)
   }
 
-  if (doc.partner_id) {
-    const { data: partner } = await supabase
-      .from('partners')
-      .select('name')
-      .eq('id', doc.partner_id)
-      .single()
-
-    let memberName = null
-    if (doc.partner_member_id) {
-      const { data: member } = await supabase
-        .from('partner_members')
-        .select('full_name, first_name, last_name')
-        .eq('id', doc.partner_member_id)
-        .single()
-      memberName = member?.full_name || `${member?.first_name || ''} ${member?.last_name || ''}`.trim()
-    }
-
-    return {
-      type: 'partner',
-      id: doc.partner_id,
-      name: partner?.name || 'Unknown Partner',
-      memberId: doc.partner_member_id,
-      memberName,
-    }
-  }
-
-  if (doc.introducer_id) {
-    const { data: introducer } = await supabase
-      .from('introducers')
-      .select('legal_name')
-      .eq('id', doc.introducer_id)
-      .single()
-
-    let memberName = null
-    if (doc.introducer_member_id) {
-      const { data: member } = await supabase
-        .from('introducer_members')
-        .select('full_name, first_name, last_name')
-        .eq('id', doc.introducer_member_id)
-        .single()
-      memberName = member?.full_name || `${member?.first_name || ''} ${member?.last_name || ''}`.trim()
-    }
-
-    return {
-      type: 'introducer',
-      id: doc.introducer_id,
-      name: introducer?.legal_name || 'Unknown Introducer',
-      memberId: doc.introducer_member_id,
-      memberName,
-    }
-  }
-
-  if (doc.lawyer_id) {
-    const { data: lawyer } = await supabase
-      .from('lawyers')
-      .select('firm_name')
-      .eq('id', doc.lawyer_id)
-      .single()
-
-    let memberName = null
-    if (doc.lawyer_member_id) {
-      const { data: member } = await supabase
-        .from('lawyer_members')
-        .select('full_name, first_name, last_name')
-        .eq('id', doc.lawyer_member_id)
-        .single()
-      memberName = member?.full_name || `${member?.first_name || ''} ${member?.last_name || ''}`.trim()
-    }
-
-    return {
-      type: 'lawyer',
-      id: doc.lawyer_id,
-      name: lawyer?.firm_name || 'Unknown Lawyer',
-      memberId: doc.lawyer_member_id,
-      memberName,
-    }
-  }
-
-  if (doc.commercial_partner_id) {
-    const { data: cp } = await supabase
-      .from('commercial_partners')
-      .select('name')
-      .eq('id', doc.commercial_partner_id)
-      .single()
-
-    let memberName = null
-    if (doc.commercial_partner_member_id) {
-      const { data: member } = await supabase
-        .from('commercial_partner_members')
-        .select('full_name, first_name, last_name')
-        .eq('id', doc.commercial_partner_member_id)
-        .single()
-      memberName = member?.full_name || `${member?.first_name || ''} ${member?.last_name || ''}`.trim()
-    }
-
-    return {
-      type: 'commercial_partner',
-      id: doc.commercial_partner_id,
-      name: cp?.name || 'Unknown Commercial Partner',
-      memberId: doc.commercial_partner_member_id,
-      memberName,
-    }
-  }
-
-  return {
-    type: 'unknown',
-    id: '',
-    name: 'Unknown Entity',
-    memberId: null,
-    memberName: null,
-  }
+  return result
 }
 
 // Helper to get date X days from now (negative for past)

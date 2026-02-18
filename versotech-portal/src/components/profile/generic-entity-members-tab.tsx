@@ -9,8 +9,8 @@
  * Uses MemberKYCEditDialog for comprehensive KYC field editing.
  */
 
-import { useState, useEffect } from 'react'
-import { Users, UserPlus, Edit, Trash2, ShieldCheck, Clock, AlertCircle } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Users, UserPlus, Edit, Trash2, ShieldCheck, Clock, AlertCircle, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -129,13 +129,10 @@ export function GenericEntityMembersTab({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [submittingMemberId, setSubmittingMemberId] = useState<string | null>(null)
 
   // Load members
-  useEffect(() => {
-    loadMembers()
-  }, [apiEndpoint])
-
-  const loadMembers = async () => {
+  const loadMembers = useCallback(async () => {
     setLoading(true)
     setError(null)
 
@@ -154,7 +151,11 @@ export function GenericEntityMembersTab({
     } finally {
       setLoading(false)
     }
-  }
+  }, [apiEndpoint])
+
+  useEffect(() => {
+    loadMembers()
+  }, [loadMembers])
 
   const handleAddMember = () => {
     setEditingMember(null)
@@ -199,6 +200,33 @@ export function GenericEntityMembersTab({
 
   const handleDialogSuccess = () => {
     loadMembers()
+  }
+
+  const handleSubmitMemberKyc = async (memberId: string) => {
+    setSubmittingMemberId(memberId)
+    try {
+      const response = await fetch('/api/me/personal-kyc/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          entityType,
+          memberId,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to submit member KYC')
+      }
+
+      toast.success('Member personal KYC submitted for review')
+      await loadMembers()
+    } catch (err) {
+      console.error('Error submitting member KYC:', err)
+      toast.error(err instanceof Error ? err.message : 'Failed to submit member KYC')
+    } finally {
+      setSubmittingMemberId(null)
+    }
   }
 
   const getDisplayName = (member: EntityMember) => {
@@ -328,7 +356,7 @@ export function GenericEntityMembersTab({
                   <TableHead>Email</TableHead>
                   <TableHead>Ownership %</TableHead>
                   <TableHead>KYC Status</TableHead>
-                  {canManage && <TableHead className="text-right">Actions</TableHead>}
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -356,9 +384,21 @@ export function GenericEntityMembersTab({
                       {member.ownership_percentage != null ? `${member.ownership_percentage}%` : 'N/A'}
                     </TableCell>
                     <TableCell>{getKYCStatusBadge(member.kyc_status)}</TableCell>
-                    {canManage && (
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        {member.kyc_status !== 'submitted' && member.kyc_status !== 'approved' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleSubmitMemberKyc(member.id)}
+                            disabled={submittingMemberId === member.id}
+                          >
+                            <Send className="w-4 h-4 mr-1.5" />
+                            {submittingMemberId === member.id ? 'Submitting...' : 'Submit KYC'}
+                          </Button>
+                        )}
+                        {canManage && (
+                          <>
                           <Button
                             variant="outline"
                             size="sm"
@@ -373,9 +413,10 @@ export function GenericEntityMembersTab({
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
-                        </div>
-                      </TableCell>
-                    )}
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

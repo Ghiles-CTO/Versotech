@@ -45,7 +45,20 @@
     "specific_rule_assertions": true,
     "subscription_deal_id_required": true,
     "subscription_deal_vehicle_consistency": true,
-    "investor_identity_duplicate_check": true
+    "investor_identity_duplicate_check": true,
+    "introduction_integrity_check": true,
+    "introduction_date_required": true,
+    "introduction_date_matches_contract_date": true,
+    "subscription_formula_cross_field_check": true,
+    "commission_rate_integrity_check": true,
+    "commission_base_amount_matches_funded_check": true,
+    "mapping_coverage_hard_fail": true,
+    "dual_role_introducer_check": true,
+    "deprecated_introducer_references_check": true,
+    "commission_rate_amount_formula_check": true,
+    "dashboard_commission_header_mismatch_is_failure": true,
+    "dashboard_numeric_parse_check": true,
+    "dashboard_contract_date_parse_check": true
   },
   "allowed_commission_statuses": [
     "paid"
@@ -308,5 +321,98 @@
     "verso",
     "introducer",
     "introducers"
+  ],
+  "required_dual_role_introducers": [
+    "Old City Securities LLC",
+    "Bromley Capital Partners"
+  ],
+  "deprecated_introducer_ids": [],
+  "subscription_formula_amount_tolerance": 1.0,
+  "allowed_introduction_missing_date_ids": [
+    "d3b58990-9327-4c5b-b6ed-af7f16fb9858"
+  ],
+  "allowed_introduction_duplicate_tuples": [],
+  "allowed_performance_fee_threshold_multiplier_non_zero_ids": [],
+  "commission_base_amount_ruled_keys": [
+    {
+      "deal_id": "83ce0a28-e538-4f44-a430-b83394d17b9d",
+      "investor_id": "f3dabc56-d079-4536-9ad5-9e6b543aea21",
+      "reason": "VC203 post-broker-cleanup split behavior documented in VC2 checkpoint"
+    },
+    {
+      "deal_id": "15beca51-460e-4ad4-8269-45fb98382624",
+      "investor_id": "9a7ddab9-7c07-4c5f-93bc-1898761afd6c",
+      "reason": "VC206 REDPOINT/ALTA split behavior documented in VC2 checkpoint"
+    },
+    {
+      "deal_id": "b77e95ee-4649-4644-933e-ed10a2118b03",
+      "investor_id": "f3dabc56-d079-4536-9ad5-9e6b543aea21",
+      "reason": "VC207 post-broker-cleanup split behavior documented in VC2 checkpoint"
+    },
+    {
+      "deal_id": "b1ff280a-1a0e-4024-b25d-de6160816cb1",
+      "investor_id": "35fc9d94-e9c8-4e73-9038-c8483d9f7712",
+      "reason": "VC209 combined-introducer split behavior documented in VC2 checkpoint"
+    },
+    {
+      "deal_id": "b1ff280a-1a0e-4024-b25d-de6160816cb1",
+      "investor_id": "f7f53e18-d962-4c1d-8041-8085f5eb3975",
+      "reason": "VC209 Bromley rule + split behavior documented in VC2 checkpoint"
+    },
+    {
+      "deal_id": "2a0c48b3-5196-4323-9665-9f713ea52668",
+      "investor_id": "3de46042-a7a4-4e86-89d4-a9b8830be1a2",
+      "reason": "VC215 paired-introducer spread-only behavior (Set Cap/Bromley rules) documented in VC2 checkpoint"
+    }
+  ],
+  "commission_rate_formula_ruled_keys": [
+    {
+      "deal_id": "2a0c48b3-5196-4323-9665-9f713ea52668",
+      "investor_id": "09971d0a-2b71-45a7-ab86-5358b6515788",
+      "rate_bps": 700,
+      "reason": "VC215 split commission override documented in VC2 checkpoint"
+    },
+    {
+      "deal_id": "2a0c48b3-5196-4323-9665-9f713ea52668",
+      "investor_id": "0898d202-db1f-4e65-adc0-27236ca2224f",
+      "rate_bps": 161,
+      "reason": "VC215 split commission override documented in VC2 checkpoint"
+    },
+    {
+      "deal_id": "2a0c48b3-5196-4323-9665-9f713ea52668",
+      "investor_id": "31dccf8d-314a-4fa9-80af-9c02732bff31",
+      "rate_bps": 61,
+      "reason": "VC215 split commission override documented in VC2 checkpoint"
+    },
+    {
+      "deal_id": "2a0c48b3-5196-4323-9665-9f713ea52668",
+      "investor_id": "678fa547-84c7-4ceb-8619-296f9d9ab54b",
+      "rate_bps": 102,
+      "reason": "VC215 split commission override documented in VC2 checkpoint"
+    },
+    {
+      "deal_id": "2a0c48b3-5196-4323-9665-9f713ea52668",
+      "investor_id": "ab1109d5-4563-4a47-a8fd-e73eedce1ff5",
+      "rate_bps": 161,
+      "reason": "VC215 split commission override documented in VC2 checkpoint"
+    },
+    {
+      "deal_id": "2a0c48b3-5196-4323-9665-9f713ea52668",
+      "investor_id": "ac8c2cb9-164e-4f89-9984-837fec9e03e7",
+      "rate_bps": 161,
+      "reason": "VC215 split commission override documented in VC2 checkpoint"
+    },
+    {
+      "deal_id": "2a0c48b3-5196-4323-9665-9f713ea52668",
+      "investor_id": "ee299ab9-9b40-4fdf-b920-6dfb27b9df69",
+      "rate_bps": 161,
+      "reason": "VC215 split commission override documented in VC2 checkpoint"
+    },
+    {
+      "deal_id": "2a0c48b3-5196-4323-9665-9f713ea52668",
+      "investor_id": "fca68c81-0f76-488d-8a16-461d08c73a1a",
+      "rate_bps": 161,
+      "reason": "VC215 split commission override documented in VC2 checkpoint"
+    }
   ]
 }
