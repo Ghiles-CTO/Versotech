@@ -117,6 +117,7 @@ export function InvestorJourneyBar({
 
   const getStatus = (stage: StageDefinition, idx: number): StageStatus => {
     if (extendedSummary[stage.key]) return 'completed'
+    if (lastCompleted > idx) return 'completed' // a later step is done, so treat this as done too
     if (idx === currentIndex) return 'current'
     return 'pending'
   }

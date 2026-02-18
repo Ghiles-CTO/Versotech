@@ -227,7 +227,7 @@ export function InterestStatusCard({
             Your Interest Status
           </CardTitle>
           <Badge className={cn(stageInfo.bgColor, stageInfo.color, "border-0")}>
-            {isApprovalBlocked ? 'Approval required' : `Stage ${currentStage}/10`}
+            {isApprovalBlocked ? 'Approval required' : `Step ${[1,1,2,2,2,2,3,3,4,5,5][Math.min(currentStage,10)]} of 5`}
           </Badge>
         </div>
       </CardHeader>

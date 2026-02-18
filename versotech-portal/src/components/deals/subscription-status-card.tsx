@@ -211,13 +211,18 @@ export function SubscriptionStatusCard({
   const [clarificationDetails, setClarificationDetails] = useState('')
   const [clarificationSubmitting, setClarificationSubmitting] = useState(false)
 
-  // Progress calculation
+  // Progress calculation — if a later step is done, treat all earlier steps as done
+  const isActive = !!subscription.activated_at
+  const isFunded = isActive || !!subscription.funded_at
+  const isSigned = isFunded || !!subscription.signed_at
+  const isSent = isSigned || !!subscription.pack_sent_at
+  const isGenerated = isSent || !!subscription.pack_generated_at
   const steps = [
-    { key: 'generated', done: !!subscription.pack_generated_at },
-    { key: 'sent', done: !!subscription.pack_sent_at },
-    { key: 'signed', done: !!subscription.signed_at },
-    { key: 'funded', done: !!subscription.funded_at },
-    { key: 'active', done: !!subscription.activated_at }
+    { key: 'generated', done: isGenerated },
+    { key: 'sent', done: isSent },
+    { key: 'signed', done: isSigned },
+    { key: 'funded', done: isFunded },
+    { key: 'active', done: isActive }
   ]
   const completedSteps = steps.filter(s => s.done).length
   const progressPercent = (completedSteps / steps.length) * 100
