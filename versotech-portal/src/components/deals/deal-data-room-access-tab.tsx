@@ -99,6 +99,7 @@ export function DealDataRoomAccessTab({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [items, setItems] = useState(accessRecords ?? [])
+  const [localDocuments, setLocalDocuments] = useState(documents ?? [])
   const [editingDocId, setEditingDocId] = useState<string | null>(null)
   const [docFormValues, setDocFormValues] = useState<any>({})
   const [isDocDialogOpen, setIsDocDialogOpen] = useState(false)
@@ -106,6 +107,10 @@ export function DealDataRoomAccessTab({
   useEffect(() => {
     setItems(accessRecords ?? [])
   }, [accessRecords])
+
+  useEffect(() => {
+    setLocalDocuments(documents ?? [])
+  }, [documents])
 
   const investorOptions = useMemo(() => {
     const investors = memberships
@@ -134,7 +139,7 @@ export function DealDataRoomAccessTab({
       return node
     }
 
-    documents?.forEach(doc => {
+    localDocuments?.forEach(doc => {
       const folderPath = doc.folder || 'Uncategorised'
       const parts = folderPath.split('/')
       const leaf = getOrCreate(root, parts, 0, '')
@@ -142,16 +147,16 @@ export function DealDataRoomAccessTab({
     })
 
     return root
-  }, [documents])
+  }, [localDocuments])
 
   // Derive unique existing folders from documents for combobox
   const existingFolders = useMemo(() => {
     const set = new Set<string>([...DATA_ROOM_DEFAULT_FOLDERS])
-    documents?.forEach(doc => {
+    localDocuments?.forEach(doc => {
       if (doc.folder) set.add(doc.folder)
     })
     return Array.from(set)
-  }, [documents])
+  }, [localDocuments])
 
   const [editFolderComboOpen, setEditFolderComboOpen] = useState(false)
   const [editFolderSearch, setEditFolderSearch] = useState('')
@@ -244,13 +249,20 @@ export function DealDataRoomAccessTab({
   }
 
   const refresh = async () => {
-    const response = await fetch(`/api/deals/${dealId}/data-room-access`)
-    if (!response.ok) {
+    const [accessRes, docsRes] = await Promise.all([
+      fetch(`/api/deals/${dealId}/data-room-access`),
+      fetch(`/api/deals/${dealId}/documents`)
+    ])
+    if (!accessRes.ok) {
       setErrorMessage('Failed to refresh access records. Please reload the page.')
       return
     }
-    const data = await response.json()
-    setItems(data.access ?? [])
+    const accessData = await accessRes.json()
+    setItems(accessData.access ?? [])
+    if (docsRes.ok) {
+      const docsData = await docsRes.json()
+      setLocalDocuments(docsData.documents ?? [])
+    }
   }
 
   const latestAccessByInvestor = useMemo(() => {

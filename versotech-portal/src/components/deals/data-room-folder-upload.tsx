@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -150,7 +149,6 @@ const MAX_FOLDER_TOTAL_BYTES = 1024 * 1024 * 1024 // 1 GB
 const MAX_FOLDER_FILE_COUNT = 500
 
 export function DataRoomFolderUpload({ dealId, onUploadComplete, trigger }: FolderUploadProps) {
-  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [folderEntries, setFolderEntries] = useState<FolderFileEntry[]>([])
   const [rootFolderName, setRootFolderName] = useState('')
@@ -339,7 +337,6 @@ export function DataRoomFolderUpload({ dealId, onUploadComplete, trigger }: Fold
       setOpen(false)
 
       onUploadComplete?.()
-      router.refresh()
     } catch (error) {
       console.error('Upload error:', error)
       toast.error('Failed to upload folder')
