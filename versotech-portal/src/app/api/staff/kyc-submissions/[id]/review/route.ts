@@ -31,6 +31,74 @@ const ENTITY_NOTIFICATION_CONFIG: Record<string, { userTable: string; entityIdCo
   arranger: { userTable: 'arranger_users', entityIdColumn: 'arranger_id', link: '/versotech_main/arranger-profile' },
 }
 
+function formatDocumentTypeLabel(documentType: string) {
+  return documentType.replace(/_/g, ' ')
+}
+
+function composeReviewerMessage(rejectionReason?: string, notes?: string): string | null {
+  const primaryReason = rejectionReason?.trim()
+  const reviewerNotes = notes?.trim()
+
+  if (primaryReason && reviewerNotes) {
+    return `${primaryReason} Additional notes: ${reviewerNotes}`
+  }
+
+  return primaryReason || reviewerNotes || null
+}
+
+function buildKycNotificationCopy(params: {
+  action: 'approve' | 'reject' | 'request_info'
+  documentType: string
+  documentTypeLabel: string
+  reviewerMessage: string | null
+}): { title: string; message: string } {
+  const { action, documentType, documentTypeLabel, reviewerMessage } = params
+
+  if (action === 'approve') {
+    if (documentType === 'personal_info') {
+      return {
+        title: 'Personal KYC Approved',
+        message: 'Your personal KYC information has been reviewed and approved.',
+      }
+    }
+
+    if (documentType === 'entity_info') {
+      return {
+        title: 'Entity KYC Approved',
+        message: 'Your entity information has been reviewed and approved.',
+      }
+    }
+
+    if (documentType === 'questionnaire') {
+      return {
+        title: 'Compliance Questionnaire Approved',
+        message: 'Your compliance questionnaire has been reviewed and approved. This approval applies to the questionnaire only.',
+      }
+    }
+
+    return {
+      title: 'KYC Document Approved',
+      message: `Your ${documentTypeLabel} submission has been reviewed and approved.`,
+    }
+  }
+
+  if (action === 'request_info') {
+    return {
+      title: 'Additional Information Required',
+      message: reviewerMessage
+        ? `Our compliance team requested additional information for your ${documentTypeLabel} submission. Reason: ${reviewerMessage}`
+        : `Our compliance team requested additional information for your ${documentTypeLabel} submission.`,
+    }
+  }
+
+  return {
+    title: 'KYC Submission Rejected',
+    message: reviewerMessage
+      ? `Your ${documentTypeLabel} submission was rejected. Reason: ${reviewerMessage}`
+      : `Your ${documentTypeLabel} submission was rejected. Please review and resubmit.`,
+  }
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -127,6 +195,8 @@ export async function POST(
       )
     }
 
+    const { entityType, entityId } = getEntityTypeFromSubmission(submission)
+
     // Update submission
     const updateData: any = {
       status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'pending',
@@ -171,7 +241,6 @@ export async function POST(
     }
 
     if (action !== 'approve') {
-      const { entityType, entityId } = getEntityTypeFromSubmission(submission)
       const entityTable = entityType ? ENTITY_TABLES[entityType] : null
       if (entityTable && entityId) {
         const { data: entityStatus } = await serviceSupabase
@@ -209,18 +278,20 @@ export async function POST(
       }
     }
 
-    // Auto-complete related tasks if approved (investor-specific)
-    if (action === 'approve' && submission.investor_id) {
+    // Auto-complete related tasks if approved
+    if (action === 'approve' && entityType && entityId) {
       await autoCompleteRelatedTasks(
         serviceSupabase,
-        submission.investor_id,
-        submission.document_type,
-        user.id
+        {
+          entityType,
+          entityId,
+          documentType: submission.document_type,
+          reviewerId: user.id,
+        }
       )
     }
 
     // Determine entity info for audit log
-    const { entityType, entityId } = getEntityTypeFromSubmission(submission)
     const entity = submission.investor || submission.partner || submission.introducer ||
                    submission.lawyer || submission.commercial_partner || submission.arranger_entity
     const entityName = entity?.legal_name || entity?.display_name || entity?.name || entity?.firm_name || 'Unknown'
@@ -261,62 +332,32 @@ export async function POST(
       try {
         const target = await resolveNotificationTarget(serviceSupabase, entityType, entityId)
         if (target?.userId) {
-          const docTypeLabel = submission.document_type.replace(/_/g, ' ')
+          const documentTypeLabel = formatDocumentTypeLabel(submission.document_type)
+          const reviewerMessage = composeReviewerMessage(rejection_reason, notes)
+          const notificationCopy = buildKycNotificationCopy({
+            action,
+            documentType: submission.document_type,
+            documentTypeLabel,
+            reviewerMessage,
+          })
 
-          if (action === 'approve') {
-            await createInvestorNotification({
-              userId: target.userId,
-              investorId: submission.investor_id || undefined,
-              title: submission.document_type === 'personal_info' ? 'Personal KYC Approved' :
-                     submission.document_type === 'entity_info' ? 'Entity KYC Approved' :
-                     'KYC Documents Approved',
-              message: submission.document_type === 'personal_info'
-                ? 'Your personal KYC information has been reviewed and approved.'
-                : submission.document_type === 'entity_info'
-                ? 'Your entity information has been reviewed and approved.'
-                : 'Your KYC documents have been reviewed and approved. Thank you for completing your verification.',
-              link: target.link,
-              type: 'kyc_status',
-              extraMetadata: {
-                submission_id: submissionId,
-                document_type: submission.document_type,
-                entity_type: entityType,
-                entity_id: entityId,
-              }
-            })
-          } else if (action === 'request_info') {
-            await createInvestorNotification({
-              userId: target.userId,
-              investorId: submission.investor_id || undefined,
-              title: 'Additional Information Requested',
-              message: `Our compliance team has requested additional information for your ${docTypeLabel} submission. Please review and provide the requested details.`,
-              link: target.link,
-              type: 'kyc_status',
-              extraMetadata: {
-                submission_id: submissionId,
-                document_type: submission.document_type,
-                info_request_reason: rejection_reason,
-                entity_type: entityType,
-                entity_id: entityId,
-              }
-            })
-          } else {
-            await createInvestorNotification({
-              userId: target.userId,
-              investorId: submission.investor_id || undefined,
-              title: 'KYC Submission Requires Attention',
-              message: `Your ${docTypeLabel} submission requires attention. Please review and resubmit.`,
-              link: target.link,
-              type: 'kyc_status',
-              extraMetadata: {
-                submission_id: submissionId,
-                document_type: submission.document_type,
-                rejection_reason: rejection_reason,
-                entity_type: entityType,
-                entity_id: entityId,
-              }
-            })
-          }
+          await createInvestorNotification({
+            userId: target.userId,
+            investorId: submission.investor_id || undefined,
+            title: notificationCopy.title,
+            message: notificationCopy.message,
+            link: target.link,
+            type: 'kyc_status',
+            extraMetadata: {
+              submission_id: submissionId,
+              document_type: submission.document_type,
+              info_request_reason: action === 'request_info' ? rejection_reason || null : null,
+              rejection_reason: action === 'reject' ? rejection_reason || null : null,
+              review_notes: notes || null,
+              entity_type: entityType,
+              entity_id: entityId,
+            }
+          })
         }
       } catch (notificationError) {
         console.error('[kyc-review] Failed to send notification:', notificationError)
@@ -387,11 +428,16 @@ async function resolveNotificationTarget(
  */
 async function autoCompleteRelatedTasks(
   supabase: any,
-  investorId: string,
-  documentType: string,
-  reviewerId: string
+  params: {
+    entityType: string
+    entityId: string
+    documentType: string
+    reviewerId: string
+  }
 ) {
   try {
+    const { entityType, entityId, documentType, reviewerId } = params
+
     // Find tasks related to this document type for this investor
     // Task titles must match how tasks are created in the system
     const taskTitlePatterns: Record<string, string> = {
@@ -422,17 +468,26 @@ async function autoCompleteRelatedTasks(
 
     if (!taskTitle) return
 
-    // Update tasks with matching title for this investor
-    await supabase
+    // Update tasks with matching title for this entity context
+    let query = supabase
       .from('tasks')
       .update({
         status: 'completed',
         completed_at: new Date().toISOString(),
         completed_by: reviewerId
       })
-      .eq('investor_id', investorId)
       .ilike('title', `%${taskTitle}%`)
       .eq('status', 'pending')
+
+    if (entityType === 'investor') {
+      query = query.eq('owner_investor_id', entityId)
+    } else {
+      query = query
+        .eq('related_entity_type', entityType)
+        .eq('related_entity_id', entityId)
+    }
+
+    await query
 
   } catch (error) {
     console.error('Error auto-completing tasks:', error)

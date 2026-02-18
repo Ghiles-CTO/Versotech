@@ -149,7 +149,7 @@ export function emailShell(
 <body>
   <div class="container">
     <div class="logo-container">
-      <div class="logo">V E R S O</div>
+      <div class="logo">VERSO</div>
     </div>
 
     ${bodyContent}
@@ -388,7 +388,7 @@ export async function sendAccountStatusEmail(params: {
       <p>Congratulations! Your account has been approved. You can now have full access to VERSO Portal.</p>
     </div>
     <div class="button-container">
-      <a href="${link}" class="button">Access Deal on VERSO Portal</a>
+      <a href="${link}" class="button">Open VERSO Portal</a>
     </div>
     <div class="content">
     `
