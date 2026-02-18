@@ -158,9 +158,17 @@ export function MessageBubble({
           title={formatFullTimestamp(message.createdAt)}
         >
           <div className="flex flex-col">
-            <p className="whitespace-pre-wrap break-words">
-              {message.body ? linkifyBody(message.body, isSelf) : null}
-            </p>
+            {(() => {
+              const lp = (message.metadata as Record<string, unknown>)?.link_preview as LinkPreview | undefined
+              const displayBody = lp?.url
+                ? (message.body ?? '').replace(lp.url, '').trim()
+                : message.body
+              return displayBody ? (
+                <p className="whitespace-pre-wrap break-words">
+                  {linkifyBody(displayBody, isSelf)}
+                </p>
+              ) : null
+            })()}
 
             {/* Inline metadata (WhatsApp style - time in corner) */}
             <div className={cn(
