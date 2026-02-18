@@ -279,6 +279,30 @@ async function resolveRequestedBy(
   return (anyUser?.user_id as string | null) ?? null
 }
 
+async function resolveApprovalAssignee(supabase: SupabaseClient): Promise<string | null> {
+  const { data: ceo } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('role', 'ceo')
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  if (ceo?.id) {
+    return ceo.id as string
+  }
+
+  const { data: staffAdmin } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('role', 'staff_admin')
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  return (staffAdmin?.id as string | null) ?? null
+}
+
 /**
  * Determines entity type from a KYC submission based on which *_id field is set.
  */
@@ -395,15 +419,18 @@ async function createAccountActivationApproval(
     .maybeSingle()
 
   const requestedBy = await resolveRequestedBy(supabase, entityType, entityId)
+  const assignedTo = await resolveApprovalAssignee(supabase)
+  const safeRequestedBy = requestedBy || assignedTo
 
-  await supabase
+  const { error: approvalInsertError } = await supabase
     .from('approvals')
     .insert({
       entity_type: 'account_activation',
       entity_id: entityId,
       status: 'pending',
       priority: 'medium',
-      requested_by: requestedBy,
+      requested_by: safeRequestedBy,
+      assigned_to: assignedTo,
       entity_metadata: {
         entity_table: config.entityTable,
         entity_name: getEntityName(entity),
@@ -411,6 +438,14 @@ async function createAccountActivationApproval(
       },
       created_at: new Date().toISOString(),
     })
+
+  if (approvalInsertError) {
+    console.error(`[KYC] Failed to create account activation approval for ${entityType}:${entityId}`, {
+      error: approvalInsertError,
+      requestedBy,
+      assignedTo,
+    })
+  }
 }
 
 /**
