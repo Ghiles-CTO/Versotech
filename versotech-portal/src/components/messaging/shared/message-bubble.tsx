@@ -162,12 +162,6 @@ export function MessageBubble({
               {message.body ? linkifyBody(message.body, isSelf) : null}
             </p>
 
-            {/* Link Preview Card */}
-            {(() => {
-              const lp = (message.metadata as Record<string, unknown>)?.link_preview as LinkPreview | undefined
-              return lp?.url ? <LinkPreviewCard preview={lp} isSelf={isSelf} /> : null
-            })()}
-
             {/* Inline metadata (WhatsApp style - time in corner) */}
             <div className={cn(
               'flex items-center gap-1 mt-1 justify-end select-none',
@@ -207,6 +201,12 @@ export function MessageBubble({
                 </span>
               )}
             </div>
+
+            {/* Link Preview Card — bottom of bubble */}
+            {(() => {
+              const lp = (message.metadata as Record<string, unknown>)?.link_preview as LinkPreview | undefined
+              return lp?.url ? <LinkPreviewCard preview={lp} isSelf={isSelf} /> : null
+            })()}
           </div>
         </div>
       </div>
