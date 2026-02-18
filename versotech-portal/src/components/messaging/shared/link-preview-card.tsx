@@ -48,9 +48,31 @@ export function LinkPreviewCard({ preview, isSelf }: LinkPreviewCardProps) {
       </div>
 
       {/* Text — right side */}
-      <div className="flex flex-col justify-center gap-1 min-w-0 flex-1 px-3 py-3">
-        {/* Domain row */}
-        <div className="flex items-center gap-1.5">
+      <div className="flex flex-col justify-between gap-1 min-w-0 flex-1 px-3 py-3">
+        <div className="flex flex-col gap-1">
+          {/* Title */}
+          {preview.title && (
+            <p className={cn(
+              'text-[13px] font-semibold leading-snug line-clamp-2',
+              isSelf ? 'text-primary-foreground' : 'text-foreground'
+            )}>
+              {preview.title}
+            </p>
+          )}
+
+          {/* Description */}
+          {preview.description && (
+            <p className={cn(
+              'text-[11px] leading-relaxed line-clamp-2',
+              isSelf ? 'text-primary-foreground/60' : 'text-muted-foreground'
+            )}>
+              {preview.description}
+            </p>
+          )}
+        </div>
+
+        {/* Domain row — bottom */}
+        <div className="flex items-center gap-1.5 mt-1">
           {preview.favicon && (
             <img
               src={preview.favicon}
@@ -70,26 +92,6 @@ export function LinkPreviewCard({ preview, isSelf }: LinkPreviewCardProps) {
             isSelf ? 'text-primary-foreground/40' : 'text-muted-foreground/40'
           )} />
         </div>
-
-        {/* Title */}
-        {preview.title && (
-          <p className={cn(
-            'text-[13px] font-semibold leading-snug line-clamp-2',
-            isSelf ? 'text-primary-foreground' : 'text-foreground'
-          )}>
-            {preview.title}
-          </p>
-        )}
-
-        {/* Description */}
-        {preview.description && (
-          <p className={cn(
-            'text-[11px] leading-relaxed line-clamp-2',
-            isSelf ? 'text-primary-foreground/60' : 'text-muted-foreground'
-          )}>
-            {preview.description}
-          </p>
-        )}
       </div>
     </a>
   )
