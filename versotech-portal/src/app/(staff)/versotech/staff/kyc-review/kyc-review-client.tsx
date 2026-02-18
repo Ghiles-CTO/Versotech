@@ -116,6 +116,7 @@ export function KYCReviewClient() {
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [documentTypeFilter, setDocumentTypeFilter] = useState<string>('all')
+  const [entityTypeFilter, setEntityTypeFilter] = useState<string>('all')
   const [investorFilter, setInvestorFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
@@ -224,6 +225,7 @@ export function KYCReviewClient() {
       const params = new URLSearchParams()
       if (statusFilter !== 'all') params.append('status', statusFilter)
       if (documentTypeFilter !== 'all') params.append('document_type', documentTypeFilter)
+      if (entityTypeFilter !== 'all') params.append('entity_type', entityTypeFilter)
       if (investorFilter !== 'all') params.append('investor_id', investorFilter)
       params.append('page', String(page))
       params.append('pageSize', String(pageSize))
@@ -248,12 +250,12 @@ export function KYCReviewClient() {
     } finally {
       setLoading(false)
     }
-  }, [statusFilter, documentTypeFilter, investorFilter, page, pageSize])
+  }, [statusFilter, documentTypeFilter, entityTypeFilter, investorFilter, page, pageSize])
 
   // Reset to page 1 when filters change
   useEffect(() => {
     setPage(1)
-  }, [statusFilter, documentTypeFilter, investorFilter])
+  }, [statusFilter, documentTypeFilter, entityTypeFilter, investorFilter])
 
   useEffect(() => {
     loadSubmissions()
@@ -374,7 +376,7 @@ export function KYCReviewClient() {
       <div>
         <h1 className="text-3xl font-bold text-foreground">KYC Document Review</h1>
         <p className="text-muted-foreground mt-1">
-          Review and approve investor KYC documents
+          Review and approve KYC submissions across all personas
         </p>
       </div>
 
@@ -446,7 +448,7 @@ export function KYCReviewClient() {
           <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             <div>
               <Label htmlFor="status-filter">Status</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -477,6 +479,23 @@ export function KYCReviewClient() {
                       {getDocumentTypeLabel(type)}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="entity-filter">Entity Type</Label>
+              <Select value={entityTypeFilter} onValueChange={setEntityTypeFilter}>
+                <SelectTrigger id="entity-filter">
+                  <SelectValue placeholder="All entities" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Entities</SelectItem>
+                  <SelectItem value="investor">Investor</SelectItem>
+                  <SelectItem value="partner">Partner</SelectItem>
+                  <SelectItem value="introducer">Introducer</SelectItem>
+                  <SelectItem value="lawyer">Lawyer</SelectItem>
+                  <SelectItem value="commercial_partner">Commercial Partner</SelectItem>
+                  <SelectItem value="arranger">Arranger</SelectItem>
                 </SelectContent>
               </Select>
             </div>

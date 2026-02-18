@@ -1,6 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { AlertCircle } from 'lucide-react'
 import { ArrangerProfileClient } from './arranger-profile-client'
+import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
 
 export const dynamic = 'force-dynamic'
 
@@ -93,9 +94,15 @@ export default async function ArrangerProfilePage() {
     .eq('arranger_entity_id', arrangerUser.arranger_id)
 
   // Fetch the user's member record for personal KYC (linked via linked_user_id)
-  const { data: memberData, error: memberError } = await serviceSupabase
-    .from('arranger_members')
-    .select(`
+  const { member: memberData, error: memberError } = await fetchMemberWithAutoLink({
+    supabase: serviceSupabase,
+    memberTable: 'arranger_members',
+    entityIdColumn: 'arranger_id',
+    entityId: arrangerUser.arranger_id,
+    userId: user.id,
+    userEmail: user.email,
+    context: 'ArrangerProfilePage',
+    select: `
       id,
       full_name,
       first_name,
@@ -129,10 +136,8 @@ export default async function ArrangerProfilePage() {
       kyc_status,
       kyc_approved_at,
       kyc_notes
-    `)
-    .eq('arranger_id', arrangerUser.arranger_id)
-    .eq('linked_user_id', user.id)
-    .maybeSingle()
+    `,
+  })
 
   if (memberError) {
     console.error('[ArrangerProfilePage] Error fetching member:', memberError)

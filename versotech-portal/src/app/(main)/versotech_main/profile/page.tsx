@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { ProfilePageClient } from '@/components/profile/profile-page-client'
+import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -68,9 +69,15 @@ export default async function ProfilePage({
 
   if (investorUser) {
     // Fetch the user's member record (linked via linked_user_id)
-    const { data: memberData, error: memberError } = await serviceSupabase
-      .from('investor_members')
-      .select(`
+    const { member: memberData, error: memberError } = await fetchMemberWithAutoLink({
+      supabase: serviceSupabase,
+      memberTable: 'investor_members',
+      entityIdColumn: 'investor_id',
+      entityId: investorUser.investor_id,
+      userId: user.id,
+      userEmail: user.email,
+      context: 'ProfilePage',
+      select: `
         id,
         full_name,
         first_name,
@@ -104,11 +111,8 @@ export default async function ProfilePage({
         kyc_status,
         kyc_approved_at,
         kyc_notes
-      `)
-      .eq('investor_id', investorUser.investor_id)
-      .eq('linked_user_id', user.id)
-      .eq('is_active', true)
-      .maybeSingle()
+      `,
+    })
 
     if (memberError) {
       console.error('[ProfilePage] Error fetching member:', memberError)

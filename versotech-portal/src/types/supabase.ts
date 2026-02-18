@@ -7171,7 +7171,7 @@ export type Database = {
           id: string
           introducer_id: string | null
           introducer_member_id: string | null
-          investor_id: string
+          investor_id: string | null
           investor_member_id: string | null
           lawyer_id: string | null
           lawyer_member_id: string | null
@@ -7210,7 +7210,7 @@ export type Database = {
           id?: string
           introducer_id?: string | null
           introducer_member_id?: string | null
-          investor_id: string
+          investor_id?: string | null
           investor_member_id?: string | null
           lawyer_id?: string | null
           lawyer_member_id?: string | null
@@ -7249,7 +7249,7 @@ export type Database = {
           id?: string
           introducer_id?: string | null
           introducer_member_id?: string | null
-          investor_id?: string
+          investor_id?: string | null
           investor_member_id?: string | null
           lawyer_id?: string | null
           lawyer_member_id?: string | null

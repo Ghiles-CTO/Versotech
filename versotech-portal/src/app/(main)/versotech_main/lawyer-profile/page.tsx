@@ -1,6 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { AlertCircle } from 'lucide-react'
 import { LawyerProfileClient } from '@/components/lawyer/lawyer-profile-client'
+import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
 
 export const dynamic = 'force-dynamic'
 
@@ -88,9 +89,15 @@ export default async function LawyerProfilePage() {
     .maybeSingle()
 
   // Fetch the user's member record for personal KYC (linked via linked_user_id)
-  const { data: memberData, error: memberError } = await serviceSupabase
-    .from('lawyer_members')
-    .select(`
+  const { member: memberData, error: memberError } = await fetchMemberWithAutoLink({
+    supabase: serviceSupabase,
+    memberTable: 'lawyer_members',
+    entityIdColumn: 'lawyer_id',
+    entityId: lawyerUser.lawyer_id,
+    userId: user.id,
+    userEmail: user.email,
+    context: 'LawyerProfilePage',
+    select: `
       id,
       full_name,
       first_name,
@@ -124,10 +131,8 @@ export default async function LawyerProfilePage() {
       kyc_status,
       kyc_approved_at,
       kyc_notes
-    `)
-    .eq('lawyer_id', lawyerUser.lawyer_id)
-    .eq('linked_user_id', user.id)
-    .maybeSingle()
+    `,
+  })
 
   if (memberError) {
     console.error('[LawyerProfilePage] Error fetching member:', memberError)

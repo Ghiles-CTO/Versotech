@@ -707,14 +707,22 @@ export function CommercialPartnerProfileClient({
         {/* Regulatory Tab */}
         <TabsContent value="regulatory" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Scale className="h-5 w-5" />
-                Regulatory Information
-              </CardTitle>
-              <CardDescription>
-                Your regulatory status and licensing details
-              </CardDescription>
+            <CardHeader className="flex flex-row items-start justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Scale className="h-5 w-5" />
+                  Regulatory Information
+                </CardTitle>
+                <CardDescription>
+                  Your regulatory status and licensing details
+                </CardDescription>
+              </div>
+              {cpInfo?.type !== 'individual' && (
+                <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -911,7 +919,10 @@ export function CommercialPartnerProfileClient({
             phone_mobile: cpInfo.phone_mobile ?? '',
             phone_office: cpInfo.phone_office ?? '',
             website: cpInfo.website ?? '',
+            jurisdiction: cpInfo.jurisdiction ?? '',
           }}
+          showJurisdiction={true}
+          jurisdictionLabel="Jurisdiction"
           apiEndpoint="/api/commercial-partners/me/profile"
           onSuccess={() => window.location.reload()}
         />

@@ -28,6 +28,7 @@ const entityAddressSchema = z.object({
   state_province: z.string().max(100).optional().nullable(),
   postal_code: z.string().max(20).optional().nullable(),
   country: z.string().optional().nullable(),
+  jurisdiction: z.string().max(100).optional().nullable(),
 
   // Contact Information
   email: z.string().email('Invalid email').optional().nullable().or(z.literal('')),
@@ -49,6 +50,8 @@ interface EntityAddressEditDialogProps {
   onSuccess?: () => void
   title?: string
   description?: string
+  showJurisdiction?: boolean
+  jurisdictionLabel?: string
 }
 
 export function EntityAddressEditDialog({
@@ -61,6 +64,8 @@ export function EntityAddressEditDialog({
   onSuccess,
   title = 'Edit Address & Contact',
   description,
+  showJurisdiction = false,
+  jurisdictionLabel = 'Jurisdiction',
 }: EntityAddressEditDialogProps) {
   const [isSaving, setIsSaving] = useState(false)
 
@@ -73,6 +78,7 @@ export function EntityAddressEditDialog({
       state_province: initialData?.state_province || '',
       postal_code: initialData?.postal_code || '',
       country: initialData?.country || '',
+      jurisdiction: initialData?.jurisdiction || '',
       email: initialData?.email || '',
       phone: initialData?.phone || '',
       phone_mobile: initialData?.phone_mobile || '',
@@ -212,6 +218,22 @@ export function EntityAddressEditDialog({
                   )}
                 />
               </div>
+
+              {showJurisdiction && (
+                <FormField
+                  control={form.control}
+                  name="jurisdiction"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{jurisdictionLabel}</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ''} placeholder="e.g. United Kingdom, DIFC, Delaware" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
             {/* Contact Section */}

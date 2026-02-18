@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { PartnerProfileClient } from '@/components/partner-profile/partner-profile-client'
+import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -53,9 +54,15 @@ export default async function PartnerProfilePage() {
     .single()
 
   // Fetch the user's member record for personal KYC (linked via linked_user_id)
-  const { data: memberData, error: memberError } = await serviceSupabase
-    .from('partner_members')
-    .select(`
+  const { member: memberData, error: memberError } = await fetchMemberWithAutoLink({
+    supabase: serviceSupabase,
+    memberTable: 'partner_members',
+    entityIdColumn: 'partner_id',
+    entityId: partnerUser.partner_id,
+    userId: user.id,
+    userEmail: user.email,
+    context: 'PartnerProfilePage',
+    select: `
       id,
       full_name,
       first_name,
@@ -89,10 +96,8 @@ export default async function PartnerProfilePage() {
       kyc_status,
       kyc_approved_at,
       kyc_notes
-    `)
-    .eq('partner_id', partnerUser.partner_id)
-    .eq('linked_user_id', user.id)
-    .maybeSingle()
+    `,
+  })
 
   if (memberError) {
     console.error('[PartnerProfilePage] Error fetching member:', memberError)

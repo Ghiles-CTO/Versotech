@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+
+const ENTITY_FILTER_COLUMN_MAP = {
+  investor: 'investor_id',
+  partner: 'partner_id',
+  introducer: 'introducer_id',
+  lawyer: 'lawyer_id',
+  commercial_partner: 'commercial_partner_id',
+  arranger: 'arranger_entity_id',
+} as const
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,11 +37,15 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Use service client for staff queue reads to avoid persona-specific RLS gaps
+    const serviceSupabase = createServiceClient()
+
     // Get query parameters for filtering and pagination
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const investorId = searchParams.get('investor_id')
     const documentType = searchParams.get('document_type')
+    const entityType = searchParams.get('entity_type')
     const page = parseInt(searchParams.get('page') || '1')
     const pageSize = parseInt(searchParams.get('pageSize') || '25')
 
@@ -41,7 +54,7 @@ export async function GET(request: NextRequest) {
     const to = from + pageSize - 1
 
     // Build query with proper table aliases and get count
-    let query = supabase
+    let query = serviceSupabase
       .from('kyc_submissions')
       .select(`
         *,
@@ -158,6 +171,16 @@ export async function GET(request: NextRequest) {
     if (documentType) {
       query = query.eq('document_type', documentType)
     }
+    if (entityType) {
+      const mappedColumn = ENTITY_FILTER_COLUMN_MAP[entityType as keyof typeof ENTITY_FILTER_COLUMN_MAP]
+      if (!mappedColumn) {
+        return NextResponse.json(
+          { error: 'Invalid entity_type filter' },
+          { status: 400 }
+        )
+      }
+      query = query.not(mappedColumn, 'is', null)
+    }
 
     // Apply ordering and pagination AFTER filters
     query = query
@@ -255,7 +278,7 @@ export async function GET(request: NextRequest) {
     }))
 
     // Get submission statistics using aggregation (more efficient)
-    const { data: statsData } = await supabase
+    const { data: statsData } = await serviceSupabase
       .from('kyc_submissions')
       .select('status')
 

@@ -49,6 +49,23 @@ const ENTITY_CONFIGS = {
 
 type EntityType = keyof typeof ENTITY_CONFIGS
 
+type MemberRow = {
+  id: string
+  linked_user_id: string | null
+  email: string | null
+  full_name: string | null
+  first_name: string | null
+  last_name: string | null
+  kyc_status: string | null
+  date_of_birth: string | null
+  nationality: string | null
+  residential_street: string | null
+  residential_country: string | null
+  id_type: string | null
+  id_number: string | null
+  [key: string]: unknown
+}
+
 /**
  * POST /api/me/personal-kyc/submit
  *
@@ -90,41 +107,114 @@ export async function POST(request: Request) {
     const config = ENTITY_CONFIGS[entityType as EntityType]
     const serviceSupabase = createServiceClient()
 
-    // Verify the member belongs to this user via linked_user_id
-    const { data: member, error: memberError } = await serviceSupabase
-      .from(config.memberTable)
-      .select(`
-        id,
-        ${config.entityIdColumn},
-        linked_user_id,
-        full_name,
-        first_name,
-        last_name,
-        kyc_status,
-        date_of_birth,
-        nationality,
-        residential_street,
-        residential_country,
-        id_type,
-        id_number
-      `)
-      .eq('id', memberId)
-      .eq('linked_user_id', user.id)
-      .maybeSingle()
+    // Resolve the member and auto-link when safe:
+    // - user must belong to the same entity via the persona user bridge table
+    // - member must either already be linked to the user or be uniquely matchable by email
+    const memberSelect = `
+      id,
+      ${config.entityIdColumn},
+      linked_user_id,
+      email,
+      full_name,
+      first_name,
+      last_name,
+      kyc_status,
+      date_of_birth,
+      nationality,
+      residential_street,
+      residential_country,
+      id_type,
+      id_number
+    `
 
-    if (memberError) {
-      console.error(`Error fetching ${entityType} member:`, memberError)
+    const { data: rawMemberData, error: rawMemberError } = await serviceSupabase
+      .from(config.memberTable)
+      .select(memberSelect)
+      .eq('id', memberId)
+      .maybeSingle()
+    const rawMember = rawMemberData as MemberRow | null
+
+    if (rawMemberError) {
+      console.error(`Error fetching ${entityType} member:`, rawMemberError)
       return NextResponse.json(
         { error: 'Failed to fetch member data' },
         { status: 500 }
       )
     }
 
-    if (!member) {
+    if (!rawMember) {
+      return NextResponse.json(
+        { error: 'Member not found' },
+        { status: 404 }
+      )
+    }
+
+    const entityId = rawMember[config.entityIdColumn as keyof typeof rawMember]
+    if (!entityId || typeof entityId !== 'string') {
+      return NextResponse.json(
+        { error: 'Member is not linked to a valid entity' },
+        { status: 400 }
+      )
+    }
+
+    const { data: entityUser, error: entityUserError } = await serviceSupabase
+      .from(config.userTable)
+      .select('user_id')
+      .eq('user_id', user.id)
+      .eq(config.entityIdColumn, entityId)
+      .maybeSingle()
+
+    if (entityUserError || !entityUser) {
       return NextResponse.json(
         { error: 'Member not found or access denied' },
         { status: 404 }
       )
+    }
+
+    let member = rawMember
+    const linkedUserId = member.linked_user_id as string | null
+
+    if (linkedUserId && linkedUserId !== user.id) {
+      return NextResponse.json(
+        { error: 'Member not found or access denied' },
+        { status: 404 }
+      )
+    }
+
+    if (!linkedUserId) {
+      const memberEmail = typeof member.email === 'string' ? member.email.trim().toLowerCase() : null
+      const userEmail = user.email?.trim().toLowerCase() ?? null
+
+      if (!memberEmail || !userEmail || memberEmail !== userEmail) {
+        return NextResponse.json(
+          { error: 'Member not found or access denied' },
+          { status: 404 }
+        )
+      }
+
+      const { data: linkedMemberData, error: linkError } = await serviceSupabase
+        .from(config.memberTable)
+        .update({
+          linked_user_id: user.id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', memberId)
+        .is('linked_user_id', null)
+        .select(memberSelect)
+        .maybeSingle()
+      const linkedMember = linkedMemberData as MemberRow | null
+
+      if (linkError) {
+        console.error(`Error auto-linking ${entityType} member:`, linkError)
+        return NextResponse.json(
+          { error: 'Failed to verify member ownership' },
+          { status: 500 }
+        )
+      }
+
+      if (linkedMember) {
+        member = linkedMember
+      }
     }
 
     // Check if already submitted (prevent double-submit)
@@ -162,14 +252,6 @@ export async function POST(request: Request) {
     }
 
     // Build submission data dynamically based on entity type
-    const entityId = member[config.entityIdColumn as keyof typeof member]
-    if (!entityId || typeof entityId !== 'string') {
-      return NextResponse.json(
-        { error: 'Member is not linked to a valid entity' },
-        { status: 400 }
-      )
-    }
-
     const submissionMemberIdColumn = `${entityType}_member_id`
 
     // Prevent duplicate queue entries when a personal_info submission is already pending

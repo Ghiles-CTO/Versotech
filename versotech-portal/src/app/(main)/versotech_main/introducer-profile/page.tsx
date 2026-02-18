@@ -1,6 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { AlertCircle } from 'lucide-react'
 import { IntroducerProfileClient } from '@/components/introducer-profile/introducer-profile-client'
+import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
 
 export const dynamic = 'force-dynamic'
 
@@ -101,9 +102,15 @@ export default async function IntroducerProfilePage() {
     .eq('introducer_id', introducerUser.introducer_id)
 
   // Fetch the user's member record for personal KYC (linked via linked_user_id)
-  const { data: memberData, error: memberError } = await serviceSupabase
-    .from('introducer_members')
-    .select(`
+  const { member: memberData, error: memberError } = await fetchMemberWithAutoLink({
+    supabase: serviceSupabase,
+    memberTable: 'introducer_members',
+    entityIdColumn: 'introducer_id',
+    entityId: introducerUser.introducer_id,
+    userId: user.id,
+    userEmail: user.email,
+    context: 'IntroducerProfilePage',
+    select: `
       id,
       full_name,
       first_name,
@@ -137,10 +144,8 @@ export default async function IntroducerProfilePage() {
       kyc_status,
       kyc_approved_at,
       kyc_notes
-    `)
-    .eq('introducer_id', introducerUser.introducer_id)
-    .eq('linked_user_id', user.id)
-    .maybeSingle()
+    `,
+  })
 
   if (memberError) {
     console.error('[IntroducerProfilePage] Error fetching member:', memberError)

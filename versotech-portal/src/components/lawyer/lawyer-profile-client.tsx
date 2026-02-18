@@ -430,10 +430,12 @@ export function LawyerProfileClient({
             <Users className="h-4 w-4" />
             Members
           </TabsTrigger>
-          <TabsTrigger value="entity-members" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Directors/UBOs
-          </TabsTrigger>
+          {lawyerInfo?.type !== 'individual' && (
+            <TabsTrigger value="entity-members" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Directors/UBOs
+            </TabsTrigger>
+          )}
           <TabsTrigger value="kyc" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             KYC
@@ -735,28 +737,30 @@ export function LawyerProfileClient({
         </TabsContent>
 
         {/* Entity Members Tab (Directors/UBOs) */}
-        <TabsContent value="entity-members" className="space-y-4">
-          {lawyerInfo ? (
-            <GenericEntityMembersTab
-              entityType="lawyer"
-              entityId={lawyerInfo.id}
-              entityName={lawyerInfo.firm_name || lawyerInfo.display_name || 'Law Firm'}
-              apiEndpoint="/api/lawyers/me/members"
-              canManage={lawyerUserInfo.role === 'admin' || lawyerUserInfo.is_primary}
-              title="Directors, UBOs & Signatories"
-              description="Manage firm partners, directors, beneficial owners (>25% ownership), and authorized signatories with full KYC information."
-            />
-          ) : (
-            <Card>
-              <CardContent className="py-8 text-center">
-                <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">
-                  No law firm linked to your account
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
+        {lawyerInfo?.type !== 'individual' && (
+          <TabsContent value="entity-members" className="space-y-4">
+            {lawyerInfo ? (
+              <GenericEntityMembersTab
+                entityType="lawyer"
+                entityId={lawyerInfo.id}
+                entityName={lawyerInfo.firm_name || lawyerInfo.display_name || 'Law Firm'}
+                apiEndpoint="/api/lawyers/me/members"
+                canManage={lawyerUserInfo.role === 'admin' || lawyerUserInfo.is_primary}
+                title="Directors, UBOs & Signatories"
+                description="Manage firm partners, directors, beneficial owners (>25% ownership), and authorized signatories with full KYC information."
+              />
+            ) : (
+              <Card>
+                <CardContent className="py-8 text-center">
+                  <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground">
+                    No law firm linked to your account
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        )}
 
         {/* KYC Tab */}
         <TabsContent value="kyc" className="space-y-4">
