@@ -41,10 +41,17 @@ import {
   UserPlus,
   TrendingUp,
   Wallet,
-  BadgeCheck
+  BadgeCheck,
+  Loader2
 } from 'lucide-react'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
+import { toast } from 'sonner'
 import { InterestModal } from '@/components/deals/interest-modal'
-import { SubscribeNowDialog } from '@/components/deals/subscribe-now-dialog'
+// [DEPRECATED] Old subscribe dialog — kept for rollback. See subscribe-now-dialog.tsx
+// import { SubscribeNowDialog } from '@/components/deals/subscribe-now-dialog'
 import { ShareDealDialog } from '@/components/deals/share-deal-dialog'
 import { getAccountStatusCopy, formatKycStatusLabel } from '@/lib/account-approval-status'
 
@@ -603,10 +610,42 @@ export function InvestorDealsListClient({
   const [sortBy, setSortBy] = useState('closing_date')
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
 
+  // Subscribe dialog state
+  const [showSubscribeDialog, setShowSubscribeDialog] = useState(false)
+  const [subscribeDealId, setSubscribeDealId] = useState<string | null>(null)
+  const [subscribeDealName, setSubscribeDealName] = useState('')
+  const [subscribeDealCurrency, setSubscribeDealCurrency] = useState('')
+  const [subscribeDealMin, setSubscribeDealMin] = useState<number | null>(null)
+  const [subscribeDealMax, setSubscribeDealMax] = useState<number | null>(null)
+  const [subscribeDealLogo, setSubscribeDealLogo] = useState<string | null>(null)
+  const [subscribeAmount, setSubscribeAmount] = useState('')
+  const [subscribeBankConfirm, setSubscribeBankConfirm] = useState(true)
+  const [subscribeNotes, setSubscribeNotes] = useState('')
+  const [subscribeLoading, setSubscribeLoading] = useState(false)
+  const [investorSignatories, setInvestorSignatories] = useState<{ id: string; full_name: string; email: string }[]>([])
+
   // Wait for client-side hydration to complete before rendering Radix UI components
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Fetch investor's authorized signatories (investor-level, not deal-specific)
+  useEffect(() => {
+    if (!primaryInvestorId) return
+    async function fetchSignatories() {
+      try {
+        const res = await fetch('/api/investors/me/members')
+        if (res.ok) {
+          const data = await res.json()
+          const sigs = (data.members || []).filter(
+            (m: any) => m.role === 'authorized_signatory' && m.is_active
+          )
+          setInvestorSignatories(sigs.map((s: any) => ({ id: s.id, full_name: s.full_name, email: s.email })))
+        }
+      } catch { /* silent */ }
+    }
+    fetchSignatories()
+  }, [primaryInvestorId])
 
   // Extract unique values for filter dropdowns
   // NOTE: All useMemo hooks MUST be called before any early returns to comply with Rules of Hooks
@@ -799,6 +838,60 @@ export function InvestorDealsListClient({
     setSectorFilter('all')
     setStageFilter('all')
     setLocationFilter('all')
+  }
+
+  // Format a raw number string with thousand separators for display
+  const formatAmountDisplay = (raw: string) => {
+    const cleaned = raw.replace(/[^0-9.]/g, '')
+    if (!cleaned) return ''
+    const parts = cleaned.split('.')
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    return parts.length > 1 ? `${parts[0]}.${parts[1]}` : parts[0]
+  }
+
+  // Parse the displayed amount back to a raw number
+  const parseDisplayAmount = (display: string): number => {
+    return parseFloat(display.replace(/,/g, '')) || 0
+  }
+
+  const handleSubscribe = async () => {
+    if (!subscribeAmount || !subscribeDealId) return
+    try {
+      setSubscribeLoading(true)
+      const response = await fetch(`/api/deals/${subscribeDealId}/subscriptions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          payload: {
+            amount: parseDisplayAmount(subscribeAmount),
+            currency: subscribeDealCurrency,
+            bank_confirmation: subscribeBankConfirm,
+            notes: subscribeNotes.trim() || null
+          },
+          subscription_type: 'personal'
+        })
+      })
+      if (!response.ok) {
+        const err = await response.json()
+        throw new Error(err.error || 'Failed to submit subscription')
+      }
+      await response.json()
+      setShowSubscribeDialog(false)
+      setSubscribeAmount('')
+      setSubscribeBankConfirm(true)
+      setSubscribeNotes('')
+      setSubscribeDealId(null)
+      toast.success('Subscription submitted for review', {
+        description: 'The VERSO team will follow up shortly.'
+      })
+      // Refresh deals list to reflect new subscription state
+      window.location.reload()
+    } catch (err: any) {
+      console.error('Error subscribing:', err)
+      toast.error(err.message || 'Failed to submit subscription')
+    } finally {
+      setSubscribeLoading(false)
+    }
   }
 
   // Render loading state until hydration is complete to prevent Radix UI ID mismatches
@@ -1664,17 +1757,21 @@ export function InvestorDealsListClient({
 
                       {/* Subscribe to Investment - primary CTA for investors with valid investor ID */}
                       {!isClosed && primaryInvestorId && canInvest && !subscription && (
-                        <SubscribeNowDialog
-                          dealId={deal.id}
-                          dealName={deal.name}
-                          currency={deal.currency}
-                          existingSubmission={subscription}
+                        <Button
+                          className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+                          onClick={() => {
+                            setSubscribeDealId(deal.id)
+                            setSubscribeDealName(deal.name)
+                            setSubscribeDealCurrency(deal.currency)
+                            setSubscribeDealMin(deal.minimum_investment ?? null)
+                            setSubscribeDealMax(deal.maximum_investment ?? null)
+                            setSubscribeDealLogo(deal.company_logo_url ?? null)
+                            setShowSubscribeDialog(true)
+                          }}
                         >
-                          <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700">
-                            Subscribe to Investment Opportunity
-                            <ArrowUpRight className="h-4 w-4" />
-                          </Button>
-                        </SubscribeNowDialog>
+                          Subscribe to Investment Opportunity
+                          <ArrowUpRight className="h-4 w-4" />
+                        </Button>
                       )}
 
                       {/* Submit Interest for Data Room - secondary CTA for investors with a valid investor ID */}
@@ -1715,6 +1812,214 @@ export function InvestorDealsListClient({
           })}
         </div>
       )}
+
+      {/* ═══════ Subscribe to Investment Dialog ═══════ */}
+      <Dialog open={showSubscribeDialog} onOpenChange={setShowSubscribeDialog}>
+        <DialogContent
+          className="sm:max-w-[480px] p-0 gap-0 border-0 shadow-[0_25px_60px_-12px_rgba(0,0,0,0.35)] dark:shadow-[0_25px_60px_-12px_rgba(0,0,0,0.7)]"
+          showCloseButton={false}
+        >
+          {/* ── Gold accent bar ── */}
+          <div className="h-[3px]" style={{ background: 'linear-gradient(90deg, hsl(43 74% 66%) 0%, hsl(43 74% 56%) 50%, hsl(43 74% 66%) 100%)' }} />
+
+          {/* ── Header with texture ── */}
+          <div className="relative px-8 pt-8 pb-6 overflow-hidden">
+            {/* Subtle radial glow */}
+            <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full opacity-[0.06] dark:opacity-[0.10]" style={{ background: 'radial-gradient(circle, hsl(43 74% 66%), transparent 65%)' }} />
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+
+            <div className="relative flex items-start gap-4">
+              <DealLogo
+                src={subscribeDealLogo}
+                alt={subscribeDealName}
+                size={48}
+                rounded="lg"
+              />
+              <div className="min-w-0 flex-1">
+                <DialogHeader className="pb-0 space-y-0">
+                  <DialogTitle className="text-lg font-semibold tracking-tight leading-tight">
+                    Subscribe to Investment Opportunity
+                  </DialogTitle>
+                </DialogHeader>
+                <DialogDescription className="text-[13px] text-muted-foreground/80 leading-relaxed mt-1.5">
+                  Enter your commitment amount to submit a subscription request for {subscribeDealName}. Once reviewed, you&apos;ll receive the subscription documents to sign.
+                </DialogDescription>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Amount Section — dark inset panel ── */}
+          <div className="mx-5 rounded-xl border border-border/80 bg-muted/40 dark:bg-black/20 overflow-hidden">
+            <div className="px-5 pt-4 pb-1">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
+                  Commitment Amount ({subscribeDealCurrency})
+                </span>
+                {subscribeDealMin != null && subscribeDealMax != null && (
+                  <span className="text-[10px] tabular-nums text-muted-foreground/40 font-medium">
+                    Range: {formatCurrency(subscribeDealMin, subscribeDealCurrency)} &ndash; {formatCurrency(subscribeDealMax, subscribeDealCurrency)}
+                  </span>
+                )}
+              </div>
+
+              {/* Big currency + input row */}
+              <div className="flex items-baseline gap-3">
+                <span className="text-lg font-bold text-muted-foreground/50 select-none shrink-0" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                  {subscribeDealCurrency}
+                </span>
+                <input
+                  id="subscribe-amount"
+                  type="text"
+                  inputMode="decimal"
+                  autoFocus
+                  className="w-full bg-transparent border-0 outline-none text-3xl font-bold tracking-tight placeholder:text-muted-foreground/20 text-foreground"
+                  style={{ fontVariantNumeric: 'tabular-nums' }}
+                  placeholder="0"
+                  value={subscribeAmount}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/[^0-9.]/g, '')
+                    setSubscribeAmount(formatAmountDisplay(raw))
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Live readback bar */}
+            <div className="px-5 py-2.5 border-t border-border/50 bg-muted/30 dark:bg-black/10 flex items-center justify-between min-h-[36px]">
+              {subscribeAmount && parseDisplayAmount(subscribeAmount) > 0 ? (
+                <>
+                  <span className="text-xs tabular-nums text-muted-foreground font-medium">
+                    {formatCurrency(parseDisplayAmount(subscribeAmount), subscribeDealCurrency)}
+                  </span>
+                  {subscribeDealMin != null && parseDisplayAmount(subscribeAmount) < subscribeDealMin && (
+                    <span className="text-[11px] font-medium text-amber-500 dark:text-amber-400 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      Below minimum
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="text-xs text-muted-foreground/30">
+                  Enter your commitment amount
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="px-5 pt-5 space-y-5">
+            {/* Signatories notice */}
+            {investorSignatories.length > 0 && (
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <FileSignature className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium text-blue-800 dark:text-blue-200">
+                      {investorSignatories.length} Signatory(ies) Required
+                    </p>
+                    <p className="text-blue-700 dark:text-blue-300 mt-1">
+                      Both NDA and Subscription Pack will be sent to all authorized signatories.
+                    </p>
+                    <p className="text-amber-600 dark:text-amber-400 mt-2 text-xs">
+                      Note: This request does not include data room access.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── KYC Toggle Card ── */}
+          <div className="px-5 pt-5">
+            <button
+              type="button"
+              onClick={() => setSubscribeBankConfirm(!subscribeBankConfirm)}
+              className={cn(
+                'w-full rounded-xl p-4 text-left transition-all duration-300 cursor-pointer relative overflow-hidden',
+                'border-2',
+                subscribeBankConfirm
+                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40'
+                  : 'border-border/60 bg-card hover:bg-muted/40 hover:border-border'
+              )}
+            >
+              <div className="flex items-center gap-4">
+                {/* Custom animated checkbox */}
+                <div className={cn(
+                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-all duration-300',
+                  subscribeBankConfirm
+                    ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30'
+                    : 'bg-muted border-2 border-border'
+                )}>
+                  {subscribeBankConfirm && (
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="drop-shadow-sm">
+                      <path d="M2.5 7.5L5.5 10.5L11.5 3.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
+
+                <span className={cn(
+                  'text-sm font-normal cursor-pointer leading-relaxed flex-1',
+                  subscribeBankConfirm ? 'text-emerald-900 dark:text-emerald-100' : 'text-foreground'
+                )}>
+                  I confirm my bank/KYC documentation is ready for the subscription pack.
+                </span>
+
+                <ShieldCheck className={cn(
+                  'h-5 w-5 shrink-0 transition-all duration-300',
+                  subscribeBankConfirm
+                    ? 'text-emerald-500 dark:text-emerald-400 scale-110'
+                    : 'text-muted-foreground/20 scale-100'
+                )} />
+              </div>
+            </button>
+          </div>
+
+          {/* Notes */}
+          <div className="px-5 pt-4 pb-6">
+            <Label htmlFor="subscribe-notes" className="mb-2 block">Notes for the team (optional)</Label>
+            <Textarea
+              id="subscribe-notes"
+              value={subscribeNotes}
+              onChange={(e) => setSubscribeNotes(e.target.value)}
+              rows={2}
+              className="resize-none text-sm bg-muted/30 dark:bg-black/10 border-border/60"
+              placeholder="Share wiring preferences, co-investor details, or other information."
+            />
+          </div>
+
+          {/* ── Footer ── */}
+          <div className="px-6 py-5 border-t border-border/60 bg-muted/30 dark:bg-black/15 flex items-center justify-between gap-3">
+            <Button
+              variant="ghost"
+              onClick={() => setShowSubscribeDialog(false)}
+              className="text-muted-foreground hover:text-foreground h-11 px-5 rounded-lg"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubscribe}
+              disabled={subscribeLoading || !subscribeAmount || (subscribeDealMin !== null && parseDisplayAmount(subscribeAmount) < subscribeDealMin)}
+              className={cn(
+                'h-11 px-8 rounded-lg text-sm font-semibold gap-2 transition-all duration-200',
+                'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white',
+                'shadow-[0_4px_14px_0_rgba(16,185,129,0.25)] hover:shadow-[0_6px_20px_0_rgba(16,185,129,0.35)]',
+                'disabled:opacity-50 disabled:shadow-none'
+              )}
+            >
+              {subscribeLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  Confirm Interest
+                  <ArrowUpRight className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

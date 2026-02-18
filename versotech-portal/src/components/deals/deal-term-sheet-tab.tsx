@@ -300,6 +300,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
   const [uploadingAttachmentId, setUploadingAttachmentId] = useState<string | null>(null)
   const fileInputsRef = useRef<Record<string, HTMLInputElement | null>>({})
   const [dealVehicle, setDealVehicle] = useState<VehicleMeta | null>(null)
+  const [dealCurrency, setDealCurrency] = useState<string>('')
 
   // Fee plan state
   const [feePlans, setFeePlans] = useState<LinkedFeePlan[]>([])
@@ -325,6 +326,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
         const data = await response.json()
         if (cancelled) return
         setDealVehicle(data?.deal?.vehicles ?? null)
+        setDealCurrency(data?.deal?.currency || '')
       } catch (error) {
         console.error('Failed to load deal vehicle data', error)
       }
@@ -866,9 +868,9 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   <div className="rounded-lg bg-muted/20 border border-border/50 p-4 space-y-3">
                     <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide">Investment Terms</h4>
                     <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
-                      <FieldValue label="Allocation Up To" value={formatAmountWithCurrency(published.allocation_up_to, published.currency)} />
+                      <FieldValue label="Allocation Up To" value={formatAmountWithCurrency(published.allocation_up_to, dealCurrency)} />
                       <FieldValue label="Price Per Share" value={getPricePerShareDisplay(published) || '—'} />
-                      <FieldValue label="Minimum Ticket" value={formatAmountWithCurrency(published.minimum_ticket, published.currency)} />
+                      <FieldValue label="Minimum Ticket" value={formatAmountWithCurrency(published.minimum_ticket, dealCurrency)} />
                     </dl>
                   </div>
 
@@ -1049,9 +1051,9 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
               <div className="rounded-lg bg-muted/10 border border-border/50 p-4 space-y-3">
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Investment Terms</h4>
                 <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
-                  <FieldValue label="Allocation" value={formatAmountWithCurrency(termSheet.allocation_up_to, termSheet.currency)} />
+                  <FieldValue label="Allocation" value={formatAmountWithCurrency(termSheet.allocation_up_to, dealCurrency)} />
                   <FieldValue label="Price Per Share" value={getPricePerShareDisplay(termSheet) || '—'} />
-                  <FieldValue label="Min Ticket" value={formatAmountWithCurrency(termSheet.minimum_ticket, termSheet.currency)} />
+                  <FieldValue label="Min Ticket" value={formatAmountWithCurrency(termSheet.minimum_ticket, dealCurrency)} />
                 </dl>
               </div>
 

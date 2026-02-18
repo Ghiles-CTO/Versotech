@@ -1,3 +1,15 @@
+/**
+ * [DEPRECATED – 2026-02-17]
+ * This dialog has been replaced by an inline dialog in investor-deals-list-client.tsx
+ * and opportunities/[id]/page.tsx. Kept intact for potential rollback if the client
+ * prefers this version (has entity selector, deal capacity progress bar, etc.).
+ *
+ * Still used by legacy pages:
+ *   - (investor)/versoholdings/deal/[id]/page.tsx
+ *   - (investor)/versoholdings/data-rooms/[dealId]/page.tsx (via SubmitSubscriptionForm)
+ *
+ * Safe to delete once legacy pages are retired.
+ */
 'use client'
 
 import { ReactNode, useState } from 'react'

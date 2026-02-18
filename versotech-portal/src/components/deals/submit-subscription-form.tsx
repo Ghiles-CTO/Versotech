@@ -1,3 +1,18 @@
+/**
+ * [DEPRECATED – 2026-02-17]
+ * This form has been replaced by inline subscribe dialogs.
+ * Kept intact for potential rollback. Features not carried over to the new dialog:
+ *   - Entity selector (personal vs entity investment)
+ *   - Deal capacity progress bar
+ *   - Amount validation warnings against deal limits
+ *   - Locked state for pending_review submissions
+ *
+ * Still used by:
+ *   - subscribe-now-dialog.tsx
+ *   - (investor)/versoholdings/data-rooms/[dealId]/page.tsx
+ *
+ * Safe to delete once legacy pages are retired.
+ */
 'use client'
 
 import { useState, useEffect } from 'react'
