@@ -210,10 +210,26 @@ export function MessageBubble({
               )}
             </div>
 
-            {/* Link Preview Card — bottom of bubble */}
+            {/* Link Preview Card + URL — bottom of bubble */}
             {(() => {
               const lp = (message.metadata as Record<string, unknown>)?.link_preview as LinkPreview | undefined
-              return lp?.url ? <LinkPreviewCard preview={lp} isSelf={isSelf} /> : null
+              if (!lp?.url) return null
+              return (
+                <div className="flex flex-col gap-1 mt-1">
+                  <LinkPreviewCard preview={lp} isSelf={isSelf} />
+                  <a
+                    href={lp.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                      'text-[11px] break-all underline',
+                      isSelf ? 'text-primary-foreground/70 hover:text-primary-foreground' : 'text-primary hover:text-primary/80'
+                    )}
+                  >
+                    {lp.url}
+                  </a>
+                </div>
+              )
             })()}
           </div>
         </div>
