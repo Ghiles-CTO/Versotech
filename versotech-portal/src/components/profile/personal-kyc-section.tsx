@@ -205,12 +205,10 @@ export function PersonalKYCSection({
               <StatusIcon className="h-3 w-3 mr-1" />
               {statusBadge.label}
             </Badge>
-            {memberData.kyc_status !== 'approved' && memberData.kyc_status !== 'submitted' && (
-              <Button variant="outline" size="sm" onClick={() => setShowEditDialog(true)}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
-            )}
+            <Button variant="outline" size="sm" onClick={() => setShowEditDialog(true)}>
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -345,12 +343,12 @@ export function PersonalKYCSection({
           </div>
 
           {/* Submit Button */}
-          {memberData.kyc_status !== 'approved' && memberData.kyc_status !== 'submitted' && (
+          {memberData.kyc_status !== 'submitted' && (
             <div className="pt-4 border-t">
               {isInfoComplete ? (
                 <Button onClick={handleSubmitForReview} disabled={isSubmitting}>
                   <Send className="h-4 w-4 mr-2" />
-                  {isSubmitting ? 'Submitting...' : 'Submit for Review'}
+                  {isSubmitting ? 'Submitting...' : memberData.kyc_status === 'approved' ? 'Re-submit for Review' : 'Submit for Review'}
                 </Button>
               ) : (
                 <div className="flex items-center gap-3">

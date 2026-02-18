@@ -30,6 +30,7 @@ import {
   Upload,
   Users,
   Bell,
+  Send,
 } from 'lucide-react'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -108,6 +109,7 @@ type ArrangerInfo = {
 
 type ArrangerUserInfo = {
   role: string
+  is_primary: boolean
   is_active: boolean
   can_sign: boolean
   signature_specimen_url: string | null
@@ -230,6 +232,7 @@ export function ArrangerProfileClient({
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const [showKycDialog, setShowKycDialog] = useState(false)
   const [showAddressDialog, setShowAddressDialog] = useState(false)
+  const [isSubmittingEntityKyc, setIsSubmittingEntityKyc] = useState(false)
   const logoInputRef = useRef<HTMLInputElement>(null)
 
   // Edit form data
@@ -287,6 +290,33 @@ export function ArrangerProfileClient({
     const thirtyDaysFromNow = new Date()
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
     return expiryDate <= thirtyDaysFromNow && expiryDate > new Date()
+  }
+
+  const handleSubmitEntityKyc = async () => {
+    setIsSubmittingEntityKyc(true)
+    try {
+      const response = await fetch('/api/me/entity-kyc/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          entityType: 'arranger',
+          entityId: arrangerInfo.id,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to submit entity KYC')
+      }
+
+      toast.success('Entity information submitted for review')
+      window.location.reload()
+    } catch (error) {
+      console.error('[arranger-profile] Failed to submit entity KYC:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to submit entity KYC')
+    } finally {
+      setIsSubmittingEntityKyc(false)
+    }
   }
 
   // Save handlers
@@ -986,7 +1016,30 @@ export function ArrangerProfileClient({
         </TabsContent>
 
         {/* KYC Documents Tab */}
-        <TabsContent value="documents">
+        <TabsContent value="documents" className="space-y-4">
+          {arrangerInfo.type !== 'individual' &&
+            !['approved', 'submitted', 'pending', 'pending_review'].includes(arrangerInfo.kyc_status || '') && (
+            <Card>
+              <CardContent className="pt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-medium text-foreground">Submit Entity Info for Review</p>
+                  <p className="text-sm text-muted-foreground">
+                    Required to complete KYC and trigger account activation approval.
+                  </p>
+                </div>
+                {(arrangerUserInfo.role === 'admin' || arrangerUserInfo.is_primary) ? (
+                  <Button onClick={handleSubmitEntityKyc} disabled={isSubmittingEntityKyc} size="sm">
+                    <Send className="h-4 w-4 mr-2" />
+                    {isSubmittingEntityKyc ? 'Submitting...' : 'Submit Entity Info'}
+                  </Button>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Only primary contacts can submit entity information for review.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
           <ArrangerKYCDocumentsTab
             arrangerId={arrangerInfo.id}
             arrangerName={arrangerInfo.legal_name}

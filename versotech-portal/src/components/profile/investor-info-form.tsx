@@ -63,7 +63,7 @@ const investorInfoSchema = z.object({
   tax_id_number: z.string().max(50).optional().nullable(),
 
   // ID Document
-  id_type: z.enum(['passport', 'national_id', 'drivers_license', 'residence_permit']).optional().nullable(),
+  id_type: z.enum(['passport', 'national_id', 'drivers_license', 'residence_permit', 'other_government_id']).optional().nullable(),
   id_number: z.string().max(50).optional().nullable(),
   id_issue_date: z.string().optional().nullable(),
   id_expiry_date: z.string().optional().nullable(),
@@ -153,7 +153,7 @@ export function InvestorInfoForm({ onComplete }: InvestorInfoFormProps) {
               is_us_citizen: inv.is_us_citizen || false,
               is_us_taxpayer: inv.is_us_taxpayer || false,
               us_taxpayer_id: inv.us_taxpayer_id || '',
-              country_of_tax_residency: inv.country_of_tax_residency || '',
+              country_of_tax_residency: inv.tax_residency || '',
               tax_id_number: inv.tax_id_number || '',
               id_type: inv.id_type || undefined,
               id_number: inv.id_number || '',
@@ -200,7 +200,8 @@ export function InvestorInfoForm({ onComplete }: InvestorInfoFormProps) {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to save information')
+        const errBody = await response.json().catch(() => ({}))
+        throw new Error(errBody.error || 'Failed to save information')
       }
 
       setLastSaved(new Date())
@@ -730,6 +731,7 @@ export function InvestorInfoForm({ onComplete }: InvestorInfoFormProps) {
                           <SelectItem value="national_id">National ID Card</SelectItem>
                           <SelectItem value="drivers_license">Driver&apos;s License</SelectItem>
                           <SelectItem value="residence_permit">Residence Permit</SelectItem>
+                          <SelectItem value="other_government_id">Other Government ID</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

@@ -1,4 +1,5 @@
 import { SupabaseClient } from '@supabase/supabase-js'
+import { isIdDocument, isProofOfAddress } from '@/lib/validation/document-validation'
 
 /**
  * Entity types that support KYC
@@ -11,55 +12,281 @@ export type KYCEntityType =
   | 'commercial_partner'
   | 'arranger'
 
-/**
- * Maps entity types to their table names and member table names
- */
-const ENTITY_CONFIG: Record<KYCEntityType, {
+type EntityConfig = {
   entityTable: string
   memberTable: string
+  userTable: string
   entityIdColumn: string
-}> = {
+}
+
+/**
+ * Maps entity types to their table names and relationship columns.
+ */
+const ENTITY_CONFIG: Record<KYCEntityType, EntityConfig> = {
   investor: {
     entityTable: 'investors',
     memberTable: 'investor_members',
+    userTable: 'investor_users',
     entityIdColumn: 'investor_id',
   },
   partner: {
     entityTable: 'partners',
     memberTable: 'partner_members',
+    userTable: 'partner_users',
     entityIdColumn: 'partner_id',
   },
   introducer: {
     entityTable: 'introducers',
     memberTable: 'introducer_members',
+    userTable: 'introducer_users',
     entityIdColumn: 'introducer_id',
   },
   lawyer: {
     entityTable: 'lawyers',
     memberTable: 'lawyer_members',
+    userTable: 'lawyer_users',
     entityIdColumn: 'lawyer_id',
   },
   commercial_partner: {
     entityTable: 'commercial_partners',
     memberTable: 'commercial_partner_members',
+    userTable: 'commercial_partner_users',
     entityIdColumn: 'commercial_partner_id',
   },
   arranger: {
     entityTable: 'arranger_entities',
     memberTable: 'arranger_members',
+    userTable: 'arranger_users',
     entityIdColumn: 'arranger_id',
   },
 }
 
+const REQUIRED_ENTITY_DOCUMENTS: Record<KYCEntityType, string[]> = {
+  investor: [
+    'incorporation_certificate',
+    'memo_articles',
+    'register_members',
+    'register_beneficial_owners',
+    'register_directors',
+    'bank_confirmation',
+  ],
+  partner: [
+    'certificate_of_incorporation',
+    'company_registration',
+    'proof_of_address',
+    'beneficial_ownership',
+    'directors_list',
+    'partnership_agreement',
+  ],
+  introducer: [
+    'government_id',
+    'proof_of_address',
+    'professional_qualifications',
+    'bank_account_details',
+    'tax_registration',
+  ],
+  lawyer: [
+    'certificate_of_incorporation',
+    'proof_of_address',
+    'professional_license',
+    'professional_insurance',
+    'directors_list',
+    'beneficial_ownership',
+  ],
+  commercial_partner: [
+    'certificate_of_incorporation',
+    'company_registration',
+    'proof_of_address',
+    'beneficial_ownership',
+    'directors_list',
+    'bank_account_details',
+  ],
+  arranger: [
+    'certificate_of_incorporation',
+    'regulatory_license',
+    'insurance_certificate',
+    'aml_policy',
+    'financial_statements',
+    'beneficial_ownership',
+    'proof_of_address',
+  ],
+}
+
+const ACCOUNT_BLOCKED_STATUSES = new Set(['approved', 'rejected', 'unauthorized', 'blacklisted'])
+
+type SubmissionRow = {
+  id: string
+  document_type: string
+  status: string
+  investor_member_id?: string | null
+  partner_member_id?: string | null
+  introducer_member_id?: string | null
+  lawyer_member_id?: string | null
+  commercial_partner_member_id?: string | null
+  arranger_member_id?: string | null
+}
+
+function getSubmissionEntityColumn(entityType: KYCEntityType) {
+  return entityType === 'arranger' ? 'arranger_entity_id' : `${entityType}_id`
+}
+
+function getSubmissionMemberColumn(entityType: KYCEntityType) {
+  return `${entityType === 'arranger' ? 'arranger' : entityType}_member_id`
+}
+
+function normalizeStatus(value?: string | null) {
+  return value ? value.toLowerCase().trim() : null
+}
+
+function getEntityName(entity: any): string {
+  if (!entity) return 'Unknown Entity'
+  return (
+    entity.display_name ||
+    entity.legal_name ||
+    entity.name ||
+    entity.firm_name ||
+    entity.company_name ||
+    'Unknown Entity'
+  )
+}
+
+function isIndividualEntity(entityType: KYCEntityType, entity: any) {
+  const normalizedType = normalizeStatus(entity?.type)
+  if (entityType === 'investor') {
+    return normalizedType === 'individual'
+  }
+  return normalizedType === 'individual'
+}
+
+function hasApprovedSubmissionForType(
+  submissions: SubmissionRow[],
+  documentType: string,
+  memberColumn?: string,
+  memberId?: string | null
+) {
+  return submissions.some((submission: any) => {
+    if (submission.status !== 'approved') return false
+    if (submission.document_type !== documentType) return false
+
+    if (!memberColumn) return true
+
+    if (memberId === undefined) return true
+    if (memberId === null) return !submission[memberColumn]
+    return submission[memberColumn] === memberId
+  })
+}
+
+function hasApprovedIdDocument(
+  submissions: SubmissionRow[],
+  memberColumn: string,
+  memberId?: string | null,
+  allowEntityLevelFallback = false
+) {
+  return submissions.some((submission: any) => {
+    if (submission.status !== 'approved') return false
+    if (!isIdDocument(submission.document_type)) return false
+
+    if (memberId === undefined) return true
+    if (memberId === null) return !submission[memberColumn]
+    if (submission[memberColumn] === memberId) return true
+    return allowEntityLevelFallback && !submission[memberColumn]
+  })
+}
+
+function hasApprovedProofOfAddress(
+  submissions: SubmissionRow[],
+  memberColumn: string,
+  memberId?: string | null,
+  allowEntityLevelFallback = false
+) {
+  return submissions.some((submission: any) => {
+    if (submission.status !== 'approved') return false
+    if (!isProofOfAddress(submission.document_type)) return false
+
+    if (memberId === undefined) return true
+    if (memberId === null) return !submission[memberColumn]
+    if (submission[memberColumn] === memberId) return true
+    return allowEntityLevelFallback && !submission[memberColumn]
+  })
+}
+
+async function setAccountPendingApprovalIfNeeded(
+  supabase: SupabaseClient,
+  entityType: KYCEntityType,
+  entityId: string,
+  currentAccountStatus?: string | null
+) {
+  const config = ENTITY_CONFIG[entityType]
+  const normalizedCurrentStatus = normalizeStatus(currentAccountStatus)
+
+  if (normalizedCurrentStatus && ACCOUNT_BLOCKED_STATUSES.has(normalizedCurrentStatus)) {
+    return
+  }
+
+  if (normalizedCurrentStatus !== 'pending_approval') {
+    await supabase
+      .from(config.entityTable)
+      .update({
+        account_approval_status: 'pending_approval',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', entityId)
+  }
+}
+
+async function resolveRequestedBy(
+  supabase: SupabaseClient,
+  entityType: KYCEntityType,
+  entityId: string
+) {
+  const config = ENTITY_CONFIG[entityType]
+
+  const { data: memberWithUser } = await supabase
+    .from(config.memberTable)
+    .select('linked_user_id')
+    .eq(config.entityIdColumn, entityId)
+    .eq('is_active', true)
+    .not('linked_user_id', 'is', null)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  if (memberWithUser?.linked_user_id) {
+    return memberWithUser.linked_user_id as string
+  }
+
+  const { data: primaryUser } = await supabase
+    .from(config.userTable)
+    .select('user_id')
+    .eq(config.entityIdColumn, entityId)
+    .eq('is_primary', true)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  if (primaryUser?.user_id) {
+    return primaryUser.user_id as string
+  }
+
+  const { data: anyUser } = await supabase
+    .from(config.userTable)
+    .select('user_id')
+    .eq(config.entityIdColumn, entityId)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  return (anyUser?.user_id as string | null) ?? null
+}
+
 /**
- * Determines entity type from a KYC submission based on which *_id field is set
+ * Determines entity type from a KYC submission based on which *_id field is set.
  */
 export function getEntityTypeFromSubmission(submission: any): {
   entityType: KYCEntityType | null
   entityId: string | null
   memberId: string | null
 } {
-  // Check member IDs first (personal KYC submissions)
   if (submission.investor_member_id) {
     return { entityType: 'investor', entityId: submission.investor_id, memberId: submission.investor_member_id }
   }
@@ -79,7 +306,6 @@ export function getEntityTypeFromSubmission(submission: any): {
     return { entityType: 'arranger', entityId: submission.arranger_entity_id, memberId: submission.arranger_member_id }
   }
 
-  // Check entity IDs (entity-level KYC submissions)
   if (submission.investor_id) {
     return { entityType: 'investor', entityId: submission.investor_id, memberId: null }
   }
@@ -103,7 +329,7 @@ export function getEntityTypeFromSubmission(submission: any): {
 }
 
 /**
- * Updates member KYC status to 'approved' when personal_info submission is approved
+ * Updates member KYC status after a personal_info review decision.
  */
 export async function updateMemberKYCStatus(
   supabase: SupabaseClient,
@@ -133,133 +359,13 @@ export async function updateMemberKYCStatus(
     .eq('id', memberId)
 
   if (error) {
-    console.error(`Error updating ${config.memberTable} KYC status:`, error)
+    console.error(`[KYC] Failed to update ${config.memberTable} member ${memberId}:`, error)
     throw error
   }
-
-  console.log(`[KYC] Updated ${config.memberTable} member ${memberId} to ${status}`)
 }
 
 /**
- * Checks if all KYC requirements are met for an entity and updates status
- *
- * For entities, this checks:
- * 1. Entity-level KYC info is submitted/approved (entity_info document_type)
- * 2. All active members have approved personal KYC (personal_info document_type)
- *
- * When all requirements are met:
- * - Entity kyc_status is updated to 'approved'
- * - Entity account_approval_status is updated to 'pending_approval'
- * - An account_activation approval is created
- */
-export async function checkAndUpdateEntityKYCStatus(
-  supabase: SupabaseClient,
-  entityType: KYCEntityType,
-  entityId: string
-) {
-  const config = ENTITY_CONFIG[entityType]
-
-  try {
-    // Get entity current status
-    const { data: entity, error: entityError } = await supabase
-      .from(config.entityTable)
-      .select('id, kyc_status, account_approval_status')
-      .eq('id', entityId)
-      .single()
-
-    if (entityError || !entity) {
-      console.error(`[KYC] Entity ${entityId} not found in ${config.entityTable}`)
-      return
-    }
-
-    // Already approved - nothing to do
-    if (entity.kyc_status === 'approved') {
-      console.log(`[KYC] Entity ${entityId} already has approved KYC status`)
-      return
-    }
-
-    // Get all KYC submissions for this entity
-    const { data: submissions, error: submissionsError } = await supabase
-      .from('kyc_submissions')
-      .select('id, document_type, status, investor_member_id, partner_member_id, introducer_member_id, lawyer_member_id, commercial_partner_member_id, arranger_member_id')
-      .eq(`${entityType === 'arranger' ? 'arranger_entity_id' : entityType + '_id'}`, entityId)
-
-    if (submissionsError) {
-      console.error(`[KYC] Error fetching submissions for ${entityType} ${entityId}:`, submissionsError)
-      return
-    }
-
-    if (!submissions || submissions.length === 0) {
-      console.log(`[KYC] No submissions found for ${entityType} ${entityId}`)
-      return
-    }
-
-    // Check if entity_info submission is approved
-    const entityInfoApproved = submissions.some(
-      s => s.document_type === 'entity_info' && s.status === 'approved'
-    )
-
-    if (!entityInfoApproved) {
-      console.log(`[KYC] Entity ${entityId}: entity_info not approved yet`)
-      return
-    }
-
-    // Get all active members
-    const { data: members, error: membersError } = await supabase
-      .from(config.memberTable)
-      .select('id, full_name, kyc_status')
-      .eq(config.entityIdColumn, entityId)
-      .eq('is_active', true)
-
-    if (membersError) {
-      console.error(`[KYC] Error fetching members for ${entityType} ${entityId}:`, membersError)
-      return
-    }
-
-    // Check all members have approved KYC
-    if (members && members.length > 0) {
-      const memberIdColumn = `${entityType === 'arranger' ? 'arranger' : entityType}_member_id`
-
-      for (const member of members) {
-        // Check if this member has an approved personal_info submission
-        const memberSubmissionApproved = submissions.some(
-          s => s.document_type === 'personal_info' &&
-               s.status === 'approved' &&
-               s[memberIdColumn as keyof typeof s] === member.id
-        )
-
-        // Also check member's direct kyc_status
-        const memberApproved = member.kyc_status === 'approved' || memberSubmissionApproved
-
-        if (!memberApproved) {
-          console.log(`[KYC] Entity ${entityId}: Member ${member.full_name} (${member.id}) not approved yet`)
-          return
-        }
-      }
-    }
-
-    // All requirements met - update entity KYC status
-    console.log(`[KYC] All requirements met for ${entityType} ${entityId} - updating to approved`)
-
-    await supabase
-      .from(config.entityTable)
-      .update({
-        kyc_status: 'approved',
-        account_approval_status: 'pending_approval',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', entityId)
-
-    // Create account activation approval
-    await createAccountActivationApproval(supabase, entityType, entityId)
-
-  } catch (error) {
-    console.error(`[KYC] Error checking entity KYC status for ${entityType} ${entityId}:`, error)
-  }
-}
-
-/**
- * Creates an account_activation approval request when KYC is fully approved
+ * Creates an account activation approval request when KYC requirements are complete.
  */
 async function createAccountActivationApproval(
   supabase: SupabaseClient,
@@ -268,74 +374,255 @@ async function createAccountActivationApproval(
 ) {
   const config = ENTITY_CONFIG[entityType]
 
+  const { data: existingApproval } = await supabase
+    .from('approvals')
+    .select('id, status')
+    .eq('entity_type', 'account_activation')
+    .eq('entity_id', entityId)
+    .in('status', ['pending', 'approved'])
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (existingApproval) {
+    return
+  }
+
+  const { data: entity } = await supabase
+    .from(config.entityTable)
+    .select('*')
+    .eq('id', entityId)
+    .maybeSingle()
+
+  const requestedBy = await resolveRequestedBy(supabase, entityType, entityId)
+
+  await supabase
+    .from('approvals')
+    .insert({
+      entity_type: 'account_activation',
+      entity_id: entityId,
+      status: 'pending',
+      priority: 'medium',
+      requested_by: requestedBy,
+      entity_metadata: {
+        entity_table: config.entityTable,
+        entity_name: getEntityName(entity),
+        persona_type: entityType,
+      },
+      created_at: new Date().toISOString(),
+    })
+}
+
+/**
+ * Single KYC evaluator used by review flows for every persona.
+ *
+ * Rules:
+ * - Individual investors: approved ID + approved proof_of_address + approved personal_info
+ * - Entity personas: approved entity_info + required entity docs + all active members approved
+ * - Member approval:
+ *   - Investor entities: approved personal_info + approved ID + approved proof_of_address
+ *   - Non-investor entities: approved personal_info
+ */
+export async function checkAndUpdateEntityKYCStatus(
+  supabase: SupabaseClient,
+  entityType: KYCEntityType,
+  entityId: string
+) {
+  const config = ENTITY_CONFIG[entityType]
+  const submissionEntityColumn = getSubmissionEntityColumn(entityType)
+  const submissionMemberColumn = getSubmissionMemberColumn(entityType)
+
   try {
-    // Get entity name for approval metadata
-    const { data: entity } = await supabase
+    const { data: entity, error: entityError } = await supabase
       .from(config.entityTable)
-      .select('legal_name, display_name')
+      .select('*')
       .eq('id', entityId)
-      .single()
-
-    const entityName = entity?.display_name || entity?.legal_name || 'Unknown Entity'
-
-    // Find the primary user (member with linked_user_id) to set as requested_by
-    const { data: primaryMember } = await supabase
-      .from(config.memberTable)
-      .select('linked_user_id')
-      .eq(config.entityIdColumn, entityId)
-      .not('linked_user_id', 'is', null)
-      .order('created_at', { ascending: true })
-      .limit(1)
       .maybeSingle()
 
-    const requestedBy = primaryMember?.linked_user_id || null
-
-    // Check if there's already a pending activation approval
-    const { data: existingApproval } = await supabase
-      .from('approvals')
-      .select('id')
-      .eq('entity_type', 'account_activation')
-      .eq('entity_id', entityId)
-      .eq('status', 'pending')
-      .maybeSingle()
-
-    if (existingApproval) {
-      console.log(`[KYC] Account activation approval already exists for ${entityType} ${entityId}`)
+    if (entityError || !entity) {
+      console.error(`[KYC] Entity ${entityType}:${entityId} not found`, entityError)
       return
     }
 
-    // Create approval request
-    await supabase
-      .from('approvals')
-      .insert({
-        entity_type: 'account_activation',
-        entity_id: entityId,
-        status: 'pending',
-        priority: 'medium',
-        requested_by: requestedBy,
-        entity_metadata: {
-          entity_table: config.entityTable,
-          entity_name: entityName,
-          persona_type: entityType,
-        },
-        created_at: new Date().toISOString(),
-      })
+    const { data: rawSubmissions, error: submissionsError } = await supabase
+      .from('kyc_submissions')
+      .select(`
+        id,
+        document_type,
+        status,
+        investor_member_id,
+        partner_member_id,
+        introducer_member_id,
+        lawyer_member_id,
+        commercial_partner_member_id,
+        arranger_member_id
+      `)
+      .eq(submissionEntityColumn, entityId)
 
-    console.log(`[KYC] Created account activation approval for ${entityType} ${entityId}${requestedBy ? ` (requested_by: ${requestedBy})` : ''}`)
+    if (submissionsError) {
+      console.error(`[KYC] Failed fetching submissions for ${entityType}:${entityId}`, submissionsError)
+      return
+    }
 
+    const submissions = (rawSubmissions || []) as SubmissionRow[]
+    const approvedSubmissions = submissions.filter(submission => submission.status === 'approved')
+
+    const { data: members, error: membersError } = await supabase
+      .from(config.memberTable)
+      .select('id, full_name, kyc_status')
+      .eq(config.entityIdColumn, entityId)
+      .eq('is_active', true)
+
+    if (membersError) {
+      console.error(`[KYC] Failed fetching members for ${entityType}:${entityId}`, membersError)
+      return
+    }
+
+    const activeMembers = members || []
+    const isIndividual = isIndividualEntity(entityType, entity)
+
+    let requirementsMet = false
+
+    if (isIndividual && entityType === 'investor') {
+      const hasId = hasApprovedIdDocument(approvedSubmissions, submissionMemberColumn, null)
+      const hasAddress = hasApprovedProofOfAddress(approvedSubmissions, submissionMemberColumn, null)
+      const hasPersonalInfo = hasApprovedSubmissionForType(
+        approvedSubmissions,
+        'personal_info',
+        submissionMemberColumn,
+        null
+      )
+
+      requirementsMet = hasId && hasAddress && hasPersonalInfo
+    } else if (isIndividual) {
+      if (activeMembers.length > 0) {
+        requirementsMet = true
+        for (const member of activeMembers) {
+          const hasPersonalInfo = hasApprovedSubmissionForType(
+            approvedSubmissions,
+            'personal_info',
+            submissionMemberColumn,
+            member.id
+          )
+
+          if (!hasPersonalInfo) {
+            requirementsMet = false
+            break
+          }
+
+          if (member.kyc_status !== 'approved') {
+            await updateMemberKYCStatus(supabase, entityType, member.id, 'approved')
+          }
+        }
+      } else {
+        const hasPersonalInfo = hasApprovedSubmissionForType(
+          approvedSubmissions,
+          'personal_info',
+          submissionMemberColumn,
+          null
+        )
+        requirementsMet = hasPersonalInfo
+      }
+    } else {
+      const hasEntityInfo = hasApprovedSubmissionForType(approvedSubmissions, 'entity_info')
+      if (!hasEntityInfo) {
+        requirementsMet = false
+      } else {
+        const entityDocs = REQUIRED_ENTITY_DOCUMENTS[entityType] || []
+        const hasAllEntityDocs = entityDocs.every(documentType =>
+          hasApprovedSubmissionForType(
+            approvedSubmissions,
+            documentType,
+            submissionMemberColumn,
+            null
+          )
+        )
+
+        if (!hasAllEntityDocs) {
+          requirementsMet = false
+        } else {
+          requirementsMet = true
+          for (const member of activeMembers) {
+            const hasPersonalInfo = hasApprovedSubmissionForType(
+              approvedSubmissions,
+              'personal_info',
+              submissionMemberColumn,
+              member.id
+            )
+
+            const memberApproved =
+              entityType === 'investor'
+                ? hasPersonalInfo &&
+                  hasApprovedIdDocument(
+                    approvedSubmissions,
+                    submissionMemberColumn,
+                    member.id,
+                    false
+                  ) &&
+                  hasApprovedProofOfAddress(
+                    approvedSubmissions,
+                    submissionMemberColumn,
+                    member.id,
+                    false
+                  )
+                : hasPersonalInfo
+
+            if (!memberApproved) {
+              requirementsMet = false
+              break
+            }
+
+            if (member.kyc_status !== 'approved') {
+              await updateMemberKYCStatus(supabase, entityType, member.id, 'approved')
+            }
+          }
+        }
+      }
+    }
+
+    const currentKycStatus = normalizeStatus(entity.kyc_status)
+    const currentAccountStatus = normalizeStatus(entity.account_approval_status)
+
+    if (!requirementsMet) {
+      return
+    }
+
+    if (currentKycStatus !== 'approved') {
+      const entityUpdateData: any = {
+        kyc_status: 'approved',
+        updated_at: new Date().toISOString(),
+      }
+
+      if (entityType === 'investor') {
+        entityUpdateData.kyc_completed_at = new Date().toISOString()
+      } else {
+        entityUpdateData.kyc_approved_at = new Date().toISOString()
+      }
+
+      await supabase
+        .from(config.entityTable)
+        .update(entityUpdateData)
+        .eq('id', entityId)
+    }
+
+    await setAccountPendingApprovalIfNeeded(
+      supabase,
+      entityType,
+      entityId,
+      currentAccountStatus
+    )
+
+    const blocked = currentAccountStatus && ACCOUNT_BLOCKED_STATUSES.has(currentAccountStatus)
+    if (!blocked) {
+      await createAccountActivationApproval(supabase, entityType, entityId)
+    }
   } catch (error) {
-    console.error(`[KYC] Error creating account activation approval:`, error)
+    console.error(`[KYC] Error evaluating ${entityType}:${entityId}`, error)
   }
 }
 
 /**
- * Handles the full KYC review flow for any entity type
- *
- * This is called from the KYC review endpoint after approving a submission.
- * It:
- * 1. Updates member kyc_status if this is a personal_info submission
- * 2. Checks overall entity KYC status
- * 3. Creates account activation approval if all KYC is complete
+ * Handles approval side effects for a KYC submission.
  */
 export async function handleKYCApproval(
   supabase: SupabaseClient,
@@ -344,15 +631,13 @@ export async function handleKYCApproval(
   const { entityType, entityId, memberId } = getEntityTypeFromSubmission(submission)
 
   if (!entityType || !entityId) {
-    console.error('[KYC] Could not determine entity type from submission:', submission.id)
+    console.error('[KYC] Could not determine entity from submission', submission?.id)
     return
   }
 
-  // If this is a personal_info submission for a member, update member status
   if (submission.document_type === 'personal_info' && memberId) {
     await updateMemberKYCStatus(supabase, entityType, memberId, 'approved')
   }
 
-  // Check and update overall entity KYC status
   await checkAndUpdateEntityKYCStatus(supabase, entityType, entityId)
 }

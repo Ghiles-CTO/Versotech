@@ -46,7 +46,7 @@ import { formatFileSize } from '@/lib/utils'
 
 interface KYCSubmission {
   id: string
-  investor_id: string
+  investor_id: string | null
   counterparty_entity_id?: string | null
   investor_member_id?: string | null
   document_type: string
@@ -569,7 +569,7 @@ export function KYCReviewClient() {
                           ) : (
                             <>
                               {submission.investor?.display_name || submission.investor?.legal_name || 'Unknown'}
-                              {submission.investor?.id && (
+                              {submission.investor_id && submission.investor?.id && (
                                 <a
                                   href={`/versotech/staff/investors/${submission.investor.id}`}
                                   target="_blank"
@@ -636,6 +636,21 @@ export function KYCReviewClient() {
                           </div>
                           <div className="text-xs text-muted-foreground ml-6">
                             {formatFileSize(submission.document.file_size_bytes)}
+                          </div>
+                        </div>
+                      ) : (submission.document_type === 'personal_info' || submission.document_type === 'entity_info') &&
+                           submission.metadata?.review_snapshot ? (
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <ClipboardList className="w-4 h-4 text-indigo-500" />
+                            <span className="text-sm text-indigo-500 font-medium">Profile Snapshot</span>
+                          </div>
+                          <div className="text-xs text-muted-foreground ml-6">
+                            {Object.entries(submission.metadata.review_snapshot)
+                              .filter(([_, value]) => value !== null && value !== '')
+                              .slice(0, 2)
+                              .map(([key, value]) => `${key.replace(/_/g, ' ')}: ${String(value)}`)
+                              .join(' • ') || 'Form data attached in metadata'}
                           </div>
                         </div>
                       ) : submission.metadata && submission.document_type === 'questionnaire' ? (

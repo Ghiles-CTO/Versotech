@@ -180,6 +180,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    let resolvedArrangerMemberId: string | null = null
+    if (arrangerUserId && arrangerUserId !== 'entity-level') {
+      const { data: arrangerMember } = await serviceSupabase
+        .from('arranger_members')
+        .select('id')
+        .eq('arranger_id', arrangerId)
+        .eq('linked_user_id', arrangerUserId)
+        .eq('is_active', true)
+        .maybeSingle()
+
+      resolvedArrangerMemberId = arrangerMember?.id || null
+    }
+
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json({ error: 'File size exceeds 50MB limit' }, { status: 400 })
@@ -252,6 +265,61 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create document record' }, { status: 500 })
     }
 
+    // Version-aware KYC submission entry (review queue source of truth)
+    let versionQuery = serviceSupabase
+      .from('kyc_submissions')
+      .select('id, version')
+      .eq('arranger_entity_id', arrangerId)
+      .eq('document_type', documentType)
+
+    if (resolvedArrangerMemberId) {
+      versionQuery = versionQuery.eq('arranger_member_id', resolvedArrangerMemberId)
+    } else {
+      versionQuery = versionQuery.is('arranger_member_id', null)
+    }
+
+    const { data: latestSubmission } = await versionQuery
+      .order('version', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    const newVersion = latestSubmission ? latestSubmission.version + 1 : 1
+    const previousSubmissionId = latestSubmission?.id || null
+
+    const { data: submission, error: submissionError } = await serviceSupabase
+      .from('kyc_submissions')
+      .insert({
+        arranger_entity_id: arrangerId,
+        arranger_member_id: resolvedArrangerMemberId,
+        document_type: documentType,
+        document_id: document.id,
+        status: 'pending',
+        version: newVersion,
+        previous_submission_id: previousSubmissionId,
+        submitted_at: new Date().toISOString(),
+        metadata: {
+          file_size: file.size,
+          mime_type: file.type,
+          original_filename: file.name,
+          source: 'arranger_profile_upload',
+          selected_arranger_user_id: arrangerUserId || null,
+          is_reupload: !!latestSubmission,
+        }
+      })
+      .select('id, status')
+      .single()
+
+    if (submissionError) {
+      console.error('KYC submission creation error:', submissionError)
+
+      await serviceSupabase.from('documents').delete().eq('id', document.id)
+      await serviceSupabase.storage
+        .from(process.env.STORAGE_BUCKET_NAME || 'documents')
+        .remove([fileKey])
+
+      return NextResponse.json({ error: 'Failed to create KYC submission' }, { status: 500 })
+    }
+
     // Create audit log
     await serviceSupabase.from('audit_logs').insert({
       event_type: 'compliance',
@@ -276,7 +344,9 @@ export async function POST(request: NextRequest) {
         type: document.type,
         file_key: document.file_key,
         created_at: document.created_at
-      }
+      },
+      submission_id: submission.id,
+      submission_status: submission.status,
     })
 
   } catch (error) {

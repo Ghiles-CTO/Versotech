@@ -241,7 +241,7 @@ export async function PATCH(
     if (is_us_citizen !== undefined) updateData.is_us_citizen = is_us_citizen
     if (is_us_taxpayer !== undefined) updateData.is_us_taxpayer = is_us_taxpayer
     if (us_taxpayer_id !== undefined) updateData.us_taxpayer_id = cleanValue(us_taxpayer_id)
-    if (country_of_tax_residency !== undefined) updateData.country_of_tax_residency = cleanValue(country_of_tax_residency)
+    if (country_of_tax_residency !== undefined) updateData.tax_residency = cleanValue(country_of_tax_residency)
     // ID Document
     if (id_type !== undefined) updateData.id_type = cleanValue(id_type)
     if (id_number !== undefined) updateData.id_number = cleanValue(id_number)

@@ -166,6 +166,7 @@ export function ProfilePageClient({
   const [showAddressDialog, setShowAddressDialog] = useState(false)
   const [showEntityInfoDialog, setShowEntityInfoDialog] = useState(false)
   const [isSubmittingEntityKyc, setIsSubmittingEntityKyc] = useState(false)
+  const [isSubmittingPersonalKyc, setIsSubmittingPersonalKyc] = useState(false)
   const isStaff = variant === 'staff'
 
   // Submit entity KYC for review
@@ -189,6 +190,30 @@ export function ProfilePageClient({
       toast.error(error instanceof Error ? error.message : 'Failed to submit entity KYC')
     } finally {
       setIsSubmittingEntityKyc(false)
+    }
+  }
+
+  // Submit personal info for individual investor review.
+  const handleSubmitPersonalKyc = async () => {
+    setIsSubmittingPersonalKyc(true)
+    try {
+      const response = await fetch('/api/investors/me/submit-personal-kyc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to submit personal KYC')
+      }
+
+      toast.success('Personal information submitted for review')
+      window.location.reload()
+    } catch (error) {
+      console.error('Error submitting personal KYC:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to submit personal KYC')
+    } finally {
+      setIsSubmittingPersonalKyc(false)
     }
   }
 
@@ -466,7 +491,7 @@ export function ProfilePageClient({
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
-                    {investorInfo.kyc_status !== 'approved' && investorInfo.kyc_status !== 'submitted' && (
+                    {!['approved', 'submitted', 'pending', 'pending_review'].includes(investorInfo.kyc_status || '') && (
                       <Button variant="outline" size="sm" onClick={() => setShowEntityInfoDialog(true)}>
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
@@ -499,7 +524,7 @@ export function ProfilePageClient({
                   </div>
 
                   {/* Submit Entity KYC Button */}
-                  {investorInfo.kyc_status !== 'approved' && investorInfo.kyc_status !== 'submitted' && (
+                  {!['approved', 'submitted', 'pending', 'pending_review'].includes(investorInfo.kyc_status || '') && (
                     <div className="pt-4 border-t">
                       {(investorUserInfo?.is_primary || investorUserInfo?.role === 'admin') ? (
                         <Button
@@ -517,7 +542,7 @@ export function ProfilePageClient({
                       )}
                     </div>
                   )}
-                  {investorInfo.kyc_status === 'submitted' && (
+                  {(investorInfo.kyc_status === 'submitted' || investorInfo.kyc_status === 'pending') && (
                     <div className="pt-4 border-t">
                       <Badge className="bg-blue-100 text-blue-800 border-blue-200">
                         <Send className="h-3 w-3 mr-1" />
@@ -667,36 +692,71 @@ export function ProfilePageClient({
 
           {/* Individual KYC Info Display */}
           {isIndividual && investorInfo && (
-            <IndividualKycDisplay
-              data={{
-                first_name: investorInfo.first_name,
-                middle_name: investorInfo.middle_name,
-                last_name: investorInfo.last_name,
-                name_suffix: investorInfo.name_suffix,
-                date_of_birth: investorInfo.date_of_birth,
-                country_of_birth: investorInfo.country_of_birth,
-                nationality: investorInfo.nationality,
-                email: investorInfo.email,
-                phone_mobile: investorInfo.phone_mobile,
-                phone_office: investorInfo.phone_office,
-                residential_street: investorInfo.residential_street,
-                residential_city: investorInfo.residential_city,
-                residential_state: investorInfo.residential_state,
-                residential_postal_code: investorInfo.residential_postal_code,
-                residential_country: investorInfo.residential_country,
-                is_us_citizen: investorInfo.is_us_citizen,
-                is_us_taxpayer: investorInfo.is_us_taxpayer,
-                us_taxpayer_id: investorInfo.us_taxpayer_id,
-                country_of_tax_residency: investorInfo.country_of_tax_residency,
-                id_type: investorInfo.id_type,
-                id_number: investorInfo.id_number,
-                id_issue_date: investorInfo.id_issue_date,
-                id_expiry_date: investorInfo.id_expiry_date,
-                id_issuing_country: investorInfo.id_issuing_country,
-              }}
-              onEdit={() => setShowKycDialog(true)}
-              title="Personal KYC Information"
-            />
+            <div className="space-y-4">
+              <IndividualKycDisplay
+                data={{
+                  first_name: investorInfo.first_name,
+                  middle_name: investorInfo.middle_name,
+                  last_name: investorInfo.last_name,
+                  name_suffix: investorInfo.name_suffix,
+                  date_of_birth: investorInfo.date_of_birth,
+                  country_of_birth: investorInfo.country_of_birth,
+                  nationality: investorInfo.nationality,
+                  email: investorInfo.email,
+                  phone_mobile: investorInfo.phone_mobile,
+                  phone_office: investorInfo.phone_office,
+                  residential_street: investorInfo.residential_street,
+                  residential_city: investorInfo.residential_city,
+                  residential_state: investorInfo.residential_state,
+                  residential_postal_code: investorInfo.residential_postal_code,
+                  residential_country: investorInfo.residential_country,
+                  is_us_citizen: investorInfo.is_us_citizen,
+                  is_us_taxpayer: investorInfo.is_us_taxpayer,
+                  us_taxpayer_id: investorInfo.us_taxpayer_id,
+                  country_of_tax_residency: investorInfo.country_of_tax_residency,
+                  id_type: investorInfo.id_type,
+                  id_number: investorInfo.id_number,
+                  id_issue_date: investorInfo.id_issue_date,
+                  id_expiry_date: investorInfo.id_expiry_date,
+                  id_issuing_country: investorInfo.id_issuing_country,
+                }}
+                onEdit={() => setShowKycDialog(true)}
+                title="Personal KYC Information"
+              />
+
+              {!['approved', 'submitted', 'pending', 'pending_review'].includes(investorInfo.kyc_status || '') && (
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="font-medium text-foreground">Submit Personal Information for Review</p>
+                        <p className="text-sm text-muted-foreground">
+                          Required before final KYC completion and account activation.
+                        </p>
+                      </div>
+                      <Button
+                        onClick={handleSubmitPersonalKyc}
+                        disabled={isSubmittingPersonalKyc}
+                        size="sm"
+                      >
+                        <Send className="h-4 w-4 mr-2" />
+                        {isSubmittingPersonalKyc ? 'Submitting...' : 'Submit Personal Info'}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              {(investorInfo.kyc_status === 'submitted' || investorInfo.kyc_status === 'pending') && (
+                <Card>
+                  <CardContent className="pt-6">
+                    <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                      <Send className="h-3 w-3 mr-1" />
+                      Personal Info Submitted for Review
+                    </Badge>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           )}
 
           {/* If no investor entity, show basic profile edit */}

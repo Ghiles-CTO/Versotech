@@ -83,9 +83,7 @@ export function ArrangerKYCDocumentsTab({
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
-  const [currentKycStatus, setCurrentKycStatus] = useState(kycStatus)
-  const [selectedMemberId, setSelectedMemberId] = useState<string>('entity-level')
+  const currentKycStatus = kycStatus
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
 
   const fetchDocuments = useCallback(async () => {
@@ -257,39 +255,6 @@ export function ArrangerKYCDocumentsTab({
     }
   }
 
-  const handleSubmitKyc = async () => {
-    setSubmitting(true)
-    try {
-      const response = await fetch('/api/arrangers/me/kyc-submission', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        if (data.details?.missing) {
-          toast.error(`Missing documents: ${data.details.missing.join(', ')}`)
-        } else {
-          toast.error(data.error || 'Failed to submit KYC')
-        }
-        return
-      }
-
-      setCurrentKycStatus('pending')
-      toast.success('KYC documents submitted for review!')
-    } catch (error) {
-      console.error('KYC submission error:', error)
-      toast.error('Failed to submit KYC')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  const canSubmit = completionPercentage === 100 &&
-                    currentKycStatus !== 'approved' &&
-                    currentKycStatus !== 'pending'
-
   return (
     <div className="space-y-6">
       {/* KYC Status Header */}
@@ -346,41 +311,6 @@ export function ArrangerKYCDocumentsTab({
             <p className="text-xs text-muted-foreground mt-2">
               Upload all required documents to complete KYC verification
             </p>
-          )}
-
-          {/* Submit for Approval Button */}
-          {completionPercentage === 100 && (
-            <div className="mt-4 pt-4 border-t">
-              {currentKycStatus === 'pending' ? (
-                <div className="flex items-center gap-2 text-yellow-700 bg-yellow-50 px-4 py-3 rounded-lg">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm font-medium">KYC documents are being reviewed...</span>
-                </div>
-              ) : currentKycStatus === 'approved' ? (
-                <div className="flex items-center gap-2 text-green-700 bg-green-50 px-4 py-3 rounded-lg">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span className="text-sm font-medium">KYC verification complete</span>
-                </div>
-              ) : (
-                <Button
-                  onClick={handleSubmitKyc}
-                  disabled={submitting || !canSubmit}
-                  className="w-full"
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    <>
-                      <Shield className="h-4 w-4 mr-2" />
-                      Submit for Approval
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
           )}
         </CardContent>
       </Card>

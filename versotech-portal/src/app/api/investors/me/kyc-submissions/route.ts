@@ -5,9 +5,17 @@ import { z } from 'zod'
 
 // Allowed document types for KYC submissions - SIMPLIFIED
 const ALLOWED_DOCUMENT_TYPES = [
-  // Individual docs
+  // Individual ID docs
   'passport',
+  'national_id',
+  'drivers_license',
+  'residence_permit',
+  'other_government_id',
+  // Proof of address docs
   'utility_bill',
+  'bank_statement',
+  'government_correspondence',
+  'council_tax_bill',
   // Entity docs
   'incorporation_certificate',
   'memo_articles',

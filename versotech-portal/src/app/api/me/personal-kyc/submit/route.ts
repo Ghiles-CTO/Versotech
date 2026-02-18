@@ -6,36 +6,42 @@ const ENTITY_CONFIGS = {
   investor: {
     memberTable: 'investor_members',
     entityIdColumn: 'investor_id',
+    submissionEntityIdColumn: 'investor_id',
     userTable: 'investor_users',
     entityTable: 'investors',
   },
   partner: {
     memberTable: 'partner_members',
     entityIdColumn: 'partner_id',
+    submissionEntityIdColumn: 'partner_id',
     userTable: 'partner_users',
     entityTable: 'partners',
   },
   introducer: {
     memberTable: 'introducer_members',
     entityIdColumn: 'introducer_id',
+    submissionEntityIdColumn: 'introducer_id',
     userTable: 'introducer_users',
     entityTable: 'introducers',
   },
   lawyer: {
     memberTable: 'lawyer_members',
     entityIdColumn: 'lawyer_id',
+    submissionEntityIdColumn: 'lawyer_id',
     userTable: 'lawyer_users',
     entityTable: 'lawyers',
   },
   commercial_partner: {
     memberTable: 'commercial_partner_members',
     entityIdColumn: 'commercial_partner_id',
+    submissionEntityIdColumn: 'commercial_partner_id',
     userTable: 'commercial_partner_users',
     entityTable: 'commercial_partners',
   },
   arranger: {
     memberTable: 'arranger_members',
     entityIdColumn: 'arranger_id',
+    submissionEntityIdColumn: 'arranger_entity_id',
     userTable: 'arranger_users',
     entityTable: 'arranger_entities',
   },
@@ -121,17 +127,10 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check if already submitted or approved
+    // Check if already submitted (prevent double-submit)
     if (member.kyc_status === 'submitted') {
       return NextResponse.json(
         { error: 'Personal KYC already submitted for review' },
-        { status: 400 }
-      )
-    }
-
-    if (member.kyc_status === 'approved') {
-      return NextResponse.json(
-        { error: 'Personal KYC already approved' },
         { status: 400 }
       )
     }
@@ -164,6 +163,42 @@ export async function POST(request: Request) {
 
     // Build submission data dynamically based on entity type
     const entityId = member[config.entityIdColumn as keyof typeof member]
+    if (!entityId || typeof entityId !== 'string') {
+      return NextResponse.json(
+        { error: 'Member is not linked to a valid entity' },
+        { status: 400 }
+      )
+    }
+
+    const submissionMemberIdColumn = `${entityType}_member_id`
+
+    // Prevent duplicate queue entries when a personal_info submission is already pending
+    const { data: existingPendingSubmission, error: existingPendingError } = await serviceSupabase
+      .from('kyc_submissions')
+      .select('id')
+      .eq(config.submissionEntityIdColumn, entityId)
+      .eq(submissionMemberIdColumn, member.id)
+      .eq('document_type', 'personal_info')
+      .in('status', ['pending', 'under_review'])
+      .order('submitted_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (existingPendingError) {
+      console.error('Error checking existing pending personal KYC submission:', existingPendingError)
+      return NextResponse.json(
+        { error: 'Failed to validate existing KYC submission status' },
+        { status: 500 }
+      )
+    }
+
+    if (existingPendingSubmission) {
+      return NextResponse.json(
+        { error: 'Personal KYC already submitted for review' },
+        { status: 400 }
+      )
+    }
+
     const submissionData: Record<string, unknown> = {
       document_type: 'personal_info',
       status: 'pending',
@@ -173,12 +208,22 @@ export async function POST(request: Request) {
         entity_type: entityType,
         member_name: member.full_name || `${member.first_name} ${member.last_name}`,
         submitted_by_user_id: user.id,
+        review_snapshot: {
+          first_name: member.first_name,
+          last_name: member.last_name,
+          date_of_birth: member.date_of_birth,
+          nationality: member.nationality,
+          residential_street: member.residential_street,
+          residential_country: member.residential_country,
+          id_type: member.id_type,
+          id_number: member.id_number,
+        }
       }
     }
 
     // Add entity-specific foreign key
-    submissionData[config.entityIdColumn] = entityId
-    submissionData[`${entityType}_member_id`] = member.id
+    submissionData[config.submissionEntityIdColumn] = entityId
+    submissionData[submissionMemberIdColumn] = member.id
 
     // Create KYC submission record
     const { data: submission, error: submissionError } = await serviceSupabase

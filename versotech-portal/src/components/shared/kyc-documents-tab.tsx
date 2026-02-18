@@ -75,21 +75,24 @@ interface Document {
   }
 }
 
-// Required documents by entity type
+// Required documents by entity type — aligned with REQUIRED_ENTITY_DOCUMENTS
+// in check-entity-kyc-status.ts (the approval engine source of truth).
+// Labels match persona-specific self-service upload tabs.
 const REQUIRED_DOCUMENTS: Record<EntityType, RequiredDocument[]> = {
   investor: [
-    { label: 'Certificate of Incorporation', value: 'certificate_of_incorporation' },
-    { label: 'Memorandum & Articles of Association', value: 'memorandum_articles' },
-    { label: 'Register of Members/Directors', value: 'register_members_directors' },
-    { label: 'Passport/ID (Authorized Signatories)', value: 'signatory_id' },
-    { label: 'Proof of Address (Signatories)', value: 'signatory_proof_of_address' },
-    { label: 'Source of Funds Declaration', value: 'source_of_funds' },
-    { label: 'Tax Forms (W-8BEN-E/W-9)', value: 'tax_forms' },
+    { label: 'Certificate of Incorporation', value: 'incorporation_certificate' },
+    { label: 'Memorandum & Articles of Association', value: 'memo_articles' },
+    { label: 'Register of Members', value: 'register_members' },
+    { label: 'Register of Beneficial Owners', value: 'register_beneficial_owners' },
+    { label: 'Register of Directors', value: 'register_directors' },
+    { label: 'Bank Confirmation Letter', value: 'bank_confirmation' },
   ],
   introducer: [
-    { label: 'Introducer Agreement', value: 'introducer_agreement' },
-    { label: 'Company Registration', value: 'company_registration' },
+    { label: 'Government-issued ID', value: 'government_id' },
     { label: 'Proof of Address', value: 'proof_of_address' },
+    { label: 'Professional Qualifications', value: 'professional_qualifications' },
+    { label: 'Bank Account Details', value: 'bank_account_details' },
+    { label: 'Tax Registration Document', value: 'tax_registration' },
   ],
   arranger: [
     { label: 'Certificate of Incorporation', value: 'certificate_of_incorporation' },
@@ -101,24 +104,28 @@ const REQUIRED_DOCUMENTS: Record<EntityType, RequiredDocument[]> = {
     { label: 'Proof of Registered Address', value: 'proof_of_address' },
   ],
   lawyer: [
-    { label: 'Bar Registration Certificate', value: 'bar_registration' },
+    { label: 'Certificate of Incorporation / Registration', value: 'certificate_of_incorporation' },
+    { label: 'Proof of Registered Address', value: 'proof_of_address' },
+    { label: 'Professional License / Bar Registration', value: 'professional_license' },
     { label: 'Professional Indemnity Insurance', value: 'professional_insurance' },
-    { label: 'Firm Registration', value: 'firm_registration' },
-    { label: 'Practice License', value: 'practice_license' },
+    { label: 'Partners/Directors List', value: 'directors_list' },
+    { label: 'Beneficial Ownership Declaration', value: 'beneficial_ownership' },
   ],
   partner: [
-    { label: 'Accreditation Certificate', value: 'accreditation_certificate' },
     { label: 'Certificate of Incorporation', value: 'certificate_of_incorporation' },
+    { label: 'Company Registration Document', value: 'company_registration' },
+    { label: 'Proof of Registered Address', value: 'proof_of_address' },
     { label: 'Beneficial Ownership Declaration', value: 'beneficial_ownership' },
-    { label: 'Source of Funds Declaration', value: 'source_of_funds' },
-    { label: 'Tax Forms', value: 'tax_forms' },
+    { label: 'Directors/Partners List', value: 'directors_list' },
+    { label: 'Partnership Agreement', value: 'partnership_agreement' },
   ],
   commercial_partner: [
     { label: 'Certificate of Incorporation', value: 'certificate_of_incorporation' },
-    { label: 'Regulatory License', value: 'regulatory_license' },
-    { label: 'Professional Indemnity Insurance', value: 'insurance_certificate' },
-    { label: 'AML/CTF Policy Document', value: 'aml_policy' },
-    { label: 'Partnership Agreement', value: 'partnership_agreement' },
+    { label: 'Company Registration Document', value: 'company_registration' },
+    { label: 'Proof of Registered Address', value: 'proof_of_address' },
+    { label: 'Beneficial Ownership Declaration', value: 'beneficial_ownership' },
+    { label: 'Directors List', value: 'directors_list' },
+    { label: 'Bank Account Details', value: 'bank_account_details' },
   ],
 }
 
@@ -597,44 +604,52 @@ export function KYCDocumentsTab({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Summary Card */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>KYC Documents</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-base">KYC Documents</CardTitle>
+              <CardDescription className="mt-1">
                 {entityName ? `Compliance documents for ${entityName}` : 'Required compliance and verification documents'}
               </CardDescription>
             </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-foreground">
-                {uploadedCount}/{requiredDocuments.length}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {completionPercentage}% complete
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <div className="text-2xl font-semibold tabular-nums text-foreground">
+                  {uploadedCount}<span className="text-muted-foreground font-normal text-base">/{requiredDocuments.length}</span>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  uploaded
+                </div>
               </div>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pb-4">
           {/* Progress bar */}
-          <div className="w-full bg-white/10 rounded-full h-2">
+          <div className="w-full bg-muted/50 rounded-full h-1.5">
             <div
-              className={`h-2 rounded-full transition-all ${
-                completionPercentage === 100 ? 'bg-green-500' :
-                completionPercentage >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+              className={`h-1.5 rounded-full transition-all duration-500 ease-out ${
+                completionPercentage === 100 ? 'bg-emerald-500' :
+                completionPercentage >= 50 ? 'bg-amber-500' : 'bg-orange-500'
               }`}
               style={{ width: `${completionPercentage}%` }}
             />
           </div>
+          {completionPercentage === 100 && (
+            <p className="text-xs text-emerald-500 mt-2 flex items-center gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              All required documents uploaded
+            </p>
+          )}
         </CardContent>
       </Card>
 
       {/* Required Documents Checklist */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3">
           <CardTitle className="text-base">Required Documents</CardTitle>
           <CardDescription>
             Upload all required documents to complete KYC verification
@@ -646,7 +661,7 @@ export function KYCDocumentsTab({
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {requiredDocuments.map((docType) => {
                 const uploaded = documents.find(d => d.type === docType.value)
                 const isUploading = uploading === docType.value
@@ -654,25 +669,31 @@ export function KYCDocumentsTab({
                 return (
                   <div
                     key={docType.value}
-                    className="flex items-center justify-between gap-4 py-3 px-4 rounded-lg border border-white/10 hover:bg-white/5 transition-colors"
+                    className={`flex items-center justify-between gap-4 py-3 px-4 rounded-lg border transition-colors ${
+                      uploaded
+                        ? 'border-emerald-500/20 bg-emerald-500/5'
+                        : 'border-border/50 hover:bg-muted/30'
+                    }`}
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       {uploaded ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-400 flex-shrink-0" />
+                        <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0" />
                       ) : (
-                        <Circle className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                        <Circle className="h-5 w-5 text-muted-foreground/50 flex-shrink-0" />
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{docType.label}</p>
+                        <p className={`text-sm font-medium truncate ${uploaded ? 'text-foreground' : 'text-muted-foreground'}`}>
+                          {docType.label}
+                        </p>
                         {uploaded && (
-                          <p className="text-xs text-muted-foreground truncate">
-                            {uploaded.file_name} • {formatFileSize(uploaded.file_size_bytes)}
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">
+                            {uploaded.file_name} · {formatFileSize(uploaded.file_size_bytes)}
                           </p>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
                       {/* Validation badge */}
                       {uploaded && renderValidationBadge(uploaded)}
 
@@ -699,6 +720,7 @@ export function KYCDocumentsTab({
                             size="sm"
                             onClick={() => handleDownload(uploaded)}
                             className="h-8 w-8 p-0"
+                            title="Download"
                           >
                             <Download className="h-4 w-4" />
                           </Button>
@@ -708,6 +730,7 @@ export function KYCDocumentsTab({
                               size="sm"
                               onClick={() => handleDelete(uploaded)}
                               className="h-8 w-8 p-0 text-red-400 hover:text-red-300"
+                              title="Delete"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -731,11 +754,12 @@ export function KYCDocumentsTab({
                             size="sm"
                             onClick={() => fileInputRefs.current[docType.value]?.click()}
                             disabled={isUploading}
+                            className="h-8 text-xs"
                           >
                             {isUploading ? (
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
                             ) : (
-                              <Upload className="h-4 w-4 mr-2" />
+                              <Upload className="h-3.5 w-3.5 mr-1.5" />
                             )}
                             Upload
                           </Button>
@@ -753,31 +777,31 @@ export function KYCDocumentsTab({
       {/* Other Documents */}
       {documents.filter(d => !requiredDocuments.some(req => req.value === d.type)).length > 0 && (
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="text-base">Additional Documents</CardTitle>
             <CardDescription>
               Other documents uploaded for this entity
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {documents
                 .filter(d => !requiredDocuments.some(req => req.value === d.type))
                 .map((doc) => (
                   <div
                     key={doc.id}
-                    className="flex items-center justify-between gap-4 py-2 px-3 rounded-lg hover:bg-white/5 transition-colors"
+                    className="flex items-center justify-between gap-4 py-2.5 px-3 rounded-lg hover:bg-muted/30 transition-colors"
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                      <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{doc.name}</p>
                         <p className="text-xs text-muted-foreground truncate">
-                          {doc.file_name} • {formatFileSize(doc.file_size_bytes)}
+                          {doc.file_name} · {formatFileSize(doc.file_size_bytes)}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
                       {isPreviewableExtension(doc.file_name || '') && (
                         <Button
                           variant="ghost"
@@ -799,6 +823,7 @@ export function KYCDocumentsTab({
                         size="sm"
                         onClick={() => handleDownload(doc)}
                         className="h-8 w-8 p-0"
+                        title="Download"
                       >
                         <Download className="h-4 w-4" />
                       </Button>
@@ -808,6 +833,7 @@ export function KYCDocumentsTab({
                           size="sm"
                           onClick={() => handleDelete(doc)}
                           className="h-8 w-8 p-0 text-red-400 hover:text-red-300"
+                          title="Delete"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -821,13 +847,9 @@ export function KYCDocumentsTab({
       )}
 
       {/* Helper Text */}
-      <div className="text-xs text-muted-foreground space-y-1 border-t border-white/10 pt-4">
-        <p>• Supported formats: PDF, DOC, DOCX, JPG, PNG, TXT</p>
-        <p>• Maximum file size: 50MB per file</p>
-        <p>• Documents are stored securely and linked to this entity</p>
-        <p>• Upload actions are logged for audit trail</p>
-        {isIdDocument('signatory_id') && <p>• ID documents must have a valid expiry date</p>}
-        {isProofOfAddress('proof_of_address') && <p>• Proof of address must be dated within the last 3 months</p>}
+      <div className="text-xs text-muted-foreground space-y-1 pt-2">
+        <p>Supported formats: PDF, DOC, DOCX, JPG, PNG, TXT · Max 50MB per file</p>
+        <p>Documents are stored securely and all upload actions are logged for audit trail.</p>
       </div>
     </div>
 

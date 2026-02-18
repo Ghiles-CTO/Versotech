@@ -205,6 +205,7 @@ export default async function ArrangerProfilePage() {
       } : null}
       arrangerUserInfo={{
         role: arrangerUser.role,
+        is_primary: arrangerUser.is_primary || false,
         is_active: true, // arranger_users doesn't have is_active, assume active
         can_sign: arrangerUser.can_sign || false,
         signature_specimen_url: arrangerUser.signature_specimen_url,

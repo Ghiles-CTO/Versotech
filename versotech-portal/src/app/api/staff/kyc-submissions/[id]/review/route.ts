@@ -22,6 +22,15 @@ interface ReviewBody {
   notes?: string
 }
 
+const ENTITY_NOTIFICATION_CONFIG: Record<string, { userTable: string; entityIdColumn: string; link: string }> = {
+  investor: { userTable: 'investor_users', entityIdColumn: 'investor_id', link: '/versotech_main/profile' },
+  partner: { userTable: 'partner_users', entityIdColumn: 'partner_id', link: '/versotech_main/partner-profile' },
+  introducer: { userTable: 'introducer_users', entityIdColumn: 'introducer_id', link: '/versotech_main/introducer-profile' },
+  lawyer: { userTable: 'lawyer_users', entityIdColumn: 'lawyer_id', link: '/versotech_main/lawyer-profile' },
+  commercial_partner: { userTable: 'commercial_partner_users', entityIdColumn: 'commercial_partner_id', link: '/versotech_main/commercial-partner-profile' },
+  arranger: { userTable: 'arranger_users', entityIdColumn: 'arranger_id', link: '/versotech_main/arranger-profile' },
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -190,14 +199,6 @@ export async function POST(
     if (action === 'approve') {
       // Use generic handler for all entity types
       await handleKYCApproval(serviceSupabase, submission)
-
-      // Also check investor-specific status for backwards compatibility
-      if (submission.investor_id) {
-        await checkAndUpdateInvestorKYCStatus(
-          serviceSupabase,
-          submission.investor_id
-        )
-      }
     }
 
     // If rejected and this is a personal_info submission, update member status
@@ -255,19 +256,17 @@ export async function POST(
       timestamp: new Date().toISOString()
     })
 
-    // Send notification to investor (only for investor entity types)
-    // TODO: Add notification support for other entity types
-    if (submission.investor_id && submission.investor) {
+    // Send notification to the primary linked user for the relevant entity type.
+    if (entityType && entityId) {
       try {
-        const investorUserId = await getInvestorPrimaryUserId(submission.investor.id)
-        if (investorUserId) {
-          const investorName = submission.investor.display_name || submission.investor.legal_name || 'Investor'
+        const target = await resolveNotificationTarget(serviceSupabase, entityType, entityId)
+        if (target?.userId) {
           const docTypeLabel = submission.document_type.replace(/_/g, ' ')
 
           if (action === 'approve') {
             await createInvestorNotification({
-              userId: investorUserId,
-              investorId: submission.investor.id,
+              userId: target.userId,
+              investorId: submission.investor_id || undefined,
               title: submission.document_type === 'personal_info' ? 'Personal KYC Approved' :
                      submission.document_type === 'entity_info' ? 'Entity KYC Approved' :
                      'KYC Documents Approved',
@@ -276,39 +275,45 @@ export async function POST(
                 : submission.document_type === 'entity_info'
                 ? 'Your entity information has been reviewed and approved.'
                 : 'Your KYC documents have been reviewed and approved. Thank you for completing your verification.',
-              link: '/versotech_main/profile',
+              link: target.link,
               type: 'kyc_status',
               extraMetadata: {
                 submission_id: submissionId,
-                document_type: submission.document_type
+                document_type: submission.document_type,
+                entity_type: entityType,
+                entity_id: entityId,
               }
             })
           } else if (action === 'request_info') {
             await createInvestorNotification({
-              userId: investorUserId,
-              investorId: submission.investor.id,
+              userId: target.userId,
+              investorId: submission.investor_id || undefined,
               title: 'Additional Information Requested',
               message: `Our compliance team has requested additional information for your ${docTypeLabel} submission. Please review and provide the requested details.`,
-              link: '/versotech_main/profile',
+              link: target.link,
               type: 'kyc_status',
               extraMetadata: {
                 submission_id: submissionId,
                 document_type: submission.document_type,
-                info_request_reason: rejection_reason
+                info_request_reason: rejection_reason,
+                entity_type: entityType,
+                entity_id: entityId,
               }
             })
           } else {
             await createInvestorNotification({
-              userId: investorUserId,
-              investorId: submission.investor.id,
+              userId: target.userId,
+              investorId: submission.investor_id || undefined,
               title: 'KYC Submission Requires Attention',
               message: `Your ${docTypeLabel} submission requires attention. Please review and resubmit.`,
-              link: '/versotech_main/profile',
+              link: target.link,
               type: 'kyc_status',
               extraMetadata: {
                 submission_id: submissionId,
                 document_type: submission.document_type,
-                rejection_reason: rejection_reason
+                rejection_reason: rejection_reason,
+                entity_type: entityType,
+                entity_id: entityId,
               }
             })
           }
@@ -339,152 +344,42 @@ export async function POST(
   }
 }
 
-/**
- * Check if all required KYC documents are approved and update investor status
- *
- * For individual investors:
- * - Requires: passport_id (or passport), utility_bill
- *
- * For entity investors:
- * - Entity-level docs: incorporation_certificate, memo_articles,
- *   register_members, register_directors, bank_confirmation
- * - Per-member docs: Each active member needs passport_id AND utility_bill
- *
- * NOTE: Questionnaire is COMPLIANCE, not KYC - handled separately
- * NOTE: NDA is handled in deal flow, not KYC requirements
- */
-async function checkAndUpdateInvestorKYCStatus(
+async function resolveNotificationTarget(
   supabase: any,
-  investorId: string
-) {
-  try {
-    // Get investor type to determine required documents
-    const { data: investor } = await supabase
-      .from('investors')
-      .select('type, kyc_status')
-      .eq('id', investorId)
-      .single()
-
-    if (!investor) return
-
-    const isEntityType = ['entity', 'institution', 'corporate'].includes(investor.type)
-
-    // Get all investor KYC submissions (exclude counterparty entity submissions)
-    const { data: submissions } = await supabase
-      .from('kyc_submissions')
-      .select('document_type, status, investor_member_id')
-      .eq('investor_id', investorId)
-      .is('counterparty_entity_id', null) // Only main investor KYC
-
-    if (!submissions) return
-
-    // Helper to check if a document type is approved
-    const isDocApproved = (docType: string, memberId?: string | null) => {
-      return submissions.some((sub: any) =>
-        sub.document_type === docType &&
-        sub.status === 'approved' &&
-        (memberId === undefined || sub.investor_member_id === memberId)
-      )
-    }
-
-    // Helper to check if either passport or passport_id is approved (they're equivalent)
-    const isIdDocApproved = (memberId?: string | null) => {
-      return isDocApproved('passport_id', memberId) || isDocApproved('passport', memberId)
-    }
-
-    if (isEntityType) {
-      // Entity investor: Check entity-level docs + per-member docs
-
-      // Entity-level required documents (NO questionnaire, NO NDA)
-      const entityDocs = [
-        'incorporation_certificate',
-        'memo_articles',
-        'register_members',
-        'register_directors',
-        'bank_confirmation'
-      ]
-
-      // Check all entity-level docs are approved (no member association)
-      const entityDocsApproved = entityDocs.every(docType =>
-        isDocApproved(docType, null)
-      )
-
-      if (!entityDocsApproved) {
-        console.log(`[KYC Status] Investor ${investorId}: Entity documents not all approved`)
-        return
-      }
-
-      // Get all active members for this entity investor
-      const { data: members } = await supabase
-        .from('investor_members')
-        .select('id, full_name')
-        .eq('investor_id', investorId)
-        .eq('is_active', true)
-
-      // Track which members have all docs approved
-      const membersWithAllDocsApproved: string[] = []
-
-      if (members && members.length > 0) {
-        // Each member needs ID (passport or passport_id) AND utility_bill approved
-        for (const member of members) {
-          const hasId = isIdDocApproved(member.id)
-          const hasAddress = isDocApproved('utility_bill', member.id)
-
-          if (hasId && hasAddress) {
-            membersWithAllDocsApproved.push(member.id)
-          } else {
-            // Missing docs - investor can't be fully approved yet
-            if (!hasId) {
-              console.log(`[KYC Status] Investor ${investorId}: Member ${member.full_name} missing approved ID document`)
-            }
-            if (!hasAddress) {
-              console.log(`[KYC Status] Investor ${investorId}: Member ${member.full_name} missing approved utility_bill`)
-            }
-            return
-          }
-        }
-      }
-
-      // Update member KYC status for those with all docs approved
-      if (membersWithAllDocsApproved.length > 0) {
-        await supabase
-          .from('investor_members')
-          .update({ kyc_status: 'approved' })
-          .in('id', membersWithAllDocsApproved)
-          .neq('kyc_status', 'approved') // Only update if not already approved
-
-        console.log(`[KYC Status] Updated ${membersWithAllDocsApproved.length} member(s) to approved`)
-      }
-    } else {
-      // Individual investor: Check ID (passport or passport_id) + utility_bill
-      if (!isIdDocApproved(null)) {
-        console.log(`[KYC Status] Investor ${investorId}: Individual ID document not approved`)
-        return
-      }
-
-      if (!isDocApproved('utility_bill', null)) {
-        console.log(`[KYC Status] Investor ${investorId}: Individual utility_bill not approved`)
-        return
-      }
-    }
-
-    // All checks passed - update investor KYC status if not already approved
-    if (investor.kyc_status !== 'approved') {
-      await supabase
-        .from('investors')
-        .update({
-          kyc_status: 'approved',
-          kyc_completed_at: new Date().toISOString()
-        })
-        .eq('id', investorId)
-
-      console.log(`[KYC Status] Investor ${investorId}: KYC status updated to approved`)
-    }
-
-  } catch (error) {
-    console.error('Error checking investor KYC status:', error)
-    // Don't throw - this is a background operation
+  entityType: string,
+  entityId: string
+): Promise<{ userId: string; link: string } | null> {
+  if (entityType === 'investor') {
+    const userId = await getInvestorPrimaryUserId(entityId)
+    return userId ? { userId, link: ENTITY_NOTIFICATION_CONFIG.investor.link } : null
   }
+
+  const config = ENTITY_NOTIFICATION_CONFIG[entityType]
+  if (!config) return null
+
+  const { data: primary } = await supabase
+    .from(config.userTable)
+    .select('user_id')
+    .eq(config.entityIdColumn, entityId)
+    .eq('is_primary', true)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  if (primary?.user_id) {
+    return { userId: primary.user_id, link: config.link }
+  }
+
+  const { data: fallback } = await supabase
+    .from(config.userTable)
+    .select('user_id')
+    .eq(config.entityIdColumn, entityId)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  if (!fallback?.user_id) return null
+  return { userId: fallback.user_id, link: config.link }
 }
 
 /**
@@ -500,10 +395,18 @@ async function autoCompleteRelatedTasks(
     // Find tasks related to this document type for this investor
     // Task titles must match how tasks are created in the system
     const taskTitlePatterns: Record<string, string> = {
-      // Individual documents
+      // Individual ID documents
       passport_id: 'Upload ID',
       passport: 'Upload ID',
+      national_id: 'Upload ID',
+      drivers_license: 'Upload ID',
+      residence_permit: 'Upload ID',
+      other_government_id: 'Upload ID',
+      // Proof of address documents
       utility_bill: 'Upload Utility Bill',
+      bank_statement: 'Upload Utility Bill',
+      government_correspondence: 'Upload Utility Bill',
+      council_tax_bill: 'Upload Utility Bill',
       // Entity documents
       incorporation_certificate: 'Upload Incorporation',
       memo_articles: 'Upload Memo',

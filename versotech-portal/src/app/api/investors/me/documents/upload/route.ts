@@ -131,6 +131,7 @@ export async function POST(request: NextRequest) {
             investor_id: investorId,
             full_name: userName,
             email: selfProfile?.email,
+            linked_user_id: selfUserId,
             role: 'authorized_signatory',
             kyc_status: 'pending',
             is_signatory: true,

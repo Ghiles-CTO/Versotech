@@ -95,7 +95,7 @@ const updateInvestorSchema = z.object({
   tax_id_number: z.string().max(50).optional().nullable(),
 
   // ID Document
-  id_type: z.enum(['passport', 'national_id', 'drivers_license', 'residence_permit']).optional().nullable(),
+  id_type: z.enum(['passport', 'national_id', 'drivers_license', 'residence_permit', 'other_government_id']).optional().nullable(),
   id_number: z.string().max(50).optional().nullable(),
   id_issue_date: z.string().optional().nullable(),
   id_expiry_date: z.string().optional().nullable(),
@@ -193,7 +193,6 @@ export async function PATCH(request: Request) {
       'is_us_citizen',
       'is_us_taxpayer',
       'us_taxpayer_id',
-      'country_of_tax_residency',
       'tax_id_number',
       // ID Document
       'id_type',
@@ -214,6 +213,11 @@ export async function PATCH(request: Request) {
       if (parsed.data[field as keyof typeof parsed.data] !== undefined) {
         updateData[field] = parsed.data[field as keyof typeof parsed.data]
       }
+    }
+
+    // Map form field → DB column (country_of_tax_residency → tax_residency)
+    if (parsed.data.country_of_tax_residency !== undefined) {
+      updateData.tax_residency = parsed.data.country_of_tax_residency
     }
 
     // Handle address fields from EntityAddressEditDialog
@@ -290,7 +294,7 @@ export async function PATCH(request: Request) {
 
     if (updateError) {
       console.error('Error updating investor:', updateError)
-      return NextResponse.json({ error: 'Failed to update investor' }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to update your profile' }, { status: 500 })
     }
 
     return NextResponse.json({ investor: updatedInvestor })

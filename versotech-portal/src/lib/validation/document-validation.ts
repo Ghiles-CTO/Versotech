@@ -66,6 +66,7 @@ export const ID_DOCUMENT_TYPES = [
   'residence_permit',
   'visa',
   'government_id',
+  'other_government_id',
   'member_id',
   'director_id',
   'ubo_id',
@@ -122,6 +123,18 @@ const VALIDATION_CONFIG: Record<string, DocumentValidationConfig> = {
     warningDays: 30,
   },
   drivers_license: {
+    category: 'id_document',
+    requiresExpiry: true,
+    enforcement: 'strict_block',
+    warningDays: 30,
+  },
+  residence_permit: {
+    category: 'id_document',
+    requiresExpiry: true,
+    enforcement: 'strict_block',
+    warningDays: 30,
+  },
+  other_government_id: {
     category: 'id_document',
     requiresExpiry: true,
     enforcement: 'strict_block',

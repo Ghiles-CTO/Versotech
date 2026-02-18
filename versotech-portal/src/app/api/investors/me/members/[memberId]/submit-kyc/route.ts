@@ -97,6 +97,16 @@ export async function POST(
           submission_type: 'personal_kyc',
           member_name: member.full_name || `${member.first_name} ${member.last_name}`,
           submitted_by_user_id: user.id,
+          review_snapshot: {
+            first_name: member.first_name,
+            last_name: member.last_name,
+            date_of_birth: member.date_of_birth,
+            nationality: member.nationality,
+            residential_street: member.residential_street,
+            residential_country: member.residential_country,
+            id_type: member.id_type,
+            id_number: member.id_number,
+          }
         }
       })
       .select('id')

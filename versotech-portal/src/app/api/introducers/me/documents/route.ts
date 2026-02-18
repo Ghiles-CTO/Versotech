@@ -237,6 +237,52 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create document record' }, { status: 500 })
     }
 
+    // Version-aware KYC submission entry (review queue source of truth)
+    const { data: latestSubmission } = await serviceSupabase
+      .from('kyc_submissions')
+      .select('id, version')
+      .eq('introducer_id', introducerId)
+      .eq('document_type', documentType)
+      .is('introducer_member_id', null)
+      .order('version', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    const newVersion = latestSubmission ? latestSubmission.version + 1 : 1
+    const previousSubmissionId = latestSubmission?.id || null
+
+    const { data: submission, error: submissionError } = await serviceSupabase
+      .from('kyc_submissions')
+      .insert({
+        introducer_id: introducerId,
+        document_type: documentType,
+        document_id: document.id,
+        status: 'pending',
+        version: newVersion,
+        previous_submission_id: previousSubmissionId,
+        submitted_at: new Date().toISOString(),
+        metadata: {
+          file_size: file.size,
+          mime_type: file.type,
+          original_filename: file.name,
+          source: 'introducer_profile_upload',
+          is_reupload: !!latestSubmission,
+        }
+      })
+      .select('id, status')
+      .single()
+
+    if (submissionError) {
+      console.error('KYC submission creation error:', submissionError)
+
+      await serviceSupabase.from('documents').delete().eq('id', document.id)
+      await serviceSupabase.storage
+        .from(process.env.STORAGE_BUCKET_NAME || 'documents')
+        .remove([fileKey])
+
+      return NextResponse.json({ error: 'Failed to create KYC submission' }, { status: 500 })
+    }
+
     // Create audit log
     await serviceSupabase.from('audit_logs').insert({
       event_type: 'compliance',
@@ -261,7 +307,9 @@ export async function POST(request: NextRequest) {
         type: document.type,
         file_key: document.file_key,
         created_at: document.created_at
-      }
+      },
+      submission_id: submission.id,
+      submission_status: submission.status,
     })
 
   } catch (error) {

@@ -53,12 +53,81 @@ export async function GET(request: NextRequest) {
           type,
           kyc_status
         ),
+        partner:partners(
+          id,
+          name,
+          legal_name,
+          contact_email,
+          type,
+          kyc_status
+        ),
+        introducer:introducers(
+          id,
+          display_name,
+          legal_name,
+          email,
+          type,
+          kyc_status
+        ),
+        lawyer:lawyers(
+          id,
+          firm_name,
+          display_name,
+          primary_contact_email,
+          legal_entity_type,
+          kyc_status
+        ),
+        commercial_partner:commercial_partners(
+          id,
+          name,
+          legal_name,
+          contact_email,
+          type,
+          kyc_status
+        ),
+        arranger_entity:arranger_entities(
+          id,
+          legal_name,
+          email,
+          type,
+          kyc_status
+        ),
         counterparty_entity:investor_counterparty(
           id,
           legal_name,
           entity_type
         ),
         investor_member:investor_members(
+          id,
+          full_name,
+          role,
+          role_title
+        ),
+        partner_member:partner_members(
+          id,
+          full_name,
+          role,
+          role_title
+        ),
+        introducer_member:introducer_members(
+          id,
+          full_name,
+          role,
+          role_title
+        ),
+        lawyer_member:lawyer_members(
+          id,
+          full_name,
+          role,
+          role_title
+        ),
+        commercial_partner_member:commercial_partner_members(
+          id,
+          full_name,
+          role,
+          role_title
+        ),
+        arranger_member:arranger_members(
           id,
           full_name,
           role,
@@ -105,6 +174,86 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    const normalizeEntity = (submission: any) => {
+      const investorEntity = submission.investor
+      if (investorEntity) return investorEntity
+
+      if (submission.partner) {
+        return {
+          id: submission.partner.id,
+          legal_name: submission.partner.legal_name || submission.partner.name,
+          display_name: submission.partner.name || submission.partner.legal_name,
+          email: submission.partner.contact_email || null,
+          type: submission.partner.type || 'entity',
+          kyc_status: submission.partner.kyc_status || null,
+        }
+      }
+
+      if (submission.introducer) {
+        return {
+          id: submission.introducer.id,
+          legal_name: submission.introducer.legal_name || submission.introducer.display_name,
+          display_name: submission.introducer.display_name || submission.introducer.legal_name,
+          email: submission.introducer.email || null,
+          type: submission.introducer.type || 'entity',
+          kyc_status: submission.introducer.kyc_status || null,
+        }
+      }
+
+      if (submission.lawyer) {
+        return {
+          id: submission.lawyer.id,
+          legal_name: submission.lawyer.firm_name || submission.lawyer.display_name,
+          display_name: submission.lawyer.display_name || submission.lawyer.firm_name,
+          email: submission.lawyer.primary_contact_email || null,
+          type: submission.lawyer.legal_entity_type || 'entity',
+          kyc_status: submission.lawyer.kyc_status || null,
+        }
+      }
+
+      if (submission.commercial_partner) {
+        return {
+          id: submission.commercial_partner.id,
+          legal_name: submission.commercial_partner.legal_name || submission.commercial_partner.name,
+          display_name: submission.commercial_partner.name || submission.commercial_partner.legal_name,
+          email: submission.commercial_partner.contact_email || null,
+          type: submission.commercial_partner.type || 'entity',
+          kyc_status: submission.commercial_partner.kyc_status || null,
+        }
+      }
+
+      if (submission.arranger_entity) {
+        return {
+          id: submission.arranger_entity.id,
+          legal_name: submission.arranger_entity.legal_name,
+          display_name: submission.arranger_entity.legal_name,
+          email: submission.arranger_entity.email || null,
+          type: submission.arranger_entity.type || 'entity',
+          kyc_status: submission.arranger_entity.kyc_status || null,
+        }
+      }
+
+      return null
+    }
+
+    const normalizeMember = (submission: any) => {
+      return (
+        submission.investor_member ||
+        submission.partner_member ||
+        submission.introducer_member ||
+        submission.lawyer_member ||
+        submission.commercial_partner_member ||
+        submission.arranger_member ||
+        null
+      )
+    }
+
+    const normalizedSubmissions = (submissions || []).map((submission: any) => ({
+      ...submission,
+      investor: normalizeEntity(submission),
+      investor_member: normalizeMember(submission),
+    }))
+
     // Get submission statistics using aggregation (more efficient)
     const { data: statsData } = await supabase
       .from('kyc_submissions')
@@ -134,7 +283,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      submissions: submissions || [],
+      submissions: normalizedSubmissions,
       statistics,
       pagination: {
         page,

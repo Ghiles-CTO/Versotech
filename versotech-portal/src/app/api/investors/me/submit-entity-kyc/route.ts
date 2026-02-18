@@ -93,6 +93,32 @@ export async function POST() {
       )
     }
 
+    // Prevent duplicate queue entries when an entity_info submission is already pending
+    const { data: existingPendingSubmission, error: existingPendingError } = await serviceSupabase
+      .from('kyc_submissions')
+      .select('id')
+      .eq('investor_id', investor.id)
+      .eq('document_type', 'entity_info')
+      .in('status', ['pending', 'under_review'])
+      .order('submitted_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (existingPendingError) {
+      console.error('Error checking existing pending entity KYC submission:', existingPendingError)
+      return NextResponse.json(
+        { error: 'Failed to validate existing KYC submission status' },
+        { status: 500 }
+      )
+    }
+
+    if (existingPendingSubmission) {
+      return NextResponse.json(
+        { error: 'Entity KYC already submitted for review' },
+        { status: 400 }
+      )
+    }
+
     // Validate required entity fields are complete
     const requiredFields = [
       { field: 'legal_name', label: 'Legal Name' },
@@ -128,6 +154,15 @@ export async function POST() {
           entity_name: investor.legal_name,
           entity_type: investor.type,
           submitted_by_user_id: user.id,
+          review_snapshot: {
+            legal_name: investor.legal_name,
+            country_of_incorporation: investor.country_of_incorporation,
+            registered_address_line_1: investor.registered_address_line_1,
+            registered_city: investor.registered_city,
+            registered_country: investor.registered_country,
+            email: investor.email,
+            phone: investor.phone,
+          }
         }
       })
       .select('id')

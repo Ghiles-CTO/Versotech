@@ -29,6 +29,7 @@ import {
   Clock,
   AlertTriangle,
   Bell,
+  Send,
 } from 'lucide-react'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
@@ -196,6 +197,7 @@ export function LawyerProfileClient({
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const [showAddressDialog, setShowAddressDialog] = useState(false)
   const [showKycDialog, setShowKycDialog] = useState(false)
+  const [isSubmittingEntityKyc, setIsSubmittingEntityKyc] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Edit state
@@ -243,6 +245,35 @@ export function LawyerProfileClient({
       primary_contact_phone: lawyerInfo?.phone || '',
     })
     setIsEditing(false)
+  }
+
+  const handleSubmitEntityKyc = async () => {
+    if (!lawyerInfo?.id) return
+
+    setIsSubmittingEntityKyc(true)
+    try {
+      const response = await fetch('/api/me/entity-kyc/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          entityType: 'lawyer',
+          entityId: lawyerInfo.id,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to submit entity KYC')
+      }
+
+      toast.success('Entity information submitted for review')
+      window.location.reload()
+    } catch (error) {
+      console.error('[lawyer-profile] Failed to submit entity KYC:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to submit entity KYC')
+    } finally {
+      setIsSubmittingEntityKyc(false)
+    }
   }
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -729,6 +760,29 @@ export function LawyerProfileClient({
 
         {/* KYC Tab */}
         <TabsContent value="kyc" className="space-y-4">
+          {lawyerInfo?.type !== 'individual' &&
+            !['approved', 'submitted', 'pending', 'pending_review'].includes(lawyerInfo?.kyc_status || '') && (
+            <Card>
+              <CardContent className="pt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-medium text-foreground">Submit Entity Info for Review</p>
+                  <p className="text-sm text-muted-foreground">
+                    Required to complete KYC and trigger account activation approval.
+                  </p>
+                </div>
+                {(lawyerUserInfo.role === 'admin' || lawyerUserInfo.is_primary) ? (
+                  <Button onClick={handleSubmitEntityKyc} disabled={isSubmittingEntityKyc} size="sm">
+                    <Send className="h-4 w-4 mr-2" />
+                    {isSubmittingEntityKyc ? 'Submitting...' : 'Submit Entity Info'}
+                  </Button>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Only primary contacts can submit entity information for review.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
           {lawyerInfo ? (
             <LawyerKYCDocumentsTab
               lawyerId={lawyerInfo.id}

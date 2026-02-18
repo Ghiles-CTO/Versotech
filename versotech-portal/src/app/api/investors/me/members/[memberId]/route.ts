@@ -145,7 +145,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     // Verify member belongs to user's investor
     const { data: existingMember } = await serviceSupabase
       .from('investor_members')
-      .select('id')
+      .select('id, kyc_status')
       .eq('id', memberId)
       .in('investor_id', investorIds)
       .single()
@@ -165,11 +165,17 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       )
     }
 
+    // If KYC was approved/submitted, reset to pending so staff re-reviews
+    const kycReset = (existingMember.kyc_status === 'approved' || existingMember.kyc_status === 'submitted')
+      ? { kyc_status: 'pending' as const, kyc_approved_at: null }
+      : {}
+
     // Update member
     const { data: updatedMember, error: updateError } = await serviceSupabase
       .from('investor_members')
       .update({
         ...parsed.data,
+        ...kycReset,
         updated_at: new Date().toISOString()
       })
       .eq('id', memberId)

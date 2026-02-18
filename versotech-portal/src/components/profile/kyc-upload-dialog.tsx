@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { toast } from 'sonner'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -21,8 +20,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Upload, Loader2, Info, Building2, User, AlertCircle } from 'lucide-react'
-import { getEntityDocumentTypes, getMemberDocumentTypes, getIndividualDocumentTypes } from '@/constants/kyc-document-types'
+import { Badge } from '@/components/ui/badge'
+import {
+  Upload,
+  Loader2,
+  Building2,
+  User,
+  AlertCircle,
+  FileText,
+  ShieldCheck,
+  X,
+  CalendarDays,
+  StickyNote,
+  ChevronRight,
+} from 'lucide-react'
+import { getEntityDocumentTypes, getDocumentsByCategory, DOCUMENT_CATEGORIES } from '@/constants/kyc-document-types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface Member {
@@ -51,42 +63,39 @@ export function KYCUploadDialog({
   memberType
 }: KYCUploadDialogProps) {
   const [file, setFile] = useState<File | null>(null)
+  const [documentCategory, setDocumentCategory] = useState<string>('')
   const [documentType, setDocumentType] = useState<string>('')
   const [customLabel, setCustomLabel] = useState<string>('')
   const [expiryDate, setExpiryDate] = useState<string>('')
   const [notes, setNotes] = useState<string>('')
   const [uploadTarget, setUploadTarget] = useState<string>('')
   const [isUploading, setIsUploading] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const isEntityInvestor = category === 'entity'
   const isForMember = uploadTarget && uploadTarget !== 'entity-level'
   const hasMembers = members.length > 0
 
-  // Get document types based on selection
-  const availableDocumentTypes = useMemo(() => {
-    if (!isEntityInvestor) {
-      // Individual investor - simple personal docs
-      return getIndividualDocumentTypes()
-    }
+  // For individual/member: cascading — get doc types from selected category
+  // For entity-level: flat dropdown of corporate docs
+  const usesCascading = !isEntityInvestor || isForMember
+  const categoryDocTypes = useMemo(() => {
+    if (!usesCascading) return getEntityDocumentTypes()
+    return getDocumentsByCategory(documentCategory)
+  }, [usesCascading, documentCategory])
 
-    if (isForMember) {
-      // Uploading for a specific member - personal ID docs
-      return getMemberDocumentTypes()
-    }
-
-    // Entity-level docs
-    return getEntityDocumentTypes()
-  }, [isEntityInvestor, isForMember])
-
-  // Reset document type when target changes
+  // Reset document type + category when target changes
   useEffect(() => {
     setDocumentType('')
+    setDocumentCategory('')
   }, [uploadTarget])
 
   // Reset form when dialog opens
   useEffect(() => {
     if (open) {
       setFile(null)
+      setDocumentCategory('')
       setDocumentType('')
       setCustomLabel('')
       setExpiryDate('')
@@ -95,23 +104,54 @@ export function KYCUploadDialog({
     }
   }, [open])
 
+  // When category changes, reset document type (unless custom)
+  const handleCategoryChange = useCallback((value: string) => {
+    setDocumentCategory(value)
+    if (value === 'custom') {
+      setDocumentType('custom')
+    } else {
+      setDocumentType('')
+    }
+  }, [])
+
+  const validateFile = useCallback((selectedFile: File): boolean => {
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      toast.error('File too large', { description: 'Maximum file size is 10MB' })
+      return false
+    }
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/heic', 'image/webp']
+    if (!allowedTypes.includes(selectedFile.type)) {
+      toast.error('Invalid file type', { description: 'Only PDF and image files are allowed' })
+      return false
+    }
+    return true
+  }, [])
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
-    if (selectedFile) {
-      if (selectedFile.size > 10 * 1024 * 1024) {
-        toast.error('File too large', { description: 'Maximum file size is 10MB' })
-        return
-      }
-
-      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/heic', 'image/webp']
-      if (!allowedTypes.includes(selectedFile.type)) {
-        toast.error('Invalid file type', { description: 'Only PDF and image files are allowed' })
-        return
-      }
-
+    if (selectedFile && validateFile(selectedFile)) {
       setFile(selectedFile)
     }
   }
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const droppedFile = e.dataTransfer.files[0]
+    if (droppedFile && validateFile(droppedFile)) {
+      setFile(droppedFile)
+    }
+  }, [validateFile])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -154,7 +194,6 @@ export function KYCUploadDialog({
         formData.append('entityId', entityId)
       }
 
-      // Add member ID if uploading for a specific member
       if (isForMember && memberType) {
         if (memberType === 'investor') {
           formData.append('investorMemberId', uploadTarget)
@@ -186,180 +225,425 @@ export function KYCUploadDialog({
     }
   }
 
+  const fileExtension = file?.name.split('.').pop()?.toUpperCase() || ''
+  const canSubmit = file && documentType && (!isEntityInvestor || uploadTarget) && (documentType !== 'custom' || customLabel.trim()) && (!usesCascading || documentCategory)
+
+  // Step tracking
+  // Entity-level (flat): Who → Type → File (3 steps)
+  // Entity member (cascading): Who → Category → Type → File (4 steps)
+  // Individual (cascading): Category → Type → File (3 steps)
+  const entityStep = (() => {
+    if (!isEntityInvestor) {
+      // Individual: Category → Type → File
+      if (!documentCategory) return 1
+      if (!documentType) return 2
+      return 3
+    }
+    if (!uploadTarget) return 1
+    if (isForMember) {
+      // Member: Who → Category → Type → File
+      if (!documentCategory) return 2
+      if (!documentType) return 3
+      return 4
+    }
+    // Entity-level: Who → Type → File
+    if (!documentType) return 2
+    return 3
+  })()
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Upload KYC Document</DialogTitle>
-          <DialogDescription>
-            {isEntityInvestor
-              ? 'Upload entity documents or member ID documents'
-              : 'Upload your ID and proof of address'}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-[540px] p-0 gap-0 overflow-hidden">
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 border-b border-border/50">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <ShieldCheck className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <DialogTitle className="text-base">Upload KYC Document</DialogTitle>
+                <DialogDescription className="mt-0.5">
+                  {isEntityInvestor
+                    ? 'Upload entity documents or member ID documents'
+                    : 'Upload your Proof of Identification and Proof of Address'}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* STEP 1: For entity investors - WHO is this document for? */}
+        {/* Form body */}
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5 max-h-[calc(100vh-16rem)] overflow-y-auto">
+
+          {/* Entity flow: Step 1 — Who is this for? */}
           {isEntityInvestor && (
-            <div className="space-y-2">
-              <Label className="text-base font-semibold">
-                Step 1: Who is this document for?
-              </Label>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                {entityStep === 1 ? (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">1</span>
+                ) : (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-[11px] font-semibold text-primary">1</span>
+                )}
+                <Label className="text-sm font-medium">Who is this document for?</Label>
+              </div>
+
               <Select value={uploadTarget} onValueChange={setUploadTarget}>
-                <SelectTrigger className={!uploadTarget ? 'border-amber-400 bg-amber-50' : ''}>
-                  <SelectValue placeholder="Select..." />
+                <SelectTrigger className={!uploadTarget ? 'border-amber-500/40 bg-amber-500/5 dark:bg-amber-500/10' : ''}>
+                  <SelectValue placeholder="Select recipient..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* Entity option - always available */}
                   <SelectItem value="entity-level">
                     <div className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4 text-blue-600" />
+                      <Building2 className="h-4 w-4 text-blue-500" />
                       <span className="font-medium">Entity (Company Documents)</span>
                     </div>
                   </SelectItem>
-
-                  {/* Member options - if members exist */}
                   {hasMembers && members.map((member) => (
                     <SelectItem key={member.id} value={member.id}>
                       <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-green-600" />
+                        <User className="h-4 w-4 text-emerald-500" />
                         <span>{member.full_name}</span>
-                        <span className="text-muted-foreground text-xs">({member.role})</span>
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-normal">{member.role}</Badge>
                       </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
-              {/* Helpful description */}
               {uploadTarget === 'entity-level' && (
-                <p className="text-sm text-blue-600">
-                  Entity docs: Incorporation Certificate, Memo & Articles, Registers, Bank Confirmation
+                <p className="text-xs text-muted-foreground pl-7">
+                  Incorporation Certificate, Memo & Articles, Registers, Bank Confirmation
                 </p>
               )}
               {isForMember && (
-                <p className="text-sm text-green-600">
-                  Member docs: Passport/ID, Proof of Address
+                <p className="text-xs text-muted-foreground pl-7">
+                  Passport/ID, Proof of Address for this member
                 </p>
               )}
 
-              {/* Alert if no members */}
               {!hasMembers && (
-                <Alert className="border-amber-300 bg-amber-50">
-                  <AlertCircle className="h-4 w-4 text-amber-600" />
-                  <AlertDescription className="text-amber-800">
-                    <strong>No members added yet.</strong> To upload ID documents for Directors/UBOs,
-                    first add them in the <span className="font-semibold">Directors/UBOs tab</span>.
+                <Alert className="border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/10">
+                  <AlertCircle className="h-4 w-4 text-amber-500" />
+                  <AlertDescription className="text-sm">
+                    <strong>No members added yet.</strong> Add Directors/UBOs first to upload their ID documents.
                   </AlertDescription>
                 </Alert>
               )}
             </div>
           )}
 
-          {/* STEP 2: Document Type */}
-          <div className="space-y-2">
-            <Label className={isEntityInvestor ? "text-base font-semibold" : ""}>
-              {isEntityInvestor ? 'Step 2: Document Type' : 'Document Type'}
-            </Label>
-            <Select
-              value={documentType}
-              onValueChange={setDocumentType}
-              disabled={isEntityInvestor && !uploadTarget}
-            >
-              <SelectTrigger className={isEntityInvestor && !uploadTarget ? 'opacity-50' : ''}>
-                <SelectValue placeholder={isEntityInvestor && !uploadTarget ? 'First select who...' : 'Select document type...'} />
-              </SelectTrigger>
-              <SelectContent>
-                {availableDocumentTypes.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {type.label}
-                  </SelectItem>
-                ))}
-                <SelectItem value="custom">Other (Custom)</SelectItem>
-              </SelectContent>
-            </Select>
-            {documentType && documentType !== 'custom' && (
-              <p className="text-xs text-muted-foreground">
-                {availableDocumentTypes.find(t => t.value === documentType)?.description}
-              </p>
-            )}
-          </div>
+          {/* Cascading: Category → Type (for individual / member flows) */}
+          {usesCascading && (
+            <>
+              {/* Category Selection */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  {(() => {
+                    const stepNum = isEntityInvestor ? 2 : 1
+                    const isActive = isEntityInvestor ? entityStep === 2 : entityStep === 1
+                    const isDone = isEntityInvestor ? entityStep > 2 : entityStep > 1
+                    return isDone ? (
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-[11px] font-semibold text-primary">{stepNum}</span>
+                    ) : (
+                      <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold ${isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>{stepNum}</span>
+                    )
+                  })()}
+                  <Label className="text-sm font-medium">Document Category</Label>
+                </div>
 
-          {/* Custom label if "Other" selected */}
-          {documentType === 'custom' && (
-            <div className="space-y-2">
-              <Label>Custom Document Name</Label>
-              <Input
-                value={customLabel}
-                onChange={(e) => setCustomLabel(e.target.value)}
-                placeholder="e.g., Trust Agreement"
-                required
-              />
-            </div>
+                <Select
+                  value={documentCategory}
+                  onValueChange={handleCategoryChange}
+                  disabled={isEntityInvestor && !uploadTarget}
+                >
+                  <SelectTrigger className={isEntityInvestor && !uploadTarget ? 'opacity-40 cursor-not-allowed' : ''}>
+                    <SelectValue placeholder={isEntityInvestor && !uploadTarget ? 'Select recipient first...' : 'What type of document is this?'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DOCUMENT_CATEGORIES.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        <div className="flex flex-col">
+                          <span>{cat.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {documentCategory && documentCategory !== 'custom' && (
+                  <p className="text-xs text-muted-foreground flex items-start gap-1.5 pl-7">
+                    <ChevronRight className="h-3 w-3 mt-0.5 shrink-0 text-muted-foreground/60" />
+                    {DOCUMENT_CATEGORIES.find(c => c.value === documentCategory)?.description}
+                  </p>
+                )}
+              </div>
+
+              {/* Document Type (only when non-custom category selected) */}
+              {documentCategory && documentCategory !== 'custom' && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    {(() => {
+                      const stepNum = isEntityInvestor ? 3 : 2
+                      const isActive = isEntityInvestor ? entityStep === 3 : entityStep === 2
+                      const isDone = isEntityInvestor ? entityStep > 3 : entityStep > 2
+                      return isDone ? (
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-[11px] font-semibold text-primary">{stepNum}</span>
+                      ) : (
+                        <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold ${isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>{stepNum}</span>
+                      )
+                    })()}
+                    <Label className="text-sm font-medium">Document Type</Label>
+                  </div>
+
+                  <Select value={documentType} onValueChange={setDocumentType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select specific document..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categoryDocTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          <span>{type.label}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {documentType && (
+                    <p className="text-xs text-muted-foreground flex items-start gap-1.5 pl-7">
+                      <ChevronRight className="h-3 w-3 mt-0.5 shrink-0 text-muted-foreground/60" />
+                      {categoryDocTypes.find(t => t.value === documentType)?.description}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Custom label (when "Other" category) */}
+              {documentCategory === 'custom' && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Custom Document Name</Label>
+                  <Input
+                    value={customLabel}
+                    onChange={(e) => setCustomLabel(e.target.value)}
+                    placeholder="e.g., Trust Agreement"
+                    required
+                  />
+                </div>
+              )}
+            </>
           )}
 
-          {/* File Upload */}
+          {/* Entity-level: flat dropdown (unchanged) */}
+          {!usesCascading && (
+            <>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  {entityStep === 2 ? (
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">2</span>
+                  ) : entityStep > 2 ? (
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-[11px] font-semibold text-primary">2</span>
+                  ) : (
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-muted-foreground">2</span>
+                  )}
+                  <Label className="text-sm font-medium">Document Type</Label>
+                </div>
+
+                <Select
+                  value={documentType}
+                  onValueChange={setDocumentType}
+                  disabled={!uploadTarget}
+                >
+                  <SelectTrigger className={!uploadTarget ? 'opacity-40 cursor-not-allowed' : ''}>
+                    <SelectValue placeholder={!uploadTarget ? 'Select recipient first...' : 'Select document type...'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categoryDocTypes.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        <span>{type.label}</span>
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="custom">
+                      <span>Other (Custom)</span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {documentType && documentType !== 'custom' && (
+                  <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+                    <ChevronRight className="h-3 w-3 mt-0.5 shrink-0 text-muted-foreground/60" />
+                    {categoryDocTypes.find(t => t.value === documentType)?.description}
+                  </p>
+                )}
+              </div>
+
+              {documentType === 'custom' && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Custom Document Name</Label>
+                  <Input
+                    value={customLabel}
+                    onChange={(e) => setCustomLabel(e.target.value)}
+                    placeholder="e.g., Trust Agreement"
+                    required
+                  />
+                </div>
+              )}
+            </>
+          )}
+
+          {/* File Drop Zone */}
           <div className="space-y-2">
-            <Label>File</Label>
-            <Input
+            {(() => {
+              // File step is always the last step
+              const fileStepNum = (() => {
+                if (!isEntityInvestor) return 3 // Individual: Cat → Type → File
+                if (isForMember) return 4 // Member: Who → Cat → Type → File
+                return 3 // Entity-level: Who → Type → File
+              })()
+              const isFileStepActive = entityStep === fileStepNum
+              const isFileStepDone = entityStep > fileStepNum
+
+              return (
+                <div className="flex items-center gap-2 mb-1">
+                  {isFileStepDone ? (
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-[11px] font-semibold text-primary">{fileStepNum}</span>
+                  ) : (
+                    <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold ${isFileStepActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>{fileStepNum}</span>
+                  )}
+                  <Label className="text-sm font-medium">Upload File</Label>
+                </div>
+              )
+            })()}
+
+            <input
+              ref={fileInputRef}
               type="file"
+              className="sr-only"
               accept=".pdf,.jpg,.jpeg,.png,.heic,.webp"
               onChange={handleFileChange}
-              required
             />
-            {file && (
-              <p className="text-xs text-muted-foreground">
-                Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-              </p>
+
+            {!file ? (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                className={`
+                  relative cursor-pointer rounded-lg border-2 border-dashed p-6
+                  transition-all duration-200 text-center
+                  ${isDragging
+                    ? 'border-primary bg-primary/5 dark:bg-primary/10'
+                    : 'border-muted-foreground/20 hover:border-muted-foreground/40 hover:bg-muted/30'
+                  }
+                `}
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <div className={`rounded-full p-2.5 transition-colors ${isDragging ? 'bg-primary/10' : 'bg-muted'}`}>
+                    <Upload className={`h-5 w-5 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      {isDragging ? 'Drop file here' : 'Click to browse or drag & drop'}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      PDF, JPEG, PNG, HEIC, WEBP &middot; Max 10MB
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10">
+                  <FileText className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{file.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {fileExtension} &middot; {(file.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+                  onClick={() => {
+                    setFile(null)
+                    if (fileInputRef.current) fileInputRef.current.value = ''
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             )}
-            <p className="text-xs text-muted-foreground">
-              Max 10MB. PDF, JPEG, PNG, HEIC, WEBP accepted.
-            </p>
           </div>
 
-          {/* Expiry Date */}
-          <div className="space-y-2">
-            <Label>Expiry Date (Optional)</Label>
-            <Input
-              type="date"
-              value={expiryDate}
-              onChange={(e) => setExpiryDate(e.target.value)}
-            />
+          {/* Optional fields row */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <CalendarDays className="h-3 w-3" />
+                Expiry Date
+                <span className="text-muted-foreground/50">(optional)</span>
+              </Label>
+              <Input
+                type="date"
+                value={expiryDate}
+                onChange={(e) => setExpiryDate(e.target.value)}
+                className="text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <StickyNote className="h-3 w-3" />
+                Notes
+                <span className="text-muted-foreground/50">(optional)</span>
+              </Label>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Additional info..."
+                rows={1}
+                className="text-sm min-h-[36px] resize-none"
+              />
+            </div>
           </div>
+        </form>
 
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label>Notes (Optional)</Label>
-            <Textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Any additional info..."
-              rows={2}
-            />
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isUploading}>
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-border/50 bg-muted/30 flex items-center justify-between gap-3">
+          <p className="text-[11px] text-muted-foreground/70 hidden sm:block">
+            All documents are encrypted and stored securely.
+          </p>
+          <div className="flex items-center gap-2 ml-auto">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => onOpenChange(false)}
+              disabled={isUploading}
+            >
               Cancel
             </Button>
             <Button
-              type="submit"
-              disabled={isUploading || !file || !documentType || (isEntityInvestor && !uploadTarget) || (documentType === 'custom' && !customLabel.trim())}
+              size="sm"
+              disabled={isUploading || !canSubmit}
+              onClick={handleSubmit}
             >
               {isUploading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                   Uploading...
                 </>
               ) : (
                 <>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload
+                  <Upload className="mr-1.5 h-3.5 w-3.5" />
+                  Upload Document
                 </>
               )}
             </Button>
-          </DialogFooter>
-        </form>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   )

@@ -6,25 +6,21 @@
  * Implements User Story 2.1.9: Onboarding/Check-in
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 
-// Required document types for KYC (mirrors kyc-submission/route.ts)
+// Required arranger entity documents (mirrors arranger KYC tab checklist).
 const REQUIRED_DOCUMENT_TYPES = [
-  'company_registration',
+  'certificate_of_incorporation',
+  'regulatory_license',
+  'insurance_certificate',
+  'aml_policy',
+  'financial_statements',
+  'beneficial_ownership',
   'proof_of_address',
-  'director_id',
 ]
 
-// Required profile fields
-const REQUIRED_PROFILE_FIELDS = [
-  'legal_name',
-  'registration_number',
-  'regulator',
-  'license_number',
-]
-
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = await createClient()
     const serviceSupabase = createServiceClient()
@@ -38,7 +34,7 @@ export async function GET(request: NextRequest) {
     // Get arranger entity for this user
     const { data: arrangerUser, error: arrangerUserError } = await supabase
       .from('arranger_users')
-      .select('arranger_id, role')
+      .select('arranger_id, role, signature_specimen_url')
       .eq('user_id', user.id)
       .single()
 
@@ -58,9 +54,9 @@ export async function GET(request: NextRequest) {
         regulator,
         license_number,
         tax_id,
-        primary_email,
-        primary_phone,
-        address_line1,
+        email,
+        phone,
+        address_line_1,
         city,
         country,
         status,
@@ -87,37 +83,33 @@ export async function GET(request: NextRequest) {
 
     // Check KYC documents
     const { data: documents, error: docsError } = await serviceSupabase
-      .from('arranger_documents')
-      .select('document_type')
-      .eq('arranger_id', arrangerId)
-      .eq('status', 'active')
+      .from('documents')
+      .select('type')
+      .eq('arranger_entity_id', arrangerId)
 
-    const uploadedTypes = new Set((documents || []).map(d => d.document_type))
-    const documentsStatus = {
-      company_registration: uploadedTypes.has('company_registration'),
-      proof_of_address: uploadedTypes.has('proof_of_address'),
-      director_id: uploadedTypes.has('director_id'),
+    if (docsError) {
+      console.error('Failed to fetch arranger documents:', docsError)
+      return NextResponse.json({ error: 'Failed to fetch arranger documents' }, { status: 500 })
     }
+
+    const uploadedTypes = new Set((documents || []).map(d => d.type))
+    const documentsStatus = Object.fromEntries(
+      REQUIRED_DOCUMENT_TYPES.map((documentType) => [documentType, uploadedTypes.has(documentType)])
+    )
     const documentsComplete = Object.values(documentsStatus).every(Boolean)
     const documentsFilledCount = Object.values(documentsStatus).filter(Boolean).length
 
     // Check signature specimen
-    const { data: signatureDoc } = await serviceSupabase
-      .from('arranger_documents')
-      .select('id')
-      .eq('arranger_id', arrangerId)
-      .eq('document_type', 'signature_specimen')
-      .eq('status', 'active')
-      .maybeSingle()
+    const signatureComplete = !!arrangerUser.signature_specimen_url
 
-    const signatureComplete = !!signatureDoc
+    const submittedOrApproved = ['submitted', 'pending', 'approved'].includes(arranger.kyc_status || '')
 
     // Calculate overall progress
     const steps = [
       { id: 'profile', complete: profileComplete },
       { id: 'documents', complete: documentsComplete },
       { id: 'signature', complete: signatureComplete },
-      { id: 'submitted', complete: arranger.kyc_status === 'pending' || arranger.kyc_status === 'approved' },
+      { id: 'submitted', complete: submittedOrApproved },
       { id: 'approved', complete: arranger.kyc_status === 'approved' },
     ]
 
@@ -145,13 +137,13 @@ export async function GET(request: NextRequest) {
         label: 'Add your signature specimen',
         href: '/versotech_main/arranger-profile?tab=signature',
       }
-    } else if (arranger.kyc_status !== 'pending' && arranger.kyc_status !== 'approved') {
+    } else if (!submittedOrApproved) {
       nextAction = {
         step: 'submit',
         label: 'Submit for approval',
         href: '/versotech_main/arranger-profile?tab=documents',
       }
-    } else if (arranger.kyc_status === 'pending') {
+    } else if (arranger.kyc_status === 'pending' || arranger.kyc_status === 'submitted') {
       nextAction = {
         step: 'pending',
         label: 'Awaiting review',
@@ -186,7 +178,7 @@ export async function GET(request: NextRequest) {
             complete: signatureComplete,
           },
           submitted: {
-            complete: arranger.kyc_status === 'pending' || arranger.kyc_status === 'approved',
+            complete: submittedOrApproved,
             submitted_at: arranger.kyc_submitted_at,
           },
           approved: {

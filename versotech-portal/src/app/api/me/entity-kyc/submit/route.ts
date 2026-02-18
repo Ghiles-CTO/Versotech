@@ -6,7 +6,8 @@ const ENTITY_CONFIGS = {
   investor: {
     entityTable: 'investors',
     userTable: 'investor_users',
-    entityIdColumn: 'investor_id',
+    userEntityIdColumn: 'investor_id',
+    submissionEntityIdColumn: 'investor_id',
     requiredFields: [
       { field: 'legal_name', label: 'Legal Name' },
       { field: 'country_of_incorporation', label: 'Country of Incorporation' },
@@ -17,7 +18,8 @@ const ENTITY_CONFIGS = {
   partner: {
     entityTable: 'partners',
     userTable: 'partner_users',
-    entityIdColumn: 'partner_id',
+    userEntityIdColumn: 'partner_id',
+    submissionEntityIdColumn: 'partner_id',
     requiredFields: [
       { field: 'legal_name', label: 'Legal Name' },
       { field: 'country', label: 'Country' },
@@ -26,7 +28,8 @@ const ENTITY_CONFIGS = {
   introducer: {
     entityTable: 'introducers',
     userTable: 'introducer_users',
-    entityIdColumn: 'introducer_id',
+    userEntityIdColumn: 'introducer_id',
+    submissionEntityIdColumn: 'introducer_id',
     requiredFields: [
       { field: 'legal_name', label: 'Legal Name' },
       { field: 'country', label: 'Country' },
@@ -35,16 +38,18 @@ const ENTITY_CONFIGS = {
   lawyer: {
     entityTable: 'lawyers',
     userTable: 'lawyer_users',
-    entityIdColumn: 'lawyer_id',
+    userEntityIdColumn: 'lawyer_id',
+    submissionEntityIdColumn: 'lawyer_id',
     requiredFields: [
-      { field: 'legal_name', label: 'Legal Name' },
-      { field: 'jurisdiction', label: 'Jurisdiction' },
+      { field: 'firm_name', label: 'Firm Name' },
+      { field: 'country', label: 'Country' },
     ],
   },
   commercial_partner: {
     entityTable: 'commercial_partners',
     userTable: 'commercial_partner_users',
-    entityIdColumn: 'commercial_partner_id',
+    userEntityIdColumn: 'commercial_partner_id',
+    submissionEntityIdColumn: 'commercial_partner_id',
     requiredFields: [
       { field: 'name', label: 'Name' },
       { field: 'jurisdiction', label: 'Jurisdiction' },
@@ -53,9 +58,13 @@ const ENTITY_CONFIGS = {
   arranger: {
     entityTable: 'arranger_entities',
     userTable: 'arranger_users',
-    entityIdColumn: 'arranger_id',
+    userEntityIdColumn: 'arranger_id',
+    submissionEntityIdColumn: 'arranger_entity_id',
     requiredFields: [
       { field: 'legal_name', label: 'Legal Name' },
+      { field: 'registration_number', label: 'Registration Number' },
+      { field: 'regulator', label: 'Regulator' },
+      { field: 'license_number', label: 'License Number' },
     ],
   },
 } as const
@@ -108,7 +117,7 @@ export async function POST(request: Request) {
       .from(config.userTable)
       .select('is_primary, role')
       .eq('user_id', user.id)
-      .eq(config.entityIdColumn, entityId)
+      .eq(config.userEntityIdColumn, entityId)
       .maybeSingle()
 
     if (entityUserError || !entityUser) {
@@ -163,6 +172,32 @@ export async function POST(request: Request) {
       )
     }
 
+    // Prevent duplicate queue entries when an existing submission is still in review
+    const { data: existingPendingSubmission, error: existingPendingError } = await serviceSupabase
+      .from('kyc_submissions')
+      .select('id')
+      .eq(config.submissionEntityIdColumn, entityId)
+      .eq('document_type', 'entity_info')
+      .in('status', ['pending', 'under_review'])
+      .order('submitted_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (existingPendingError) {
+      console.error('Error checking existing pending entity KYC submission:', existingPendingError)
+      return NextResponse.json(
+        { error: 'Failed to validate existing KYC submission status' },
+        { status: 500 }
+      )
+    }
+
+    if (existingPendingSubmission) {
+      return NextResponse.json(
+        { error: 'Entity KYC already submitted for review' },
+        { status: 400 }
+      )
+    }
+
     // Validate required fields
     const missingFields = config.requiredFields.filter(
       ({ field }) => !entity[field as keyof typeof entity]
@@ -186,13 +221,20 @@ export async function POST(request: Request) {
       metadata: {
         submission_type: 'entity_kyc',
         entity_type: entityType,
-        entity_name: entity.legal_name || entity.name,
+        entity_name: entity.legal_name || entity.name || entity.firm_name || entity.display_name,
         submitted_by_user_id: user.id,
+        review_snapshot: {
+          ...Object.fromEntries(
+            config.requiredFields.map(({ field }) => [field, entity[field as keyof typeof entity]])
+          ),
+          legal_name: entity.legal_name || entity.name || entity.firm_name || entity.display_name || null,
+          country: entity.country || entity.registered_country || entity.jurisdiction || null,
+        }
       }
     }
 
     // Add entity-specific foreign key
-    submissionData[config.entityIdColumn] = entityId
+    submissionData[config.submissionEntityIdColumn] = entityId
 
     // Create KYC submission record
     const { data: submission, error: submissionError } = await serviceSupabase
@@ -210,12 +252,19 @@ export async function POST(request: Request) {
     }
 
     // Update entity kyc_status to 'submitted'
+    const entityUpdateData: Record<string, unknown> = {
+      kyc_status: 'submitted',
+      updated_at: new Date().toISOString(),
+    }
+
+    if (entityType === 'arranger') {
+      entityUpdateData.kyc_submitted_at = new Date().toISOString()
+      entityUpdateData.kyc_submitted_by = user.id
+    }
+
     const { error: updateError } = await serviceSupabase
       .from(config.entityTable)
-      .update({
-        kyc_status: 'submitted',
-        updated_at: new Date().toISOString(),
-      })
+      .update(entityUpdateData)
       .eq('id', entityId)
 
     if (updateError) {
