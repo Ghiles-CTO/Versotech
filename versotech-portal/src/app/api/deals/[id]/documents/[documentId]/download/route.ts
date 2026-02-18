@@ -14,6 +14,11 @@ function isImage(fileName: string | null | undefined): boolean {
   return /\.(jpg|jpeg|png|gif|webp|bmp|tiff?)$/i.test(fileName)
 }
 
+function isVideo(fileName: string | null | undefined): boolean {
+  if (!fileName) return false
+  return /\.(mp4|mov|webm|avi|mkv|m4v)$/i.test(fileName)
+}
+
 function getMimeType(fileName: string | null | undefined): string {
   if (!fileName) return 'application/octet-stream'
   const ext = fileName.toLowerCase().split('.').pop()
@@ -219,7 +224,25 @@ export async function GET(
       }
     })
 
-    // Download raw bytes from storage (used for all file types)
+    // --- Video: short-lived signed URL (range requests required for playback) ---
+    // Videos cannot be watermarked and need byte-range support the proxy doesn't provide.
+    // A 2-minute signed URL expires before it can be meaningfully shared.
+    if (isVideo(document.file_name)) {
+      const { data: signedUrl, error: urlError } = await serviceSupabase.storage
+        .from(bucket)
+        .createSignedUrl(document.file_key, 120, { download: false })
+
+      if (urlError || !signedUrl) {
+        return NextResponse.json({ error: 'Failed to generate video link' }, { status: 500 })
+      }
+
+      return NextResponse.json({
+        download_url: signedUrl.signedUrl,
+        watermark: watermarkInfo,
+      })
+    }
+
+    // Download raw bytes from storage (PDF, image, and other types)
     const { data: fileBlob, error: downloadError } = await serviceSupabase.storage
       .from(bucket)
       .download(document.file_key)
