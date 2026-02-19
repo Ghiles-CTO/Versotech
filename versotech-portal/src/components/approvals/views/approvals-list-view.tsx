@@ -53,7 +53,7 @@ export function ApprovalsListView({
               <div className="flex-1 space-y-4">
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge variant="outline">
-                    {approval.entity_type === 'deal_interest'
+                    {approval.entity_type === 'deal_interest' || approval.entity_type === 'deal_interest_nda'
                       ? 'DATA ROOM ACCESS REQUEST'
                       : approval.entity_type.replace(/_/g, ' ').toUpperCase()}
                   </Badge>
@@ -67,7 +67,7 @@ export function ApprovalsListView({
                     ? `Member Invitation: ${approval.entity_metadata?.email || 'Unknown'}`
                     : (approval.related_deal?.name || approval.related_investor?.legal_name || 'Approval Request')}
                 </h3>
-                {approval.entity_type === 'deal_interest' && (
+                {(approval.entity_type === 'deal_interest' || approval.entity_type === 'deal_interest_nda') && (
                   <p className="text-sm text-muted-foreground">
                     Deal: {approval.related_deal?.name || 'Unknown'} • Requested by {approval.requested_by_profile?.display_name || 'Unknown'}
                   </p>

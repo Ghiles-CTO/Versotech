@@ -556,7 +556,7 @@ export function ApprovalsPageClient({
                               <TableCell>
                                 <div>
                                   <div className="font-medium text-foreground">
-                                    {approval.entity_type === 'deal_interest'
+                                    {approval.entity_type === 'deal_interest' || approval.entity_type === 'deal_interest_nda'
                                       ? 'DATA ROOM ACCESS REQUEST'
                                       : approval.entity_type.replace(/_/g, ' ').toUpperCase()}
                                   </div>

@@ -51,7 +51,7 @@ export function ApprovalsKanbanView({ approvals, onApprovalClick }: ApprovalsKan
                       <div className="flex items-start justify-between gap-2">
                         <div className="space-y-1.5 flex-1 min-w-0">
                           <Badge variant="outline" className="text-xs">
-                            {approval.entity_type === 'deal_interest'
+                            {approval.entity_type === 'deal_interest' || approval.entity_type === 'deal_interest_nda'
                               ? 'Data Room Access Request'
                               : approval.entity_type.replace(/_/g, ' ')}
                           </Badge>
@@ -106,7 +106,7 @@ export function ApprovalsKanbanView({ approvals, onApprovalClick }: ApprovalsKan
                           {approval.related_investor.legal_name}
                         </p>
                       )}
-                      {approval.entity_type === 'deal_interest' && approval.requested_by_profile && (
+                      {(approval.entity_type === 'deal_interest' || approval.entity_type === 'deal_interest_nda') && approval.requested_by_profile && (
                         <p className="text-xs text-muted-foreground truncate">
                           Requested by {approval.requested_by_profile.display_name}
                         </p>

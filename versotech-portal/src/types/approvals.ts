@@ -1,6 +1,7 @@
 // Approval entity types that can be approved/rejected
 export type ApprovalEntityType =
   | 'deal_interest'
+  | 'deal_interest_nda'
   | 'deal_subscription'
   | 'deal_close'
   | 'allocation'

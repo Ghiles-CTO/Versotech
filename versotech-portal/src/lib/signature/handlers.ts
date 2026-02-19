@@ -382,18 +382,21 @@ export async function handleNDASignature(
         duration_days: 7
       })
 
-      // Grant new access (7 days only)
-      console.log('💾 [NDA HANDLER] Inserting new data room access record')
+      // Grant or re-grant access (7 days). Uses upsert so previously
+      // revoked/expired rows are updated instead of causing a unique-constraint error.
+      console.log('💾 [NDA HANDLER] Upserting data room access record')
       const { data: newAccess, error: accessError } = await supabase
         .from('deal_data_room_access')
-        .insert({
+        .upsert({
           deal_id: dealInterest.deal_id,
           investor_id: dealInterest.investor_id,
           granted_at: new Date().toISOString(),
           expires_at: expiryDate.toISOString(),
           auto_granted: true,
+          revoked_at: null,
+          revoked_by: null,
           notes: `Automatically granted upon NDA execution for ${deal?.name || 'deal'}. Initial 7-day access period.`
-        })
+        }, { onConflict: 'deal_id,investor_id' })
         .select()
         .single()
 

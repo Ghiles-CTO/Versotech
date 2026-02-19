@@ -29,8 +29,8 @@ function resolveAccountActivationEntityTable(metadata: any): string | null {
 function getApprovalEntityLabel(entityType: string): string {
   const labels: Record<string, string> = {
     account_activation: 'account activation',
-    deal_interest: 'deal interest',
-    deal_interest_nda: 'deal interest',
+    deal_interest: 'data room access',
+    deal_interest_nda: 'data room access',
     deal_subscription: 'subscription',
     investor_onboarding: 'onboarding',
     member_invitation: 'member invitation',

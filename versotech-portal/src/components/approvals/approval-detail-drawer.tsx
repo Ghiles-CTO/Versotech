@@ -68,6 +68,7 @@ const statusColors = {
 
 const entityTypeLabels: Record<string, string> = {
   deal_interest: 'Data Room Access Request',
+  deal_interest_nda: 'Data Room Access Request',
   deal_subscription: 'Subscription',
   deal_close: 'Deal Close',
   allocation: 'Allocation',
@@ -92,6 +93,7 @@ function getMessagePresets(approval: Approval): { title: string; message: string
         message: `Welcome ${displayName} to VERSOTECH`
       }
     case 'deal_interest':
+    case 'deal_interest_nda':
       return {
         title: `Data Room Access - ${dealName || 'Deal'}`,
         message: `Regarding your data room access request for ${dealName || 'the deal'}.`

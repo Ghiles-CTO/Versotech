@@ -256,7 +256,7 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
                     <SelectItem value="all">All Types</SelectItem>
                     {uniqueEntityTypes.map((type) => (
                       <SelectItem key={type} value={type}>
-                        {type === 'deal_interest' ? 'Data Room Access Request' : type.replace(/_/g, ' ')}
+                        {type === 'deal_interest' || type === 'deal_interest_nda' ? 'Data Room Access Request' : type.replace(/_/g, ' ')}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -396,7 +396,7 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
                       {visibleColumns.entity_type && (
                         <TableCell>
                           <Badge variant="outline" className="text-xs">
-                            {approval.entity_type === 'deal_interest'
+                            {approval.entity_type === 'deal_interest' || approval.entity_type === 'deal_interest_nda'
                               ? 'Data Room Access Request'
                               : approval.entity_type.replace(/_/g, ' ')}
                           </Badge>
