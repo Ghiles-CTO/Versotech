@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
 import { z } from 'zod'
 
 // Investors can only set these statuses - final statuses require staff action
@@ -20,17 +21,16 @@ export async function GET(request: NextRequest) {
         }
 
         // Get investor profile and status
-        const { data: investorUser } = await supabase
-            .from('investor_users')
-            .select('investor_id, investors(kyc_status)')
-            .eq('user_id', user.id)
-            .single()
+        const { link: investorUser } = await resolvePrimaryInvestorLink(
+            supabase,
+            user.id,
+            'investor_id, investors(kyc_status)'
+        )
 
         if (!investorUser || !investorUser.investors) {
             return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
         }
 
-        // @ts-expect-error - Types might not be fully generated for the join
         const status = investorUser.investors.kyc_status || 'not_started'
 
         return NextResponse.json({ status })
@@ -50,11 +50,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const { data: investorUser } = await supabase
-            .from('investor_users')
-            .select('investor_id')
-            .eq('user_id', user.id)
-            .single()
+        const { link: investorUser } = await resolvePrimaryInvestorLink(
+            supabase,
+            user.id,
+            'investor_id'
+        )
 
         if (!investorUser) {
             return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })

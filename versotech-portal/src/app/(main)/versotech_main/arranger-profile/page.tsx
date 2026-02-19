@@ -102,7 +102,7 @@ export default async function ArrangerProfilePage() {
     userId: user.id,
     userEmail: user.email,
     defaultFullName: profile?.display_name || user.email || null,
-    createIfMissing: arranger?.type === 'individual',
+    createIfMissing: true,
     context: 'ArrangerProfilePage',
     select: `
       id,

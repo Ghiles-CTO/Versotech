@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getDocumentTypeLabel, getIndividualDocumentTypes, getEntityDocumentTypes } from '@/constants/kyc-document-types'
+import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
 import { z } from 'zod'
 
 // Allowed document types for KYC submissions - SIMPLIFIED
@@ -120,7 +121,10 @@ export async function GET(request: NextRequest) {
         .select('role, can_sign, is_primary')
         .eq('user_id', user.id)
         .eq('investor_id', investorIds[0])
-        .single()
+        .order('is_primary', { ascending: false })
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle()
 
       if (currentUserLink && (currentUserLink.can_sign || currentUserLink.role === 'admin' || currentUserLink.is_primary)) {
         // Get current user's profile info
@@ -199,11 +203,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Get investor ID
-    const { data: investorUsers } = await supabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
-      .single()
+    const { link: investorUsers } = await resolvePrimaryInvestorLink(
+      supabase,
+      user.id,
+      'investor_id'
+    )
 
     if (!investorUsers) {
       return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })

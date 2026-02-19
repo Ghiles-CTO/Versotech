@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { createClient } from '@/lib/supabase/server'
+import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const ALLOWED_MIME_TYPES = [
@@ -34,11 +35,11 @@ export async function POST(request: NextRequest) {
       .single()
 
     // Get investor ID for this user - this is the real authorization check
-    const { data: investorUser } = await supabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
-      .single()
+    const { link: investorUser } = await resolvePrimaryInvestorLink(
+      supabase,
+      user.id,
+      'investor_id'
+    )
 
     if (!investorUser) {
       return NextResponse.json(

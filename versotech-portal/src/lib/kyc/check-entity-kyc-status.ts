@@ -87,7 +87,7 @@ const ENTITY_DOCUMENT_ALIASES: Record<string, string[]> = {
   bank_confirmation: ['bank_account_details'],
 }
 
-const ACCOUNT_BLOCKED_STATUSES = new Set(['approved', 'rejected', 'unauthorized', 'blacklisted'])
+const ACCOUNT_BLOCKED_STATUSES = new Set(['approved', 'unauthorized', 'blacklisted'])
 
 type SubmissionRow = {
   id: string
@@ -435,6 +435,10 @@ async function createAccountActivationApproval(
     })
 
   if (approvalInsertError) {
+    // Safe idempotency in race scenarios (paired with DB unique index migration).
+    if ((approvalInsertError as any)?.code === '23505') {
+      return
+    }
     console.error(`[KYC] Failed to create account activation approval for ${entityType}:${entityId}`, {
       error: approvalInsertError,
       requestedBy,

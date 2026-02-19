@@ -277,10 +277,28 @@ export async function GET(request: NextRequest) {
       investor_member: normalizeMember(submission),
     }))
 
-    // Get submission statistics using aggregation (more efficient)
-    const { data: statsData } = await serviceSupabase
+    // Get submission statistics for the same filtered scope shown in the table.
+    let statsQuery = serviceSupabase
       .from('kyc_submissions')
       .select('status')
+
+    if (status) {
+      statsQuery = statsQuery.eq('status', status)
+    }
+    if (investorId) {
+      statsQuery = statsQuery.eq('investor_id', investorId)
+    }
+    if (documentType) {
+      statsQuery = statsQuery.eq('document_type', documentType)
+    }
+    if (entityType) {
+      const mappedColumn = ENTITY_FILTER_COLUMN_MAP[entityType as keyof typeof ENTITY_FILTER_COLUMN_MAP]
+      if (mappedColumn) {
+        statsQuery = statsQuery.not(mappedColumn, 'is', null)
+      }
+    }
+
+    const { data: statsData } = await statsQuery
 
     // Count by status in memory (Supabase doesn't have built-in GROUP BY in JS client)
     const statusCounts: Record<string, number> = {}

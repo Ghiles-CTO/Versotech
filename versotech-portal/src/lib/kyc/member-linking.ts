@@ -46,6 +46,16 @@ export async function fetchMemberWithAutoLink({
       .eq(entityIdColumn, entityId)
       .eq('is_active', true)
 
+  const fetchExistingLinkedMember = async () => {
+    const { data, error } = await baseQuery()
+      .eq('linked_user_id', userId)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+
+    return { data, error }
+  }
+
   const { data: linkedMember, error: linkedError } = await baseQuery()
     .eq('linked_user_id', userId)
     .maybeSingle()
@@ -112,6 +122,15 @@ export async function fetchMemberWithAutoLink({
 
         return { member: fetchedLinked || null, error: null, autoLinked: true }
       }
+
+      // Concurrent tab/request may have linked this user just before our update.
+      const { data: racedLinked, error: racedLinkedError } = await fetchExistingLinkedMember()
+      if (racedLinkedError) {
+        return { member: null, error: racedLinkedError, autoLinked: false }
+      }
+      if (racedLinked) {
+        return { member: racedLinked, error: null, autoLinked: false }
+      }
     } else if (safeCandidates.length > 1) {
       console.warn(`[${context}] Skipped auto-link: multiple unlinked members matched email`, {
         memberTable,
@@ -173,13 +192,23 @@ export async function fetchMemberWithAutoLink({
 
       return { member: fetchedLinked || null, error: null, autoLinked: true }
     }
+
+    // Concurrent tab/request may have linked this user just before our update.
+    const { data: racedLinked, error: racedLinkedError } = await fetchExistingLinkedMember()
+    if (racedLinkedError) {
+      return { member: null, error: racedLinkedError, autoLinked: false }
+    }
+    if (racedLinked) {
+      return { member: racedLinked, error: null, autoLinked: false }
+    }
   } else if (safeUnlinkedMembers.length > 1) {
-    console.warn(`[${context}] Skipped member auto-create: multiple unlinked active members exist`, {
+    // Do not block login/onboarding when an entity already has multiple members.
+    // In this case we create a dedicated member linked to the current portal user.
+    console.info(`[${context}] Multiple unlinked active members found; creating a dedicated linked member`, {
       memberTable,
       entityId,
       userId,
     })
-    return { member: null, error: null, autoLinked: false }
   }
 
   const inferredName =

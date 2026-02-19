@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { ProfilePageClient } from '@/components/profile/profile-page-client'
 import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
+import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -52,11 +53,11 @@ export default async function ProfilePage({
   let investorUserInfo = null
 
   // Check if user is associated with an investor
-  const { data: investorUser, error: investorUserError } = await serviceSupabase
-    .from('investor_users')
-    .select('investor_id, role, is_primary, can_sign')
-    .eq('user_id', user.id)
-    .maybeSingle()
+  const { link: investorUser, error: investorUserError } = await resolvePrimaryInvestorLink(
+    serviceSupabase,
+    user.id,
+    'investor_id, role, is_primary, can_sign'
+  )
 
   if (investorUserError) {
     console.error('[ProfilePage] Error fetching investor_users:', investorUserError)
@@ -76,6 +77,12 @@ export default async function ProfilePage({
       entityId: investorUser.investor_id,
       userId: user.id,
       userEmail: user.email,
+      defaultFullName:
+        profile.full_name ||
+        profile.display_name ||
+        user.email ||
+        null,
+      createIfMissing: true,
       context: 'ProfilePage',
       select: `
         id,

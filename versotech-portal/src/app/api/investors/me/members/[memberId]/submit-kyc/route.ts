@@ -84,6 +84,50 @@ export async function POST(
       )
     }
 
+    const { data: existingPending } = await serviceSupabase
+      .from('kyc_submissions')
+      .select('id')
+      .eq('investor_id', member.investor_id)
+      .eq('investor_member_id', member.id)
+      .eq('document_type', 'personal_info')
+      .in('status', ['pending', 'under_review'])
+      .limit(1)
+      .maybeSingle()
+
+    if (existingPending?.id) {
+      return NextResponse.json(
+        { error: 'Personal KYC already submitted for review' },
+        { status: 400 }
+      )
+    }
+
+    const previousMemberStatus = member.kyc_status
+    const { data: reserveTransition, error: reserveTransitionError } = await serviceSupabase
+      .from('investor_members')
+      .update({
+        kyc_status: 'submitted',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', memberId)
+      .neq('kyc_status', 'submitted')
+      .select('id')
+      .maybeSingle()
+
+    if (reserveTransitionError) {
+      console.error('Error reserving member KYC submission:', reserveTransitionError)
+      return NextResponse.json(
+        { error: 'Failed to reserve KYC submission' },
+        { status: 500 }
+      )
+    }
+
+    if (!reserveTransition) {
+      return NextResponse.json(
+        { error: 'Personal KYC already submitted for review' },
+        { status: 400 }
+      )
+    }
+
     // Create KYC submission record
     const { data: submission, error: submissionError } = await serviceSupabase
       .from('kyc_submissions')
@@ -113,25 +157,27 @@ export async function POST(
       .single()
 
     if (submissionError) {
+      const isUniqueViolation = (submissionError as { code?: string }).code === '23505'
+      if (isUniqueViolation) {
+        return NextResponse.json(
+          { error: 'Personal KYC already submitted for review' },
+          { status: 400 }
+        )
+      }
+
       console.error('Error creating KYC submission:', submissionError)
+      await serviceSupabase
+        .from('investor_members')
+        .update({
+          kyc_status: previousMemberStatus || 'pending',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', memberId)
+        .eq('kyc_status', 'submitted')
       return NextResponse.json(
         { error: 'Failed to create KYC submission' },
         { status: 500 }
       )
-    }
-
-    // Update member kyc_status to 'submitted'
-    const { error: updateError } = await serviceSupabase
-      .from('investor_members')
-      .update({
-        kyc_status: 'submitted',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', memberId)
-
-    if (updateError) {
-      console.error('Error updating member KYC status:', updateError)
-      // Don't fail the request - submission was created
     }
 
     const { data: entityStatus } = await serviceSupabase

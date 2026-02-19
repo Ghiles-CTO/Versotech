@@ -1,4 +1,5 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
 import { NextResponse } from 'next/server'
 
 /**
@@ -17,11 +18,11 @@ export async function GET() {
     }
 
     // Get investor ID from investor_users
-    const { data: investorUser, error: investorUserError } = await serviceSupabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { link: investorUser, error: investorUserError } = await resolvePrimaryInvestorLink(
+      serviceSupabase,
+      user.id,
+      'investor_id'
+    )
 
     if (investorUserError) {
       console.error('Error fetching investor user:', investorUserError)

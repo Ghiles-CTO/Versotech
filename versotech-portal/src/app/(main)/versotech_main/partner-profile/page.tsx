@@ -62,7 +62,7 @@ export default async function PartnerProfilePage() {
     userId: user.id,
     userEmail: user.email,
     defaultFullName: profile?.full_name || profile?.display_name || user.email || null,
-    createIfMissing: partner?.type === 'individual',
+    createIfMissing: true,
     context: 'PartnerProfilePage',
     select: `
       id,

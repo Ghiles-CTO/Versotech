@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,11 +14,11 @@ export async function POST(request: NextRequest) {
     const serviceSupabase = createServiceClient()
 
     // Verify user is an investor with signing permissions
-    const { data: investorUser, error: investorError } = await serviceSupabase
-      .from('investor_users')
-      .select('investor_id, can_sign')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { link: investorUser, error: investorError } = await resolvePrimaryInvestorLink(
+      serviceSupabase,
+      user.id,
+      'investor_id, can_sign'
+    )
 
     if (investorError || !investorUser) {
       return NextResponse.json({ error: 'Not an investor' }, { status: 403 })
@@ -120,11 +121,11 @@ export async function DELETE() {
     const serviceSupabase = createServiceClient()
 
     // Verify user is an investor
-    const { data: investorUser, error: investorError } = await serviceSupabase
-      .from('investor_users')
-      .select('investor_id, signature_specimen_url')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { link: investorUser, error: investorError } = await resolvePrimaryInvestorLink(
+      serviceSupabase,
+      user.id,
+      'investor_id, signature_specimen_url'
+    )
 
     if (investorError || !investorUser) {
       return NextResponse.json({ error: 'Not an investor' }, { status: 403 })

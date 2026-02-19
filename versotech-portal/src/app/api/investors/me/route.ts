@@ -1,6 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
 
 /**
  * GET /api/investors/me
@@ -16,20 +17,20 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get investor IDs for this user
-    const { data: investorLinks, error: linksError } = await serviceSupabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
+    // Get the user's primary investor link deterministically.
+    const { link: investorLink, error: linksError } = await resolvePrimaryInvestorLink(
+      serviceSupabase,
+      user.id,
+      'investor_id'
+    )
 
-    if (linksError || !investorLinks || investorLinks.length === 0) {
+    if (linksError || !investorLink?.investor_id) {
       // Return 200 with null investor instead of 404 to avoid log noise
       // This allows profile page to gracefully check if user has investor entity
       return NextResponse.json({ investor: null, exists: false }, { status: 200 })
     }
 
-    // Get the first (primary) investor
-    const investorId = investorLinks[0].investor_id
+    const investorId = investorLink.investor_id
 
     // Fetch investor data
     const { data: investor, error: investorError } = await serviceSupabase
@@ -125,17 +126,17 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get investor IDs for this user
-    const { data: investorLinks, error: linksError } = await serviceSupabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
+    const { link: investorLink, error: linksError } = await resolvePrimaryInvestorLink(
+      serviceSupabase,
+      user.id,
+      'investor_id'
+    )
 
-    if (linksError || !investorLinks || investorLinks.length === 0) {
+    if (linksError || !investorLink?.investor_id) {
       return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
     }
 
-    const investorId = investorLinks[0].investor_id
+    const investorId = investorLink.investor_id
 
     // Fetch investor to determine type (entity vs individual)
     const { data: investor, error: investorError } = await serviceSupabase

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { SupabaseClient } from '@supabase/supabase-js'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 // Entity type configurations
@@ -71,68 +72,51 @@ const ENTITY_CONFIGS = {
 
 type EntityType = keyof typeof ENTITY_CONFIGS
 
-/**
- * POST /api/me/entity-kyc/submit
- *
- * Generic endpoint to submit entity KYC for any entity type.
- * Creates a kyc_submissions record and updates entity kyc_status to 'submitted'.
- */
-export async function POST(request: Request) {
+type SubmitEntityKycResult = {
+  status: number
+  payload: Record<string, unknown>
+}
+
+export async function submitEntityKycForUser(params: {
+  serviceSupabase: SupabaseClient
+  userId: string
+  entityType: string
+  entityId: string
+}): Promise<SubmitEntityKycResult> {
+  const { serviceSupabase, userId, entityType, entityId } = params
+
   try {
-    // Authenticate user
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Parse request body
-    const body = await request.json()
-    const { entityType, entityId } = body
-
-    // Validate entity type
     if (!entityType || !Object.keys(ENTITY_CONFIGS).includes(entityType)) {
-      return NextResponse.json(
-        { error: 'Invalid entity type. Must be one of: ' + Object.keys(ENTITY_CONFIGS).join(', ') },
-        { status: 400 }
-      )
+      return {
+        status: 400,
+        payload: { error: `Invalid entity type. Must be one of: ${Object.keys(ENTITY_CONFIGS).join(', ')}` },
+      }
     }
 
     if (!entityId) {
-      return NextResponse.json(
-        { error: 'Entity ID is required' },
-        { status: 400 }
-      )
+      return { status: 400, payload: { error: 'Entity ID is required' } }
     }
 
     const config = ENTITY_CONFIGS[entityType as EntityType]
-    const serviceSupabase = createServiceClient()
 
     // Verify user has access to this entity and check permissions
     const { data: entityUser, error: entityUserError } = await serviceSupabase
       .from(config.userTable)
       .select('is_primary, role')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq(config.userEntityIdColumn, entityId)
       .maybeSingle()
 
     if (entityUserError || !entityUser) {
-      return NextResponse.json(
-        { error: 'Access denied or entity not found' },
-        { status: 403 }
-      )
+      return { status: 403, payload: { error: 'Access denied or entity not found' } }
     }
 
     // Only admins or primary contacts can submit entity KYC
     if (!entityUser.is_primary && entityUser.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Only primary contacts or admins can submit entity KYC' },
-        { status: 403 }
-      )
+      return {
+        status: 403,
+        payload: { error: 'Only primary contacts or admins can submit entity KYC' },
+      }
     }
 
     // Fetch entity details
@@ -143,33 +127,24 @@ export async function POST(request: Request) {
       .single()
 
     if (entityError || !entity) {
-      return NextResponse.json(
-        { error: 'Entity not found' },
-        { status: 404 }
-      )
+      return { status: 404, payload: { error: 'Entity not found' } }
     }
 
     // Only allow for entity-type (not individual)
     if (entity.type === 'individual') {
-      return NextResponse.json(
-        { error: 'Entity KYC submission is not applicable for individual entities' },
-        { status: 400 }
-      )
+      return {
+        status: 400,
+        payload: { error: 'Entity KYC submission is not applicable for individual entities' },
+      }
     }
 
     // Check if already submitted or approved
     if (entity.kyc_status === 'submitted') {
-      return NextResponse.json(
-        { error: 'Entity KYC already submitted for review' },
-        { status: 400 }
-      )
+      return { status: 400, payload: { error: 'Entity KYC already submitted for review' } }
     }
 
     if (entity.kyc_status === 'approved') {
-      return NextResponse.json(
-        { error: 'Entity KYC already approved' },
-        { status: 400 }
-      )
+      return { status: 400, payload: { error: 'Entity KYC already approved' } }
     }
 
     // Prevent duplicate queue entries when an existing submission is still in review
@@ -185,35 +160,63 @@ export async function POST(request: Request) {
 
     if (existingPendingError) {
       console.error('Error checking existing pending entity KYC submission:', existingPendingError)
-      return NextResponse.json(
-        { error: 'Failed to validate existing KYC submission status' },
-        { status: 500 }
-      )
+      return {
+        status: 500,
+        payload: { error: 'Failed to validate existing KYC submission status' },
+      }
     }
 
     if (existingPendingSubmission) {
-      return NextResponse.json(
-        { error: 'Entity KYC already submitted for review' },
-        { status: 400 }
-      )
+      return { status: 400, payload: { error: 'Entity KYC already submitted for review' } }
     }
 
-    // Validate required fields
+    // Validate required fields before status transition.
     const missingFields = config.requiredFields.filter(
       ({ field }) => !entity[field as keyof typeof entity]
     )
 
     if (missingFields.length > 0) {
-      return NextResponse.json(
-        {
+      return {
+        status: 400,
+        payload: {
           error: 'Please complete all required entity fields before submitting',
-          missing: missingFields.map(f => f.label)
+          missing: missingFields.map(f => f.label),
         },
-        { status: 400 }
-      )
+      }
     }
 
-    // Build submission data
+    // Idempotency gate: only one request can transition this entity to submitted.
+    const previousEntityKycStatus = entity.kyc_status
+    const reserveUpdateData: Record<string, unknown> = {
+      kyc_status: 'submitted',
+      updated_at: new Date().toISOString(),
+    }
+
+    if (entityType === 'arranger') {
+      reserveUpdateData.kyc_submitted_at = new Date().toISOString()
+      reserveUpdateData.kyc_submitted_by = userId
+    }
+
+    const { data: reserveTransition, error: reserveTransitionError } = await serviceSupabase
+      .from(config.entityTable)
+      .update(reserveUpdateData)
+      .eq('id', entityId)
+      .neq('kyc_status', 'submitted')
+      .select('id')
+      .maybeSingle()
+
+    if (reserveTransitionError) {
+      console.error('Error transitioning entity to submitted:', reserveTransitionError)
+      return {
+        status: 500,
+        payload: { error: 'Failed to reserve entity KYC submission' },
+      }
+    }
+
+    if (!reserveTransition) {
+      return { status: 400, payload: { error: 'Entity KYC already submitted for review' } }
+    }
+
     const submissionData: Record<string, unknown> = {
       document_type: 'entity_info',
       status: 'pending',
@@ -222,15 +225,15 @@ export async function POST(request: Request) {
         submission_type: 'entity_kyc',
         entity_type: entityType,
         entity_name: entity.legal_name || entity.name || entity.firm_name || entity.display_name,
-        submitted_by_user_id: user.id,
+        submitted_by_user_id: userId,
         review_snapshot: {
           ...Object.fromEntries(
             config.requiredFields.map(({ field }) => [field, entity[field as keyof typeof entity]])
           ),
           legal_name: entity.legal_name || entity.name || entity.firm_name || entity.display_name || null,
           country: entity.country || entity.registered_country || entity.jurisdiction || null,
-        }
-      }
+        },
+      },
     }
 
     // Add entity-specific foreign key
@@ -244,32 +247,34 @@ export async function POST(request: Request) {
       .single()
 
     if (submissionError) {
+      const isUniqueViolation = (submissionError as { code?: string }).code === '23505'
+      if (isUniqueViolation) {
+        return {
+          status: 400,
+          payload: { error: 'Entity KYC already submitted for review' },
+        }
+      }
+
       console.error('Error creating KYC submission:', submissionError)
-      return NextResponse.json(
-        { error: 'Failed to create KYC submission' },
-        { status: 500 }
-      )
-    }
 
-    // Update entity kyc_status to 'submitted'
-    const entityUpdateData: Record<string, unknown> = {
-      kyc_status: 'submitted',
-      updated_at: new Date().toISOString(),
-    }
+      // Best-effort rollback for non-idempotent failures.
+      const rollbackData: Record<string, unknown> = {
+        kyc_status: previousEntityKycStatus || 'pending',
+        updated_at: new Date().toISOString(),
+      }
 
-    if (entityType === 'arranger') {
-      entityUpdateData.kyc_submitted_at = new Date().toISOString()
-      entityUpdateData.kyc_submitted_by = user.id
-    }
+      if (entityType === 'arranger') {
+        rollbackData.kyc_submitted_at = entity.kyc_submitted_at || null
+        rollbackData.kyc_submitted_by = entity.kyc_submitted_by || null
+      }
 
-    const { error: updateError } = await serviceSupabase
-      .from(config.entityTable)
-      .update(entityUpdateData)
-      .eq('id', entityId)
+      await serviceSupabase
+        .from(config.entityTable)
+        .update(rollbackData)
+        .eq('id', entityId)
+        .eq('kyc_status', 'submitted')
 
-    if (updateError) {
-      console.error('Error updating entity KYC status:', updateError)
-      // Don't fail the request - submission was created
+      return { status: 500, payload: { error: 'Failed to create KYC submission' } }
     }
 
     const { data: entityStatus } = await serviceSupabase
@@ -279,30 +284,66 @@ export async function POST(request: Request) {
       .maybeSingle()
 
     const existingAccountStatus = entityStatus?.account_approval_status?.toLowerCase() ?? null
-    const shouldUpdateAccountStatus = !existingAccountStatus ||
-      ['pending_onboarding', 'new', 'incomplete'].includes(existingAccountStatus)
+    const shouldUpdateAccountStatus =
+      !existingAccountStatus || ['pending_onboarding', 'new', 'incomplete'].includes(existingAccountStatus)
 
     if (shouldUpdateAccountStatus) {
       await serviceSupabase
         .from(config.entityTable)
         .update({
           account_approval_status: 'incomplete',
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', entityId)
     }
 
-    return NextResponse.json({
-      success: true,
-      submission_id: submission.id,
-      message: 'Entity KYC submitted for review'
-    })
-
+    return {
+      status: 200,
+      payload: {
+        success: true,
+        submission_id: submission.id,
+        message: 'Entity KYC submitted for review',
+      },
+    }
   } catch (error) {
     console.error('Error in entity-kyc submit:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return { status: 500, payload: { error: 'Internal server error' } }
+  }
+}
+
+/**
+ * POST /api/me/entity-kyc/submit
+ *
+ * Generic endpoint to submit entity KYC for any entity type.
+ */
+export async function POST(request: Request) {
+  try {
+    // Authenticate user
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Parse request body
+    const body = await request.json()
+    const { entityType, entityId } = body
+
+    const serviceSupabase = createServiceClient()
+    const result = await submitEntityKycForUser({
+      serviceSupabase,
+      userId: user.id,
+      entityType,
+      entityId,
+    })
+
+    return NextResponse.json(result.payload, { status: result.status })
+  } catch (error) {
+    console.error('Error in entity-kyc submit:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -102,7 +102,7 @@ export default async function CommercialPartnerProfilePage() {
     userId: user.id,
     userEmail: user.email,
     defaultFullName: profile?.display_name || user.email || null,
-    createIfMissing: commercialPartner?.type === 'individual',
+    createIfMissing: true,
     context: 'CommercialPartnerProfilePage',
     select: `
       id,

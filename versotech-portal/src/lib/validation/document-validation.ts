@@ -244,10 +244,12 @@ export function getDocumentConfig(documentType: string): DocumentValidationConfi
  * Check if a document type is an ID document
  */
 export function isIdDocument(documentType: string): boolean {
-  return ID_DOCUMENT_TYPES.includes(documentType as any) ||
-    documentType.includes('_id') ||
-    documentType.includes('passport') ||
-    documentType.includes('license')
+  const normalized = (documentType || '').toLowerCase().trim()
+  return ID_DOCUMENT_TYPES.includes(normalized as any) ||
+    normalized.endsWith('_id') ||
+    normalized.includes('passport') ||
+    normalized === 'id_card' ||
+    normalized === 'drivers_license'
 }
 
 /**

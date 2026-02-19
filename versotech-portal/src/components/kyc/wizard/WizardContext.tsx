@@ -89,6 +89,7 @@ export function WizardProvider({
   }))
 
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const autoSaveAbortControllerRef = useRef<AbortController | null>(null)
   const isDirtyRef = useRef(false)
   const isSavingRef = useRef(false) // Ref for immediate saving state check
   const isSubmittedRef = useRef(false) // Ref to prevent auto-save after final submission
@@ -209,6 +210,8 @@ export function WizardProvider({
       }
 
       let response: Response
+      const controller = new AbortController()
+      autoSaveAbortControllerRef.current = controller
 
       if (state.submissionId) {
         // Update existing draft
@@ -216,6 +219,7 @@ export function WizardProvider({
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
+          signal: controller.signal,
         })
       } else {
         // Create new draft
@@ -223,6 +227,7 @@ export function WizardProvider({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
+          signal: controller.signal,
         })
       }
 
@@ -241,11 +246,16 @@ export function WizardProvider({
 
       isDirtyRef.current = false
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        // Expected when submit cancels an in-flight autosave.
+        return
+      }
       console.error('Failed to save progress:', error)
       setState(prev => ({ ...prev, isSaving: false }))
       toast.error('Failed to save progress. Your changes may not be saved.')
     } finally {
       isSavingRef.current = false
+      autoSaveAbortControllerRef.current = null
     }
   }, [state.formData, state.completedSteps, state.submissionId])
 
@@ -325,6 +335,15 @@ export function WizardProvider({
       autoSaveTimeoutRef.current = null
     }
 
+    // Cancel any in-flight autosave request before submit to avoid status races.
+    if (autoSaveAbortControllerRef.current) {
+      autoSaveAbortControllerRef.current.abort()
+      autoSaveAbortControllerRef.current = null
+    }
+
+    // Mark as submitting now so no new autosave starts during submit.
+    isSubmittedRef.current = true
+
     // Get current visible steps
     const currentVisibleSteps = getVisibleSteps(state.formData)
 
@@ -398,9 +417,6 @@ export function WizardProvider({
         throw new Error('Failed to submit questionnaire')
       }
 
-      // Mark as submitted to prevent any future auto-saves
-      isSubmittedRef.current = true
-
       setState(prev => ({
         ...prev,
         isSaving: false,
@@ -412,6 +428,8 @@ export function WizardProvider({
       return true
     } catch (error) {
       console.error('Failed to submit:', error)
+      // Allow autosave again if submit failed.
+      isSubmittedRef.current = false
       setState(prev => ({ ...prev, isSaving: false }))
       toast.error('Failed to submit questionnaire')
       return false

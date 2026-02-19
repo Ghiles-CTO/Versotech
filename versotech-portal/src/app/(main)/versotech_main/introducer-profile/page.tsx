@@ -110,7 +110,7 @@ export default async function IntroducerProfilePage() {
     userId: user.id,
     userEmail: user.email,
     defaultFullName: profile?.display_name || user.email || null,
-    createIfMissing: introducer?.type === 'individual',
+    createIfMissing: true,
     context: 'IntroducerProfilePage',
     select: `
       id,

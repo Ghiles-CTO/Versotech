@@ -114,7 +114,7 @@ export async function PATCH(
     // Verify the submission belongs to this investor
     const { data: existingSubmission } = await supabase
       .from('kyc_submissions')
-      .select('id, status, investor_id')
+      .select('id, status, investor_id, document_type')
       .eq('id', id)
       .in('investor_id', investorIds)
       .single()
@@ -148,6 +148,19 @@ export async function PATCH(
       return NextResponse.json({
         error: 'Submission was modified by another request. Please refresh and try again.',
         code: 'CONFLICT'
+      }, { status: 409 })
+    }
+
+    // Prevent status regression for questionnaire submissions:
+    // once pending, it cannot be downgraded back to draft by stale autosave requests.
+    if (
+      existingSubmission.document_type === 'questionnaire' &&
+      existingSubmission.status === 'pending' &&
+      status === 'draft'
+    ) {
+      return NextResponse.json({
+        error: 'Questionnaire has already been submitted and cannot be moved back to draft.',
+        code: 'STATUS_REGRESSION_BLOCKED',
       }, { status: 409 })
     }
 

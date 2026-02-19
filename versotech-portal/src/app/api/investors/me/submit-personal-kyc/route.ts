@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
 
 /**
  * POST /api/investors/me/submit-personal-kyc
@@ -18,11 +19,11 @@ export async function POST() {
 
     const serviceSupabase = createServiceClient()
 
-    const { data: investorUser, error: investorUserError } = await serviceSupabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { link: investorUser, error: investorUserError } = await resolvePrimaryInvestorLink(
+      serviceSupabase,
+      user.id,
+      'investor_id'
+    )
 
     if (investorUserError || !investorUser?.investor_id) {
       return NextResponse.json({ error: 'Investor profile not found' }, { status: 404 })
@@ -101,6 +102,30 @@ export async function POST() {
       )
     }
 
+    // Idempotency gate: only one request can transition this investor to submitted.
+    const { data: reserveTransition, error: reserveTransitionError } = await serviceSupabase
+      .from('investors')
+      .update({
+        kyc_status: 'submitted',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', investor.id)
+      .neq('kyc_status', 'submitted')
+      .select('id')
+      .maybeSingle()
+
+    if (reserveTransitionError) {
+      console.error('[submit-personal-kyc] Failed to reserve submission:', reserveTransitionError)
+      return NextResponse.json({ error: 'Failed to reserve personal KYC submission' }, { status: 500 })
+    }
+
+    if (!reserveTransition) {
+      return NextResponse.json(
+        { error: 'Personal KYC is already submitted for review' },
+        { status: 400 }
+      )
+    }
+
     const { data: submission, error: submissionError } = await serviceSupabase
       .from('kyc_submissions')
       .insert({
@@ -131,7 +156,23 @@ export async function POST() {
       .single()
 
     if (submissionError) {
+      const isUniqueViolation = (submissionError as { code?: string }).code === '23505'
+      if (isUniqueViolation) {
+        return NextResponse.json(
+          { error: 'Personal KYC is already submitted for review' },
+          { status: 400 }
+        )
+      }
+
       console.error('[submit-personal-kyc] Failed to create submission:', submissionError)
+      await serviceSupabase
+        .from('investors')
+        .update({
+          kyc_status: investor.kyc_status || 'pending',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', investor.id)
+        .eq('kyc_status', 'submitted')
       return NextResponse.json({ error: 'Failed to submit personal KYC' }, { status: 500 })
     }
 
@@ -141,10 +182,6 @@ export async function POST() {
 
     const investorUpdateData: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
-    }
-
-    if (investor.kyc_status !== 'approved') {
-      investorUpdateData.kyc_status = 'submitted'
     }
 
     if (shouldSetIncomplete) {

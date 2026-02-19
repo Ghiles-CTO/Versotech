@@ -7,9 +7,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { POST as submitEntityKyc } from '@/app/api/me/entity-kyc/submit/route'
+import { submitEntityKycForUser } from '@/app/api/me/entity-kyc/submit/route'
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -29,16 +29,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not an arranger user' }, { status: 403 })
     }
 
-    const delegatedRequest = new Request(request.url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        entityType: 'arranger',
-        entityId: arrangerUser.arranger_id,
-      }),
+    const result = await submitEntityKycForUser({
+      serviceSupabase,
+      userId: user.id,
+      entityType: 'arranger',
+      entityId: arrangerUser.arranger_id,
     })
 
-    return submitEntityKyc(delegatedRequest)
+    return NextResponse.json(result.payload, { status: result.status })
   } catch (error) {
     console.error('[arranger-kyc-submission] Error delegating submit:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

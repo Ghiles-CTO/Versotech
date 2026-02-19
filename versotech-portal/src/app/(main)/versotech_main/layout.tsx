@@ -1,13 +1,25 @@
 import { ReactNode } from 'react'
 import { getProfile } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { PersonaProvider, Persona } from '@/contexts/persona-context'
 import { UnifiedAppLayout } from '@/components/layout/unified-app-layout'
 import { ProxyModeProvider, ProxyModeBanner } from '@/components/commercial-partner'
 import { PlatformTour } from '@/components/tour'
+import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
 
 export const dynamic = 'force-dynamic'
+
+const PERSONA_MEMBER_CONFIG: Partial<
+  Record<Persona['persona_type'], { memberTable: string; entityIdColumn: string }>
+> = {
+  investor: { memberTable: 'investor_members', entityIdColumn: 'investor_id' },
+  partner: { memberTable: 'partner_members', entityIdColumn: 'partner_id' },
+  introducer: { memberTable: 'introducer_members', entityIdColumn: 'introducer_id' },
+  lawyer: { memberTable: 'lawyer_members', entityIdColumn: 'lawyer_id' },
+  commercial_partner: { memberTable: 'commercial_partner_members', entityIdColumn: 'commercial_partner_id' },
+  arranger: { memberTable: 'arranger_members', entityIdColumn: 'arranger_id' },
+}
 
 interface LayoutProps {
   children: ReactNode
@@ -109,6 +121,35 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
       activePersonaForTour = investor?.type === 'entity'
         ? 'investor_entity'
         : 'investor_individual'
+    }
+  }
+
+  // Auto-link/create member rows for persona-backed users on login.
+  // If the user's email is not in members for that entity, create a linked member record.
+  const serviceSupabase = createServiceClient()
+  for (const persona of userPersonas) {
+    const memberConfig = PERSONA_MEMBER_CONFIG[persona.persona_type]
+    if (!memberConfig || !persona.entity_id || persona.entity_id === 'internal') continue
+
+    const { error: memberLinkError } = await fetchMemberWithAutoLink({
+      supabase: serviceSupabase,
+      memberTable: memberConfig.memberTable,
+      entityIdColumn: memberConfig.entityIdColumn,
+      entityId: persona.entity_id,
+      userId: profile.id,
+      userEmail: profile.email,
+      defaultFullName: profile.displayName || profile.email || null,
+      createIfMissing: true,
+      context: `UnifiedPortalLayout:${persona.persona_type}`,
+      select: 'id, linked_user_id, email, full_name, first_name, last_name, role, kyc_status',
+    })
+
+    if (memberLinkError) {
+      console.error('[UnifiedPortalLayout] Failed member auto-link/create', {
+        personaType: persona.persona_type,
+        entityId: persona.entity_id,
+        error: memberLinkError,
+      })
     }
   }
 

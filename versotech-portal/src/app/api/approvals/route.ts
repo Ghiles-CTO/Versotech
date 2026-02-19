@@ -3,51 +3,6 @@ import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { getAuthenticatedUser } from '@/lib/api-auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { SupabaseClient } from '@supabase/supabase-js'
-
-/**
- * Handles account_activation approval - updates entity's account_approval_status
- */
-async function handleAccountActivationApproval(
-  supabase: SupabaseClient,
-  entityId: string,
-  metadata: any,
-  status: 'approved' | 'rejected',
-  notes?: string
-) {
-  const entityTable = metadata?.entity_table
-  const personaType = metadata?.persona_type
-
-  if (!entityTable) {
-    console.error('[Account Activation] Missing entity_table in metadata')
-    return
-  }
-
-  const updateData: any = {
-    account_approval_status: status,
-    updated_at: new Date().toISOString(),
-  }
-
-  if (status === 'rejected' && notes) {
-    updateData.account_rejection_reason = notes
-  }
-
-  try {
-    const { error } = await supabase
-      .from(entityTable)
-      .update(updateData)
-      .eq('id', entityId)
-
-    if (error) {
-      console.error(`[Account Activation] Error updating ${entityTable}:`, error)
-      throw error
-    }
-
-    console.log(`[Account Activation] Updated ${entityTable} ${entityId} to ${status}`)
-  } catch (error) {
-    console.error('[Account Activation] Failed to update entity status:', error)
-  }
-}
 
 // Validation schema for creating approvals
 const createApprovalSchema = z.object({
@@ -524,6 +479,44 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
+    const { data: existingApproval, error: existingApprovalError } = await serviceSupabase
+      .from('approvals')
+      .select('id, entity_type')
+      .eq('id', approval_id)
+      .maybeSingle()
+
+    if (existingApprovalError) {
+      console.error('Failed to load approval before update:', existingApprovalError)
+      return NextResponse.json(
+        { error: 'Failed to load approval record' },
+        { status: 500 }
+      )
+    }
+
+    if (!existingApproval) {
+      return NextResponse.json(
+        { error: 'Approval not found' },
+        { status: 404 }
+      )
+    }
+
+    const requestedStatus = validation.data.status
+    const requestedAction = validation.data.action
+    const isFinalAccountActivationDecision =
+      existingApproval.entity_type === 'account_activation' &&
+      (
+        (requestedStatus && ['approved', 'rejected'].includes(requestedStatus)) ||
+        (requestedAction && ['approve', 'reject'].includes(requestedAction))
+      )
+
+    // Keep a single approval-decision path for account activation in /api/approvals/[id]/action.
+    if (isFinalAccountActivationDecision) {
+      return NextResponse.json(
+        { error: 'Use /api/approvals/[id]/action for account activation decisions' },
+        { status: 409 }
+      )
+    }
+
     // Prepare update data
     const updates: any = validation.data
     
@@ -557,17 +550,6 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json(
         { error: 'Failed to update approval' },
         { status: 500 }
-      )
-    }
-
-    // Handle account_activation approval - update entity account_approval_status
-    if (approval.entity_type === 'account_activation' && ['approved', 'rejected'].includes(approval.status)) {
-      await handleAccountActivationApproval(
-        serviceSupabase,
-        approval.entity_id,
-        approval.entity_metadata,
-        approval.status as 'approved' | 'rejected',
-        approval.notes
       )
     }
 

@@ -9,6 +9,38 @@ import { sendInvitationEmail } from '@/lib/email/resend-service'
 import { getAppUrl } from '@/lib/signature/token'
 import { handleDealClose, handleTermsheetClose } from '@/lib/deals/deal-close-handler'
 
+const ACCOUNT_ACTIVATION_ENTITY_TABLES = [
+  'investors',
+  'partners',
+  'lawyers',
+  'introducers',
+  'commercial_partners',
+  'arranger_entities',
+] as const
+
+function resolveAccountActivationEntityTable(metadata: any): string | null {
+  const entityTable = metadata?.entity_table
+  if (!entityTable) {
+    return null
+  }
+  return ACCOUNT_ACTIVATION_ENTITY_TABLES.includes(entityTable) ? entityTable : null
+}
+
+function getApprovalEntityLabel(entityType: string): string {
+  const labels: Record<string, string> = {
+    account_activation: 'account activation',
+    deal_interest: 'deal interest',
+    deal_interest_nda: 'deal interest',
+    deal_subscription: 'subscription',
+    investor_onboarding: 'onboarding',
+    member_invitation: 'member invitation',
+    sale_request: 'sale request',
+    commission_invoice: 'commission invoice',
+  }
+
+  return labels[entityType] || entityType.replace(/_/g, ' ')
+}
+
 /**
  * Generate subscription pack filename with standardized format:
  * {ENTITY_CODE} - SUBSCRIPTION PACK - {INVESTMENT_NAME} - {INVESTOR_NAME} - {DDMMYY}.docx
@@ -156,6 +188,36 @@ export async function POST(
 
     // Handle entity-specific actions on approval
     if (action === 'approve') {
+      let accountActivationSnapshot: {
+        entityTable: string
+        entityId: string
+        accountApprovalStatus: string | null
+        onboardingStatus?: string | null
+      } | null = null
+
+      if (approval.entity_type === 'account_activation') {
+        const entityTable = resolveAccountActivationEntityTable(approval.entity_metadata || {})
+        if (entityTable) {
+          const selectColumns = entityTable === 'investors'
+            ? 'account_approval_status, onboarding_status'
+            : 'account_approval_status'
+          const { data: snapshot } = await serviceSupabase
+            .from(entityTable)
+            .select(selectColumns)
+            .eq('id', approval.entity_id)
+            .maybeSingle()
+
+          if (snapshot) {
+            accountActivationSnapshot = {
+              entityTable,
+              entityId: approval.entity_id,
+              accountApprovalStatus: (snapshot as any).account_approval_status ?? null,
+              onboardingStatus: entityTable === 'investors' ? (snapshot as any).onboarding_status ?? null : undefined,
+            }
+          }
+        }
+      }
+
       const result = await handleEntityApproval(
         serviceSupabase,
         approval,
@@ -167,6 +229,32 @@ export async function POST(
       if (!result.success) {
         transactionError = result.error
         transactionSuccess = false
+        const rollbackTimestamp = new Date().toISOString()
+
+        if (accountActivationSnapshot) {
+          const restorePayload: Record<string, unknown> = {
+            account_approval_status: accountActivationSnapshot.accountApprovalStatus,
+            updated_at: rollbackTimestamp,
+          }
+
+          if (accountActivationSnapshot.entityTable === 'investors') {
+            restorePayload.onboarding_status = accountActivationSnapshot.onboardingStatus ?? null
+          }
+
+          const { error: entityRestoreError } = await serviceSupabase
+            .from(accountActivationSnapshot.entityTable)
+            .update(restorePayload)
+            .eq('id', accountActivationSnapshot.entityId)
+
+          if (entityRestoreError) {
+            console.error('[AccountActivation] Failed restoring entity after approval failure', {
+              approval_id: id,
+              entity_table: accountActivationSnapshot.entityTable,
+              entity_id: accountActivationSnapshot.entityId,
+              error: entityRestoreError,
+            })
+          }
+        }
 
         // ROLLBACK: If entity logic fails, rollback approval to 'pending'
         console.error(`Entity approval failed for ${approval.entity_type}:`, result.error)
@@ -180,7 +268,7 @@ export async function POST(
             approved_at: null,
             resolved_at: null,
             notes: `Auto-rollback: ${result.error}. Original approver: ${user.id}`,
-            updated_at: new Date().toISOString()
+            updated_at: rollbackTimestamp
           })
           .eq('id', id)
 
@@ -246,15 +334,16 @@ export async function POST(
 
     // Create notification for requester
     if (approval.requested_by) {
+      const approvalLabel = getApprovalEntityLabel(approval.entity_type)
       const notificationMessage = action === 'approve'
-        ? `Your ${approval.entity_type} request has been approved`
-        : `Your ${approval.entity_type} request has been rejected`
+        ? `Your ${approvalLabel} request has been approved.`
+        : `Your ${approvalLabel} request has been rejected${rejection_reason ? `: ${rejection_reason}` : '.'}`
 
       await serviceSupabase
         .from('investor_notifications')
         .insert({
           user_id: approval.requested_by,
-          title: `${approval.entity_type} ${action === 'approve' ? 'approved' : 'rejected'}`,
+          title: `${approvalLabel} ${action === 'approve' ? 'approved' : 'rejected'}`,
           message: notificationMessage,
           type: action === 'approve' ? 'approval_granted' : 'approval_rejected',
           metadata: {
@@ -2029,21 +2118,27 @@ async function handleEntityApproval(
       case 'account_activation': {
         // Account activation approval - updates the entity's account_approval_status
         // The entity_table comes from metadata to support all 6 entity types
-        const entityTable = metadata?.entity_table || 'investors'
+        const entityTable = resolveAccountActivationEntityTable(metadata)
+        if (!entityTable) {
+          console.error('[AccountActivation] Missing or invalid entity_table metadata', {
+            approval_id: approval.id,
+            entity_id: entityId,
+            metadata,
+          })
+          return { success: false, error: 'Account activation metadata is missing entity target' }
+        }
 
-        // Validate supported entity tables
-        const validTables = ['investors', 'partners', 'lawyers', 'introducers', 'commercial_partners', 'arranger_entities']
-        if (!validTables.includes(entityTable)) {
-          console.error(`[AccountActivation] Invalid entity table: ${entityTable}`)
-          return { success: false, error: `Unsupported entity table: ${entityTable}` }
+        const activationUpdateData: Record<string, unknown> = {
+          account_approval_status: 'approved',
+          updated_at: new Date().toISOString(),
+        }
+        if (entityTable === 'investors') {
+          activationUpdateData.onboarding_status = 'completed'
         }
 
         const { error: activationError } = await supabase
           .from(entityTable)
-          .update({
-            account_approval_status: 'approved',
-            updated_at: new Date().toISOString()
-          })
+          .update(activationUpdateData)
           .eq('id', entityId)
 
         if (activationError) {
@@ -2297,11 +2392,9 @@ async function handleEntityRejection(
     if (entityType === 'account_activation') {
       // Account activation rejection - updates the entity's account_approval_status to rejected
       const metadata = approval.entity_metadata || {}
-      const entityTable = metadata?.entity_table || 'investors'
+      const entityTable = resolveAccountActivationEntityTable(metadata)
 
-      // Validate supported entity tables
-      const validTables = ['investors', 'partners', 'lawyers', 'introducers', 'commercial_partners', 'arranger_entities']
-      if (validTables.includes(entityTable)) {
+      if (entityTable) {
         await supabase
           .from(entityTable)
           .update({
@@ -2312,6 +2405,12 @@ async function handleEntityRejection(
           .eq('id', entityId)
 
         console.log(`[AccountActivation] Account rejected: ${entityTable}.${entityId}`)
+      } else {
+        console.error('[AccountActivation] Missing or invalid entity_table metadata on rejection', {
+          approval_id: approval.id,
+          entity_id: entityId,
+          metadata,
+        })
       }
     }
   } catch (error) {

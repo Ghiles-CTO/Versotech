@@ -7,9 +7,10 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { POST as submitEntityKyc } from '@/app/api/me/entity-kyc/submit/route'
+import { submitEntityKycForUser } from '@/app/api/me/entity-kyc/submit/route'
+import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -19,26 +20,24 @@ export async function POST(request: NextRequest) {
     }
 
     const serviceSupabase = createServiceClient()
-    const { data: investorUser, error: investorUserError } = await serviceSupabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { link: investorUser, error: investorUserError } = await resolvePrimaryInvestorLink(
+      serviceSupabase,
+      user.id,
+      'investor_id'
+    )
 
     if (investorUserError || !investorUser?.investor_id) {
       return NextResponse.json({ error: 'Investor not found' }, { status: 404 })
     }
 
-    const delegatedRequest = new Request(request.url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        entityType: 'investor',
-        entityId: investorUser.investor_id,
-      }),
+    const result = await submitEntityKycForUser({
+      serviceSupabase,
+      userId: user.id,
+      entityType: 'investor',
+      entityId: investorUser.investor_id,
     })
 
-    return submitEntityKyc(delegatedRequest)
+    return NextResponse.json(result.payload, { status: result.status })
   } catch (error) {
     console.error('[investor-submit-entity-kyc] Error delegating submit:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -55,11 +54,11 @@ export async function GET() {
     }
 
     const serviceSupabase = createServiceClient()
-    const { data: investorUser } = await serviceSupabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { link: investorUser } = await resolvePrimaryInvestorLink(
+      serviceSupabase,
+      user.id,
+      'investor_id'
+    )
 
     if (!investorUser?.investor_id) {
       return NextResponse.json({ error: 'Investor not found' }, { status: 404 })
@@ -87,4 +86,3 @@ export async function GET() {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-
