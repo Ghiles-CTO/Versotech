@@ -16,6 +16,56 @@ import { fileURLToPath } from 'url'
 import type { DocumentType, SignaturePlacementRecord } from './types'
 import { SIGNATURE_CONFIG } from './config'
 
+/**
+ * Polyfill browser globals that pdfjs-dist expects.
+ * We only use getTextContent() + getViewport() (no canvas rendering),
+ * so minimal stubs are sufficient to prevent the module from crashing.
+ */
+function ensurePdfjsPolyfills() {
+  const g = globalThis as any
+  if (typeof g.DOMMatrix === 'undefined') {
+    g.DOMMatrix = class DOMMatrix {
+      a = 1; b = 0; c = 0; d = 1; e = 0; f = 0
+      constructor(init?: any) {
+        if (Array.isArray(init) && init.length >= 6) {
+          ;[this.a, this.b, this.c, this.d, this.e, this.f] = init
+        }
+      }
+      isIdentity = true
+      inverse() { return new DOMMatrix() }
+      multiply() { return new DOMMatrix() }
+      scale() { return new DOMMatrix() }
+      translate() { return new DOMMatrix() }
+      transformPoint(p: any) { return p }
+      static fromMatrix() { return new DOMMatrix() }
+      static fromFloat32Array() { return new DOMMatrix() }
+      static fromFloat64Array() { return new DOMMatrix() }
+    }
+  }
+  if (typeof g.ImageData === 'undefined') {
+    g.ImageData = class ImageData {
+      width: number; height: number; data: Uint8ClampedArray
+      constructor(w: number, h: number) {
+        this.width = w; this.height = h
+        this.data = new Uint8ClampedArray(w * h * 4)
+      }
+    }
+  }
+  if (typeof g.Path2D === 'undefined') {
+    g.Path2D = class Path2D {
+      addPath() {}
+      closePath() {}
+      moveTo() {}
+      lineTo() {}
+      bezierCurveTo() {}
+      quadraticCurveTo() {}
+      arc() {}
+      arcTo() {}
+      rect() {}
+    }
+  }
+}
+
 export interface DetectedAnchor {
   anchorId: string       // e.g., 'party_a', 'party_b_tcs', 'party_a_2_form'
   pageNumber: number     // 1-indexed page number
@@ -37,6 +87,9 @@ export interface DetectedAnchor {
  * @returns Array of detected anchors with positions
  */
 export async function detectAnchors(pdfBytes: Uint8Array): Promise<DetectedAnchor[]> {
+  // Polyfill browser globals before importing pdfjs-dist (server-side only)
+  ensurePdfjsPolyfills()
+
   // Dynamic import pdfjs-dist
   const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs')
 
