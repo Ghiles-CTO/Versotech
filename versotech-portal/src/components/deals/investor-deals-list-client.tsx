@@ -1763,8 +1763,8 @@ export function InvestorDealsListClient({
                             setSubscribeDealId(deal.id)
                             setSubscribeDealName(deal.name)
                             setSubscribeDealCurrency(deal.currency)
-                            setSubscribeDealMin(feeStructure?.minimum_ticket ?? deal.minimum_investment ?? null)
-                            setSubscribeDealMax(feeStructure?.allocation_up_to ?? deal.maximum_investment ?? null)
+                            setSubscribeDealMin(feeStructure?.minimum_ticket ?? null)
+                            setSubscribeDealMax(feeStructure?.allocation_up_to ?? null)
                             setSubscribeDealLogo(deal.company_logo_url ?? null)
                             setShowSubscribeDialog(true)
                           }}

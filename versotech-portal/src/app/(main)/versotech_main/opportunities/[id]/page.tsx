@@ -830,8 +830,8 @@ export default function OpportunityDetailPage() {
 
   // Derive subscription limits from termsheet (fee_structures), falling back to deal-level fields
   const publishedTermSheet = opportunity.fee_structures.find(ts => ts.status === 'published') || opportunity.fee_structures[0] || null
-  const subscribeMinAmount = publishedTermSheet?.minimum_ticket ?? opportunity.minimum_investment ?? null
-  const subscribeMaxAmount = publishedTermSheet?.allocation_up_to ?? opportunity.maximum_investment ?? null
+  const subscribeMinAmount = publishedTermSheet?.minimum_ticket ?? null
+  const subscribeMaxAmount = publishedTermSheet?.allocation_up_to ?? null
   const canSignNda = opportunity.can_sign_nda && !isTrackingOnly && isAccountApproved
   const showActionChoices =
     !isBlacklisted &&
