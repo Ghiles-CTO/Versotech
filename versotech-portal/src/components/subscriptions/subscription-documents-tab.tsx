@@ -215,7 +215,10 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Failed to send for signature')
+        const details = typeof error.details === 'string' && error.details.length > 0
+          ? `: ${error.details}`
+          : ''
+        throw new Error(`${error.error || 'Failed to send for signature'}${details}`)
       }
 
       const data = await response.json()

@@ -13,6 +13,84 @@ const requestSchema = z.object({
   // arranger_id is required when countersigner_type is 'arranger'
 }).optional()
 
+type SignatureFailureReason = 'anchor_missing' | 'pdf_parse' | 'signer_config' | 'unknown'
+type SignatureFailurePhase = 'issuer' | 'arranger' | 'investor' | 'regeneration' | 'unknown'
+
+class SignatureWorkflowStepError extends Error {
+  readonly phase: SignatureFailurePhase
+  readonly reason: SignatureFailureReason
+
+  constructor(phase: SignatureFailurePhase, reason: SignatureFailureReason, message: string) {
+    super(message)
+    this.name = 'SignatureWorkflowStepError'
+    this.phase = phase
+    this.reason = reason
+  }
+}
+
+function classifySignatureFailureReason(message: string): SignatureFailureReason {
+  const lower = message.toLowerCase()
+
+  if (
+    lower.includes('sig_anchor') ||
+    lower.includes('signature anchor') ||
+    lower.includes('anchor_not_found') ||
+    lower.includes('missing_anchors') ||
+    lower.includes('no signature anchors found') ||
+    lower.includes('pdf has no signature anchor markers')
+  ) {
+    return 'anchor_missing'
+  }
+
+  if (
+    lower.includes('dommatrix') ||
+    lower.includes('cannot polyfill') ||
+    lower.includes('@napi-rs/canvas') ||
+    lower.includes('pdf parsing error') ||
+    lower.includes('failed to fetch pdf for signature anchor detection')
+  ) {
+    return 'pdf_parse'
+  }
+
+  if (
+    lower.includes('no ceo') ||
+    lower.includes('no arranger signer') ||
+    lower.includes('no email configured')
+  ) {
+    return 'signer_config'
+  }
+
+  return 'unknown'
+}
+
+function normalizeErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  return 'Unknown error'
+}
+
+async function readErrorMessageFromResponse(response: Response): Promise<string> {
+  const raw = await response.text()
+  if (!raw) return `${response.status} ${response.statusText}`
+
+  try {
+    const parsed = JSON.parse(raw)
+    if (typeof parsed?.details === 'string' && parsed.details.length > 0) {
+      if (typeof parsed?.error === 'string' && parsed.error.length > 0) {
+        return `${parsed.error}: ${parsed.details}`
+      }
+      return parsed.details
+    }
+    if (typeof parsed?.error === 'string' && parsed.error.length > 0) {
+      return parsed.error
+    }
+  } catch {
+    // raw text fallback below
+  }
+
+  return raw
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; documentId: string }> }
@@ -81,7 +159,6 @@ export async function POST(
                 document.file_key?.toLowerCase().endsWith('.pdf')
 
   let signableDocument = document
-  let signableDocumentId = documentId
 
   if (isPdf) {
     console.log('✅ [READY-FOR-SIGNATURE] Document is already PDF, skipping conversion')
@@ -192,7 +269,6 @@ export async function POST(
 
     // Use the new PDF document for signature
     signableDocument = pdfDocument
-    signableDocumentId = pdfDocument.id
 
     console.log('🔄 Proceeding with converted PDF for signature:', {
       original_docx_id: document.id,
@@ -229,38 +305,6 @@ export async function POST(
     return NextResponse.json({ error: 'Subscription not found' }, { status: 404 })
   }
   console.log('✅ [READY-FOR-SIGNATURE] Subscription fetched:', { investor_type: subscription.investor?.type })
-
-  // Check for existing signature requests to prevent duplicates
-  console.log('🔍 [READY-FOR-SIGNATURE] Checking existing requests...')
-  const { data: existingRequests } = await serviceSupabase
-    .from('signature_requests')
-    .select('id, signer_role, status')
-    .eq('document_id', signableDocumentId)
-    .in('status', ['pending', 'signed'])
-
-  if (existingRequests && existingRequests.length > 0) {
-    const pendingCount = existingRequests.filter(r => r.status === 'pending').length
-    const signedCount = existingRequests.filter(r => r.status === 'signed').length
-
-    return NextResponse.json({
-      error: 'Signature requests already exist for this document',
-      details: `Found ${pendingCount} pending and ${signedCount} signed signature request(s). Cannot create duplicates.`,
-      existing_requests: existingRequests.map(r => ({ id: r.id, role: r.signer_role, status: r.status }))
-    }, { status: 409 }) // 409 Conflict
-  }
-
-  console.log('✅ [READY-FOR-SIGNATURE] No existing requests, proceeding...')
-
-  // Get signed URL for document (use the signable PDF)
-  const { data: urlData } = await serviceSupabase.storage
-    .from('deal-documents')
-    .createSignedUrl(signableDocument.file_key, 7 * 24 * 60 * 60) // 7 days
-
-  if (!urlData?.signedUrl) {
-    return NextResponse.json({ error: 'Failed to generate document URL' }, { status: 500 })
-  }
-
-  console.log('✅ [READY-FOR-SIGNATURE] Got signed URL')
 
   // Determine signatories
   console.log('🔍 [READY-FOR-SIGNATURE] Determining signatories...')
@@ -328,25 +372,173 @@ export async function POST(
     }
   }
 
-  // Create signature requests - COMPANY SIGNS FIRST, then investors
-  // This ensures the company (arranger/CEO) approves the document before investors sign
+  // Create signature requests - COMPANY SIGNS FIRST, then investors.
+  // This ensures the company (arranger/CEO) approves the document before investors sign.
   console.log('✅ [READY-FOR-SIGNATURE] Signatories determined:', signatories.length)
-  try {
+
+  const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
+  const requestCookie = request.headers.get('cookie') || ''
+
+  const createSignatureRequestViaApi = async (
+    phase: SignatureFailurePhase,
+    payload: Record<string, unknown>
+  ): Promise<any> => {
+    const response = await fetch(`${appBaseUrl}/api/signature/request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+
+    if (!response.ok) {
+      const apiMessage = await readErrorMessageFromResponse(response)
+      const reason = classifySignatureFailureReason(apiMessage)
+      throw new SignatureWorkflowStepError(
+        phase,
+        reason,
+        `Failed to create ${phase} signature request: ${apiMessage}`
+      )
+    }
+
+    return response.json()
+  }
+
+  const getSignedUrlForDocument = async (fileKey: string): Promise<string> => {
+    const { data } = await serviceSupabase.storage
+      .from('deal-documents')
+      .createSignedUrl(fileKey, 7 * 24 * 60 * 60) // 7 days
+
+    if (!data?.signedUrl) {
+      throw new SignatureWorkflowStepError(
+        'unknown',
+        'unknown',
+        'Failed to generate document URL'
+      )
+    }
+
+    return data.signedUrl
+  }
+
+  const clearPendingSignatureRequests = async (targetDocumentId: string): Promise<void> => {
+    const { error } = await serviceSupabase
+      .from('signature_requests')
+      .delete()
+      .eq('document_id', targetDocumentId)
+      .eq('status', 'pending')
+
+    if (error) {
+      console.warn('⚠️ [READY-FOR-SIGNATURE] Failed to clear partial signature requests:', error.message)
+    }
+  }
+
+  const regenerateAndLoadReplacementDocument = async (
+    previousDocumentId: string
+  ): Promise<any> => {
+    console.warn('♻️ [READY-FOR-SIGNATURE] Anchor/PDF failure detected, attempting one auto-regeneration before retry')
+
+    const regenResponse = await fetch(`${appBaseUrl}/api/subscriptions/${subscriptionId}/regenerate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(requestCookie ? { cookie: requestCookie } : {}),
+      },
+      body: JSON.stringify({ format: 'pdf' }),
+    })
+
+    if (!regenResponse.ok) {
+      const regenError = await readErrorMessageFromResponse(regenResponse)
+      const regenReason = classifySignatureFailureReason(regenError)
+      throw new SignatureWorkflowStepError(
+        'regeneration',
+        regenReason,
+        `Auto-regeneration failed: ${regenError}`
+      )
+    }
+
+    const regenData = await regenResponse.json().catch(() => ({}))
+    const regeneratedDocumentId = typeof regenData?.document_id === 'string' && regenData.document_id.length > 0
+      ? regenData.document_id
+      : null
+
+    let replacementDocument: any = null
+    if (regeneratedDocumentId) {
+      const { data } = await serviceSupabase
+        .from('documents')
+        .select('*')
+        .eq('id', regeneratedDocumentId)
+        .eq('subscription_id', subscriptionId)
+        .single()
+      replacementDocument = data
+    } else {
+      const { data } = await serviceSupabase
+        .from('documents')
+        .select('*')
+        .eq('subscription_id', subscriptionId)
+        .eq('mime_type', 'application/pdf')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      replacementDocument = data
+    }
+
+    if (!replacementDocument) {
+      throw new SignatureWorkflowStepError(
+        'regeneration',
+        'unknown',
+        'Auto-regeneration completed but no replacement PDF document was found'
+      )
+    }
+
+    if (replacementDocument.id === previousDocumentId) {
+      throw new SignatureWorkflowStepError(
+        'regeneration',
+        'unknown',
+        'Auto-regeneration did not produce a new document to retry'
+      )
+    }
+
+    await clearPendingSignatureRequests(previousDocumentId)
+
+    console.log('✅ [READY-FOR-SIGNATURE] Auto-regeneration produced replacement PDF:', {
+      old_document_id: previousDocumentId,
+      new_document_id: replacementDocument.id,
+      file_key: replacementDocument.file_key,
+    })
+
+    return replacementDocument
+  }
+
+  const runSignatureWorkflowForDocument = async (targetDocument: any): Promise<NextResponse> => {
+    const targetDocumentId = targetDocument.id as string
+
+    // Check for existing signature requests to prevent duplicates
+    console.log('🔍 [READY-FOR-SIGNATURE] Checking existing requests for document:', targetDocumentId)
+    const { data: existingRequests } = await serviceSupabase
+      .from('signature_requests')
+      .select('id, signer_role, status')
+      .eq('document_id', targetDocumentId)
+      .in('status', ['pending', 'signed'])
+
+    if (existingRequests && existingRequests.length > 0) {
+      const pendingCount = existingRequests.filter(r => r.status === 'pending').length
+      const signedCount = existingRequests.filter(r => r.status === 'signed').length
+
+      return NextResponse.json({
+        error: 'Signature requests already exist for this document',
+        details: `Found ${pendingCount} pending and ${signedCount} signed signature request(s). Cannot create duplicates.`,
+        existing_requests: existingRequests.map(r => ({ id: r.id, role: r.signer_role, status: r.status }))
+      }, { status: 409 }) // 409 Conflict
+    }
+
+    console.log('✅ [READY-FOR-SIGNATURE] No existing requests, proceeding...')
+    const signedUrl = await getSignedUrlForDocument(targetDocument.file_key)
+    console.log('✅ [READY-FOR-SIGNATURE] Got signed URL')
+
     // ============================================================
     // STEP 1: CREATE ISSUER (party_b) SIGNATURE REQUEST
     // ============================================================
-    // The Issuer (VERSO Capital 2 SCSP via GP SARL) ALWAYS signs as party_b
-    // This is separate from the Arranger (party_c) which is handled in STEP 1.5
-    //
-    // IMPORTANT: countersigner_type only affects WORKFLOW ORDER, not signature positions!
-    // - countersigner_type='ceo': CEO signs first, then arranger, then investors
-    // - countersigner_type='arranger': Arranger signs first, then CEO, then investors
-    // Both CEO and Arranger ALWAYS sign, just in different order.
     console.log('🔍 [READY-FOR-SIGNATURE] Creating ISSUER (party_b) signature request...')
 
-    // ALWAYS get CEO/Issuer signer - they sign party_b regardless of countersigner_type
     const ceoSigner = await getCeoSigner(serviceSupabase)
-
     if (!ceoSigner || !ceoSigner.email) {
       console.error('[ready-for-signature] CRITICAL: No CEO signer configured in ceo_users table')
       return NextResponse.json({
@@ -357,54 +549,28 @@ export async function POST(
     const issuerEmail = ceoSigner.email
     const issuerName = ceoSigner.displayName
 
-    console.log('[ready-for-signature] Using configured CEO/Issuer signer for party_b:', {
-      email: issuerEmail,
-      name: issuerName
-    })
-
-    // Create Issuer (party_b) signature request
-    console.log(`🔍 [READY-FOR-SIGNATURE] Creating ISSUER signature request for ${issuerName} (party_b)`)
     const issuerSigPayload = {
       investor_id: subscription.investor_id,
       signer_email: issuerEmail,
       signer_name: issuerName,
       document_type: 'subscription',
-      google_drive_url: urlData.signedUrl,
-      signer_role: 'admin',  // CEO/Issuer is always 'admin' role
-      signature_position: 'party_b',  // ALWAYS party_b for Issuer
+      google_drive_url: signedUrl,
+      signer_role: 'admin',
+      signature_position: 'party_b',
       subscription_id: subscriptionId,
-      document_id: signableDocumentId,
+      document_id: targetDocumentId,
       deal_id: subscription.deal_id
     }
 
-    const issuerSigResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/signature/request`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(issuerSigPayload)
-    })
-
-    if (!issuerSigResponse.ok) {
-      const errorText = await issuerSigResponse.text()
-      throw new Error(`Failed to create Issuer (party_b) signature request: ${errorText}`)
-    }
-
-    const issuerSigData = await issuerSigResponse.json()
+    const issuerSigData = await createSignatureRequestViaApi('issuer', issuerSigPayload)
     console.log('✅ [READY-FOR-SIGNATURE] Issuer (party_b) signature request created')
 
     // ============================================================
     // STEP 1.5: CREATE ARRANGER (party_c) SIGNATURE REQUEST
     // ============================================================
-    // The arranger signs separately from the issuer on pages 12 and 39
-    // This is required because the legal document has THREE parties:
-    // - party_a: Subscribers (investors)
-    // - party_b: Issuer (VERSO Capital 2 SCSP)
-    // - party_c: Arranger (Verso Management Ltd.)
     console.log('🔍 [READY-FOR-SIGNATURE] Creating arranger (party_c) signature request...')
-    console.log('   Deal ID:', subscription.deal_id)
 
     let arrangerSigData = null
-
-    // Get arranger details from the deal
     const { data: dealForArranger, error: dealError } = await serviceSupabase
       .from('deals')
       .select('arranger_entity_id')
@@ -415,10 +581,7 @@ export async function POST(
       console.error('❌ [READY-FOR-SIGNATURE] Failed to fetch deal for arranger:', dealError.message)
     }
 
-    console.log('   Arranger entity ID:', dealForArranger?.arranger_entity_id || 'NOT SET')
-
     if (dealForArranger?.arranger_entity_id) {
-      // Get arranger entity and primary user who can sign
       const { data: arrangerEntity, error: entityError } = await serviceSupabase
         .from('arranger_entities')
         .select('legal_name')
@@ -428,9 +591,7 @@ export async function POST(
       if (entityError) {
         console.error('❌ [READY-FOR-SIGNATURE] Failed to fetch arranger entity:', entityError.message)
       }
-      console.log('   Arranger entity name:', arrangerEntity?.legal_name || 'NOT FOUND')
 
-      // Get primary arranger user who can sign (use maybeSingle to avoid error on no results)
       const { data: arrangerUser, error: userError } = await serviceSupabase
         .from('arranger_users')
         .select('user_id')
@@ -442,12 +603,9 @@ export async function POST(
       if (userError) {
         console.error('❌ [READY-FOR-SIGNATURE] Failed to fetch primary arranger user:', userError.message)
       }
-      console.log('   Primary arranger user_id:', arrangerUser?.user_id || 'NOT FOUND')
 
-      // Fallback: get any arranger user who can sign
       let arrangerUserId = arrangerUser?.user_id
       if (!arrangerUserId) {
-        console.log('   Looking for fallback arranger user with can_sign=true...')
         const { data: anySigningUser, error: fallbackError } = await serviceSupabase
           .from('arranger_users')
           .select('user_id')
@@ -460,7 +618,6 @@ export async function POST(
           console.error('❌ [READY-FOR-SIGNATURE] Failed to fetch fallback arranger user:', fallbackError.message)
         }
         arrangerUserId = anySigningUser?.user_id
-        console.log('   Fallback arranger user_id:', arrangerUserId || 'NOT FOUND')
       }
 
       if (arrangerUserId) {
@@ -473,7 +630,6 @@ export async function POST(
         if (profileError) {
           console.error('❌ [READY-FOR-SIGNATURE] Failed to fetch arranger profile:', profileError.message)
         }
-        console.log('   Arranger profile:', arrangerProfile?.email, arrangerProfile?.display_name)
 
         if (arrangerProfile?.email) {
           const arrangerSigPayload = {
@@ -481,50 +637,29 @@ export async function POST(
             signer_email: arrangerProfile.email,
             signer_name: arrangerProfile.display_name || arrangerEntity?.legal_name || 'Arranger',
             document_type: 'subscription',
-            google_drive_url: urlData.signedUrl,
+            google_drive_url: signedUrl,
             signer_role: 'arranger',
-            signature_position: 'party_c',  // KEY: Use party_c for arranger, NOT party_b!
+            signature_position: 'party_c',
             subscription_id: subscriptionId,
-            document_id: signableDocumentId,
+            document_id: targetDocumentId,
             deal_id: subscription.deal_id
           }
 
-          console.log('   Creating arranger signature request for:', arrangerProfile.email)
-
-          const arrangerSigResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/signature/request`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(arrangerSigPayload)
-          })
-
-          if (arrangerSigResponse.ok) {
-            arrangerSigData = await arrangerSigResponse.json()
-            console.log('✅ [READY-FOR-SIGNATURE] Arranger (party_c) signature request created:', arrangerSigData.signature_request_id)
-          } else {
-            const errorText = await arrangerSigResponse.text()
-            console.error('❌ [READY-FOR-SIGNATURE] Failed to create arranger signature request:', errorText)
-            // FATAL: Arranger signature is required - fail the entire request
-            return NextResponse.json({
-              error: 'Failed to create arranger signature request',
-              details: errorText
-            }, { status: 500 })
-          }
+          arrangerSigData = await createSignatureRequestViaApi('arranger', arrangerSigPayload)
+          console.log('✅ [READY-FOR-SIGNATURE] Arranger (party_c) signature request created:', arrangerSigData.signature_request_id)
         } else {
-          // FATAL: Arranger must have email configured
           console.error('❌ [READY-FOR-SIGNATURE] FATAL: Arranger user has no email configured')
           return NextResponse.json({
             error: `Arranger user for ${arrangerEntity?.legal_name || 'arranger entity'} has no email configured. Please update the arranger user's profile.`
           }, { status: 400 })
         }
       } else {
-        // FATAL: Arranger must have a signer configured
         console.error('❌ [READY-FOR-SIGNATURE] FATAL: No arranger user with can_sign=true found for arranger_id:', dealForArranger.arranger_entity_id)
         return NextResponse.json({
           error: `No arranger signer configured for ${arrangerEntity?.legal_name || 'arranger entity'}. Please configure an arranger user with can_sign=true.`
         }, { status: 400 })
       }
     } else {
-      // FATAL: Deal must have an arranger entity for subscription pack signatures
       console.error('❌ [READY-FOR-SIGNATURE] FATAL: No arranger entity linked to deal:', subscription.deal_id)
       return NextResponse.json({
         error: 'No arranger entity linked to this deal. Subscription packs require an arranger to sign as party_c. Please link an arranger entity to the deal.'
@@ -534,7 +669,6 @@ export async function POST(
     // ============================================================
     // STEP 2: CREATE INVESTOR SIGNATURE REQUESTS (AFTER COMPANY)
     // ============================================================
-    // Investors will sign after the company has signed
     console.log('🔍 [READY-FOR-SIGNATURE] Creating investor signature requests (they sign AFTER company)...')
     const signerPositions = ['party_a', 'party_a_2', 'party_a_3', 'party_a_4', 'party_a_5']
     const investorSignatureRequests = []
@@ -542,35 +676,23 @@ export async function POST(
     for (let i = 0; i < signatories.length; i++) {
       const signatory = signatories[i]
       const position = signerPositions[i] || `party_a_${i + 1}`
-      console.log(`🔍 [READY-FOR-SIGNATURE] Creating investor signature ${i + 1}/${signatories.length} for ${signatory.full_name}`)
 
       const investorSigPayload = {
         investor_id: subscription.investor_id,
         signer_email: signatory.email,
         signer_name: signatory.full_name,
         document_type: 'subscription',
-        google_drive_url: urlData.signedUrl,
+        google_drive_url: signedUrl,
         signer_role: 'investor',
         signature_position: position,
         subscription_id: subscriptionId,
-        document_id: signableDocumentId,
-        deal_id: subscription.deal_id, // For task context (deal name, amount)
+        document_id: targetDocumentId,
+        deal_id: subscription.deal_id,
         member_id: signatory.id !== 'investor_primary' ? signatory.id : undefined,
-        total_party_a_signatories: signatories.length // For multi-signatory positioning
+        total_party_a_signatories: signatories.length
       }
 
-      const investorSigResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/signature/request`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(investorSigPayload)
-      })
-
-      if (!investorSigResponse.ok) {
-        const errorText = await investorSigResponse.text()
-        throw new Error(`Failed to create investor signature request for ${signatory.full_name}: ${errorText}`)
-      }
-
-      const investorSigData = await investorSigResponse.json()
+      const investorSigData = await createSignatureRequestViaApi('investor', investorSigPayload)
       investorSignatureRequests.push({
         signatory: signatory.full_name,
         email: signatory.email,
@@ -580,15 +702,14 @@ export async function POST(
 
     console.log('✅ [READY-FOR-SIGNATURE] All investor signatures created')
 
-    // Update document status (update the signable PDF document)
     await serviceSupabase
       .from('documents')
       .update({
         ready_for_signature: true,
         status: 'pending_signature',
-        signature_status: 'pending'  // Track signature collection progress
+        signature_status: 'pending'
       })
-      .eq('id', signableDocumentId)
+      .eq('id', targetDocumentId)
 
     const now = new Date().toISOString()
     await serviceSupabase
@@ -602,7 +723,6 @@ export async function POST(
       .eq('id', subscriptionId)
       .is('pack_generated_at', null)
 
-    // Notify arranger users when pack is sent for signature
     if (subscription.deal_id) {
       const { data: deal } = await serviceSupabase
         .from('deals')
@@ -619,7 +739,6 @@ export async function POST(
         if (arrangerUsers && arrangerUsers.length > 0) {
           const investorName = subscription.investor?.display_name || subscription.investor?.legal_name || 'Investor'
           const dealName = deal.name || 'the deal'
-
           const notifications = arrangerUsers.map((au: { user_id: string }) => ({
             user_id: au.user_id,
             investor_id: null,
@@ -627,15 +746,13 @@ export async function POST(
             message: `Subscription pack for ${investorName} (${dealName}) has been sent for signature.`,
             link: '/versotech_main/versosign'
           }))
-
           await serviceSupabase.from('investor_notifications').insert(notifications)
-          console.log('📧 Notified arranger users about pack sent:', arrangerUsers.length)
         }
       }
     }
 
     console.log('✅ Multi-signatory signature requests created for subscription pack:', {
-      document_id: signableDocumentId,
+      document_id: targetDocumentId,
       investor_requests: investorSignatureRequests.length,
       issuer_request: issuerSigData.signature_request_id,
       arranger_request: arrangerSigData?.signature_request_id || null
@@ -644,23 +761,76 @@ export async function POST(
     return NextResponse.json({
       success: true,
       investor_signature_requests: investorSignatureRequests,
-      // NEW: Separate issuer (party_b) and arranger (party_c) requests
-      issuer_request: issuerSigData,        // party_b - VERSO Capital 2 SCSP (via GP SARL)
+      issuer_request: issuerSigData,
       issuer_name: issuerName,
-      arranger_request: arrangerSigData,    // party_c - Verso Management Ltd.
-      // BACKWARDS COMPATIBLE: countersigner fields for existing UI consumers
-      // The "countersigner" is now always the CEO (party_b), not the arranger
+      arranger_request: arrangerSigData,
       countersigner_request: issuerSigData,
-      countersigner_type: 'ceo' as const,   // Always 'ceo' - party_b is always CEO/Issuer
+      countersigner_type: 'ceo' as const,
       countersigner_name: issuerName,
-      total_signatories: signatories.length + 1 + (arrangerSigData ? 1 : 0) // investors + issuer + arranger
+      total_signatories: signatories.length + 1 + (arrangerSigData ? 1 : 0)
     })
-
-  } catch (error) {
-    console.error('Error creating signature requests:', error)
-    return NextResponse.json({
-      error: 'Failed to initiate signature workflow',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
   }
+
+  let retryAttempted = false
+  let activeDocument = signableDocument
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      return await runSignatureWorkflowForDocument(activeDocument)
+    } catch (error) {
+      const message = normalizeErrorMessage(error)
+      const phase = error instanceof SignatureWorkflowStepError ? error.phase : 'unknown'
+      const reason = error instanceof SignatureWorkflowStepError
+        ? error.reason
+        : classifySignatureFailureReason(message)
+
+      console.error('Error creating signature requests:', {
+        message,
+        phase,
+        reason,
+        attempt: attempt + 1,
+        document_id: activeDocument?.id
+      })
+
+      const shouldRetry = !retryAttempted && (reason === 'anchor_missing' || reason === 'pdf_parse')
+      if (shouldRetry) {
+        retryAttempted = true
+        try {
+          activeDocument = await regenerateAndLoadReplacementDocument(activeDocument.id)
+          continue
+        } catch (regenError) {
+          const regenMessage = normalizeErrorMessage(regenError)
+          const regenReason = regenError instanceof SignatureWorkflowStepError
+            ? regenError.reason
+            : classifySignatureFailureReason(regenMessage)
+          return NextResponse.json({
+            error: 'Failed to initiate signature workflow',
+            details: regenMessage,
+            phase: 'regeneration',
+            reason: regenReason,
+            retry_attempted: true,
+            document_id: activeDocument?.id
+          }, { status: 500 })
+        }
+      }
+
+      return NextResponse.json({
+        error: 'Failed to initiate signature workflow',
+        details: message,
+        phase,
+        reason,
+        retry_attempted: retryAttempted,
+        document_id: activeDocument?.id
+      }, { status: 500 })
+    }
+  }
+
+  return NextResponse.json({
+    error: 'Failed to initiate signature workflow',
+    details: 'Unexpected retry flow termination',
+    phase: 'unknown',
+    reason: 'unknown',
+    retry_attempted: retryAttempted,
+    document_id: activeDocument?.id
+  }, { status: 500 })
 }

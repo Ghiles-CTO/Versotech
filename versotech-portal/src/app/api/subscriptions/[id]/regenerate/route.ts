@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { triggerWorkflow } from '@/lib/trigger-workflow'
 import { convertDocxToPdf } from '@/lib/gotenberg/convert'
 import { getCeoSigner } from '@/lib/staff/ceo-signer'
+import { buildSubscriptionPackPayload } from '@/lib/subscription-pack/payload-builder'
 
 const STAFF_ROLES = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo']
 
@@ -385,177 +386,50 @@ export async function POST(
     console.log('[REGENERATE] arrangerSignatureHtml FULL:', arrangerSignatureHtml)
     console.log('[REGENERATE] ==========================================')
 
-    // === KEY DIFFERENCE: Use subscription.commitment (source of truth) ===
-    const amount = Number(subscription.commitment) || 0
-    if (amount <= 0) {
-      return NextResponse.json(
-        { error: 'Subscription commitment amount must be greater than 0' },
-        { status: 400 }
-      )
-    }
-
-    // Calculate subscription details using SUBSCRIPTION table values
-    // Use subscription.price_per_share if set, otherwise fall back to fee structure
-    const subscriptionPricePerShare = Number(subscription.price_per_share)
-    const parsedTextPrice = parseFloat(feeStructure.price_per_share_text?.replace(/[^\d.]/g, '') || '0')
-    const feeStructurePricePerShare = (feeStructure.price_per_share && feeStructure.price_per_share > 0)
-      ? feeStructure.price_per_share
-      : (parsedTextPrice > 0 ? parsedTextPrice : 0)
-    const pricePerShare = subscriptionPricePerShare > 0
-      ? subscriptionPricePerShare
-      : (feeStructurePricePerShare > 0 ? feeStructurePricePerShare : 1.00)
-
-    // Use subscription.num_shares if set, otherwise calculate
-    const numShares = Number(subscription.num_shares) > 0
-      ? Number(subscription.num_shares)
-      : Math.floor(amount / pricePerShare)
-
-    // Fee percentages are stored as whole numbers (2.0 = 2%, 25.0 = 25%)
-    const subscriptionFeeRate = Number(subscription.subscription_fee_percent) || feeStructure.subscription_fee_percent || 0
-    // Divide by 100 to convert percentage to decimal for calculation
-    const subscriptionFeeAmount = Number(subscription.subscription_fee_amount) || (amount * (subscriptionFeeRate / 100))
-    const totalSubscriptionPrice = amount + subscriptionFeeAmount
-
-    // Format dates
-    const agreementDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-    const paymentDeadlineDays = feeStructure.payment_deadline_days || 10
-    const paymentDeadlineDate = new Date(Date.now() + paymentDeadlineDays * 24 * 60 * 60 * 1000)
-      .toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-
-    // Determine subscriber info (use entity if entity subscription, otherwise investor)
     const investorData = subscription.investor
-    // vehicleData already set above with fallback logic
     const dealData = subscription.deal
 
-    const subscriberName = counterpartyEntity
-      ? counterpartyEntity.legal_name
-      : investorData.legal_name
+    let subscriptionPayload: Record<string, any>
+    let amount = 0
+    let numShares = 0
+    let pricePerShare = 0
 
-    const subscriberType = counterpartyEntity
-      ? counterpartyEntity.entity_type?.replace(/_/g, ' ').toUpperCase()
-      : (investorData.type || 'Corporate Entity')
+    try {
+      const built = buildSubscriptionPackPayload({
+        outputFormat,
+        subscription,
+        investor: investorData,
+        deal: dealData,
+        vehicle: vehicleData || {},
+        feeStructure,
+        counterpartyEntity,
+        signatories,
+        issuerName,
+        issuerTitle,
+        arrangerName,
+        arrangerTitle,
+        signatoriesTableHtml,
+        signatoriesFormHtml,
+        signatoriesSignatureHtml,
+        issuerSignatureHtml,
+        arrangerSignatureHtml,
+        isRegeneration: true,
+        originalSubscriptionId: subscriptionId,
+      })
 
-    const subscriberAddress = counterpartyEntity && counterpartyEntity.registered_address
-      ? [
-          counterpartyEntity.registered_address.street,
-          [
-            counterpartyEntity.registered_address.city,
-            counterpartyEntity.registered_address.state,
-            counterpartyEntity.registered_address.postal_code
-          ].filter(Boolean).join(', '),
-          counterpartyEntity.registered_address.country
-        ].filter(Boolean).join(', ')
-      : (investorData.registered_address || '')
-
-    const subscriberBlock = counterpartyEntity
-      ? `${counterpartyEntity.legal_name}, a ${counterpartyEntity.entity_type?.replace(/_/g, ' ')} with registered office at ${subscriberAddress}`
-      : `${investorData.legal_name}, ${investorData.type || 'entity'} with registered office at ${investorData.registered_address || ''}`
-
-    const subscriberTitle = counterpartyEntity?.representative_title || 'Authorized Representative'
-    const subscriberRepName = counterpartyEntity?.representative_name || counterpartyEntity?.legal_name || investorData.legal_name
-
-    // Build comprehensive subscription pack payload (same structure as initial generation)
-    const subscriptionPayload = {
-      // Output format: 'pdf' for direct PDF, 'docx' for editable Word doc
-      output_format: outputFormat,
-
-      // Series & Investment info
-      series_number: vehicleData?.series_number || '',
-      series_title: vehicleData?.investment_name || vehicleData?.name || '',
-      series_short_title: vehicleData?.series_short_title || '',
-      ultimate_investment: dealData?.company_name || dealData?.name || '',
-
-      // Subscriber info
-      subscriber_name: subscriberName,
-      subscriber_type: subscriberType,
-      subscriber_address: subscriberAddress,
-      subscriber_block: subscriberBlock,
-      subscriber_title: subscriberTitle,
-      subscriber_representative_name: subscriberRepName,
-
-      // Investment branding
-      investment_logo_url: dealData?.company_logo_url || '',
-
-      // Financial details - FROM SUBSCRIPTION TABLE (source of truth)
-      certificates_count: numShares.toString(),
-      price_per_share: pricePerShare.toFixed(2),
-      subscription_amount: amount.toFixed(2),
-      // Fee rates are already stored as percentages (2.0 = 2%), no multiplication needed
-      subscription_fee_rate: `${subscriptionFeeRate.toFixed(2)}%`,
-      subscription_fee_amount: subscriptionFeeAmount.toFixed(2),
-      subscription_fee_text: `${subscriptionFeeRate.toFixed(2)}% upfront subscription fee`,
-      total_subscription_price: totalSubscriptionPrice.toFixed(2),
-
-      // Currency
-      currency_code: subscription.currency || dealData?.currency || 'USD',
-      currency_long: (subscription.currency || dealData?.currency) === 'USD' ? 'United States Dollars' : (subscription.currency || dealData?.currency),
-
-      // Fee structures - values are already percentages (2.0 = 2%, 25.0 = 25%)
-      management_fee_text: `${(feeStructure.management_fee_percent || 0).toFixed(2)}% of net asset value per annum, calculated and payable quarterly`,
-      performance_fee_text: `${(feeStructure.carried_interest_percent || 0).toFixed(2)}% performance fee on realized gains`,
-      escrow_fee_text: feeStructure.escrow_fee_text || 'As per escrow agreement',
-
-      // Legal clauses - values are already percentages
-      management_fee_clause: feeStructure.management_fee_clause || `The Issuer shall charge a Management Fee of ${(feeStructure.management_fee_percent || 0).toFixed(2)}% per annum of the net asset value of the Series, calculated on a quarterly basis and payable quarterly in advance.`,
-      performance_fee_clause: feeStructure.performance_fee_clause || `The Issuer shall be entitled to a Performance Fee equal to ${(feeStructure.carried_interest_percent || 0).toFixed(2)}% of the net profits generated by the Series.`,
-
-      // Wire/Escrow instructions
-      wire_bank_name: feeStructure.wire_bank_name || 'Banque de Luxembourg',
-      wire_bank_address: feeStructure.wire_bank_address || '14, boulevard Royal, L-2449 Luxembourg, Grand Duchy of Luxembourg',
-      wire_account_holder: feeStructure.wire_account_holder || 'Elvinger Hoss Prussen - Escrow Account',
-      wire_escrow_agent: feeStructure.wire_escrow_agent || 'Elvinger Hoss Prussen',
-      wire_law_firm_address: feeStructure.wire_law_firm_address || '2 Place Winston Churchill, L-1340 Luxembourg, Grand Duchy of Luxembourg',
-      wire_iban: feeStructure.wire_iban || 'LU28 0019 4855 4447 1000',
-      wire_bic: feeStructure.wire_bic || 'BLUXLULL',
-      wire_reference: feeStructure.wire_reference_format?.replace('{series}', vehicleData?.series_number || '') || `${vehicleData?.series_number}-${vehicleData?.series_short_title}`,
-      wire_description: feeStructure.wire_description_format || `Escrow account for ${vehicleData?.name}`,
-      wire_arranger: feeStructure.exclusive_arranger || 'VERSO Management Ltd',
-      wire_contact_email: feeStructure.wire_contact_email || 'subscription@verso.capital',
-
-      // Issuer info (using dynamically fetched issuerName/issuerTitle)
-      issuer_gp_name: vehicleData?.issuer_gp_name || 'VERSO Capital 2 GP SARL',
-      issuer_gp_rcc_number: vehicleData?.issuer_gp_rcc_number || '',
-      issuer_rcc_number: vehicleData?.issuer_rcc_number || '',
-      issuer_website: vehicleData?.issuer_website || 'www.verso.capital',
-      issuer_name: issuerName,  // From getCeoSigner or feeStructure
-      issuer_title: issuerTitle, // From getCeoSigner or feeStructure
-
-      // Dates & deadlines
-      agreement_date: agreementDate,
-      payment_deadline_days: paymentDeadlineDays.toString(),
-      payment_deadline_date: paymentDeadlineDate,
-      issue_within_business_days: (feeStructure.issue_within_business_days || 5).toString(),
-
-      // Recitals
-      recital_b_html: feeStructure.recital_b_html || `(B) The Issuer intends to issue Certificates which shall track equity interests in ${dealData?.company_name || dealData?.name}, and the Subscriber intends to subscribe for ${numShares} Certificates.`,
-
-      // Arranger (using dynamically fetched arrangerName/arrangerTitle)
-      arranger_name: arrangerName,  // From arranger_users or feeStructure
-      arranger_title: arrangerTitle, // From arranger_users or feeStructure
-      arranger_company_name: feeStructure.exclusive_arranger || 'VERSO Management',
-
-      // LPA & Certificates details
-      // Note: lpa_date and max_aggregate_amount columns don't exist in vehicles table yet
-      lpa_date: '',
-      max_aggregate_amount: '100,000,000',
-
-      // Accession Undertaking (Appendix) fields
-      selling_subscriber_name: subscriberName,
-      accession_holder_name: subscriberName,
-      accession_signatory_name: signatories[0]?.name || '',
-      accession_signatory_title: signatories[0]?.title || '',
-
-      // Multi-signatory support: pre-rendered HTML (n8n doesn't support Handlebars loops)
-      // All signature blocks include SIG_ANCHOR markers for precise signature positioning
-      signatories_table_html: signatoriesTableHtml,  // Legacy: no anchors
-      signatories_form_html: signatoriesFormHtml,    // Page 2: subscriber form signatures with anchors
-      signatories_signature_html: signatoriesSignatureHtml, // Page 12: subscriber main agreement signatures
-      issuer_signature_html: issuerSignatureHtml,    // Page 12: issuer main agreement signature
-      arranger_signature_html: arrangerSignatureHtml, // Page 12: arranger main agreement signature
-
-      // Regeneration flag (useful for N8N to know this is a regeneration)
-      is_regeneration: true,
-      original_subscription_id: subscriptionId
+      subscriptionPayload = built.payload
+      amount = built.computed.amount
+      numShares = built.computed.numShares
+      pricePerShare = built.computed.pricePerShare
+    } catch (buildError) {
+      return NextResponse.json(
+        {
+          error: buildError instanceof Error
+            ? buildError.message
+            : 'Failed to build subscription pack payload',
+        },
+        { status: 400 }
+      )
     }
 
     console.log('🔄 Triggering Subscription Pack REGENERATION:', {

@@ -29,6 +29,33 @@ import type {
   SignatureRequestRecord
 } from './types'
 
+function normalizeCreateSignatureRequestError(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error || 'Unknown error')
+  const lower = message.toLowerCase()
+
+  if (
+    lower.includes('sig_anchor') ||
+    lower.includes('signature anchor') ||
+    lower.includes('anchor_not_found') ||
+    lower.includes('missing_anchors') ||
+    lower.includes('pdf has no signature anchor markers') ||
+    lower.includes('no signature anchors found')
+  ) {
+    return `Signature anchor detection failed: ${message}`
+  }
+
+  if (
+    lower.includes('dommatrix') ||
+    lower.includes('cannot polyfill') ||
+    lower.includes('@napi-rs/canvas') ||
+    lower.includes('pdf parsing error')
+  ) {
+    return `PDF parsing failed while preparing signature request: ${message}`
+  }
+
+  return message
+}
+
 /**
  * Create a new signature request
  *
@@ -850,7 +877,7 @@ export async function createSignatureRequest(
     console.error('Signature request error:', error)
     return {
       success: false,
-      error: 'Internal server error'
+      error: normalizeCreateSignatureRequestError(error)
     }
   }
 }
