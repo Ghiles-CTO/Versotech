@@ -5,6 +5,9 @@ import {
   CheckCircle, XCircle, Clock, AlertCircle, FileText,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
   ExternalLink, ClipboardList, MessageSquare, Inbox, History,
+  CreditCard, MapPin, UserRound, Building2, ScrollText, Users,
+  BarChart3, Shield, CircleDollarSign, ClipboardCheck, Fingerprint,
+  type LucideIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -48,6 +51,62 @@ import { QuestionnaireViewer } from '@/components/kyc/questionnaire-viewer'
 import { getDocumentTypeLabel } from '@/constants/kyc-document-types'
 import { formatFileSize } from '@/lib/utils'
 
+// ─── Document type icon map ───────────────────────────────────────────────────
+const DOC_TYPE_ICON_MAP: Record<string, LucideIcon> = {
+  passport: CreditCard,
+  national_id: CreditCard,
+  drivers_license: CreditCard,
+  proof_of_id: Fingerprint,
+  proof_of_address: MapPin,
+  utility_bill: MapPin,
+  bank_statement: MapPin,
+  personal_info: UserRound,
+  entity_info: Building2,
+  questionnaire: ClipboardCheck,
+  certificate_of_incorporation: Building2,
+  company_registration: Building2,
+  business_license: Building2,
+  articles_of_association: ScrollText,
+  memorandum: ScrollText,
+  bylaws: ScrollText,
+  partnership_agreement: ScrollText,
+  shareholder_agreement: Users,
+  ownership_structure: Users,
+  ubo_declaration: Users,
+  register_of_members: Users,
+  financial_statements: BarChart3,
+  tax_returns: BarChart3,
+  aml_policy: Shield,
+  source_of_funds: CircleDollarSign,
+  source_of_wealth: CircleDollarSign,
+}
+
+function getDocTypeIcon(documentType: string): LucideIcon {
+  return DOC_TYPE_ICON_MAP[documentType] ?? FileText
+}
+
+// ─── File extension helpers ───────────────────────────────────────────────────
+function getFileExt(mimeType: string): string {
+  if (mimeType === 'application/pdf') return 'PDF'
+  if (mimeType === 'image/jpeg' || mimeType === 'image/jpg') return 'JPG'
+  if (mimeType === 'image/png') return 'PNG'
+  if (mimeType === 'image/gif') return 'GIF'
+  if (mimeType === 'image/webp') return 'WEBP'
+  if (mimeType.startsWith('image/')) return mimeType.split('/')[1].toUpperCase().slice(0, 4)
+  if (mimeType.includes('wordprocessingml') || mimeType.includes('msword')) return 'DOC'
+  if (mimeType.includes('spreadsheetml') || mimeType.includes('excel')) return 'XLS'
+  return 'FILE'
+}
+
+function getFileBadgeClass(mimeType: string): string {
+  if (mimeType === 'application/pdf') return 'bg-red-500/15 text-red-500 border-red-500/20'
+  if (mimeType.startsWith('image/')) return 'bg-green-500/15 text-green-600 border-green-500/20'
+  if (mimeType.includes('word') || mimeType.includes('document')) return 'bg-blue-500/15 text-blue-500 border-blue-500/20'
+  if (mimeType.includes('sheet') || mimeType.includes('excel')) return 'bg-emerald-500/15 text-emerald-500 border-emerald-500/20'
+  return 'bg-muted text-muted-foreground border-border'
+}
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 interface KYCSubmission {
   id: string
   investor_id: string | null
@@ -113,28 +172,22 @@ interface Pagination {
   hasPrevPage: boolean
 }
 
+// ─── Main component ───────────────────────────────────────────────────────────
 export function KYCReviewClient() {
-  // Tab state
   const [activeTab, setActiveTab] = useState<'queue' | 'history'>('queue')
-
-  // Data state
   const [submissions, setSubmissions] = useState<KYCSubmission[]>([])
   const [globalStats, setGlobalStats] = useState<Statistics | null>(null)
   const [pagination, setPagination] = useState<Pagination | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Shared filters
   const [documentTypeFilter, setDocumentTypeFilter] = useState<string>('all')
   const [entityTypeFilter, setEntityTypeFilter] = useState<string>('all')
   const [investorFilter, setInvestorFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
-
-  // History-tab specific status sub-filter
   const [historyStatusFilter, setHistoryStatusFilter] = useState<string>('all')
 
-  // Review dialog state
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false)
   const [selectedSubmission, setSelectedSubmission] = useState<KYCSubmission | null>(null)
   const [reviewAction, setReviewAction] = useState<'approve' | 'reject' | 'request_info'>('approve')
@@ -142,12 +195,10 @@ export function KYCReviewClient() {
   const [reviewNotes, setReviewNotes] = useState('')
   const [reviewing, setReviewing] = useState(false)
 
-  // Bulk selection state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkRejectOpen, setBulkRejectOpen] = useState(false)
   const [bulkRejectionReason, setBulkRejectionReason] = useState('')
 
-  // Only pending/under_review are selectable for bulk
   const reviewableSubmissions = submissions.filter(s => ['pending', 'under_review'].includes(s.status))
 
   const toggleSelect = (id: string) => {
@@ -158,9 +209,64 @@ export function KYCReviewClient() {
       return next
     })
   }
-
   const selectAllReviewable = () => setSelectedIds(new Set(reviewableSubmissions.map(s => s.id)))
   const clearSelection = () => setSelectedIds(new Set())
+
+  const {
+    isOpen: previewOpen,
+    document: previewDocument,
+    previewUrl,
+    isLoading: isLoadingPreview,
+    error: previewError,
+    openPreview,
+    closePreview,
+    downloadDocument: downloadFromPreview,
+    watermark: previewWatermark,
+  } = useDocumentViewer()
+
+  const [viewingQuestionnaire, setViewingQuestionnaire] = useState<KYCSubmission | null>(null)
+
+  const handlePreview = (submission: KYCSubmission) => {
+    if (!submission.document) return
+    openPreview({
+      id: submission.document.id,
+      file_name: submission.document.name,
+      name: submission.document.name,
+      mime_type: submission.document.mime_type,
+      file_size_bytes: submission.document.file_size_bytes,
+    })
+  }
+
+  const loadSubmissions = useCallback(async () => {
+    try {
+      setLoading(true)
+      const params = new URLSearchParams()
+      if (activeTab === 'queue') {
+        params.append('status', 'queue')
+      } else {
+        params.append('status', historyStatusFilter !== 'all' ? historyStatusFilter : 'history')
+      }
+      if (documentTypeFilter !== 'all') params.append('document_type', documentTypeFilter)
+      if (entityTypeFilter !== 'all') params.append('entity_type', entityTypeFilter)
+      if (investorFilter !== 'all') params.append('investor_id', investorFilter)
+      params.append('page', String(page))
+      params.append('pageSize', String(pageSize))
+
+      const response = await fetch(`/api/staff/kyc-submissions?${params.toString()}`)
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to load submissions')
+      }
+      const data = await response.json()
+      setSubmissions(data.submissions || [])
+      setPagination(data.pagination || null)
+      if (data.statistics) setGlobalStats(data.statistics)
+    } catch (error: any) {
+      toast.error('Failed to load KYC submissions', { description: error.message })
+    } finally {
+      setLoading(false)
+    }
+  }, [activeTab, historyStatusFilter, documentTypeFilter, entityTypeFilter, investorFilter, page, pageSize])
 
   const handleBulkAction = async (action: 'approve' | 'reject', reason?: string) => {
     if (selectedIds.size === 0) return
@@ -180,105 +286,12 @@ export function KYCReviewClient() {
       clearSelection()
       setBulkRejectOpen(false)
       setBulkRejectionReason('')
-      await refreshData()
-    } catch (error: any) {
+      await loadSubmissions()
+    } catch {
       toast.error('Failed to process some documents')
     } finally {
       setReviewing(false)
     }
-  }
-
-  // Document viewer
-  const {
-    isOpen: previewOpen,
-    document: previewDocument,
-    previewUrl,
-    isLoading: isLoadingPreview,
-    error: previewError,
-    openPreview,
-    closePreview,
-    downloadDocument: downloadFromPreview,
-    watermark: previewWatermark,
-  } = useDocumentViewer()
-
-  // Questionnaire viewer
-  const [viewingQuestionnaire, setViewingQuestionnaire] = useState<KYCSubmission | null>(null)
-
-  const handlePreview = (submission: KYCSubmission) => {
-    if (!submission.document) return
-    openPreview({
-      id: submission.document.id,
-      file_name: submission.document.name,
-      name: submission.document.name,
-      mime_type: submission.document.mime_type,
-      file_size_bytes: submission.document.file_size_bytes,
-    })
-  }
-
-  const loadSubmissions = useCallback(async () => {
-    try {
-      setLoading(true)
-      const params = new URLSearchParams()
-
-      // Tab drives the status filter
-      if (activeTab === 'queue') {
-        params.append('status', 'queue')
-      } else {
-        params.append('status', historyStatusFilter !== 'all' ? historyStatusFilter : 'history')
-      }
-
-      if (documentTypeFilter !== 'all') params.append('document_type', documentTypeFilter)
-      if (entityTypeFilter !== 'all') params.append('entity_type', entityTypeFilter)
-      if (investorFilter !== 'all') params.append('investor_id', investorFilter)
-      params.append('page', String(page))
-      params.append('pageSize', String(pageSize))
-
-      const response = await fetch(`/api/staff/kyc-submissions?${params.toString()}`)
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to load submissions')
-      }
-      const data = await response.json()
-      setSubmissions(data.submissions || [])
-      setPagination(data.pagination || null)
-      // Stats from this call are global (API removed status filter from stats query)
-      if (data.statistics) setGlobalStats(data.statistics)
-    } catch (error: any) {
-      toast.error('Failed to load KYC submissions', { description: error.message })
-    } finally {
-      setLoading(false)
-    }
-  }, [activeTab, historyStatusFilter, documentTypeFilter, entityTypeFilter, investorFilter, page, pageSize])
-
-  const refreshData = useCallback(async () => {
-    await loadSubmissions()
-  }, [loadSubmissions])
-
-  // Reset filters & page on tab switch
-  useEffect(() => {
-    setPage(1)
-    setDocumentTypeFilter('all')
-    setEntityTypeFilter('all')
-    setInvestorFilter('all')
-    setSearchQuery('')
-    setSelectedIds(new Set())
-  }, [activeTab])
-
-  // Reset page on filter changes
-  useEffect(() => {
-    setPage(1)
-  }, [historyStatusFilter, documentTypeFilter, entityTypeFilter, investorFilter])
-
-  useEffect(() => {
-    loadSubmissions()
-  }, [loadSubmissions])
-
-  const openReviewDialog = (submission: KYCSubmission, action: 'approve' | 'reject' | 'request_info') => {
-    setSelectedSubmission(submission)
-    setReviewAction(action)
-    setRejectionReason('')
-    setReviewNotes('')
-    setReviewDialogOpen(true)
   }
 
   const handleReview = async () => {
@@ -302,9 +315,9 @@ export function KYCReviewClient() {
         const error = await response.json()
         throw new Error(error.error || 'Review failed')
       }
-      toast.success({ approve: 'Document approved successfully', reject: 'Document rejected', request_info: 'Information request sent to investor' }[reviewAction])
+      toast.success({ approve: 'Document approved', reject: 'Document rejected', request_info: 'Info request sent' }[reviewAction])
       setReviewDialogOpen(false)
-      await refreshData()
+      await loadSubmissions()
     } catch (error: any) {
       toast.error(error.message || 'Failed to review document')
     } finally {
@@ -312,22 +325,35 @@ export function KYCReviewClient() {
     }
   }
 
+  useEffect(() => {
+    setPage(1)
+    setDocumentTypeFilter('all')
+    setEntityTypeFilter('all')
+    setInvestorFilter('all')
+    setSearchQuery('')
+    setSelectedIds(new Set())
+  }, [activeTab])
+
+  useEffect(() => { setPage(1) }, [historyStatusFilter, documentTypeFilter, entityTypeFilter, investorFilter])
+  useEffect(() => { loadSubmissions() }, [loadSubmissions])
+
+  const openReviewDialog = (submission: KYCSubmission, action: 'approve' | 'reject' | 'request_info') => {
+    setSelectedSubmission(submission)
+    setReviewAction(action)
+    setRejectionReason('')
+    setReviewNotes('')
+    setReviewDialogOpen(true)
+  }
+
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'approved':
-        return <Badge className="bg-emerald-500/15 text-emerald-500 border-emerald-500/30 border"><CheckCircle className="w-3 h-3 mr-1" />Approved</Badge>
-      case 'rejected':
-        return <Badge className="bg-rose-500/15 text-rose-500 border-rose-500/30 border"><XCircle className="w-3 h-3 mr-1" />Rejected</Badge>
-      case 'under_review':
-        return <Badge className="bg-blue-500/15 text-blue-400 border-blue-500/30 border"><Clock className="w-3 h-3 mr-1" />Under Review</Badge>
-      case 'pending':
-        return <Badge className="bg-amber-500/15 text-amber-500 border-amber-500/30 border"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
-      case 'draft':
-        return <Badge variant="outline" className="text-muted-foreground"><Clock className="w-3 h-3 mr-1" />Draft</Badge>
-      case 'expired':
-        return <Badge variant="outline" className="text-muted-foreground"><AlertCircle className="w-3 h-3 mr-1" />Expired</Badge>
-      default:
-        return null
+      case 'approved': return <Badge className="bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 font-medium"><CheckCircle className="w-3 h-3 mr-1" />Approved</Badge>
+      case 'rejected': return <Badge className="bg-rose-500/15 text-rose-500 border border-rose-500/30 font-medium"><XCircle className="w-3 h-3 mr-1" />Rejected</Badge>
+      case 'under_review': return <Badge className="bg-blue-500/15 text-blue-400 border border-blue-500/30 font-medium"><Clock className="w-3 h-3 mr-1" />Under Review</Badge>
+      case 'pending': return <Badge className="bg-amber-500/15 text-amber-500 border border-amber-500/30 font-medium"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
+      case 'draft': return <Badge variant="outline" className="text-muted-foreground font-medium"><Clock className="w-3 h-3 mr-1" />Draft</Badge>
+      case 'expired': return <Badge variant="outline" className="text-muted-foreground font-medium"><AlertCircle className="w-3 h-3 mr-1" />Expired</Badge>
+      default: return null
     }
   }
 
@@ -339,12 +365,11 @@ export function KYCReviewClient() {
   const filteredSubmissions = submissions.filter(sub => {
     if (!searchQuery) return true
     const q = searchQuery.toLowerCase()
-    const label = getDocumentTypeLabel(sub.document_type, sub.custom_label).toLowerCase()
     return (
       sub.investor?.display_name?.toLowerCase().includes(q) ||
       sub.investor?.legal_name?.toLowerCase().includes(q) ||
       sub.investor?.email?.toLowerCase().includes(q) ||
-      label.includes(q) ||
+      getDocumentTypeLabel(sub.document_type, sub.custom_label).toLowerCase().includes(q) ||
       sub.counterparty_entity?.legal_name?.toLowerCase().includes(q)
     )
   })
@@ -352,15 +377,80 @@ export function KYCReviewClient() {
   const queueCount = globalStats ? globalStats.pending + globalStats.under_review : null
   const historyCount = globalStats ? globalStats.approved + globalStats.rejected + globalStats.expired : null
 
-  // ─── Shared subcomponents ────────────────────────────────────────────────────
+  // ─── Shared cell components ─────────────────────────────────────────────────
+
+  // Merged document type + content cell — the clickable file/form is the single entry point for preview
+  const DocumentCell = ({ submission }: { submission: KYCSubmission }) => {
+    const DocIcon = getDocTypeIcon(submission.document_type)
+
+    return (
+      <div className="space-y-1.5">
+        {/* Document type label with category icon */}
+        <div className="flex items-center gap-1.5">
+          <DocIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+          <span className="font-medium text-sm leading-tight">
+            {getDocumentTypeLabel(submission.document_type, submission.custom_label)}
+          </span>
+          {submission.version && submission.version > 1 && (
+            <span className="text-[10px] font-semibold text-amber-500 bg-amber-500/10 px-1 py-0.5 rounded">v{submission.version}</span>
+          )}
+        </div>
+
+        {/* Member badge */}
+        {submission.investor_member && (
+          <Badge variant="outline" className="text-[11px] font-normal py-0 h-5">
+            {submission.investor_member.full_name}
+            {submission.investor_member.role_title && ` · ${submission.investor_member.role_title}`}
+          </Badge>
+        )}
+
+        {/* Clickable file / form indicator */}
+        {submission.document ? (
+          <button
+            onClick={() => handlePreview(submission)}
+            className="flex items-center gap-1.5 group text-left max-w-full"
+            title="Click to preview"
+          >
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border flex-shrink-0 ${getFileBadgeClass(submission.document.mime_type)}`}>
+              {getFileExt(submission.document.mime_type)}
+            </span>
+            <span className="text-xs text-muted-foreground group-hover:text-foreground group-hover:underline underline-offset-2 transition-colors truncate max-w-[160px]">
+              {submission.document.name}
+            </span>
+            <span className="text-[10px] text-muted-foreground/50 flex-shrink-0 hidden group-hover:inline">
+              {formatFileSize(submission.document.file_size_bytes)}
+            </span>
+          </button>
+        ) : submission.document_type === 'questionnaire' && submission.metadata ? (
+          <button
+            onClick={() => setViewingQuestionnaire(submission)}
+            className="flex items-center gap-1 group text-left"
+            title="Click to view questionnaire"
+          >
+            <ClipboardCheck className="w-3 h-3 text-blue-500 flex-shrink-0" />
+            <span className="text-xs text-blue-500 group-hover:underline underline-offset-2">
+              View questionnaire
+            </span>
+          </button>
+        ) : (submission.document_type === 'personal_info' || submission.document_type === 'entity_info') && submission.metadata?.review_snapshot ? (
+          <div className="flex items-center gap-1">
+            <ClipboardList className="w-3 h-3 text-indigo-400 flex-shrink-0" />
+            <span className="text-xs text-indigo-400">Profile snapshot</span>
+          </div>
+        ) : (
+          <span className="text-xs text-muted-foreground/40">No attachment</span>
+        )}
+      </div>
+    )
+  }
 
   const InvestorCell = ({ submission }: { submission: KYCSubmission }) => (
     <div>
-      <div className="font-medium flex items-center gap-1.5">
+      <div className="font-medium text-sm flex items-center gap-1.5 flex-wrap">
         {submission.counterparty_entity ? (
           <>
             {submission.counterparty_entity.legal_name}
-            <Badge variant="outline" className="text-xs">Entity</Badge>
+            <Badge variant="outline" className="text-[11px] py-0 h-4">Entity</Badge>
           </>
         ) : (
           <>
@@ -371,7 +461,6 @@ export function KYCReviewClient() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground transition-colors"
-                title="View investor profile"
               >
                 <ExternalLink className="w-3 h-3" />
               </a>
@@ -382,19 +471,16 @@ export function KYCReviewClient() {
       <div className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap mt-0.5">
         <span>{submission.investor?.email || ''}</span>
         {submission.investor?.type && ['entity', 'corporate', 'institution'].includes(submission.investor.type) && (
-          <Badge variant="secondary" className="text-xs">{submission.investor.type}</Badge>
+          <Badge variant="secondary" className="text-[11px] py-0 h-4">{submission.investor.type}</Badge>
         )}
         {submission.investor?.kyc_status && (
           <Badge
             variant="outline"
-            className={`text-xs ${
-              submission.investor.kyc_status === 'approved'
-                ? 'border-emerald-500/50 text-emerald-500'
-                : submission.investor.kyc_status === 'pending'
-                  ? 'border-amber-500/50 text-amber-500'
-                  : submission.investor.kyc_status === 'rejected'
-                    ? 'border-rose-500/50 text-rose-500'
-                    : 'border-muted-foreground/30 text-muted-foreground'
+            className={`text-[11px] py-0 h-4 ${
+              submission.investor.kyc_status === 'approved' ? 'border-emerald-500/50 text-emerald-500' :
+              submission.investor.kyc_status === 'pending' ? 'border-amber-500/50 text-amber-500' :
+              submission.investor.kyc_status === 'rejected' ? 'border-rose-500/50 text-rose-500' :
+              'border-muted-foreground/30 text-muted-foreground'
             }`}
           >
             KYC: {submission.investor.kyc_status}
@@ -404,94 +490,13 @@ export function KYCReviewClient() {
     </div>
   )
 
-  const DocTypeCell = ({ submission }: { submission: KYCSubmission }) => (
-    <div>
-      <div className="font-medium text-sm">
-        {getDocumentTypeLabel(submission.document_type, submission.custom_label)}
-      </div>
-      {submission.investor_member && (
-        <Badge variant="outline" className="text-xs font-normal mt-0.5">
-          {submission.investor_member.full_name}
-          {submission.investor_member.role_title && ` (${submission.investor_member.role_title})`}
-        </Badge>
-      )}
-      {submission.version && submission.version > 1 && (
-        <div className="text-xs text-amber-500 mt-0.5">v{submission.version}</div>
-      )}
-    </div>
-  )
-
-  const ContentCell = ({ submission }: { submission: KYCSubmission }) => {
-    if (submission.document) {
-      return (
-        <div>
-          <div className="flex items-center gap-1.5">
-            <FileText className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-            <span className="text-sm truncate max-w-[180px]">{submission.document.name}</span>
-          </div>
-          <div className="text-xs text-muted-foreground ml-5">
-            {formatFileSize(submission.document.file_size_bytes)}
-          </div>
-        </div>
-      )
-    }
-    if ((submission.document_type === 'personal_info' || submission.document_type === 'entity_info') && submission.metadata?.review_snapshot) {
-      return (
-        <div className="flex items-center gap-1.5">
-          <ClipboardList className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" />
-          <span className="text-sm text-indigo-500 font-medium">Profile Snapshot</span>
-        </div>
-      )
-    }
-    if (submission.metadata && submission.document_type === 'questionnaire') {
-      return (
-        <div className="flex items-center gap-1.5">
-          <ClipboardList className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-          <span className="text-sm text-blue-500 font-medium">Questionnaire</span>
-        </div>
-      )
-    }
-    return <span className="text-sm text-muted-foreground">—</span>
-  }
-
-  const ViewActions = ({ submission }: { submission: KYCSubmission }) => (
-    <>
-      {submission.document && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" onClick={() => handlePreview(submission)}>
-                <FileText className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent><p>View Document</p></TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )}
-      {submission.metadata && submission.document_type === 'questionnaire' && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" onClick={() => setViewingQuestionnaire(submission)}>
-                <ClipboardList className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent><p>View Questionnaire</p></TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )}
-    </>
-  )
-
   const FilterBar = ({ showHistoryStatus }: { showHistoryStatus?: boolean }) => (
     <div className="flex items-end gap-3 flex-wrap">
       {showHistoryStatus && (
         <div className="min-w-[140px]">
           <Label className="text-xs text-muted-foreground mb-1 block">Status</Label>
           <Select value={historyStatusFilter} onValueChange={setHistoryStatusFilter}>
-            <SelectTrigger className="h-8 text-sm">
-              <SelectValue placeholder="All statuses" />
-            </SelectTrigger>
+            <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="All statuses" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Completed</SelectItem>
               <SelectItem value="approved">Approved</SelectItem>
@@ -505,9 +510,7 @@ export function KYCReviewClient() {
       <div className="min-w-[160px]">
         <Label className="text-xs text-muted-foreground mb-1 block">Document Type</Label>
         <Select value={documentTypeFilter} onValueChange={setDocumentTypeFilter}>
-          <SelectTrigger className="h-8 text-sm">
-            <SelectValue placeholder="All types" />
-          </SelectTrigger>
+          <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="All types" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
             {uniqueDocumentTypes.map(type => (
@@ -519,9 +522,7 @@ export function KYCReviewClient() {
       <div className="min-w-[140px]">
         <Label className="text-xs text-muted-foreground mb-1 block">Entity Type</Label>
         <Select value={entityTypeFilter} onValueChange={setEntityTypeFilter}>
-          <SelectTrigger className="h-8 text-sm">
-            <SelectValue placeholder="All entities" />
-          </SelectTrigger>
+          <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="All entities" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Entities</SelectItem>
             <SelectItem value="investor">Investor</SelectItem>
@@ -536,9 +537,7 @@ export function KYCReviewClient() {
       <div className="min-w-[160px]">
         <Label className="text-xs text-muted-foreground mb-1 block">Investor</Label>
         <Select value={investorFilter} onValueChange={setInvestorFilter}>
-          <SelectTrigger className="h-8 text-sm">
-            <SelectValue placeholder="All investors" />
-          </SelectTrigger>
+          <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="All" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All</SelectItem>
             {uniqueInvestors.map(inv => (
@@ -562,18 +561,12 @@ export function KYCReviewClient() {
   const PaginationControls = () => {
     if (!pagination || pagination.totalPages <= 1) return null
     return (
-      <div className="flex items-center justify-between px-1 pt-4 border-t">
+      <div className="flex items-center justify-between pt-4 border-t">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>
-            {((pagination.page - 1) * pagination.pageSize) + 1}–{Math.min(pagination.page * pagination.pageSize, pagination.totalCount)} of {pagination.totalCount}
-          </span>
+          <span>{((pagination.page - 1) * pagination.pageSize) + 1}–{Math.min(pagination.page * pagination.pageSize, pagination.totalCount)} of {pagination.totalCount}</span>
           <Select value={String(pageSize)} onValueChange={v => { setPageSize(Number(v)); setPage(1) }}>
-            <SelectTrigger className="h-7 w-[65px] text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {[10, 25, 50, 100].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
-            </SelectContent>
+            <SelectTrigger className="h-7 w-[65px] text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>{[10, 25, 50, 100].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}</SelectContent>
           </Select>
           <span>per page</span>
         </div>
@@ -589,7 +582,6 @@ export function KYCReviewClient() {
   }
 
   // ─── Render ──────────────────────────────────────────────────────────────────
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -598,8 +590,6 @@ export function KYCReviewClient() {
           <h1 className="text-3xl font-bold text-foreground">KYC Document Review</h1>
           <p className="text-muted-foreground mt-1">Review and approve KYC submissions across all personas</p>
         </div>
-
-        {/* Compact global stats pills */}
         {globalStats && (
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-500 text-sm font-medium border border-amber-500/20">
@@ -631,11 +621,7 @@ export function KYCReviewClient() {
             <Inbox className="w-4 h-4" />
             Review Queue
             {queueCount !== null && (
-              <Badge
-                className={`ml-0.5 text-xs h-5 min-w-5 px-1.5 ${
-                  queueCount > 0 ? 'bg-amber-500 hover:bg-amber-500 text-white' : 'bg-muted text-muted-foreground'
-                }`}
-              >
+              <Badge className={`ml-0.5 text-xs h-5 min-w-5 px-1.5 ${queueCount > 0 ? 'bg-amber-500 hover:bg-amber-500 text-white' : 'bg-muted text-muted-foreground'}`}>
                 {queueCount}
               </Badge>
             )}
@@ -660,7 +646,7 @@ export function KYCReviewClient() {
           ) : filteredSubmissions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <CheckCircle className="w-12 h-12 text-emerald-500 mb-3 opacity-60" />
-              <p className="text-lg font-medium text-foreground">All clear</p>
+              <p className="text-lg font-medium">All clear</p>
               <p className="text-sm text-muted-foreground mt-1">No documents awaiting review</p>
             </div>
           ) : (
@@ -678,16 +664,15 @@ export function KYCReviewClient() {
                     </TableHead>
                     <TableHead>Investor / Entity</TableHead>
                     <TableHead>Document</TableHead>
-                    <TableHead>Content</TableHead>
-                    <TableHead>Submitted</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right pr-4">Actions</TableHead>
+                    <TableHead className="w-28">Submitted</TableHead>
+                    <TableHead className="w-32">Status</TableHead>
+                    <TableHead className="text-right pr-4 w-56">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredSubmissions.map(submission => (
-                    <TableRow key={submission.id} className="group">
-                      <TableCell className="pl-4">
+                    <TableRow key={submission.id} className="group align-top">
+                      <TableCell className="pl-4 pt-3">
                         {['pending', 'under_review'].includes(submission.status) && (
                           <input
                             type="checkbox"
@@ -697,46 +682,63 @@ export function KYCReviewClient() {
                           />
                         )}
                       </TableCell>
-                      <TableCell><InvestorCell submission={submission} /></TableCell>
-                      <TableCell><DocTypeCell submission={submission} /></TableCell>
-                      <TableCell><ContentCell submission={submission} /></TableCell>
-                      <TableCell>
+                      <TableCell className="py-3"><InvestorCell submission={submission} /></TableCell>
+                      <TableCell className="py-3"><DocumentCell submission={submission} /></TableCell>
+                      <TableCell className="py-3">
                         <div className="text-sm">{new Date(submission.submitted_at).toLocaleDateString()}</div>
                         <div className="text-xs text-muted-foreground">{new Date(submission.submitted_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                       </TableCell>
-                      <TableCell>{getStatusBadge(submission.status)}</TableCell>
-                      <TableCell className="pr-4">
-                        <div className="flex items-center justify-end gap-1">
-                          <ViewActions submission={submission} />
-                          {['pending', 'under_review'].includes(submission.status) && (
-                            <>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-emerald-500 border-emerald-500/50 hover:bg-emerald-950 hover:text-emerald-400 hover:border-emerald-500"
-                                onClick={() => openReviewDialog(submission, 'approve')}
-                              >
-                                <CheckCircle className="w-3.5 h-3.5 mr-1" />Approve
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-amber-500 border-amber-500/50 hover:bg-amber-950 hover:text-amber-400 hover:border-amber-500"
-                                onClick={() => openReviewDialog(submission, 'request_info')}
-                              >
-                                <MessageSquare className="w-3.5 h-3.5 mr-1" />Info
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-rose-500 border-rose-500/50 hover:bg-rose-950 hover:text-rose-400 hover:border-rose-500"
-                                onClick={() => openReviewDialog(submission, 'reject')}
-                              >
-                                <XCircle className="w-3.5 h-3.5 mr-1" />Reject
-                              </Button>
-                            </>
-                          )}
-                        </div>
+                      <TableCell className="py-3">{getStatusBadge(submission.status)}</TableCell>
+                      <TableCell className="py-3 pr-4">
+                        {['pending', 'under_review'].includes(submission.status) && (
+                          <div className="flex items-center justify-end gap-1.5">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-emerald-500 border-emerald-500/50 hover:bg-emerald-950 hover:text-emerald-400 hover:border-emerald-500 h-7 px-2.5"
+                                    onClick={() => openReviewDialog(submission, 'approve')}
+                                  >
+                                    <CheckCircle className="w-3.5 h-3.5 mr-1" />Approve
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Approve this document</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-amber-500 border-amber-500/50 hover:bg-amber-950 hover:text-amber-400 hover:border-amber-500 h-7 px-2.5"
+                                    onClick={() => openReviewDialog(submission, 'request_info')}
+                                  >
+                                    <MessageSquare className="w-3.5 h-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Request more information</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-rose-500 border-rose-500/50 hover:bg-rose-950 hover:text-rose-400 hover:border-rose-500 h-7 px-2.5"
+                                    onClick={() => openReviewDialog(submission, 'reject')}
+                                  >
+                                    <XCircle className="w-3.5 h-3.5 mr-1" />Reject
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Reject this document</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -760,7 +762,7 @@ export function KYCReviewClient() {
           ) : filteredSubmissions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <History className="w-12 h-12 text-muted-foreground mb-3 opacity-40" />
-              <p className="text-lg font-medium text-foreground">No history yet</p>
+              <p className="text-lg font-medium">No history yet</p>
               <p className="text-sm text-muted-foreground mt-1">Reviewed documents will appear here</p>
             </div>
           ) : (
@@ -770,32 +772,31 @@ export function KYCReviewClient() {
                   <TableRow className="bg-muted/30">
                     <TableHead>Investor / Entity</TableHead>
                     <TableHead>Document</TableHead>
-                    <TableHead>Submitted</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead className="w-28">Submitted</TableHead>
+                    <TableHead className="w-32">Status</TableHead>
                     <TableHead>Reviewed By</TableHead>
-                    <TableHead>Reviewed</TableHead>
-                    <TableHead className="text-right pr-4">View</TableHead>
+                    <TableHead className="w-28">Reviewed</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredSubmissions.map(submission => (
-                    <TableRow key={submission.id}>
-                      <TableCell><InvestorCell submission={submission} /></TableCell>
-                      <TableCell><DocTypeCell submission={submission} /></TableCell>
-                      <TableCell>
+                    <TableRow key={submission.id} className="align-top">
+                      <TableCell className="py-3"><InvestorCell submission={submission} /></TableCell>
+                      <TableCell className="py-3"><DocumentCell submission={submission} /></TableCell>
+                      <TableCell className="py-3">
                         <div className="text-sm">{new Date(submission.submitted_at).toLocaleDateString()}</div>
                         <div className="text-xs text-muted-foreground">{new Date(submission.submitted_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                       </TableCell>
-                      <TableCell>
-                        <div className="space-y-0.5">
+                      <TableCell className="py-3">
+                        <div className="space-y-1">
                           {getStatusBadge(submission.status)}
                           {submission.status === 'rejected' && submission.rejection_reason && (
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <div className="text-xs text-rose-400 max-w-[180px] truncate cursor-help mt-1">
+                                  <p className="text-xs text-rose-400 max-w-[200px] truncate cursor-help mt-1">
                                     {submission.rejection_reason}
-                                  </div>
+                                  </p>
                                 </TooltipTrigger>
                                 <TooltipContent className="max-w-[300px]">
                                   <p className="text-sm">{submission.rejection_reason}</p>
@@ -805,27 +806,20 @@ export function KYCReviewClient() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="py-3">
                         {submission.reviewer ? (
                           <div className="text-sm font-medium">{submission.reviewer.display_name}</div>
                         ) : (
                           <span className="text-sm text-muted-foreground">—</span>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="py-3">
                         {submission.reviewed_at ? (
-                          <div>
+                          <>
                             <div className="text-sm">{new Date(submission.reviewed_at).toLocaleDateString()}</div>
                             <div className="text-xs text-muted-foreground">{new Date(submission.reviewed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                          </div>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="pr-4">
-                        <div className="flex items-center justify-end gap-1">
-                          <ViewActions submission={submission} />
-                        </div>
+                          </>
+                        ) : <span className="text-sm text-muted-foreground">—</span>}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -854,8 +848,7 @@ export function KYCReviewClient() {
                   {getDocumentTypeLabel(selectedSubmission.document_type, selectedSubmission.custom_label)} for{' '}
                   {selectedSubmission.counterparty_entity
                     ? `${selectedSubmission.counterparty_entity.legal_name} (Entity of ${selectedSubmission.investor?.display_name || selectedSubmission.investor?.legal_name || 'Unknown'})`
-                    : selectedSubmission.investor?.display_name || selectedSubmission.investor?.legal_name || 'Unknown'
-                  }
+                    : selectedSubmission.investor?.display_name || selectedSubmission.investor?.legal_name || 'Unknown'}
                 </>
               )}
             </DialogDescription>
@@ -870,9 +863,8 @@ export function KYCReviewClient() {
                 <Textarea
                   id="rejection-reason"
                   placeholder={reviewAction === 'request_info'
-                    ? 'Please specify what additional information or documents are needed...'
-                    : 'Please explain why this document is being rejected...'
-                  }
+                    ? 'Specify what additional information or documents are needed...'
+                    : 'Explain why this document is being rejected...'}
                   value={rejectionReason}
                   onChange={e => setRejectionReason(e.target.value)}
                   rows={4}
@@ -897,10 +889,7 @@ export function KYCReviewClient() {
             <Button
               onClick={handleReview}
               disabled={reviewing}
-              className={
-                reviewAction === 'approve' ? 'bg-emerald-600 hover:bg-emerald-700' :
-                reviewAction === 'request_info' ? 'bg-amber-600 hover:bg-amber-700' : ''
-              }
+              className={reviewAction === 'approve' ? 'bg-emerald-600 hover:bg-emerald-700' : reviewAction === 'request_info' ? 'bg-amber-600 hover:bg-amber-700' : ''}
             >
               {reviewing ? 'Processing...' : reviewAction === 'approve' ? 'Approve' : reviewAction === 'request_info' ? 'Send Request' : 'Reject'}
             </Button>
@@ -951,13 +940,13 @@ export function KYCReviewClient() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Reject {selectedIds.size} Documents</DialogTitle>
-            <DialogDescription>This will reject all selected documents with the same reason.</DialogDescription>
+            <DialogDescription>All selected documents will be rejected with the same reason.</DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <Label htmlFor="bulk-rejection-reason">Rejection Reason <span className="text-destructive">*</span></Label>
             <Textarea
               id="bulk-rejection-reason"
-              placeholder="Please explain why these documents are being rejected..."
+              placeholder="Explain why these documents are being rejected..."
               value={bulkRejectionReason}
               onChange={e => setBulkRejectionReason(e.target.value)}
               rows={4}
