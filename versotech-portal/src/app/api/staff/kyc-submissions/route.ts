@@ -162,7 +162,12 @@ export async function GET(request: NextRequest) {
       `, { count: 'exact' })
 
     // Apply filters BEFORE pagination
-    if (status) {
+    // Support special multi-status values: 'queue' (pending+under_review), 'history' (completed)
+    if (status === 'queue') {
+      query = query.in('status', ['pending', 'under_review'])
+    } else if (status === 'history') {
+      query = query.in('status', ['approved', 'rejected', 'expired', 'draft'])
+    } else if (status) {
       query = query.eq('status', status)
     }
     if (investorId) {
@@ -277,14 +282,11 @@ export async function GET(request: NextRequest) {
       investor_member: normalizeMember(submission),
     }))
 
-    // Get submission statistics for the same filtered scope shown in the table.
+    // Get global statistics (always unfiltered by status so tab badges reflect real totals)
     let statsQuery = serviceSupabase
       .from('kyc_submissions')
       .select('status')
 
-    if (status) {
-      statsQuery = statsQuery.eq('status', status)
-    }
     if (investorId) {
       statsQuery = statsQuery.eq('investor_id', investorId)
     }
