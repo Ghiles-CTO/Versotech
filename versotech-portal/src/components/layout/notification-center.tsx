@@ -14,12 +14,9 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { usePersona } from '@/contexts/persona-context'
 import { useTheme } from '@/components/theme-provider'
-import { createClient } from '@/lib/supabase/client'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import {
   Bell,
-  CheckSquare,
-  MessageSquare,
   AlertCircle,
   CheckCheck
 } from 'lucide-react'
@@ -27,7 +24,7 @@ import Link from 'next/link'
 
 interface NotificationItem {
   id: string
-  type: 'task' | 'message' | 'notification'
+  type: 'notification'
   title: string
   description?: string
   href: string
@@ -60,170 +57,29 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
   // Use mounted check to prevent hydration mismatch (server renders light, client may have dark)
   const isDark = mounted && theme === 'staff-dark'
 
-  // Fetch notifications from multiple sources
+  // Fetch notifications via API route (uses service client, bypasses RLS)
   const fetchNotifications = useCallback(async () => {
     if (!activePersona || !mounted) return
 
     setLoading(true)
-    const supabase = createClient()
-    const items: NotificationItem[] = []
-
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-      if (userError || !user) {
-        console.warn('[NotificationCenter] No authenticated user found')
+      const response = await fetch('/api/notifications?limit=10')
+      if (!response.ok) {
         setNotifications([])
         return
       }
-
-      const userId = user.id
-      const personaType = activePersona.persona_type
-
-      // Passive personas (lawyer, introducer) only receive notifications - no tasks or messages
-      const isPassiveRecipient = personaType === 'lawyer' || personaType === 'introducer'
-
-      // Fetch tasks (skip for passive personas - they don't have tasks page access)
-      if (!isPassiveRecipient) {
-        let taskQuery = supabase
-          .from('tasks')
-          .select('id, title, description, created_at, owner_user_id, owner_investor_id')
-          .eq('status', 'pending')
-          .order('created_at', { ascending: false })
-          .limit(5)
-
-        if (personaType === 'investor') {
-          taskQuery = taskQuery.or(`owner_user_id.eq.${userId},owner_investor_id.eq.${activePersona.entity_id}`)
-        } else {
-          taskQuery = taskQuery.eq('owner_user_id', userId)
-        }
-
-        const { data: tasks } = await taskQuery
-
-        if (tasks) {
-          tasks.forEach((task: any) => {
-            items.push({
-              id: `task-${task.id}`,
-              type: 'task',
-              title: task.title,
-              description: task.description,
-              href: '/versotech_main/tasks',
-              read: true,
-              created_at: task.created_at
-            })
-          })
-        }
-      }
-
-      // Fetch unread messages (skip for passive personas - they don't have inbox access)
-      if (!isPassiveRecipient) {
-        const { data: participants } = await supabase
-          .from('conversation_participants')
-          .select('conversation_id, last_read_at')
-          .eq('user_id', userId)
-          .limit(50)
-
-        const conversationIds = (participants || [])
-          .map((row: any) => row.conversation_id)
-          .filter(Boolean)
-
-        if (conversationIds.length > 0) {
-          let conversationQuery = supabase
-            .from('conversations')
-            .select('id, subject, preview, last_message_at, created_at, visibility')
-            .in('id', conversationIds)
-            .order('last_message_at', { ascending: false, nullsFirst: false })
-            .limit(10)
-
-          if (personaType !== 'staff') {
-            conversationQuery = conversationQuery.in('visibility', ['investor', 'deal'])
-          }
-
-          const { data: conversations } = await conversationQuery
-
-          const lastReadByConversation = new Map<string, string | null>()
-          ;(participants || []).forEach((row: any) => {
-            if (row.conversation_id) {
-              lastReadByConversation.set(row.conversation_id, row.last_read_at ?? null)
-            }
-          })
-
-          const unreadConversations = (conversations || []).filter((conv: any) => {
-            const lastMessageAt = conv.last_message_at ?? conv.created_at
-            if (!lastMessageAt) return false
-            const lastReadAt = lastReadByConversation.get(conv.id)
-            if (!lastReadAt) return true
-            return new Date(lastMessageAt).getTime() > new Date(lastReadAt).getTime()
-          })
-
-          unreadConversations.slice(0, 5).forEach((conv: any) => {
-            const lastMessageAt = conv.last_message_at ?? conv.created_at
-            items.push({
-              id: `msg-${conv.id}`,
-              type: 'message',
-              title: conv.subject || 'New message',
-              description: conv.preview || 'You have a new message',
-              href: '/versotech_main/inbox?tab=messages',
-              read: false,
-              created_at: lastMessageAt
-            })
-          })
-        }
-      }
-
-      // Fetch notifications for all personas (investor, lawyer, staff, etc.)
-      // Notifications use read_at timestamp (null = unread)
-      const { data: notifs } = await supabase
-        .from('investor_notifications')
-        .select('id, title, message, created_at, read_at, link, agent:agent_id (name, avatar_url)')
-        .eq('user_id', userId)
-        .is('read_at', null)
-        .order('created_at', { ascending: false })
-        .limit(5)
-
-      if (notifs) {
-        notifs.forEach((notif: any) => {
-          items.push({
-            id: `notif-${notif.id}`,
-            type: 'notification',
-            title: notif.title,
-            description: notif.message,
-            href: notif.link || '/versotech_main/notifications',
-            read: false,
-            created_at: notif.created_at,
-            agent: notif.agent ?? null
-          })
-        })
-      }
-
-      if (personaType === 'lawyer') {
-        const { data: lawyerNotifs } = await supabase
-          .from('notifications')
-          .select('id, title, message, created_at, read, link, agent:agent_id (name, avatar_url)')
-          .eq('user_id', userId)
-          .eq('read', false)
-          .order('created_at', { ascending: false })
-          .limit(5)
-
-        if (lawyerNotifs) {
-          lawyerNotifs.forEach((notif: any) => {
-            items.push({
-              id: `lawyer-notif-${notif.id}`,
-              type: 'notification',
-              title: notif.title,
-              description: notif.message,
-              href: notif.link || '/versotech_main/notifications',
-              read: false,
-              created_at: notif.created_at,
-              agent: notif.agent ?? null
-            })
-          })
-        }
-      }
-
-      // Sort by date and take top 10
-      items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      setNotifications(items.slice(0, 10))
+      const data = await response.json()
+      const items: NotificationItem[] = (data.notifications ?? []).map((n: any) => ({
+        id: `notif-${n.id}`,
+        type: 'notification' as const,
+        title: n.title,
+        description: n.message,
+        href: n.link || '/versotech_main/notifications',
+        read: !!n.read_at,
+        created_at: n.created_at,
+        agent: n.agent ?? null,
+      }))
+      setNotifications(items)
     } catch (error) {
       console.error('[NotificationCenter] Error fetching notifications:', error)
     } finally {
@@ -285,14 +141,6 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
     if (newOpen) fetchNotifications()
   }
 
-  const getIcon = (type: NotificationItem['type']) => {
-    switch (type) {
-      case 'task': return CheckSquare
-      case 'message': return MessageSquare
-      case 'notification': return AlertCircle
-      default: return Bell
-    }
-  }
 
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr)
@@ -429,10 +277,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
           </div>
         ) : (
           <div className="max-h-80 overflow-y-auto">
-            {notifications.map((item) => {
-              const Icon = getIcon(item.type)
-
-              return (
+            {notifications.map((item) => (
                 <DropdownMenuItem
                   key={item.id}
                   asChild
@@ -453,12 +298,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
                       "h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0",
                       isDark ? "bg-white/10" : "bg-gray-100"
                     )}>
-                      <Icon className={cn(
-                        "h-4 w-4",
-                        item.type === 'task' && "text-blue-500",
-                        item.type === 'message' && "text-green-500",
-                        item.type === 'notification' && "text-orange-500"
-                      )} />
+                      <AlertCircle className="h-4 w-4 text-orange-500" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className={cn(
@@ -504,8 +344,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
                     )}
                   </Link>
                 </DropdownMenuItem>
-              )
-            })}
+              ))}
           </div>
         )}
 
