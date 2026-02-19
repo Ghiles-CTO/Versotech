@@ -122,6 +122,27 @@ function DocumentRow({
   doc: SubscriptionDocument
 }) {
   const [expanded, setExpanded] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const path = doc.signed_url || doc.unsigned_url
+    if (!path) return
+    setDownloading(true)
+    try {
+      const res = await fetch(`/api/storage/signed-url?bucket=signatures&path=${encodeURIComponent(path)}`)
+      const data = await res.json()
+      if (data.signedUrl) {
+        window.open(data.signedUrl, '_blank')
+      } else {
+        toast.error('Could not generate download link')
+      }
+    } catch {
+      toast.error('Download failed')
+    } finally {
+      setDownloading(false)
+    }
+  }
   const signedCount = doc.signatories.filter(s => s.status === 'signed').length
   const totalCount = doc.signatories.length
   const isComplete = doc.status === 'complete'
@@ -179,13 +200,11 @@ function DocumentRow({
               size="sm"
               variant="ghost"
               className="h-5 text-[10px] px-2 mt-0.5"
-              onClick={(e) => {
-                e.stopPropagation()
-                window.open(doc.signed_url || doc.unsigned_url!, '_blank')
-              }}
+              onClick={handleDownload}
+              disabled={downloading}
             >
-              {doc.signed_url ? <Download className="w-2.5 h-2.5 mr-1" /> : <ExternalLink className="w-2.5 h-2.5 mr-1" />}
-              {doc.signed_url ? 'Download' : 'View'}
+              <Download className="w-2.5 h-2.5 mr-1" />
+              {downloading ? 'Loading...' : 'Download'}
             </Button>
           )}
         </div>
