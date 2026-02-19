@@ -488,23 +488,9 @@ export function KYCReviewClient() {
     </div>
   )
 
-  const FilterBar = ({ showHistoryStatus }: { showHistoryStatus?: boolean }) => (
-    <div className="flex items-end gap-3 flex-wrap">
-      {showHistoryStatus && (
-        <div className="min-w-[140px]">
-          <Label className="text-xs text-muted-foreground mb-1 block">Status</Label>
-          <Select value={historyStatusFilter} onValueChange={setHistoryStatusFilter}>
-            <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="All statuses" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Completed</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
-              <SelectItem value="expired">Expired</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+  // Shared filter dropdowns JSX (inlined — NOT a sub-component to avoid remount on re-render)
+  const filterDropdowns = (
+    <>
       <div className="min-w-[160px]">
         <Label className="text-xs text-muted-foreground mb-1 block">Document Type</Label>
         <Select value={documentTypeFilter} onValueChange={setDocumentTypeFilter}>
@@ -553,7 +539,7 @@ export function KYCReviewClient() {
           className="h-8 text-sm"
         />
       </div>
-    </div>
+    </>
   )
 
   const PaginationControls = () => {
@@ -635,7 +621,7 @@ export function KYCReviewClient() {
 
         {/* ── Review Queue Tab ─────────────────────────────────────────────── */}
         <TabsContent value="queue" className="mt-4 space-y-4">
-          <FilterBar />
+          <div className="flex items-end gap-3 flex-wrap">{filterDropdowns}</div>
 
           {loading ? (
             <div className="flex items-center justify-center py-16">
@@ -751,7 +737,22 @@ export function KYCReviewClient() {
 
         {/* ── History Tab ──────────────────────────────────────────────────── */}
         <TabsContent value="history" className="mt-4 space-y-4">
-          <FilterBar showHistoryStatus />
+          <div className="flex items-end gap-3 flex-wrap">
+            <div className="min-w-[140px]">
+              <Label className="text-xs text-muted-foreground mb-1 block">Status</Label>
+              <Select value={historyStatusFilter} onValueChange={setHistoryStatusFilter}>
+                <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="All statuses" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Completed</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="expired">Expired</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {filterDropdowns}
+          </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-16">
