@@ -15,6 +15,17 @@ import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import {
   CheckCircle2,
   XCircle,
   Clock,
@@ -29,7 +40,8 @@ import {
   MessageCircle,
   UserCheck,
   Shield,
-  Users
+  Users,
+  Send
 } from 'lucide-react'
 import { Approval } from '@/types/approvals'
 import { format, formatDistanceToNow } from 'date-fns'
@@ -68,6 +80,43 @@ const entityTypeLabels: Record<string, string> = {
   account_activation: 'Account Activation'
 }
 
+function getMessagePresets(approval: Approval): { title: string; message: string } {
+  const displayName = approval.requested_by_profile?.display_name || 'Investor'
+  const dealName = approval.related_deal?.name
+  const entityName = approval.related_investor?.legal_name || approval.entity_metadata?.entity_name
+
+  switch (approval.entity_type) {
+    case 'account_activation':
+      return {
+        title: `Account Activation - ${entityName || displayName}`,
+        message: `Welcome ${displayName} to VERSOTECH`
+      }
+    case 'deal_interest':
+      return {
+        title: `Data Room Access - ${dealName || 'Deal'}`,
+        message: `Regarding your data room access request for ${dealName || 'the deal'}.`
+      }
+    case 'deal_subscription':
+      return {
+        title: `Subscription - ${dealName || 'Deal'}`,
+        message: `Regarding your subscription for ${dealName || 'the deal'}.`
+      }
+    case 'deal_close':
+      return {
+        title: `Deal Close - ${dealName || 'Deal'}`,
+        message: `Regarding the deal close for ${dealName || 'the deal'}.`
+      }
+    default: {
+      const approvalType = entityTypeLabels[approval.entity_type] || approval.entity_type
+      const context = dealName || entityName || ''
+      return {
+        title: context ? `${approvalType} - ${context}` : approvalType,
+        message: `Regarding your ${approvalType.toLowerCase()} request.`
+      }
+    }
+  }
+}
+
 export function ApprovalDetailDrawer({
   approval,
   open,
@@ -80,6 +129,9 @@ export function ApprovalDetailDrawer({
   const [isApproving, setIsApproving] = useState(false)
   const [isRejecting, setIsRejecting] = useState(false)
   const [isCreatingConversation, setIsCreatingConversation] = useState(false)
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false)
+  const [messageTitle, setMessageTitle] = useState('')
+  const [messageBody, setMessageBody] = useState('')
 
   useEffect(() => {
     if (approval?.sla_breach_at) {
@@ -124,7 +176,7 @@ export function ApprovalDetailDrawer({
     }
   }
 
-  const handleMessageInvestor = async () => {
+  const openMessageDialog = () => {
     if (!approval.requested_by_profile?.id) {
       toast.error('Cannot message investor', {
         description: 'Investor profile not found'
@@ -132,24 +184,28 @@ export function ApprovalDetailDrawer({
       return
     }
 
+    const presets = getMessagePresets(approval)
+    setMessageTitle(presets.title)
+    setMessageBody(presets.message)
+    setMessageDialogOpen(true)
+  }
+
+  const handleSendMessage = async () => {
+    if (!approval.requested_by_profile?.id) return
+
     setIsCreatingConversation(true)
     try {
-      // Create conversation with the investor about this approval
-      const dealName = approval.related_deal?.name || 'Deal'
-      const approvalType = entityTypeLabels[approval.entity_type] || approval.entity_type
-      const subject = `${approvalType} - ${dealName}`
-
       const response = await fetch('/api/conversations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          subject,
+          subject: messageTitle,
           participant_ids: [approval.requested_by_profile.id],
           type: 'dm',
           visibility: 'investor',
-          initial_message: `Regarding your ${approvalType.toLowerCase()} for ${dealName}.`,
+          initial_message: messageBody,
           metadata: {
             approval_id: approval.id,
             entity_type: approval.entity_type,
@@ -169,7 +225,7 @@ export function ApprovalDetailDrawer({
         description: `Opening conversation with ${approval.requested_by_profile.display_name || 'investor'}`
       })
 
-      // Navigate to the conversation
+      setMessageDialogOpen(false)
       router.push(`/versotech_main/messages?conversation=${data.conversation.id}`)
       onOpenChange(false)
     } catch (error) {
@@ -267,7 +323,7 @@ export function ApprovalDetailDrawer({
             {/* Message Investor Button */}
             {approval.requested_by_profile && (
               <Button
-                onClick={handleMessageInvestor}
+                onClick={openMessageDialog}
                 disabled={isCreatingConversation}
                 variant="outline"
                 className="w-full border-blue-300 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-500/20 hover:text-blue-800 dark:hover:text-blue-200"
@@ -845,6 +901,55 @@ export function ApprovalDetailDrawer({
           </TabsContent>
         </Tabs>
       </SheetContent>
+
+      {/* Compose Message Dialog */}
+      <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Message Investor</DialogTitle>
+            <DialogDescription>
+              Customize the conversation title and initial message before sending to {approval?.requested_by_profile?.display_name || 'investor'}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="message-title">Conversation Title</Label>
+              <Input
+                id="message-title"
+                value={messageTitle}
+                onChange={(e) => setMessageTitle(e.target.value)}
+                placeholder="Enter conversation title..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="message-body">Message</Label>
+              <Textarea
+                id="message-body"
+                value={messageBody}
+                onChange={(e) => setMessageBody(e.target.value)}
+                placeholder="Enter your message..."
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setMessageDialogOpen(false)}
+              disabled={isCreatingConversation}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSendMessage}
+              disabled={!messageTitle.trim() || !messageBody.trim() || isCreatingConversation}
+            >
+              <Send className="h-4 w-4 mr-2" />
+              {isCreatingConversation ? 'Sending...' : 'Send Message'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Sheet>
   )
 }
