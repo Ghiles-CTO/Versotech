@@ -493,7 +493,7 @@ export function ProfilePageClient({
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
-                    {!['approved', 'submitted', 'pending', 'pending_review'].includes(investorInfo.kyc_status || '') && (
+                    {!['approved', 'submitted', 'pending_review'].includes(investorInfo.kyc_status || '') && (
                       <Button variant="outline" size="sm" onClick={() => setShowEntityInfoDialog(true)}>
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
@@ -526,7 +526,7 @@ export function ProfilePageClient({
                   </div>
 
                   {/* Submit Entity KYC Button */}
-                  {!['approved', 'submitted', 'pending', 'pending_review'].includes(investorInfo.kyc_status || '') && (
+                  {!['approved', 'submitted', 'pending_review'].includes(investorInfo.kyc_status || '') && (
                     <div className="pt-4 border-t">
                       {(investorUserInfo?.is_primary || investorUserInfo?.role === 'admin') ? (
                         <Button
@@ -544,7 +544,7 @@ export function ProfilePageClient({
                       )}
                     </div>
                   )}
-                  {(investorInfo.kyc_status === 'submitted' || investorInfo.kyc_status === 'pending') && (
+                  {investorInfo.kyc_status === 'submitted' && (
                     <div className="pt-4 border-t">
                       <Badge className="bg-blue-100 text-blue-800 border-blue-200">
                         <Send className="h-3 w-3 mr-1" />
@@ -726,7 +726,7 @@ export function ProfilePageClient({
                 title="Personal KYC Information"
               />
 
-              {!['approved', 'submitted', 'pending', 'pending_review'].includes(investorInfo.kyc_status || '') && (
+              {!['approved', 'submitted', 'pending_review'].includes(investorInfo.kyc_status || '') && (
                 <Card>
                   <CardContent className="pt-6">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -748,7 +748,7 @@ export function ProfilePageClient({
                   </CardContent>
                 </Card>
               )}
-              {(investorInfo.kyc_status === 'submitted' || investorInfo.kyc_status === 'pending') && (
+              {investorInfo.kyc_status === 'submitted' && (
                 <Card>
                   <CardContent className="pt-6">
                     <Badge className="bg-blue-100 text-blue-800 border-blue-200">

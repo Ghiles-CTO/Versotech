@@ -283,6 +283,14 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
     }
 
+    // Convert empty strings to null for date columns (Postgres rejects "" for date type)
+    const dateFields = ['date_of_birth', 'id_issue_date', 'id_expiry_date', 'proof_of_address_date', 'proof_of_address_expiry']
+    for (const field of dateFields) {
+      if (field in updateData && updateData[field] === '') {
+        updateData[field] = null
+      }
+    }
+
     updateData.updated_at = new Date().toISOString()
 
     // Update investor
