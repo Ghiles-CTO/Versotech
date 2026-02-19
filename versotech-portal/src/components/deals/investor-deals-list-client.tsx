@@ -1763,8 +1763,8 @@ export function InvestorDealsListClient({
                             setSubscribeDealId(deal.id)
                             setSubscribeDealName(deal.name)
                             setSubscribeDealCurrency(deal.currency)
-                            setSubscribeDealMin(deal.minimum_investment ?? null)
-                            setSubscribeDealMax(deal.maximum_investment ?? null)
+                            setSubscribeDealMin(feeStructure?.minimum_ticket ?? deal.minimum_investment ?? null)
+                            setSubscribeDealMax(feeStructure?.allocation_up_to ?? deal.maximum_investment ?? null)
                             setSubscribeDealLogo(deal.company_logo_url ?? null)
                             setShowSubscribeDialog(true)
                           }}
@@ -1894,7 +1894,13 @@ export function InvestorDealsListClient({
                   {subscribeDealMin != null && parseDisplayAmount(subscribeAmount) < subscribeDealMin && (
                     <span className="text-[11px] font-medium text-amber-500 dark:text-amber-400 flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
-                      Below minimum
+                      Below minimum ({formatCurrency(subscribeDealMin, subscribeDealCurrency)})
+                    </span>
+                  )}
+                  {subscribeDealMax != null && parseDisplayAmount(subscribeAmount) > subscribeDealMax && (
+                    <span className="text-[11px] font-medium text-amber-500 dark:text-amber-400 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      Exceeds allocation ({formatCurrency(subscribeDealMax, subscribeDealCurrency)})
                     </span>
                   )}
                 </>
@@ -1997,7 +2003,7 @@ export function InvestorDealsListClient({
             </Button>
             <Button
               onClick={handleSubscribe}
-              disabled={subscribeLoading || !subscribeAmount || (subscribeDealMin !== null && parseDisplayAmount(subscribeAmount) < subscribeDealMin)}
+              disabled={subscribeLoading || !subscribeAmount || (subscribeDealMin !== null && parseDisplayAmount(subscribeAmount) < subscribeDealMin) || (subscribeDealMax !== null && parseDisplayAmount(subscribeAmount) > subscribeDealMax)}
               className={cn(
                 'h-11 px-8 rounded-lg text-sm font-semibold gap-2 transition-all duration-200',
                 'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white',

@@ -827,6 +827,11 @@ export default function OpportunityDetailPage() {
   const subscriptionSubmittedAt = opportunity.subscription_submission?.submitted_at ?? null
   const canSubscribe = opportunity.can_subscribe && !isTrackingOnly && isAccountApproved
   const canExpressInterest = opportunity.can_express_interest && !isTrackingOnly && isAccountApproved
+
+  // Derive subscription limits from termsheet (fee_structures), falling back to deal-level fields
+  const publishedTermSheet = opportunity.fee_structures.find(ts => ts.status === 'published') || opportunity.fee_structures[0] || null
+  const subscribeMinAmount = publishedTermSheet?.minimum_ticket ?? opportunity.minimum_investment ?? null
+  const subscribeMaxAmount = publishedTermSheet?.allocation_up_to ?? opportunity.maximum_investment ?? null
   const canSignNda = opportunity.can_sign_nda && !isTrackingOnly && isAccountApproved
   const showActionChoices =
     !isBlacklisted &&
@@ -1746,9 +1751,9 @@ export default function OpportunityDetailPage() {
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
                   Commitment Amount ({opportunity.currency})
                 </span>
-                {opportunity.minimum_investment && opportunity.maximum_investment && (
+                {subscribeMinAmount && subscribeMaxAmount && (
                   <span className="text-[10px] tabular-nums text-muted-foreground/40 font-medium">
-                    Range: {formatCurrency(opportunity.minimum_investment, opportunity.currency)} &ndash; {formatCurrency(opportunity.maximum_investment, opportunity.currency)}
+                    Range: {formatCurrency(subscribeMinAmount, opportunity.currency)} &ndash; {formatCurrency(subscribeMaxAmount, opportunity.currency)}
                   </span>
                 )}
               </div>
@@ -1778,10 +1783,16 @@ export default function OpportunityDetailPage() {
                   <span className="text-xs tabular-nums text-muted-foreground font-medium">
                     {formatCurrency(parseDisplayAmount(subscribeAmount), opportunity.currency)}
                   </span>
-                  {opportunity.minimum_investment !== null && parseDisplayAmount(subscribeAmount) < opportunity.minimum_investment && (
+                  {subscribeMinAmount !== null && parseDisplayAmount(subscribeAmount) < subscribeMinAmount && (
                     <span className="text-[11px] font-medium text-amber-500 dark:text-amber-400 flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
-                      Below minimum
+                      Below minimum ({formatCurrency(subscribeMinAmount, opportunity.currency)})
+                    </span>
+                  )}
+                  {subscribeMaxAmount !== null && parseDisplayAmount(subscribeAmount) > subscribeMaxAmount && (
+                    <span className="text-[11px] font-medium text-amber-500 dark:text-amber-400 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      Exceeds allocation ({formatCurrency(subscribeMaxAmount, opportunity.currency)})
                     </span>
                   )}
                 </>
@@ -1876,7 +1887,7 @@ export default function OpportunityDetailPage() {
             </Button>
             <Button
               onClick={handleSubscribe}
-              disabled={actionLoading || !subscribeAmount || (opportunity.minimum_investment !== null && parseDisplayAmount(subscribeAmount) < opportunity.minimum_investment)}
+              disabled={actionLoading || !subscribeAmount || (subscribeMinAmount !== null && parseDisplayAmount(subscribeAmount) < subscribeMinAmount) || (subscribeMaxAmount !== null && parseDisplayAmount(subscribeAmount) > subscribeMaxAmount)}
               className={cn(
                 'h-11 px-8 rounded-lg text-sm font-semibold gap-2 transition-all duration-200',
                 'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white',
