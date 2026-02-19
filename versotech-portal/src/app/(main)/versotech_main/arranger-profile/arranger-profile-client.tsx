@@ -1012,7 +1012,7 @@ export function ArrangerProfileClient({
         {/* KYC Documents Tab */}
         <TabsContent value="documents" className="space-y-4">
           {arrangerInfo.type !== 'individual' &&
-            !['approved', 'submitted', 'pending', 'pending_review'].includes(arrangerInfo.kyc_status || '') && (
+            !['approved', 'submitted', 'pending_review'].includes(arrangerInfo.kyc_status || '') && (
             <Card>
               <CardContent className="pt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
