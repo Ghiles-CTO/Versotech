@@ -33,12 +33,16 @@ export async function applyImageWatermark(
   const line2 = entityName || ''
 
   // Build a repeating grid of diagonal text stamps in SVG.
-  // The SVG covers 200%×200% of the image, centred, then rotated -35°
-  // so the text fills every corner after rotation.
+  // The SVG must be exactly width×height to match the base image (sharp requires
+  // composite overlays to be same size or smaller). We use a large internal
+  // drawing area shifted by negative translate so the rotated grid fills every
+  // corner, then clip to the image bounds via the SVG viewport.
   const gridRows = 8
   const gridCols = 5
-  const spacingX = Math.round((width * 2) / gridCols)
-  const spacingY = Math.round((height * 2) / gridRows)
+  const innerW = width * 2
+  const innerH = height * 2
+  const spacingX = Math.round(innerW / gridCols)
+  const spacingY = Math.round(innerH / gridRows)
 
   const stamps: string[] = []
   for (let row = 0; row < gridRows; row++) {
@@ -58,15 +62,17 @@ export async function applyImageWatermark(
     }
   }
 
-  // Overlay SVG dimensions: double the image size so rotation doesn't leave bare corners
-  const svgW = width * 2
-  const svgH = height * 2
-  const centerX = svgW / 2
-  const centerY = svgH / 2
+  // SVG is sized to the image (so sharp accepts the composite). The inner group
+  // is drawn in a 2× canvas, translated so it's centred over the viewport, then
+  // rotated. Anything outside the viewport is clipped automatically by SVG.
+  const offsetX = -Math.round(width / 2)
+  const offsetY = -Math.round(height / 2)
+  const centerX = innerW / 2
+  const centerY = innerH / 2
 
   const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}">
-      <g transform="rotate(-35 ${centerX} ${centerY})">
+    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+      <g transform="translate(${offsetX}, ${offsetY}) rotate(-35 ${centerX} ${centerY})">
         ${stamps.join('')}
       </g>
     </svg>
@@ -78,9 +84,8 @@ export async function applyImageWatermark(
     .composite([{
       input: svgBuffer,
       blend: 'over',
-      // Centre the larger overlay over the image
-      left: -Math.round(width / 2),
-      top: -Math.round(height / 2),
+      left: 0,
+      top: 0,
     }])
     .png()
     .toBuffer()
