@@ -458,8 +458,6 @@ export function KYCReviewClient() {
             {submission.investor_id && submission.investor?.id && (
               <a
                 href={`/versotech_main/investors/${submission.investor.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ExternalLink className="w-3 h-3" />
@@ -920,18 +918,30 @@ export function KYCReviewClient() {
         />
       )}
 
-      {/* ── Bulk Action Bar ──────────────────────────────────────────────────── */}
+      {/* ── Bulk Action Bar — sticky to viewport bottom ──────────────────────── */}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-background border border-border rounded-lg shadow-lg px-5 py-3 flex items-center gap-3 z-50">
-          <span className="text-sm font-medium">{selectedIds.size} selected</span>
-          <div className="w-px h-5 bg-border" />
-          <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => handleBulkAction('approve')} disabled={reviewing}>
-            <CheckCircle className="h-3.5 w-3.5 mr-1.5" />Approve All
-          </Button>
-          <Button size="sm" variant="destructive" onClick={() => setBulkRejectOpen(true)} disabled={reviewing}>
-            <XCircle className="h-3.5 w-3.5 mr-1.5" />Reject All
-          </Button>
-          <Button size="sm" variant="ghost" onClick={clearSelection} disabled={reviewing}>Cancel</Button>
+        <div className="fixed bottom-0 inset-x-0 z-50 border-t border-border bg-background/95 backdrop-blur-sm shadow-[0_-4px_20px_rgba(0,0,0,0.15)]">
+          <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                <span className="text-[11px] font-bold text-primary-foreground">{selectedIds.size}</span>
+              </div>
+              <span className="text-sm font-medium text-foreground">
+                {selectedIds.size} document{selectedIds.size !== 1 ? 's' : ''} selected
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={clearSelection} disabled={reviewing}>
+                Deselect all
+              </Button>
+              <Button size="sm" variant="destructive" onClick={() => setBulkRejectOpen(true)} disabled={reviewing}>
+                <XCircle className="h-3.5 w-3.5 mr-1.5" />Reject All
+              </Button>
+              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => handleBulkAction('approve')} disabled={reviewing}>
+                <CheckCircle className="h-3.5 w-3.5 mr-1.5" />Approve All
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 
