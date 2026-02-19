@@ -396,7 +396,7 @@ export function DealDetailClient({
         </TabsContent>
 
         <TabsContent value="members">
-          <DealMembersTab dealId={deal.id} members={deal.deal_memberships || []} subscriptions={subscriptionsForJourney} />
+          <DealMembersTab dealId={deal.id} dealStatus={deal.status} members={deal.deal_memberships || []} subscriptions={subscriptionsForJourney} />
         </TabsContent>
 
         <TabsContent value="fees">

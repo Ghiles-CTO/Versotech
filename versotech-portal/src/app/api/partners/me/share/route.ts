@@ -72,9 +72,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Deal not found' }, { status: 404 })
     }
 
-    if (deal.status === 'closed' || deal.status === 'cancelled') {
+    const dispatchableStatuses = ['open', 'allocation_pending']
+    if (!dispatchableStatuses.includes(deal.status)) {
       return NextResponse.json(
-        { error: 'Cannot share a closed or cancelled deal' },
+        { error: `Cannot share a deal when status is "${deal.status}". The deal must be Open.` },
         { status: 400 }
       )
     }

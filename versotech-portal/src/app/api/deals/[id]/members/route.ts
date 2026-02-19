@@ -149,6 +149,26 @@ export async function POST(
     }
 
     const { id: dealId } = await params
+
+    // Check deal status allows adding participants — only open/allocation_pending deals
+    const { data: deal, error: dealFetchError } = await supabase
+      .from('deals')
+      .select('id, status')
+      .eq('id', dealId)
+      .single()
+
+    if (dealFetchError || !deal) {
+      return NextResponse.json({ error: 'Deal not found' }, { status: 404 })
+    }
+
+    const dispatchableStatuses = ['open', 'allocation_pending']
+    if (!dispatchableStatuses.includes(deal.status)) {
+      return NextResponse.json(
+        { error: `Cannot add participants when deal status is "${deal.status}". Change the deal status to "Open" first.` },
+        { status: 400 }
+      )
+    }
+
     const body = await request.json()
     const validatedData = addMemberSchema.parse(body)
 

@@ -33,7 +33,8 @@ import {
   UserPlus,
   UserCircle,
   FileCheck,
-  ArrowRight
+  ArrowRight,
+  Lock
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -88,6 +89,7 @@ const JOURNEY_STAGES = [
 
 interface DealMembersTabProps {
   dealId: string
+  dealStatus: string
   members: any[]
   subscriptions?: any[]
 }
@@ -153,7 +155,7 @@ function JourneyProgressBar({ member }: { member: any }) {
   )
 }
 
-export function DealMembersTab({ dealId, members: initialMembers, subscriptions = [] }: DealMembersTabProps) {
+export function DealMembersTab({ dealId, dealStatus, members: initialMembers, subscriptions = [] }: DealMembersTabProps) {
   const router = useRouter()
   const [members, setMembers] = useState(initialMembers)
 
@@ -368,6 +370,17 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
     viewer: 'bg-muted text-muted-foreground'
   }
 
+  // Dispatch is only allowed when deal is open or allocation_pending
+  const canDispatch = dealStatus === 'open' || dealStatus === 'allocation_pending'
+
+  const statusLabels: Record<string, string> = {
+    draft: 'Draft',
+    open: 'Open',
+    allocation_pending: 'Allocation Pending',
+    closed: 'Closed',
+    cancelled: 'Cancelled',
+  }
+
   // Calculate journey stats
   const stats = {
     total: enhancedMembers.length,
@@ -433,13 +446,22 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <AddParticipantModal
-                dealId={dealId}
-                onParticipantAdded={() => {
-                  refreshMembers()
-                  fetchAssignments()
-                }}
-              />
+              {canDispatch ? (
+                <AddParticipantModal
+                  dealId={dealId}
+                  onParticipantAdded={() => {
+                    refreshMembers()
+                    fetchAssignments()
+                  }}
+                />
+              ) : (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-500/30 bg-amber-500/5">
+                  <Lock className="h-4 w-4 text-amber-500 shrink-0" />
+                  <span className="text-sm text-amber-600 dark:text-amber-400">
+                    Deal is <strong>{statusLabels[dealStatus] || dealStatus}</strong> — set to Open to dispatch
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </CardHeader>

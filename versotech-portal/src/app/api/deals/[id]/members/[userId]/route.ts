@@ -113,6 +113,26 @@ export async function PATCH(
     }
 
     const { id: dealId, userId } = await params
+
+    // Check deal status allows dispatching
+    const { data: deal, error: dealFetchError } = await supabase
+      .from('deals')
+      .select('id, status')
+      .eq('id', dealId)
+      .single()
+
+    if (dealFetchError || !deal) {
+      return NextResponse.json({ error: 'Deal not found' }, { status: 404 })
+    }
+
+    const dispatchableStatuses = ['open', 'allocation_pending']
+    if (!dispatchableStatuses.includes(deal.status)) {
+      return NextResponse.json(
+        { error: `Cannot dispatch when deal status is "${deal.status}". Change the deal status to "Open" first.` },
+        { status: 400 }
+      )
+    }
+
     const body = await request.json()
 
     // Validate request body

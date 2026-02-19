@@ -183,10 +183,11 @@ export async function POST(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Deal not found' }, { status: 404 })
     }
 
-    // Check deal status allows dispatching
-    if (deal.status === 'closed' || deal.status === 'cancelled') {
+    // Check deal status allows dispatching — only open/allocation_pending deals
+    const dispatchableStatuses = ['open', 'allocation_pending']
+    if (!dispatchableStatuses.includes(deal.status)) {
       return NextResponse.json(
-        { error: 'Cannot dispatch to a closed or cancelled deal' },
+        { error: `Cannot dispatch when deal status is "${deal.status}". Change the deal status to "Open" first.` },
         { status: 400 }
       )
     }

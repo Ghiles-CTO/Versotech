@@ -127,15 +127,23 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const serviceSupabase = createServiceClient()
 
-    // Verify the deal exists
+    // Verify the deal exists and status allows dispatch
     const { data: deal, error: dealError } = await serviceSupabase
       .from('deals')
-      .select('id, name, arranger_entity_id')
+      .select('id, name, status, arranger_entity_id')
       .eq('id', dealId)
       .single()
 
     if (dealError || !deal) {
       return NextResponse.json({ error: 'Deal not found' }, { status: 404 })
+    }
+
+    const dispatchableStatuses = ['open', 'allocation_pending']
+    if (!dispatchableStatuses.includes(deal.status)) {
+      return NextResponse.json(
+        { error: `Cannot add participants when deal status is "${deal.status}". Change the deal status to "Open" first.` },
+        { status: 400 }
+      )
     }
 
     // Verify the entity exists
