@@ -231,8 +231,7 @@ function generateNotificationEmail(params: {
   link: string
   type: NotificationType
 }): string {
-  const dealTypes: NotificationType[] = ['deal_invite', 'deal_access', 'deal_shared', 'partner_deal_share']
-  const buttonText = dealTypes.includes(params.type) ? 'Access Deal on VERSO Portal' : 'View in Verso'
+  const buttonText = 'Access VERSO Portal'
   const showTitle = params.type !== 'deal_invite'
 
   const body = `

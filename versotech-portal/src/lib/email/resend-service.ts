@@ -256,7 +256,7 @@ export async function sendStaffInvitation(params: {
     </div>
 
     <div class="button-container">
-      <a href="${params.loginUrl}" class="button">Access Verso</a>
+      <a href="${params.loginUrl}" class="button">Access VERSO Portal</a>
     </div>
   `
 
@@ -388,7 +388,7 @@ export async function sendAccountStatusEmail(params: {
       <p>Congratulations! Your account has been approved. You can now have full access to VERSO Portal.</p>
     </div>
     <div class="button-container">
-      <a href="${link}" class="button">Open VERSO Portal</a>
+      <a href="${link}" class="button">Access VERSO Portal</a>
     </div>
     <div class="content">
     `
@@ -438,7 +438,7 @@ export async function sendNewDealEmail(params: {
     </div>
 
     <div class="button-container">
-      <a href="${params.dealLink}" class="button">Access Deal on VERSO Portal</a>
+      <a href="${params.dealLink}" class="button">Access VERSO Portal</a>
     </div>
 
     <div class="content">
@@ -483,7 +483,7 @@ export async function sendDocumentSignedEmail(params: {
     </div>
 
     <div class="button-container">
-      <a href="${params.dealLink}" class="button">Access Deal VERSO Portal</a>
+      <a href="${params.dealLink}" class="button">Access VERSO Portal</a>
     </div>
 
     <div class="content">
@@ -604,7 +604,7 @@ export async function sendSignatureRequestEmail(params: {
     </div>
 
     <div class="button-container">
-      <a href="${params.signingUrl}" class="button">Access Deal VERSO Portal</a>
+      <a href="${params.signingUrl}" class="button">Access VERSO Portal</a>
     </div>
 
     <div class="content">
