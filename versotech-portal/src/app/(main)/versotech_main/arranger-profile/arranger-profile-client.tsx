@@ -1038,6 +1038,7 @@ export function ArrangerProfileClient({
             arrangerId={arrangerInfo.id}
             arrangerName={arrangerInfo.legal_name}
             kycStatus={arrangerInfo.kyc_status}
+            entityType={arrangerInfo.type}
           />
         </TabsContent>
 

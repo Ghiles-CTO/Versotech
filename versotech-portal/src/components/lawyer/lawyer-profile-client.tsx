@@ -786,6 +786,7 @@ export function LawyerProfileClient({
               lawyerId={lawyerInfo.id}
               lawyerName={lawyerInfo.firm_name || lawyerInfo.display_name}
               kycStatus={lawyerInfo.kyc_status || undefined}
+              entityType={lawyerInfo.type}
             />
           ) : (
             <Card>

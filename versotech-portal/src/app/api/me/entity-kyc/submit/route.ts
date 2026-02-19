@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
 
 // Entity type configurations
 const ENTITY_CONFIGS = {
   investor: {
     entityTable: 'investors',
     userTable: 'investor_users',
+    memberTable: 'investor_members',
+    memberEntityIdColumn: 'investor_id',
     userEntityIdColumn: 'investor_id',
     submissionEntityIdColumn: 'investor_id',
     requiredFields: [
@@ -19,6 +22,8 @@ const ENTITY_CONFIGS = {
   partner: {
     entityTable: 'partners',
     userTable: 'partner_users',
+    memberTable: 'partner_members',
+    memberEntityIdColumn: 'partner_id',
     userEntityIdColumn: 'partner_id',
     submissionEntityIdColumn: 'partner_id',
     requiredFields: [
@@ -29,6 +34,8 @@ const ENTITY_CONFIGS = {
   introducer: {
     entityTable: 'introducers',
     userTable: 'introducer_users',
+    memberTable: 'introducer_members',
+    memberEntityIdColumn: 'introducer_id',
     userEntityIdColumn: 'introducer_id',
     submissionEntityIdColumn: 'introducer_id',
     requiredFields: [
@@ -39,6 +46,8 @@ const ENTITY_CONFIGS = {
   lawyer: {
     entityTable: 'lawyers',
     userTable: 'lawyer_users',
+    memberTable: 'lawyer_members',
+    memberEntityIdColumn: 'lawyer_id',
     userEntityIdColumn: 'lawyer_id',
     submissionEntityIdColumn: 'lawyer_id',
     requiredFields: [
@@ -49,6 +58,8 @@ const ENTITY_CONFIGS = {
   commercial_partner: {
     entityTable: 'commercial_partners',
     userTable: 'commercial_partner_users',
+    memberTable: 'commercial_partner_members',
+    memberEntityIdColumn: 'commercial_partner_id',
     userEntityIdColumn: 'commercial_partner_id',
     submissionEntityIdColumn: 'commercial_partner_id',
     requiredFields: [
@@ -59,6 +70,8 @@ const ENTITY_CONFIGS = {
   arranger: {
     entityTable: 'arranger_entities',
     userTable: 'arranger_users',
+    memberTable: 'arranger_members',
+    memberEntityIdColumn: 'arranger_id',
     userEntityIdColumn: 'arranger_id',
     submissionEntityIdColumn: 'arranger_entity_id',
     requiredFields: [
@@ -75,6 +88,12 @@ type EntityType = keyof typeof ENTITY_CONFIGS
 type SubmitEntityKycResult = {
   status: number
   payload: Record<string, unknown>
+}
+
+type ProfileRow = {
+  email?: string | null
+  full_name?: string | null
+  display_name?: string | null
 }
 
 export async function submitEntityKycForUser(params: {
@@ -105,6 +124,8 @@ export async function submitEntityKycForUser(params: {
       .select('is_primary, role')
       .eq('user_id', userId)
       .eq(config.userEntityIdColumn, entityId)
+      .order('created_at', { ascending: true })
+      .limit(1)
       .maybeSingle()
 
     if (entityUserError || !entityUser) {
@@ -145,6 +166,83 @@ export async function submitEntityKycForUser(params: {
 
     if (entity.kyc_status === 'approved') {
       return { status: 400, payload: { error: 'Entity KYC already approved' } }
+    }
+
+    // Ensure at least one active member exists so entity KYC cannot become silently stuck.
+    const { data: existingActiveMember, error: activeMemberQueryError } = await serviceSupabase
+      .from(config.memberTable)
+      .select('id')
+      .eq(config.memberEntityIdColumn, entityId)
+      .eq('is_active', true)
+      .limit(1)
+      .maybeSingle()
+
+    if (activeMemberQueryError) {
+      console.error('Error checking active members before entity KYC submit:', activeMemberQueryError)
+      return {
+        status: 500,
+        payload: { error: 'Failed to validate entity members before KYC submission' },
+      }
+    }
+
+    if (!existingActiveMember) {
+      const { data: rawProfile } = await serviceSupabase
+        .from('profiles')
+        .select('email, full_name, display_name')
+        .eq('id', userId)
+        .maybeSingle()
+      const profile = (rawProfile || null) as ProfileRow | null
+
+      const defaultFullName =
+        profile?.full_name ||
+        profile?.display_name ||
+        null
+
+      const { error: autoMemberError } = await fetchMemberWithAutoLink({
+        supabase: serviceSupabase,
+        memberTable: config.memberTable,
+        entityIdColumn: config.memberEntityIdColumn,
+        entityId,
+        userId,
+        userEmail: profile?.email || null,
+        defaultFullName,
+        createIfMissing: true,
+        select: 'id',
+        context: `submitEntityKycForUser:${entityType}`,
+      })
+
+      if (autoMemberError) {
+        console.error('Error auto-linking/creating member before entity KYC submit:', autoMemberError)
+        return {
+          status: 500,
+          payload: { error: 'Failed to set up an active member for entity KYC' },
+        }
+      }
+
+      const { data: activeMemberAfterSetup, error: activeMemberRecheckError } = await serviceSupabase
+        .from(config.memberTable)
+        .select('id')
+        .eq(config.memberEntityIdColumn, entityId)
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle()
+
+      if (activeMemberRecheckError) {
+        console.error('Error rechecking active members before entity KYC submit:', activeMemberRecheckError)
+        return {
+          status: 500,
+          payload: { error: 'Failed to validate entity members before KYC submission' },
+        }
+      }
+
+      if (!activeMemberAfterSetup) {
+        return {
+          status: 400,
+          payload: {
+            error: 'At least one active member is required before submitting entity KYC',
+          },
+        }
+      }
     }
 
     // Prevent duplicate queue entries when an existing submission is still in review

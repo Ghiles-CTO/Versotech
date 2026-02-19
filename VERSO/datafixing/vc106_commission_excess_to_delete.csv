@@ -1,0 +1,575 @@
+id,introducer,investor,basis_type,rate_bps,accrual_amount,currency,created_at,reason
+41f5108b-be71-495e-8e8a-882d3fbbe7bb,VERSO BI,CLOUDSAFE HOLDINGS LTD,performance_fee,500,0.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+e8214843-5a84-43f9-8633-7e47634e7480,VERSO BI,CLOUDSAFE HOLDINGS LTD,performance_fee,500,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+fdf474e0-44ee-494e-ae1e-90e5633ab17a,VERSO BI,David HOLDEN,invested_amount,200,3000.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+7ea5e61e-1fff-4465-9cf4-18fb8d952d78,VERSO BI,David HOLDEN,spread,0,1976.87,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+f2ce873f-cf02-486e-8664-599a3329db48,VERSO BI,David HOLDEN,performance_fee,500,0.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+9963ca5c-1a48-4629-a063-b25d05f65a95,VERSO BI,Imrat HAYAT,invested_amount,200,4904.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+a08c6de1-17e0-4c8b-bd46-9a499962227f,VERSO BI,Imrat HAYAT,spread,0,25200.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+83863c5e-89b8-4f51-9c29-6763079f5904,Manna Capital,Rajiv AGARWALA,spread,0,5000.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+231484f7-ca6b-4327-ade7-8b937f9167ae,Manna Capital,Rajiv AGARWALA,spread,0,5000.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+89b8213f-f251-499f-8b8d-6f11fbe207cc,VERSO BI,Ashish KOTHARI,invested_amount,100,1000.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+4156b30f-8c37-4efe-931c-76e0ff7e4d62,VERSO BI,Ashish KOTHARI,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+bfeb023d-8a61-4712-ab9a-9996143ffb91,VERSO BI,Fawad MUKHTAR,invested_amount,100,2000.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+8073d5c1-e958-497f-9866-fa3384b1aa32,VERSO BI,Fawad MUKHTAR,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+99a18162-96d0-47d0-94d4-2d9bf1622fff,VERSO BI,SOUTH SOUND LTD,invested_amount,200,4000.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+00d9d85f-aa00-4c87-8aa9-c8b67314c474,VERSO BI,SOUTH SOUND LTD,spread,0,2635.93,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+71683c3f-f828-4d8a-8a92-6b12fd35f7dd,VERSO BI,SOUTH SOUND LTD,performance_fee,500,0.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+ca009d7e-1ec8-4181-8c28-bdc92cc7858b,VERSO BI,Constantin-Octavian PATRASCU,invested_amount,200,2000.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+e9d8e446-ba0d-483a-aa9d-47bbf4474518,VERSO BI,Constantin-Octavian PATRASCU,spread,0,1317.81,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+c281ae62-a6d6-450f-840f-740b73f3207e,VERSO BI,Constantin-Octavian PATRASCU,performance_fee,500,0.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+610de953-b0e6-4045-a289-eb22fc757b66,VERSO PARTNER,Mayuriben JOGANI,invested_amount,50,500.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+ae6cfb3d-a038-4860-b266-e09bd207ca18,VERSO PARTNER,Mayuriben JOGANI,spread,0,5356.26,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+c37acd37-70e6-4571-8e1e-341332821c3d,VERSO PARTNER,Mayuriben JOGANI,performance_fee,500,0.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+b786d4e2-f050-4f3a-a530-c770fe7001b9,VERSO BI,Mayuriben JOGANI,invested_amount,100,1000.0,USD,2026-01-19T22:13:59.592121+00:00,excess_over_dashboard
+566106a7-8f58-4e7c-86f3-2cfaa658f222,VERSO BI,Mayuriben JOGANI,invested_amount,100,1000.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+4403303c-7d2e-4af4-830a-e899853eeeae,VERSO BI,Mayuriben JOGANI,performance_fee,1000,0.0,USD,2026-01-16T14:53:53.719432+00:00,excess_over_dashboard
+9baa058d-afe6-47ba-b74c-dc3513adc10d,VERSO BI,Mayuriben JOGANI,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+6cd05eef-a1ac-437b-b804-750e622d7ee6,VERSO BI,Hayden RUSHTON,invested_amount,200,2000.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+a3a63020-cdcb-482a-a6aa-212df8d5a707,VERSO BI,Hayden RUSHTON,spread,0,1317.81,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+3c66b9c2-7aaa-4c72-bccd-0152d7288660,VERSO BI,Hayden RUSHTON,performance_fee,500,0.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+5e9c154b-135b-4f08-b15e-a5034291a1db,VERSO BI,Mrs Nalini Yoga & Mr Aran James WILLETTS,performance_fee,500,0.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+37acb395-93a4-45a7-b930-1052ab35e6aa,VERSO BI,Emma Graham-Taylor & Gregory SOMMERVILLE,spread,0,1317.81,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+129cee13-222c-424d-ac07-01adc32370fe,VERSO BI,Emma Graham-Taylor & Gregory SOMMERVILLE,performance_fee,500,0.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+8fca2a39-f9f0-471a-b7c6-09fcdc20f06e,VERSO BI,Rabin D. and Dolly LAI,invested_amount,200,2000.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+72d33b0f-29d4-40c9-acdd-ee4d1223a2d1,VERSO BI,Rabin D. and Dolly LAI,spread,0,5356.26,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+3a8393d0-b5f7-41f7-aaa5-7d4bfdb0e0b1,VERSO BI,Kim LUND,invested_amount,200,2000.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+d96a0807-7b3c-4356-8deb-2d2546d5fdb3,VERSO BI,Kim LUND,spread,0,1317.81,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+706ce201-bb69-40ac-87ab-3116b72ff068,VERSO BI,Kim LUND,performance_fee,500,0.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+1d1d9c1d-826f-42cb-ba69-673b4432735d,VERSO BI,Ivan BELGA,invested_amount,200,2000.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+186240fb-3110-429f-b03e-efa8bdb6b9c1,VERSO BI,Ivan BELGA,spread,0,1317.81,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+e780fe5b-e5d5-45e2-b253-2aee1d3cc84e,VERSO BI,Ivan BELGA,performance_fee,500,0.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+478cfc45-39f2-4fee-a248-3b8e340a3869,VERSO BI,Ayman JOMAA,invested_amount,200,6000.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+63e16a64-d81d-4779-96ef-affa3f2c5461,VERSO BI,Karthic JAYARAMAN,invested_amount,200,8000.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+b6efdde7-6a01-4051-bc0d-9030461f73fc,VERSO BI,Imran HAKIM,invested_amount,200,2000.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+39273144-3f1a-4032-8f2d-132168e37f5e,VERSO BI,Imran HAKIM,spread,0,1317.81,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+26e868b3-ff78-4332-a599-3d07f660c65c,VERSO BI,Imran HAKIM,performance_fee,500,0.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+dd9a8c7d-31ac-4abb-89e6-c76d78390077,VERSO BI,Kenilworth Ltd,invested_amount,200,2000.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+9241003e-c4f5-4737-99e5-864cad63fbb8,VERSO BI,Kenilworth Ltd,spread,0,1317.81,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+526f0e21-562b-4109-8c7a-6f399940627c,VERSO BI,Kenilworth Ltd,performance_fee,500,0.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+18c53c35-49bb-4fea-88ac-8035ac2dc253,VERSO PARTNER,Adil KHAWAJA,invested_amount,50,1250.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+c0e7cb81-006e-4680-a810-a3e53df81262,VERSO PARTNER,Adil KHAWAJA,spread,0,13392.54,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+0d3abc96-ded3-4013-9229-85b22a2d41d3,VERSO PARTNER,Adil KHAWAJA,performance_fee,500,0.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+2d6789d1-a596-4561-8cbf-30c5f8f2928f,VERSO BI,Adil KHAWAJA,invested_amount,100,2500.0,USD,2026-01-19T22:13:59.592121+00:00,excess_over_dashboard
+f7e9e984-f5b9-4ec7-8c33-b486f7543f6e,VERSO BI,Adil KHAWAJA,invested_amount,100,2500.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+3d014445-e6ee-4c50-b966-d9366c10ad67,VERSO BI,Adil KHAWAJA,performance_fee,1000,0.0,USD,2026-01-16T14:58:05.843258+00:00,excess_over_dashboard
+fa1ff40a-5969-457e-bf7e-ad86c00e6aaa,VERSO BI,Adil KHAWAJA,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+eabc1959-179c-4738-9070-2f5b1f23c2c5,VERSO PARTNER,Bharat JATANIA,invested_amount,50,500.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+fc50b70e-2635-450c-9a80-d17bc65c9686,VERSO PARTNER,Bharat JATANIA,spread,0,4697.36,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+c11b83aa-b1a5-4c94-8759-d6b272e51b9b,Terra Financial & Management Services SA,Beatrice and Marcel KNOPF,spread,150,3330.0,USD,2026-01-16T13:16:31.556952+00:00,excess_over_dashboard
+c49c2d87-8545-42a3-9f78-4e86346209dd,Terra Financial & Management Services SA,Beatrice and Marcel KNOPF,spread,0,3330.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+634cfe0e-16a6-4094-8bbd-b1e2761b86a8,Terra Financial & Management Services SA,Beatrice and Marcel KNOPF,spread,0,3330.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+0cc6a17c-3306-4b39-96b6-c77e5f1df613,Terra Financial & Management Services SA,VOLF Trust,spread,0,16651.5,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+83468f0c-a155-4c55-a526-3066a6dd3031,Terra Financial & Management Services SA,VOLF Trust,spread,0,16651.5,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+568f774a-7b3f-47cb-b600-7176bd97f1d9,VERSO BI,Chang NGAN,spread,500,5040.0,USD,2026-01-19T22:42:34.385995+00:00,excess_over_dashboard
+dd343f25-9c72-4eb3-aa0f-57ea0afc4fa4,VERSO BI,Chang NGAN,spread,0,5040.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+10436caf-8b3a-45cc-b427-2b47d53f0691,VERSO BI,Chang NGAN,spread,0,5040.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+bd8797c6-72b7-40d5-8d62-347b27fdb69f,VERSO BI,OFBR Trust,spread,0,13941.6,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+929597f6-6a25-4c88-8c76-483c2d2c1cd4,VERSO BI,OFBR Trust,spread,0,13941.6,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+243d786d-c996-40fe-9b31-730297064f20,VERSO BI,Mrs Nilakantan & Mr Subbiah MAHESWARI & SUBRAMANIAN,spread,666,10321.69,USD,2026-01-19T22:42:34.385995+00:00,excess_over_dashboard
+8ff27208-84c5-4d62-bdc0-cddff85240a6,VERSO BI,Mrs Nilakantan & Mr Subbiah MAHESWARI & SUBRAMANIAN,spread,0,10321.69,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+b8b184f4-6fea-48d8-a57e-9f1db5349a2b,VERSO BI,Mrs Nilakantan & Mr Subbiah MAHESWARI & SUBRAMANIAN,spread,0,10321.69,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+f6b59c8d-29e9-414d-8799-2d5b616f4422,VERSO BI,KRANA INVESTMENTS PTE. LTD.,spread,0,20999.03,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+f3ba0382-859b-4ac1-b2dc-90a4ab2b3ded,VERSO BI,KRANA INVESTMENTS PTE. LTD.,spread,0,20999.03,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+7359a10b-651a-44fc-9a91-fcb338be303c,VERSO BI,TRUE INVESTMENTS 4 LLC,spread,0,57104.25,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+ffd81c76-c729-441f-a9a9-07b02281748b,VERSO BI,TRUE INVESTMENTS 4 LLC,spread,0,57104.25,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+e1c4d43e-68d1-4579-8208-1ea523d9f911,VERSO BI,Daryl YONGJIE,spread,500,8250.3,USD,2026-01-19T22:42:34.385995+00:00,excess_over_dashboard
+a66a6449-16fd-4516-b4b9-141e66025587,VERSO BI,Daryl YONGJIE,spread,0,8250.3,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+4e31442d-804c-4333-8a92-832e0afd5fa1,VERSO BI,Daryl YONGJIE,spread,0,8250.3,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+2e5e95f3-858c-4409-83b4-f058b8d6a08b,VERSO BI,AS ADVISORY DWC-LLC,spread,0,35712.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+9e0e4e7a-fb90-40f2-b4e0-d9b1e2e970aa,VERSO BI,AS ADVISORY DWC-LLC,spread,0,35712.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+8e753eab-9bb2-4693-b061-f64650b56b34,VERSO BI,Hedgebay Securities LLC,spread,0,2177.1,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+0f129fc8-f11f-47fd-a8e1-ff142327cbb1,VERSO BI,Hedgebay Securities LLC,spread,0,2177.1,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+009d005d-b4a7-4ca5-bf15-7959b78ed3a9,VERSO BI,Hedgebay Securities LLC,spread,0,2177.1,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+c75c43c1-ca94-4775-b55d-50e1058555b0,VERSO BI,Hedgebay Securities LLC,spread,0,2177.1,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+89d22ccb-d99f-48cc-84db-8100afaeed87,VERSO BI,Hedgebay Securities LLC,spread,0,2177.1,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+c720ad60-d965-475f-8d4e-009c007d47c6,VERSO BI,Hedgebay Securities LLC,spread,0,2177.1,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+2c942bab-7beb-49a4-8da4-4565f796053a,VERSO BI,Hedgebay Securities LLC,spread,0,8716.6,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+88419d55-0743-4f64-bb8a-1637b838b754,VERSO BI,Hedgebay Securities LLC,spread,0,8716.6,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+1d149617-7b54-41f8-b39d-702eb83cd3d5,VERSO BI,Tan GEOK,spread,500,4003.2,USD,2026-01-19T22:42:34.385995+00:00,excess_over_dashboard
+0eec605b-ce74-4e31-add0-358023b838e7,VERSO BI,Tan GEOK,spread,0,4003.2,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+27ade96a-b9fa-4899-98b0-b52551185487,VERSO BI,Tan GEOK,spread,0,4003.2,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+f10c6487-a97b-456f-be07-372fb9ca39eb,VERSO BI,Ekkawat SAE-JEE,spread,0,1249.2,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+7207bb7b-2170-4ad8-83da-11fc19d7438a,VERSO BI,Ekkawat SAE-JEE,spread,0,1249.2,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+14108be2-24f5-4165-b6c9-d0f6e6160288,VERSO BI,OEP Ltd,spread,0,35715.0,USD,2026-01-19T22:42:34.385995+00:00,excess_over_dashboard
+62a4c37f-0691-48eb-9825-af1e88666246,VERSO BI,OEP Ltd,spread,0,35715.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+68e1d6c6-8e21-4b5b-a6fc-7f4c7c3971c1,VERSO BI,OEP Ltd,spread,0,35715.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+e184b457-d560-4bda-9ff1-7ec94bd193bc,VERSO BI,SAMIR KOHI,spread,0,10000.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+1d465f7a-7933-4449-8330-7e2ed67ff181,VERSO BI,SAMIR KOHI,spread,0,10000.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+4f1a6969-96cc-4d44-9b1c-4229e7cd5301,VERSO BI,Elidon Estate Inc,spread,0,13999.36,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+53b6f7c0-199d-423d-a24a-61ce8b6401ad,VERSO BI,Elidon Estate Inc,spread,0,13999.36,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+dc878e83-c132-4f7a-b42a-6d1493b1e54f,VERSO BI,Han CHIH-HENG,spread,0,4999.5,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+7456da15-8d8a-421b-90a1-34e6931128e6,VERSO BI,Han CHIH-HENG,spread,0,4999.5,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+ca1938a9-d5f7-42c9-945c-b47cbb422bbc,VERSO BI,ONC Limited,performance_fee,125,0.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+9013eaa3-2c9a-4bb0-bb6d-4edb18101fda,VERSO BI,ONC Limited,performance_fee,125,0.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+a9c47740-20cb-4673-a738-1354f0a58534,VERSO BI,ONC Limited,spread,0,65901.35,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+2a9911bd-41e5-4b66-9bd1-a8a5a3edc270,VERSO BI,ONC Limited,spread,0,65901.35,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+ac48c4c2-b65a-4667-9d7e-11d7ceabf940,VERSO BI,ONC Limited,invested_amount,200,99999.98,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+cd991bb2-0680-4fad-949c-9251ba584ecd,VERSO BI,ONC Limited,invested_amount,200,99999.98,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+c626005d-e056-48ba-a32e-86eecf75bd41,VERSO BI,SHEILA and KAMLESH MADHVANI,spread,0,40000.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+dab83226-ddfd-44d5-be02-f1a3687370d2,VERSO BI,SHEILA and KAMLESH MADHVANI,spread,0,40000.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+81e45411-e610-4f33-80f1-211eb09a5959,VERSO BI,Mohammed AL ABBASI,spread,1316,31750.0,USD,2026-01-19T22:42:34.385995+00:00,excess_over_dashboard
+179f831d-d195-4a6a-966f-dc5157eacaac,VERSO BI,Mohammed AL ABBASI,spread,0,31750.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+a5c94bb9-fdfa-42a7-a40a-549f5e66dad4,VERSO BI,Mohammed AL ABBASI,spread,0,31750.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+c246973b-13b4-4aa9-a2be-aaf24ac1de66,VERSO BI,CAUSE FIRST Holdings Ltd,spread,0,6806.52,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+942816da-fe50-45b7-920a-810f331991aa,VERSO BI,CAUSE FIRST Holdings Ltd,spread,0,6806.52,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+f55ff146-fad1-4e87-a298-3aeaa5284120,VERSO BI,Adam Smith Singapore Pte Ltd,spread,0,1749.15,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+0affdce0-f82f-43e8-891b-e7d5221b6b88,VERSO BI,Adam Smith Singapore Pte Ltd,spread,0,1749.15,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+e876df12-2e75-4e7c-b1d9-591f352359c8,VERSO BI,Mrs Anisha Bansal and Mr Rahul KARKUN,spread,1818,9088.0,USD,2026-01-19T22:42:34.385995+00:00,excess_over_dashboard
+e466673e-f9e5-49b6-92e4-8bd56a78f801,VERSO BI,Mrs Anisha Bansal and Mr Rahul KARKUN,spread,0,9088.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+60edb165-10dc-46ea-9144-189ab3b70845,VERSO BI,Mrs Anisha Bansal and Mr Rahul KARKUN,spread,0,9088.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+6072f575-d565-419a-8d39-ceb96b4d1dcc,VERSO BI,Johann AKERMANN,spread,666,15000.0,USD,2026-01-19T22:42:34.385995+00:00,excess_over_dashboard
+1d7bc1d7-cd25-4857-8e44-6794eae7854a,VERSO BI,Johann AKERMANN,spread,0,15000.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+51a3b669-72c3-49c0-8417-c6cff2ed9342,VERSO BI,Johann AKERMANN,spread,0,15000.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+496c0427-72ed-4320-8d0e-173478da971f,VERSO BI,ROSEN INVEST HOLDINGS Inc,spread,0,6806.52,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+03843e43-9ba4-40e2-b811-c769491400d7,VERSO BI,ROSEN INVEST HOLDINGS Inc,spread,0,6806.52,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+20543eb0-c36e-486a-bd74-d20c761b6e1f,VERSO BI,Daphne CHANDRA,invested_amount,0,23542.2,USD,2026-01-19T22:13:59.592121+00:00,excess_over_dashboard
+eea67a8d-9a5a-4876-82b9-fa11cab21e63,VERSO BI,Daphne CHANDRA,invested_amount,0,23542.2,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+e2b30858-3632-4093-bc8d-94ce09796190,VERSO BI,Daphne CHANDRA,invested_amount,0,23542.2,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+fca278e2-0496-442a-83f6-06ab60e24f65,VERSO BI,Craig BROWN,spread,0,5000.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+d205020e-3c79-4284-9ca4-92a16fccc241,VERSO BI,Craig BROWN,spread,0,5000.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+0e1128c3-1a06-49bb-a01b-370ce822ca39,VERSO BI,Matteo MARTINI,spread,754,7537.5,USD,2026-01-19T22:42:34.385995+00:00,excess_over_dashboard
+5dcbf6e6-a4fd-48e6-9d51-4bf84f179582,VERSO BI,Matteo MARTINI,spread,0,7537.5,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+c9889343-a445-456d-ae1c-4d7628770d0b,VERSO BI,Matteo MARTINI,spread,0,7537.5,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+f4aff910-56db-4697-9968-356b2c4852c1,VERSO BI,Dario SCIMONE,performance_fee,1000,0.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+1ac46725-c7cd-41ae-a14b-16de7712ea74,VERSO BI,Dario SCIMONE,performance_fee,1000,0.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+451a5ca0-9e9a-4d80-a35c-a10cf3b08c4a,VERSO BI,Dario SCIMONE,spread,0,5980.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+b81b7f22-51a6-4b10-8c45-cad2c9edd88f,VERSO BI,Dario SCIMONE,spread,0,5980.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+7204aaf2-9847-4551-ad1a-7ebd67ac6727,VERSO BI,Dario SCIMONE,invested_amount,200,1000.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+172576be-106a-409f-8157-e1fd72749123,VERSO BI,Dario SCIMONE,invested_amount,200,1000.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+9d87fb13-81e2-46b3-9d52-ec87414a00c7,VERSO BI,Sandra CABIAN,spread,754,3768.0,USD,2026-01-19T22:42:34.385995+00:00,excess_over_dashboard
+ad476081-6751-42f9-8e63-4a6dd98f28da,VERSO BI,Sandra CABIAN,spread,0,3768.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+f426af55-3bb5-4aa9-b03f-308bb5c5aa20,VERSO BI,Sandra CABIAN,spread,0,3768.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+66bec0ba-9685-49df-a34f-79d25f6215dc,VERSO BI,DALINGA HOLDING AG,spread,0,3768.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+e5ec1677-7589-466f-8faf-947556e3a513,VERSO BI,DALINGA HOLDING AG,spread,0,3768.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+87f0879f-fe5b-410b-97a5-c6bdb6042b2f,Manna Capital,Blaine ROLLINS,spread,0,5000.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+3cb2ff35-3fa0-4b71-9441-36e1193ee4da,Manna Capital,Blaine ROLLINS,spread,0,5000.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+de5aa097-5a58-400e-8c4c-b29e7559e589,Manna Capital,Blaine ROLLINS,spread,0,15000.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+0f6a1dc2-7f9f-416f-b8b3-e85bb84fe012,Manna Capital,Blaine ROLLINS,spread,0,15000.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+c3fa624d-3431-45b6-b5c5-32b4411ff2d5,Manna Capital,Laurence CHANG,spread,0,5000.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+4550a198-1dc9-4409-a25f-3d7dd0ab155d,Manna Capital,Laurence CHANG,spread,0,5000.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+ea207d43-d48f-4ea8-aa5b-e4a71ac56bee,Manna Capital,Laurence CHANG,spread,0,10000.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+ba117228-b00a-4e93-a62a-3bb606cdd4d0,Manna Capital,Laurence CHANG,spread,0,10000.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+72e0639f-20af-4897-b221-1df08fadd924,Setcap,JIMENEZ TRADING INC,spread,468,994968.0,USD,2026-01-16T15:51:18.137901+00:00,excess_over_dashboard
+eb16f794-35e8-4ef3-95b8-97e75ed0b4d8,Setcap,JIMENEZ TRADING INC,spread,0,994968.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+afd499d9-4394-42f9-a867-3a68df8f15f3,Setcap,JIMENEZ TRADING INC,spread,0,994968.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+88fb721a-1df9-4c1b-9693-424c9dd8a09a,Setcap,Bahama Global Towers Limited,spread,287,18687.5,USD,2026-01-16T13:16:31.556952+00:00,excess_over_dashboard
+e60d1f1e-26a0-494b-aa76-42d8c7279386,Setcap,Bahama Global Towers Limited,spread,0,18687.5,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+416ebafe-72ec-40bc-aa96-7700b46e505c,Setcap,Bahama Global Towers Limited,spread,0,18687.5,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+6e86b3fb-5297-483e-beca-54a7e51b76a0,VERSO PARTNER,Beatrice and Marcel KNOPF,performance_fee,500,0.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+826366a3-85ab-4eaa-b832-406eba8a2c4f,VERSO PARTNER,Beatrice and Marcel KNOPF,performance_fee,500,0.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+07f1862a-3266-4134-9f89-247bdf32b74f,VERSO PARTNER,Beatrice and Marcel KNOPF,spread,0,6660.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+e663e417-b111-459e-b25a-60739286ee54,VERSO PARTNER,Beatrice and Marcel KNOPF,spread,0,6660.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+052a5b12-d1b6-42ff-91e8-13714620870a,VERSO PARTNER,Beatrice and Marcel KNOPF,invested_amount,100,500.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+72929887-4b90-487a-881f-9ba8ae20f370,VERSO PARTNER,Beatrice and Marcel KNOPF,invested_amount,100,500.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+f2e77d25-1902-49f2-ae16-913c8797cfde,VERSO PARTNER,DALINGA HOLDING AG,performance_fee,500,0.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+3e79d881-1bf3-4719-9b5c-516099e3993b,VERSO PARTNER,DALINGA HOLDING AG,spread,0,5024.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+0c3bea86-4c26-4c3c-89cf-afae82aaa8ce,VERSO PARTNER,DALINGA HOLDING AG,invested_amount,200,1000.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+a785fbc2-6610-43dc-9c1a-2d45952571df,VERSO PARTNER,Dario SCIMONE,performance_fee,500,0.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+310aa854-cdf6-4d4d-bc4a-e759dbd39bc0,VERSO PARTNER,Dario SCIMONE,spread,0,4784.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+8d0397d0-115b-4024-be97-8e98c7d56da0,VERSO PARTNER,Dario SCIMONE,invested_amount,200,1000.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+197bb500-b90a-46e4-a12e-da50a8436b20,VERSO PARTNER,LEE RAND GROUP,spread,0,2301.25,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+c95da944-c180-4219-97ee-6b1dadc86875,VERSO PARTNER,LEE RAND GROUP,spread,0,2301.25,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+d09f72f3-acfd-4c32-910a-ff7ec1dec341,VERSO PARTNER,LEE RAND GROUP,spread,0,4604.25,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+6fdcfb44-7212-4682-a05b-fa0cdaf8f778,VERSO PARTNER,LEE RAND GROUP,spread,0,4604.25,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+a5e5fb7e-148e-48e8-a4dc-03a07b03b153,VERSO PARTNER,LEE RAND GROUP,spread,0,4604.25,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+942d83ef-93d1-40bb-a2f1-1520eae996b1,VERSO PARTNER,LEE RAND GROUP,spread,0,3223.5,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+e9215574-1370-4a4d-8152-1f26e1531b49,VERSO PARTNER,LEE RAND GROUP,spread,0,18420.5,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+1ad2c66f-5f8f-4fbd-89ea-1303cd349a0c,VERSO PARTNER,ONC Limited,performance_fee,375,0.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+cfa0fa14-f9ef-456c-93da-a8f76249285a,VERSO PARTNER,ONC Limited,spread,0,234906.43,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+795cfee0-ac7b-4aa7-9179-07702f6a9e24,VERSO PARTNER,Ekkawat SAE-JEE,spread,0,2776.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+f61df2fb-e51e-45c7-94b5-da26fabe9310,VERSO PARTNER,KRANA INVESTMENTS PTE. LTD.,spread,0,41094.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+7839380b-30d7-4b0f-857f-54082c5d1b43,VERSO PARTNER,KRANA INVESTMENTS PTE. LTD.,invested_amount,100,3000.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+e2e74257-d42e-4e73-8cee-4968e226f942,VERSO PARTNER,Adam Smith Singapore Pte Ltd,performance_fee,500,0.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+bbf213a8-f564-4975-98db-07e8c37bab06,VERSO PARTNER,Adam Smith Singapore Pte Ltd,spread,0,3423.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+d80a689f-244e-4dbf-8222-50bc5212b5d8,VERSO PARTNER,Adam Smith Singapore Pte Ltd,invested_amount,100,250.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+be002d1e-9302-44fd-8c86-69ca2a152185,VERSO PARTNER,Mrs Nilakantan & Mr Subbiah MAHESWARI & SUBRAMANIAN,performance_fee,500,0.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+77f83718-2b09-4640-b1c2-fb2f7562f0aa,VERSO PARTNER,Mrs Nilakantan & Mr Subbiah MAHESWARI & SUBRAMANIAN,performance_fee,500,0.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+9a32d6dd-044e-4df3-87dc-673eba152226,VERSO PARTNER,Mrs Nilakantan & Mr Subbiah MAHESWARI & SUBRAMANIAN,spread,0,20199.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+0c41a49c-9ab2-41d7-a08f-c21c2f114eef,VERSO PARTNER,Mrs Nilakantan & Mr Subbiah MAHESWARI & SUBRAMANIAN,spread,0,20199.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+13b4b0d2-21fa-4f31-b292-83e3639c4886,VERSO PARTNER,AS ADVISORY DWC-LLC,spread,0,35712.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+3a01bf22-5118-47b9-ae8d-d4227eb45e39,VERSO PARTNER,Barbara and Heinz WINZ,performance_fee,500,0.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+b0944d0e-8572-4037-a5a3-f684082317b8,VERSO PARTNER,Barbara and Heinz WINZ,performance_fee,500,0.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+c7725a37-8224-461d-9f80-e537684032bd,VERSO PARTNER,Barbara and Heinz WINZ,spread,0,13320.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+3f2e6064-2efb-4ffe-8fb2-29d4e0409277,VERSO PARTNER,Barbara and Heinz WINZ,spread,0,13320.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+dba2efc1-8aeb-42f4-9024-886bb15fa08b,VERSO PARTNER,Barbara and Heinz WINZ,invested_amount,100,1000.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+2143d7c8-578c-4137-8b4e-2566078671cc,VERSO PARTNER,Barbara and Heinz WINZ,invested_amount,100,1000.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+0233f968-6fec-4c7c-884d-1d361b49dcf5,VERSO PARTNER,OFBR Trust,spread,0,26196.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+e90bc62a-4072-4ab5-bffe-3f1f89f3b78b,VERSO PARTNER,OFBR Trust,invested_amount,100,2000.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+9027b922-7596-47d7-bc4e-694f53b47a35,VERSO PARTNER,Matteo MARTINI,performance_fee,500,0.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+c1835c1b-8a6c-4879-bdf1-a963d13997b7,VERSO PARTNER,Matteo MARTINI,performance_fee,500,0.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+60f4defc-98e3-400c-bd6c-e6d17dcf5ae0,VERSO PARTNER,Matteo MARTINI,spread,0,10050.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+1821d42b-4688-4152-a051-d0014e58ef3d,VERSO PARTNER,Matteo MARTINI,spread,0,10050.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+feb2c4fa-1b78-490a-88d8-c0124620e7cf,VERSO PARTNER,Matteo MARTINI,invested_amount,200,2000.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+5bfbea72-c0b4-414d-811e-06ffb479e2c3,VERSO PARTNER,Matteo MARTINI,invested_amount,200,2000.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+66d34bae-e8ca-4fc0-949a-49e5274f7683,VERSO PARTNER,MA GROUP AG,spread,0,5274.5,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+e759af1d-f89a-447d-a155-b9cb1770e18d,VERSO PARTNER,MA GROUP AG,invested_amount,200,600.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+15c525ed-af14-4afe-8a87-2901b00162b0,VERSO PARTNER,Sandra CABIAN,spread,0,5024.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+30c3d965-2796-4cf2-b1c6-5fb8613e6f53,VERSO PARTNER,Sandra CABIAN,spread,0,5024.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+13f09e9b-55e2-48d5-80c8-e2309b8e9473,VERSO PARTNER,Sandra CABIAN,invested_amount,100,500.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+d354679a-2081-4da4-87ac-74bffbe17e6e,VERSO PARTNER,Sandra CABIAN,invested_amount,100,500.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+67c34383-3770-4580-a0b8-6567cfe55c0b,VERSO PARTNER,Bahama Global Towers Limited,spread,0,13812.5,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+8846f472-f25a-4d47-9203-d83188d193bd,VERSO PARTNER,Elidon Estate Inc,performance_fee,500,0.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+454d10b2-0465-4078-9969-cf39837612d1,VERSO PARTNER,Elidon Estate Inc,spread,0,27396.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+9d9cd808-9ed8-49f0-b265-545db0e7af21,VERSO PARTNER,Elidon Estate Inc,invested_amount,100,2000.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+f24a3d44-5da4-40df-9bd3-2de20a11d237,VERSO PARTNER,VOLF Trust,performance_fee,500,0.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+55540324-0452-4918-83cf-926e0d9ef883,VERSO PARTNER,VOLF Trust,spread,0,33303.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+2fcdf9f6-9119-4e4e-a771-8adbfe814eb8,VERSO PARTNER,VOLF Trust,invested_amount,100,2500.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+d4c5937d-7560-4cda-b318-7ac683f2d9f0,VERSO PARTNER,Sabrina WINZ,performance_fee,500,0.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+c17e2965-a1cb-4f28-9233-81d13c452342,VERSO PARTNER,Sabrina WINZ,spread,0,6660.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+538f7a5f-d0d3-47a2-b7cb-b28e34bb5480,VERSO PARTNER,Sabrina WINZ,invested_amount,100,500.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+99049206-570f-4c73-83f3-400a1c6e6587,VERSO PARTNER,ROSEN INVEST HOLDINGS Inc,spread,0,6748.8,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+644ef0ff-5305-49ed-b52c-9ec07ca6b89e,VERSO PARTNER,ROSEN INVEST HOLDINGS Inc,invested_amount,100,1000.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+a392b4bc-98b2-41a0-bbd8-961cfc02e7bb,VERSO PARTNER,OEP Ltd,spread,0,35715.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+d330d867-d866-4acf-b060-7e3c4975eeb2,VERSO PARTNER,OEP Ltd,spread,0,35715.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+9a4f0582-3436-43bf-82b0-1a9b0acbfd24,VERSO PARTNER,CAUSE FIRST Holdings Ltd,spread,0,6748.8,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+12dc12a8-231e-433e-b5b4-bdc08fabcf5d,VERSO PARTNER,PANT Investments Inc,spread,0,9210.25,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+60201885-8cbf-41d4-b573-c2784e656033,VERSO PARTNER,Johann AKERMANN,spread,0,30000.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+6e7d5f37-efc1-40d3-b3ef-fbc17f4ba46d,VERSO PARTNER,Johann AKERMANN,spread,0,30000.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+2646da1b-bef2-4f53-89ba-85709f52b8ab,VERSO PARTNER,Johann AKERMANN,invested_amount,100,2252.0,USD,2026-01-24T14:14:43.977423+00:00,excess_over_dashboard
+69f78254-fceb-4fb1-9c71-531cedfb8ac7,VERSO PARTNER,Johann AKERMANN,invested_amount,100,2252.0,USD,2026-01-24T14:52:58.787034+00:00,excess_over_dashboard
+554c67bb-3f07-4ccb-95a7-01ddab101f38,VERSO PARTNER,Bharat JATANIA,performance_fee,750,0.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+f9f23d00-8197-48c4-9056-5761e9e7aaac,VERSO BI,Bharat JATANIA,invested_amount,100,1000.0,USD,2026-01-19T22:13:59.592121+00:00,excess_over_dashboard
+6997a06e-a1c8-4b5e-aa8f-842f788f93a9,VERSO BI,Bharat JATANIA,invested_amount,100,1000.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+1aa1e150-163f-421e-9ebf-2c275c53ae28,VERSO BI,Bharat JATANIA,spread,132,1317.81,USD,2026-01-19T22:43:12.054499+00:00,excess_over_dashboard
+c3c9a7d7-4af2-43ba-9f0b-7333d51061a0,VERSO BI,Bharat JATANIA,spread,0,1317.81,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+809321b2-31b2-4a38-b2d7-6b5c0a4c0408,VERSO BI,Bharat JATANIA,performance_fee,500,0.0,USD,2026-01-16T14:58:05.843258+00:00,excess_over_dashboard
+366c945f-423b-4cab-8ef8-46d010a8811f,VERSO BI,Bharat JATANIA,performance_fee,500,0.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+acd47979-d611-49d1-a201-7ccd5824c02a,VERSO BI,Lubna QUNASH,invested_amount,100,1000.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+96e15cb5-d8d4-4b57-847c-c7ee2fb570dd,VERSO BI,Lubna QUNASH,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.106897+00:00,excess_over_dashboard
+337cb2b2-da43-4a72-8785-43b26a76d1b4,VERSO PARTNER,Michel GUERIN,invested_amount,50,1000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+296c9f7d-0cb0-4fa5-9e9d-0d34fbd3a512,VERSO PARTNER,Michel GUERIN,spread,0,10713.78,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+480b35a2-7b83-4ab4-9dda-fe5fe7b42853,VERSO PARTNER,Michel GUERIN,performance_fee,500,0.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+53df6de3-f8c3-4171-b0fa-7c4cb35a2c6b,VERSO BI,Michel GUERIN,invested_amount,100,2000.0,USD,2026-01-19T22:13:59.592121+00:00,excess_over_dashboard
+b9c4c6bd-9857-499d-9c0d-f68edc037eb1,VERSO BI,Michel GUERIN,invested_amount,100,2000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+22c0480c-a222-4d94-8e14-925bcf9d7975,VERSO BI,Michel GUERIN,performance_fee,1000,0.0,USD,2026-01-16T14:58:05.843258+00:00,excess_over_dashboard
+9914c5bb-e884-433f-8610-6da2ac8ab5d3,VERSO BI,Michel GUERIN,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+34b6330e-ef1e-47e3-9471-100c33e8cf90,VERSO PARTNER,Eric LE SEIGNEUR,invested_amount,500,5000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+a030c2d2-8223-4900-bccf-b961abff89a3,VERSO PARTNER,Eric LE SEIGNEUR,spread,0,5356.26,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+eb71a60b-9cce-4ecc-91c5-635ebc4a567e,VERSO PARTNER,Eric LE SEIGNEUR,spread,0,5356.26,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+5a0d89ff-cb9c-40a4-b11f-19a3f9d38073,VERSO PARTNER,Eric LE SEIGNEUR,performance_fee,500,0.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+6a1a3561-e2c7-4145-88c9-5f457b4f45fb,VERSO PARTNER,Eric LE SEIGNEUR,performance_fee,500,0.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+15035dbd-21d3-4329-a6d5-0950a95316f6,VERSO BI,Eric LE SEIGNEUR,invested_amount,200,2000.0,USD,2026-01-19T22:13:59.592121+00:00,excess_over_dashboard
+9ff25706-1589-4441-b480-bdd7192560df,VERSO BI,Eric LE SEIGNEUR,invested_amount,200,2000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+355c8d24-2a73-4d74-9c56-e42204005bbe,VERSO BI,Eric LE SEIGNEUR,performance_fee,1000,0.0,USD,2026-01-16T14:58:05.843258+00:00,excess_over_dashboard
+476fde2c-abdd-4f4f-bd14-0071b45c749b,VERSO BI,Eric LE SEIGNEUR,performance_fee,1000,0.0,USD,2026-01-16T22:42:20.816252+00:00,excess_over_dashboard
+cfc60c91-ef7a-481b-9c7c-e902b2682640,VERSO BI,Eric LE SEIGNEUR,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+df06e2e6-c54d-407b-aa9f-dc4ef033e7f1,VERSO BI,Eric LE SEIGNEUR,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+ba078a81-2f9f-4ad6-949c-8fa7a6fa0cc0,VERSO BI,John ACKERLEY,performance_fee,500,0.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+ba514169-caaf-4e35-8e34-0bb44ece8248,VERSO BI,John ACKERLEY,performance_fee,500,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+370101f7-6526-4d87-9094-3793edb1384c,VERSO BI,John ACKERLEY,spread,0,1317.5,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+71e4db88-af5c-40a9-994a-83f49d1bd71d,VERSO BI,John ACKERLEY,spread,0,1317.5,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+18358ecf-68d9-4590-ad16-d723f48723a8,VERSO BI,John ACKERLEY,invested_amount,200,1000.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+f6e9443b-582d-4e1f-bb35-72db3bd03221,VERSO BI,John ACKERLEY,invested_amount,200,1000.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+86ecc527-d263-419c-8ca9-f987ecb72296,VERSO BI,INNOSIGHT VENTURES Pte Ltd,spread,0,5600.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+06f1d24f-f318-4eaf-93ed-f8ed3190093f,VERSO BI,INNOSIGHT VENTURES Pte Ltd,spread,0,5600.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+e68ef047-d6d5-4bc0-91bd-7f99e8eb28ee,VERSO BI,INNOSIGHT VENTURES Pte Ltd,spread,0,20000.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+e820dfc0-364c-4419-a0c0-a76a4ddad555,VERSO BI,INNOSIGHT VENTURES Pte Ltd,spread,0,20000.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+693d174f-ca06-4865-8100-9ed5af0cd643,VERSO BI,Banco BTG Pactual S.A. Client 34924,performance_fee,500,0.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+66f37291-f592-4c85-b0a3-5821d670d659,VERSO BI,Banco BTG Pactual S.A. Client 34924,spread,0,10712.52,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+52340488-b290-4524-b6d6-971c11b75c24,VERSO BI,Banco BTG Pactual S.A. Client 80776,invested_amount,50,500.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+6035fba7-7847-4a93-96a6-804fbd3dfc1f,VERSO BI,Banco BTG Pactual S.A. Client 80776,performance_fee,500,0.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+0e6891c4-1e38-4512-bb20-36722d2fd98b,VERSO BI,Banco BTG Pactual S.A. Client 80776,spread,0,10712.52,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+80b7da09-7a29-42da-b8c3-4385c9faa45d,VERSO BI,Banco BTG Pactual S.A. Client 80840,invested_amount,50,500.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+7167883d-267e-430e-81f6-68dfca0dc6e7,VERSO BI,Banco BTG Pactual S.A. Client 80840,performance_fee,500,0.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+eb08d06c-89f8-4182-bc1d-9ef936f699d6,VERSO BI,Banco BTG Pactual S.A. Client 80840,spread,0,10712.52,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+c91732b4-aad0-46ff-a106-f7271fe4ede9,VERSO BI,Banco BTG Pactual S.A. Client 80772,performance_fee,500,0.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+a0ec2165-36f1-4a4c-95b7-94ba56731d1d,VERSO BI,Banco BTG Pactual S.A. Client 80772,spread,0,10712.52,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+01efb7f7-b2a9-4813-8c88-8f3925254c73,VERSO BI,Hossien JAVID,invested_amount,200,999.6,USD,2026-01-19T22:13:59.592121+00:00,excess_over_dashboard
+244f42c2-d3ca-48ef-9db0-b233f83d442c,VERSO BI,Hossien JAVID,invested_amount,200,999.6,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+47d63399-efa4-40e4-9008-9631cfcf4aa5,VERSO BI,Hossien JAVID,spread,536,2677.5,USD,2026-01-19T22:43:12.054499+00:00,excess_over_dashboard
+d875db7c-b2b3-476e-966f-8c5e795d2e1a,VERSO BI,Hossien JAVID,spread,0,2677.5,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+8edb0eea-becd-46a7-974c-28bef7cab150,VERSO BI,Kaveh ALAMOUTI,spread,0,5356.26,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+ad5cde6f-593a-488c-8eab-0a5544ac6290,VERSO BI,Banco BTG Pactual S.A. Client 80738,invested_amount,50,500.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+22923433-e9a6-44ba-a4af-ef4fffcca7b5,VERSO BI,Banco BTG Pactual S.A. Client 80738,performance_fee,500,0.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+92e9efde-06be-41cd-878f-d10a8ee61523,VERSO BI,Banco BTG Pactual S.A. Client 80738,spread,0,10712.52,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+973f9d74-ffc9-47cb-aff3-e1241ee68925,VERSO BI,Damien Krauser,invested_amount,100,1000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+98b3ded8-c09b-41b0-be67-041e40591fac,VERSO BI,Steve MANNING,performance_fee,500,0.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+75671c44-d815-45be-9833-e81afd098a20,VERSO BI,Steve MANNING,performance_fee,500,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+5044fb9b-ed88-4491-93fd-565b804505be,VERSO BI,Steve MANNING,spread,0,1317.5,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+01a71cee-f6a0-4785-9094-c4396f9e7d6d,VERSO BI,Steve MANNING,spread,0,1317.5,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+7d7cc774-b070-463a-95fb-b751cc785acc,VERSO BI,Guillaume SAMAMA,invested_amount,100,1000.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+478c1947-693c-4072-9e01-9112fdda9748,VERSO BI,Patrick CORR,invested_amount,100,5000.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+e605d10d-9b3e-47a2-a0df-a5b30b4f288c,VERSO BI,Patrick CORR,invested_amount,100,5000.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+b79deb5f-effa-4aea-9bce-55e1fce9da43,VERSO BI,Patrick CORR,performance_fee,500,0.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+e5e25f04-3f8b-4c1b-9b1f-1c48217b6f3c,VERSO BI,Patrick CORR,performance_fee,500,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+9dd18224-355f-4886-bc3d-800a425faf98,VERSO BI,Patrick CORR,spread,0,13179.96,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+053ac8c6-a394-440a-be1a-1b755be66574,VERSO BI,Patrick CORR,spread,0,13179.96,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+b631f971-5734-4f68-9dc3-8261265923a1,VERSO BI,Salman HUSSAIN,invested_amount,200,999.6,USD,2026-01-19T22:13:59.592121+00:00,excess_over_dashboard
+060cfb9a-e708-4f21-914a-8ce5bfe46521,VERSO BI,Salman HUSSAIN,invested_amount,200,999.6,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+136c6427-56db-4e09-9f5b-ed559c431469,VERSO BI,Steve MANNING,invested_amount,200,1000.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+c48b97b0-49ec-4144-8e17-38c7e39db04e,VERSO BI,Steve MANNING,invested_amount,200,1000.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+aa62e841-b0a8-4098-895e-19b14554c0d7,VERSO BI,Global Custody & Clearing Limited,performance_fee,500,0.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+29b2e550-bbdb-4fe7-ade0-afec69a5fa10,VERSO BI,Global Custody & Clearing Limited,performance_fee,500,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+6236cb98-ca38-4a4b-9d35-d24281c3ec0d,VERSO BI,Global Custody & Clearing Limited,spread,0,37293.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+8b407888-549e-4601-9894-e5b5526036c3,VERSO BI,Global Custody & Clearing Limited,spread,0,37293.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+28ac97ba-4fb7-48bd-9d62-e344398186a6,VERSO BI,Global Custody & Clearing Limited,invested_amount,200,28294.56,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+344331b7-9665-43eb-826f-79ce4e0e6489,VERSO BI,Global Custody & Clearing Limited,invested_amount,200,28294.56,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+11a45ab4-79c5-4f67-9b75-a6c209286a59,VERSO BI,Gregory BROOKS,performance_fee,500,0.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+44fe7f47-443f-4869-a93c-7fc815d5d9a5,VERSO BI,Gregory BROOKS,performance_fee,500,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+d4f51d89-bf57-464c-8eff-d3928b6adfef,VERSO BI,Gregory BROOKS,spread,0,1317.5,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+c6586f4d-0e50-454b-a032-a7485cff79a9,VERSO BI,Gregory BROOKS,spread,0,1317.5,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+47616fb3-5faa-4cf9-a583-7fcf79a41f3b,VERSO BI,Gregory BROOKS,invested_amount,200,1000.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+de7452e1-af7a-4cb9-a44e-6b855b386bc5,VERSO BI,Gregory BROOKS,invested_amount,200,1000.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+dfd0c092-0b8f-40b3-b932-bd695e397436,VERSO BI,Sudon Carlop Holdings Limited,performance_fee,500,0.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+bcb676a3-36b0-4013-bd24-5cf8f4a7e73f,VERSO BI,Sudon Carlop Holdings Limited,performance_fee,500,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+cb040bd6-3ce9-41cf-965e-5c00afc7b651,VERSO BI,Sudon Carlop Holdings Limited,spread,0,2635.62,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+24acc555-edfb-49f8-ba18-dfdc51af4c62,VERSO BI,Sudon Carlop Holdings Limited,spread,0,2635.62,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+4b3cb78d-1c95-4daf-8335-39260e295da1,VERSO BI,Sudon Carlop Holdings Limited,invested_amount,200,2000.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+be804845-1398-4e40-a760-3bf0a40cada2,VERSO BI,Sudon Carlop Holdings Limited,invested_amount,200,2000.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+0cf013e9-ab4e-4b76-ba1e-44a1c5189b9f,VERSO BI,CLOUDSAFE HOLDINGS LTD,spread,0,13179.96,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+a3b2f04f-a86e-4358-82e7-376860e6ba87,VERSO BI,CLOUDSAFE HOLDINGS LTD,spread,0,13179.96,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+d428395f-accf-47cd-b6f6-5b2b1cd30f97,VERSO BI,CLOUDSAFE HOLDINGS LTD,invested_amount,200,10000.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+a893bc4f-d526-4765-ab71-2d7d1d017bd6,VERSO BI,CLOUDSAFE HOLDINGS LTD,invested_amount,200,10000.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+24dab19a-814b-453c-8963-26e5ebe26eff,VERSO BI,Jean DUTIL,performance_fee,500,0.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+25beb66e-4df7-4879-a727-e5d178e694fc,VERSO BI,Jean DUTIL,performance_fee,500,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+a54f05b3-f37d-480b-ba13-ad1fd7ba1d1c,VERSO BI,Jean DUTIL,spread,0,2635.62,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+4127146f-5f75-4079-8c78-fb85e9bb5a5a,VERSO BI,Jean DUTIL,spread,0,2635.62,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+a9a3f0d4-4ea9-454d-8184-c4bd483293bf,VERSO BI,Jean DUTIL,invested_amount,200,2000.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+b6e2ac08-4d9a-4c07-a828-e262b313f08a,VERSO BI,Jean DUTIL,invested_amount,200,2000.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+4f2bce7c-137b-4e18-a0bd-93d4e0bcf378,VERSO BI,TERRA Financial & Management Services SA,performance_fee,250,0.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+ecffc576-ca85-4001-a0f8-9248d8110594,VERSO BI,TERRA Financial & Management Services SA,performance_fee,250,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+d5f37ca9-4347-4328-9e3b-533703af9e2a,VERSO BI,Mark MATTHEWS,performance_fee,500,0.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+8414a22c-03cc-46e7-aede-a8af9bc79402,VERSO BI,Mark MATTHEWS,performance_fee,500,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+62800b39-299b-4bb7-a007-b6ce6b59a6b6,VERSO BI,Mark MATTHEWS,spread,0,2635.62,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+220fafad-9f41-4ddd-90c2-7095bf675e7b,VERSO BI,Mark MATTHEWS,spread,0,2635.62,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+c761057b-03d4-46e0-9fa3-abb0316d69c6,VERSO BI,Mark MATTHEWS,invested_amount,200,2000.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+d3b37468-a2c2-4183-8a84-97a0c024c199,VERSO BI,Mark MATTHEWS,invested_amount,200,2000.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+09987b61-ea92-4148-a254-afc47a0fdb57,VERSO BI,Oliver WRIGHT,performance_fee,500,0.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+ecb1d1fb-d96b-4635-9d6e-aae00d487dcb,VERSO BI,Oliver WRIGHT,performance_fee,500,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+20d7e22c-3c93-4bb0-85dc-0d5969fb4104,VERSO BI,Oliver WRIGHT,spread,0,1317.5,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+bb7af1c6-dd70-495f-a481-994dbe0e8905,VERSO BI,Oliver WRIGHT,spread,0,1317.5,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+64e20850-bc52-4e0e-a8d9-36a0e004a4a5,VERSO BI,Oliver WRIGHT,invested_amount,200,1000.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+4a28fa7e-70fa-452e-9dec-46eef2ca077e,VERSO BI,Oliver WRIGHT,invested_amount,200,1000.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+fc9cdf08-9df9-436a-8841-5427ad2c2ff9,VERSO BI,FigTree Family Office Ltd,performance_fee,500,0.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+70178ddf-5ed7-411c-93ea-21b286355aa6,VERSO BI,FigTree Family Office Ltd,performance_fee,500,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+7068cfa1-40d1-4b9a-83ea-162dc870e2c5,VERSO BI,FigTree Family Office Ltd,spread,0,9489.72,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+0fd53356-8dd4-4390-86cd-8cb308f3a021,VERSO BI,FigTree Family Office Ltd,spread,0,9489.72,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+7a86d469-de62-4f7f-8436-774a54cf268d,VERSO BI,FigTree Family Office Ltd,invested_amount,200,7200.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+98dd1356-7718-4683-8aff-42fd8a5e1f10,VERSO BI,FigTree Family Office Ltd,invested_amount,200,7200.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+e2954f95-b18a-4563-a8dc-191cb20db5a7,VERSO BI,Emile VAN DEN BOL,performance_fee,500,0.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+c7ecdbe4-c53e-47f9-8dc2-c67f3947bc5d,VERSO BI,Emile VAN DEN BOL,performance_fee,500,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+4852bca7-1806-41c3-8bfa-7c2701a8da5f,VERSO BI,Emile VAN DEN BOL,spread,0,2635.62,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+0d5d0306-e18f-4bb9-bfe8-ea4822618adc,VERSO BI,Emile VAN DEN BOL,spread,0,2635.62,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+aafacd99-0f1e-41cc-b0ef-f643da8354e8,VERSO BI,Emile VAN DEN BOL,invested_amount,200,2000.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+48e6af3d-37a0-41e4-806b-1fe36060bcf6,VERSO BI,Emile VAN DEN BOL,invested_amount,200,2000.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+8fe8a4aa-7e0f-4368-b826-624cdef384e0,VERSO BI,Stephen JORDAN,performance_fee,500,0.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+76d32550-528a-4617-8ad2-9c9c6a1c39aa,VERSO BI,Stephen JORDAN,performance_fee,500,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+51e857b7-2e6d-490d-b66a-c6cb592f2c3c,VERSO BI,Stephen JORDAN,spread,0,4217.24,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+00d62c70-c713-4f61-9a61-339f846167dc,VERSO BI,Stephen JORDAN,spread,0,4217.24,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+a3768dfa-cf4a-41df-ae7c-305d2c27bded,VERSO BI,Stephen JORDAN,invested_amount,200,3200.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+a90cb948-6da8-4af9-af35-425f9f094f86,VERSO BI,Stephen JORDAN,invested_amount,200,3200.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+88543082-9a65-4c27-80c4-3acec847537e,VERSO BI,Lesli SCHUTTE,performance_fee,500,0.0,USD,2026-01-16T14:51:22.102053+00:00,excess_over_dashboard
+1928b2d2-329f-42d1-91c7-51d6fcd948f5,VERSO BI,Lesli SCHUTTE,performance_fee,500,0.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+59dd5120-2db8-4d32-b467-06d9f711ca92,VERSO BI,Lesli SCHUTTE,performance_fee,500,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+1b189303-f36c-432b-b2aa-3174e44bcb76,VERSO BI,Lesli SCHUTTE,spread,264,1317.5,USD,2026-01-19T22:42:34.385995+00:00,excess_over_dashboard
+240245de-69fa-44ab-9249-28a8288c43d1,VERSO BI,Lesli SCHUTTE,spread,0,1317.5,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+e2ddd02a-65b2-4ccf-b618-076ac49b8969,VERSO BI,Lesli SCHUTTE,spread,0,1317.5,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+bd94b08e-e23d-468e-a464-9b2365b73b14,VERSO BI,Lesli SCHUTTE,invested_amount,200,1000.0,USD,2026-01-19T22:13:59.592121+00:00,excess_over_dashboard
+082e3e92-f175-47e0-9aef-999a5e049597,VERSO BI,Lesli SCHUTTE,invested_amount,200,1000.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+3c9d9556-cc56-40ae-aa6f-c062ac5ce839,VERSO BI,Lesli SCHUTTE,invested_amount,200,1000.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+fa492c26-4437-447d-8e7d-c6006e44073e,VERSO BI,Stephane DAHAN,performance_fee,500,0.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+3dce4494-c5a6-4288-8d19-c3198bae6d35,VERSO BI,Stephane DAHAN,performance_fee,500,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+8cd64d53-5829-4899-beee-d594eba44618,VERSO BI,Stephane DAHAN,spread,0,5271.86,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+2f4945ef-e2f9-42cf-94a1-611a75f42553,VERSO BI,Stephane DAHAN,spread,0,5271.86,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+3f9fdb16-afd6-4138-b505-da998bd76219,VERSO BI,Stephane DAHAN,invested_amount,200,4000.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+90feaa47-84b4-4d13-a4e5-f487a7d589fa,VERSO BI,Stephane DAHAN,invested_amount,200,4000.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+b2e28b22-a786-477a-8863-ee53282a4a03,VERSO BI,GORILLA PE Inc,spread,0,1760203.8,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+811e0a62-9706-482e-9c4a-930c827f96c7,VERSO BI,GORILLA PE Inc,spread,0,1760203.8,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+2082dc0a-ed7c-418f-b671-1ac322332162,VERSO BI,Matthew HAYCOX,performance_fee,500,0.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+62ad7beb-b1ed-49ce-95c7-10105c62d478,VERSO BI,Matthew HAYCOX,performance_fee,500,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+cb219e5d-2b69-4326-8b44-d5de2d4df468,VERSO BI,Matthew HAYCOX,spread,0,1976.56,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+e113c40a-73d9-49aa-a791-7bb96d72836e,VERSO BI,Matthew HAYCOX,spread,0,1976.56,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+0c3066a4-e9a2-43fe-a62d-e9259b28e559,VERSO BI,Matthew HAYCOX,invested_amount,200,1500.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+be2b2694-9b29-458c-bf1e-b67884412bdc,VERSO BI,Matthew HAYCOX,invested_amount,200,1500.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+3dc28635-874d-4406-97f4-dbe52c8c988a,VERSO BI,Shana NUSSBERGER,spread,0,9106.02,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+37feb687-83ee-4758-b626-ff0263b56092,VERSO BI,Shana NUSSBERGER,spread,0,9106.02,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+6efee673-d09d-42c4-9500-0eba97426ec1,VERSO BI,JASSQ HOLDING LIMITED,spread,0,2550.9,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+0514c5de-1328-4bf8-8cde-4736236ac3b3,VERSO BI,JASSQ HOLDING LIMITED,spread,0,2550.9,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+0b31c74c-0e61-463d-87fe-da2198b3e3c7,VERSO BI,Manraj SEKHON,spread,748,29930.56,USD,2026-01-19T22:42:34.385995+00:00,excess_over_dashboard
+2ab4c123-6f69-4fe6-81ac-4c03bdecacef,VERSO BI,Manraj SEKHON,spread,0,29930.56,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+9aaf0e59-bba3-402e-9a2e-f52ca85ec18d,VERSO BI,Manraj SEKHON,spread,0,29930.56,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+26597a3a-095a-4a7a-96f4-c3f3b85415d7,VERSO BI,Erich GRAF,spread,0,1360.32,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+65858b19-9eda-4297-8d63-b73bb573c5ea,VERSO BI,Erich GRAF,spread,0,1360.32,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+3c2f4a58-184e-40e3-b4af-eeb796cbad1b,VERSO PARTNER,Oliver WRIGHT,performance_fee,750,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+d7c60a77-e803-4abb-b761-f96849bd31c3,VERSO PARTNER,Oliver WRIGHT,spread,0,6162.5,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+bc6880d6-1452-4826-a73c-a701635b245a,VERSO PARTNER,Erich GRAF,spread,0,4676.1,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+9465dc1c-34cf-47e6-a581-36a9f16e888d,VERSO PARTNER,TERRA Financial & Management Services SA,performance_fee,375,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+fa35d3d5-2a9e-4740-bf10-a9ad3ae70bff,VERSO PARTNER,TERRA Financial & Management Services SA,spread,0,1678.32,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+815fb575-59c4-44c0-bd98-8cf87816061d,VERSO PARTNER,TERRA Financial & Management Services SA,invested_amount,100,300.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+9981f4af-bbc9-4d5c-a79b-757fb312636f,VERSO PARTNER,Sudon Carlop Holdings Limited,performance_fee,750,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+a2aa6ce9-8da6-4226-9ffa-3960d78fc4c0,VERSO PARTNER,Sudon Carlop Holdings Limited,spread,0,12327.9,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+71808cf6-dffd-46b0-8afc-8a6c650da9f3,VERSO PARTNER,Emile VAN DEN BOL,performance_fee,750,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+5270eb50-dfb3-458b-b192-e20fc86b8d51,VERSO PARTNER,Emile VAN DEN BOL,spread,0,20829.9,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+aedfcd2a-f85b-46a2-a88d-22a3f70e2707,VERSO PARTNER,JASSQ HOLDING LIMITED,invested_amount,100,2000.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+aae8ec38-ddfe-470c-816c-36a4759d586e,VERSO PARTNER,Jean DUTIL,performance_fee,750,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+65043098-2fab-4c2b-83ab-6da6ed36f791,VERSO PARTNER,Jean DUTIL,spread,0,12327.9,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+84cad776-7d41-46f1-ad59-85ff4d6c33d0,VERSO PARTNER,Barnaby MOORE,spread,0,18995.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+6cf8329f-4491-4af0-be27-da2ea7226463,VERSO PARTNER,Barnaby MOORE,spread,0,18995.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+7b8a3cc2-b9ad-4bd2-b526-bb84eb90882b,VERSO PARTNER,Steve MANNING,performance_fee,750,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+c615ef27-38b0-4dad-9077-2262e50e6bc8,VERSO PARTNER,Steve MANNING,spread,0,6162.5,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+024a8c9c-d6d2-4b56-82c0-15480cafb96e,VERSO PARTNER,John ACKERLEY,performance_fee,750,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+076a16fc-355d-494b-a8f5-47508a1464e1,VERSO PARTNER,John ACKERLEY,spread,0,10412.5,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+229f0ae0-0808-4ce5-9038-c842916d12a2,VERSO PARTNER,Gregory BROOKS,performance_fee,750,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+da3bbcb5-dd19-4c4f-bdff-10489499a7a8,VERSO PARTNER,Gregory BROOKS,spread,0,6162.5,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+e8fcdfcd-5fb0-4aa9-82c5-27547f264945,VERSO PARTNER,INNOSIGHT VENTURES Pte Ltd,spread,0,6020.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+f5725afe-64fb-4b1e-8be1-0aa96985f2d2,VERSO PARTNER,INNOSIGHT VENTURES Pte Ltd,spread,0,68000.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+030e39f4-81b0-43c3-993b-486568eff059,VERSO PARTNER,Lesli SCHUTTE,performance_fee,750,0.0,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+bb3114f7-ef10-4ee4-8508-85d1211f6fcb,VERSO PARTNER,Lesli SCHUTTE,performance_fee,750,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+0b486a7a-4da1-44e1-b8f5-c4fabb309cdf,VERSO PARTNER,Lesli SCHUTTE,spread,0,6162.5,USD,2026-01-24T14:17:51.050967+00:00,excess_over_dashboard
+e46fd8df-80c3-49c6-813f-1ef9e98420db,VERSO PARTNER,Lesli SCHUTTE,spread,0,6162.5,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+0605d786-ccc4-4b60-bdc0-2fbb5c8e37f3,VERSO PARTNER,Innovatech 1,performance_fee,1000,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+aa0e40dd-5deb-4522-9270-7d716c8ed385,VERSO PARTNER,Innovatech 1,spread,0,48990.06,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+adf63efe-ef00-4b68-99f0-78e4cb509a1f,VERSO PARTNER,Innovatech 1,invested_amount,100,9144.81,USD,2026-01-24T14:33:18.791566+00:00,excess_over_dashboard
+59fedfdf-4e7f-4d6e-9302-aac5ae6f6eda,VERSO PARTNER,Innovatech 1,invested_amount,100,9144.81,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+40c526de-0613-446c-b7dd-65eb539e33cb,VERSO PARTNER,Global Custody & Clearing Limited,performance_fee,750,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+1b6f50da-8302-4064-b16d-4d0f7b3343d7,VERSO PARTNER,Global Custody & Clearing Limited,spread,0,174435.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+70d73f04-3fc6-4215-bb1b-6a5b31b2f988,VERSO PARTNER,Mark MATTHEWS,performance_fee,750,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+b681cccc-2a9b-479d-b084-b4474c9c9641,VERSO PARTNER,Mark MATTHEWS,spread,0,12327.9,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+2d2227e4-56b6-41ba-adca-24298acaefde,VERSO PARTNER,Stephane DAHAN,performance_fee,750,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+4121e376-c043-462d-810b-02bd9b15d0ad,VERSO PARTNER,Stephane DAHAN,spread,0,24658.7,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+2bcf9dbd-88cb-47e0-a51f-1ef1e571fe70,VERSO PARTNER,Matthew HAYCOX,performance_fee,750,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+2580ad39-89cd-4a6f-abd7-68761ee41389,VERSO PARTNER,Matthew HAYCOX,spread,0,9245.2,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+edf4dde8-5879-4ab2-abf0-5ed7753b3dc4,VERSO PARTNER,CLOUDSAFE HOLDINGS LTD,performance_fee,750,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+9de09808-72fd-437d-91ae-ac9fad18ec98,VERSO PARTNER,CLOUDSAFE HOLDINGS LTD,spread,0,30824.1,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+18603ab4-e956-42cd-81df-64ae5ebacd56,VERSO PARTNER,Patrick CORR,performance_fee,750,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+0afc1ea1-1322-44ba-81ee-37b7848e11d9,VERSO PARTNER,Patrick CORR,spread,0,104164.2,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+1979c9ce-f3eb-4e40-81c1-9beb3503f6c2,VERSO PARTNER,Patrick CORR,invested_amount,50,2500.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+4f5e9d4d-9467-401c-873f-0b800fc3ae3b,VERSO PARTNER,Stephen JORDAN,performance_fee,750,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+d23320e7-b89a-4987-8ad7-be7ca9ce6f45,VERSO PARTNER,Stephen JORDAN,spread,0,19725.8,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+0e446898-915f-4671-85a3-a76362f3bfe0,VERSO PARTNER,FigTree Family Office Ltd,performance_fee,750,0.0,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+389776d2-6b6d-411e-a813-723f8aa49d65,VERSO PARTNER,FigTree Family Office Ltd,spread,0,44387.4,USD,2026-01-24T14:52:58.956029+00:00,excess_over_dashboard
+fdfe24f3-8dc3-48dc-9173-0e56cbffdd04,VERSO BI,Phaena Advisory Ltd,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+ae546cee-2437-4205-bbfa-1b4e38501a59,VERSO BI,Bhikhu PATEL,invested_amount,200,5000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+7e702926-20c5-4503-b6de-4a9e78df822f,VERSO BI,Bhikhu PATEL,spread,0,13392.54,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+9a946340-61a6-4ee9-8ae3-bb51e82e0b35,VERSO BI,Vijaykumar PATEL,invested_amount,200,15000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+3c1be70c-29f1-4f1b-a18f-346fa98292df,VERSO BI,Vijaykumar PATEL,spread,0,40177.62,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+2b76c16d-3b6a-4f5a-b1b4-f4dea7798580,VERSO BI,Salman HUSSAIN,spread,536,2677.5,USD,2026-01-19T22:43:12.054499+00:00,excess_over_dashboard
+ce3c0d35-5afc-47a7-a4b3-36c8f61af38c,VERSO BI,Salman HUSSAIN,spread,0,2677.5,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+8fa83a2d-5e08-4ac3-9d39-33ccee08d89a,VERSO BI,POTASSIUM Capital,invested_amount,200,2000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+a55ae307-a108-4f28-9e44-efd954e054de,VERSO BI,POTASSIUM Capital,spread,0,1317.81,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+a74c2e11-b39e-4239-9877-a6eccb98bd48,VERSO BI,POTASSIUM Capital,performance_fee,500,0.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+fcf32ef0-9783-4b2d-b03d-8d6d0d3cf65e,VERSO BI,Aatif HASSAN,invested_amount,200,2000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+fc035ea3-7539-4091-8697-8bbd8449b3bd,VERSO BI,Aatif HASSAN,spread,0,1317.81,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+fcaa2833-3ab9-481e-b6c0-3216a94234c8,VERSO BI,Aatif HASSAN,performance_fee,500,0.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+d84ad515-7342-48be-b947-a1ef32d505d1,VERSO PARTNER,Kevin WILTSHIRE,spread,0,4016.88,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+5793fa8d-a3c7-46bb-8510-3717a08335c7,VERSO PARTNER,Kevin WILTSHIRE,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+37f8fea8-5e8f-4496-9bdb-20c89ea82b3f,VERSO BI,GTV Partners SA,invested_amount,200,10000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+3b168ff8-24a8-4d89-a239-17276c5ac330,VERSO BI,GTV Partners SA,spread,0,33033.42,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+63ce8ba5-dc6c-460d-bf58-c5a4dc6a1a99,VERSO BI,GTV Partners SA,performance_fee,500,0.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+53ed6b24-0e2d-4ca5-afd6-e3540240d70d,VERSO BI,LENN Participations SARL,invested_amount,100,1000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+cbae1b90-f776-479a-a716-3a1cc1397bb7,VERSO BI,LENN Participations SARL,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+6d318de1-bfab-497b-898e-4fd41520f8ad,VERSO BI,WEALTH TRAIN LIMITED,spread,0,5930.92,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+5aadd9e6-d0d2-4e5d-9b5f-88782f083b2f,VERSO BI,WEALTH TRAIN LIMITED,performance_fee,500,0.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+26249e2b-657a-4d89-80ad-5b6dcc34daa9,VERSO BI,Frederic SAMAMA,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+5df539b6-a757-449f-8d42-ef8724415df9,VERSO BI,Banco BTG Pactual S.A. Client 80772,invested_amount,50,500.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+33d10cde-5299-4b4a-a9b7-f40561f132d4,VERSO BI,Kaveh ALAMOUTI,invested_amount,200,2000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+da6b2047-4e5b-4bc0-81ab-b7850e6ec05e,VERSO BI,Guillaume SAMAMA,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+880853e8-92cd-459a-a3a8-8be86a6b9549,VERSO BI,Laurent CUDRE-MAUROUX,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+39c4ed59-0701-4445-b729-d3bc7ae1d46a,VERSO BI,Frederic SAMAMA,invested_amount,100,1000.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+5c8f49d5-ff0a-4dcb-97ce-bfac19ae0344,VERSO BI,Banco BTG Pactual S.A. Client 34924,invested_amount,50,500.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+c9ac1805-ec73-41df-a55c-3a86350481a0,VERSO BI,Kian JAVID,invested_amount,200,499.56,USD,2026-01-19T22:13:59.592121+00:00,excess_over_dashboard
+ef42fe88-2f16-4bed-9ef5-71f1d736418a,VERSO BI,Kian JAVID,invested_amount,200,499.56,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+616ddaaf-1d0c-4927-9549-aff1844ef94c,VERSO BI,Kian JAVID,spread,536,1338.12,USD,2026-01-19T22:43:12.054499+00:00,excess_over_dashboard
+bde8dac2-e8e1-495c-9b0c-d7b1308a0883,VERSO BI,Kian JAVID,spread,0,1338.12,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+5186079d-b694-4b78-839e-9e9e6df5072a,VERSO BI,Banco BTG Pactual S.A. Client 80890,invested_amount,50,500.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+f6f2d6f7-fb78-49d6-a021-60feb718c631,VERSO BI,Banco BTG Pactual S.A. Client 80890,performance_fee,500,0.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+18056e35-8dd1-4ea4-8e0c-4e8ffa3df1ca,VERSO BI,Banco BTG Pactual S.A. Client 80890,spread,0,10712.52,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+bfa6c240-40c3-459e-a919-ae6efd523d24,VERSO BI,OLD HILL INVESTMENT GROUP LLC,spread,0,59819.61,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+a03eef1a-560e-44c7-87b1-8b7a02a0c541,VERSO BI,Kamyar BADII,invested_amount,200,399.84,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+6689e920-1327-4a32-b407-8d3d6d4ec694,VERSO BI,Kamyar BADII,spread,0,1071.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+289f2991-76ed-4b45-90de-0636a119f4d9,VERSO BI,Banco BTG Pactual S.A. Client 36003,invested_amount,50,1250.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+1bcc510a-cbbf-406e-a23f-13ea9c6c764e,VERSO BI,Banco BTG Pactual S.A. Client 36003,performance_fee,500,0.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+7dff860e-43ff-458b-b306-7a95c3e04b06,VERSO BI,Banco BTG Pactual S.A. Client 36003,spread,0,26785.08,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+0979e9b2-b0c1-4760-8e58-03ce2756f001,VERSO BI,Vasily SUKHOTIN,invested_amount,100,6000.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+931d0452-fb91-4518-b350-ea23f5c93898,VERSO BI,Laurent CUDRE-MAUROUX,invested_amount,100,1000.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+075b1226-9998-47d2-b8bb-b7dea3a6bdf1,VERSO BI,Banco BTG Pactual S.A. Client 80873,invested_amount,50,500.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+4dfedf78-4f49-43d1-90c1-ec6aebba8d78,VERSO BI,Banco BTG Pactual S.A. Client 80873,performance_fee,500,0.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+73828a12-097f-4822-b13f-645863f618f0,VERSO BI,Banco BTG Pactual S.A. Client 80873,spread,0,10712.52,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+d0fa2e23-7c24-40a8-bca7-62db21762b93,VERSO BI,Caspian Enterprises Limited,invested_amount,200,20000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+d0adf21a-5429-4e06-82b7-f631633a3249,VERSO BI,Caspian Enterprises Limited,spread,0,53571.42,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+f5c571f2-bce7-45c9-8169-55461b8cdcd2,VERSO BI,Banco BTG Pactual S.A. Client 515,invested_amount,50,5000.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+c072082e-3dfe-4096-8741-22a805010ffc,VERSO BI,Banco BTG Pactual S.A. Client 515,performance_fee,500,0.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+8f5e06bc-b80f-4bbc-8494-0915d8629327,VERSO BI,Banco BTG Pactual S.A. Client 515,spread,0,107142.84,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+9043d802-d00e-4d0b-95c6-ea5b93d37e2c,VERSO BI,Banco BTG Pactual S.A. Client 80862,invested_amount,50,500.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+e2434bbb-cb20-46d4-a26f-fdf23456eb79,VERSO BI,Banco BTG Pactual S.A. Client 80862,performance_fee,500,0.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+a604acd5-febb-401c-abc4-a1b4a4f2ad93,VERSO BI,Banco BTG Pactual S.A. Client 80862,spread,0,10712.52,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+c236c41a-c168-46ee-ae00-6487dd9ab3b5,VERSO BI,Cyrus ALAMOUTI,invested_amount,200,2000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+27a63fa6-663d-4abb-9272-e2e257155581,VERSO BI,Cyrus ALAMOUTI,spread,0,5356.26,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+61386bff-b4d5-4689-b44b-14bfa81a1e57,VERSO BI,Banco BTG Pactual S.A. Client 81022,invested_amount,50,500.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+81809dbb-85ce-4218-a6a3-f94ffd3963ae,VERSO BI,Banco BTG Pactual S.A. Client 81022,performance_fee,500,0.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+1804a94f-faf8-4756-8306-b5e19d770aee,VERSO BI,Banco BTG Pactual S.A. Client 81022,spread,0,10712.52,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+8c92719e-7a32-455d-aa9c-7088fd85c4a3,VERSO BI,Rensburg Client Nominees Limited A/c CLT,invested_amount,200,2000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+824f377a-27f9-40b4-87f6-298d7c1d97c9,VERSO BI,Scott FLETCHER,invested_amount,200,10000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+21de70a1-28c0-4fc9-9131-ed0b462ecdf8,VERSO BI,Luiz FONTES WILLIAMS,spread,408,4078.0,USD,2026-01-19T22:43:12.054499+00:00,excess_over_dashboard
+86ccc833-859c-4e5e-b385-acc4b50b4cfe,VERSO BI,Luiz FONTES WILLIAMS,spread,0,4078.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+7566fb21-b561-4a3a-8d95-8d64da3bef48,VERSO BI,Banco BTG Pactual S.A. Client 80775,invested_amount,50,500.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+5d163f0f-8894-41eb-81f6-9594bb5b556d,VERSO BI,Banco BTG Pactual S.A. Client 80775,performance_fee,500,0.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+b9df0a3a-4e69-4472-9021-cddea6f28d79,VERSO BI,Banco BTG Pactual S.A. Client 80775,spread,0,10712.52,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+37459fdb-62d1-40a0-8d0c-a9a9bd164217,VERSO BI,MARSAULT INTERNATIONAL LTD,invested_amount,100,2000.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+aee899bf-e83a-4b00-b15e-1b1d64065b12,VERSO BI,MARSAULT INTERNATIONAL LTD,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+bb5f2c8f-12da-43ef-8313-2e3a8e459de7,VERSO BI,TERSANE INTERNATIONAL LTD,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+0940cf87-e73a-41dc-9d06-c0b1016e1b55,VERSO BI,Bernard DUFAURE,invested_amount,100,1000.0,USD,2026-01-19T22:13:59.592121+00:00,excess_over_dashboard
+4957e7d4-a1fd-475a-a81d-118e6b142631,VERSO BI,Bernard DUFAURE,invested_amount,100,1000.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+ca63fe9b-4317-41db-99a8-d50c6fb719dd,VERSO BI,Bernard DUFAURE,performance_fee,1000,0.0,USD,2026-01-16T15:09:38.203993+00:00,excess_over_dashboard
+ab0856cd-e011-4af3-9e01-46af7eb7fa33,VERSO BI,Bernard DUFAURE,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+40e62d35-ee12-4de2-b568-7cfc0e978a77,VERSO BI,GREENLEAF,spread,0,132388.65,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+9181f20e-74a0-415a-b496-c652b241962e,VERSO BI,Georges CYTRON,invested_amount,100,1000.0,USD,2026-01-19T22:13:59.592121+00:00,excess_over_dashboard
+ac9f159a-5c61-4061-af14-82b207cd7f62,VERSO BI,Georges CYTRON,invested_amount,100,1000.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+1a6e9766-a14e-4d20-88a0-570e441be4ca,VERSO BI,Georges CYTRON,performance_fee,1000,0.0,USD,2026-01-16T15:09:38.203993+00:00,excess_over_dashboard
+6c458a30-2b2b-4f2d-bc70-0029de4aad4f,VERSO BI,Georges CYTRON,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+5b9da31b-46e0-4ab0-8a8c-6a8d63df7a74,VERSO BI,Banco BTG Pactual S.A. Client 36957,invested_amount,50,500.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+b73fc779-a308-4321-9096-7d6bc64da541,VERSO BI,Banco BTG Pactual S.A. Client 36957,performance_fee,500,0.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+f89d1b6f-eb25-471c-894e-925cebbf507f,VERSO BI,Banco BTG Pactual S.A. Client 36957,spread,0,10712.52,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+1efdef67-4c6c-4120-bc0b-3d4182419889,VERSO BI,Banco BTG Pactual S.A. Client 12279,invested_amount,50,500.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+b99df555-0860-415e-af78-b1c1455182eb,VERSO BI,Banco BTG Pactual S.A. Client 12279,performance_fee,500,0.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+7d27fa04-5fa6-4732-a93b-5fdf32b6a04a,VERSO BI,Banco BTG Pactual S.A. Client 12279,spread,0,10712.52,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+e016bb35-4474-49a0-adfc-bc73472049ef,VERSO BI,Herve STEIMES,invested_amount,100,1000.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+20021ca6-cd7b-4b7d-b9c5-da40e33b09f2,VERSO BI,Herve STEIMES,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+e49db21b-6f8d-4861-80cf-de5cac151563,VERSO BI,Shaham SOLOUKI,invested_amount,200,999.6,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+1007dcb7-1621-4be9-83fd-025025277033,VERSO BI,Shaham SOLOUKI,spread,0,2677.5,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+8b717a79-2eac-42f3-bc39-4732ff474656,VERSO BI,Julien SERRA,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+a517371e-5c4e-4a7f-8dab-12b3af3ca7e6,VERSO BI,Julien SERRA,invested_amount,100,1000.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+ac4c3578-f0ae-46fe-a4e3-33201ea1a4d4,VERSO BI,DCMS Holdings Limited,invested_amount,200,8000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+7832a5d2-f964-44a2-b598-655fe06f2974,VERSO BI,SWISS TRUSTEES OF GENEVA SA as Trustees of the LUTEPIN TRUST,invested_amount,100,5000.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+131fd366-c447-49c9-bd62-077d7d9d6d58,VERSO BI,SWISS TRUSTEES OF GENEVA SA as Trustees of the LUTEPIN TRUST,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+aa7429cd-5ba8-4c38-b477-a6795c17ef19,VERSO BI,Banco BTG Pactual S.A. Client 34658,invested_amount,50,500.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+23130381-c6ac-4045-8d05-b2cb3bbf6b09,VERSO BI,Banco BTG Pactual S.A. Client 34658,performance_fee,500,0.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+8d9ac57e-6071-49ac-b4eb-3a283e9618a9,VERSO BI,Banco BTG Pactual S.A. Client 34658,spread,0,10712.52,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+c4d13199-5022-4eff-8a60-7d1b70d04979,VERSO BI,Raphael GHESQUIERES,invested_amount,100,1000.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+48b67b28-5ef2-41bf-86d7-38b45010957c,VERSO BI,Raphael GHESQUIERES,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+afb7233b-766c-465d-b694-a0908e0cbad6,VERSO BI,Banco BTG Pactual S.A. Client 80910,invested_amount,50,500.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+c13bf043-a5a7-4893-846f-f7f5f95f4ef8,VERSO BI,Banco BTG Pactual S.A. Client 80910,performance_fee,500,0.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+4d2bcd3a-806e-407a-ad73-16e285f533df,VERSO BI,Banco BTG Pactual S.A. Client 80910,spread,0,10712.52,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+8c0c5fe1-2610-4d15-875e-0e0842753dcd,VERSO BI,Juan TONELLI BANFI,invested_amount,200,5000.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+ed294c84-1b3d-4565-b80a-452848c13d1b,VERSO BI,Juan TONELLI BANFI,spread,0,13392.54,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+7b5e3f12-0e46-486a-884e-97712b5edb86,VERSO BI,David ROSSIER,invested_amount,100,2000.0,USD,2026-01-19T22:13:59.592121+00:00,excess_over_dashboard
+9f8789b2-192d-42e3-bc01-7d2321e21857,VERSO BI,David ROSSIER,invested_amount,100,2000.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+76dce87d-cf57-4566-b5a2-5df96693e327,VERSO BI,David ROSSIER,performance_fee,1000,0.0,USD,2026-01-16T15:09:38.203993+00:00,excess_over_dashboard
+3b00e71d-8823-4552-8e91-64bc9870460f,VERSO BI,David ROSSIER,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+5f7f1b55-e930-4293-a5d0-94f9e193aee9,VERSO BI,GELIGA LIMITED,invested_amount,200,10000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+992db23f-7b8f-493b-b42e-9974418e2128,VERSO BI,GELIGA LIMITED,spread,0,26785.08,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+3c0f1344-851c-4c1c-9def-87fd3486b777,VERSO BI,Banco BTG Pactual S.A. Client 36749,invested_amount,50,500.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+861f37fc-b79e-41bd-a128-f35d4c0b5ee5,VERSO BI,Banco BTG Pactual S.A. Client 36749,performance_fee,500,0.0,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+4e5bd3f2-8376-4d65-b19f-458b7979369f,VERSO BI,Banco BTG Pactual S.A. Client 36749,spread,0,10712.52,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard
+c595b251-5fbc-4bd8-8f41-1ff7a1b31247,VERSO BI,Darius ALAMOUTI,invested_amount,200,2000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+a8c4b738-f2a8-4b2b-ba58-af7d792f9d05,VERSO BI,Darius ALAMOUTI,spread,0,5356.26,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+ec5453c1-1945-4551-a0d1-90458b324d6e,VERSO BI,Eric LE SEIGNEUR,invested_amount,100,1000.0,USD,2026-01-19T22:13:59.592121+00:00,excess_over_dashboard
+9c662fef-456a-4299-92cc-708fa424e01c,VERSO BI,Eric LE SEIGNEUR,invested_amount,100,1000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+644a8331-5269-4fae-a4cc-865cefdbac82,VERSO BI,Murat Cem and Mehmet Can GOKER,invested_amount,200,7000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+6ab13a01-0b66-4b9a-b586-b60668f0b876,VERSO BI,Murat Cem and Mehmet Can GOKER,invested_amount,200,13000.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+4f9eedd6-3414-4d15-a459-a5124bec4740,VERSO BI,Murat Cem and Mehmet Can GOKER,spread,0,34821.36,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+d9038608-dd4c-4c6d-9547-ae70663b0549,VERSO BI,Murat Cem and Mehmet Can GOKER,spread,0,18748.8,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+eef6f88c-b8aa-4e26-a128-b93dec8c277a,VERSO BI,Rosario RIENZO,invested_amount,100,2000.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+d89fc08c-33c1-4da0-959f-26e66c5f4f75,VERSO BI,Rosario RIENZO,performance_fee,1000,0.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+9b478250-bbba-4462-b968-0543a4b874b3,VERSO PARTNER,Eric LE SEIGNEUR,invested_amount,100,1000.0,USD,2026-01-24T14:52:59.275952+00:00,excess_over_dashboard
+ec554fe3-85f1-4120-aafc-169c53739d6d,VERSO PARTNER,Georges CYTRON,invested_amount,50,500.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+7edc58f0-29ec-453a-acc2-4493644d904b,VERSO PARTNER,Georges CYTRON,spread,0,5356.26,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+0f7c6171-c872-4f32-82cc-755f165e0417,VERSO PARTNER,Georges CYTRON,performance_fee,500,0.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+ea95b744-0971-422c-b237-f1de620bcb74,VERSO PARTNER,David ROSSIER,invested_amount,50,1000.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+2ec94f36-32cd-4264-9de3-ce606eab55f0,VERSO PARTNER,David ROSSIER,spread,0,10713.78,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+6afffb97-0e36-4f84-86cb-5ccbd0344ffc,VERSO PARTNER,David ROSSIER,performance_fee,500,0.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+1b6081be-d0bd-41e6-8a9b-d6ad4c84bebf,VERSO PARTNER,Bernard DUFAURE,invested_amount,50,500.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+c4efefe1-40b4-4389-a7d1-6b0c84ce5c83,VERSO PARTNER,Bernard DUFAURE,spread,0,5356.26,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+e4d59fc2-7796-4ec7-8b4b-be6b7e4aeaf4,VERSO PARTNER,Bernard DUFAURE,performance_fee,500,0.0,USD,2026-01-24T14:52:59.429865+00:00,excess_over_dashboard
+328cb299-d4a9-4ce1-ba62-a95fac7a6b6f,Manna Capital,Luiz FONTES WILLIAMS,spread,0,8196.78,USD,2026-01-24T14:52:59.570349+00:00,excess_over_dashboard

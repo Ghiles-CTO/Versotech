@@ -1,0 +1,865 @@
+{
+  "generated_at_utc": "2026-02-17T00:03:21.196465+00:00",
+  "coverage_matrix_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/ENGINE_RULE_COVERAGE_MATRIX_2026-02-15.csv",
+  "source_order": [
+    "data_verification_engine (latest dated checkpoints first)",
+    "verso_capital_2_data (latest dated docs first)",
+    "dashboardreconciliations (latest dated docs first)",
+    "datamigration (latest dated docs first)",
+    "VERSO/datafixing (latest dated docs first)"
+  ],
+  "sources_scanned_count": 479,
+  "conflicts": [],
+  "rules": [
+    {
+      "rule_id": "E01",
+      "scope": "VC1/VC2/IN",
+      "description": "Subscription-deal vehicle consistency \u2014 subscription's vehicle must match deal's vehicle",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E02",
+      "scope": "VC1/VC2/IN",
+      "description": "Dashboard column existence validation \u2014 required columns must exist before processing a sheet",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E03",
+      "scope": "VC1/VC2/IN",
+      "description": "Commission header drift detection \u2014 warns if commission column headers do not match expected patterns",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E04",
+      "scope": "VC1/VC2/IN",
+      "description": "Dashboard commission amount without introducer name \u2014 non-zero amounts with empty name cell",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E05",
+      "scope": "VC1",
+      "description": "Individual loose identity duplicates \u2014 same first+last name on multiple individual-type investor IDs",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E06",
+      "scope": "VC1",
+      "description": "Metric tolerance overrides \u2014 commitment uses 1.0 tolerance instead of default 0.01",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E07",
+      "scope": "VC1",
+      "description": "Percent comparison mode \u2014 fraction_or_percent_strict for percent fields",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E08",
+      "scope": "VC1",
+      "description": "Dashboard header row and data start row overrides per sheet",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E09",
+      "scope": "VC1/VC2/IN",
+      "description": "Vehicle-level position total vs dashboard ownership total",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E10",
+      "scope": "VC1/VC2/IN",
+      "description": "restrict_to_db_vehicles_with_data \u2014 vehicles with no DB data are excluded from scope",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E11",
+      "scope": "VC1/IN",
+      "description": "Dashboard optional numeric fields \u2014 management_fee_percent, bd_fee_percent, bd_fee, finra_shares, finra_fee not required",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E12",
+      "scope": "VC2",
+      "description": "Contacts file cross-reference \u2014 introducer/broker names in contacts must exist in DB master tables",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E13",
+      "scope": "VC2",
+      "description": "Forbidden names in introducers master table (e.g. Lafferty must not appear in introducers table)",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E14",
+      "scope": "VC2",
+      "description": "Forbidden names in introductions table (e.g. Lafferty must not appear in any introduction row)",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E15",
+      "scope": "VC2",
+      "description": "Commission combined amount mismatch \u2014 investor-basis-level aggregate check for combined introducer rows",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E16",
+      "scope": "VC2/IN",
+      "description": "Performance fee tier splitting \u2014 DB performance_fee basis_type split into tier1/tier2 by tier_number",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E17",
+      "scope": "ALL",
+      "description": "Trust pack \u2014 CSV vs JSON count consistency, forbidden pattern enforcement, warning allow-list",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E18",
+      "scope": "ALL",
+      "description": "Gate script \u2014 verify_all_scopes.sh with set -euo pipefail and exit code propagation",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E19",
+      "scope": "IN",
+      "description": "Dashboard ownership fallback to shares if ownership column missing",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E20",
+      "scope": "VC1/VC2/IN",
+      "description": "Row-level contract_date comparison with null tolerance",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E21",
+      "scope": "VC2",
+      "description": "Broker table completeness \u2014 expected broker names must exist in brokers table",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E22",
+      "scope": "VC2",
+      "description": "VC2 dashboard vehicle alias by sheet \u2014 VCS001/VCS002 map to VC203",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "E23",
+      "scope": "IN",
+      "description": "IN2 (IN102) commission extraction disabled \u2014 empty slot config, no commissions extracted",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R01",
+      "scope": "VC1",
+      "description": "Introducer name aliases (VC1 scope) \u2014 Anand/Set Cap, Dan/Daniel, Rick/Altras, Terra/TERRA, Setcap+Daniel replacement, Anand+Dan -> Set Cap",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R02",
+      "scope": "VC2",
+      "description": "Introducer name aliases (VC2 scope) \u2014 Renbridge/Renaissance, Headwall/AGP, Aeon, Old City, Astral/Astra, Lafferty, Bromley, VOGT, CHEN, Bright Views",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R03",
+      "scope": "VC1/VC2/IN",
+      "description": "Investor name normalization \u2014 strip titles, & -> and, limited -> ltd, remove punctuation, token replacements (dan->daniel, mickael->michael), two-name swap, explicit investor aliases",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R04",
+      "scope": "VC2",
+      "description": "VC2 canonical naming rule \u2014 use client file legal names for storage, dashboard names for matching only",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R05",
+      "scope": "VC1",
+      "description": "Investor dedup rules \u2014 Talal PASHA->CHAMSI PASHA, Sandra CABIAN->KOHLER CABIAN, Sheikh AL SABAH->Yousef AL SABAH, Zandera Finco->Holdco",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R06",
+      "scope": "VC1",
+      "description": "Introducer cleanup / merge \u2014 Stableton+Terra replaced, Denis Matthey deleted, GEMERA old ID merged",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R07",
+      "scope": "VC1/VC2/IN",
+      "description": "Commission basis types and rate conversion \u2014 dashboard percent = decimal fraction, rate_bps = percent * 10000",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R08",
+      "scope": "VC1/VC2/IN",
+      "description": "Invested amount commission calculation \u2014 use dashboard Subscription fees when available, otherwise amount_invested * percent",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R09",
+      "scope": "VC1/VC2/IN",
+      "description": "Spread commission calculation \u2014 use dashboard Spread PPS Fees, otherwise Spread PPS * shares",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R10",
+      "scope": "VC1/VC2/IN",
+      "description": "Performance fee commission rows \u2014 accrual_amount = 0.0, threshold_multiplier = 0.0, one row per tier per investor per introducer",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R11",
+      "scope": "VC1/VC2/IN",
+      "description": "All commissions status = paid \u2014 applied 2026-01-31 across all 867 rows",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R12",
+      "scope": "VC1/VC2/IN",
+      "description": "Commission duplicate detection \u2014 exact duplicates (all fields identical except id/created_at), keep earlier row, delete stale batch rows with rate_bps=0",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R13",
+      "scope": "VC1/VC2/IN",
+      "description": "Commission split rules \u2014 investors with 2+ subscriptions need matching split commission rows with different base_amount",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R14",
+      "scope": "VC1/VC2/IN",
+      "description": "Commission total ruled diffs \u2014 expected deltas per vehicle (IN102, IN103, IN106, VC113, VC114, VC106)",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R15",
+      "scope": "VC1",
+      "description": "Zero-amount commission artifacts \u2014 66 rows in VC106 with rate_bps=0, accrual_amount=0; excluded from row-count parity; flagged but not failures",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R16",
+      "scope": "VC1/VC2/IN",
+      "description": "Partners are treated as introducers \u2014 dashboard Partner columns extracted alongside Introducer columns, both flow into introducers/introductions/commissions tables",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R17",
+      "scope": "VC2",
+      "description": "R. F. Lafferty = BROKER only (VC2) \u2014 removed from introducers table, 0 commission rows, 0 introduction rows",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R18",
+      "scope": "VC2",
+      "description": "Old City Securities LLC = DUAL ROLE (VC2) \u2014 exists in both brokers and introducers tables",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R19",
+      "scope": "VC2",
+      "description": "Bromley Capital Partners = context-dependent role \u2014 BROKER in VC215 (commissions removed, paired rates reduced by 100bps), INTRODUCER in VC202/VC206/VC209",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R20",
+      "scope": "VC2",
+      "description": "VC215 Set Cap = spread-only partner \u2014 invested_amount 14 rows all $0.00, spread 14 rows sum $25654.81",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R21",
+      "scope": "VC2",
+      "description": "Bright Views Holdings = internal placeholder, not real introducer \u2014 3 commission rows ($9000) for Jamel CHANDOUL in VC209, warning only",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R22",
+      "scope": "VC2",
+      "description": "Documented split assertions (VC2) \u2014 VC203 EVERLASTING, VC206 REDPOINT OMEGA V, VC209 PVPL, Bromley retained on VC202/VC206/VC209",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R23",
+      "scope": "VC1/VC2/IN",
+      "description": "Dashboard is source of truth \u2014 every non-zero dashboard row becomes a subscription, 1:1 mapping, repeated rows = separate subscriptions",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R24",
+      "scope": "VC1/VC2/IN",
+      "description": "Zero ownership rule \u2014 if dashboard ownership/units = 0, do NOT create subscription or position; commissions can still exist",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R25",
+      "scope": "VC1/IN",
+      "description": "Missing ownership handling \u2014 blank row = not active, missing column entirely (IN101/IN102/IN109/IN111) = treat all as active",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R26",
+      "scope": "VC2",
+      "description": "Subscription status/funding rules (VC2) \u2014 status = funded, funded_amount = commitment",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R27",
+      "scope": "VC1/VC2/IN",
+      "description": "Every subscription must have deal_id \u2014 NULL deal_id is erroneous when vehicle has one deal",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R28",
+      "scope": "VC1/VC2/IN",
+      "description": "bd_fee_amount calculation rule \u2014 bd_fee_amount = commitment * bd_fee_percent; flag rows where bd_fee_amount equals bd_fee_percent exactly",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R29",
+      "scope": "VC1/VC2/IN",
+      "description": "subscription_fee_amount calculation rule \u2014 subscription_fee_amount = commitment * subscription_fee_percent",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R30",
+      "scope": "VC1",
+      "description": "VC106 performance_fee_tier1_percent convention \u2014 whole numbers (20=20%), all others use fractions (0.2=20%)",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R31",
+      "scope": "VC1",
+      "description": "Cost per share priority rule \u2014 use Cost per Share when present, else Final Cost per Share, else NULL",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R32",
+      "scope": "VC1/VC2/IN",
+      "description": "Spread fee calculation \u2014 spread_fee_amount = spread_per_share * num_shares",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R33",
+      "scope": "VC1/VC2/IN",
+      "description": "Vehicle sheet to code mapping \u2014 VCxx -> VC1xx, INxx -> IN1xx (prepend 1)",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R34",
+      "scope": "VC1",
+      "description": "VC122 column parsing correction \u2014 OWNERSHIP POSITION = column 17, Number of shares = column 16",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R35",
+      "scope": "IN",
+      "description": "IN110 ETH-denominated amounts \u2014 parse ETH prefix to extract numeric values",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R36",
+      "scope": "VC2",
+      "description": "VC203 commission slot override \u2014 column positions shifted by 1 from default",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R37",
+      "scope": "VC2",
+      "description": "VCL001 and VCL002 separation from VC203 \u2014 4 AGP subscriptions moved, not part of VC2xx scope",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R38",
+      "scope": "VC1",
+      "description": "VC1 max_introducers_per_subscription = 3",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R39",
+      "scope": "VC1",
+      "description": "VC1 skip cost_per_share and ownership in vehicle totals",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R40",
+      "scope": "VC1",
+      "description": "VC126 ruled fallback: OEP Ltd -> Julien MACHOT",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R41",
+      "scope": "VC1",
+      "description": "VC113 alias: Zandera (Finco) Limited -> Zandera (Holdco) Limited",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R42",
+      "scope": "VC1/VC2/IN",
+      "description": "Position uniqueness per investor+vehicle \u2014 only one position row per (investor_id, vehicle_id)",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R43",
+      "scope": "VC1/VC2/IN",
+      "description": "No zero-unit positions",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R44",
+      "scope": "VC1/VC2/IN",
+      "description": "Position units = aggregate dashboard ownership per investor \u2014 positions.units must match dashboard ownership sum",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R45",
+      "scope": "VC1/VC2/IN",
+      "description": "Currency from dashboard, no assumptions \u2014 currency set from dashboard row, some VC125 rows use EUR",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R46",
+      "scope": "VC1/VC2/IN",
+      "description": "rate_bps is integer \u2014 dashboard shows fractional rates, DB stores integer",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R47",
+      "scope": "VC1/VC2/IN",
+      "description": "Dashboard combined-introducer cells \u2014 cells with + or multi-line names treated as warnings",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R48",
+      "scope": "VC1/VC2/IN",
+      "description": "Subscription matching order \u2014 numeric gate, tie-breakers, name keys for disambiguation",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R49",
+      "scope": "VC2",
+      "description": "Red rows in client file = excluded",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R50",
+      "scope": "VC1",
+      "description": "Strikethrough rows in commission file = deleted from DB",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R51",
+      "scope": "VC1/VC2/IN",
+      "description": "Client override commissions take precedence over dashboard",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R52",
+      "scope": "VC1/VC2/IN",
+      "description": "One introduction per unique (introducer_id, investor_id, deal_id) \u2014 introduced_at = contract_date, status = allocated",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R53",
+      "scope": "VC1/VC2/IN",
+      "description": "Every commission must point to an existing introduction \u2014 no orphaned commission rows",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R54",
+      "scope": "VC2",
+      "description": "VC206 REDPOINT OMEGA V unequal split \u2014 Visual Sectors 111bps $82000, Astral Global 122bps $90000, total $172000",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R55",
+      "scope": "VC2",
+      "description": "VC209 PVPL split after Lafferty removal \u2014 Visual Sectors corrected to 10bps $10000",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R56",
+      "scope": "VC2",
+      "description": "VC215 Bromley paired-introducer rate adjustment \u2014 remaining introducer keeps original rate minus 100bps",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R57",
+      "scope": "VC2",
+      "description": "Multi-introducer spread zero issue (VC2) \u2014 21 rows with spread_fee > 0 but introducer spread commissions = 0",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R58",
+      "scope": "N/A",
+      "description": "No SELECT * in queries",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "N/A"
+    },
+    {
+      "rule_id": "R59",
+      "scope": "VC1/VC2/IN",
+      "description": "Commission basis is always funded_amount \u2014 fee tiers only affect investor fees, not partner commissions",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "PARTIAL"
+    },
+    {
+      "rule_id": "R60",
+      "scope": "VC1/VC2/IN",
+      "description": "Reuse existing investor/introducer records \u2014 no duplicate creation, resolve aliases first",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R61",
+      "scope": "VC1",
+      "description": "VC111 BAUMSLAG/FINALMA fee swap correction \u2014 specific field values after correction",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    },
+    {
+      "rule_id": "R62",
+      "scope": "VC1",
+      "description": "VC113 MACHOT/OEP perf1 swap correction \u2014 direct (perf1=0) and via OEP (perf1=0.1)",
+      "effective_version_date": "2026-02-16",
+      "source_file": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/REMAINING_STRICT_FAILS_2026-02-16.md",
+      "supersedes": [],
+      "status": "active",
+      "engine_status": "IMPLEMENTED"
+    }
+  ]
+}

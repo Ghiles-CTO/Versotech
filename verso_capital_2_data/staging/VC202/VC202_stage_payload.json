@@ -1,0 +1,666 @@
+{
+  "vc": "VC202",
+  "subs": [
+    {
+      "vc": "VC202",
+      "dash_row": 3,
+      "investor_legal_name": "SESR INVESTMENTS PTE LTD",
+      "investor_type": "entity",
+      "investor_contact_name": "Anmol SETHY",
+      "investor_email": "anmol.sethy@indorama.com",
+      "commitment": 5000000.0,
+      "currency": "USD",
+      "status": "funded",
+      "funded_amount": 5000000.0,
+      "cost_per_share": 865.42,
+      "price_per_share": 870.0,
+      "num_shares": 5747.0,
+      "units_subscription": 5747.0,
+      "contract_date": "2024-12-26",
+      "spread_per_share": 4.58,
+      "spread_fee_amount": 26321.26,
+      "subscription_fee_percent": 0.015,
+      "subscription_fee_amount": 75000.0,
+      "bd_fee_percent": 0,
+      "bd_fee_amount": 0,
+      "finra_shares": 0,
+      "finra_fee_amount": 0,
+      "performance_fee_tier1_percent": 0.1,
+      "performance_fee_tier1_threshold": null,
+      "performance_fee_tier2_percent": null,
+      "performance_fee_tier2_threshold": null,
+      "management_fee_percent": 0,
+      "opportunity_name": "REVOLUT",
+      "sourcing_contract_ref": ""
+    },
+    {
+      "vc": "VC202",
+      "dash_row": 4,
+      "investor_legal_name": "SPLENDID HEIGHT HOLDINGS LIMITED",
+      "investor_type": "entity",
+      "investor_contact_name": "Peter WONG",
+      "investor_email": "peter_wong@gaorongventures.com",
+      "commitment": 9999751.16,
+      "currency": "USD",
+      "status": "funded",
+      "funded_amount": 9999751.16,
+      "cost_per_share": 865.42,
+      "price_per_share": 1403.08,
+      "num_shares": 7127.0,
+      "units_subscription": 7127.0,
+      "contract_date": "2025-10-19",
+      "spread_per_share": 537.66,
+      "spread_fee_amount": 3831902.82,
+      "subscription_fee_percent": 0.025,
+      "subscription_fee_amount": 249993.779,
+      "bd_fee_percent": 0,
+      "bd_fee_amount": 0,
+      "finra_shares": 0,
+      "finra_fee_amount": 0,
+      "performance_fee_tier1_percent": 0,
+      "performance_fee_tier1_threshold": null,
+      "performance_fee_tier2_percent": null,
+      "performance_fee_tier2_threshold": null,
+      "management_fee_percent": 0,
+      "opportunity_name": "REVOLUT",
+      "sourcing_contract_ref": ""
+    }
+  ],
+  "positions": [
+    {
+      "vc": "VC202",
+      "investor_legal_name": "SESR INVESTMENTS PTE LTD",
+      "units": 5747.0,
+      "cost_basis": 5000000.0,
+      "as_of_date": "2024-12-26"
+    },
+    {
+      "vc": "VC202",
+      "investor_legal_name": "SPLENDID HEIGHT HOLDINGS LIMITED",
+      "units": 7127.0,
+      "cost_basis": 9999751.16,
+      "as_of_date": "2025-10-19"
+    }
+  ],
+  "introductions": [
+    {
+      "vc": "VC202",
+      "dash_row": 3,
+      "investor_legal_name": "SESR INVESTMENTS PTE LTD",
+      "introduced_at": "2024-12-26",
+      "introducer_legal_name": "Renaissance Bridge Capital LLC",
+      "introducer_contact_name": "Anushka Mathur",
+      "introducer_email": "anushka@renbridgecap.com",
+      "introducer_type": "entity",
+      "introduction_status": "allocated",
+      "commission_currency": "USD",
+      "commission_status": "paid",
+      "commission_paid_at": "2024-12-26",
+      "commission_items": [
+        {
+          "basis_type": "invested_amount",
+          "rate_bps": 50,
+          "base_amount": 5000000.0,
+          "accrual_amount": 25000.0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "spread",
+          "rate_bps": 0,
+          "base_amount": 5000000.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "performance_fee",
+          "rate_bps": 0,
+          "base_amount": 5000000.0,
+          "accrual_amount": 0.0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        }
+      ]
+    },
+    {
+      "vc": "VC202",
+      "dash_row": 4,
+      "investor_legal_name": "SPLENDID HEIGHT HOLDINGS LIMITED",
+      "introduced_at": "2025-10-19",
+      "introducer_legal_name": "Bromley Capital Partners",
+      "introducer_contact_name": "Xiaoxiao Yin",
+      "introducer_email": "xyin@bromleypartners.com",
+      "introducer_type": "entity",
+      "introduction_status": "allocated",
+      "commission_currency": "USD",
+      "commission_status": "paid",
+      "commission_paid_at": "2025-10-19",
+      "commission_items": [
+        {
+          "basis_type": "invested_amount",
+          "rate_bps": 80,
+          "base_amount": 9999751.16,
+          "accrual_amount": 80000.00423,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "spread",
+          "rate_bps": 0,
+          "base_amount": 9999751.16,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "performance_fee",
+          "rate_bps": 0,
+          "base_amount": 9999751.16,
+          "accrual_amount": 0.0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        }
+      ]
+    },
+    {
+      "vc": "VC202",
+      "dash_row": 5,
+      "investor_legal_name": "SESR INVESTMENTS PTE LTD",
+      "introduced_at": null,
+      "introducer_legal_name": "Renaissance Bridge Capital LLC",
+      "introducer_contact_name": "Anushka Mathur",
+      "introducer_email": "anushka@renbridgecap.com",
+      "introducer_type": "entity",
+      "introduction_status": "allocated",
+      "commission_currency": "USD",
+      "commission_status": "paid",
+      "commission_paid_at": null,
+      "commission_items": [
+        {
+          "basis_type": "invested_amount",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "spread",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "performance_fee",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0.0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        }
+      ]
+    },
+    {
+      "vc": "VC202",
+      "dash_row": 6,
+      "investor_legal_name": "SESR INVESTMENTS PTE LTD",
+      "introduced_at": null,
+      "introducer_legal_name": "Renaissance Bridge Capital LLC",
+      "introducer_contact_name": "Anushka Mathur",
+      "introducer_email": "anushka@renbridgecap.com",
+      "introducer_type": "entity",
+      "introduction_status": "allocated",
+      "commission_currency": "USD",
+      "commission_status": "paid",
+      "commission_paid_at": null,
+      "commission_items": [
+        {
+          "basis_type": "invested_amount",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "spread",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "performance_fee",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0.0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        }
+      ]
+    },
+    {
+      "vc": "VC202",
+      "dash_row": 7,
+      "investor_legal_name": "SESR INVESTMENTS PTE LTD",
+      "introduced_at": null,
+      "introducer_legal_name": "Renaissance Bridge Capital LLC",
+      "introducer_contact_name": "Anushka Mathur",
+      "introducer_email": "anushka@renbridgecap.com",
+      "introducer_type": "entity",
+      "introduction_status": "allocated",
+      "commission_currency": "USD",
+      "commission_status": "paid",
+      "commission_paid_at": null,
+      "commission_items": [
+        {
+          "basis_type": "invested_amount",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "spread",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "performance_fee",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0.0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        }
+      ]
+    },
+    {
+      "vc": "VC202",
+      "dash_row": 8,
+      "investor_legal_name": "SESR INVESTMENTS PTE LTD",
+      "introduced_at": null,
+      "introducer_legal_name": "Renaissance Bridge Capital LLC",
+      "introducer_contact_name": "Anushka Mathur",
+      "introducer_email": "anushka@renbridgecap.com",
+      "introducer_type": "entity",
+      "introduction_status": "allocated",
+      "commission_currency": "USD",
+      "commission_status": "paid",
+      "commission_paid_at": null,
+      "commission_items": [
+        {
+          "basis_type": "invested_amount",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "spread",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "performance_fee",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0.0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        }
+      ]
+    },
+    {
+      "vc": "VC202",
+      "dash_row": 9,
+      "investor_legal_name": "SESR INVESTMENTS PTE LTD",
+      "introduced_at": null,
+      "introducer_legal_name": "Renaissance Bridge Capital LLC",
+      "introducer_contact_name": "Anushka Mathur",
+      "introducer_email": "anushka@renbridgecap.com",
+      "introducer_type": "entity",
+      "introduction_status": "allocated",
+      "commission_currency": "USD",
+      "commission_status": "paid",
+      "commission_paid_at": null,
+      "commission_items": [
+        {
+          "basis_type": "invested_amount",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "spread",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "performance_fee",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0.0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        }
+      ]
+    },
+    {
+      "vc": "VC202",
+      "dash_row": 10,
+      "investor_legal_name": "SESR INVESTMENTS PTE LTD",
+      "introduced_at": null,
+      "introducer_legal_name": "Renaissance Bridge Capital LLC",
+      "introducer_contact_name": "Anushka Mathur",
+      "introducer_email": "anushka@renbridgecap.com",
+      "introducer_type": "entity",
+      "introduction_status": "allocated",
+      "commission_currency": "USD",
+      "commission_status": "paid",
+      "commission_paid_at": null,
+      "commission_items": [
+        {
+          "basis_type": "invested_amount",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "spread",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "performance_fee",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0.0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        }
+      ]
+    },
+    {
+      "vc": "VC202",
+      "dash_row": 11,
+      "investor_legal_name": "SESR INVESTMENTS PTE LTD",
+      "introduced_at": null,
+      "introducer_legal_name": "Renaissance Bridge Capital LLC",
+      "introducer_contact_name": "Anushka Mathur",
+      "introducer_email": "anushka@renbridgecap.com",
+      "introducer_type": "entity",
+      "introduction_status": "allocated",
+      "commission_currency": "USD",
+      "commission_status": "paid",
+      "commission_paid_at": null,
+      "commission_items": [
+        {
+          "basis_type": "invested_amount",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "spread",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "performance_fee",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0.0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        }
+      ]
+    },
+    {
+      "vc": "VC202",
+      "dash_row": 12,
+      "investor_legal_name": "SESR INVESTMENTS PTE LTD",
+      "introduced_at": null,
+      "introducer_legal_name": "Renaissance Bridge Capital LLC",
+      "introducer_contact_name": "Anushka Mathur",
+      "introducer_email": "anushka@renbridgecap.com",
+      "introducer_type": "entity",
+      "introduction_status": "allocated",
+      "commission_currency": "USD",
+      "commission_status": "paid",
+      "commission_paid_at": null,
+      "commission_items": [
+        {
+          "basis_type": "invested_amount",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "spread",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "performance_fee",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0.0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        }
+      ]
+    },
+    {
+      "vc": "VC202",
+      "dash_row": 13,
+      "investor_legal_name": "SESR INVESTMENTS PTE LTD",
+      "introduced_at": null,
+      "introducer_legal_name": "Renaissance Bridge Capital LLC",
+      "introducer_contact_name": "Anushka Mathur",
+      "introducer_email": "anushka@renbridgecap.com",
+      "introducer_type": "entity",
+      "introduction_status": "allocated",
+      "commission_currency": "USD",
+      "commission_status": "paid",
+      "commission_paid_at": null,
+      "commission_items": [
+        {
+          "basis_type": "invested_amount",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "spread",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "performance_fee",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0.0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        }
+      ]
+    },
+    {
+      "vc": "VC202",
+      "dash_row": 14,
+      "investor_legal_name": "SESR INVESTMENTS PTE LTD",
+      "introduced_at": null,
+      "introducer_legal_name": "Renaissance Bridge Capital LLC",
+      "introducer_contact_name": "Anushka Mathur",
+      "introducer_email": "anushka@renbridgecap.com",
+      "introducer_type": "entity",
+      "introduction_status": "allocated",
+      "commission_currency": "USD",
+      "commission_status": "paid",
+      "commission_paid_at": null,
+      "commission_items": [
+        {
+          "basis_type": "invested_amount",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "spread",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "performance_fee",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0.0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        }
+      ]
+    },
+    {
+      "vc": "VC202",
+      "dash_row": 15,
+      "investor_legal_name": "SESR INVESTMENTS PTE LTD",
+      "introduced_at": null,
+      "introducer_legal_name": "Renaissance Bridge Capital LLC",
+      "introducer_contact_name": "Anushka Mathur",
+      "introducer_email": "anushka@renbridgecap.com",
+      "introducer_type": "entity",
+      "introduction_status": "allocated",
+      "commission_currency": "USD",
+      "commission_status": "paid",
+      "commission_paid_at": null,
+      "commission_items": [
+        {
+          "basis_type": "invested_amount",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "spread",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "performance_fee",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0.0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        }
+      ]
+    },
+    {
+      "vc": "VC202",
+      "dash_row": 16,
+      "investor_legal_name": "SESR INVESTMENTS PTE LTD",
+      "introduced_at": null,
+      "introducer_legal_name": "Renaissance Bridge Capital LLC",
+      "introducer_contact_name": "Anushka Mathur",
+      "introducer_email": "anushka@renbridgecap.com",
+      "introducer_type": "entity",
+      "introduction_status": "allocated",
+      "commission_currency": "USD",
+      "commission_status": "paid",
+      "commission_paid_at": null,
+      "commission_items": [
+        {
+          "basis_type": "invested_amount",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "spread",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "performance_fee",
+          "rate_bps": 0,
+          "base_amount": 0.0,
+          "accrual_amount": 0.0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        }
+      ]
+    }
+  ],
+  "checks": {
+    "dashboard_active_commitment": 14999751.16,
+    "stage_active_commitment": 14999751.16,
+    "dashboard_active_shares": 12874.0,
+    "stage_active_shares": 12874.0,
+    "dashboard_active_ownership": 12874.0,
+    "stage_active_ownership": 12874.0,
+    "dashboard_active_subscription_fee": 324993.779,
+    "stage_active_subscription_fee": 324993.779,
+    "dashboard_active_spread_fee": 3858224.08,
+    "stage_active_spread_fee": 3858224.08,
+    "dashboard_intro_subscription_fee": 105000.00423,
+    "stage_intro_subscription_fee": 105000.00423,
+    "dashboard_intro_spread_fee": 0.0,
+    "stage_intro_spread_fee": 0,
+    "subscription_count": 2,
+    "position_count": 2,
+    "introduction_count": 14
+  }
+}

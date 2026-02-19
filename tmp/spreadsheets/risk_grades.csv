@@ -1,0 +1,9 @@
+code,label,points,color,sort_order
+A1,Capital Preservation,0,Dark Green,0
+A2,Very Low Risk,1,Green,1
+A3,Low Risk,2,Light Green,2
+A4,Moderate Risk,3,Yellow,3
+B,Elevated Risk,5,Orange,5
+C,High Risk,10,Red,10
+D,Very High Risk,15,Dark Red,15
+E,Extreme / Speculative,20,Black,20

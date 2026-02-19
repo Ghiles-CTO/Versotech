@@ -68,12 +68,14 @@ interface ArrangerKYCDocumentsTabProps {
   arrangerId: string
   arrangerName?: string
   kycStatus?: string
+  entityType?: string | null
 }
 
 export function ArrangerKYCDocumentsTab({
   arrangerId,
   arrangerName,
-  kycStatus
+  kycStatus,
+  entityType
 }: ArrangerKYCDocumentsTabProps) {
   const [documents, setDocuments] = useState<Document[]>([])
   const [members, setMembers] = useState<ArrangerMember[]>([])
@@ -81,6 +83,7 @@ export function ArrangerKYCDocumentsTab({
   const [uploading, setUploading] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
   const currentKycStatus = kycStatus
+  const isIndividualEntity = entityType === 'individual'
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
 
   const fetchDocuments = useCallback(async () => {
@@ -237,10 +240,18 @@ export function ArrangerKYCDocumentsTab({
     })
   }
 
-  const uploadedCount = documents.filter(d =>
-    REQUIRED_DOCUMENTS.some(req => req.value === d.type)
-  ).length
-  const completionPercentage = Math.round((uploadedCount / REQUIRED_DOCUMENTS.length) * 100)
+  const uploadedCount = isIndividualEntity
+    ? new Set(
+        documents
+          .filter(d => MEMBER_DOCUMENTS.some(req => req.value === d.type))
+          .map(d => d.type)
+      ).size
+    : documents.filter(d => REQUIRED_DOCUMENTS.some(req => req.value === d.type)).length
+
+  const requiredCount = isIndividualEntity ? MEMBER_DOCUMENTS.length : REQUIRED_DOCUMENTS.length
+  const completionPercentage = requiredCount > 0
+    ? Math.round((uploadedCount / requiredCount) * 100)
+    : 0
 
   const getStatusColor = (status?: string) => {
     switch (status) {
@@ -271,7 +282,11 @@ export function ArrangerKYCDocumentsTab({
               <div>
                 <CardTitle>KYC Documents</CardTitle>
                 <CardDescription>
-                  {arrangerName ? `Compliance documents for ${arrangerName}` : 'Upload required compliance documents'}
+                  {isIndividualEntity
+                    ? 'Upload your personal KYC documents'
+                    : arrangerName
+                      ? `Compliance documents for ${arrangerName}`
+                      : 'Upload required compliance documents'}
                 </CardDescription>
                 <p className="text-xs text-muted-foreground mt-1">
                   Entity: <span className="font-medium text-foreground">{arrangerName || 'Current arranger entity'}</span>
@@ -281,7 +296,7 @@ export function ArrangerKYCDocumentsTab({
             <div className="text-right">
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold text-foreground">
-                  {uploadedCount}/{REQUIRED_DOCUMENTS.length}
+                  {uploadedCount}/{requiredCount}
                 </span>
                 {currentKycStatus && (
                   <Badge variant="outline" className={cn('capitalize', getStatusColor(currentKycStatus))}>
@@ -309,13 +324,16 @@ export function ArrangerKYCDocumentsTab({
           </div>
           {completionPercentage < 100 && (
             <p className="text-xs text-muted-foreground mt-2">
-              Upload all required documents to complete KYC verification
+              {isIndividualEntity
+                ? 'Upload your ID and proof of address to complete KYC verification'
+                : 'Upload all required documents to complete KYC verification'}
             </p>
           )}
         </CardContent>
       </Card>
 
       {/* Required Documents Checklist */}
+      {!isIndividualEntity && (
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Required Documents</CardTitle>
@@ -424,6 +442,7 @@ export function ArrangerKYCDocumentsTab({
           )}
         </CardContent>
       </Card>
+      )}
 
       {/* Member KYC Documents Section */}
       {members.length > 0 && (

@@ -1,0 +1,320 @@
+{
+  "summary": {
+    "rules_version": "2026-02-14.3",
+    "scope_vehicle_codes": [
+      "VC102",
+      "VC106",
+      "VC111",
+      "VC112",
+      "VC113",
+      "VC114",
+      "VC118",
+      "VC121",
+      "VC122",
+      "VC123",
+      "VC124",
+      "VC125",
+      "VC126",
+      "VC128",
+      "VC130",
+      "VC131",
+      "VC132",
+      "VC133",
+      "VC138",
+      "VC140",
+      "VC141",
+      "VC143"
+    ],
+    "dashboard_active_rows": 466,
+    "dashboard_zero_rows": 56,
+    "db_subscriptions": 466,
+    "db_positions": 384,
+    "db_introductions": 498,
+    "db_commissions": 1030,
+    "contacts_checked_rows": 0,
+    "contacts_red_rows_excluded": [],
+    "fail_count": 4,
+    "warning_count": 28,
+    "fail_by_check": {
+      "commission_row_amount_mismatch": 2,
+      "commission_row_missing_in_db": 2
+    },
+    "warn_by_check": {
+      "strikethrough_commission_row_reinstated_ruled": 6,
+      "introduction_tuple_repeat_ruled": 3,
+      "introduction_missing_date_ruled": 1,
+      "performance_fee_threshold_multiplier_non_zero_ruled": 1,
+      "commission_totals_ruled_diff_spread": 4,
+      "commission_row_ruled_dashboard_override": 13
+    },
+    "mapping_coverage": {
+      "unmapped_dashboard_rows": 0,
+      "unmapped_db_rows": 0,
+      "unmapped_commission_rows_dashboard_to_db": 2,
+      "unmapped_commission_rows_db_to_dashboard": 0,
+      "name_mapping_applied_count": 66,
+      "name_mapping_unresolved_count": 0,
+      "fallback_match_warning_count": 0
+    },
+    "rule_enforcement_summary": {
+      "introduction_integrity_check": true,
+      "subscription_formula_cross_field_check": true,
+      "commission_rate_integrity_check": true,
+      "commission_base_amount_matches_funded_check": false,
+      "strikethrough_commission_delete_check": true,
+      "dual_role_introducer_check": true,
+      "deprecated_introducer_references_check": true
+    },
+    "strikethrough_source_rows": 29,
+    "strikethrough_resolved_rows": 29,
+    "strikethrough_unresolved_rows": 0,
+    "strikethrough_rows_present_in_db": 6
+  },
+  "failures": [
+    {
+      "severity": "fail",
+      "check": "commission_row_amount_mismatch",
+      "vehicle": "VC133",
+      "row_ref": "VC33:8",
+      "details": "investor=Keir Richard BENBOW introducer=Elevation basis=spread dashboard=1750.0 db=5250.0 delta=3500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_amount_mismatch",
+      "vehicle": "VC133",
+      "row_ref": "VC33:10",
+      "details": "investor=ZANDERA (Holdco) Ltd introducer=Elevation+Rick basis=spread dashboard=112875.0 db=96750.0 delta=-16125.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_db",
+      "vehicle": "VC133",
+      "row_ref": "VC33:10",
+      "details": "investor=ZANDERA (Holdco) Ltd introducer=Anand basis=spread dashboard=24187.5 db=0.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_db",
+      "vehicle": "VC133",
+      "row_ref": "VC33:6",
+      "details": "investor=Sahejman Singh KAHLON introducer=Elevation basis=spread dashboard=825.0 db=0.0"
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:489",
+      "details": "source_row=489 investor=DALINGA HOLDING AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=499.87 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:490",
+      "details": "source_row=490 investor=DALINGA HOLDING AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=99.27 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:494",
+      "details": "source_row=494 investor=MA GROUP AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=358.0 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:496",
+      "details": "source_row=496 investor=DALINGA HOLDING AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=499.87 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:497",
+      "details": "source_row=497 investor=DALINGA HOLDING AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=99.27 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:500",
+      "details": "source_row=500 investor=MA GROUP AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=358.0 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "introduction_tuple_repeat_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 count=2"
+    },
+    {
+      "severity": "warn",
+      "check": "introduction_tuple_repeat_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f investor_id=996ec13d-5df9-4b46-8581-29bf3880c052 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 count=2"
+    },
+    {
+      "severity": "warn",
+      "check": "introduction_tuple_repeat_ruled",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 count=2"
+    },
+    {
+      "severity": "warn",
+      "check": "introduction_missing_date_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introduction_id=11673e9c-1afc-4586-a5ae-83b52b7c5e29 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21"
+    },
+    {
+      "severity": "warn",
+      "check": "performance_fee_threshold_multiplier_non_zero_ruled",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "commission_id=0eb2ccb5-59d9-44b7-9d5c-07e9710c9ac6 threshold_multiplier=0.1"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "dashboard=6326296.752 db=6326296.81 delta=0.058 expected=0.058"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "dashboard=963887.6075 db=963887.62 delta=0.0125 expected=0.0125"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC114",
+      "row_ref": "",
+      "details": "dashboard=0.4 db=0.0 delta=-0.4 expected=-0.4"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC133",
+      "row_ref": "",
+      "details": "dashboard=222892.5 db=217680.0 delta=-5212.5 expected=-5212.5"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:7",
+      "details": "investor=777 WALNUT LLC introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=825.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "d04fcd07-6af9-41a6-9530-06dbe8588b63",
+      "details": "investor=778 WALNUT LLC introducer=Set Cap basis=spread expected_amount=2805.0 expected_rate=n/a dashboard_amount=0.0 db_amount=2805.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:11",
+      "details": "investor=Band Capital Limited introducer=Elevation basis=spread expected_amount=53700.0 expected_rate=n/a dashboard_amount=8950.0 db_amount=53700.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:11",
+      "details": "investor=Band Capital Limited introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=12530.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:3",
+      "details": "investor=Charles DE BAVIER introducer=Elevation basis=spread expected_amount=9900.0 expected_rate=n/a dashboard_amount=1650.0 db_amount=9900.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:3",
+      "details": "investor=Charles DE BAVIER introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=5610.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:5",
+      "details": "investor=CARTA INVESTMENTS LLC introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=1650.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:13",
+      "details": "investor=Tuygan GOKER introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=10525.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:13",
+      "details": "investor=Tuygan GOKER introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=12915.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:4",
+      "details": "investor=JASSQ HOLDING LIMITED introducer=Elevation basis=spread expected_amount=30000.0 expected_rate=n/a dashboard_amount=5000.0 db_amount=30000.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:4",
+      "details": "investor=JASSQ HOLDING LIMITED introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=7000.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:12",
+      "details": "investor=Jeremy LOWY introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=825.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:9",
+      "details": "investor=Marco JERRENTRUP introducer=Elevation basis=spread expected_amount=5250.0 expected_rate=n/a dashboard_amount=1750.0 db_amount=5250.0"
+    }
+  ],
+  "mapping_coverage": {
+    "unmapped_dashboard_rows": 0,
+    "unmapped_db_rows": 0,
+    "unmapped_commission_rows_dashboard_to_db": 2,
+    "unmapped_commission_rows_db_to_dashboard": 0,
+    "name_mapping_applied_count": 66,
+    "name_mapping_unresolved_count": 0,
+    "fallback_match_warning_count": 0
+  },
+  "rule_enforcement_summary": {
+    "introduction_integrity_check": true,
+    "subscription_formula_cross_field_check": true,
+    "commission_rate_integrity_check": true,
+    "commission_base_amount_matches_funded_check": false,
+    "strikethrough_commission_delete_check": true,
+    "dual_role_introducer_check": true,
+    "deprecated_introducer_references_check": true
+  },
+  "warning_governance_status": "PENDING_TRUST_PACK"
+}

@@ -2,6 +2,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { AlertCircle } from 'lucide-react'
 import { IntroducerProfileClient } from '@/components/introducer-profile/introducer-profile-client'
 import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
+import { resolvePrimaryPersonaLink } from '@/lib/kyc/persona-link'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,11 +52,17 @@ export default async function IntroducerProfilePage() {
   }
 
   // Get introducer user info
-  const { data: introducerUser } = await serviceSupabase
-    .from('introducer_users')
-    .select('introducer_id, role, is_primary, can_sign')
-    .eq('user_id', user.id)
-    .maybeSingle()
+  const { link: introducerUser } = await resolvePrimaryPersonaLink<{
+    introducer_id: string
+    role: string
+    is_primary: boolean
+    can_sign: boolean
+  }>({
+    supabase: serviceSupabase,
+    config: { userTable: 'introducer_users', entityIdColumn: 'introducer_id' },
+    userId: user.id,
+    select: 'introducer_id, role, is_primary, can_sign',
+  })
 
   if (!introducerUser?.introducer_id) {
     return (

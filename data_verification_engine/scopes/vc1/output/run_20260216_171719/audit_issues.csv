@@ -1,0 +1,19 @@
+severity,check,vehicle,row_ref,details
+fail,row_mapping_unresolved,VC133,VC33:10,mode=fallback_amounts_date dash_investor=ZANDERA (Holdco) Ltd db_investor=Zandera (Holdco) Limited commitment=1000000.0 shares=645.0 dash_date=2022-04-21 db_date=2022-04-21 sub_id=24cf686d-78b3-432f-b133-08e9efc477cb
+fail,commission_totals_mismatch_invested_amount,VC143,,dashboard=2000.0 db=0.0 delta=-2000.0
+fail,commission_row_missing_in_db,VC143,VC43:5,investor=LF GROUP SARL introducer=Pierre Paumier basis=invested_amount dashboard=2000.0 db=0.0
+fail,name_mapping_unresolved_total,,,count=1
+warn,strikethrough_commission_row_reinstated_ruled,VC125,strike:489,source_row=489 investor=DALINGA HOLDING AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=499.87 db_rows=1
+warn,strikethrough_commission_row_reinstated_ruled,VC125,strike:490,source_row=490 investor=DALINGA HOLDING AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=99.27 db_rows=1
+warn,strikethrough_commission_row_reinstated_ruled,VC125,strike:494,source_row=494 investor=MA GROUP AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=358.0 db_rows=1
+warn,strikethrough_commission_row_reinstated_ruled,VC125,strike:496,source_row=496 investor=DALINGA HOLDING AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=499.87 db_rows=1
+warn,strikethrough_commission_row_reinstated_ruled,VC125,strike:497,source_row=497 investor=DALINGA HOLDING AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=99.27 db_rows=1
+warn,strikethrough_commission_row_reinstated_ruled,VC125,strike:500,source_row=500 investor=MA GROUP AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=358.0 db_rows=1
+warn,introduction_tuple_repeat_ruled,VC106,,introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 count=2
+warn,introduction_tuple_repeat_ruled,VC106,,introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f investor_id=996ec13d-5df9-4b46-8581-29bf3880c052 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 count=2
+warn,introduction_tuple_repeat_ruled,VC126,,introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 count=2
+warn,introduction_missing_date_ruled,VC106,,introduction_id=11673e9c-1afc-4586-a5ae-83b52b7c5e29 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21
+warn,performance_fee_threshold_multiplier_non_zero_ruled,VC126,,commission_id=0eb2ccb5-59d9-44b7-9d5c-07e9710c9ac6 threshold_multiplier=0.1
+warn,commission_totals_ruled_diff_spread,VC106,,dashboard=6326296.752 db=6326296.81 delta=0.058 expected=0.058
+warn,commission_totals_ruled_diff_spread,VC113,,dashboard=963887.6075 db=963887.62 delta=0.0125 expected=0.0125
+warn,commission_totals_ruled_diff_spread,VC114,,dashboard=0.4 db=0.0 delta=-0.4 expected=-0.4

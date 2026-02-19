@@ -1,0 +1,54 @@
+investment_type,key_risk_drivers,risk_grade,risk_grade_range
+Central bank reserves / sovereign cash (AAA),"Counterparty, inflation erosion",A1,A1
+Money market funds (government-only),"Interest rate, liquidity",A1,A1
+Money market funds (prime / corporate),"Credit spread, liquidity stress",A2,A2
+Bank deposits (OECD banks),"Bank solvency, bail-in",A2,A2
+Short-term T-Bills (OECD),Rate risk,A1,A1
+Sovereign bonds (AAA–AA),"Duration, fiscal",A2,A1–A2
+Sovereign bonds (BBB),Debt sustainability,A3,A3
+Emerging market sovereign debt,"FX, political risk",B,B
+Investment-grade corporate bonds,"Credit cycle, duration",A3,A3
+High-yield bonds,Default risk,C,B–C
+Distressed debt,Recovery uncertainty,D,C–D
+"Structured credit (ABS, CLO mezzanine)","Complexity, correlation",C,B–C
+Developed market equities,Market volatility,A4,A4
+Emerging market equities,"FX, governance",B,B
+Sector ETFs (cyclical sectors),Sector concentration,B,B
+Volatility products / leveraged ETFs,Path dependency,D,C–D
+Listed REITs,Rate sensitivity,B,B
+"Residential real estate (core, OECD)","Rates, liquidity",A3,A3
+Residential real estate (leveraged),"Leverage, cycles",A4,A4
+"Commercial real estate – core (office, retail prime)",Demand shifts,B,A4–B
+Logistics / data centers,Tenant concentration,A3,A3
+Hospitality / retail secondary,Cyclicality,C,B–C
+Real estate development,Execution risk,C,C
+Distressed real estate,"Liquidity, legal",D,C–D
+Private equity funds – buyout,"Leverage, exit risk",B,B
+Growth equity,Valuation risk,B,B
+Venture capital (early stage),Failure probability,D,C–D
+Venture capital (late stage),"Liquidity, repricing",C,C
+Fund-of-funds (PE/VC),Layered fees,B,B
+Co-investments,Concentration,C,B–C
+Core infrastructure (regulated utilities),Regulatory risk,A3,A3
+Renewable energy (subsidy-backed),Policy risk,A4,A4
+Transport infrastructure,Demand elasticity,B,B
+Natural resources / mining,Commodity volatility,C,C
+Timberland / farmland,"Climate, liquidity",A4,A4
+Market-neutral hedge funds,Model risk,A4,A4
+Global macro,Event risk,B,B
+Long/short equity,Beta leakage,B,B
+Event-driven,Deal failure,B,B
+CTA / trend-following,Regime shifts,B,B
+G10 FX (unleveraged),Volatility,A4,A4
+EM FX,Political / liquidity,C,B–C
+Leveraged FX trading,Margin risk,D,C–D
+Gold,Price volatility,A4,A4
+Industrial commodities,Cyclicality,B,B
+Cryptoassets (BTC/ETH),"Volatility, regulation",D,D
+Altcoins / DeFi,"Counterparty, hacks",E,E
+Structured notes (capital protected),Issuer risk,A3,A3
+Structured notes (yield-enhanced),Optionality risk,B,B
+Trade finance (insured),Counterparty,A3,A3
+Trade finance (uninsured),Default risk,C,B–C
+Litigation finance,Binary outcomes,C,C
+Special situations,"Legal, timing",D,C–D

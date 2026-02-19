@@ -554,6 +554,7 @@ export function PartnerProfileClient({
             partnerId={partnerInfo.id}
             partnerName={partnerInfo.name}
             kycStatus={partnerInfo.kyc_status || undefined}
+            entityType={partnerInfo.type}
           />
         </TabsContent>
 

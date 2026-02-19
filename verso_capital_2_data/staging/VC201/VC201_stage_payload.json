@@ -1,0 +1,66 @@
+{
+  "vc": "VC201",
+  "subs": [
+    {
+      "vc": "VC201",
+      "dash_row": 3,
+      "investor_legal_name": "Infinitas Capital SPV V a series of Infinitas Capital Master LLC",
+      "investor_type": "entity",
+      "investor_contact_name": "Robin LAUBER",
+      "investor_email": "Robin.Lauber@infinitas-capital.com",
+      "commitment": 372237.5,
+      "currency": "USD",
+      "status": "funded",
+      "funded_amount": 372237.5,
+      "cost_per_share": 28.0,
+      "price_per_share": 30.0,
+      "num_shares": 12408.0,
+      "units_subscription": 12408.0,
+      "contract_date": "2025-01-14",
+      "spread_per_share": 2.0,
+      "spread_fee_amount": 24816.0,
+      "subscription_fee_percent": 0.0309278350515464,
+      "subscription_fee_amount": 11512.5,
+      "bd_fee_percent": 0,
+      "bd_fee_amount": 0,
+      "finra_shares": 0,
+      "finra_fee_amount": 0,
+      "performance_fee_tier1_percent": 0.1,
+      "performance_fee_tier1_threshold": null,
+      "performance_fee_tier2_percent": null,
+      "performance_fee_tier2_threshold": null,
+      "management_fee_percent": 0,
+      "opportunity_name": "XAI",
+      "sourcing_contract_ref": "Series B (TRANSFORM)"
+    }
+  ],
+  "positions": [
+    {
+      "vc": "VC201",
+      "investor_legal_name": "Infinitas Capital SPV V a series of Infinitas Capital Master LLC",
+      "units": 12408.0,
+      "cost_basis": 372237.5,
+      "as_of_date": "2025-01-14"
+    }
+  ],
+  "introductions": [],
+  "checks": {
+    "dashboard_active_commitment": 372237.5,
+    "stage_active_commitment": 372237.5,
+    "dashboard_active_shares": 12408.0,
+    "stage_active_shares": 12408.0,
+    "dashboard_active_ownership": 12408.0,
+    "stage_active_ownership": 12408.0,
+    "dashboard_active_subscription_fee": 11512.5,
+    "stage_active_subscription_fee": 11512.5,
+    "dashboard_active_spread_fee": 24816.0,
+    "stage_active_spread_fee": 24816.0,
+    "dashboard_intro_subscription_fee": 0.0,
+    "stage_intro_subscription_fee": 0,
+    "dashboard_intro_spread_fee": 0.0,
+    "stage_intro_spread_fee": 0,
+    "subscription_count": 1,
+    "position_count": 1,
+    "introduction_count": 0
+  }
+}

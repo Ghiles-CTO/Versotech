@@ -1,0 +1,3995 @@
+{
+  "summary": {
+    "rules_version": "2026-02-14.3",
+    "scope_vehicle_codes": [
+      "VC102",
+      "VC106",
+      "VC111",
+      "VC112",
+      "VC113",
+      "VC114",
+      "VC118",
+      "VC121",
+      "VC122",
+      "VC123",
+      "VC124",
+      "VC125",
+      "VC126",
+      "VC128",
+      "VC130",
+      "VC131",
+      "VC132",
+      "VC133",
+      "VC138",
+      "VC140",
+      "VC141",
+      "VC143"
+    ],
+    "dashboard_active_rows": 466,
+    "dashboard_zero_rows": 56,
+    "db_subscriptions": 466,
+    "db_positions": 384,
+    "db_introductions": 498,
+    "db_commissions": 1030,
+    "contacts_checked_rows": 0,
+    "contacts_red_rows_excluded": [],
+    "fail_count": 525,
+    "warning_count": 32,
+    "fail_by_check": {
+      "commission_rate_amount_formula_mismatch": 390,
+      "commission_base_amount_vs_funded_amount_mismatch": 135
+    },
+    "warn_by_check": {
+      "strikethrough_commission_row_reinstated_ruled": 6,
+      "introduction_tuple_repeat_ruled": 3,
+      "introduction_missing_date_ruled": 1,
+      "performance_fee_threshold_multiplier_non_zero_ruled": 1,
+      "commission_totals_ruled_diff_spread": 4,
+      "commission_row_ruled_dashboard_override": 17
+    },
+    "mapping_coverage": {
+      "unmapped_dashboard_rows": 0,
+      "unmapped_db_rows": 0,
+      "unmapped_commission_rows_dashboard_to_db": 0,
+      "unmapped_commission_rows_db_to_dashboard": 0,
+      "name_mapping_applied_count": 66,
+      "name_mapping_unresolved_count": 0,
+      "fallback_match_warning_count": 0
+    },
+    "rule_enforcement_summary": {
+      "introduction_integrity_check": true,
+      "subscription_formula_cross_field_check": true,
+      "commission_rate_integrity_check": true,
+      "commission_base_amount_matches_funded_check": true,
+      "strikethrough_commission_delete_check": true,
+      "dual_role_introducer_check": true,
+      "deprecated_introducer_references_check": true
+    },
+    "strikethrough_source_rows": 29,
+    "strikethrough_resolved_rows": 29,
+    "strikethrough_unresolved_rows": 0,
+    "strikethrough_rows_present_in_db": 6
+  },
+  "failures": [
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=01846fe4-c9a2-40c6-b489-5d19698d574b base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=022619f0-c2d8-448c-9504-5df4de1be663 base_amount=1000000.0 rate_bps=1071 accrual_amount=107142.84 expected=107100.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=031702da-e989-424d-bf4a-32d598e9bc23 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=033c48f1-4fa4-442c-968b-6e2486fb8f22 base_amount=150000.0 rate_bps=1266 accrual_amount=18995.0 expected=18990.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=036db0ff-f101-4ad2-ba1f-5dc664203684 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=06ec7555-be3e-4384-8563-7035f5bed976 base_amount=200000.0 rate_bps=697 accrual_amount=13941.6 expected=13940.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=090ef52b-bb9e-487a-b03c-b38d266a43e6 base_amount=24978.24 rate_bps=872 accrual_amount=2177.1 expected=2178.102528"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=0941c8f1-4a85-415b-9af0-6291b83334b5 base_amount=100000.0 rate_bps=1071 accrual_amount=10712.52 expected=10710.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=09c4403c-4ee5-4607-a390-2c16abbf2b7d base_amount=30040.0 rate_bps=7837 accrual_amount=23542.2 expected=23542.348"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=09fe59fd-c30c-4b8d-b97c-00e9be3956d9 base_amount=100000.0 rate_bps=468 accrual_amount=4676.1 expected=4680.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=0a7d3437-aa30-4e22-8a4f-1509cfd4e424 base_amount=25000.0 rate_bps=700 accrual_amount=1749.15 expected=1750.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=0b0f58f3-f445-4a48-a6f0-1042d1d5ca26 base_amount=100000.0 rate_bps=1071 accrual_amount=10712.52 expected=10710.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=0cd827ed-b953-4f7c-bdac-e9b9621adcdf base_amount=200000.0 rate_bps=1000 accrual_amount=0.0 expected=20000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=0d857a56-dec8-4cef-8188-789bb379a3dc base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=0de80b5c-0df4-414e-8533-00a3fa2f7424 base_amount=1000000.0 rate_bps=536 accrual_amount=53571.42 expected=53600.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=0e29818b-3b39-47b1-93bc-9fbe7eb4f49b base_amount=50000.0 rate_bps=500 accrual_amount=0.0 expected=2500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=0eb3f1a1-c077-48d0-9d36-8868e553547a base_amount=300000.0 rate_bps=700 accrual_amount=20999.03 expected=21000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=1001b799-70a7-45f6-8906-4fd3fae566b6 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=10311f7e-b5f0-4f6b-a106-4dcca3ffadd7 base_amount=200000.0 rate_bps=700 accrual_amount=13999.36 expected=14000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=103c3af7-75d8-4aea-8a5c-8f14cbc7a28b base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=112c10aa-53e3-4ead-8a83-9519b2371e8c base_amount=75000.0 rate_bps=536 accrual_amount=4016.88 expected=4020.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=114e1829-21d2-4aa7-974b-cf5cf54ab8ec base_amount=500000.0 rate_bps=500 accrual_amount=0.0 expected=25000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=11dddf06-017b-4bf8-8d3b-c5e12c96802b base_amount=4999999.2 rate_bps=375 accrual_amount=0.0 expected=187499.97"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=11fee7d4-5610-4182-8d85-7f8b20f2f265 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=1215d4b4-f862-4b70-8c51-816ead362a37 base_amount=100000.0 rate_bps=1071 accrual_amount=10712.52 expected=10710.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=1422f22d-cd34-46c7-9d26-328c511ab698 base_amount=588000.0 rate_bps=1156 accrual_amount=68000.0 expected=67972.8"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=14a0528b-a7d4-4d13-a253-64caa70dd61c base_amount=150000.0 rate_bps=132 accrual_amount=1976.87 expected=1980.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=155a77ca-67e7-4937-9882-656e57615211 base_amount=50000.0 rate_bps=750 accrual_amount=0.0 expected=3750.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=15b55946-1882-4917-abfd-5e76e042a0b5 base_amount=75000.0 rate_bps=264 accrual_amount=1976.56 expected=1980.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=17c1fcd2-a3b2-4f71-b215-03750085f195 base_amount=25000.0 rate_bps=1111 accrual_amount=2776.0 expected=2777.5"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=17d788cd-358a-4cc0-bdec-8e4c393fc127 base_amount=200000.0 rate_bps=1000 accrual_amount=0.0 expected=20000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=185707c4-73a4-46d6-9ed7-af9bc210a0bd base_amount=200000.0 rate_bps=500 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=18f65d5c-ba4a-405f-9a57-21cd881f4031 base_amount=100000.0 rate_bps=750 accrual_amount=0.0 expected=7500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=1912bdf2-a2ed-4bac-b31b-835c639a62a3 base_amount=100000.0 rate_bps=1071 accrual_amount=10712.52 expected=10710.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=1d06eca4-e3f9-4762-8a41-8ae6d3fc54ea base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=1d1df909-f676-49ad-a2da-7ae827ce1440 base_amount=24985.0 rate_bps=921 accrual_amount=2301.25 expected=2301.1185"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=1d5341e4-9896-451d-a719-18396f8e5ced base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=1dc49aac-7e95-49c9-9a34-6a9fe4e58829 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=1dd6a448-e401-471f-bf8c-091e38042e9c base_amount=500000.0 rate_bps=500 accrual_amount=0.0 expected=25000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=1ec535a0-6d79-467a-b03b-e57e07c19333 base_amount=200000.0 rate_bps=1000 accrual_amount=0.0 expected=20000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=1f4229aa-f1f0-4747-9937-bb849543eb2e base_amount=100000.0 rate_bps=264 accrual_amount=2635.62 expected=2640.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=1f87e836-87d3-43bd-902b-2ea1b0b3678e base_amount=100000.0 rate_bps=132 accrual_amount=1317.81 expected=1320.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=21e5e1d6-fa78-44d0-865e-d340b0f87d0d base_amount=36361.92 rate_bps=536 accrual_amount=1947.96 expected=1948.998912"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=22295438-9d4f-4402-8a1e-74e7e75c5564 base_amount=100000.0 rate_bps=132 accrual_amount=1317.81 expected=1320.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=22649125-1384-477d-b8b9-65008e92343c base_amount=50000.0 rate_bps=1233 accrual_amount=6162.5 expected=6165.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=228414aa-fef8-4347-922d-f992da243504 base_amount=50000.0 rate_bps=750 accrual_amount=0.0 expected=3750.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=23ba9a13-a792-4234-a5f2-1086c3c54e62 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=24e8acc8-5efb-4328-b257-9d59b4c71218 base_amount=100000.0 rate_bps=1071 accrual_amount=10712.52 expected=10710.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=260941c4-4bca-4fc8-a315-95c3aeb6f93d base_amount=50000.0 rate_bps=1233 accrual_amount=6162.5 expected=6165.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=2626c213-093c-4c6c-a6d1-c722602c4bbc base_amount=450000.0 rate_bps=750 accrual_amount=0.0 expected=33750.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=269f94fc-2182-4a14-81fc-c98fc087ed6b base_amount=250000.0 rate_bps=1071 accrual_amount=26785.08 expected=26775.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=270a989e-05b7-4126-9749-0087ca72d1ed base_amount=100000.0 rate_bps=750 accrual_amount=0.0 expected=7500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=2710ead7-8769-4040-969d-6f63ed383438 base_amount=200000.0 rate_bps=500 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=279ac392-76fc-4537-b6b6-d513af91ce49 base_amount=100000.0 rate_bps=470 accrual_amount=4697.36 expected=4700.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=28a8dcf9-5381-4459-92f1-46002b891526 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=28df617a-7221-46a3-8a4c-3c7bc52a9b9d base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=29146d11-8329-470e-8701-4f6bc7e7e8df base_amount=36361.92 rate_bps=500 accrual_amount=0.0 expected=1818.096"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=2960546e-8678-4d26-bd37-40f7ffb21b03 base_amount=1414728.0 rate_bps=1233 accrual_amount=174435.0 expected=174435.9624"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=2a6eb07f-f720-4575-b2ca-5718d6fe8070 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=2ae79107-5e42-4c89-9e93-c4d9b87be9ba base_amount=100000.0 rate_bps=750 accrual_amount=0.0 expected=7500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=2b21fd93-a71b-415a-929e-9524333a6c0d base_amount=100000.0 rate_bps=1071 accrual_amount=10712.52 expected=10710.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=2c3f750d-b100-499c-937e-2a98b628acb7 base_amount=50000.0 rate_bps=957 accrual_amount=4784.0 expected=4785.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=2d977142-1ed7-42e4-a822-1dba40726448 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=2e81dfe1-ea58-45a3-a274-bbdbf0eb0893 base_amount=200000.0 rate_bps=264 accrual_amount=5271.86 expected=5280.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=2e95927e-0efd-4f84-9f2d-b44013fed143 base_amount=24978.24 rate_bps=872 accrual_amount=2177.1 expected=2178.102528"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=2f13e067-dca2-4cff-a363-37cad76baf11 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=2f694838-1de3-466c-b91a-b603423ac51c base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=2fca694f-c69c-4295-bc00-1679257ae366 base_amount=30000.0 rate_bps=1759 accrual_amount=5274.5 expected=5277.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=30a35631-cffc-4517-93ec-d2f9d603e124 base_amount=500000.0 rate_bps=500 accrual_amount=0.0 expected=25000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=314444ba-ff04-49c6-9eb5-7cc32a71e4cb base_amount=200000.0 rate_bps=132 accrual_amount=2635.93 expected=2640.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=334e234d-16b2-4073-974e-caa418b1d30c base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=34fcfc34-4632-445a-bc01-01131959b20a base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=35467b08-6d84-477f-b379-952612272b1d base_amount=100000.0 rate_bps=675 accrual_amount=6748.8 expected=6750.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=35ce59fc-5a54-49ac-86ab-21c3e601db54 base_amount=700000.0 rate_bps=855 accrual_amount=59819.61 expected=59850.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=35d91d12-f798-4d72-9e59-0bc7a752b7b5 base_amount=250000.0 rate_bps=1000 accrual_amount=0.0 expected=25000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=36e34923-c665-4477-ba14-4a11c44e3426 base_amount=50000.0 rate_bps=1233 accrual_amount=6162.5 expected=6165.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=37ee7665-1720-45f8-91e8-811e7446fee9 base_amount=75000.0 rate_bps=750 accrual_amount=0.0 expected=5625.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=3830db54-9bb7-40ca-8377-93baea34bd88 base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=3840c557-266a-4260-a3df-81a16435c075 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=3928420a-acdd-4984-ae9b-ba8e975db640 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=3ca542a2-aedb-4585-a769-3188f62ea4eb base_amount=30000.0 rate_bps=250 accrual_amount=0.0 expected=750.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=3ce320bb-ff3a-4d5f-b60d-163b0913a47e base_amount=50000.0 rate_bps=264 accrual_amount=1317.5 expected=1320.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=3d3c7a65-db10-4b34-adb4-fde47bdfdaeb base_amount=200000.0 rate_bps=536 accrual_amount=10713.78 expected=10720.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=3e9bb3fb-cba0-4b57-bb49-a88e57464ff6 base_amount=500000.0 rate_bps=387 accrual_amount=19371.45 expected=19350.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=3ff5c2d8-73fc-41ee-90a3-d2b4f2df14b3 base_amount=619989.0 rate_bps=921 accrual_amount=57104.25 expected=57100.9869"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=41f09dc8-d0d0-430c-b65a-6f71108882bb base_amount=99997.0 rate_bps=921 accrual_amount=9210.25 expected=9209.7237"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=4211fea7-bccc-4c1d-a34a-fdce4eef4e98 base_amount=200000.0 rate_bps=750 accrual_amount=0.0 expected=15000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=428f8971-acfa-418d-9703-564bffa6a848 base_amount=50000.0 rate_bps=1000 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=43e7421f-edce-447f-92ff-a4520b188ecd base_amount=30000.0 rate_bps=375 accrual_amount=0.0 expected=1125.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=443b5d19-ed45-4c4c-ab75-a87e099e2a03 base_amount=1414728.0 rate_bps=750 accrual_amount=0.0 expected=106104.6"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=4498d405-25dd-48f1-bf3f-80de90fe5fcb base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=44fd2c44-004f-4e67-96be-c73ccd29e51e base_amount=914481.12 rate_bps=1000 accrual_amount=0.0 expected=91448.112"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=452cfe0b-4224-4eba-945a-b547253f6e23 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=4538f2ea-f1b3-4b8b-9a09-75718c2b4f05 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=45b77d0c-1294-4c39-b881-898aeb224eaa base_amount=450000.0 rate_bps=470 accrual_amount=21140.86 expected=21150.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=46d898c9-e464-47a3-ab62-885392054afc base_amount=550000.0 rate_bps=425 accrual_amount=23384.0 expected=23375.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=46f08712-7a7c-47c2-8b25-9685567de270 base_amount=250000.0 rate_bps=1000 accrual_amount=0.0 expected=25000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=4831ab6f-6d9d-4b8c-b03e-eac0ff875708 base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=48a9f403-7853-4f63-ad25-4a1e5e477eed base_amount=400000.0 rate_bps=536 accrual_amount=21427.56 expected=21440.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=499400f8-e356-4b7a-b39f-a17b672fa097 base_amount=30000.0 rate_bps=560 accrual_amount=1678.32 expected=1680.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=4b4ea3c4-4f8f-4812-83c0-31609aefc8dc base_amount=100007.04 rate_bps=872 accrual_amount=8716.6 expected=8720.613888"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=4ca00dfc-0690-4dec-9cc1-d65072f557c5 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=4d51347e-2f73-46c0-a203-4d6ef5c4ce37 base_amount=250000.0 rate_bps=1000 accrual_amount=0.0 expected=25000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=4dc11331-55d4-4760-83f0-17a1ba5bb0d1 base_amount=200000.0 rate_bps=500 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=4e4226cd-f1f4-42a4-a159-92ac4ee9d7a0 base_amount=500000.0 rate_bps=536 accrual_amount=26785.08 expected=26800.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=4e7729df-8f65-4b98-9cfd-1305898c6a53 base_amount=100000.0 rate_bps=750 accrual_amount=0.0 expected=7500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=4e9eaf45-7308-4662-8ea3-86e340045ffa base_amount=100000.0 rate_bps=2083 accrual_amount=20829.9 expected=20830.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=4ed3b8cf-d806-43e7-aae1-1ce6695a82b9 base_amount=100000.0 rate_bps=750 accrual_amount=0.0 expected=7500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=4ee83c20-0080-4f44-b521-16aab935603c base_amount=50000.0 rate_bps=500 accrual_amount=0.0 expected=2500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=4fce5251-4890-4a8d-8b4a-9ed0a2d712b3 base_amount=50000.0 rate_bps=500 accrual_amount=0.0 expected=2500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=50796bad-71fc-4c23-a6aa-17d808580e3c base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=5090ede1-e0fb-4469-85cc-5d796831aa50 base_amount=100000.0 rate_bps=750 accrual_amount=0.0 expected=7500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=50b22de5-d91d-497b-b7c9-883eec806851 base_amount=50000.0 rate_bps=1000 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=50e6c898-86d4-4bb0-ac99-f346dbf0cf7a base_amount=199994.0 rate_bps=921 accrual_amount=18420.5 expected=18419.4474"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=51131d8b-02e6-41bd-aad7-9c74dcb27fbc base_amount=100000.0 rate_bps=1071 accrual_amount=10712.52 expected=10710.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=5209c2f7-9e31-42c4-b1f7-603a5c6f7f19 base_amount=164640.0 rate_bps=340 accrual_amount=5600.0 expected=5597.76"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=52d2de82-114c-4716-b4e4-614009cfa155 base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=53568752-7e45-4c9a-8e9e-6cc86d8cf814 base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=537c37f6-cf7f-4b42-a959-0d8c38f01ec2 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=53b5b5b8-af5a-4b16-9c8f-9ab9f945bb4f base_amount=25000.0 rate_bps=1370 accrual_amount=3423.0 expected=3425.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=53ff69b2-8001-4414-8e49-40e91eccd1a8 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=5434fbf8-22f4-4241-a9f9-876eb88db649 base_amount=46569.6 rate_bps=536 accrual_amount=2494.8 expected=2496.13056"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=54be1b4f-ee64-49b9-9449-19be6ff27998 base_amount=360000.0 rate_bps=750 accrual_amount=0.0 expected=27000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=55aedbe3-4981-4107-981c-88d3439da1bd base_amount=600000.0 rate_bps=536 accrual_amount=32142.6 expected=32160.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=56bb3b66-60c2-4248-ba84-bc0260e550e8 base_amount=49980.0 rate_bps=536 accrual_amount=2677.5 expected=2678.928"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=57b84bd7-91b7-4d63-8c2b-3b197df4a944 base_amount=34998.0 rate_bps=921 accrual_amount=3223.5 expected=3223.3158"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=590e70d9-d147-4a6c-a29d-cb95b63c2e89 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=5a36c284-0373-49bb-b6c7-a441ecc41c0c base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=5ad8eea6-7890-49a1-b167-8656a675b687 base_amount=500000.0 rate_bps=264 accrual_amount=13179.96 expected=13200.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=5b7bbf52-8c01-492d-a6cd-e576de148d9e base_amount=200000.0 rate_bps=1233 accrual_amount=24658.7 expected=24660.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=5bc067ef-0c14-4a9e-b3ba-ea0dfe44f73d base_amount=200000.0 rate_bps=500 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=5bd7744c-a450-4a65-9a18-010691cc97b5 base_amount=200000.0 rate_bps=1000 accrual_amount=0.0 expected=20000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=5c30486f-09ab-4d0b-b289-8597cb5170e1 base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=5d05f027-b4f6-4a1d-98ae-f0621083db4f base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=5e60b9e6-77a1-497d-a2de-e2f1bef7126b base_amount=250000.0 rate_bps=500 accrual_amount=0.0 expected=12500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=5f35a083-fceb-4454-910d-f8901d6dc3d0 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=5f50934b-a097-4d89-aa0a-10f9d0a24ebb base_amount=4999999.2 rate_bps=470 accrual_amount=234906.43 expected=234999.9624"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=5f6abe6f-fd9f-4a6b-b54a-df730c495c7a base_amount=250000.0 rate_bps=1332 accrual_amount=33303.0 expected=33300.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=60365391-063b-40ab-ad1a-f548be8410ce base_amount=50000.0 rate_bps=264 accrual_amount=1317.5 expected=1320.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=6048d2ca-f0ca-46e8-93d7-75ca56bacedf base_amount=49989.0 rate_bps=921 accrual_amount=4604.25 expected=4603.9869"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=61107b45-46cf-42f7-b42e-b035501abf70 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=62c28441-863c-457f-b9fe-8bff63cb12a3 base_amount=100000.0 rate_bps=675 accrual_amount=6748.8 expected=6750.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=637f2ef1-4989-44af-b25b-c0917ce81d1b base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=63bef3e5-f666-4f80-8254-74b84b652dcd base_amount=500000.0 rate_bps=750 accrual_amount=0.0 expected=37500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=654dd68f-8683-423a-93ef-8a6858ae2d8f base_amount=160000.0 rate_bps=264 accrual_amount=4217.24 expected=4224.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=66d45c28-d41a-482d-8d0f-8a80854fc5d8 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=6816a04f-eefa-487e-a50a-6c76e93c90ef base_amount=100000.0 rate_bps=681 accrual_amount=6806.52 expected=6810.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=68deb9eb-345d-441e-9dc4-495099deb010 base_amount=24985.0 rate_bps=921 accrual_amount=2301.25 expected=2301.1185"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=692c343f-cdee-445e-b964-9ec42a699fc7 base_amount=100000.0 rate_bps=820 accrual_amount=8196.78 expected=8200.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=6930fba9-bc7c-469f-906c-e9c44f0718d8 base_amount=100000.0 rate_bps=1071 accrual_amount=10712.52 expected=10710.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=69649913-b64d-4142-9e09-8ba6659a0e72 base_amount=100000.0 rate_bps=264 accrual_amount=2635.62 expected=2640.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=69e4ca3e-06aa-4120-b1a7-e18043cf2c4b base_amount=160000.0 rate_bps=500 accrual_amount=0.0 expected=8000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=6a0268a8-750c-4198-8634-504c9906be26 base_amount=50000.0 rate_bps=1818 accrual_amount=9088.0 expected=9090.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=6a4b063b-ce6a-44c2-b32e-bd41b9fe2a4d base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=6ab4f196-d4ac-49c3-a801-86c0620c4e8c base_amount=100000.0 rate_bps=750 accrual_amount=0.0 expected=7500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=6bbba75b-dc3d-456f-9a83-bf634315a098 base_amount=50000.0 rate_bps=500 accrual_amount=0.0 expected=2500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=6c65b164-47b5-4e2f-9db7-aee746ad1941 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=6c75381c-ac41-4954-be08-7f8227a3fbc4 base_amount=500000.0 rate_bps=470 accrual_amount=23490.09 expected=23500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=6c84deaa-9472-43dc-ab96-07a0c3b733ce base_amount=100000.0 rate_bps=470 accrual_amount=4697.36 expected=4700.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=6d76ecda-f4cb-489b-8285-0893574872a0 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=6dfd32be-1b90-4d3a-82b0-b9e8b4001c5e base_amount=100000.0 rate_bps=132 accrual_amount=1317.81 expected=1320.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=6e0b5e4a-ca9f-4abe-a77f-cb66fd83499f base_amount=500000.0 rate_bps=661 accrual_amount=33033.42 expected=33050.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=6e230dcf-c956-4cb6-b55c-9784269b217b base_amount=500000.0 rate_bps=616 accrual_amount=30824.1 expected=30800.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=6e6fb658-a167-4018-9c73-885a474ad5da base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=6fa6c7cc-c683-4d75-bc5f-7df8f10d6c8c base_amount=19992.0 rate_bps=536 accrual_amount=1071.0 expected=1071.5712"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=7115051f-2ec5-4ec3-9077-9a7a2b5e7b37 base_amount=160000.0 rate_bps=750 accrual_amount=0.0 expected=12000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=7195fda6-bae3-4728-961a-585d0ac5518a base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=7292b72e-3373-4d2c-9a64-7e1f42b23bfc base_amount=100000.0 rate_bps=1071 accrual_amount=10712.52 expected=10710.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=736b253b-9094-42c3-96db-32de411b0d40 base_amount=200000.0 rate_bps=536 accrual_amount=10713.78 expected=10720.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=74d5c9a8-6cb1-467e-bd17-2369992d3d1c base_amount=250000.0 rate_bps=1429 accrual_amount=35715.0 expected=35725.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=751314d2-f175-4717-859e-8044d2f24f10 base_amount=100000.0 rate_bps=132 accrual_amount=1317.81 expected=1320.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=75a5d5d3-1550-402d-bfb5-8e8c8ae9e209 base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=76710f68-241b-44b5-b3da-c86781f08ef4 base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=76b25e5f-a5c7-49a9-a737-c251c1a9b55a base_amount=225200.0 rate_bps=1332 accrual_amount=30000.0 expected=29996.64"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=783f6e96-96f7-4787-a1c3-38f161bd24a1 base_amount=100000.0 rate_bps=1071 accrual_amount=10712.52 expected=10710.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=788f076c-05dc-407c-bf09-454735dde065 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=78e01257-6ba9-4915-a2e2-cada996df09d base_amount=50000.0 rate_bps=750 accrual_amount=0.0 expected=3750.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=7934729e-b728-4833-b06e-6d1e96fa9647 base_amount=100000.0 rate_bps=470 accrual_amount=4697.36 expected=4700.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=7998cb55-7ec0-4f96-9741-e44ef0460fff base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=79d27c12-41e2-4b91-85d9-f2434e8e4bca base_amount=220000.0 rate_bps=1818 accrual_amount=40000.0 expected=39996.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=7b5d9f24-9d89-42fa-b8eb-05ad458b220e base_amount=50000.0 rate_bps=500 accrual_amount=0.0 expected=2500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=7cfd9c75-50b0-4f1f-a10a-b7dedc343a8b base_amount=100000.0 rate_bps=1233 accrual_amount=12327.9 expected=12330.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=7d707cd5-13c8-4be7-a935-ddfed8825541 base_amount=225200.0 rate_bps=666 accrual_amount=15000.0 expected=14998.32"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=7d8a9937-1be6-447c-8c0a-65c9bf9b7745 base_amount=100000.0 rate_bps=264 accrual_amount=2635.62 expected=2640.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=7e81fdd1-89bd-4992-bfe7-c25cf9bbf2c6 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=7e83c37d-0e22-4fcc-b187-4f7a21d17fe2 base_amount=200000.0 rate_bps=536 accrual_amount=10713.78 expected=10720.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=7f134b2e-1b96-4ac1-8e51-32f1bd0e4233 base_amount=4661508.64 rate_bps=536 accrual_amount=249723.18 expected=249856.863104"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=7f5326cc-6715-4e69-9662-128173bc0a7a base_amount=49989.0 rate_bps=921 accrual_amount=4604.25 expected=4603.9869"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=7f795757-9cde-401e-b2b2-e3ec54fed17b base_amount=750000.0 rate_bps=536 accrual_amount=40177.62 expected=40200.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=7fc442b5-dd4c-4a7c-9cdf-2451d6d7a552 base_amount=245200.0 rate_bps=408 accrual_amount=10000.0 expected=10004.16"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=7fdfa2ca-34b1-44bc-8d7a-50636d49843c base_amount=200000.0 rate_bps=1310 accrual_amount=26196.0 expected=26200.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=8171a41f-26fa-45dc-9da4-6ce90f09f79e base_amount=50000.0 rate_bps=1005 accrual_amount=5024.0 expected=5025.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=82334f53-6627-4f61-8b2c-a3652187102a base_amount=125000.0 rate_bps=536 accrual_amount=6695.64 expected=6700.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=83d01fc6-83e6-44c0-beba-5876a0490d65 base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=84b13b68-e751-4665-9252-80310cf5827a base_amount=24978.24 rate_bps=536 accrual_amount=1338.12 expected=1338.833664"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=85119520-4691-4ab2-bb75-0ef77d879114 base_amount=50000.0 rate_bps=500 accrual_amount=0.0 expected=2500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=8630b164-075c-41b3-81a8-776599a6005f base_amount=200000.0 rate_bps=750 accrual_amount=0.0 expected=15000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=86e7fdb6-7adb-4851-b345-8be6c25eba01 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=8755198d-bf4d-49ba-a0db-e06730e742ba base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=883c0b73-6b19-499d-8439-8a9bfdec4081 base_amount=62892.48 rate_bps=500 accrual_amount=0.0 expected=3144.624"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=8954361a-0f17-44c8-8907-f64f2e1b8b1d base_amount=100000.0 rate_bps=750 accrual_amount=0.0 expected=7500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=89ec5289-03f9-4e65-80e8-9af805476e48 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=8b1db420-4c71-41a5-b738-2b988188c805 base_amount=150000.0 rate_bps=616 accrual_amount=9246.65 expected=9240.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=8b2bcf16-a341-47df-b41b-2b34b7bf7e7d base_amount=160000.0 rate_bps=1233 accrual_amount=19725.8 expected=19728.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=8b85fa0c-cb5a-4e60-969f-f5dc5d7ec73d base_amount=15052.8 rate_bps=500 accrual_amount=0.0 expected=752.64"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=8bce94fd-e015-430e-8cce-ec5c0ed15830 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=8cd84732-8ebd-4fc2-850d-0f79ef3c946d base_amount=100000.0 rate_bps=750 accrual_amount=0.0 expected=7500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=8d89581b-0a6b-4ca9-abbd-cbb3d38bcba7 base_amount=24978.24 rate_bps=872 accrual_amount=2177.1 expected=2178.102528"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=8efcb9f5-b73a-4ed9-bae8-8ce343c7c689 base_amount=350000.0 rate_bps=536 accrual_amount=18748.8 expected=18760.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=8f0f247a-2a5e-4cff-80ed-adcd8ca39305 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=9040ff4a-e9e3-4b88-a4b0-fd9db1987123 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=906d3e3f-92ab-474c-adbf-7f9d09dcadee base_amount=100000.0 rate_bps=500 accrual_amount=4999.5 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=90b87920-90bd-42d3-91f7-206becfea23f base_amount=1549144.8 rate_bps=855 accrual_amount=132388.65 expected=132451.8804"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=925b60c4-0671-4fe2-8974-83a1978e5800 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=929361dc-e14c-48a6-858e-35c63c8824ad base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=959331f2-79d0-415f-af4a-deb9443c4a49 base_amount=50000.0 rate_bps=500 accrual_amount=0.0 expected=2500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=95cc5ac8-caf8-4e80-9b40-257c5eb37ba9 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=960e399a-ecfe-46dc-a7cb-0c3c8d8b2067 base_amount=250000.0 rate_bps=1000 accrual_amount=0.0 expected=25000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=96c16782-22b1-4afc-99c7-b3afafcff8cb base_amount=360000.0 rate_bps=1233 accrual_amount=44387.4 expected=44388.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=96c9ff30-ec5f-4406-af44-1de780bdf8b2 base_amount=100000.0 rate_bps=750 accrual_amount=0.0 expected=7500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=978d1cbf-c235-46c4-901d-1e64094202fe base_amount=50000.0 rate_bps=536 accrual_amount=2677.5 expected=2680.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=986723c5-f185-457a-9031-183683b77b04 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=9870c848-39ba-4ba5-9324-21530f25d57d base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=995eb248-ce99-475b-9776-173b99cb9db7 base_amount=300000.0 rate_bps=1370 accrual_amount=41094.0 expected=41100.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=99edfa36-8185-44ef-a149-e0e20971f5ec base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=9a3cca1a-85f8-4362-b17b-b725657dc338 base_amount=124444.32 rate_bps=536 accrual_amount=6666.66 expected=6670.215552"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=9e295cd9-d3a1-4d17-9ee1-0cee78fdf4de base_amount=124444.32 rate_bps=500 accrual_amount=0.0 expected=6222.216"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=9ed13c03-8099-4151-8484-1638494e8c48 base_amount=62892.48 rate_bps=536 accrual_amount=3369.24 expected=3371.036928"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=a027bca3-1267-401e-b4e8-83f160dda678 base_amount=46569.6 rate_bps=500 accrual_amount=0.0 expected=2328.48"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=a206d408-d3f5-433f-bef6-7806a773a373 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=a2eaba66-9d85-4da7-a6c5-100b208d1597 base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=a374a369-3bd5-47e5-8755-10e4ced62f0c base_amount=250000.0 rate_bps=666 accrual_amount=16651.5 expected=16650.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=a3a44641-43c2-451d-9551-1c5edd0ae45e base_amount=250000.0 rate_bps=1429 accrual_amount=35715.0 expected=35725.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=a3f0995e-5b19-47ec-a157-06903bcf903e base_amount=200000.0 rate_bps=1000 accrual_amount=0.0 expected=20000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=a42abe85-f80c-4b6b-81a8-5c099b885912 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=a4854011-7cfc-4ada-8bba-27b58989893f base_amount=100000.0 rate_bps=132 accrual_amount=1317.81 expected=1320.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=a4cdf3ac-f4d3-4718-8ba6-be8079fb113f base_amount=250000.0 rate_bps=500 accrual_amount=0.0 expected=12500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=a6638057-268c-4eb6-ad09-720bb8663ac3 base_amount=588000.0 rate_bps=340 accrual_amount=20000.0 expected=19992.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=a68d6af4-527b-4115-838c-d3ed26681250 base_amount=200000.0 rate_bps=1370 accrual_amount=27396.0 expected=27400.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=a7048da9-6fc4-4013-bd7a-d5963d5d8e1b base_amount=50000.0 rate_bps=750 accrual_amount=0.0 expected=3750.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=a723bf7a-0202-4bcd-be69-bae73429f32f base_amount=100000.0 rate_bps=132 accrual_amount=1317.81 expected=1320.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=a727697d-391d-49ac-97dc-4cdf64bf802f base_amount=500000.0 rate_bps=500 accrual_amount=0.0 expected=25000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=a7411922-f1ae-49f1-aa67-b5d047672a52 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=a799ae0a-70f6-471d-b87d-3e6557f8e0e4 base_amount=450000.0 rate_bps=500 accrual_amount=0.0 expected=22500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=a86f915e-8762-4d8d-bf83-16a5a2831b25 base_amount=25000.0 rate_bps=500 accrual_amount=0.0 expected=1250.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=a88ac862-169a-4896-827c-01721c3442ce base_amount=250000.0 rate_bps=536 accrual_amount=13392.54 expected=13400.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=a8d13279-d056-4873-9efd-2d3c8c64d186 base_amount=250000.0 rate_bps=1429 accrual_amount=35712.0 expected=35725.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=a8d36aab-9276-4964-a3ff-bbdeda4738bb base_amount=150000.0 rate_bps=536 accrual_amount=8035.02 expected=8040.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=aae92f79-dc55-4371-a25d-2d606f9775a9 base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=ac59a430-b760-479a-ae55-fd2c14832227 base_amount=150000.0 rate_bps=500 accrual_amount=0.0 expected=7500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=aca4f4f4-21ac-45c0-a825-3d55fb728550 base_amount=3763.2 rate_bps=500 accrual_amount=0.0 expected=188.16"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=ae58c9b8-7782-473a-8702-5ad1f0adb8d7 base_amount=100000.0 rate_bps=681 accrual_amount=6806.52 expected=6810.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=ae7a3dd7-d855-4b4f-92f2-6c2e9b8e2992 base_amount=400000.0 rate_bps=748 accrual_amount=29930.56 expected=29920.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=aea860b8-3202-40a7-8bfb-61183ca411af base_amount=50000.0 rate_bps=500 accrual_amount=0.0 expected=2500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=aee3dccf-ec23-4ba4-9840-ff4946b6e41b base_amount=49980.0 rate_bps=536 accrual_amount=2677.5 expected=2678.928"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=af0bcf12-3812-4f36-a807-7a641852d848 base_amount=50000.0 rate_bps=264 accrual_amount=1317.5 expected=1320.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=afd75f37-b7c7-4fda-b42a-4608a0898dd6 base_amount=50000.0 rate_bps=750 accrual_amount=0.0 expected=3750.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b0b4117a-d9a2-4361-acb4-cd9fd3fd7f92 base_amount=100000.0 rate_bps=132 accrual_amount=1317.81 expected=1320.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b0c79ad3-3f2d-4efe-8f6e-5910f5b26a79 base_amount=100000.0 rate_bps=264 accrual_amount=2635.62 expected=2640.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b152094d-2b48-4936-90bc-de68188ebd9d base_amount=50000.0 rate_bps=264 accrual_amount=1317.5 expected=1320.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b16f7479-ca37-4407-9d9a-01580bed356a base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b22a4581-92e7-4ab1-badd-8b763baa20e1 base_amount=200000.0 rate_bps=536 accrual_amount=10713.78 expected=10720.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b233d503-5646-4ebf-a6a9-3d9fdf66f10e base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b34e6b69-4108-481d-9612-c2b1603c474f base_amount=155000.0 rate_bps=1303 accrual_amount=20199.0 expected=20196.5"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b3760456-9334-405f-9101-820085981f1b base_amount=241300.0 rate_bps=1316 accrual_amount=31750.0 expected=31755.08"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b3c2ed59-9b3a-4b5f-8fd8-a50e11deaa3e base_amount=100000.0 rate_bps=136 accrual_amount=1360.32 expected=1360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b547961e-214d-44b6-b763-1c1c53bae51a base_amount=50000.0 rate_bps=500 accrual_amount=0.0 expected=2500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b55b1ea8-90cc-4a25-b6e2-864080b480b2 base_amount=1414728.0 rate_bps=264 accrual_amount=37293.0 expected=37348.8192"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b57055bd-c002-4743-b09e-5c3458977c19 base_amount=125000.0 rate_bps=500 accrual_amount=0.0 expected=6250.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b5cf6900-163f-411e-a89d-f7c9de53526b base_amount=245200.0 rate_bps=1028 accrual_amount=25200.0 expected=25206.56"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b6bb2727-8dc0-4549-b0d3-f3e05fc6b9f5 base_amount=250000.0 rate_bps=536 accrual_amount=13392.54 expected=13400.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b71b92ba-f159-4188-9a57-032262496143 base_amount=100000.0 rate_bps=750 accrual_amount=0.0 expected=7500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b7adf131-e278-44aa-b266-e3b116025247 base_amount=75000.0 rate_bps=500 accrual_amount=0.0 expected=3750.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b7f3238e-5417-412b-9392-e0d71c133d4f base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b80c5179-1e6c-4407-9036-a88d5e0c184b base_amount=100000.0 rate_bps=1071 accrual_amount=10712.52 expected=10710.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b86c95b3-d4d7-4eb5-9e6c-a9b3c16e18eb base_amount=50000.0 rate_bps=754 accrual_amount=3768.0 expected=3770.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b8989618-d4c4-46f7-803a-446846006224 base_amount=650000.0 rate_bps=536 accrual_amount=34821.36 expected=34840.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b8e1a26d-ce4e-434d-aa26-4f7b6ebc179d base_amount=15052.8 rate_bps=536 accrual_amount=806.4 expected=806.83008"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b8f0450f-433e-46f4-8848-4eb273511dba base_amount=25000.0 rate_bps=500 accrual_amount=1249.2 expected=1250.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b93fd24c-9f5d-4778-b662-bdbaa7d8f31d base_amount=50000.0 rate_bps=264 accrual_amount=1317.5 expected=1320.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b98ff613-c691-4aae-a7ee-d92adcb33f26 base_amount=250000.0 rate_bps=536 accrual_amount=13392.54 expected=13400.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b9ac8740-63d9-40d3-9500-774fa0b673ae base_amount=164640.0 rate_bps=366 accrual_amount=6020.0 expected=6025.824"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=b9dfc5eb-d6aa-4fa0-964e-8e49c40bd557 base_amount=250000.0 rate_bps=536 accrual_amount=13392.54 expected=13400.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=bbb26bb2-c9e5-4fea-a9a0-198f268b83c5 base_amount=125000.0 rate_bps=750 accrual_amount=0.0 expected=9375.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=bc75f232-f24b-4631-8b97-ba5c4adcc9e6 base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=bc868162-afe4-4ac7-84f4-390a38f25798 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=bce542a8-befc-49b8-9fb9-2d0ff0f57d7d base_amount=500000.0 rate_bps=536 accrual_amount=26785.08 expected=26800.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=bd7a708d-6d81-4828-bf40-fe716e212b45 base_amount=4999999.2 rate_bps=132 accrual_amount=65901.35 expected=65999.98944"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=bd91209c-da48-4f66-b3dc-f79eb38e23a6 base_amount=200000.0 rate_bps=128 accrual_amount=2550.9 expected=2560.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=be61475d-40b6-44d6-8e11-5869407ec7bc base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=bec28870-cba0-45d1-84bb-0017820ad5a6 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=bef18ceb-2273-4fb4-8820-3e5a393ef3b8 base_amount=155000.0 rate_bps=666 accrual_amount=10321.69 expected=10323.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=bf5089a2-88c8-472f-bddd-a9891f1281e1 base_amount=50000.0 rate_bps=500 accrual_amount=0.0 expected=2500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=bf732ff7-a588-4f42-860d-64d24cd8c70c base_amount=155000.0 rate_bps=500 accrual_amount=0.0 expected=7750.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=bfacfeff-cf88-488d-aec8-d1124f6f7d46 base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=c009571d-60a7-4a52-a961-ae9254701267 base_amount=500000.0 rate_bps=500 accrual_amount=0.0 expected=25000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=c04fcae6-9564-4cb9-b508-a340ce3c2584 base_amount=100000.0 rate_bps=750 accrual_amount=0.0 expected=7500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=c1352367-0460-4779-85dc-4dbf80d5cbbe base_amount=125000.0 rate_bps=536 accrual_amount=6695.64 expected=6700.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=c18bf572-5a5a-4385-91d0-77edd158b72b base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=c2513243-34b2-44df-8ca0-0b5bf2cb6922 base_amount=500000.0 rate_bps=1000 accrual_amount=0.0 expected=50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=c4d2996b-e1ce-4a17-970b-a20f1e41ed5e base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=c52dcc0a-60b9-46aa-92ed-3df59d10c10a base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=c54a1667-328e-432c-aa01-912f55663095 base_amount=50000.0 rate_bps=2083 accrual_amount=10412.5 expected=10415.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=c5b112da-24e0-446b-8d26-a5ec50cb8067 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=c80ed39d-6d62-4f13-81a2-f8f22b7518b4 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=c85e6be2-7749-4f3e-b18c-24abb1955ff7 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=c9d1a091-9cfe-4112-88cf-c76373fbdd5e base_amount=1000000.0 rate_bps=500 accrual_amount=0.0 expected=50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=c9ec2805-9386-4ad2-9f56-af948ec7cdd6 base_amount=5000352.0 rate_bps=1990 accrual_amount=994968.0 expected=995070.048"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=caffb344-6eb8-4953-ad7c-9a0b91224ae2 base_amount=3763.2 rate_bps=536 accrual_amount=201.6 expected=201.70752"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=cb509ae4-e580-4709-a2ec-eb5386ea3032 base_amount=100000.0 rate_bps=470 accrual_amount=4697.36 expected=4700.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=cbe41cdf-9b8b-4325-b722-8ac25d3d785f base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=cc1eede6-df23-44f7-8194-17b4f1d1a8e0 base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=ccf1761e-fc57-475a-8be0-4ad2d3fd1c61 base_amount=129407.04 rate_bps=500 accrual_amount=0.0 expected=6470.352"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=cdbf2971-c530-4b17-9135-8aa0519cc0a7 base_amount=129407.04 rate_bps=536 accrual_amount=6932.52 expected=6936.217344"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=cdf1842c-be92-4ce1-9718-d6b1cc086ecc base_amount=49980.0 rate_bps=536 accrual_amount=2677.5 expected=2678.928"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=ce9c1ffe-b388-47f9-b969-8a94ea8ebd25 base_amount=200000.0 rate_bps=536 accrual_amount=10713.78 expected=10720.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=d003a601-8148-4eff-b222-c9825289c91c base_amount=100000.0 rate_bps=754 accrual_amount=7537.5 expected=7540.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=d066c47c-4eb3-4830-b4f5-84e47af8cab1 base_amount=500000.0 rate_bps=500 accrual_amount=0.0 expected=25000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=d19cbadc-1ad5-410d-8abe-e3640af2b5cc base_amount=149500.0 rate_bps=924 accrual_amount=13812.5 expected=13813.8"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=d2d81e98-8c72-4e4a-b012-6b7424240d02 base_amount=14999997.6 rate_bps=1173 accrual_amount=1760203.8 expected=1759499.71848"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=d3ca13bf-1894-4ab5-a3e0-a0445ad29a61 base_amount=4999999.2 rate_bps=125 accrual_amount=0.0 expected=62499.99"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=d4a76efa-bbc0-4570-a4c1-b7f135c02db9 base_amount=100000.0 rate_bps=1233 accrual_amount=12327.9 expected=12330.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=d53edf76-a476-402d-9e09-b0a1e16a5bab base_amount=50000.0 rate_bps=536 accrual_amount=2677.5 expected=2680.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=d55a0702-1aae-45c3-8097-696d3d04fca7 base_amount=100000.0 rate_bps=470 accrual_amount=4697.36 expected=4700.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=d55e057f-396c-423c-a459-edb6ebc587be base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=d596b5e3-c4fd-4d48-905b-404958b41f91 base_amount=300000.0 rate_bps=536 accrual_amount=16071.3 expected=16080.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=d71a7443-3794-4a97-8afd-b982bdd51a87 base_amount=360000.0 rate_bps=264 accrual_amount=9489.72 expected=9504.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=d741083a-ffb2-48a9-9ea5-cdaa12b49ff1 base_amount=100000.0 rate_bps=1071 accrual_amount=10712.52 expected=10710.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=d7c50bef-3b57-49f1-8765-8ac98fcda33b base_amount=1414728.0 rate_bps=500 accrual_amount=0.0 expected=70736.4"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=d887bc21-91e4-472f-b6fd-a3390cbc3d9b base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=d91f3457-13ef-42fd-9adf-db871f9a0357 base_amount=150000.0 rate_bps=750 accrual_amount=0.0 expected=11250.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=db1d7b81-3bfe-43a7-8097-d6128bad393c base_amount=250000.0 rate_bps=1429 accrual_amount=35712.0 expected=35725.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=db299388-c5fa-4b55-862e-eeb61d8ad067 base_amount=100000.0 rate_bps=470 accrual_amount=4697.36 expected=4700.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=db314542-35e2-4be0-87e9-3a1d329664a1 base_amount=400000.0 rate_bps=1000 accrual_amount=0.0 expected=40000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=db51e7d0-ab08-4ba2-88c5-b45d2fc88553 base_amount=360000.0 rate_bps=500 accrual_amount=0.0 expected=18000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=dcc29a27-5f12-45eb-994a-57cdb06ca5c4 base_amount=100000.0 rate_bps=408 accrual_amount=4078.0 expected=4080.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=dce7252c-f81f-4bd3-aaf1-c47fbcf5b1ed base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=dcf82be6-8a57-47fe-80d7-e623212102d2 base_amount=100000.0 rate_bps=536 accrual_amount=5356.26 expected=5360.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=ddb064eb-f662-4b52-b69f-21c4f12cf33c base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=deb84516-78ac-48ab-96c8-14695598f5f8 base_amount=500000.0 rate_bps=264 accrual_amount=13179.96 expected=13200.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=dfb6ff69-7ab1-48aa-9062-663293055808 base_amount=100000.0 rate_bps=750 accrual_amount=0.0 expected=7500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=e043b948-b899-486a-a126-042a070d6238 base_amount=200000.0 rate_bps=500 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=e2752bf1-102e-4d5f-8cf9-98c2b1562a22 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=e2d4876c-f892-4f7a-9da5-df69b09bc4c9 base_amount=500000.0 rate_bps=750 accrual_amount=0.0 expected=37500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=e359272b-75e3-4da2-8d37-442ce1dd5aaa base_amount=100000.0 rate_bps=132 accrual_amount=1317.81 expected=1320.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=e397d829-5679-4390-b600-efa646ebab29 base_amount=100000.0 rate_bps=470 accrual_amount=4697.36 expected=4700.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=e42fcba4-1c25-4782-9d15-b8471563af26 base_amount=100000.0 rate_bps=470 accrual_amount=4697.36 expected=4700.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=e4cc5e39-7494-4de6-a40f-00b4d8dabb2c base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=e65d982c-9516-4e16-986d-2d0f98459c91 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=e76d593e-ed75-4838-8ad3-37161b995444 base_amount=100000.0 rate_bps=1071 accrual_amount=10712.52 expected=10710.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=e8c4ed22-afca-47c9-a085-a9cec764b4ea base_amount=50000.0 rate_bps=1233 accrual_amount=6162.5 expected=6165.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=e8de00a3-1d3b-4917-9e9d-e76110d8e935 base_amount=50000.0 rate_bps=500 accrual_amount=0.0 expected=2500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=e9ac5307-c47b-459c-9728-8e10d14b4501 base_amount=100000.0 rate_bps=470 accrual_amount=4697.36 expected=4700.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=ea474371-4278-4d75-8511-d7e312ede7a6 base_amount=50000.0 rate_bps=1005 accrual_amount=5024.0 expected=5025.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=ebcf3c9e-47fe-4988-b77d-cc32cfdeeade base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=ec3b7440-0f43-4243-8e2e-4ea06c22479c base_amount=100000.0 rate_bps=1071 accrual_amount=10712.52 expected=10710.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=ed375bea-dc89-49c5-8263-986d3e1a2a92 base_amount=49989.0 rate_bps=921 accrual_amount=4604.25 expected=4603.9869"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=ed5c7722-e4c3-491c-b0cd-d1ec477e1d61 base_amount=75000.0 rate_bps=1000 accrual_amount=0.0 expected=7500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=edacfc78-8544-4281-8d89-5a4195de9c2f base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=eec2abcc-22bf-475c-a029-e578767678a8 base_amount=250000.0 rate_bps=500 accrual_amount=0.0 expected=12500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=ef76aabe-ca64-4ce5-bb1e-845e3aa9db3f base_amount=200000.0 rate_bps=500 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=f0961530-be64-4214-b3e1-ff635c318138 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=f0b4770c-7a68-451a-a9b1-dcb8a6f2845c base_amount=50000.0 rate_bps=754 accrual_amount=3768.0 expected=3770.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=f0dab0b9-dbe0-48f3-81a0-b6a4bb1d3fca base_amount=100000.0 rate_bps=1071 accrual_amount=10712.52 expected=10710.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=f19f1404-73b5-40f3-9198-fb5c93a0eb20 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=f22b225f-faca-4023-abe5-51a3564deedc base_amount=200000.0 rate_bps=500 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=f24f644e-a5a6-4af2-a7d6-5ba20fc07eb9 base_amount=914481.12 rate_bps=536 accrual_amount=48990.06 expected=49016.188032"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=f2820a43-fae4-46a6-9938-71f69a6c955f base_amount=100000.0 rate_bps=132 accrual_amount=1317.81 expected=1320.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=f3af471f-7f5d-48ec-89f5-4189dc953460 base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=f3b2f12e-ac21-4a2e-8192-7671f33a77b5 base_amount=100000.0 rate_bps=470 accrual_amount=4697.36 expected=4700.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=f41b5434-a4c7-4ad7-98c7-4860f683a6fa base_amount=4661508.64 rate_bps=500 accrual_amount=0.0 expected=233075.432"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=f44ffbd1-1df7-4f2e-b908-25ef7c546a07 base_amount=50000.0 rate_bps=536 accrual_amount=2677.5 expected=2680.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=f46c2c5b-cf7a-428f-beda-6ba3b6265dc8 base_amount=50000.0 rate_bps=500 accrual_amount=0.0 expected=2500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=f49b90ec-8f5b-4d09-9c4c-431949f9e8a7 base_amount=400000.0 rate_bps=748 accrual_amount=29930.56 expected=29920.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=f555befc-a879-478d-ab9d-bca674fff784 base_amount=100000.0 rate_bps=750 accrual_amount=0.0 expected=7500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=f58da892-9b52-49f6-a7ae-40c65a891b01 base_amount=250000.0 rate_bps=500 accrual_amount=0.0 expected=12500.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=f6546ccb-47a1-4b00-82ba-7d1f3da38e99 base_amount=100000.0 rate_bps=132 accrual_amount=1317.81 expected=1320.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=f6e3c6f7-6e60-46f6-aa47-8760ab8c5415 base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=f7b76ed6-1355-4346-9f4d-1c97ed518590 base_amount=500000.0 rate_bps=2083 accrual_amount=104164.2 expected=104150.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=f872275c-c66e-416e-82f1-99f4ed3a485f base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=f92aab87-8ca2-46bc-ae5d-ea2515205f33 base_amount=450000.0 rate_bps=132 accrual_amount=5930.92 expected=5940.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=fa0af239-9597-4ebc-856b-fc5c95ee26cb base_amount=200000.0 rate_bps=500 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=faf7112d-a595-44c9-8e55-d2558e7dcddd base_amount=100000.0 rate_bps=1000 accrual_amount=0.0 expected=10000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=fb009fbc-67a2-49ab-b59f-7f9334118cde base_amount=200000.0 rate_bps=470 accrual_amount=9395.82 expected=9400.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=fcb38eae-fc60-4bba-a66d-4d86bb794baf base_amount=75000.0 rate_bps=1233 accrual_amount=9245.2 expected=9247.5"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=fde7b13a-e699-4dc3-8f1f-93f61d33c234 base_amount=100000.0 rate_bps=1233 accrual_amount=12327.9 expected=12330.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=fead6dd1-0827-4bc4-938b-96111b77809a base_amount=250000.0 rate_bps=536 accrual_amount=13392.54 expected=13400.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=ff0f9087-a0ca-4c38-ae3e-8ca327a17b56 base_amount=1000000.0 rate_bps=1000 accrual_amount=0.0 expected=100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=ff48ebcc-c23c-44e2-8602-2ff1fdae6fed base_amount=100000.0 rate_bps=500 accrual_amount=0.0 expected=5000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_rate_amount_formula_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "commission_id=fffc4c99-ed23-457b-b58d-a32bfa927e9f base_amount=170000.0 rate_bps=536 accrual_amount=9106.02 expected=9112.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=1319a62f-544e-45bf-a208-61041f9f1e34 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=85157.0 funded_sum=0.0 delta=85157.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=24c96f5a-0b23-4e40-b562-c0570df12fd8 introducer_id=98fdce26-5a61-486e-a450-8e13dd4cfbf4 commission_base_sum=100000.0 funded_sum=150000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=24c96f5a-0b23-4e40-b562-c0570df12fd8 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=100000.0 funded_sum=150000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=35af0245-05fb-4d6c-b17e-64d0d6b180f0 introducer_id=98fdce26-5a61-486e-a450-8e13dd4cfbf4 commission_base_sum=1414728.0 funded_sum=0.0 delta=1414728.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=40af6e6d-0fe7-4f4e-b430-c0119e7f439a introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=500000.0 funded_sum=0.0 delta=500000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=69075b7c-5dfd-4bd5-b8f7-e0757fe28d64 introducer_id=98fdce26-5a61-486e-a450-8e13dd4cfbf4 commission_base_sum=500000.0 funded_sum=1000000.0 delta=-500000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=69075b7c-5dfd-4bd5-b8f7-e0757fe28d64 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=500000.0 funded_sum=1000000.0 delta=-500000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=8618f750-f156-4c86-a554-5905443e08fb introducer_id=98fdce26-5a61-486e-a450-8e13dd4cfbf4 commission_base_sum=1549144.8 funded_sum=0.0 delta=1549144.8"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=8618f750-f156-4c86-a554-5905443e08fb introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=1549144.8 funded_sum=0.0 delta=1549144.8"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=996ec13d-5df9-4b46-8581-29bf3880c052 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=50000.0 funded_sum=100000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=e7811d86-9e53-49b8-beb3-c3d5276c737c introducer_id=a2a0b0a1-817a-4039-bcbf-160b84f51567 commission_base_sum=4163030.12 funded_sum=0.0 delta=4163030.12"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 introducer_id=a2a0b0a1-817a-4039-bcbf-160b84f51567 commission_base_sum=740372.0 funded_sum=2350372.0 delta=-1610000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=684501.0 funded_sum=2350372.0 delta=-1665871.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=02e7a81c-d5bf-4839-9776-f89ae320b586 introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a commission_base_sum=1000000.0 funded_sum=0.0 delta=1000000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=077277ca-fe09-45b0-9dd4-789fa3238f84 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=75000.0 delta=-75000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=077277ca-fe09-45b0-9dd4-789fa3238f84 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=75000.0 delta=-75000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=0938fe48-c579-4031-8fba-97b348218ddf introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=105000.0 delta=-105000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=0938fe48-c579-4031-8fba-97b348218ddf introducer_id=87571ef2-b05d-4d7d-8095-2992d43b9aa8 commission_base_sum=0.0 funded_sum=105000.0 delta=-105000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=0b1c8fa8-14a1-40fd-bfdd-629ba576a1a7 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=400000.0 delta=-400000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=0b1c8fa8-14a1-40fd-bfdd-629ba576a1a7 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=400000.0 delta=-400000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=0ba0fbe1-9833-477e-9ee5-7690ef0fe97a introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=0ba0fbe1-9833-477e-9ee5-7690ef0fe97a introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=0dc9ff3f-1013-42f5-9a51-3531fe36cc7f introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=0dc9ff3f-1013-42f5-9a51-3531fe36cc7f introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=0ff7cbaa-7e95-458f-9c57-b5c92d6341b7 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=0ff7cbaa-7e95-458f-9c57-b5c92d6341b7 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=20951004-4990-4398-8890-c2a538d55bfa introducer_id=736a31b2-b8a6-4a0e-8abe-ed986014d0c4 commission_base_sum=0.0 funded_sum=600000.0 delta=-600000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=24382ea8-d04a-42e8-b75e-01cd107be49b introducer_id=736a31b2-b8a6-4a0e-8abe-ed986014d0c4 commission_base_sum=0.0 funded_sum=30000.0 delta=-30000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=2c251597-567e-4257-ba20-d01e39e183aa introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a commission_base_sum=0.0 funded_sum=150000.0 delta=-150000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=2de34a55-9382-403c-a45e-3209c3b22e8a introducer_id=736a31b2-b8a6-4a0e-8abe-ed986014d0c4 commission_base_sum=0.0 funded_sum=26000.0 delta=-26000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=37a063a2-40b3-4be0-aafe-9a68f913c473 introducer_id=6147711e-310e-45ec-8892-ac072e25c3b0 commission_base_sum=0.0 funded_sum=200000.0 delta=-200000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=409d31f7-0db4-463d-9846-09dd943ad569 introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=5f35adc5-412a-4980-88ce-5d2b6f7fa3fc introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=5f35adc5-412a-4980-88ce-5d2b6f7fa3fc introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=60fe12b2-3a1c-4fb9-b039-3b321393d5d2 introducer_id=840071c5-c1ee-4617-a120-6e596d2dc97d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=7f066910-063c-4bc6-8999-af10132b78fc introducer_id=840071c5-c1ee-4617-a120-6e596d2dc97d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=90c92efe-20ea-4a95-b960-a0a372b987e5 introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=996ec13d-5df9-4b46-8581-29bf3880c052 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=75000.0 delta=-75000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=a1985b2e-8366-4742-8dcf-f78349e01e4d introducer_id=6147711e-310e-45ec-8892-ac072e25c3b0 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=ab3bc530-2d5f-4b8c-8558-af52b7d33bad introducer_id=736a31b2-b8a6-4a0e-8abe-ed986014d0c4 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=ad515b55-94a7-4eb4-bd59-6733373e8fb3 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=250000.0 delta=-250000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=afcff2c8-e0f3-435c-85dc-0987e3005775 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=110000.0 delta=-110000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=afcff2c8-e0f3-435c-85dc-0987e3005775 introducer_id=87571ef2-b05d-4d7d-8095-2992d43b9aa8 commission_base_sum=0.0 funded_sum=110000.0 delta=-110000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=b43ec27d-0329-4918-acc0-a078f344a164 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=b43ec27d-0329-4918-acc0-a078f344a164 introducer_id=87571ef2-b05d-4d7d-8095-2992d43b9aa8 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=b65f05da-0ba0-42c3-ac7a-b5bc31084f53 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=165000.0 delta=-165000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=b65f05da-0ba0-42c3-ac7a-b5bc31084f53 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=165000.0 delta=-165000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=bcd039b7-d2d5-4191-a05d-dffacb6c8f0f introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=bcd039b7-d2d5-4191-a05d-dffacb6c8f0f introducer_id=87571ef2-b05d-4d7d-8095-2992d43b9aa8 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=c42adb05-f412-489a-b1a2-59607e1efb05 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=c42adb05-f412-489a-b1a2-59607e1efb05 introducer_id=87571ef2-b05d-4d7d-8095-2992d43b9aa8 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=da660498-c2a8-4ffa-aa4e-8b1d9b1dcd1e introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=da660498-c2a8-4ffa-aa4e-8b1d9b1dcd1e introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=e0cbd154-70d4-48fe-bf57-573d4adb53c2 introducer_id=736a31b2-b8a6-4a0e-8abe-ed986014d0c4 commission_base_sum=0.0 funded_sum=20000.0 delta=-20000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=f19450d7-1d16-4be0-893a-ab37e66ec644 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=f19450d7-1d16-4be0-893a-ab37e66ec644 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=f1b68c31-c670-48d1-b0ad-c4812388f4b7 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=f1b68c31-c670-48d1-b0ad-c4812388f4b7 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=f5ca7c9a-be30-4141-9f63-bfba0479f383 introducer_id=55b67690-c83d-4406-a2b4-935032d22739 commission_base_sum=0.0 funded_sum=130000.0 delta=-130000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=f5ca7c9a-be30-4141-9f63-bfba0479f383 introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a commission_base_sum=0.0 funded_sum=130000.0 delta=-130000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=fab2d2df-ca6a-4e18-aa08-6d8e7b1ffc64 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=fab2d2df-ca6a-4e18-aa08-6d8e7b1ffc64 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=fb853190-854c-4fa7-baee-23f82b7ee8fa introducer_id=736a31b2-b8a6-4a0e-8abe-ed986014d0c4 commission_base_sum=0.0 funded_sum=2800000.0 delta=-2800000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "deal_id=5e244c1d-847b-492f-ba7c-d35b5e2bb957 investor_id=077277ca-fe09-45b0-9dd4-789fa3238f84 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=150000.0 delta=-150000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "deal_id=5e244c1d-847b-492f-ba7c-d35b5e2bb957 investor_id=077277ca-fe09-45b0-9dd4-789fa3238f84 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=150000.0 delta=-150000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "deal_id=5e244c1d-847b-492f-ba7c-d35b5e2bb957 investor_id=0b1c8fa8-14a1-40fd-bfdd-629ba576a1a7 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=500000.0 delta=-500000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "deal_id=5e244c1d-847b-492f-ba7c-d35b5e2bb957 investor_id=0b1c8fa8-14a1-40fd-bfdd-629ba576a1a7 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=500000.0 delta=-500000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "deal_id=5e244c1d-847b-492f-ba7c-d35b5e2bb957 investor_id=0ff7cbaa-7e95-458f-9c57-b5c92d6341b7 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "deal_id=5e244c1d-847b-492f-ba7c-d35b5e2bb957 investor_id=0ff7cbaa-7e95-458f-9c57-b5c92d6341b7 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "deal_id=5e244c1d-847b-492f-ba7c-d35b5e2bb957 investor_id=bd62f55f-73cf-4ea9-b730-453ba3838de4 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=250000.0 delta=-250000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "deal_id=5e244c1d-847b-492f-ba7c-d35b5e2bb957 investor_id=bd62f55f-73cf-4ea9-b730-453ba3838de4 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=250000.0 delta=-250000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC133",
+      "row_ref": "",
+      "details": "deal_id=750e0559-a10a-48eb-9593-106329bf9f53 investor_id=02e7a81c-d5bf-4839-9776-f89ae320b586 introducer_id=55b67690-c83d-4406-a2b4-935032d22739 commission_base_sum=0.0 funded_sum=1000000.0 delta=-1000000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC133",
+      "row_ref": "",
+      "details": "deal_id=750e0559-a10a-48eb-9593-106329bf9f53 investor_id=13b86b6c-0d42-4240-9924-a9f8cd4ce31b introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC133",
+      "row_ref": "",
+      "details": "deal_id=750e0559-a10a-48eb-9593-106329bf9f53 investor_id=28dc2310-81d5-477a-851d-2533e1f521df introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC133",
+      "row_ref": "",
+      "details": "deal_id=750e0559-a10a-48eb-9593-106329bf9f53 investor_id=31dccf8d-314a-4fa9-80af-9c02732bff31 introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC133",
+      "row_ref": "",
+      "details": "deal_id=750e0559-a10a-48eb-9593-106329bf9f53 investor_id=598aa3a7-fef2-4988-b28e-397fc40d15f6 introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=0d18b5d6-fd7c-403b-931a-b9af09ee9715 introducer_id=8964a91a-eb92-4f65-aa47-750c417cd499 commission_base_sum=0.0 funded_sum=150000.0 delta=-150000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=0d18b5d6-fd7c-403b-931a-b9af09ee9715 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=0.0 funded_sum=150000.0 delta=-150000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=11be6624-9dd0-4a7d-b4eb-9241d6d35f07 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=200000.0 delta=-200000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=11be6624-9dd0-4a7d-b4eb-9241d6d35f07 introducer_id=25bbd020-6cba-4c48-a8be-936c3295f586 commission_base_sum=0.0 funded_sum=200000.0 delta=-200000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=4c26cb2f-083d-4a9a-8301-69795259424c introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=250000.0 delta=-250000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=4c26cb2f-083d-4a9a-8301-69795259424c introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=250000.0 delta=-250000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=50af6602-d56f-4274-b714-db711c939836 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=80000.0 delta=-80000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=50af6602-d56f-4274-b714-db711c939836 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=0.0 funded_sum=80000.0 delta=-80000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=5177d335-8401-4bf9-8487-cb3d2f9e0f7a introducer_id=0aebf77c-47a3-4011-abd4-74ee3772d78e commission_base_sum=0.0 funded_sum=70000.0 delta=-70000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=5177d335-8401-4bf9-8487-cb3d2f9e0f7a introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=0.0 funded_sum=70000.0 delta=-70000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=55e3a375-9304-4576-84aa-7cee77f60a05 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=200000.0 delta=-200000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=55e3a375-9304-4576-84aa-7cee77f60a05 introducer_id=25bbd020-6cba-4c48-a8be-936c3295f586 commission_base_sum=0.0 funded_sum=200000.0 delta=-200000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=5f35adc5-412a-4980-88ce-5d2b6f7fa3fc introducer_id=8964a91a-eb92-4f65-aa47-750c417cd499 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=5f35adc5-412a-4980-88ce-5d2b6f7fa3fc introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=68524290-1804-4f44-b45b-fcc6d54615a0 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=0.0 funded_sum=500000.0 delta=-500000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=7c94bfd1-33d2-42c6-b986-587d5e5593c2 introducer_id=0aebf77c-47a3-4011-abd4-74ee3772d78e commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=7c94bfd1-33d2-42c6-b986-587d5e5593c2 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=84c3272c-5c98-453a-b0aa-77366cc31a53 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=0.0 funded_sum=250000.0 delta=-250000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=996ec13d-5df9-4b46-8581-29bf3880c052 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=9c9e78cf-0418-4fa9-b00d-07af4db45578 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=75000.0 delta=-75000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=9c9e78cf-0418-4fa9-b00d-07af4db45578 introducer_id=25bbd020-6cba-4c48-a8be-936c3295f586 commission_base_sum=0.0 funded_sum=75000.0 delta=-75000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=ae8cc9b9-b42d-48cd-a49f-3e34f2cba628 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=150000.0 delta=-150000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=ae8cc9b9-b42d-48cd-a49f-3e34f2cba628 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=0.0 funded_sum=150000.0 delta=-150000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=afb8d124-32b7-4959-8af9-5e96f0383159 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=afb8d124-32b7-4959-8af9-5e96f0383159 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=b0f5790d-8407-4058-a16b-6656c63bd065 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=b0f5790d-8407-4058-a16b-6656c63bd065 introducer_id=25bbd020-6cba-4c48-a8be-936c3295f586 commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=b5502e75-ed90-45a8-8037-fca4fe1dbee0 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=b5502e75-ed90-45a8-8037-fca4fe1dbee0 introducer_id=25bbd020-6cba-4c48-a8be-936c3295f586 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=bcd039b7-d2d5-4191-a05d-dffacb6c8f0f introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=bcd039b7-d2d5-4191-a05d-dffacb6c8f0f introducer_id=87571ef2-b05d-4d7d-8095-2992d43b9aa8 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=bd62f55f-73cf-4ea9-b730-453ba3838de4 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=bd62f55f-73cf-4ea9-b730-453ba3838de4 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=c42adb05-f412-489a-b1a2-59607e1efb05 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=c42adb05-f412-489a-b1a2-59607e1efb05 introducer_id=87571ef2-b05d-4d7d-8095-2992d43b9aa8 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=cf8a4352-7624-4a97-bb12-d6e5ebc71c5d introducer_id=0aebf77c-47a3-4011-abd4-74ee3772d78e commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=cf8a4352-7624-4a97-bb12-d6e5ebc71c5d introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=d06aaa52-d948-4d3b-849b-e1a365843159 introducer_id=8964a91a-eb92-4f65-aa47-750c417cd499 commission_base_sum=0.0 funded_sum=200000.0 delta=-200000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=d06aaa52-d948-4d3b-849b-e1a365843159 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=0.0 funded_sum=200000.0 delta=-200000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=d8fb5171-f000-4cd7-9c2b-d69a66e05e31 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=d8fb5171-f000-4cd7-9c2b-d69a66e05e31 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=ec8893f1-9473-4d80-bd46-04b2cc8b2f3a introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=115000.0 delta=-115000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=ec8893f1-9473-4d80-bd46-04b2cc8b2f3a introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=115000.0 delta=-115000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=f0183109-5b5e-4fb0-8d57-4ff6c57c0b35 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=0.0 funded_sum=500000.0 delta=-500000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=f1b68c31-c670-48d1-b0ad-c4812388f4b7 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=f1b68c31-c670-48d1-b0ad-c4812388f4b7 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=f8b1ac99-5655-4c49-a05a-f89271741275 introducer_id=0aebf77c-47a3-4011-abd4-74ee3772d78e commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=f8b1ac99-5655-4c49-a05a-f89271741275 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC102",
+      "row_ref": "",
+      "details": "deal_id=ba9c45e0-4299-4762-b8ad-5a3f619fa4fb investor_id=938db8aa-ce0c-47e9-b0f7-23ba9c20e7a1 introducer_id=41974010-e41d-40a6-9cbf-725618e7e00c commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC112",
+      "row_ref": "",
+      "details": "deal_id=c4a16193-8f6b-43e8-b664-caeb46d0de85 investor_id=0b1c8fa8-14a1-40fd-bfdd-629ba576a1a7 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=500000.0 delta=-500000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC112",
+      "row_ref": "",
+      "details": "deal_id=c4a16193-8f6b-43e8-b664-caeb46d0de85 investor_id=339f94c0-6be8-4590-bbbd-386f6fd30248 introducer_id=5a765445-bee7-4716-96f6-e2e2ca0329c7 commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC112",
+      "row_ref": "",
+      "details": "deal_id=c4a16193-8f6b-43e8-b664-caeb46d0de85 investor_id=5f35adc5-412a-4980-88ce-5d2b6f7fa3fc introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 investor_id=20264559-6a69-447d-baa5-72d7ea111fb9 introducer_id=bc23b7c7-4253-40c2-889b-97a5044c23d5 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 investor_id=6d5c9cdb-93f0-49c1-aa1e-a8a2506d9382 introducer_id=bc23b7c7-4253-40c2-889b-97a5044c23d5 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 investor_id=76518678-13f1-4a8e-a050-1e0ef6a39d4c introducer_id=25bbd020-6cba-4c48-a8be-936c3295f586 commission_base_sum=0.0 funded_sum=600000.0 delta=-600000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC125",
+      "row_ref": "",
+      "details": "deal_id=f73d625c-dc39-4829-919e-327dd5bdae07 investor_id=3e75e4c5-6071-410d-bb55-d4ede85ab93d introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=17900.0 delta=-17900.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC125",
+      "row_ref": "",
+      "details": "deal_id=f73d625c-dc39-4829-919e-327dd5bdae07 investor_id=3e75e4c5-6071-410d-bb55-d4ede85ab93d introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=17900.0 delta=-17900.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC125",
+      "row_ref": "",
+      "details": "deal_id=f73d625c-dc39-4829-919e-327dd5bdae07 investor_id=698833c1-7ff3-4fa7-b7d0-733d8547cf43 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=339072.75 delta=-339072.75"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC125",
+      "row_ref": "",
+      "details": "deal_id=f73d625c-dc39-4829-919e-327dd5bdae07 investor_id=938db8aa-ce0c-47e9-b0f7-23ba9c20e7a1 introducer_id=41974010-e41d-40a6-9cbf-725618e7e00c commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:489",
+      "details": "source_row=489 investor=DALINGA HOLDING AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=499.87 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:490",
+      "details": "source_row=490 investor=DALINGA HOLDING AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=99.27 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:494",
+      "details": "source_row=494 investor=MA GROUP AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=358.0 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:496",
+      "details": "source_row=496 investor=DALINGA HOLDING AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=499.87 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:497",
+      "details": "source_row=497 investor=DALINGA HOLDING AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=99.27 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:500",
+      "details": "source_row=500 investor=MA GROUP AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=358.0 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "introduction_tuple_repeat_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 count=2"
+    },
+    {
+      "severity": "warn",
+      "check": "introduction_tuple_repeat_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f investor_id=996ec13d-5df9-4b46-8581-29bf3880c052 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 count=2"
+    },
+    {
+      "severity": "warn",
+      "check": "introduction_tuple_repeat_ruled",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 count=2"
+    },
+    {
+      "severity": "warn",
+      "check": "introduction_missing_date_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introduction_id=11673e9c-1afc-4586-a5ae-83b52b7c5e29 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21"
+    },
+    {
+      "severity": "warn",
+      "check": "performance_fee_threshold_multiplier_non_zero_ruled",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "commission_id=0eb2ccb5-59d9-44b7-9d5c-07e9710c9ac6 threshold_multiplier=0.1"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "dashboard=6326296.752 db=6326296.81 delta=0.058 expected=0.058"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "dashboard=963887.6075 db=963887.62 delta=0.0125 expected=0.0125"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC114",
+      "row_ref": "",
+      "details": "dashboard=0.4 db=0.0 delta=-0.4 expected=-0.4"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC133",
+      "row_ref": "",
+      "details": "dashboard=222892.5 db=217680.0 delta=-5212.5 expected=-5212.5"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:7",
+      "details": "investor=777 WALNUT LLC introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=825.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "d04fcd07-6af9-41a6-9530-06dbe8588b63",
+      "details": "investor=778 WALNUT LLC introducer=Set Cap basis=spread expected_amount=2805.0 expected_rate=n/a dashboard_amount=0.0 db_amount=2805.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:11",
+      "details": "investor=Band Capital Limited introducer=Elevation basis=spread expected_amount=53700.0 expected_rate=n/a dashboard_amount=8950.0 db_amount=53700.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:11",
+      "details": "investor=Band Capital Limited introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=12530.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:3",
+      "details": "investor=Charles DE BAVIER introducer=Elevation basis=spread expected_amount=9900.0 expected_rate=n/a dashboard_amount=1650.0 db_amount=9900.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:3",
+      "details": "investor=Charles DE BAVIER introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=5610.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:8",
+      "details": "investor=Keir Richard BENBOW introducer=Elevation basis=spread expected_amount=5250.0 expected_rate=n/a dashboard_amount=1750.0 db_amount=5250.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:5",
+      "details": "investor=CARTA INVESTMENTS LLC introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=1650.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:13",
+      "details": "investor=Tuygan GOKER introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=10525.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:13",
+      "details": "investor=Tuygan GOKER introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=12915.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:10",
+      "details": "investor=ZANDERA (Holdco) Ltd introducer=Elevation+Rick basis=spread expected_amount=96750.0 expected_rate=n/a dashboard_amount=112875.0 db_amount=96750.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:10",
+      "details": "investor=ZANDERA (Holdco) Ltd introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=24187.5 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:4",
+      "details": "investor=JASSQ HOLDING LIMITED introducer=Elevation basis=spread expected_amount=30000.0 expected_rate=n/a dashboard_amount=5000.0 db_amount=30000.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:4",
+      "details": "investor=JASSQ HOLDING LIMITED introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=7000.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:12",
+      "details": "investor=Jeremy LOWY introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=825.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:9",
+      "details": "investor=Marco JERRENTRUP introducer=Elevation basis=spread expected_amount=5250.0 expected_rate=n/a dashboard_amount=1750.0 db_amount=5250.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:6",
+      "details": "investor=Sahejman Singh KAHLON introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=825.0 db_amount=0.0"
+    }
+  ],
+  "mapping_coverage": {
+    "unmapped_dashboard_rows": 0,
+    "unmapped_db_rows": 0,
+    "unmapped_commission_rows_dashboard_to_db": 0,
+    "unmapped_commission_rows_db_to_dashboard": 0,
+    "name_mapping_applied_count": 66,
+    "name_mapping_unresolved_count": 0,
+    "fallback_match_warning_count": 0
+  },
+  "rule_enforcement_summary": {
+    "introduction_integrity_check": true,
+    "subscription_formula_cross_field_check": true,
+    "commission_rate_integrity_check": true,
+    "commission_base_amount_matches_funded_check": true,
+    "strikethrough_commission_delete_check": true,
+    "dual_role_introducer_check": true,
+    "deprecated_introducer_references_check": true
+  },
+  "warning_governance_status": "PENDING_TRUST_PACK"
+}

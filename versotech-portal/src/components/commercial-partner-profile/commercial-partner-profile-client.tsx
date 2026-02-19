@@ -810,6 +810,7 @@ export function CommercialPartnerProfileClient({
               commercialPartnerId={cpInfo.id}
               commercialPartnerName={cpInfo.name || cpInfo.legal_name || undefined}
               kycStatus={cpInfo.kyc_status || undefined}
+              entityType={cpInfo.type}
             />
           )}
         </TabsContent>

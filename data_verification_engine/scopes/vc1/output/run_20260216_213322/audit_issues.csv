@@ -1,0 +1,40 @@
+severity,check,vehicle,row_ref,details
+fail,commission_rate_amount_formula_mismatch,VC106,,deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=d3c08a04-d8d6-4f53-bd88-5e47ff10ffc3 rate_bps=7837 amount_sum=23542.2 expected_row_sum=23542.348 expected_split_sum=23542.348 sample_commission_id=09c4403c-4ee5-4607-a390-2c16abbf2b7d
+fail,commission_rate_amount_formula_mismatch,VC113,,deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=02e7a81c-d5bf-4839-9776-f89ae320b586 rate_bps=200 amount_sum=40000.0 expected_row_sum=20000.0 expected_split_sum=20000.0 sample_commission_id=9390646c-b70a-451b-8b6e-16a11a397833
+fail,commission_base_amount_vs_funded_amount_mismatch,VC106,,deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=24c96f5a-0b23-4e40-b562-c0570df12fd8 commission_base_sum=200000.0 funded_sum=150000.0 unique_base_values=[100000.0]
+fail,commission_base_amount_vs_funded_amount_mismatch,VC106,,deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=69075b7c-5dfd-4bd5-b8f7-e0757fe28d64 commission_base_sum=1000000.0 funded_sum=1000000.0 unique_base_values=[500000.0]
+fail,commission_base_amount_vs_funded_amount_mismatch,VC106,,deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=996ec13d-5df9-4b46-8581-29bf3880c052 commission_base_sum=50000.0 funded_sum=100000.0 unique_base_values=[50000.0]
+fail,commission_base_amount_vs_funded_amount_mismatch,VC106,,deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=e78f40f3-7e17-44cd-af46-a01a2f195f3e commission_base_sum=400000.0 funded_sum=200000.0 unique_base_values=[100000.0]
+fail,commission_base_amount_vs_funded_amount_mismatch,VC106,,"deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 commission_base_sum=1424873.0 funded_sum=2350372.0 unique_base_values=[2240.0, 70902.0, 82917.0, 234607.0, 250000.0, 349344.0, 434863.0]"
+warn,strikethrough_commission_row_reinstated_ruled,VC125,strike:489,source_row=489 investor=DALINGA HOLDING AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=499.87 db_rows=1
+warn,strikethrough_commission_row_reinstated_ruled,VC125,strike:490,source_row=490 investor=DALINGA HOLDING AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=99.27 db_rows=1
+warn,strikethrough_commission_row_reinstated_ruled,VC125,strike:494,source_row=494 investor=MA GROUP AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=358.0 db_rows=1
+warn,strikethrough_commission_row_reinstated_ruled,VC125,strike:496,source_row=496 investor=DALINGA HOLDING AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=499.87 db_rows=1
+warn,strikethrough_commission_row_reinstated_ruled,VC125,strike:497,source_row=497 investor=DALINGA HOLDING AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=99.27 db_rows=1
+warn,strikethrough_commission_row_reinstated_ruled,VC125,strike:500,source_row=500 investor=MA GROUP AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=358.0 db_rows=1
+warn,introduction_tuple_repeat_ruled,VC106,,introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 count=2
+warn,introduction_tuple_repeat_ruled,VC106,,introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f investor_id=996ec13d-5df9-4b46-8581-29bf3880c052 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 count=2
+warn,introduction_tuple_repeat_ruled,VC126,,introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 count=2
+warn,introduction_missing_date_ruled,VC106,,introduction_id=11673e9c-1afc-4586-a5ae-83b52b7c5e29 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21
+warn,performance_fee_threshold_multiplier_non_zero_ruled,VC126,,commission_id=0eb2ccb5-59d9-44b7-9d5c-07e9710c9ac6 threshold_multiplier=0.1
+warn,commission_totals_ruled_diff_spread,VC106,,dashboard=6326296.752 db=6326296.81 delta=0.058 expected=0.058
+warn,commission_totals_ruled_diff_spread,VC113,,dashboard=963887.6075 db=963887.62 delta=0.0125 expected=0.0125
+warn,commission_totals_ruled_diff_spread,VC114,,dashboard=0.4 db=0.0 delta=-0.4 expected=-0.4
+warn,commission_totals_ruled_diff_spread,VC133,,dashboard=222892.5 db=217680.0 delta=-5212.5 expected=-5212.5
+warn,commission_row_ruled_dashboard_override,VC133,VC33:7,investor=777 WALNUT LLC introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=825.0 db_amount=0.0
+warn,commission_row_ruled_dashboard_override,VC133,d04fcd07-6af9-41a6-9530-06dbe8588b63,investor=778 WALNUT LLC introducer=Set Cap basis=spread expected_amount=2805.0 expected_rate=n/a dashboard_amount=0.0 db_amount=2805.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:11,investor=Band Capital Limited introducer=Elevation basis=spread expected_amount=53700.0 expected_rate=n/a dashboard_amount=8950.0 db_amount=53700.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:11,investor=Band Capital Limited introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=12530.0 db_amount=0.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:3,investor=Charles DE BAVIER introducer=Elevation basis=spread expected_amount=9900.0 expected_rate=n/a dashboard_amount=1650.0 db_amount=9900.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:3,investor=Charles DE BAVIER introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=5610.0 db_amount=0.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:8,investor=Keir Richard BENBOW introducer=Elevation basis=spread expected_amount=5250.0 expected_rate=n/a dashboard_amount=1750.0 db_amount=5250.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:5,investor=CARTA INVESTMENTS LLC introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=1650.0 db_amount=0.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:13,investor=Tuygan GOKER introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=10525.0 db_amount=0.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:13,investor=Tuygan GOKER introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=12915.0 db_amount=0.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:10,investor=ZANDERA (Holdco) Ltd introducer=Elevation+Rick basis=spread expected_amount=96750.0 expected_rate=n/a dashboard_amount=112875.0 db_amount=96750.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:10,investor=ZANDERA (Holdco) Ltd introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=24187.5 db_amount=0.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:4,investor=JASSQ HOLDING LIMITED introducer=Elevation basis=spread expected_amount=30000.0 expected_rate=n/a dashboard_amount=5000.0 db_amount=30000.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:4,investor=JASSQ HOLDING LIMITED introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=7000.0 db_amount=0.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:12,investor=Jeremy LOWY introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=825.0 db_amount=0.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:9,investor=Marco JERRENTRUP introducer=Elevation basis=spread expected_amount=5250.0 expected_rate=n/a dashboard_amount=1750.0 db_amount=5250.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:6,investor=Sahejman Singh KAHLON introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=825.0 db_amount=0.0

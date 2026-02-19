@@ -1,0 +1,4 @@
+severity,check,vehicle,row_ref,details
+fail,vehicle_totals_mismatch,VC209,,spread_fee: dashboard=5855431.1565000005 db=8079471.1565000005 delta=2224040.0
+warn,brokers_unexpected,,,['Old City Securities LLC']
+warn,introducer_warning_only_present,VC209,,Bright Views Holdings rows=3 amount=9000.0

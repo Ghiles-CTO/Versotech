@@ -1,0 +1,122 @@
+row,series,legal_name,role,introducer_1,dashboard_investor_best,dashboard_investor_score,dashboard_investor_status,dashboard_intro_best,dashboard_intro_score,dashboard_intro_status
+2,VC201,Infinitas Capital SPV V a series of Infinitas Capital Master LLC,-,,Infinitas Capital SPV V a series of Infinitas Capital Master LLC,1.0,matched,,,n/a
+3,VC202,SESR INVESTMENTS PTE LTD,Introducer,Renaissance Bridge Capital LLC,SESR INVESTMENTS PTE LTD,1.0,matched,Renaissance bridge Capital LLC,1.0,matched
+4,VC202,SPLENDID HEIGHT HOLDINGS LIMITED,Introducer,Bromley Capital Partners,SPLENDID HEIGHT HOLDINGS LIMITED,1.0,matched,Bromley Capital Partners,1.0,matched
+5,VC203,DOMINARI SECURITIES LLC,Introducer,Dimensional Advisors,DOMINARI SECURITIES LLC,1.0,matched,,0.0,not_found
+6,VC203,DOMINARI SECURITIES LLC,Broker,R. F. Lafferty & Co. Inc.,DOMINARI SECURITIES LLC,1.0,matched,,0.0,not_found
+7,VC203,Georges SMITH,-,,Georges SMITH,1.0,matched,,,n/a
+8,VC203,Julien MACHOT,-,,Julien MACHOT,1.0,matched,,,n/a
+9,VC203,Nicholas FOWLER,-,,Nicholas FOWLER,1.0,matched,,,n/a
+11,VC203,Sebastian LATTUGA,Broker,R. F. Lafferty & Co. Inc.,Sebastian LATTUGA,1.0,matched,,0.0,not_found
+12,VC203,EVERLASTING HOLDINGS LLC,Introducer,"Sakal Advisory, LLC",EVERLASTING HOLDINGS LLC,1.0,matched,,0.0,not_found
+14,VC203,EVERLASTING HOLDINGS LLC,Introducer,Astral Global Limited,EVERLASTING HOLDINGS LLC,1.0,matched,,0.0,not_found
+15,VC203,Tobias ENSELE,Introducer,Old City Securities LLC,Tobias ENSELE,1.0,matched,,0.0,not_found
+16,VC203,Tobias ENSELE,Introducer,Renaissance bridge Capital LLC,Tobias ENSELE,1.0,matched,,0.0,not_found
+17,VC203,"PEGASUS TECH VENTURES COMPANY VIII, L.P.",Introducer,Astral Global Limited,"PEGASUS TECH VENTURES COMPANY VIII, L.P.",1.0,matched,,0.0,not_found
+18,VC203,INS NEVADA LLC,Introducer,Rainmaker Securities,INS NEVADA LLC,1.0,matched,,0.0,not_found
+19,VC203,INCRED GLOBAL WEALTH PTE LTD,Introducer,Renaissance Bridge Capital LLC,INCRED GLOBAL WEALTH PTE LTD,1.0,matched,,0.0,not_found
+20,VC203,INCRED GLOBAL WEALTH PTE LTD,Introducer,Old City Securities LLC,INCRED GLOBAL WEALTH PTE LTD,1.0,matched,,0.0,not_found
+21,VC203,Julien MACHOT,-,,Julien MACHOT,1.0,matched,,,n/a
+22,VC203,MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP,Introducer,Renaissance Bridge Capital LLC,MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP,1.0,matched,,0.0,not_found
+23,VC203,MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP,Introducer,Oliver Little,MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP,1.0,matched,,0.0,not_found
+28,VC203,AEON INC,-,,AEON INC,1.0,matched,,,n/a
+29,VC203,Robert VOGT IV,-,,Robert C. VOGT IV,0.9333,matched,,,n/a
+30,VC206,"AAF D Boral Mstr SPV LLC, Ser III OpenAI",Introducer,AEON INC,"AAF D Boral Mstr SPV LLC, Ser III OpenAI",1.0,matched,Aeon,0.6667,matched
+31,VC206,ODIN INVESTMENTS LIMITED,-,,ODIN INVESTMENTS LIMITED,1.0,matched,,,n/a
+32,VC206,AI DIRECT OPPORTUNITIES FUND SCSP,Introducer,Venture Spring,AI DIRECT OPPORTUNITIES FUND SCSP,1.0,matched,"Venture Spring
+ Dimensional Advisors",0.92,matched
+33,VC206,AI DIRECT OPPORTUNITIES FUND SCSP,Introducer,Dimensional Advisors,AI DIRECT OPPORTUNITIES FUND SCSP,1.0,matched,"Venture Spring
+ Dimensional Advisors",0.92,matched
+34,VC206,KIWI INNOVATIONS LIMITED,Introducer,Bromley Capital Partners,KIWI INNOVATIONS LIMITED,1.0,matched,Bromley Capital,0.92,matched
+35,VC206,Rishabh MITTAL,Introducer,Renaissance Bridge Capital LLC,Rishabh MITTAL,1.0,matched,Bromley Capital,0.4889,not_found
+36,VC206,Anuroop ARORA,Introducer,Renaissance Bridge Capital LLC,Anuroop ARORA,1.0,matched,Bromley Capital,0.4889,not_found
+37,VC206,Bharath RAM,Introducer,Renaissance Bridge Capital LLC,Bharath RAM,1.0,matched,Bromley Capital,0.4889,not_found
+38,VC206,AEON INC,-,,AEON INC,1.0,matched,,,n/a
+39,VC206,Julien MACHOT,-,,Julien MACHOT,1.0,matched,,,n/a
+40,VC206,Jyotsna HEDGE,Introducer,Mervyn Pereira,Jyotsna HEDGE,1.0,matched,Mervyn Pereira,1.0,matched
+41,VC206,PUTHAN N.C. MENON AND/OR SOBHA MENON RAGHAVANNAIR,Introducer,Mervyn Pereira,PUTHAN N.C. MENON AND/OR SOBHA MENON RAGHAVANNAIR,1.0,matched,Mervyn Pereira,1.0,matched
+42,VC206,"ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC",,,"ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC",1.0,matched,,,n/a
+43,VC206,"REDPOINT OMEGA V, L.P.",Introducer,Visual Sectors,"REDPOINT OMEGA V, L.P.",1.0,matched,Visual Sectors,1.0,matched
+44,VC206,"REDPOINT OMEGA V, L.P.",Introducer,Astral Global Limited,"REDPOINT OMEGA V, L.P.",1.0,matched,Astra Global,0.7273,matched
+45,VC206,"REDPOINT OMEGA ASSOCIATES V, LLC",Introducer,Visual Sectors,"REDPOINT OMEGA ASSOCIATES V, LLC",1.0,matched,Visual Sectors,1.0,matched
+46,VC206,"ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC",,,"ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC",1.0,matched,,,n/a
+47,VC206,"ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC",,,"ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC",1.0,matched,,,n/a
+48,VC207,TARA LYNN SCHOLLEMANN,,,TARA LYNN SCHOLLEMANN,1.0,matched,,,n/a
+49,VC207,JONATHAN STONA,,,JONATHAN STONA,1.0,matched,,,n/a
+50,VC207,PRASANNA SANTHANAM,,,PRASANNA SANTHANAM,1.0,matched,,,n/a
+51,VC207,DILIP STEPHANE ROUSSENALY,,,DILIP STEPHANE ROUSSENALY,1.0,matched,,,n/a
+52,VC207,GUSTAVO FUCHS ALBUQUERQUE,,,GUSTAVO FUCHS ALBUQUERQUE,1.0,matched,,,n/a
+53,VC207,MARK SOUZA,,,MARK SOUZA,1.0,matched,,,n/a
+54,VC207,KEE-MIN NGIAM,,,KEE-MIN NGIAM,1.0,matched,,,n/a
+55,VC207,ANUROOP ARORA,Introducer,Renaissance Bridge Capital LLC,ANUROOP ARORA,1.0,matched,Renaissance,0.92,matched
+56,VC207,DIVYA SRIDHAR and SHRIVATSAN VASUDHEVAN,Introducer,Renaissance Bridge Capital LLC,DIVYA and SHRIVATSAN SRIDHAR AND VASUDHEVAN,1.0,matched,Renaissance,0.92,matched
+57,VC207,BHARATH RAM,Introducer,Renaissance Bridge Capital LLC,BHARATH RAM,1.0,matched,Renaissance,0.92,matched
+58,VC207,VARUN SEMBIUM VARADARAJAN,Introducer,Renaissance Bridge Capital LLC,VARUN SEMBIUM VARADARAJAN,1.0,matched,Renaissance,0.92,matched
+59,VC207,Julien MACHOT,,,Julien MACHOT,1.0,matched,,,n/a
+60,VC207,ABHINEET MISHRA,Introducer,Renaissance Bridge Capital LLC,ABHINEET MISHRA,1.0,matched,Renaissance,0.92,matched
+61,VC207,AGP ALTERNATIVE INVESTMENT QP FUND - SERIES 4,Introducer,Alliance Global Partners LLC,AGP ALTERNATIVE INVESTMENT QP FUND - SERIES 4,1.0,matched,Renaissance,0.3077,not_found
+62,VC207,ASHUTOSH CHETAL,Introducer,Renaissance Bridge Capital LLC,ASHUTOSH CHETAL,1.0,matched,Renaissance,0.92,matched
+63,VC207,VIDHYA GOVINDARAJAN,Introducer,Renaissance Bridge Capital LLC,VIDHYA GOVINDARAJAN,1.0,matched,Renaissance,0.92,matched
+64,VC207,ANKUR SRIVASTAVA,Introducer,Renaissance Bridge Capital LLC,ANKUR SRIVASTAVA,1.0,matched,Renaissance,0.92,matched
+65,VC207,GURPREET SINGH,Introducer,Renaissance Bridge Capital LLC,GURPREET SINGH,1.0,matched,Renaissance,0.92,matched
+66,VC207,AEON INC.,Broker,R. F. Lafferty & Co. Inc.,AEON INC.,1.0,matched,Lafferty,0.92,matched
+67,VC207,SPARKLABS GLOBAL CAPITAL X LLC,Introducer,Elena VYSOTSKAIA,SPARKLABS GLOBAL CAPITAL X LLC,1.0,matched,Elena VYSOTSKAIA,1.0,matched
+68,VC207,Julien MACHOT,,,Julien MACHOT,1.0,matched,,,n/a
+69,VC207,MR AND MRS MATHEW KOLANGIKOMBIL THOMAS,,,MR AND MRS MATHEW KOLANGIKOMBIL THOMAS,1.0,matched,,,n/a
+70,VC207,Rishabh MITTAL,Introducer,Renaissance Bridge Capital LLC,Rishabh MITTAL,1.0,matched,Renaissance,0.92,matched
+71,VC207,LF GROUP SARL,,,LF GROUP SARL,1.0,matched,,,n/a
+72,VC207,IGOR TSUKERMAN and IRENE APOTOVSKY,,,IGOR and IRENE TSUKERMAN and APOTOVSKY,1.0,matched,,,n/a
+73,VC209,SINO SUISSE LLC,Introducer,Bromley Capital Partners,SINO SUISSE LLC,1.0,matched,Bromley Partners,0.8,matched
+74,VC209,AEON INC,,,AEON INC,1.0,matched,,,n/a
+75,VC209,Georgi GEORGIEV,Introducer,Robin Doble,Georgi GEORGIEV,1.0,matched,Robin Doble,1.0,matched
+76,VC209,JRF INVESTMENTS DMCC,Introducer,Renaissance Bridge Capital LLC,JRF INVESTMENTS DMCC,1.0,matched,Renaissance,0.92,matched
+77,VC209,"D. BORAL MASTER SPV, SERIES IV XAI",Introducer,AEON INC,"D. BORAL MASTER SPV, SERIES IV XAI",1.0,matched,Aeon,0.6667,matched
+78,VC209,U.S. HMC SERIES FUND LP - SERIES II,,,U.S. HMC SERIES FUND LP - SERIES II,1.0,matched,,,n/a
+79,VC209,Seri Cosmos Capital Limited,,,Seri Cosmos Capital Limited,1.0,matched,,,n/a
+80,VC209,CBH Compagnie Bancaire Helvétique SA,Broker,R. F. Lafferty & Co. Inc.,"CBH Compagnie Bancaire Helvétique SA,",1.0,matched,Lafferty,0.92,matched
+81,VC209,Jamel CHANDOUL,Introducer,Bright Views Holdings,Jamel CHANDOUL,1.0,matched,Bright Views,0.92,matched
+82,VC209,BRIGHT VIEWS HOLDINGS,,,BRIGHT VIEWS HOLDINGS,1.0,matched,,,n/a
+83,VC209,"STP CAP V, A SERIES OF CGF2021 LLC, SYDECAR LLC",Broker,R. F. Lafferty & Co. Inc.,"STP CAP V, A SERIES OF CGF2021 LLC, SYDECAR LLC",1.0,matched,Lafferty,0.92,matched
+84,VC209,SINO SUISSE LLC,,,SINO SUISSE LLC,1.0,matched,,,n/a
+85,VC209,CBH Compagnie Bancaire Helvétique SA,,,"CBH Compagnie Bancaire Helvétique SA,",1.0,matched,,,n/a
+86,VC209,MOBILITY INNOVATION FUND LLC,Introducer,Jeffrey Wan,MOBILITY INNOVATION FUND LLC,1.0,matched,Jeffrey Wan,1.0,matched
+87,VC209,U.S. HMC SERIES FUND LP – SERIES II,,,U.S. HMC SERIES FUND LP – SERIES II,1.0,matched,,,n/a
+88,VC209,MRS ANISHA BANSAL AND MR RAHUL KARKUN,,,MRS ANISHA BANSAL AND MR RAHUL KARKUN,1.0,matched,,,n/a
+89,VC209,"SPACEFARING VENTURES FUND 9, LLC",,,"SPACEFARING VENTURES FUND 9, LLC",1.0,matched,,,n/a
+90,VC209,PVPL FUND LLC SERIES 3,Broker,R. F. Lafferty & Co. Inc.,PVPL FUND LLC SERIES 3,1.0,matched,Lafferty,0.92,matched
+91,VC209,PVPL FUND LLC SERIES 3,Introducer,Visual Sectors,PVPL FUND LLC SERIES 3,1.0,matched,Visual Sectors,1.0,matched
+92,VC209,"PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC",Introducer,Rubix Holdings Limited,"PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC",1.0,matched,Rubix Holdings Limited,1.0,matched
+93,VC209,Julien MACHOT,,,JRF INVESTMENTS DMCC,0.4242,not_found,,,n/a
+94,VC209,"PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC",,,"PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC",1.0,matched,,,n/a
+95,VC209,Mohan SASANAPURI,,,Mohan SASANAPURI,1.0,matched,,,n/a
+96,VC209,Kartik Kumar ATTULURI,,,Kartik Kumar ATTULURI,1.0,matched,,,n/a
+97,VC209,Prabhakar Somana KONGANDA,,,Prabhakar Somana KONGANDA,1.0,matched,,,n/a
+98,VC209,MADISON TRUST COMPANY (on behalf of Edward Bendickson),,,MADISON TRUST COMPANY (on behalf of Edward Bendickson),1.0,matched,,,n/a
+99,VC209,"FRONTIERX VIII, LP",,,"FRONTIERX VIII, LP",1.0,matched,,,n/a
+100,VC210,Marvin HAZELL,Introducer,ANIM,Marvin HAZELL,1.0,matched,ANIM,1.0,matched
+101,VC210,Hailey ORR,Introducer,ANIM,Hailey ORR,1.0,matched,ANIM,1.0,matched
+102,VC211,Anton POLETAEV,Introducer,Renaissance Bridge Capital LLC,ANTON POLETAEV,1.0,matched,Renaissance,0.92,matched
+103,VC215,Julien MACHOT,,,Julien MACHOT,1.0,matched,,,n/a
+104,VC215,Gourav KAKKAR,Introducer,Infinyte Club Private Limited,Gourav KAKKAR,1.0,matched,Infinyte Club,0.92,matched
+105,VC215,Gourav KAKKAR,Introducer,Set Cap,Gourav KAKKAR,1.0,matched,Bromley Capital,0.4545,not_found
+106,VC215,Rajagopalan MADHUSUDAN,Introducer,Infinyte Club Private Limited,Rajagopalan MADHUSUDAN,1.0,matched,Infinyte Club,0.92,matched
+107,VC215,Rajagopalan MADHUSUDAN,Introducer,Set Cap,Rajagopalan MADHUSUDAN,1.0,matched,Bromley Capital,0.4545,not_found
+108,VC215,Ved NIRANJANBHAI ANTANI,Introducer,Infinyte Club Private Limited,Ved NIRANJANBHAI ANTANI,1.0,matched,Infinyte Club,0.92,matched
+109,VC215,Ved NIRANJANBHAI ANTANI,Introducer,Set Cap,Ved NIRANJANBHAI ANTANI,1.0,matched,Bromley Capital,0.4545,not_found
+110,VC215,Mahesh NALLAPATI,Introducer,Infinyte Club Private Limited,Mahesh NALLAPATI,1.0,matched,Infinyte Club,0.92,matched
+111,VC215,Mahesh NALLAPATI,Introducer,Set Cap,Mahesh NALLAPATI,1.0,matched,Bromley Capital,0.4545,not_found
+112,VC215,Varun SEMBIUM VARADARAJAN,Introducer,Renaissance Bridge Capital LLC,Varun SEMBIUM VARADARAJAN,1.0,matched,Renaissance,0.92,matched
+113,VC215,CARTA INVESTMENTS LLC,Introducer,Infinyte Club Private Limited,CARTA INVESTMENTS LLC,1.0,matched,Infinyte Club,0.92,matched
+114,VC215,CARTA INVESTMENTS LLC,Introducer,Set Cap,CARTA INVESTMENTS LLC,1.0,matched,Bromley Capital,0.4545,not_found
+115,VC215,STELLATRION PARTNERS,Introducer,Set Cap,STELLATRION PARTNERS,1.0,matched,Bromley Capital,0.4545,not_found
+116,VC215,STELLATRION PARTNERS,Introducer,Set Cap,STELLATRION PARTNERS,1.0,matched,Bromley Capital,0.4545,not_found
+117,VC215,"ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC",,,"ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC",1.0,matched,,,n/a
+118,VC215,"ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC",,,"ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC",1.0,matched,,,n/a
+119,VC215,"ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC",,,"ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC",1.0,matched,,,n/a
+120,VC215,Anuroop ARORA,Introducer,Renaissance Bridge Capital LLC,Anuroop ARORA,1.0,matched,Renaissance,0.92,matched
+121,VC215,AEON INC,,,AEON INC,1.0,matched,,,n/a
+122,VC215,"Anthropic Compartment, HAG Private Markets SARL",Introducer,Hottinger AG,"Anthropic Compartment, HAG Private Markets SARL",1.0,matched,Hottinger AG,1.0,matched
+123,VC215,LF GROUP SARL,,,LF GROUP SARL,1.0,matched,,,n/a
+124,VC215,AEON INC,,,AEON INC,1.0,matched,,,n/a
+125,VC215,Keir BENBOW,,,Keir BENBOW,1.0,matched,,,n/a
+126,VC215,George Guoying CHEN,,,Georges CHEN,0.7097,matched,,,n/a

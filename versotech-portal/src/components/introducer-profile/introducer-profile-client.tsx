@@ -853,6 +853,7 @@ export function IntroducerProfileClient({
               introducerId={introducerInfo.id}
               introducerName={introducerInfo.legal_name || undefined}
               kycStatus={introducerInfo.kyc_status || undefined}
+              entityType={introducerInfo.type}
             />
           )}
         </TabsContent>

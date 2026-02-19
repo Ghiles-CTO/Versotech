@@ -55,18 +55,21 @@ interface PartnerKYCDocumentsTabProps {
   partnerId: string
   partnerName?: string
   kycStatus?: string
+  entityType?: string | null
 }
 
 export function PartnerKYCDocumentsTab({
   partnerId,
   partnerName,
-  kycStatus
+  kycStatus,
+  entityType
 }: PartnerKYCDocumentsTabProps) {
   const [documents, setDocuments] = useState<Document[]>([])
   const [members, setMembers] = useState<PartnerMember[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState<string | null>(null)
   const currentKycStatus = kycStatus
+  const isIndividualEntity = entityType === 'individual'
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
 
   const fetchDocuments = useCallback(async () => {
@@ -196,10 +199,18 @@ export function PartnerKYCDocumentsTab({
     })
   }
 
-  const uploadedCount = documents.filter(d =>
-    REQUIRED_DOCUMENTS.some(req => req.value === d.type)
-  ).length
-  const completionPercentage = Math.round((uploadedCount / REQUIRED_DOCUMENTS.length) * 100)
+  const uploadedCount = isIndividualEntity
+    ? new Set(
+        documents
+          .filter(d => MEMBER_DOCUMENTS.some(req => req.value === d.type))
+          .map(d => d.type)
+      ).size
+    : documents.filter(d => REQUIRED_DOCUMENTS.some(req => req.value === d.type)).length
+
+  const requiredCount = isIndividualEntity ? MEMBER_DOCUMENTS.length : REQUIRED_DOCUMENTS.length
+  const completionPercentage = requiredCount > 0
+    ? Math.round((uploadedCount / requiredCount) * 100)
+    : 0
 
   const getStatusColor = (status?: string) => {
     switch (status) {
@@ -230,7 +241,11 @@ export function PartnerKYCDocumentsTab({
               <div>
                 <CardTitle>KYC Documents</CardTitle>
                 <CardDescription>
-                  {partnerName ? `Compliance documents for ${partnerName}` : 'Upload required compliance documents'}
+                  {isIndividualEntity
+                    ? 'Upload your personal KYC documents'
+                    : partnerName
+                      ? `Compliance documents for ${partnerName}`
+                      : 'Upload required compliance documents'}
                 </CardDescription>
                 <p className="text-xs text-muted-foreground mt-1">
                   Entity: <span className="font-medium text-foreground">{partnerName || 'Current partner entity'}</span>
@@ -240,7 +255,7 @@ export function PartnerKYCDocumentsTab({
             <div className="text-right">
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold text-foreground">
-                  {uploadedCount}/{REQUIRED_DOCUMENTS.length}
+                  {uploadedCount}/{requiredCount}
                 </span>
                 {currentKycStatus && (
                   <Badge variant="outline" className={cn('capitalize', getStatusColor(currentKycStatus))}>
@@ -267,104 +282,108 @@ export function PartnerKYCDocumentsTab({
           </div>
           {completionPercentage < 100 && (
             <p className="text-xs text-muted-foreground mt-2">
-              Upload all required documents to complete KYC verification
+              {isIndividualEntity
+                ? 'Upload your ID and proof of address to complete KYC verification'
+                : 'Upload all required documents to complete KYC verification'}
             </p>
           )}
         </CardContent>
       </Card>
 
       {/* Required Documents Checklist */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Required Documents</CardTitle>
-          <CardDescription>
-            These documents are required for regulatory compliance and KYC verification
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {REQUIRED_DOCUMENTS.map((docType) => {
-                const uploaded = documents.find(d => d.type === docType.value)
-                const isUploading = uploading === docType.value
+      {!isIndividualEntity && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Required Documents</CardTitle>
+            <CardDescription>
+              These documents are required for regulatory compliance and KYC verification
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {REQUIRED_DOCUMENTS.map((docType) => {
+                  const uploaded = documents.find(d => d.type === docType.value)
+                  const isUploading = uploading === docType.value
 
-                return (
-                  <div
-                    key={docType.value}
-                    className={cn(
-                      "flex items-center justify-between gap-4 py-3 px-4 rounded-lg border transition-colors",
-                      uploaded ? "border-green-200 bg-green-50/50" : "border-gray-200 hover:bg-gray-50"
-                    )}
-                  >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      {uploaded ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
-                      ) : (
-                        <Circle className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                  return (
+                    <div
+                      key={docType.value}
+                      className={cn(
+                        "flex items-center justify-between gap-4 py-3 px-4 rounded-lg border transition-colors",
+                        uploaded ? "border-green-200 bg-green-50/50" : "border-gray-200 hover:bg-gray-50"
                       )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {docType.label}
-                        </p>
-                        {uploaded && (
-                          <p className="text-xs text-muted-foreground truncate">
-                            {uploaded.file_name} • {formatFileSize(uploaded.file_size_bytes)} • {formatDate(uploaded.created_at)}
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        {uploaded ? (
+                          <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+                        ) : (
+                          <Circle className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {docType.label}
                           </p>
+                          {uploaded && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              {uploaded.file_name} • {formatFileSize(uploaded.file_size_bytes)} • {formatDate(uploaded.created_at)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {uploaded ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDownload(uploaded)}
+                            className="h-8 w-8 p-0"
+                            title="Download"
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <>
+                            <Input
+                              ref={(el) => { fileInputRefs.current[docType.value] = el }}
+                              type="file"
+                              className="hidden"
+                              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.txt"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) handleUpload(file, docType.value)
+                              }}
+                              disabled={isUploading}
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => fileInputRefs.current[docType.value]?.click()}
+                              disabled={isUploading}
+                            >
+                              {isUploading ? (
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              ) : (
+                                <Upload className="h-4 w-4 mr-2" />
+                              )}
+                              Upload
+                            </Button>
+                          </>
                         )}
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {uploaded ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDownload(uploaded)}
-                          className="h-8 w-8 p-0"
-                          title="Download"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      ) : (
-                        <>
-                          <Input
-                            ref={(el) => { fileInputRefs.current[docType.value] = el }}
-                            type="file"
-                            className="hidden"
-                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.txt"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0]
-                              if (file) handleUpload(file, docType.value)
-                            }}
-                            disabled={isUploading}
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => fileInputRefs.current[docType.value]?.click()}
-                            disabled={isUploading}
-                          >
-                            {isUploading ? (
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            ) : (
-                              <Upload className="h-4 w-4 mr-2" />
-                            )}
-                            Upload
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  )
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Member KYC Documents */}
       {members.length > 0 && (

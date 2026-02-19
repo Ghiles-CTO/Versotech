@@ -1,0 +1,348 @@
+source_file,contact_row,contact_company,contact_name,contact_email,best_score,db_investor_name,db_investor_email,db_investor_id
+DB - MONACO FO.xlsx,2,JIMCO,-,info@jimco.com,0.556,Julien MACHOT,julien.machot@isdcglobal.org,f3dabc56-d079-4536-9ad5-9e6b543aea21
+DB - MONACO FO.xlsx,3,Heritage Group Monaco,-,info@heritagemonaco.com,0.562,MA GROUP AG,aicher@ma-group.ch,3e75e4c5-6071-410d-bb55-d4ede85ab93d
+DB - MONACO FO.xlsx,4,PRIME MFO,Mathias,m.melgaard@prime-estate.mc,0.556,Imrat HAYAT,,1bb4d74d-50e7-410d-b852-923c4f26d504
+DB - MONACO FO.xlsx,5,Saint Leonard SFO,Jason,Jason@slsfo.com,0.516,Vagit SHARIFOV,,e36fdb58-4f43-44bb-a73c-b8f6748fac08
+DB - MONACO FO.xlsx,8,Monaco Financial Advisors MFO,-,jdicesare@mpa-mfo.mc,0.51,Brahma Finance (BVI) Ltd,nbarham@brahmafinance.com,c364e14a-7abf-4755-b63f-79bb4a091df2
+DB - MONACO FO.xlsx,9,Rosemont Monaco,Peter Brigham,p.brigham@rosemont-mc.com,0.615,Peter HOGLAND,,0d18b5d6-fd7c-403b-931a-b9af09ee9715
+DB - MONACO FO.xlsx,11,Santocedrus Capital,-,contact@santocedrus.com,0.625,Sandra CABIAN,cabian@bluewin.ch,e92ed0be-a69a-4cb4-a623-42ce2467ca4e
+DB - MONACO FO.xlsx,12,Phoenix Capital,Pierre-Emmanuel Laurant,pe.laurant@phoenix-cap.com,0.688,POTASSIUM Capital,kirk@digitalblue.ky,79f6a524-24c2-407d-a754-6c6a8d9b18bc
+DB - MONACO FO.xlsx,14,PF MFO,Philippe Feller,philippe.feller@pfmfo.mc,0.667,Philip ALGAR,philipwpillar@gmail.com,fab2d2df-ca6a-4e18-aa08-6d8e7b1ffc64
+DB - MONACO FO.xlsx,15,Belmont MFO,-,office@belmontmfo.com,0.519,Banque Gonet (FIR),,543c2ac5-d216-4a9c-822b-f6af8753459c
+DB - MONACO FO.xlsx,16,Unumar Family Office,-,contact@unumar.mc,0.667,FigTree Family Office Ltd,christopher.gregory@figtreegroup.net,80eab681-0f34-4c73-96dd-884862dc3816
+DB - MONACO FO.xlsx,18,Max Fiduciaire MFO,-,info@maxfid.mc,0.438,BRAHMA FINANCE,nbarham@brahmafinance.com,84c3272c-5c98-453a-b0aa-77366cc31a53
+VC Firms and Email Database.xlsx,2,Stena Fastighets,Erik Sveder,erik.sveder@stena.com,0.593,Eric LE SEIGNEUR,eric@cap-blanc.com,e78f40f3-7e17-44cd-af46-a01a2f195f3e
+VC Firms and Email Database.xlsx,3,Stena Fastighets,Kim Olsson,kim.olsson@stena.com,0.667,Kim LUND,jcl@usfamily.net,f5d59ea7-68f2-41a7-85a2-811e826fae18
+VC Firms and Email Database.xlsx,4,Magnum Invest AB,Simon Angeldorff,simon.angeldorff@gmail.com,0.556,PANT Investments Inc,vikas@cerracap.com,b8414382-e1e9-479b-b341-e84c31bdba00
+VC Firms and Email Database.xlsx,5,Leetab AB,Simon Edström,edstrom@leetab.se,0.522,KALE UNITED AB,mans@kaleunited.com,ee3cba9d-1a2d-4bd0-b155-acfb426ac991
+VC Firms and Email Database.xlsx,6,SUSI Partners,Robin Nilsberth,robin.nilsberth@hotmail.se,0.815,SWISS PARTNERS,,82f125a7-76ef-4d9b-8781-4c1a2cc0bee7
+VC Firms and Email Database.xlsx,7,Havsfrun Investment AB,Jonas Israelsson,jonas.israelsson@havsfrun.se,0.667,PANT Investments Inc,vikas@cerracap.com,b8414382-e1e9-479b-b341-e84c31bdba00
+VC Firms and Email Database.xlsx,8,IK Partners,Björn Savén,bjorn.saven@ikinvest.com,0.8,SWISS PARTNERS,,82f125a7-76ef-4d9b-8781-4c1a2cc0bee7
+VC Firms and Email Database.xlsx,9,VNV Global AB,Per Brilioth,per@vnv.vc,0.545,Pierre Roy,jgroy@peace.edu,6ff19b89-a596-4d0b-af5e-8e807eb0c405
+VC Firms and Email Database.xlsx,10,Consensus Asset Management AB,Patrik Soko,patrik.soko@consensusam.se,0.696,Patrick CORR,jrcorradino@gmail.com,2d1851ef-8256-4f17-b306-e7308fd1d571
+VC Firms and Email Database.xlsx,11,Stockeld Dreamery,Sorosh Tavakoli,sorosh.tavakoli@gmail.com,0.519,Sarah DAVIES,sam_davies@shelter.org.uk,ecde52d9-0175-4b25-afe6-6d7da53d201f
+VC Firms and Email Database.xlsx,12,Pomegranate Investment AB,Florian Hellmich,florian.hellmich@pomegranateinvestment.com,0.711,PANT Investments Inc,vikas@cerracap.com,b8414382-e1e9-479b-b341-e84c31bdba00
+VC Firms and Email Database.xlsx,13,Swissquote Bank Europe,Cecilia Bjerke-Quirke,cecilia.quirke@lombardinternational.com;,0.488,Michiel VAN DEURSEN,,e0946196-b397-4389-b82a-9e5655e3ac4d
+VC Firms and Email Database.xlsx,14,SEB Nordic Family Office,Henrik Lesaques,henrik.landegren.lesaque@seb.co.uk,0.612,FigTree Family Office Ltd,christopher.gregory@figtreegroup.net,80eab681-0f34-4c73-96dd-884862dc3816
+VC Firms and Email Database.xlsx,15,Coeli,Marcus Svensson,marcus.svensson@alandsbanken.se,0.6,Markus AKERMANN,akermann.markus@gmail.com,077277ca-fe09-45b0-9dd4-789fa3238f84
+VC Firms and Email Database.xlsx,16,Alandsbanken,Martin Lövgren,martin.lovgren@alandsbanken.se,0.667,Martin AVETISYAN,avemartin@gmail.com,046c9f9b-4f57-41b4-a8ce-77a81d976bac
+VC Firms and Email Database.xlsx,17,Alandsbanken,Eva Bengtsson,eva.bengtsson@alandsbanken.se,0.56,Alain DECOMBE,alain@decombe.com,f5888bd4-ba48-4adf-a81f-31eb6d5d5c28
+VC Firms and Email Database.xlsx,18,Hammarplast AB,David Bergendahl,d.bergendahl@hammarplast.se,0.581,David BACHELIER,david.bachelier@gmail.com,205fce7d-d456-4ea9-ac62-acbfbb193010
+VC Firms and Email Database.xlsx,19,Gotapack International AB,Robert Carlund,robert.c.carlund@gmail.com,0.741,Robert SALMON,,70084284-f0ed-4204-935b-a55c3aae2b9e
+VC Firms and Email Database.xlsx,20,Gavia Invest AB,Ludwig Mattsson,ludwig@gavia.se,0.556,CARTA INVESTMENTS LLC,,31dccf8d-314a-4fa9-80af-9c02732bff31
+VC Firms and Email Database.xlsx,21,IGC,Thomas,thomas@igc.lu,0.667,Thomas YBERT,thomas.weber@dayzim.com,3295cfe5-eee6-4abd-91cf-94c8c98ca106
+VC Firms and Email Database.xlsx,22,Fortex International,Marcus Siljö,marcus.siljo@fortex.se,0.711,TERSANE INTERNATIONAL LTD,eddie73ch@gmail.com,81935830-4bad-42bb-9769-d7f0cbd685cf
+VC Firms and Email Database.xlsx,23,Bure Equity AB,Carsten Browall,carsten.browall@telia.com,0.571,KALE UNITED AB,mans@kaleunited.com,ee3cba9d-1a2d-4bd0-b155-acfb426ac991
+VC Firms and Email Database.xlsx,24,Independent Inspection Services AB,,fc@iisab.com,0.474,TERRA Financial & Management Services SA,cabian.marc@terrafinancial.ch,50af6602-d56f-4274-b714-db711c939836
+VC Firms and Email Database.xlsx,25,Vasastaden Holding AB,Niclas Eriksson,ne@vasastaden.com,0.615,DALINGA HOLDING AG,dega.ag@gmail.com,ec8893f1-9473-4d80-bd46-04b2cc8b2f3a
+VC Firms and Email Database.xlsx,26,Asivo Solutions AB,Jonas Lindblom,jonas.lindblom@asivo.se,0.545,Vasily SUKHOTIN,v.sukhotin@fxpro.com,4871a422-e1a1-4e05-af43-bf1ac2af4523
+VC Firms and Email Database.xlsx,27,StjärnaFyrkant Göteborg,Tony Eklöw,tony.eklow@stjarnafyrkant.se,0.514,Tuygan GOKER,nan,ea6fe379-59c1-4f21-b2aa-a64162bc65fe
+VC Firms and Email Database.xlsx,28,Göteborgs Revision,Markus Hellsten,markus.hellsten@goteborgsrevision.com,0.625,Georges CYTRON,,99c7fd03-b5e4-4d2f-b93e-a7d5ec2288d6
+VC Firms and Email Database.xlsx,29,Arbetsförmedlingen,Johan Ottoson,johan_ottoson@hotmail.com,0.529,Laurent CREHANGE,lc@cabinet-crehange.com,fb8e5405-61e4-40b2-a597-eddb8af016ab
+VC Firms and Email Database.xlsx,30,Vetro Group AB,Niclas Hellström,niclas@vetro.se,0.8,VERSO GROUP,jmachot@versoholdings.com,1319a62f-544e-45bf-a208-61041f9f1e34
+VC Firms and Email Database.xlsx,31,Modern Elteknik AB,Jan Johannesson,jan.johannesson@modernelteknik.se,0.621,Benjamin JONES,blj@VITOL.com,bd567786-b869-4104-a874-6acfa439c5ed
+VC Firms and Email Database.xlsx,32,Bergsala AB,Owe Bergsten,bergsten@bergsala.se,0.636,BenSkyla AG,michael.torocsik@benskyla.li,d06aaa52-d948-4d3b-849b-e1a365843159
+VC Firms and Email Database.xlsx,33,Miramar Seafood AB,Fredrik,fredrik@miramar.se,0.545,Frederic SAMAMA,,0430188b-81e3-4292-b4b9-86d38c97175f
+VC Firms and Email Database.xlsx,34,RCL Holding AB,Christoffer Lundström,christoffer@rclholding.se,0.688,DALINGA HOLDING AG,dega.ag@gmail.com,ec8893f1-9473-4d80-bd46-04b2cc8b2f3a
+VC Firms and Email Database.xlsx,35,Stefan Andersson,Stefan Andersson,stefan@stefanandersson.nu,0.545,Isabella CHANDRIS,dimitri.chandris@chandris.com,4b719a03-7eb9-4c76-a8c8-3a16570e3670
+VC Firms and Email Database.xlsx,36,Atte Capital,Anders Jansson,andersjansson05@gmail.com,0.621,POTASSIUM Capital,kirk@digitalblue.ky,79f6a524-24c2-407d-a754-6c6a8d9b18bc
+VC Firms and Email Database.xlsx,37,Consensus Asset Management AB,David Wiklander,david.boowiklander@consensusam.se,0.667,David HOLDEN,dnh4private@gmail.com,11be6624-9dd0-4a7d-b4eb-9241d6d35f07
+VC Firms and Email Database.xlsx,38,57 Stars,Bernard McGuire,bmcguire@57stars.com,0.733,Bernard DUFAURE,,8200a00b-2bc2-466b-8350-e418e59a803c
+VC Firms and Email Database.xlsx,39,57 Stars,Ivo Paglialonga,ipaglialonga@57stars.com,0.552,Rajiv AGARWALA,nan,ba36ca98-e4b4-403e-b505-dbe88b7dedb9
+VC Firms and Email Database.xlsx,40,Abu Dhabi Fund for Development,Majed Jandali,mjandali@adfd.ae,0.552,Mayuriben JOGANI,yashjogani95@gmail.com,7f066910-063c-4bc6-8999-af10132b78fc
+VC Firms and Email Database.xlsx,41,Allianz Global Investors,Simone Baur,simone.baur@allianzgi.com,0.538,Bahama Global Towers Limited,,ecb1dd0f-6866-4553-81ba-b49b1c30bd9d
+VC Firms and Email Database.xlsx,42,Carlyle AlpInvest,Henriette Grijzenhout,henriette.grijzenhout.cw@alpinvest.com,0.529,Charles DE BAVIER,charles.debavier@dbms.legal,34f8e2db-7eda-4a31-87f8-f61cbde3152f
+VC Firms and Email Database.xlsx,43,Carlyle AlpInvest,Marleen Dijkstra,marleen.dijkstra@alpinvest.com,0.529,Charles DE BAVIER,charles.debavier@dbms.legal,34f8e2db-7eda-4a31-87f8-f61cbde3152f
+VC Firms and Email Database.xlsx,44,Carlyle AlpInvest,Pit Lucius,pit.lucius@alpinvest.com,0.529,Charles DE BAVIER,charles.debavier@dbms.legal,34f8e2db-7eda-4a31-87f8-f61cbde3152f
+VC Firms and Email Database.xlsx,45,Argentum AM,Espen Langeland,ek@argentum.no,0.571,Peter HOGLAND,,0d18b5d6-fd7c-403b-931a-b9af09ee9715
+VC Firms and Email Database.xlsx,46,Argentum AM,Henrik,henrik@argentum.no,0.526,CAREITAS,fmonteleone@careit.fr,bf1dfa64-d121-4466-8bfd-1bbbe18fd0fc
+VC Firms and Email Database.xlsx,47,Astorius Private Equity,Max Berninghaus,max.berninghaus@astorius.net,0.48,Ivan BELGA,,9532de9c-65b9-4aab-a8f3-1b384bb8a623
+VC Firms and Email Database.xlsx,48,Astorius Private Equity,Georg Remshagen,georg.remshagen@astorius.net,0.552,Georges CYTRON,,99c7fd03-b5e4-4d2f-b93e-a7d5ec2288d6
+VC Firms and Email Database.xlsx,49,Astorius Private Equity,Philipp Heisig,philipp.heisig@astorius.net,0.621,Philippe Houman,patrice@macar.net,236e81ed-fb3a-494b-9094-db69110d8f67
+VC Firms and Email Database.xlsx,50,ATP Private Equity Partners,Klaus Rühne,klr@atp-pep.com,0.593,Laurent CREHANGE,lc@cabinet-crehange.com,fb8e5405-61e4-40b2-a597-eddb8af016ab
+VC Firms and Email Database.xlsx,51,Bagger-Sørensen,Søren Birn,bira@baggersorensen.com,0.519,Charles DE BAVIER,charles.debavier@dbms.legal,34f8e2db-7eda-4a31-87f8-f61cbde3152f
+VC Firms and Email Database.xlsx,52,C.W. Obel,Sebastian Noesgaard,mno@cwobel.com,0.727,Sebastian Reis,sebmerida@gmail.com,41eb923f-608b-4f24-9f3e-794807956bda
+VC Firms and Email Database.xlsx,53,Dai-ichi Life International (Europe) Limited,Keiichiro Tanabe,tanabe@dlieurope.com,0.597,TERSANE INTERNATIONAL LTD,eddie73ch@gmail.com,81935830-4bad-42bb-9769-d7f0cbd685cf
+VC Firms and Email Database.xlsx,54,ECCO Group,Diane Toth,toth@ecco.com,0.762,VERSO GROUP,jmachot@versoholdings.com,1319a62f-544e-45bf-a208-61041f9f1e34
+VC Firms and Email Database.xlsx,55,ECCO Group,,mbw@ecco.com,0.762,VERSO GROUP,jmachot@versoholdings.com,1319a62f-544e-45bf-a208-61041f9f1e34
+VC Firms and Email Database.xlsx,56,GenCap Global Advisors,Umar Khan,ukhan@gencap-advisors.com,0.636,Manraj SEKHON,manraj@sekhon.sg,e81e6e04-f27b-4d81-964b-2701e4ce8274
+VC Firms and Email Database.xlsx,57,Greater Manchester Combined Authority,Eamonn Boylan,eamonn.boylan@greatermanchester-ca.gov.uk,0.533,Emile VAN DEN BOL,emilevandenbol@brooklawncapital.com,81b04824-6086-4e08-a69d-06c2f5f23832
+VC Firms and Email Database.xlsx,58,Greater Manchester Combined Authority,Jean Brereton,jean.brereton@greatermanchester-ca.gov.uk,0.645,Jean-Pierre Bettin,,4e39325e-74f9-4f80-9e02-f608a60e715c
+VC Firms and Email Database.xlsx,59,Ingka Investments,Alex van der Have,alexander.van.der.have@ingka.com,0.703,PANT Investments Inc,vikas@cerracap.com,b8414382-e1e9-479b-b341-e84c31bdba00
+VC Firms and Email Database.xlsx,60,Julius Baer Wealth Management,Mathias Zürcher,mathias.zuercher@juliusbaer.com,0.549,TAG Capital Management,,a5be8817-481c-4623-9ff1-0b1ccfb64ffd
+VC Firms and Email Database.xlsx,61,Poul la Cour Museum,,plc@poullacour.dk,0.438,Alain DECOMBE,alain@decombe.com,f5888bd4-ba48-4adf-a81f-31eb6d5d5c28
+VC Firms and Email Database.xlsx,62,Ontario Teachers’ Pension Plan Innovation Platform,Avid Larizadeh-Duggan,avid_larizadehduggan@otpp.com,0.545,David HOLDEN,dnh4private@gmail.com,11be6624-9dd0-4a7d-b4eb-9241d6d35f07
+VC Firms and Email Database.xlsx,63,Ontario Teachers’ Pension Plan Innovation Platform,Michael Powers,michael_powers@otpp.com,0.692,Michael RYAN,mickryan@live.co.uk,ea7ec75f-d518-4cfe-a65c-70655f433a14
+VC Firms and Email Database.xlsx,64,Peugeot Invest,Julien Pierson,julien.pierson@peugeot-invest.com,0.692,Julien SERRA,julienberrut@gmail.com,a27bdabd-4cfb-446d-9523-9e9c162b4739
+VC Firms and Email Database.xlsx,65,Prima Ekuiti (UK) Ltd,Megat Ismail,megatkhairul.a@primaekuiti.co.uk,0.538,Matteo MARTINI,teinba71@gmail.com,e21e21d3-0e0f-45bc-9a0a-6d37abdfd00c
+VC Firms and Email Database.xlsx,66,University of Pittsburgh,David Almodovar,dalmodovar@cfo.pitt.edu,0.6,David BACHELIER,david.bachelier@gmail.com,205fce7d-d456-4ea9-ac62-acbfbb193010
+VC Firms and Email Database.xlsx,67,University of Pittsburgh,Michael Lima,mlima@cfo.pitt.edu,0.75,Michael RYAN,mickryan@live.co.uk,ea7ec75f-d518-4cfe-a65c-70655f433a14
+VC Firms and Email Database.xlsx,68,Export and Investment Fund of Denmark,,oha@vf.dk,0.561,PANT Investments Inc,vikas@cerracap.com,b8414382-e1e9-479b-b341-e84c31bdba00
+VC Firms and Email Database.xlsx,69,Export and Investment Fund of Denmark,,nkr@vf.dk,0.561,PANT Investments Inc,vikas@cerracap.com,b8414382-e1e9-479b-b341-e84c31bdba00
+VC Firms and Email Database.xlsx,70,Welt Ventures,Jaap Vriesendorp,jaap@welt.ventures,0.519,AS ADVISORY,ammar@asadvisoryuae.com,ce36c41f-4ccb-41ce-baf7-278a57c8c8e2
+VC Firms and Email Database.xlsx,71,Welt Ventures,Bouke Marsman,bouke@welt.ventures,0.513,INNOSIGHT VENTURES Pte Ltd,anand@ipc.fund,063e3a99-1866-421f-9553-eece3bf07ce5
+VC Firms and Email Database.xlsx,72,Tresor Asset Advisers,Erik Hansen,erikghansen@tresoradvisers.dk,0.562,AS ADVISORY,ammar@asadvisoryuae.com,ce36c41f-4ccb-41ce-baf7-278a57c8c8e2
+VC Firms and Email Database.xlsx,73,Alpha Leonis Partners AG,Erik Didriksen,didriksen@alphaleonispartners.com,0.579,SWISS PARTNERS,,82f125a7-76ef-4d9b-8781-4c1a2cc0bee7
+VC Firms and Email Database.xlsx,74,Aros Capital,Jakob Ravn,jakob@aroscapital.dk,0.69,POTASSIUM Capital,kirk@digitalblue.ky,79f6a524-24c2-407d-a754-6c6a8d9b18bc
+VC Firms and Email Database.xlsx,75,ATP Lifelong Pension,,fir@atp.dk,0.5,Antonio PERONACE,,5177d335-8401-4bf9-8487-cb3d2f9e0f7a
+VC Firms and Email Database.xlsx,76,Chr. Augustinus Fabrikker,Cecilie Glamann,CG@AUGUSTINUSFABRIKKER.DK,0.533,Philippe Houman,patrice@macar.net,236e81ed-fb3a-494b-9094-db69110d8f67
+VC Firms and Email Database.xlsx,77,Chr. Augustinus Fabrikker,Magnus Wiberg,MJ@AUGUSTINUSFABRIKKER.DK,0.56,Thomas YBERT,thomas.weber@dayzim.com,3295cfe5-eee6-4abd-91cf-94c8c98ca106
+VC Firms and Email Database.xlsx,78,Chr. Augustinus Fabrikker,,JL@AUGUSTINUSFABRIKKER.DK,0.458,Maria Christina CHANDRIS,Christina.Chandris@sostar.com,72d2b08e-72fd-4220-ac13-d9ab73f0e4c1
+VC Firms and Email Database.xlsx,79,Capital Dynamics,Markus Langner,mlangner@capdyn.com,0.69,Markus AKERMANN,akermann.markus@gmail.com,077277ca-fe09-45b0-9dd4-789fa3238f84
+VC Firms and Email Database.xlsx,80,Carnegie Mellon University,Erik Ogren,eogren@cmu.edu,0.6,Erich GRAF,nan,f1b68c31-c670-48d1-b0ad-c4812388f4b7
+VC Firms and Email Database.xlsx,81,ATRIUM Partners A/S,Kim Pedersen,krp@atriumpartners.dk,0.706,GTV Partners SA,roberto.bossi@globaltech.vc,49365fe3-a2d5-4a9c-b2ef-4249560ab28c
+VC Firms and Email Database.xlsx,82,GCM Grosvenor,Dyroff,sdyroff@gcmlp.com,0.462,LF GROUP SARL,lf.group@yahoo.com,938db8aa-ce0c-47e9-b0f7-23ba9c20e7a1
+VC Firms and Email Database.xlsx,83,GCM Grosvenor,Geater,sgeater@gcmlp.com,0.556,Serge AURIER,Aurier.tottenham@gmail.com,a4fd57c5-202c-44d5-b5c9-c970fe97f66a
+VC Firms and Email Database.xlsx,84,Kew Capital,Benson Li,benson.li@kewcapital.com,0.621,GESTIO CAPITAL LTD,matteo@gestiocapital.com,7346d7bb-7dc0-45d0-bb5f-2b4922505e7d
+VC Firms and Email Database.xlsx,85,Kirk Kapital A/S,Teis Knuthsen,tk@kirkkapital.dk,0.541,SMR3T Capital Pte Ltd,,5b87e620-5cd6-437b-a97f-6f0f3e3bab07
+VC Firms and Email Database.xlsx,86,Kirk Kapital A/S,,tfab@kirkkapital.dk,0.541,SMR3T Capital Pte Ltd,,5b87e620-5cd6-437b-a97f-6f0f3e3bab07
+VC Firms and Email Database.xlsx,87,Kirk Kapital A/S,Mads Koefoed-Hansen,mkh@kirkkapital.dk,0.541,SMR3T Capital Pte Ltd,,5b87e620-5cd6-437b-a97f-6f0f3e3bab07
+VC Firms and Email Database.xlsx,88,Lægernes Pension & Bank,Thomas Ladefoged,tla@lpb.dk,0.571,Thomas YBERT,thomas.weber@dayzim.com,3295cfe5-eee6-4abd-91cf-94c8c98ca106
+VC Firms and Email Database.xlsx,89,NYSTRS,Gerald Yahoudy,gerald.yahoudy@nystrs.org,0.552,Erwan Tarouilly,erwan.tarouilly@gmail.com,60fe12b2-3a1c-4fb9-b039-3b321393d5d2
+VC Firms and Email Database.xlsx,90,NORD Holding,Kim Schneider,kim.schneider@nordholding.dk,0.72,ZEBRA HOLDING,nathalie.beslay@plus-avocats.fr,856f36aa-0e1d-4f05-b6b4-635ea1a984a4
+VC Firms and Email Database.xlsx,91,Novo Nordisk Fonden,Morten Jørgensen,mbj@novo.dk,0.5,Mayuriben JOGANI,yashjogani95@gmail.com,7f066910-063c-4bc6-8999-af10132b78fc
+VC Firms and Email Database.xlsx,92,Novo Nordisk Fonden,Stephen van Helden,svk@novo.dk,0.625,Stephen JORDAN,stevej1405@yahoo.com,9045e2ec-a0bb-474b-af82-fee83fa5eef1
+VC Firms and Email Database.xlsx,93,New York City Comptroller,Eneasz Kądziela,ekadzie@comptroller.nyc.gov,0.48,Jean DUTIL,jjdutil@yahoo.ca,4da51840-5941-4401-b368-b74fad85d586
+VC Firms and Email Database.xlsx,94,Future Standard,Alexander von Wolffradt,awolffradt@portad.com,0.526,STRUCTURED ISSUANCE Ltd,,4c26cb2f-083d-4a9a-8301-69795259424c
+VC Firms and Email Database.xlsx,95,QIC,Rune Jepsen,r.jepsen@qic.com,0.485,TRUE INVESTMENTS 4 LLC,lee@randland.com,1a259349-5f9b-40c5-a8b9-ab466ede6861
+VC Firms and Email Database.xlsx,96,Realdania,Kaspar Jannings,kja@realdania.dk,0.571,Steve MANNING,chris@searchengineoptimizationinatlanta.com,25288dc0-7e63-4da4-b1c3-b97eeca04664
+VC Firms and Email Database.xlsx,97,Realdania,Jens Nørgaard,jkn@realdania.dk,0.522,Bharat JATANIA,danny@jataniagroup.com,702b2d12-09e0-4318-a096-21f8c4330d40
+VC Firms and Email Database.xlsx,98,Schroders Capital,Vahit Alili,vahit.alili@schroders.com,0.588,POTASSIUM Capital,kirk@digitalblue.ky,79f6a524-24c2-407d-a754-6c6a8d9b18bc
+VC Firms and Email Database.xlsx,99,Schroders Capital,Tanja Lukas,tanja.lukas@schroders.com,0.588,POTASSIUM Capital,kirk@digitalblue.ky,79f6a524-24c2-407d-a754-6c6a8d9b18bc
+VC Firms and Email Database.xlsx,100,Scope Investment,Jonas Melchior,jm@scopeinvestment.dk,0.667,PANT Investments Inc,vikas@cerracap.com,b8414382-e1e9-479b-b341-e84c31bdba00
+VC Firms and Email Database.xlsx,101,Secure Spectrum,Jan Bak,jb@securespectrum.dk,0.588,Ivan BELGA,,9532de9c-65b9-4aab-a8f3-1b384bb8a623
+VC Firms and Email Database.xlsx,102,Villum Fonden,Frederik Skoglund,psk@veluxfoundations.dk,0.6,Peter HOGLAND,,0d18b5d6-fd7c-403b-931a-b9af09ee9715
+VC Firms and Email Database.xlsx,103,Villum Fonden,Lars Hansen,lha@veluxfoundations.dk,0.593,Laurent CREHANGE,lc@cabinet-crehange.com,fb8e5405-61e4-40b2-a597-eddb8af016ab
+VC Firms and Email Database.xlsx,104,Sterling Grace Corporation,Grace,jgrace@sterlinggrace.com,0.5,Elizabeth GRACE,link2elizabeth@yahoo.com,9fc05243-a77f-4dfb-a441-fbee821710f8
+VC Firms and Email Database.xlsx,105,,,lotz69@gmail.com,0.0,Phaena Advisory Ltd,judith.itambo@gmail.com,79a689ba-cace-46b3-881c-89a0deb3632b
+VC Firms and Email Database.xlsx,106,,Lisa Tchenguiz,lisatchenguiz@gmail.com,0.519,Michel GUERIN,michel.iae@univ-paris1.fr,193ca7da-80aa-413a-9073-f415ea18f898
+VC Firms and Email Database.xlsx,107,,Siavash Habibi,siavash.habibi@gmail.com,0.519,Sandra CABIAN,cabian@bluewin.ch,e92ed0be-a69a-4cb4-a623-42ce2467ca4e
+VC Firms and Email Database.xlsx,108,CC Studios,Artan Mansouri,artan@cc-studio.cc,0.621,Jonathan Menoud,jonathan.rejaud@gmail.com,e3230a73-201e-47e7-aff1-7e0a9e81a69f
+VC Firms and Email Database.xlsx,109,IK Investment Partners,Mads Larsen,mads.ryum.larsen@ikpartners.com,0.681,KRANA INVESTMENTS PTE. LTD.,lang@orbisadvisory.net,19355c51-e298-4747-bd53-0e27f8aa6c16
+VC Firms and Email Database.xlsx,110,,Charles Vivian,charlesvivianuk@yahoo.com,0.846,Charles RIVA,Charles@charlesrivacollection.com,40af6e6d-0fe7-4f4e-b430-c0119e7f439a
+VC Firms and Email Database.xlsx,111,Groeneveld Groep,Henk Groeneveld,h.groeneveld@groeneveld.eu,0.533,LEE RAND GROUP,lee@randland.com,fa08fe4c-5b2b-4143-9518-d508537172ce
+VC Firms and Email Database.xlsx,112,,Celia Forshew,celiaforshew@gmail.com,0.538,Daniel Aufore,d.aufaure.202@gmail.com,ff1b17a1-c03d-4b8f-9fac-8465018faf33
+VC Firms and Email Database.xlsx,113,Egeria Capital,Mark Wetzels,mark@wetzels.nl,0.688,GESTIO CAPITAL LTD,matteo@gestiocapital.com,7346d7bb-7dc0-45d0-bb5f-2b4922505e7d
+VC Firms and Email Database.xlsx,114,Avedon Capital Partners BV,Alfred Tulp,tulpalfred@gmail.com,0.607,Discovery Capital Managers Ltd,af@auxbs.com,30d5c195-5f83-4076-8a4b-4e3144bade5b
+VC Firms and Email Database.xlsx,115,WPC Properties ApS,Rubén Martinez,ruben.wpc@gmail.com,0.571,Matteo MARTINI,teinba71@gmail.com,e21e21d3-0e0f-45bc-9a0a-6d37abdfd00c
+VC Firms and Email Database.xlsx,116,Salling Group,Peter Bang,peter@bang.dk,0.696,Peter HOGLAND,,0d18b5d6-fd7c-403b-931a-b9af09ee9715
+VC Firms and Email Database.xlsx,117,Ingentive,Stuart Fenton,stuartfenton@outlook.com,0.533,Scott LIVINGSTONE,,9693d037-e631-44dd-95a0-50cea93c5cf7
+VC Firms and Email Database.xlsx,118,Extantia Capital,Torben Schreiter,torben@schreiter.info,0.667,POTASSIUM Capital,kirk@digitalblue.ky,79f6a524-24c2-407d-a754-6c6a8d9b18bc
+VC Firms and Email Database.xlsx,119,,Chris Cheney,chrischeney100@gmail.com,0.516,Christopher PAULSEN,c_lapaque@hotmail.com,05e75919-b093-44de-b526-37f7e76fc4d7
+VC Firms and Email Database.xlsx,120,,Barnaby Dawe,barnaby.dawe@gmail.com,0.72,Barnaby MOORE,john@mooreandmooreinvestments.com,d44a1f79-0752-403c-814d-f49afd887089
+VC Firms and Email Database.xlsx,121,,Alex Miller,alex.miller1000@gmail.com,0.522,Andrew MEYER,Aameyer@gmail.com,37a063a2-40b3-4be0-aafe-9a68f913c473
+VC Firms and Email Database.xlsx,122,KMK Holding,Mads Høgfeldt,Mads@hoegfeldt.eu,0.667,ZEBRA HOLDING,nathalie.beslay@plus-avocats.fr,856f36aa-0e1d-4f05-b6b4-635ea1a984a4
+VC Firms and Email Database.xlsx,123,Bygma Gruppen A/S,Peter Christiansen,phc@bygma.dk,0.643,MA GROUP AG,aicher@ma-group.ch,3e75e4c5-6071-410d-bb55-d4ede85ab93d
+VC Firms and Email Database.xlsx,124,EQT,Mads Ditlevsen,mads.ditlevsen@eqtpartners.com,0.485,Michiel VAN DEURSEN,,e0946196-b397-4389-b82a-9e5655e3ac4d
+VC Firms and Email Database.xlsx,125,,Arco van Nieuwland,arvanie@gmail.com,0.5,Ivan BELGA,,9532de9c-65b9-4aab-a8f3-1b384bb8a623
+VC Firms and Email Database.xlsx,126,Plastow,Robert,robert@plastow.com,0.632,Robert SALMON,,70084284-f0ed-4204-935b-a55c3aae2b9e
+VC Firms and Email Database.xlsx,127,,Gavin Patterson,gavinepatterson@gmail.com,0.6,GTV Partners SA,roberto.bossi@globaltech.vc,49365fe3-a2d5-4a9c-b2ef-4249560ab28c
+VC Firms and Email Database.xlsx,128,Epital Health,Peder Sahlholt,peder.sahlholt@hotmail.com,0.593,Peter HOGLAND,,0d18b5d6-fd7c-403b-931a-b9af09ee9715
+VC Firms and Email Database.xlsx,129,The David Collection,Mazanti,n.mazanti@davidmus.dk,0.625,David HOLDEN,dnh4private@gmail.com,11be6624-9dd0-4a7d-b4eb-9241d6d35f07
+VC Firms and Email Database.xlsx,130,Selvstændig,Viggo Jensen,vnj@ridehus.dk,0.5,ROSEN INVEST HOLDINGS Inc,,c42adb05-f412-489a-b1a2-59607e1efb05
+VC Firms and Email Database.xlsx,131,CHC Company,,cfr@chccompany.com,0.514,INNOVATECH COMPARTMENT 8,anand@set-cap.com,04696d2f-8fb8-4db9-9968-1658c85c028d
+VC Firms and Email Database.xlsx,132,Apollo Global Management,Gernot Lohr,glohr@apollo.com,0.652,TAG Capital Management,,a5be8817-481c-4623-9ff1-0b1ccfb64ffd
+VC Firms and Email Database.xlsx,133,Topsoe,,hgba@topsoe.dk,0.556,Tobias JOERN,,55a3de24-70eb-4cd9-8b63-29406242632b
+VC Firms and Email Database.xlsx,134,Scatec Innovation,John Andersen,john.andersen@scatec.no,0.692,John ACKERLEY,,0339cb56-2073-4eaf-bd16-b5aee1578d0f
+VC Firms and Email Database.xlsx,135,General Oriental Investments SA,Livia Schürch,livia.schuerch@generaloriental.com,0.627,PANT Investments Inc,vikas@cerracap.com,b8414382-e1e9-479b-b341-e84c31bdba00
+VC Firms and Email Database.xlsx,136,Cammeby's International Ltd,Daniel Weiner,danielw@cammebys.com,0.769,TERSANE INTERNATIONAL LTD,eddie73ch@gmail.com,81935830-4bad-42bb-9769-d7f0cbd685cf
+VC Firms and Email Database.xlsx,137,KIRKBI A/S,Bo Gilje,bo.gilje@kirkbi.com,0.5,Hong NGOC LE,nina_le21@hotmail.com,546c627d-4c99-44a7-ade9-a38e79307b08
+VC Firms and Email Database.xlsx,138,KIRKBI A/S,Lars Bone,lars.bone@kirkbi.com,0.571,Garson Brandon LEVY,g.brandon.levy@gmail.com,b1bec6b1-22a2-4088-a69c-7a26358862db
+VC Firms and Email Database.xlsx,139,Reig Patrimoni,Xavier Navas,xns@reig.ad,0.64,Xavier GODRON,,50141cbb-d4f1-49f0-8bb4-240c05cb02b2
+VC Firms and Email Database.xlsx,140,Reig Patrimoni,Natalia Torres,net@reig.ad,0.571,Sebastian Reis,sebmerida@gmail.com,41eb923f-608b-4f24-9f3e-794807956bda
+VC Firms and Email Database.xlsx,141,Fairway Asset Management,John Vorrias,john.vorrias@fairway-asset.com,0.615,John BARROWMAN,cjohnbrown@gmail.com,43b6a41c-ef4c-4de0-ae3b-d70d0d9e4b43
+VC Firms and Email Database.xlsx,142,Fairway Asset Management,Alex Vamvakas,alex.vamvakas@fairway-asset.com,0.609,TAG Capital Management,,a5be8817-481c-4623-9ff1-0b1ccfb64ffd
+VC Firms and Email Database.xlsx,143,Lange Family Office,Berthold Lange,bnl@langefo.com,0.727,FigTree Family Office Ltd,christopher.gregory@figtreegroup.net,80eab681-0f34-4c73-96dd-884862dc3816
+VC Firms and Email Database.xlsx,144,Tribus Capital Partners,,jls@tribuscapital.com,0.595,SWISS PARTNERS,,82f125a7-76ef-4d9b-8781-4c1a2cc0bee7
+VC Firms and Email Database.xlsx,145,Tribus Capital Partners,,ghh@tribuscapital.com,0.595,SWISS PARTNERS,,82f125a7-76ef-4d9b-8781-4c1a2cc0bee7
+VC Firms and Email Database.xlsx,146,Green Capital,Nitin Shakdher,nitin@thegreencapital.net,0.645,GESTIO CAPITAL LTD,matteo@gestiocapital.com,7346d7bb-7dc0-45d0-bb5f-2b4922505e7d
+VC Firms and Email Database.xlsx,147,,,musatia@gmail.com,0.0,Phaena Advisory Ltd,judith.itambo@gmail.com,79a689ba-cace-46b3-881c-89a0deb3632b
+VC Firms and Email Database.xlsx,148,GFO Management AG,Davide Rima,davide.rima@gfom.ch,0.703,VERSO MANAGEMENT LTD.,jmachot@versoholdings.com,06624460-9b35-448a-aa59-cb4b64e8d244
+VC Firms and Email Database.xlsx,149,CrimsoNox Capital,Amos Soo,amos.soo@crimsonox.com,0.588,POTASSIUM Capital,kirk@digitalblue.ky,79f6a524-24c2-407d-a754-6c6a8d9b18bc
+VC Firms and Email Database.xlsx,150,CrimsoNox Capital,Terry Ho,terry.ho@crimsonox.com,0.588,POTASSIUM Capital,kirk@digitalblue.ky,79f6a524-24c2-407d-a754-6c6a8d9b18bc
+VC Firms and Email Database.xlsx,151,Narmo Capital,Salem Tamer,salem.tamer@narmocapital.com,0.667,POTASSIUM Capital,kirk@digitalblue.ky,79f6a524-24c2-407d-a754-6c6a8d9b18bc
+VC Firms and Email Database.xlsx,152,Ferd,Frida Lillebøe,rli@ferd.no,0.667,SFRD0,,9e5f318a-32a9-42b3-b0b2-ff5422fd8b39
+VC Firms and Email Database.xlsx,153,MV Holding,Gunduz Kucukertunc,gkucukertunc@mvholding.com,0.75,VERSO HOLDINGS,jmachot@versoholdings.com,cefd6688-1bae-475f-8e8c-0958bddbea11
+VC Firms and Email Database.xlsx,154,The Plaza Group,Louis Reijtenbagh,jrejtenbagh@groupplaza.com,0.621,LEE RAND GROUP,lee@randland.com,fa08fe4c-5b2b-4143-9518-d508537172ce
+VC Firms and Email Database.xlsx,155,Arkitektfirmaet Carsten Følsgaard a/S,Carsten Følsgaard,ph@foelsgaard.dk,0.483,Mark HAYWARD,vip.director@vipaviationservices.co.uk,f5ca7c9a-be30-4141-9f63-bfba0479f383
+VC Firms and Email Database.xlsx,156,M. Goldschmidt Holding A/S,Søren Hansen,sbh@mgh.dk,0.571,Laurent CREHANGE,lc@cabinet-crehange.com,fb8e5405-61e4-40b2-a597-eddb8af016ab
+VC Firms and Email Database.xlsx,157,1888 Investments,Jeff Bush,jeffrey.bush@1888investments.com,0.667,PANT Investments Inc,vikas@cerracap.com,b8414382-e1e9-479b-b341-e84c31bdba00
+VC Firms and Email Database.xlsx,158,T-Minus,Ian Forshew,ian@wearetminus.com,0.583,Daniel Aufore,d.aufaure.202@gmail.com,ff1b17a1-c03d-4b8f-9fac-8465018faf33
+VC Firms and Email Database.xlsx,159,Alta Group,Muzahir Degani,muzahir.degani@alta.exchange,0.667,MA GROUP AG,aicher@ma-group.ch,3e75e4c5-6071-410d-bb55-d4ede85ab93d
+VC Firms and Email Database.xlsx,160,Alta Group,Carlin Liang,carlin.liang@alta.exchange,0.667,MA GROUP AG,aicher@ma-group.ch,3e75e4c5-6071-410d-bb55-d4ede85ab93d
+VC Firms and Email Database.xlsx,161,Alta Group,Huiann Tan,huiann.tan@alta.exchange,0.667,MA GROUP AG,aicher@ma-group.ch,3e75e4c5-6071-410d-bb55-d4ede85ab93d
+VC Firms and Email Database.xlsx,162,,Nick Eskandari,ckeskandari@gmail.com,0.538,Eric SARASIN,sarasin@esarasin.com,698833c1-7ff3-4fa7-b7d0-733d8547cf43
+VC Firms and Email Database.xlsx,163,Wictor Family Office,Simon Sjöö,simon.sjoo@wictorfamilyoffice.com,0.756,FigTree Family Office Ltd,christopher.gregory@figtreegroup.net,80eab681-0f34-4c73-96dd-884862dc3816
+VC Firms and Email Database.xlsx,164,Wictor Family Office,Sara Viktorsson,sara@wictorfamilyoffice.com,0.756,FigTree Family Office Ltd,christopher.gregory@figtreegroup.net,80eab681-0f34-4c73-96dd-884862dc3816
+VC Firms and Email Database.xlsx,165,DIG Investment,Nicolas Trad,nicolas.trad@diginvestment.com,0.647,PANT Investments Inc,vikas@cerracap.com,b8414382-e1e9-479b-b341-e84c31bdba00
+VC Firms and Email Database.xlsx,166,DIG Investment,Giuseppe Errante,giuseppe.errante@diginvestment.com,0.647,PANT Investments Inc,vikas@cerracap.com,b8414382-e1e9-479b-b341-e84c31bdba00
+VC Firms and Email Database.xlsx,167,DIG Investment,Daniel Aaxman,daniel.aaxman@diginvestment.com,0.647,PANT Investments Inc,vikas@cerracap.com,b8414382-e1e9-479b-b341-e84c31bdba00
+VC Firms and Email Database.xlsx,168,ROE Capital Management,John Roe,joe@roe-capital.com,0.864,TAG Capital Management,,a5be8817-481c-4623-9ff1-0b1ccfb64ffd
+VC Firms and Email Database.xlsx,169,Empros Capital,Sri Bhamidipati,sriharsha@empros.com,0.625,GESTIO CAPITAL LTD,matteo@gestiocapital.com,7346d7bb-7dc0-45d0-bb5f-2b4922505e7d
+VC Firms and Email Database.xlsx,170,MedAx Capital Group,Sean Murphy,smurphy@medaxcap.com,0.55,SMR3T Capital Pte Ltd,,5b87e620-5cd6-437b-a97f-6f0f3e3bab07
+VC Firms and Email Database.xlsx,171,Wildcat Management Solutions,Niklas Boman,N@wildcat.se,0.583,VERSO MANAGEMENT LTD.,jmachot@versoholdings.com,06624460-9b35-448a-aa59-cb4b64e8d244
+VC Firms and Email Database.xlsx,172,PE Alliance,Karl Gracián,karl@pe-alliance.se,0.571,Andrey GORYAINOV,,0dc9ff3f-1013-42f5-9a51-3531fe36cc7f
+VC Firms and Email Database.xlsx,173,Kimpa,Adrien Frèrejacque,adrien@kimpa.co,0.5,Damien Krauser,damien.krauser@gmail.com,24c96f5a-0b23-4e40-b562-c0570df12fd8
+VC Firms and Email Database.xlsx,174,Type One Ventures,Tiffany Sun,tiffany@typeone.vc,0.48,Sebastian Reis,sebmerida@gmail.com,41eb923f-608b-4f24-9f3e-794807956bda
+VC Firms and Email Database.xlsx,175,Flight Fund,Molly O’Brien,molly@flightfund.com,0.519,GORILLA PE Inc,,9cb830ec-9a56-49bc-a6ef-3732b8e354d4
+VC Firms and Email Database.xlsx,176,Launcher,Erik Engellau-Nilsson,erik@launcher.vc,0.583,Laurent CREHANGE,lc@cabinet-crehange.com,fb8e5405-61e4-40b2-a597-eddb8af016ab
+VC Firms and Email Database.xlsx,177,DSM Capital,Mona Hautala,mona@dsmcapital.io,0.714,POTASSIUM Capital,kirk@digitalblue.ky,79f6a524-24c2-407d-a754-6c6a8d9b18bc
+VC Firms and Email Database.xlsx,178,DSM Capital,Jorge Lepra,jorge@dsmcapital.io,0.714,POTASSIUM Capital,kirk@digitalblue.ky,79f6a524-24c2-407d-a754-6c6a8d9b18bc
+VC Firms and Email Database.xlsx,179,Founders Capital,Richard Hadler,richard@founders-capital.com,0.606,POTASSIUM Capital,kirk@digitalblue.ky,79f6a524-24c2-407d-a754-6c6a8d9b18bc
+VC Firms and Email Database.xlsx,180,North Ventures,Mikkel Rørvig,mr@northventures.dk,0.6,INNOSIGHT VENTURES Pte Ltd,anand@ipc.fund,063e3a99-1866-421f-9553-eece3bf07ce5
+VC Firms and Email Database.xlsx,181,Acta,Henrik Albertsen,hal@acta.vc,0.588,Giovanni ALBERTINI,,339f94c0-6be8-4590-bbbd-386f6fd30248
+VC Firms and Email Database.xlsx,182,Acta,Kristoffer Edin,ke@acta.vc,0.588,Christopher PAULSEN,c_lapaque@hotmail.com,05e75919-b093-44de-b526-37f7e76fc4d7
+VC Firms and Email Database.xlsx,183,"Zanbato, Inc",Christopher Fenichell,cfenichell@zanbato.com,0.7,Christopher PAULSEN,c_lapaque@hotmail.com,05e75919-b093-44de-b526-37f7e76fc4d7
+VC Firms and Email Database.xlsx,184,,Salar Tavakoli,s.tavakolianaraki@gmail.com,0.583,SAMIR KOHI,kohisamir3@gmail.com,7ffea7ed-32a9-4aab-a366-cea7e06d8490
+VC Firms and Email Database.xlsx,185,,Siavosh Zarrasvand,siavosh.zarrasvand@gmail.com,0.5,Alberto RAVANO,,cf8a4352-7624-4a97-bb12-d6e5ebc71c5d
+VC Firms and Email Database.xlsx,186,Mirai Capital,Ivan Bukharov,ivan@miraicapital.net,0.629,TELEGRAPH HILL CAPITAL,lgroy@thcap.com,4da60014-b403-48f1-bfb6-47f85686ea68
+VC Firms and Email Database.xlsx,187,Flywheel Capital,Gavin Cunningham,gavin@flywheelcapital.io,0.579,TELEGRAPH HILL CAPITAL,lgroy@thcap.com,4da60014-b403-48f1-bfb6-47f85686ea68
+VC Firms and Email Database.xlsx,188,Banyan Square Partners,Afo Olowolafe,aolowolafe@banyansq.com,0.65,N SQUARE PATEL LLC,,44156505-451c-4200-8f2a-836eadf9ef78
+VC Firms and Email Database.xlsx,189,Banyan Square Partners,Anthony Testa,atesta@banyansq.com,0.65,N SQUARE PATEL LLC,,44156505-451c-4200-8f2a-836eadf9ef78
+VC Firms and Email Database.xlsx,190,Aequitas S.A.S.U,Lina Helmér,lina@aequitas.se,0.583,Miro HAECHLER,,fd1f1505-5317-4e1e-9653-a1fe327017e1
+VC Firms and Email Database.xlsx,191,Revon Ventures,Lennu Keinänen,lennu@revon.vc,0.552,Johann AKERMANN,akermann.markus@gmail.com,afb8d124-32b7-4959-8af9-5e96f0383159
+VC Firms and Email Database.xlsx,192,Martect,Martyn Macpherson,martyn@martect.com,0.606,Martin AVETISYAN,avemartin@gmail.com,046c9f9b-4f57-41b4-a8ce-77a81d976bac
+VC Firms and Email Database.xlsx,193,SecondLane,André Nabais,andre@secondlane.io,0.64,Sandra CABIAN,cabian@bluewin.ch,e92ed0be-a69a-4cb4-a623-42ce2467ca4e
+VC Firms and Email Database.xlsx,194,Claresco,Michel Guerriche,mg@claresco.fr,0.828,Michel GUERIN,michel.iae@univ-paris1.fr,193ca7da-80aa-413a-9073-f415ea18f898
+VC Firms and Email Database.xlsx,195,ABSTRA agency,Richard Freemanson,richard@abstra.agency,0.519,Alberto RAVANO,,cf8a4352-7624-4a97-bb12-d6e5ebc71c5d
+VC Firms and Email Database.xlsx,196,Zanbato,Arnav Guleria,arnav.guleria@zanbatosecurities.com,0.56,Charles RIVA,Charles@charlesrivacollection.com,40af6e6d-0fe7-4f4e-b430-c0119e7f439a
+VC Firms and Email Database.xlsx,197,Pear VC,Pejman Nozad,pejman@pear.vc,0.526,Patrick CORR,jrcorradino@gmail.com,2d1851ef-8256-4f17-b306-e7308fd1d571
+VC Firms and Email Database.xlsx,198,Enveq Investments,Kasra Pezeshki,Kasra@enveq.com,0.703,PANT Investments Inc,vikas@cerracap.com,b8414382-e1e9-479b-b341-e84c31bdba00
+VC Firms and Email Database.xlsx,199,KIMPA,Olivier Rieu,olivier@kimpa.co,0.72,Oliver WRIGHT,Wordbass@yahoo.com,6b132a0f-9c83-4047-b987-6b027c7e28e6
+VC Firms and Email Database.xlsx,200,Soi.ai,Wayne,wayne@soi.ai,0.632,Sofiane Zaiem,sz@sesame-financial.com,4b4d6dab-8ac2-4a88-9431-0721a0bff5c4
+VC Firms and Email Database.xlsx,201,Solvable Syndicate,Daniel Ruben,daniel@solvablesyndicate.com,0.72,Daniel Aufore,d.aufaure.202@gmail.com,ff1b17a1-c03d-4b8f-9fac-8465018faf33
+VC Firms and Email Database.xlsx,202,Google,Ibrahim Ulukaya,ulukaya@google.com,0.538,Imrat HAYAT,,1bb4d74d-50e7-410d-b852-923c4f26d504
+VC Firms and Email Database.xlsx,203,Galvanize Climate,Tom Steyer,tom.steyer@galvanizeclimate.com,0.636,Thomas YBERT,thomas.weber@dayzim.com,3295cfe5-eee6-4abd-91cf-94c8c98ca106
+VC Firms and Email Database.xlsx,204,Horizon Technology Finance,Todd McDonald,todd@horizontechfinance.com,0.522,Theo Costa,c.theo@genii-capital.com,01aaf688-bfe5-4375-bc39-7f44c2f90c1e
+VC Firms and Email Database.xlsx,205,Tom McInerney,Tom McInerney,tgm@tgm.com,0.538,John ACKERLEY,,0339cb56-2073-4eaf-bd16-b5aee1578d0f
+VC Firms and Email Database.xlsx,206,Gevulot,Teemu Päivinen,teemu@gevulot.com,0.519,Steve MANNING,chris@searchengineoptimizationinatlanta.com,25288dc0-7e63-4da4-b1c3-b97eeca04664
+VC Firms and Email Database.xlsx,207,Silicon Climate,Sundeep Ahuja,sundeep@climatecap.co,0.615,ONC Limited,joanna.bodell@zedra.com,8f47cdb2-8ccf-4ca1-a364-bed0fb48e3e8
+VC Firms and Email Database.xlsx,208,Matchday,Sebastien de Halleux,sebastien@matchday.com,0.632,Imrat HAYAT,,1bb4d74d-50e7-410d-b852-923c4f26d504
+VC Firms and Email Database.xlsx,209,Google,Saurabh Daftary,sdaftary@google.com,0.593,Sarah DAVIES,sam_davies@shelter.org.uk,ecde52d9-0175-4b25-afe6-6d7da53d201f
+VC Firms and Email Database.xlsx,210,Contentstack,Scott Cunningham,scott.cunningham@contentstack.com,0.552,Steve MANNING,chris@searchengineoptimizationinatlanta.com,25288dc0-7e63-4da4-b1c3-b97eeca04664
+VC Firms and Email Database.xlsx,211,H C Farm,,scot@hc.farm,0.48,Karthic JAYARAMAN,Karthic.jayaraman@gmail.com,1515649c-4e17-47cf-81eb-cdd07ee1e72e
+VC Firms and Email Database.xlsx,212,Mosaic General Partnership,Sam Landman,sam@mgp.vc,0.571,Samuel GRANDCHAMP,samuelgrandchamp@gmail.com,4be4bb44-11a3-4e0e-aa40-e8eea4ea56d9
+VC Firms and Email Database.xlsx,213,RemoteTeam,Sahin Boydas,sahin.boydas@gusto.com,0.583,Sarah DAVIES,sam_davies@shelter.org.uk,ecde52d9-0175-4b25-afe6-6d7da53d201f
+VC Firms and Email Database.xlsx,214,Founders Fund,Ryan Petersen,ryan@foundersfund.com,0.5,Michiel VAN DEURSEN,,e0946196-b397-4389-b82a-9e5655e3ac4d
+VC Firms and Email Database.xlsx,215,IoT Hub,,rk@iothub.vc,0.444,Fabien ROTH,info@fabienpont.ch,85b23400-3897-4856-85f5-e13588bf9509
+VC Firms and Email Database.xlsx,216,Clarity AI,Rebeca Minguela,rebeca.minguela@clarity.ai,0.667,CAREITAS,fmonteleone@careit.fr,bf1dfa64-d121-4466-8bfd-1bbbe18fd0fc
+VC Firms and Email Database.xlsx,217,8090 Industries,Rayyan Islam,rayyan@8090industries.com,0.522,Ayman JOMAA,,53a2b893-cb8d-45a1-b31d-b0b52ce14be9
+VC Firms and Email Database.xlsx,218,Marathon Venture Capital,Panos Papadopoulos,panos@marathon.vc,0.522,REVERY CAPITAL Limited,ad@reverygroup.com,0e52c740-1356-4fbc-bbee-7ce94a4cc08d
+VC Firms and Email Database.xlsx,219,Not Boring,Packy McCormick,packy@notboring.co,0.593,Patrick CORR,jrcorradino@gmail.com,2d1851ef-8256-4f17-b306-e7308fd1d571
+VC Firms and Email Database.xlsx,220,B12,Nitesh Banta,niteshbanta@b12.io,0.56,Eddie BEARNOT,,384ac2da-f9b8-4922-86c3-1502cccf66d0
+VC Firms and Email Database.xlsx,221,IPT Well Solutions,Neel Duncan,neel.duncan@iptwell.com,0.6,Cité Gestion,s.demierre@cite-gestion.com,533e5b0e-c53f-4a34-a678-88ade99db54a
+VC Firms and Email Database.xlsx,222,UMD College Park,Edward Allen,nedallen@umd.edu,0.583,David HOLDEN,dnh4private@gmail.com,11be6624-9dd0-4a7d-b4eb-9241d6d35f07
+VC Firms and Email Database.xlsx,223,Survivor Spring,Nadav Ben-Chanoch,nadav@survivorspring.com,0.519,Eric SARASIN,sarasin@esarasin.com,698833c1-7ff3-4fa7-b7d0-733d8547cf43
+VC Firms and Email Database.xlsx,224,Celesta Capital,Michael Marks,marks@celesta.vc,0.72,Michael RYAN,mickryan@live.co.uk,ea7ec75f-d518-4cfe-a65c-70655f433a14
+VC Firms and Email Database.xlsx,225,University of Cincinnati College,Brett Kissela,kissela@executiveboard.com,0.538,Bruce HAWKINS,bjoh1010@gmail.com,b5502e75-ed90-45a8-8037-fca4fe1dbee0
+VC Firms and Email Database.xlsx,226,Morgan Stanley Expansion Capital,Kevin Han,kevin.han@morganstanley.com,0.583,Kevin WILTSHIRE,,3bcf1a6c-9c51-4a32-89da-33d89e596ccd
+VC Firms and Email Database.xlsx,227,Markit,Kevin Gould,kevin.gould@markit.eu,0.571,CAREITAS,fmonteleone@careit.fr,bf1dfa64-d121-4466-8bfd-1bbbe18fd0fc
+VC Firms and Email Database.xlsx,228,Enki Solar Investments,Kerim Baran,kerim@enkisolar.com,0.696,Eric SARASIN,sarasin@esarasin.com,698833c1-7ff3-4fa7-b7d0-733d8547cf43
+VC Firms and Email Database.xlsx,229,Seven Seven Six,Katelin Holloway,k@sevensevensix.com,0.571,Herve STEIMES,lomami@me.com,9c2179a0-0791-4835-bd61-4bbaf145db6d
+VC Firms and Email Database.xlsx,230,Embedded Ventures,Jordan Noone,jordan@embedded.ventures,0.538,Benjamin JONES,blj@VITOL.com,bd567786-b869-4104-a874-6acfa439c5ed
+VC Firms and Email Database.xlsx,231,Shutterstock,Jon Oringer,jon@shutterstock.com,0.522,Hong NGOC LE,nina_le21@hotmail.com,546c627d-4c99-44a7-ade9-a38e79307b08
+VC Firms and Email Database.xlsx,232,One Better Ventures,John Replogle,john@1bv.co,0.615,John ACKERLEY,,0339cb56-2073-4eaf-bd16-b5aee1578d0f
+VC Firms and Email Database.xlsx,233,Gotham Gal Ventures,Joanne Wilson,joanne@solomonwilson.com,0.522,Jean DUTIL,jjdutil@yahoo.ca,4da51840-5941-4401-b368-b74fad85d586
+VC Firms and Email Database.xlsx,234,New Enterprise Associates,Jeff Immelt,jimmelt@nea.com,0.615,Caspian Enterprises Limited,,58e068b6-e875-4152-95a9-82204583f59b
+VC Firms and Email Database.xlsx,235,Schox Patent Group,Jeff Schox,jeff@schox.com,0.562,LEE RAND GROUP,lee@randland.com,fa08fe4c-5b2b-4143-9518-d508537172ce
+VC Firms and Email Database.xlsx,236,Kleiner Perkins,John Doerr,jdoerr@kleinerperkins.com,0.609,John ACKERLEY,,0339cb56-2073-4eaf-bd16-b5aee1578d0f
+VC Firms and Email Database.xlsx,237,Mercury,Immad Akhund,immad@mercury.com,0.6,Kim LUND,jcl@usfamily.net,f5d59ea7-68f2-41a7-85a2-811e826fae18
+VC Firms and Email Database.xlsx,238,International Medical University,Gerry George,gerry.george@aimu.us,0.741,Georgi GEORGIEV,georgiev.georgio@gmail.com,980a8b22-1a32-4c67-a9f6-abbc4bedeef1
+VC Firms and Email Database.xlsx,239,Ultiro,Michael Akampa,michael.akampa@ultiro.se,0.692,Michael RYAN,mickryan@live.co.uk,ea7ec75f-d518-4cfe-a65c-70655f433a14
+VC Firms and Email Database.xlsx,240,Redpill,Lina Wallmander,lw@rpinvest.se,0.519,Philip ALGAR,philipwpillar@gmail.com,fab2d2df-ca6a-4e18-aa08-6d8e7b1ffc64
+VC Firms and Email Database.xlsx,241,TF Capital,James Matin-Lewis,james@tokenfolio.co,0.667,POTASSIUM Capital,kirk@digitalblue.ky,79f6a524-24c2-407d-a754-6c6a8d9b18bc
+VC Firms and Email Database.xlsx,242,The Elephant Company,Mordechai Katz,mordechai@privatequity.biz,0.529,Stephane DAHAN,nan,9c9e78cf-0418-4fa9-b00d-07af4db45578
+VC Firms and Email Database.xlsx,243,Lingfield AB,Hans Lindroth,hans.lindroth@lingfield.se,0.583,Fabien ROTH,info@fabienpont.ch,85b23400-3897-4856-85f5-e13588bf9509
+VC Firms and Email Database.xlsx,244,Generate Capital,Mengzhen Lei,mengzhen.lei@generatecapital.com,0.647,GESTIO CAPITAL LTD,matteo@gestiocapital.com,7346d7bb-7dc0-45d0-bb5f-2b4922505e7d
+VC Firms and Email Database.xlsx,245,The Elephant Company,Itay Kleiner,itay@privatequity.biz,0.571,Eric LE SEIGNEUR,eric@cap-blanc.com,e78f40f3-7e17-44cd-af46-a01a2f195f3e
+VC Firms and Email Database.xlsx,246,The Elephant Company,Chaim Schiff,chaim@privatequity.biz,0.529,Stephane DAHAN,nan,9c9e78cf-0418-4fa9-b00d-07af4db45578
+VC Firms and Email Database.xlsx,247,The Elephant Company,Sigalit Cohen,sigalit@privatequity.biz,0.538,Alain DECOMBE,alain@decombe.com,f5888bd4-ba48-4adf-a81f-31eb6d5d5c28
+VC Firms and Email Database.xlsx,248,The Elephant Company,Rachel Shear,rachel@thelephant.io,0.636,Abhie SHAH,niraj.shah@efgl.com,a1985b2e-8366-4742-8dcf-f78349e01e4d
+VC Firms and Email Database.xlsx,249,,Milad Gholami,miladgholami1988@gmail.com,0.533,Emile VAN DEN BOL,emilevandenbol@brooklawncapital.com,81b04824-6086-4e08-a69d-06c2f5f23832
+VC Firms and Email Database.xlsx,250,Essoge Family Office,Carl Grandinson,carljohan.grandinson@essoge.se,0.711,FigTree Family Office Ltd,christopher.gregory@figtreegroup.net,80eab681-0f34-4c73-96dd-884862dc3816
+VC Firms and Email Database.xlsx,251,Goldsmyths,Lennu Keinänen,lennu@goldsmyths.com,0.552,Johann AKERMANN,akermann.markus@gmail.com,afb8d124-32b7-4959-8af9-5e96f0383159
+VC Firms and Email Database.xlsx,252,Capital Group,Aryian Kohandel-Shirazi,Aryiankohandel@gmail.com,0.583,MA GROUP AG,aicher@ma-group.ch,3e75e4c5-6071-410d-bb55-d4ede85ab93d
+VC Firms and Email Database.xlsx,253,Nicoya,David Karlsson,david.karlsson@nicoya.se,0.667,David ROSSIER,kevin.rossier@hypo-advisors.ch,cdee04d9-e59d-4f2c-ab6c-f289a0bd0fa0
+VC Firms and Email Database.xlsx,254,Skyon AB,Johan Roslund,johan@skyon.se,0.643,Jonathan Menoud,jonathan.rejaud@gmail.com,e3230a73-201e-47e7-aff1-7e0a9e81a69f
+VC Firms and Email Database.xlsx,255,Capfir AB,Christian Jarehov,christian@capfir.se,0.519,Kian JAVID,,31798273-4949-499e-b650-b6cf44fbe2b4
+VC Firms and Email Database.xlsx,256,Van Hessen,Jan-Willem Vreeburg,janwillem.vreeburg@vanhessen.com,0.606,Danielle BURNS,r.burns2@gmail.com,5f5e1135-bba2-4d61-9e1c-33bd27c3b453
+VC Firms and Email Database.xlsx,257,Hemington Consultants,Mark Nieuwendijk,m.nieuwendijk@hemington.nl,0.581,Theo Costa,c.theo@genii-capital.com,01aaf688-bfe5-4375-bc39-7f44c2f90c1e
+VC Firms and Email Database.xlsx,258,G.P. Prein Advies,Peter Prein,peter.prein@gppreinadvies.nl,0.583,Peter HOGLAND,,0d18b5d6-fd7c-403b-931a-b9af09ee9715
+VC Firms and Email Database.xlsx,259,Amfora Vermogensbeheer,Joop de Jonge,joop.de.jonge@amforavermogensbeheer.nl,0.474,Rainer Buchecker,,dedb246a-d576-47cc-bd15-5def19535b51
+VC Firms and Email Database.xlsx,260,,Jonathan Cahn,jonathan.kahn@america-today.com,0.714,Jonathan Menoud,jonathan.rejaud@gmail.com,e3230a73-201e-47e7-aff1-7e0a9e81a69f
+VC Firms and Email Database.xlsx,261,IBS Capital Allies,Ferry Ferry van der Wurf,ferry.vanderwurf@ibsca.nl,0.684,Band Capital Limited,ndoherty@bandcapital.co.uk,3a5450bc-c141-437c-9e9d-d085821250e5
+VC Firms and Email Database.xlsx,262,IBS Capital Allies,Jacco Rijnbeek,jacco.rijnbeek@ibsca.nl,0.684,Band Capital Limited,ndoherty@bandcapital.co.uk,3a5450bc-c141-437c-9e9d-d085821250e5
+VC Firms and Email Database.xlsx,263,Family Partners,Roy Kramer,roy.kramer@familypartners.nl,0.69,SWISS PARTNERS,,82f125a7-76ef-4d9b-8781-4c1a2cc0bee7
+VC Firms and Email Database.xlsx,264,Cornucopia Investments,Bart,bart@corinv.nl,0.698,CARTA INVESTMENTS LLC,,31dccf8d-314a-4fa9-80af-9c02732bff31
+VC Firms and Email Database.xlsx,265,Alpinvest Partners NV,Erik Thyssen,erik.thyssen@alpinvest.com,0.629,SWISS PARTNERS,,82f125a7-76ef-4d9b-8781-4c1a2cc0bee7
+VC Firms and Email Database.xlsx,266,IMAS Foundation,Henrik Lundin,henrik.lundin@imasfoundation.org,0.571,Kim LUND,jcl@usfamily.net,f5d59ea7-68f2-41a7-85a2-811e826fae18
+VC Firms and Email Database.xlsx,267,IMAS Foundation,Fang Wang,fang.wang@imasfoundation.org,0.632,Dalinga AG,dega.ag@gmail.com,b65f05da-0ba0-42c3-ac7a-b5bc31084f53
+VC Firms and Email Database.xlsx,268,IMAS Foundation,Petter Odhnoff,petter.odhnoff@imasfoundation.org,0.593,Peter HOGLAND,,0d18b5d6-fd7c-403b-931a-b9af09ee9715
+VC Firms and Email Database.xlsx,269,Gramtec Innovation,Finn Gramnaes,finn@gramtec.com,0.545,MARSAULT INTERNATIONAL LTD,,7a298dec-0c25-4281-abef-bb2b2e955571
+VC Firms and Email Database.xlsx,270,Gramtec Innovation,David Gramnaes,david@gramtec.com,0.593,David ROSSIER,kevin.rossier@hypo-advisors.ch,cdee04d9-e59d-4f2c-ab6c-f289a0bd0fa0
+VC Firms and Email Database.xlsx,271,Gramtec Innovation,Lisa Gramnaes,lisa@gramtec.com,0.571,Elizabeth GRACE,link2elizabeth@yahoo.com,9fc05243-a77f-4dfb-a441-fbee821710f8
+VC Firms and Email Database.xlsx,272,ZAAL Management-bild,Babak Houshmand,babak.houshmand@zaalmanagement.se,0.7,VERSO MANAGEMENT LTD.,jmachot@versoholdings.com,06624460-9b35-448a-aa59-cb4b64e8d244
+VC Firms and Email Database.xlsx,273,AGV Nordics,Felix Sandquist,felix@agvnordics.se,0.556,Arboris,rchalhoub@arboris.ae,16292ac0-8485-4283-ba83-a45858604814
+VC Firms and Email Database.xlsx,274,AGV Nordics,Omid Noghabai,omid@agvnordics.se,0.556,Arboris,rchalhoub@arboris.ae,16292ac0-8485-4283-ba83-a45858604814
+VC Firms and Email Database.xlsx,275,byWiT,Nalle Söderström,nalle@bywit.se,0.483,Xavier GODRON,,50141cbb-d4f1-49f0-8bb4-240c05cb02b2
+VC Firms and Email Database.xlsx,276,byWiT,David Thoms,david@bywit.se,0.696,David HOLDEN,dnh4private@gmail.com,11be6624-9dd0-4a7d-b4eb-9241d6d35f07
+VC Firms and Email Database.xlsx,277,Rebellion Capital,Amin Omrani,amin@rebellion.se,0.636,Ayman JOMAA,,53a2b893-cb8d-45a1-b31d-b0b52ce14be9
+VC Firms and Email Database.xlsx,278,Techarenan,Omid Ekhlasi,omid@techarenan.com,0.6,Chang NGAN,ngancy@yahoo.com,00277b86-69a4-408b-945e-1b299ef7406d
+VC Firms and Email Database.xlsx,279,blankt,Arman Karégar,arman@blankt.com,0.583,Ayman JOMAA,,53a2b893-cb8d-45a1-b31d-b0b52ce14be9
+VC Firms and Email Database.xlsx,280,,,pirozh@gmail.com,0.0,Phaena Advisory Ltd,judith.itambo@gmail.com,79a689ba-cace-46b3-881c-89a0deb3632b
+VC Firms and Email Database.xlsx,281,My Dental Clinic LLC,Amir Pirhayati,pirhayati.amir@gmail.com,0.56,Imrat HAYAT,,1bb4d74d-50e7-410d-b852-923c4f26d504
+VC Firms and Email Database.xlsx,282,Young People Against Anti-Semitism and Xenophobia,Siavosh Derakhti,info@siavosh.se,0.467,Kaveh ALAMOUTI,k.alamouti@yahoo.com,12de5d24-1682-40e8-b166-de9b85072507
+VC Firms and Email Database.xlsx,283,Cure Media,Sam Foroozesh,sam@curemedia.com,0.556,CAREITAS,fmonteleone@careit.fr,bf1dfa64-d121-4466-8bfd-1bbbe18fd0fc
+VC Firms and Email Database.xlsx,284,,,hk@hmd.ai,0.0,Phaena Advisory Ltd,judith.itambo@gmail.com,79a689ba-cace-46b3-881c-89a0deb3632b
+VC Firms and Email Database.xlsx,285,Humblestorm,Mernosh Saatchi,mernosh@humblestorm.se,0.519,Eric SARASIN,sarasin@esarasin.com,698833c1-7ff3-4fa7-b7d0-733d8547cf43
+VC Firms and Email Database.xlsx,286,Filed,Kamyar Espahbodi,espahbodi.kamyar@gmail.com,0.714,Kamyar BADII,,3cb3cf0f-d5d4-4a35-97e0-1a3ee350efcd
+VC Firms and Email Database.xlsx,287,Nordcell,Vahid Toosi,vahid@toosi.se,0.583,David ROSSIER,kevin.rossier@hypo-advisors.ch,cdee04d9-e59d-4f2c-ab6c-f289a0bd0fa0
+VC Firms and Email Database.xlsx,288,,Henrik Olausson,olausson.henrik@icloud.com,0.552,Hayden RUSHTON,,94895ceb-b439-46db-90ce-48f34a918385
+VC Firms and Email Database.xlsx,289,,Mikael Dahlbeck,mikaeldahlbeck1@gmail.com,0.519,Michael RYAN,mickryan@live.co.uk,ea7ec75f-d518-4cfe-a65c-70655f433a14
+VC Firms and Email Database.xlsx,290,WAGMI Ventures,Xanyar Kamangar,xanyar@wagmiventures.pt,0.5,Sandra CABIAN,cabian@bluewin.ch,e92ed0be-a69a-4cb4-a623-42ce2467ca4e
+VC Firms and Email Database.xlsx,291,Goldman Sachs,Toto Odulaja,toto.odulaja@gs.com,0.519,Salman HUSSAIN,Rosie_hussain@eco-way.ae,3144dd2e-b7cc-413d-960c-e3df7b09f34d
+VC Firms and Email Database.xlsx,292,Turnstone Private Equity AS,Oda Knudsen,oek@turnstone.no,0.56,Damien Krauser,damien.krauser@gmail.com,24c96f5a-0b23-4e40-b562-c0570df12fd8
+VC Firms and Email Database.xlsx,293,Turnstone Private Equity AS,Håkon Finsrud,hfi@turnstone.no,0.522,MONFIN LTD,,7c94bfd1-33d2-42c6-b986-587d5e5593c2
+VC Firms and Email Database.xlsx,294,pinn.one,Rasmus Flink,rasmus@pinn.one,0.593,German MUSTAFIN,,723015f9-5867-4be2-89aa-251798f68fcf
+VC Firms and Email Database.xlsx,295,,Alexander,alexander@sandwal.com,0.581,Alexandre BARBARANELLI,,7e2b0f20-3a1a-4054-9b1f-d0ed77017805
+VC Firms and Email Database.xlsx,296,,Nic Wallenberg,nic@nicwallenberg.com,0.533,Eric LE SEIGNEUR,eric@cap-blanc.com,e78f40f3-7e17-44cd-af46-a01a2f195f3e
+VC Firms and Email Database.xlsx,297,MD Swedish Clean Tech Arena,Björn Back,bjorn.back@scta.se,0.609,John ACKERLEY,,0339cb56-2073-4eaf-bd16-b5aee1578d0f
+VC Firms and Email Database.xlsx,298,Noord Asset Management,Anton Rasnaie,anton@noordmgmt.se,0.69,Antonio PERONACE,,5177d335-8401-4bf9-8487-cb3d2f9e0f7a
+VC Firms and Email Database.xlsx,299,Dubai Chamber of Commerce,Zayed AlGhurair,Zayed.AlGhurair@Dubaichamber.com,0.519,Serge AURIER,Aurier.tottenham@gmail.com,a4fd57c5-202c-44d5-b5c9-c970fe97f66a
+VC Firms and Email Database.xlsx,300,Dubai Chamber of Commerce,Abdulaziz Alzarooni,Abdulaziz.Alzarooni@Dubaichamber.com,0.485,Blaine ROLLINS,brollins@361capital.com,83a28a5a-e103-4134-8f03-80489341f722
+VC Firms and Email Database.xlsx,301,Rask Ventures,Viktor Rask-Andersen,viktor.raskandersen@gmail.com,0.513,INNOSIGHT VENTURES Pte Ltd,anand@ipc.fund,063e3a99-1866-421f-9553-eece3bf07ce5
+VC Firms and Email Database.xlsx,302,BXL Konsult AB,Robert Bexell,robert.bexell@gmail.com,0.615,Robert SALMON,,70084284-f0ed-4204-935b-a55c3aae2b9e
+VC Firms and Email Database.xlsx,303,BXL Konsult AB,Robert Bexell,robert.bexell@bxlkonsult.se,0.615,Robert SALMON,,70084284-f0ed-4204-935b-a55c3aae2b9e
+VC Firms and Email Database.xlsx,304,Struten Invest,Audun Nilsen,Bjerkreim.nilsen@gmail.com,0.621,SC TBC INVEST 3,,aaceaeea-26d7-4116-a99e-8857809a4041
+VC Firms and Email Database.xlsx,305,Scatec ASA,Andreas Austrell,andreas.austrell@scatec.com,0.579,Alexandre BARBARANELLI,,7e2b0f20-3a1a-4054-9b1f-d0ed77017805
+VC Firms and Email Database.xlsx,306,Tioex,Nima Marefat,nima.marefat@tioex.se,0.538,Matteo MARTINI,teinba71@gmail.com,e21e21d3-0e0f-45bc-9a0a-6d37abdfd00c
+VC Firms and Email Database.xlsx,307,PE Alliance,Alfred Ivarsson,alfred@pe-alliance.se,0.533,James HARTSHORN,james@bartrawealthadvisors.com,af0e1a5e-817d-4fb3-8efd-cc2d9ffe79f4
+VC Firms and Email Database.xlsx,308,Elevera Advisers,,te@eleveraadvisers.com,0.593,AS ADVISORY,ammar@asadvisoryuae.com,ce36c41f-4ccb-41ce-baf7-278a57c8c8e2
+VC Firms and Email Database.xlsx,309,Loovi Health,Joel Grajcer,joel@loovi.se,0.593,Elizabeth GRACE,link2elizabeth@yahoo.com,9fc05243-a77f-4dfb-a441-fbee821710f8
+VC Firms and Email Database.xlsx,310,Tigrim,Gustav Sjöberg,Gustav@tigrim.com,0.48,AS ADVISORY,ammar@asadvisoryuae.com,ce36c41f-4ccb-41ce-baf7-278a57c8c8e2
+VC Firms and Email Database.xlsx,311,Loovi Health,Kevin Najafi,kevin@loovi.se,0.519,Kevin WILTSHIRE,,3bcf1a6c-9c51-4a32-89da-33d89e596ccd
+VC Firms and Email Database.xlsx,312,Nat5,Xerxes Malekani,xerxes@nat5.com,0.5,Steve MANNING,chris@searchengineoptimizationinatlanta.com,25288dc0-7e63-4da4-b1c3-b97eeca04664
+VC Firms and Email Database.xlsx,313,,,omsalasi@hotmail.com,0.0,Phaena Advisory Ltd,judith.itambo@gmail.com,79a689ba-cace-46b3-881c-89a0deb3632b
+VC Firms and Email Database.xlsx,314,IBM,Vahid Zohali,vahidzohali@yahoo.se,0.615,Ashish KOTHARI,shashankkothari82@gmail.com,5ad344d5-caa7-457e-818b-ac21c0f2712f
+VC Firms and Email Database.xlsx,315,Bambuser,Maryam Ghahremani,maryam@bambuser.com,0.545,Damien Krauser,damien.krauser@gmail.com,24c96f5a-0b23-4e40-b562-c0570df12fd8
+VC Firms and Email Database.xlsx,316,Bolix Fastigheter,Milad Jafaei,milad@bolixfastigheter.se,0.545,Kian JAVID,,31798273-4949-499e-b650-b6cf44fbe2b4
+VC Firms and Email Database.xlsx,317,Ninepine,Kousha Torabi,kousha.torabi@gmail.com,0.476,Sofiane Zaiem,sz@sesame-financial.com,4b4d6dab-8ac2-4a88-9431-0721a0bff5c4
+VC Firms and Email Database.xlsx,318,Alfons,,stockholmprojekt@gmail.com,0.462,Arboris,rchalhoub@arboris.ae,16292ac0-8485-4283-ba83-a45858604814
+VC Firms and Email Database.xlsx,319,AI Music,Siavash Mahdavi,sia@mahda.vi,0.667,Sarah DAVIES,sam_davies@shelter.org.uk,ecde52d9-0175-4b25-afe6-6d7da53d201f
+VC Firms and Email Database.xlsx,320,Truecaller,Alan Mamedi,alan.mamedi@truecaller.com,0.593,Marwan Al Abedin,,bf5e3199-ef52-477c-a048-47cf2273ad5e
+VC Firms and Email Database.xlsx,321,Truecaller,Nami Zarringhalam,nami.zarringhalam@truecaller.com,0.522,Miro HAECHLER,,fd1f1505-5317-4e1e-9653-a1fe327017e1
+VC Firms and Email Database.xlsx,322,Sdiptech AB,Saeid Esmaeilzadeh,saeid@sdip.se,0.522,Innovatech 1,jmachot@versoholdings.com,ea623932-6b22-47b9-b24b-b13ab1ead088
+VC Firms and Email Database.xlsx,323,Sdiptech AB,Ashkan Pouya,ashkan@sdip.se,0.522,Ayman JOMAA,,53a2b893-cb8d-45a1-b31d-b0b52ce14be9
+VC Firms and Email Database.xlsx,324,Supersonic Capital,Alireza Sadeghi,alireza@supersonicapital.com,0.571,POTASSIUM Capital,kirk@digitalblue.ky,79f6a524-24c2-407d-a754-6c6a8d9b18bc
+VC Firms and Email Database.xlsx,325,HealthCap,Max Odlander,max.odlander@healthcap.eu,0.667,Setcap,anandrathi13@gmail.com,97f2847e-abf6-4e8b-881a-81aa1dda8022
+VC Firms and Email Database.xlsx,326,Steven Bartlett,Dom Murray,dom@stevenbartlett.com,0.556,Tom ROAD,,f82045a6-2283-4cb2-ab2d-fac14bffae29
+VC Firms and Email Database.xlsx,327,Fastighetsbyrån Årsta,Robert Kassar,robert.kassar@fastighetsbyran.se,0.692,Robert SALMON,,70084284-f0ed-4204-935b-a55c3aae2b9e
+VC Firms and Email Database.xlsx,328,Modava AB,Sina Bahmani,sina@modava.se,0.56,Sandra CABIAN,cabian@bluewin.ch,e92ed0be-a69a-4cb4-a623-42ce2467ca4e
+VC Firms and Email Database.xlsx,329,Sparnet,Olof Jakobsson,olof.jakobsson@sparnet.se,0.571,SWISS PARTNERS,,82f125a7-76ef-4d9b-8781-4c1a2cc0bee7
+VC Firms and Email Database.xlsx,330,,Felix Kvick,perfelixkvick@gmail.com,0.429,Elidon Estate Inc,langsandro@hotmail.com,899bf212-1bf5-4239-8092-079685db2f8e
+VC Firms and Email Database.xlsx,331,Mindshift Ventures,Ahmed Mounir,ahmed@mindshiftventures.com,0.636,INNOSIGHT VENTURES Pte Ltd,anand@ipc.fund,063e3a99-1866-421f-9553-eece3bf07ce5
+VC Firms and Email Database.xlsx,332,Expansion Ventures,Ted Elvhage,ted@expansion-vc.eu,0.545,INNOSIGHT VENTURES Pte Ltd,anand@ipc.fund,063e3a99-1866-421f-9553-eece3bf07ce5
+VC Firms and Email Database.xlsx,333,Blykalla,Mikael Fraenkel,mikael.fraenkel@blykalla.com,0.667,Michael RYAN,mickryan@live.co.uk,ea7ec75f-d518-4cfe-a65c-70655f433a14
+VC Firms and Email Database.xlsx,334,Nordic Angels,Andreas Grape,andreas@nordicangels.com,0.621,Andrey GORYAINOV,,0dc9ff3f-1013-42f5-9a51-3531fe36cc7f
+VC Firms and Email Database.xlsx,335,Nordic Angels,Max Ceplitis,max@nordicangels.com,0.5,Martin AVETISYAN,avemartin@gmail.com,046c9f9b-4f57-41b4-a8ce-77a81d976bac
+VC Firms and Email Database.xlsx,336,nor:houses A/S,,cg@norhouses.dk,0.5,Salman HUSSAIN,Rosie_hussain@eco-way.ae,3144dd2e-b7cc-413d-960c-e3df7b09f34d

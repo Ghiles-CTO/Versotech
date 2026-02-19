@@ -447,12 +447,30 @@ async function createAccountActivationApproval(
   }
 }
 
+async function getAccountActivationApprovalState(
+  supabase: SupabaseClient,
+  entityId: string
+): Promise<{ hasPending: boolean; hasApproved: boolean }> {
+  const { data } = await supabase
+    .from('approvals')
+    .select('status')
+    .eq('entity_type', 'account_activation')
+    .eq('entity_id', entityId)
+    .in('status', ['pending', 'approved'])
+
+  const rows = (data || []) as Array<{ status?: string | null }>
+  return {
+    hasPending: rows.some(row => normalizeStatus(row.status) === 'pending'),
+    hasApproved: rows.some(row => normalizeStatus(row.status) === 'approved'),
+  }
+}
+
 /**
  * Single KYC evaluator used by review flows for every persona.
  *
  * Rules:
  * - Individual investors: approved ID + approved proof_of_address + approved personal_info
- * - Individual non-investors: approved personal_info
+ * - Individual non-investors: approved personal_info + approved ID + approved proof_of_address
  * - Entity personas: approved entity_info + required entity docs + all active members approved
  * - Member approval (all personas): approved personal_info + approved ID + approved proof_of_address
  */
@@ -529,7 +547,12 @@ export async function checkAndUpdateEntityKYCStatus(
 
       requirementsMet = hasId && hasAddress && hasPersonalInfo
     } else if (isIndividual) {
-      if (relevantMembers.length > 0) {
+      if (relevantMembers.length === 0) {
+        console.warn(
+          `[KYC] ${entityType}:${entityId} blocked - no active members found for individual KYC completion`
+        )
+        requirementsMet = false
+      } else {
         requirementsMet = true
         for (const member of relevantMembers) {
           const hasPersonalInfo = hasApprovedSubmissionForType(
@@ -539,7 +562,22 @@ export async function checkAndUpdateEntityKYCStatus(
             member.id
           )
 
-          if (!hasPersonalInfo) {
+          const memberApproved =
+            hasPersonalInfo &&
+            hasApprovedIdDocument(
+              approvedSubmissions,
+              submissionMemberColumn,
+              member.id,
+              false
+            ) &&
+            hasApprovedProofOfAddress(
+              approvedSubmissions,
+              submissionMemberColumn,
+              member.id,
+              false
+            )
+
+          if (!memberApproved) {
             requirementsMet = false
             break
           }
@@ -548,14 +586,6 @@ export async function checkAndUpdateEntityKYCStatus(
             await updateMemberKYCStatus(supabase, entityType, member.id, 'approved')
           }
         }
-      } else {
-        const hasPersonalInfo = hasApprovedSubmissionForType(
-          approvedSubmissions,
-          'personal_info',
-          submissionMemberColumn,
-          null
-        )
-        requirementsMet = hasPersonalInfo
       }
     } else {
       const hasEntityInfo = hasApprovedSubmissionForType(approvedSubmissions, 'entity_info')
@@ -575,6 +605,9 @@ export async function checkAndUpdateEntityKYCStatus(
           requirementsMet = false
         } else {
           if (relevantMembers.length === 0) {
+            console.warn(
+              `[KYC] ${entityType}:${entityId} blocked - no active members found for entity KYC completion`
+            )
             requirementsMet = false
           } else {
             requirementsMet = true
@@ -638,6 +671,28 @@ export async function checkAndUpdateEntityKYCStatus(
         .from(config.entityTable)
         .update(entityUpdateData)
         .eq('id', entityId)
+    }
+
+    const activationState = await getAccountActivationApprovalState(supabase, entityId)
+
+    // Manual lock path:
+    // If this entity had a previously approved activation and is no longer approved at account level,
+    // do not auto-open a new CEO task. This must be manually re-opened by operations.
+    if (activationState.hasApproved && !activationState.hasPending && currentAccountStatus !== 'approved') {
+      if (currentAccountStatus === 'pending_approval') {
+        await supabase
+          .from(config.entityTable)
+          .update({
+            account_approval_status: 'incomplete',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', entityId)
+      }
+
+      console.warn(
+        `[KYC] ${entityType}:${entityId} reached KYC-complete state after prior activation approval. Manual account re-activation review is required.`
+      )
+      return
     }
 
     await setAccountPendingApprovalIfNeeded(

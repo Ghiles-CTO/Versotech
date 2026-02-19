@@ -2,6 +2,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { AlertCircle } from 'lucide-react'
 import { LawyerProfileClient } from '@/components/lawyer/lawyer-profile-client'
 import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
+import { resolvePrimaryPersonaLink } from '@/lib/kyc/persona-link'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,11 +52,17 @@ export default async function LawyerProfilePage() {
   }
 
   // Get lawyer user info
-  const { data: lawyerUser } = await serviceSupabase
-    .from('lawyer_users')
-    .select('lawyer_id, role, is_primary, can_sign')
-    .eq('user_id', user.id)
-    .maybeSingle()
+  const { link: lawyerUser } = await resolvePrimaryPersonaLink<{
+    lawyer_id: string
+    role: string
+    is_primary: boolean
+    can_sign: boolean
+  }>({
+    supabase: serviceSupabase,
+    config: { userTable: 'lawyer_users', entityIdColumn: 'lawyer_id' },
+    userId: user.id,
+    select: 'lawyer_id, role, is_primary, can_sign',
+  })
 
   if (!lawyerUser?.lawyer_id) {
     return (

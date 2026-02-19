@@ -1,0 +1,26 @@
+# Applied VFD currency + fee-zero updates
+Currency updates applied: 0
+Fee zero updates applied: 0
+Unmatched VFD rows: 33
+
+Unmatched examples (first 20):
+- ('IN103', 'Michael RYAN', 500000.0, 60446.0, '2025-01-04 00:00:00')
+- ('IN103', 'Michael RYAN', 500000.0, 60446.0, '2025-01-04 00:00:00')
+- ('VC102', 'Julien MACHOT', 150000.0, 500.0, '2019-07-12 00:00:00')
+- ('VC102', 'Julien MACHOT', 150000.0, 500.0, '2020-02-28 00:00:00')
+- ('VC106', 'Eric LE SEIGNEUR', 100000.0, 4251.0, '2021-04-30 00:00:00')
+- ('VC106', 'Eric LE SEIGNEUR', 100000.0, 4251.0, '2021-04-30 00:00:00')
+- ('VC106', 'Hedgebay Securities LLC', 24978.24, 1062.0, '2021-03-05 00:00:00')
+- ('VC106', 'Hedgebay Securities LLC', 24978.24, 1062.0, '2021-03-05 00:00:00')
+- ('VC106', 'Hedgebay Securities LLC', 24978.24, 1062.0, '2021-03-09 00:00:00')
+- ('VC106', 'Hedgebay Securities LLC', 100007.04, 4252.0, '2021-03-06 00:00:00')
+- ('VC106', 'LEE RAND GROUP', 24985.0, 1315.0, '2021-02-15 00:00:00')
+- ('VC106', 'LEE RAND GROUP', 24985.0, 1315.0, '2021-02-16 00:00:00')
+- ('VC106', 'LEE RAND GROUP', 34998.0, 1842.0, '2021-02-16 00:00:00')
+- ('VC106', 'LEE RAND GROUP', 49989.0, 2631.0, '2021-02-15 00:00:00')
+- ('VC106', 'LEE RAND GROUP', 49989.0, 2631.0, '2021-02-16 00:00:00')
+- ('VC106', 'LEE RAND GROUP', 49989.0, 2631.0, '2021-02-16 00:00:00')
+- ('VC106', 'LEE RAND GROUP', 199994.0, 10526.0, '2021-02-15 00:00:00')
+- ('VC106', 'Scott FLETCHER', 500000.0, 21258.0, '2021-06-28 00:00:00')
+- ('VC106', 'Scott FLETCHER', 500000.0, 21258.0, '2021-06-28 00:00:00')
+- ('VC106', 'VERSO GROUP', 0.0, 0.0, '2021-05-17 00:00:00')

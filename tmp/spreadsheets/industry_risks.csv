@@ -1,0 +1,12 @@
+sector_code,sector_name,risk_grade
+energy,Energy,C
+materials,Materials,B
+industrials,Industrials,B
+consumer_discretionary,Consumer Discretionary,B
+consumer_staples,Consumer Staples,A3
+health_care,Health Care,A3
+financials,Financials,B
+information_technology,Information Technology,A4
+communication_services,Communication Services,B
+utilities,Utilities,A3
+real_estate,Real Estate,B

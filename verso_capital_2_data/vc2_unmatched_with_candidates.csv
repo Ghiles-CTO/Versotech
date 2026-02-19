@@ -1,0 +1,21 @@
+kind,contact_row,contact_series,contact_name,cand1_sheet,cand1_row,cand1_name,cand1_score,cand2_sheet,cand2_row,cand2_name,cand2_score,cand3_sheet,cand3_row,cand3_name,cand3_score
+investor,95,VC209,Mohan SASANAPURI,,,,,,,,,,,,
+investor,96,VC209,Kartik Kumar ATTULURI,,,,,,,,,,,,
+investor,98,VC209,MADISON TRUST COMPANY (on behalf of Edward Bendickson),,,,,,,,,,,,
+investor,99,VC209,"FRONTIERX VIII, LP",VC26,45,ANIM X II LP,0.6207,VC26,15,ODIN (ANIM X II LP),0.5882,VC26,35,ODIN (ANIM X II LP),0.5882
+investor,104,VC215,Gourav KAKKAR,,,,,,,,,,,,
+introducer,104,VC215,Infinyte Club Private Limited,,,,,,,,,,,,
+investor,105,VC215,Rajagopalan MADHUSUDAN,VC13,22,Shrai and Aparna MADHVANI,0.5532,,,,,,,,
+introducer,105,VC215,Infinyte Club Private Limited,,,,,,,,,,,,
+investor,106,VC215,Ved NIRANJANBHAI ANTANI,,,,,,,,,,,,
+introducer,106,VC215,Infinyte Club Private Limited,,,,,,,,,,,,
+investor,107,VC215,Mahesh NALLAPATI,,,,,,,,,,,,
+introducer,107,VC215,Infinyte Club Private Limited,,,,,,,,,,,,
+introducer,109,VC215,Infinyte Club Private Limited,,,,,,,,,,,,
+investor,110,VC215,STELLATRION PARTNERS,VC9,19,SWISS PARTNERS,0.6471,VC11,28,GTV Partners SA,0.5714,,,,
+introducer,110,VC215,Set Cap,VC26,31,Gestio Capital,0.5714,,,,,,,,
+investor,111,VC215,STELLATRION PARTNERS,VC9,19,SWISS PARTNERS,0.6471,VC11,28,GTV Partners SA,0.5714,,,,
+introducer,111,VC215,Set Cap,VC26,31,Gestio Capital,0.5714,,,,,,,,
+investor,117,VC215,"Anthropic Compartment, HAG Private Markets SARL",,,,,,,,,,,,
+introducer,117,VC215,Hottinger AG,,,,,,,,,,,,
+investor,121,VC215,George Guoying CHEN,VC26,29,Georgi GEORGIEV,0.5882,VC209,5,Georgi GEORGIEV,0.5882,VC203,5,Georges SMITH,0.5625

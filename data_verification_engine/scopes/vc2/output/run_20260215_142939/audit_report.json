@@ -1,0 +1,382 @@
+{
+  "summary": {
+    "rules_version": "2026-02-14.2",
+    "scope_vehicle_codes": [
+      "VC201",
+      "VC202",
+      "VC203",
+      "VC206",
+      "VC207",
+      "VC209",
+      "VC210",
+      "VC211",
+      "VC215",
+      "VCL001",
+      "VCL002"
+    ],
+    "dashboard_active_rows": 105,
+    "dashboard_zero_rows": 5,
+    "db_subscriptions": 105,
+    "db_positions": 94,
+    "db_introductions": 88,
+    "db_commissions": 264,
+    "contacts_checked_rows": 123,
+    "contacts_red_rows_excluded": [
+      10,
+      13
+    ],
+    "fail_count": 12,
+    "warning_count": 31,
+    "fail_by_check": {
+      "commission_base_amount_vs_funded_amount_mismatch": 12
+    },
+    "warn_by_check": {
+      "introduction_missing_date_ruled": 1,
+      "commission_totals_ruled_diff_invested_amount": 4,
+      "commission_combined_ruled_removed": 9,
+      "commission_row_ruled_dashboard_override": 5,
+      "commission_row_ruled_removed": 11,
+      "introducer_warning_only_present": 1
+    },
+    "mapping_coverage": {
+      "unmapped_dashboard_rows": 0,
+      "unmapped_db_rows": 0,
+      "unmapped_commission_rows_dashboard_to_db": 0,
+      "unmapped_commission_rows_db_to_dashboard": 0,
+      "name_mapping_applied_count": 0,
+      "name_mapping_unresolved_count": 0,
+      "fallback_match_warning_count": 0
+    },
+    "rule_enforcement_summary": {
+      "introduction_integrity_check": true,
+      "subscription_formula_cross_field_check": true,
+      "commission_rate_integrity_check": true,
+      "commission_base_amount_matches_funded_check": true,
+      "dual_role_introducer_check": true,
+      "deprecated_introducer_references_check": true
+    }
+  },
+  "failures": [
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC206",
+      "row_ref": "",
+      "details": "deal_id=15beca51-460e-4ad4-8269-45fb98382624 investor_id=23e80d63-c65f-4202-b6f4-ced9b1ebc632 introducer_id=b12f291e-b081-456e-ab47-e238f722d6c4 commission_base_sum=1176400.0 funded_sum=0.0 delta=1176400.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC206",
+      "row_ref": "",
+      "details": "deal_id=15beca51-460e-4ad4-8269-45fb98382624 investor_id=2f5eed78-b28e-4978-9c50-e9e5893ba9d3 introducer_id=96215c45-eabf-46a6-889e-ee14d1324846 commission_base_sum=5000000.0 funded_sum=0.0 delta=5000000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC206",
+      "row_ref": "",
+      "details": "deal_id=15beca51-460e-4ad4-8269-45fb98382624 investor_id=3b3fd4e4-ad29-4ad9-8c6f-b82cdf55fcac introducer_id=251d7637-5082-45fa-b383-7fd65b46ace9 commission_base_sum=7396512.78 funded_sum=0.0 delta=7396512.78"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC206",
+      "row_ref": "",
+      "details": "deal_id=15beca51-460e-4ad4-8269-45fb98382624 investor_id=3b3fd4e4-ad29-4ad9-8c6f-b82cdf55fcac introducer_id=f3c455f2-a6ce-4d1b-a912-f539f1f5a67c commission_base_sum=7396512.78 funded_sum=0.0 delta=7396512.78"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC206",
+      "row_ref": "",
+      "details": "deal_id=15beca51-460e-4ad4-8269-45fb98382624 investor_id=7db95a95-5590-4c5e-ad4a-bb5b2eaa628e introducer_id=251d7637-5082-45fa-b383-7fd65b46ace9 commission_base_sum=192117.22 funded_sum=0.0 delta=192117.22"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC206",
+      "row_ref": "",
+      "details": "deal_id=15beca51-460e-4ad4-8269-45fb98382624 investor_id=94f5a7f7-be61-4cd0-8a1f-6581d45f33bf introducer_id=96215c45-eabf-46a6-889e-ee14d1324846 commission_base_sum=1000000.0 funded_sum=0.0 delta=1000000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC206",
+      "row_ref": "",
+      "details": "deal_id=15beca51-460e-4ad4-8269-45fb98382624 investor_id=9a7ddab9-7c07-4c5f-93bc-1898761afd6c introducer_id=251d7637-5082-45fa-b383-7fd65b46ace9 commission_base_sum=6000000.0 funded_sum=7500000.0 delta=-1500000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC215",
+      "row_ref": "",
+      "details": "deal_id=2a0c48b3-5196-4323-9665-9f713ea52668 investor_id=3de46042-a7a4-4e86-89d4-a9b8830be1a2 introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a commission_base_sum=600160.0 funded_sum=300080.0 delta=300080.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC203",
+      "row_ref": "",
+      "details": "deal_id=83ce0a28-e538-4f44-a430-b83394d17b9d investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 introducer_id=98179f05-df95-4646-8445-173038f8d26a commission_base_sum=207225.98 funded_sum=257225.98 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "deal_id=b1ff280a-1a0e-4024-b25d-de6160816cb1 investor_id=35fc9d94-e9c8-4e73-9038-c8483d9f7712 introducer_id=5d97cb49-ee76-4653-a62f-baba22263228 commission_base_sum=3500016.0 funded_sum=6200028.0 delta=-2700012.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "deal_id=b1ff280a-1a0e-4024-b25d-de6160816cb1 investor_id=f7f53e18-d962-4c1d-8041-8085f5eb3975 introducer_id=ec36ff03-3af0-4330-ac7e-301d0a15b78c commission_base_sum=960000.0 funded_sum=1860000.0 delta=-900000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC207",
+      "row_ref": "",
+      "details": "deal_id=b77e95ee-4649-4644-933e-ed10a2118b03 investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 introducer_id=98179f05-df95-4646-8445-173038f8d26a commission_base_sum=89200.0 funded_sum=91600.0 delta=-2400.0"
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "warn",
+      "check": "introduction_missing_date_ruled",
+      "vehicle": "VC207",
+      "row_ref": "",
+      "details": "introduction_id=d3b58990-9327-4c5b-b6ed-af7f16fb9858 deal_id=b77e95ee-4649-4644-933e-ed10a2118b03 investor_id=73a05f0c-c987-4b09-9c3a-b0dc2a402358"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "VC203",
+      "row_ref": "",
+      "details": "dashboard=320673.26 db=259999.5 delta=-60673.76 expected=-60673.76"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "VC207",
+      "row_ref": "",
+      "details": "dashboard=141932.1 db=115793.4 delta=-26138.7 expected=-26138.7"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "dashboard=704343.97 db=451663.47 delta=-252680.5 expected=-252680.5"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "VC215",
+      "row_ref": "",
+      "details": "dashboard=834528.32 db=692955.91 delta=-141572.41 expected=-141572.41"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_combined_ruled_removed",
+      "vehicle": "VC203",
+      "row_ref": "VC203:4",
+      "details": "investor=DOMINARI SECURITIES LLC introducer_label=Dimensional Advisors + R. F. Lafferty & Co. Inc. basis=invested_amount dashboard=96110.15 db_total=49999.5 delta=-46110.65"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_combined_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:4",
+      "details": "investor=Gourav KAKKAR introducer_label=Bromley Capital + Infinyte Club basis=invested_amount dashboard=747.82 db_total=461.3 delta=-286.52"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_combined_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:5",
+      "details": "investor=Rajagopalan MADHUSUDAN introducer_label=Bromley Capital + Infinyte Club basis=invested_amount dashboard=592.64 db_total=365.57 delta=-227.07"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_combined_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:6",
+      "details": "investor=Ved NIRANJANBHAI ANTANI introducer_label=Bromley Capital + Infinyte Club basis=invested_amount dashboard=1211.89 db_total=747.56 delta=-464.33"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_combined_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:7",
+      "details": "investor=Mahesh NALLAPATI introducer_label=Bromley Capital + Infinyte Club basis=invested_amount dashboard=515.79 db_total=318.17 delta=-197.62"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_combined_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:8",
+      "details": "investor=Varun SEMBIUM VARADARAJAN introducer_label=Bromley Capital + Renaissance basis=invested_amount dashboard=2144.0 db_total=1082.61 delta=-1061.39"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_combined_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:9",
+      "details": "investor=CARTA INVESTMENTS LLC introducer_label=Bromley Capital + Infinyte Club basis=invested_amount dashboard=2191.74 db_total=508.36 delta=-1683.38"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_combined_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:15",
+      "details": "investor=Anuroop ARORA introducer_label=Bromley Capital + Renaissance basis=invested_amount dashboard=2786.44 db_total=1718.84 delta=-1067.6"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_combined_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:17",
+      "details": "investor=Anthropic Compartment, HAG Private Markets SARL introducer_label=Hottinger AG + Bromley Capital basis=invested_amount dashboard=786004.0 db_total=687753.5 delta=-98250.5"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC203",
+      "row_ref": "33129a8c-d50e-4cf8-8d8d-5caeffd3e3ee",
+      "details": "investor=EVERLASTING HOLDINGS LLC introducer=Sakal Advisory, LLC basis=invested_amount expected_amount=5000.0 expected_rate=50 dashboard_amount=0.0 db_amount=5000.0 dashboard_rates=[] db_rates=[50]"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC203",
+      "row_ref": "411513a9-437e-4614-bcc5-7b27fbbc3e2c",
+      "details": "investor=EVERLASTING HOLDINGS LLC introducer=Astral Global Limited basis=invested_amount expected_amount=10000.0 expected_rate=100 dashboard_amount=0.0 db_amount=10000.0 dashboard_rates=[] db_rates=[100]"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC203",
+      "row_ref": "VC203:8",
+      "details": "investor=Sebastian LATTUGA introducer=R. F. Lafferty & Co. Inc. basis=invested_amount dashboard=14563.11 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC206",
+      "row_ref": "aadad175-eefb-48b5-acf7-22fa1d4ff4de",
+      "details": "investor=REDPOINT OMEGA V, L.P. introducer=Astral Global Limited basis=invested_amount expected_amount=90000.0 expected_rate=122 dashboard_amount=0.0 db_amount=90000.0 dashboard_rates=[] db_rates=[122]"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC206",
+      "row_ref": "bee4fe86-73ba-485e-ac94-4870a064a8b5",
+      "details": "investor=REDPOINT OMEGA V, L.P. introducer=Visual Sectors basis=invested_amount expected_amount=82000.0 expected_rate=111 dashboard_amount=0.0 db_amount=82000.0 dashboard_rates=[] db_rates=[111]"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC207",
+      "row_ref": "VC207:21",
+      "details": "investor=AEON INC. introducer=Lafferty basis=invested_amount dashboard=26138.7 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC209",
+      "row_ref": "VC209:20",
+      "details": "investor=PVPL FUND LLC SERIES 3 introducer=Lafferty+Visual Sectors basis=invested_amount expected_amount=10000.0 expected_rate=10 dashboard_amount=110000.0 db_amount=10000.0 dashboard_rates=[110] db_rates=[10]"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC209",
+      "row_ref": "VC209:13",
+      "details": "investor=STP CAP V, A SERIES OF CGF2021 LLC, SYDECAR LLC introducer=Lafferty basis=invested_amount dashboard=29677.5 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC209",
+      "row_ref": "VC209:10",
+      "details": "investor=CBH Compagnie Bancaire Helv\u00e9tique SA, introducer=Lafferty basis=invested_amount dashboard=123003.0 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:12",
+      "details": "investor=ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC introducer=Bromley Capital basis=invested_amount dashboard=12742.5 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:16",
+      "details": "investor=AEON INC introducer=Bromley Capital basis=invested_amount dashboard=4263.0 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:20",
+      "details": "investor=Keir BENBOW introducer=Bromley Capital basis=invested_amount dashboard=670.5 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:21",
+      "details": "investor=Georges CHEN introducer=Bromley Capital basis=invested_amount dashboard=8400.0 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:18",
+      "details": "investor=LF GROUP SARL introducer=Bromley Capital basis=invested_amount dashboard=937.5 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:3",
+      "details": "investor=Julien MACHOT introducer=Bromley Capital basis=invested_amount dashboard=8416.5 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_removed",
+      "vehicle": "VC215",
+      "row_ref": "VC215:10",
+      "details": "investor=STELLATRION PARTNERS introducer=Bromley Capital basis=invested_amount dashboard=2904.0 db=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "introducer_warning_only_present",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "Bright Views Holdings rows=3 amount=9000.0"
+    }
+  ],
+  "mapping_coverage": {
+    "unmapped_dashboard_rows": 0,
+    "unmapped_db_rows": 0,
+    "unmapped_commission_rows_dashboard_to_db": 0,
+    "unmapped_commission_rows_db_to_dashboard": 0,
+    "name_mapping_applied_count": 0,
+    "name_mapping_unresolved_count": 0,
+    "fallback_match_warning_count": 0
+  },
+  "rule_enforcement_summary": {
+    "introduction_integrity_check": true,
+    "subscription_formula_cross_field_check": true,
+    "commission_rate_integrity_check": true,
+    "commission_base_amount_matches_funded_check": true,
+    "dual_role_introducer_check": true,
+    "deprecated_introducer_references_check": true
+  },
+  "warning_governance_status": "PENDING_TRUST_PACK"
+}

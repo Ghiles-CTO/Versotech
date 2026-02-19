@@ -1,0 +1,166 @@
+{
+  "summary": {
+    "rules_version": "2026-02-14.2",
+    "scope_vehicle_codes": [
+      "IN101",
+      "IN102",
+      "IN103",
+      "IN106",
+      "IN109",
+      "IN110",
+      "IN111"
+    ],
+    "dashboard_active_rows": 26,
+    "dashboard_zero_rows": 5,
+    "db_subscriptions": 26,
+    "db_positions": 23,
+    "db_introductions": 15,
+    "db_commissions": 38,
+    "contacts_checked_rows": 0,
+    "contacts_red_rows_excluded": [],
+    "fail_count": 0,
+    "warning_count": 13,
+    "fail_by_check": {},
+    "warn_by_check": {
+      "dashboard_formula_error_token": 6,
+      "commission_totals_ruled_diff_invested_amount": 2,
+      "commission_totals_ruled_diff_spread": 1,
+      "commission_row_ruled_dashboard_override": 4
+    },
+    "mapping_coverage": {
+      "unmapped_dashboard_rows": 0,
+      "unmapped_db_rows": 0,
+      "unmapped_commission_rows_dashboard_to_db": 0,
+      "unmapped_commission_rows_db_to_dashboard": 0,
+      "name_mapping_applied_count": 0,
+      "name_mapping_unresolved_count": 0,
+      "fallback_match_warning_count": 0,
+      "row_match_modes": {
+        "exact_date": 26
+      }
+    },
+    "rule_enforcement_summary": {
+      "introduction_integrity_check": true,
+      "subscription_formula_cross_field_check": true,
+      "commission_rate_integrity_check": true,
+      "commission_base_amount_matches_funded_check": true,
+      "dual_role_introducer_check": true,
+      "deprecated_introducer_references_check": true
+    }
+  },
+  "failures": [],
+  "warnings": [
+    {
+      "severity": "warn",
+      "check": "dashboard_formula_error_token",
+      "vehicle": "IN110",
+      "row_ref": "IN10:3",
+      "details": "sheet=IN10 row=3 field=bd_fee raw='#VALUE!'"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_formula_error_token",
+      "vehicle": "IN110",
+      "row_ref": "IN10:4",
+      "details": "sheet=IN10 row=4 field=bd_fee raw='#VALUE!'"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_formula_error_token",
+      "vehicle": "IN110",
+      "row_ref": "IN10:5",
+      "details": "sheet=IN10 row=5 field=bd_fee raw='#VALUE!'"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_formula_error_token",
+      "vehicle": "IN110",
+      "row_ref": "IN10:6",
+      "details": "sheet=IN10 row=6 field=bd_fee raw='#VALUE!'"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_formula_error_token",
+      "vehicle": "IN110",
+      "row_ref": "IN10:7",
+      "details": "sheet=IN10 row=7 field=bd_fee raw='#VALUE!'"
+    },
+    {
+      "severity": "warn",
+      "check": "dashboard_formula_error_token",
+      "vehicle": "IN110",
+      "row_ref": "IN10:8",
+      "details": "sheet=IN10 row=8 field=bd_fee raw='#VALUE!'"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "IN102",
+      "row_ref": "",
+      "details": "dashboard=74881.5498 db=0.0 delta=-74881.5498 expected=-74881.5498"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_invested_amount",
+      "vehicle": "IN103",
+      "row_ref": "",
+      "details": "dashboard=65000.0 db=45000.0 delta=-20000.0 expected=-20000.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "IN103",
+      "row_ref": "",
+      "details": "dashboard=499997.22284 db=249998.61 delta=-249998.61284 expected=-249998.61284"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "IN103",
+      "row_ref": "IN3:3",
+      "details": "investor=Zandera (Holdco) Limited introducer=Altras+Andrew basis=invested_amount expected_amount=15000.0 expected_rate=n/a dashboard_amount=30000.0 db_amount=15000.0 dashboard_rates=[300] db_rates=[300]"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "IN103",
+      "row_ref": "IN3:3",
+      "details": "investor=Zandera (Holdco) Limited introducer=Altras+Andrew basis=spread expected_amount=174999.03 expected_rate=n/a dashboard_amount=349998.06 db_amount=174999.03 dashboard_rates=[290] db_rates=[3500]"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "IN103",
+      "row_ref": "IN3:3",
+      "details": "investor=Zandera (Holdco) Limited introducer=Anand basis=invested_amount expected_amount=5000.0 expected_rate=n/a dashboard_amount=10000.0 db_amount=5000.0 dashboard_rates=[100] db_rates=[100]"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "IN103",
+      "row_ref": "IN3:3",
+      "details": "investor=Zandera (Holdco) Limited introducer=Anand basis=spread expected_amount=74999.58 expected_rate=n/a dashboard_amount=149999.17 db_amount=74999.58 dashboard_rates=[124] db_rates=[1500]"
+    }
+  ],
+  "mapping_coverage": {
+    "unmapped_dashboard_rows": 0,
+    "unmapped_db_rows": 0,
+    "unmapped_commission_rows_dashboard_to_db": 0,
+    "unmapped_commission_rows_db_to_dashboard": 0,
+    "name_mapping_applied_count": 0,
+    "name_mapping_unresolved_count": 0,
+    "fallback_match_warning_count": 0,
+    "row_match_modes": {
+      "exact_date": 26
+    }
+  },
+  "rule_enforcement_summary": {
+    "introduction_integrity_check": true,
+    "subscription_formula_cross_field_check": true,
+    "commission_rate_integrity_check": true,
+    "commission_base_amount_matches_funded_check": true,
+    "dual_role_introducer_check": true,
+    "deprecated_introducer_references_check": true
+  },
+  "warning_governance_status": "PENDING_TRUST_PACK"
+}

@@ -2,6 +2,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { AlertCircle } from 'lucide-react'
 import { CommercialPartnerProfileClient } from '@/components/commercial-partner-profile/commercial-partner-profile-client'
 import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
+import { resolvePrimaryPersonaLink } from '@/lib/kyc/persona-link'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,11 +52,18 @@ export default async function CommercialPartnerProfilePage() {
   }
 
   // Get commercial partner user info
-  const { data: cpUser } = await serviceSupabase
-    .from('commercial_partner_users')
-    .select('commercial_partner_id, role, is_primary, can_sign, can_execute_for_clients')
-    .eq('user_id', user.id)
-    .maybeSingle()
+  const { link: cpUser } = await resolvePrimaryPersonaLink<{
+    commercial_partner_id: string
+    role: string
+    is_primary: boolean
+    can_sign: boolean
+    can_execute_for_clients: boolean
+  }>({
+    supabase: serviceSupabase,
+    config: { userTable: 'commercial_partner_users', entityIdColumn: 'commercial_partner_id' },
+    userId: user.id,
+    select: 'commercial_partner_id, role, is_primary, can_sign, can_execute_for_clients',
+  })
 
   if (!cpUser?.commercial_partner_id) {
     return (

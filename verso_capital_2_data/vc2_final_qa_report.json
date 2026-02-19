@@ -1,0 +1,29 @@
+{
+  "summary": {
+    "scope_vehicles": [
+      "VC201",
+      "VC202",
+      "VC203",
+      "VC206",
+      "VC207",
+      "VC209",
+      "VC210",
+      "VC211",
+      "VC215"
+    ],
+    "dashboard_active_rows": 105,
+    "dashboard_zero_rows": 5,
+    "db_subscriptions": 105,
+    "db_positions": 94,
+    "db_introductions": 107,
+    "db_commissions": 316,
+    "contact_non_red_scope_rows": 123,
+    "contact_red_rows": [
+      10,
+      13
+    ],
+    "fail_count": 0,
+    "fail_by_check": {}
+  },
+  "fails": []
+}

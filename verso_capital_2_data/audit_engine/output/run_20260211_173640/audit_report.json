@@ -1,0 +1,63 @@
+{
+  "summary": {
+    "rules_version": "2026-02-11",
+    "scope_vehicle_codes": [
+      "VC201",
+      "VC202",
+      "VC203",
+      "VC206",
+      "VC207",
+      "VC209",
+      "VC210",
+      "VC211",
+      "VC215",
+      "VCL001",
+      "VCL002"
+    ],
+    "dashboard_active_rows": 105,
+    "dashboard_zero_rows": 5,
+    "db_subscriptions": 105,
+    "db_positions": 94,
+    "db_introductions": 88,
+    "db_commissions": 264,
+    "contacts_checked_rows": 123,
+    "contacts_red_rows_excluded": [
+      10,
+      13
+    ],
+    "fail_count": 1,
+    "warning_count": 2,
+    "fail_by_check": {
+      "vehicle_totals_mismatch": 1
+    },
+    "warn_by_check": {
+      "brokers_unexpected": 1,
+      "introducer_warning_only_present": 1
+    }
+  },
+  "failures": [
+    {
+      "severity": "fail",
+      "check": "vehicle_totals_mismatch",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "spread_fee: dashboard=5855431.1565000005 db=8079471.1565000005 delta=2224040.0"
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "warn",
+      "check": "brokers_unexpected",
+      "vehicle": "",
+      "row_ref": "",
+      "details": "['Old City Securities LLC']"
+    },
+    {
+      "severity": "warn",
+      "check": "introducer_warning_only_present",
+      "vehicle": "VC209",
+      "row_ref": "",
+      "details": "Bright Views Holdings rows=3 amount=9000.0"
+    }
+  ]
+}

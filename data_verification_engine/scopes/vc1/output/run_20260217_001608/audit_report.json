@@ -1,0 +1,1198 @@
+{
+  "summary": {
+    "rules_version": "2026-02-14.3",
+    "scope_vehicle_codes": [
+      "VC102",
+      "VC106",
+      "VC111",
+      "VC112",
+      "VC113",
+      "VC114",
+      "VC118",
+      "VC121",
+      "VC122",
+      "VC123",
+      "VC124",
+      "VC125",
+      "VC126",
+      "VC128",
+      "VC130",
+      "VC131",
+      "VC132",
+      "VC133",
+      "VC138",
+      "VC140",
+      "VC141",
+      "VC143"
+    ],
+    "dashboard_active_rows": 466,
+    "dashboard_zero_rows": 56,
+    "db_subscriptions": 466,
+    "db_positions": 384,
+    "db_introductions": 498,
+    "db_commissions": 1030,
+    "contacts_checked_rows": 0,
+    "contacts_red_rows_excluded": [
+      10,
+      13
+    ],
+    "fail_count": 115,
+    "warning_count": 37,
+    "fail_by_check": {
+      "introduction_contract_date_mismatch": 115
+    },
+    "warn_by_check": {
+      "strikethrough_commission_row_reinstated_ruled": 6,
+      "introduction_tuple_repeat_ruled": 3,
+      "introduction_missing_date_ruled": 1,
+      "performance_fee_threshold_multiplier_non_zero_ruled": 1,
+      "commission_rate_amount_formula_ruled": 1,
+      "commission_base_amount_vs_funded_amount_ruled": 4,
+      "commission_totals_ruled_diff_spread": 4,
+      "commission_row_ruled_dashboard_override": 17
+    },
+    "mapping_coverage": {
+      "unmapped_dashboard_rows": 0,
+      "unmapped_db_rows": 0,
+      "unmapped_commission_rows_dashboard_to_db": 0,
+      "unmapped_commission_rows_db_to_dashboard": 0,
+      "name_mapping_applied_count": 66,
+      "name_mapping_unresolved_count": 0,
+      "fallback_match_warning_count": 0,
+      "row_match_modes": {
+        "exact_date": 364,
+        "relaxed": 35,
+        "fallback_loose_name_amounts": 42,
+        "fallback_amounts_date": 23,
+        "fallback_investor_shares_date": 1,
+        "fallback_amounts_no_date": 1
+      },
+      "fallback_matches_by_mode": {
+        "fallback_loose_name_amounts": 42,
+        "fallback_amounts_date": 23,
+        "fallback_investor_shares_date": 1,
+        "fallback_amounts_no_date": 1
+      },
+      "fallback_matches_ruled_count": 24,
+      "fallback_matches_safe_count": 43,
+      "fallback_matches_unruled_fail_count": 0
+    },
+    "rule_enforcement_summary": {
+      "introduction_integrity_check": true,
+      "subscription_formula_cross_field_check": true,
+      "commission_rate_integrity_check": true,
+      "commission_base_amount_matches_funded_check": true,
+      "strikethrough_commission_delete_check": true,
+      "dual_role_introducer_check": true,
+      "deprecated_introducer_references_check": true
+    },
+    "strikethrough_source_rows": 29,
+    "strikethrough_resolved_rows": 29,
+    "strikethrough_unresolved_rows": 0,
+    "strikethrough_rows_present_in_db": 6
+  },
+  "failures": [
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC112",
+      "row_ref": "",
+      "details": "introduction_id=00be726f-53f5-4bfd-8df0-6a0765bf5d0e introduced_at=2026-01-20 subscription_dates=['2022-08-25']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "introduction_id=012721a4-0257-4f26-b49f-d34c5496b9c2 introduced_at=2026-01-20 subscription_dates=['2022-04-03']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=0179ae9a-636f-4322-a669-d72d3727fe75 introduced_at=2026-01-09 subscription_dates=['2021-08-25']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=0374b5e1-18ee-42f7-b05b-52d60eca6313 introduced_at=2026-01-20 subscription_dates=['2021-11-22', '2023-03-24']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=04200799-af7c-46c8-aa98-c9d543addf9f introduced_at=2026-01-20 subscription_dates=['2021-08-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=06245c5e-24ba-40e9-a932-c495e7c80948 introduced_at=2026-01-20 subscription_dates=['2023-02-21']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=07acd0d5-2d4e-46f4-8316-ed68d3a7868d introduced_at=2026-01-20 subscription_dates=['2023-02-21']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=08e654a6-2553-4177-9308-e4956662584c introduced_at=2026-01-20 subscription_dates=['2022-03-17']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC133",
+      "row_ref": "",
+      "details": "introduction_id=106b140d-4391-41d8-b078-04d9d13456dc introduced_at=2026-01-20 subscription_dates=['2022-11-04']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=10ff8cff-8c8b-4f20-9eb9-e27ab56de9ae introduced_at=2026-01-20 subscription_dates=['2021-04-08']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=11ca6b33-3457-4c8a-8cc8-1312289f0e9e introduced_at=2026-01-20 subscription_dates=['2021-06-15']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC133",
+      "row_ref": "",
+      "details": "introduction_id=137a6f3e-944f-47e9-bd6f-38f399cc84f8 introduced_at=2026-01-20 subscription_dates=['2022-04-13']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=14c70eb3-5c29-4b9a-8067-5fdf78cfddf1 introduced_at=2026-01-20 subscription_dates=['2021-07-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "introduction_id=15c5ff6e-aaf2-40c4-a3ec-0c5aaf6c07d4 introduced_at=2026-01-20 subscription_dates=['2022-09-03']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=15e4ce4e-1738-4493-92fd-7dc039fcccbf introduced_at=2026-01-20 subscription_dates=['2021-08-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "introduction_id=1b3cade8-76a7-484e-a7e6-44b0ce82a32d introduced_at=2026-01-20 subscription_dates=['2022-04-03']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=208ea7d8-1081-44c7-ba17-b27d1f2866ff introduced_at=2026-01-20 subscription_dates=['2021-11-19']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC125",
+      "row_ref": "",
+      "details": "introduction_id=2139dffb-b5b3-4ad7-a4c9-0e5d8e6108c5 introduced_at=2026-01-20 subscription_dates=['2022-01-15']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=22599ad2-13b8-4b38-85fd-518b714a6789 introduced_at=2026-01-20 subscription_dates=['2021-06-22']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC133",
+      "row_ref": "",
+      "details": "introduction_id=237a7929-d06b-4c90-8b33-3a8c6c5cd586 introduced_at=2026-01-09 subscription_dates=['2022-04-24', '2023-04-24']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=26426b40-d0f1-4f29-9064-bfc94ba35d24 introduced_at=2026-01-20 subscription_dates=['2022-03-17']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=27459bc9-1953-46a7-b17f-dcf6c83fe87c introduced_at=2026-01-20 subscription_dates=['2021-07-15']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=2c0ad87f-c237-49ed-b491-37279eb640fb introduced_at=2026-01-20 subscription_dates=['2021-06-16']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introduction_id=2c61057f-1f36-4caa-a5c1-76b92fc22e57 introduced_at=2021-02-05 subscription_dates=['2021-02-09', '2021-03-19', '2022-01-01', '2022-03-03']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=2c9f4246-e680-44e5-907a-91a073c6533d introduced_at=2026-01-20 subscription_dates=['2021-09-16', '2021-12-05']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=2fc5aa61-4845-442c-a7ff-350ba2ccce75 introduced_at=2026-01-20 subscription_dates=['2021-11-22']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=32a7b899-29c5-4fbf-9e26-84eedd4c1a63 introduced_at=2026-01-20 subscription_dates=['2021-08-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC125",
+      "row_ref": "",
+      "details": "introduction_id=3311c328-7632-4b00-b059-4fa3b61d4ed3 introduced_at=2026-01-25 subscription_dates=['2023-09-10']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC143",
+      "row_ref": "",
+      "details": "introduction_id=36e50713-3082-45a9-a0e8-19259071ce07 introduced_at=2026-01-09 subscription_dates=['2024-01-27']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=389b6a5a-ede5-4b5b-8193-d7de9ab1556f introduced_at=2026-01-20 subscription_dates=['2021-06-16']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=38dea290-866c-49fd-80bd-265a8c7e518b introduced_at=2026-01-20 subscription_dates=['2021-07-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=39c4f77d-fb93-457e-9bc2-ce0aa9dc3f7c introduced_at=2026-01-20 subscription_dates=['2021-07-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=3b5fa270-507c-428c-a529-474847c5d4f1 introduced_at=2026-01-20 subscription_dates=['2023-04-13']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC133",
+      "row_ref": "",
+      "details": "introduction_id=3dd9354c-02a3-48f1-963c-8dbee021c82c introduced_at=2026-01-20 subscription_dates=['2022-11-04']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=3fa6226e-a6c3-4ea4-bfcb-e6f9e89464a9 introduced_at=2026-01-20 subscription_dates=['2021-07-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=43827c09-e37a-4cc0-9e3a-8ec84e82ac8e introduced_at=2026-01-20 subscription_dates=['2021-06-29', '2021-11-17']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=49abf853-23c5-4c30-af37-cb337fce91c2 introduced_at=2026-01-20 subscription_dates=['2024-01-23']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=4c60087a-5f98-45a3-a36e-cbf5b8f2d2c9 introduced_at=2026-01-25 subscription_dates=['2024-01-25']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "introduction_id=4d7734e3-c24e-4c6d-9e43-42b8a37d7bc2 introduced_at=2026-01-20 subscription_dates=['2022-04-03']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=50eb0f65-159b-418e-ab3c-e69cfad0658c introduced_at=2026-01-20 subscription_dates=['2021-06-22']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=5156a007-c0e4-463a-96b9-177aeab67cef introduced_at=2026-01-20 subscription_dates=['2021-11-17']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "introduction_id=53072381-512a-4356-bfbe-f801c5b44c0d introduced_at=2026-01-20 subscription_dates=['2022-04-03']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=53b6f2c1-c6f8-424a-a5a3-cc4e3ebe0d6a introduced_at=2026-01-09 subscription_dates=['2021-06-23']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=55d0c96d-d623-46b0-a08d-74f5433442f2 introduced_at=2026-01-20 subscription_dates=['2021-11-04']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC125",
+      "row_ref": "",
+      "details": "introduction_id=56a2142d-ad93-42f8-8551-41129f0bb48c introduced_at=2026-01-25 subscription_dates=['2021-12-24', '2023-05-07']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=5c00137f-b016-4873-8352-85b31c3f9e26 introduced_at=2026-01-20 subscription_dates=['2021-07-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=5c5d612a-167a-41c3-9ff7-ddc7cf80e630 introduced_at=2026-01-20 subscription_dates=['2021-08-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC125",
+      "row_ref": "",
+      "details": "introduction_id=5d68e83a-1908-4cb0-a1d1-311f4fa8ef26 introduced_at=2026-01-20 subscription_dates=['2022-01-15']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introduction_id=5fc9d9b4-c13d-4071-96f4-67fe726e34a6 introduced_at=2021-03-05 subscription_dates=['2021-03-09']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC133",
+      "row_ref": "",
+      "details": "introduction_id=6090f0ae-cc2f-463e-99b2-205552c4b997 introduced_at=2026-01-20 subscription_dates=['2022-11-04']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=60a33fca-c3e2-4474-8ead-42ea0e7783e6 introduced_at=2026-01-20 subscription_dates=['2021-11-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=60b90208-fe5e-41ec-87fc-8cc08eb358c2 introduced_at=2026-01-20 subscription_dates=['2021-11-22']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=63a7d251-37d9-4d91-95fa-3bdd14484aed introduced_at=2026-01-09 subscription_dates=['2024-01-23']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=6704caf0-6b12-45a0-a95f-8cd861719c8c introduced_at=2026-01-20 subscription_dates=['2021-08-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=7ae621d5-dd17-4849-93b4-8805053e1658 introduced_at=2026-01-20 subscription_dates=['2021-06-23']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=8264b4bc-ffe3-47cb-ae3d-8dedecb5f1b5 introduced_at=2026-01-20 subscription_dates=['2021-12-05']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=82ca58f7-f30d-42bb-9838-2863624c98ae introduced_at=2026-01-20 subscription_dates=['2021-08-07']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=85d9ba49-c703-41c4-8efe-14d06e8876f6 introduced_at=2026-01-20 subscription_dates=['2022-02-03']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=88b2a218-8972-4a6c-bec3-5ed7a7575e0b introduced_at=2026-01-20 subscription_dates=['2021-03-25']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=8ecce9e6-c929-427b-95bc-c6783850f70b introduced_at=2026-01-20 subscription_dates=['2021-08-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=8fe75156-8dab-4ea4-a97b-cf766557fa10 introduced_at=2026-01-20 subscription_dates=['2021-07-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC112",
+      "row_ref": "",
+      "details": "introduction_id=90967d3a-ad55-4648-aeb9-4955905452f7 introduced_at=2026-01-20 subscription_dates=['2022-10-28']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC133",
+      "row_ref": "",
+      "details": "introduction_id=91aab721-7286-4baa-9c7b-3ec5b6ac81a4 introduced_at=2026-01-20 subscription_dates=['2022-04-15']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=91d7b867-89af-4313-9a62-259358016ff8 introduced_at=2026-01-20 subscription_dates=['2021-12-05']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=925d6cc9-ce2d-4b73-b7b6-a438cae69ac5 introduced_at=2026-01-09 subscription_dates=['2021-06-16']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=954e5828-8aaf-481d-ba53-3d722b1f9d4c introduced_at=2026-01-20 subscription_dates=['2021-07-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=958b413a-b990-4e04-9088-bb9a364a574c introduced_at=2026-01-20 subscription_dates=['2021-07-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=991effc7-3464-4da8-b3ec-9221d0fccc9e introduced_at=2026-01-20 subscription_dates=['2021-11-04']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=9a0a898e-30ac-499e-af64-6f3199b7472e introduced_at=2026-01-20 subscription_dates=['2021-09-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=9d57b821-4128-43cd-b8a3-6467ad6f476a introduced_at=2026-01-09 subscription_dates=['2021-07-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introduction_id=9ea694ba-5db2-435c-82da-cdf732d695ab introduced_at=2021-03-05 subscription_dates=['2021-03-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=9fb89daf-f39c-4a5c-b036-47e0e5eef1db introduced_at=2026-01-20 subscription_dates=['2021-08-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=9ff283e2-b5e5-4322-9e89-d37738e89851 introduced_at=2026-01-20 subscription_dates=['2021-11-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=a86d271f-b523-4e6b-907b-977a8d3d792c introduced_at=2026-01-25 subscription_dates=['2021-11-19']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=a9e63eb1-5d7d-4e93-8508-a1e8e0432197 introduced_at=2026-01-20 subscription_dates=['2021-08-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=af1d33da-b1d3-47ce-ba2d-32f00573fe32 introduced_at=2026-01-20 subscription_dates=['2021-11-22', '2023-03-24']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=b054c403-2dcd-4e29-a052-21492539b051 introduced_at=2026-01-09 subscription_dates=['2024-01-02']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=b074cce7-b010-461e-9b40-9a9d15721d30 introduced_at=2026-01-20 subscription_dates=['2021-07-06', '2021-10-27']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=b21c81ab-0e24-4106-811f-e1c050a1085d introduced_at=2026-01-20 subscription_dates=['2024-01-02']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC112",
+      "row_ref": "",
+      "details": "introduction_id=b4d04063-c708-466d-abef-47981574c564 introduced_at=2026-01-20 subscription_dates=['2022-08-23']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC133",
+      "row_ref": "",
+      "details": "introduction_id=b5097843-c5cc-4020-95c4-f82d3e861023 introduced_at=2026-01-20 subscription_dates=['2022-04-18']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC133",
+      "row_ref": "",
+      "details": "introduction_id=b9831585-b765-43d4-be21-24df4ad9bea5 introduced_at=2026-01-20 subscription_dates=['2022-06-04']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=bb70a28b-2de4-442d-93bc-66083218a866 introduced_at=2026-01-20 subscription_dates=['2021-07-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC125",
+      "row_ref": "",
+      "details": "introduction_id=be9a5b2f-6ae7-43ba-a0d9-297dbcf02c2c introduced_at=2026-01-20 subscription_dates=['2022-02-02']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=c05128a2-1d78-4459-8532-82a96df33854 introduced_at=2026-01-20 subscription_dates=['2021-08-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=c2d3080f-fbd7-4663-ab9f-9e6f4b314979 introduced_at=2026-01-20 subscription_dates=['2021-07-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=c3f0f945-0d6b-47b4-b314-750b5a20ff54 introduced_at=2026-01-20 subscription_dates=['2021-07-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC133",
+      "row_ref": "",
+      "details": "introduction_id=c6212060-b151-48ec-8d3a-3e9fb7a7838c introduced_at=2026-01-20 subscription_dates=['2022-04-18']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=c8960522-1d50-4734-8d96-80f83be23f56 introduced_at=2026-01-20 subscription_dates=['2023-04-04']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=cb590a56-8a1b-4d99-af05-862c41bc461b introduced_at=2026-01-20 subscription_dates=['2023-04-13']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=cb6a77e9-e270-4364-a217-860bf603d38d introduced_at=2026-01-20 subscription_dates=['2021-07-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "introduction_id=cd505520-0afe-47d4-a0b2-5d5a04ed73ce introduced_at=2026-01-20 subscription_dates=['2022-09-03']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=cf792369-0d90-4996-b69f-dfd008580fff introduced_at=2026-01-20 subscription_dates=['2021-07-06', '2021-08-23', '2021-11-17', '2021-12-20', '2022-03-29', '2022-09-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=d3ccfaa7-cca5-46ec-82ed-fa14c12298d3 introduced_at=2026-01-20 subscription_dates=['2021-09-07']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=d4a2e33c-2363-40dc-bd44-7f8e7b780339 introduced_at=2026-01-20 subscription_dates=['2021-06-16']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=d7c9db4a-761d-4318-8906-12c599884061 introduced_at=2026-01-20 subscription_dates=['2021-09-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=da05fc12-da5f-4ca5-81fe-824034c8ddaf introduced_at=2026-01-20 subscription_dates=['2024-12-31']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=db1c3fc5-55ce-4554-b17c-7043219b8f90 introduced_at=2026-01-20 subscription_dates=['2021-07-23']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "introduction_id=dcea4b7b-9f9b-4afd-b81e-99b92032549c introduced_at=2026-01-20 subscription_dates=['2022-02-03']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=dd3f71c4-193f-492a-b3d5-de600c5b6331 introduced_at=2026-01-09 subscription_dates=['2021-06-22']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=df915952-f6e2-47f0-bc90-df80cced039a introduced_at=2026-01-09 subscription_dates=['2024-01-23']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=df94be96-c44b-4895-a13e-d180f05f777e introduced_at=2026-01-20 subscription_dates=['2021-03-25']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=e0fbe098-22c4-4980-a7fe-2e2db42a3029 introduced_at=2026-01-20 subscription_dates=['2021-08-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=e2d38e73-c0b0-4311-8f44-fc9eb27536e8 introduced_at=2026-01-20 subscription_dates=['2021-06-15']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=e69eab7a-dbb1-4e33-8cfb-4251e5146d99 introduced_at=2026-01-20 subscription_dates=['2021-07-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC125",
+      "row_ref": "",
+      "details": "introduction_id=e7ddfbfa-f70b-46ab-bda2-7563a4ea592f introduced_at=2026-01-20 subscription_dates=['2022-02-02']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC102",
+      "row_ref": "",
+      "details": "introduction_id=e8c9c57e-d8c7-459b-a3d3-7fad2c27eae2 introduced_at=2026-01-20 subscription_dates=['2024-04-15']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=ec5a5871-c16d-4f3b-9b6b-c6d8cb3c8c99 introduced_at=2026-01-20 subscription_dates=['2024-01-23']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC125",
+      "row_ref": "",
+      "details": "introduction_id=f1ea02dc-db90-4635-b503-ff29bd88c12b introduced_at=2026-01-20 subscription_dates=['2021-12-24', '2023-05-07']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=f4f4a8ac-fe0f-4fc9-95e6-74f8e0d9dc10 introduced_at=2026-01-20 subscription_dates=['2021-07-06', '2021-10-27']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=f50b0b5f-bda3-449d-91a5-536bf9cecd77 introduced_at=2026-01-20 subscription_dates=['2021-09-06']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "introduction_id=f66febc8-164c-4584-b187-464b66c56d54 introduced_at=2026-01-20 subscription_dates=['2022-02-03']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=f7ec4dac-212d-4102-a40a-3d88d773fc5d introduced_at=2026-01-20 subscription_dates=['2024-12-31']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=fe80eb82-a43e-41c7-9327-14ee20320d47 introduced_at=2026-01-20 subscription_dates=['2021-11-19']"
+    },
+    {
+      "severity": "fail",
+      "check": "introduction_contract_date_mismatch",
+      "vehicle": "VC133",
+      "row_ref": "",
+      "details": "introduction_id=ff42c9af-d96f-489b-8eac-ea96ffca19ff introduced_at=2026-01-20 subscription_dates=['2022-04-22']"
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:489",
+      "details": "source_row=489 investor=DALINGA HOLDING AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=499.87 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:490",
+      "details": "source_row=490 investor=DALINGA HOLDING AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=99.27 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:494",
+      "details": "source_row=494 investor=MA GROUP AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=358.0 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:496",
+      "details": "source_row=496 investor=DALINGA HOLDING AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=499.87 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:497",
+      "details": "source_row=497 investor=DALINGA HOLDING AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=99.27 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:500",
+      "details": "source_row=500 investor=MA GROUP AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=358.0 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "introduction_tuple_repeat_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 count=2"
+    },
+    {
+      "severity": "warn",
+      "check": "introduction_tuple_repeat_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f investor_id=996ec13d-5df9-4b46-8581-29bf3880c052 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 count=2"
+    },
+    {
+      "severity": "warn",
+      "check": "introduction_tuple_repeat_ruled",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 count=2"
+    },
+    {
+      "severity": "warn",
+      "check": "introduction_missing_date_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introduction_id=11673e9c-1afc-4586-a5ae-83b52b7c5e29 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21"
+    },
+    {
+      "severity": "warn",
+      "check": "performance_fee_threshold_multiplier_non_zero_ruled",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "commission_id=0eb2ccb5-59d9-44b7-9d5c-07e9710c9ac6 threshold_multiplier=0.1"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_rate_amount_formula_ruled",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=02e7a81c-d5bf-4839-9776-f89ae320b586 rate_bps=200 amount_sum=40000.0 expected_row_sum=20000.0 expected_split_sum=20000.0 tolerance=200.0 sample_commission_id=9390646c-b70a-451b-8b6e-16a11a397833 reason=VC113 Zandera two invested_amount rows with one NULL base created for dedup in DB_CHANGES_CHECKPOINT_2026-02-11.md Section 21"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_base_amount_vs_funded_amount_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=24c96f5a-0b23-4e40-b562-c0570df12fd8 commission_base_sum=200000.0 funded_sum=150000.0 unique_base_values=[100000.0] reason=VC106 split-commission legacy base allocation documented in DB_CHANGES_CHECKPOINT_2026-02-11.md Section 21"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_base_amount_vs_funded_amount_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=996ec13d-5df9-4b46-8581-29bf3880c052 commission_base_sum=50000.0 funded_sum=100000.0 unique_base_values=[50000.0] reason=VC106 split-commission legacy base allocation documented in DB_CHANGES_CHECKPOINT_2026-02-11.md Section 16/21"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_base_amount_vs_funded_amount_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=e78f40f3-7e17-44cd-af46-a01a2f195f3e commission_base_sum=400000.0 funded_sum=200000.0 unique_base_values=[100000.0] reason=VC106 LE SEIGNEUR two spread rows with one NULL base documented in DB_CHANGES_CHECKPOINT_2026-02-11.md Section 21"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_base_amount_vs_funded_amount_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 commission_base_sum=1424873.0 funded_sum=2350372.0 unique_base_values=[2240.0, 70902.0, 82917.0, 234607.0, 250000.0, 349344.0, 434863.0] reason=VC106 MACHOT multiple split commission rows; base sum intentionally diverges from funded sum per historical migration"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "dashboard=6326296.752 db=6326296.81 delta=0.058 expected=0.058"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "dashboard=963887.6075 db=963887.62 delta=0.0125 expected=0.0125"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC114",
+      "row_ref": "",
+      "details": "dashboard=0.4 db=0.0 delta=-0.4 expected=-0.4"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC133",
+      "row_ref": "",
+      "details": "dashboard=222892.5 db=217680.0 delta=-5212.5 expected=-5212.5"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:7",
+      "details": "investor=777 WALNUT LLC introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=825.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "d04fcd07-6af9-41a6-9530-06dbe8588b63",
+      "details": "investor=778 WALNUT LLC introducer=Set Cap basis=spread expected_amount=2805.0 expected_rate=n/a dashboard_amount=0.0 db_amount=2805.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:11",
+      "details": "investor=Band Capital Limited introducer=Elevation basis=spread expected_amount=53700.0 expected_rate=n/a dashboard_amount=8950.0 db_amount=53700.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:11",
+      "details": "investor=Band Capital Limited introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=12530.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:3",
+      "details": "investor=Charles DE BAVIER introducer=Elevation basis=spread expected_amount=9900.0 expected_rate=n/a dashboard_amount=1650.0 db_amount=9900.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:3",
+      "details": "investor=Charles DE BAVIER introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=5610.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:8",
+      "details": "investor=Keir Richard BENBOW introducer=Elevation basis=spread expected_amount=5250.0 expected_rate=n/a dashboard_amount=1750.0 db_amount=5250.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:5",
+      "details": "investor=CARTA INVESTMENTS LLC introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=1650.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:13",
+      "details": "investor=Tuygan GOKER introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=10525.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:13",
+      "details": "investor=Tuygan GOKER introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=12915.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:10",
+      "details": "investor=ZANDERA (Holdco) Ltd introducer=Elevation+Rick basis=spread expected_amount=96750.0 expected_rate=n/a dashboard_amount=112875.0 db_amount=96750.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:10",
+      "details": "investor=ZANDERA (Holdco) Ltd introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=24187.5 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:4",
+      "details": "investor=JASSQ HOLDING LIMITED introducer=Elevation basis=spread expected_amount=30000.0 expected_rate=n/a dashboard_amount=5000.0 db_amount=30000.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:4",
+      "details": "investor=JASSQ HOLDING LIMITED introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=7000.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:12",
+      "details": "investor=Jeremy LOWY introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=825.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:9",
+      "details": "investor=Marco JERRENTRUP introducer=Elevation basis=spread expected_amount=5250.0 expected_rate=n/a dashboard_amount=1750.0 db_amount=5250.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:6",
+      "details": "investor=Sahejman Singh KAHLON introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=825.0 db_amount=0.0"
+    }
+  ],
+  "mapping_coverage": {
+    "unmapped_dashboard_rows": 0,
+    "unmapped_db_rows": 0,
+    "unmapped_commission_rows_dashboard_to_db": 0,
+    "unmapped_commission_rows_db_to_dashboard": 0,
+    "name_mapping_applied_count": 66,
+    "name_mapping_unresolved_count": 0,
+    "fallback_match_warning_count": 0,
+    "row_match_modes": {
+      "exact_date": 364,
+      "relaxed": 35,
+      "fallback_loose_name_amounts": 42,
+      "fallback_amounts_date": 23,
+      "fallback_investor_shares_date": 1,
+      "fallback_amounts_no_date": 1
+    },
+    "fallback_matches_by_mode": {
+      "fallback_loose_name_amounts": 42,
+      "fallback_amounts_date": 23,
+      "fallback_investor_shares_date": 1,
+      "fallback_amounts_no_date": 1
+    },
+    "fallback_matches_ruled_count": 24,
+    "fallback_matches_safe_count": 43,
+    "fallback_matches_unruled_fail_count": 0
+  },
+  "rule_enforcement_summary": {
+    "introduction_integrity_check": true,
+    "subscription_formula_cross_field_check": true,
+    "commission_rate_integrity_check": true,
+    "commission_base_amount_matches_funded_check": true,
+    "strikethrough_commission_delete_check": true,
+    "dual_role_introducer_check": true,
+    "deprecated_introducer_references_check": true
+  },
+  "warning_governance_status": "PENDING_TRUST_PACK"
+}

@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import crypto from 'crypto'
+import { resolvePrimaryPersonaLink } from '@/lib/kyc/persona-link'
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
 const ALLOWED_MIME_TYPES = [
@@ -36,11 +37,14 @@ export async function GET() {
     }
 
     // Get commercial partner entity for current user
-    const { data: cpUser, error: cpError } = await serviceSupabase
-      .from('commercial_partner_users')
-      .select('commercial_partner_id')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { link: cpUser, error: cpError } = await resolvePrimaryPersonaLink<{
+      commercial_partner_id: string
+    }>({
+      supabase: serviceSupabase,
+      config: { userTable: 'commercial_partner_users', entityIdColumn: 'commercial_partner_id' },
+      userId: user.id,
+      select: 'commercial_partner_id',
+    })
 
     if (cpError || !cpUser?.commercial_partner_id) {
       return NextResponse.json({ error: 'Commercial Partner profile not found' }, { status: 404 })
@@ -142,11 +146,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Get commercial partner entity for current user
-    const { data: cpUser, error: cpError } = await serviceSupabase
-      .from('commercial_partner_users')
-      .select('commercial_partner_id')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { link: cpUser, error: cpError } = await resolvePrimaryPersonaLink<{
+      commercial_partner_id: string
+    }>({
+      supabase: serviceSupabase,
+      config: { userTable: 'commercial_partner_users', entityIdColumn: 'commercial_partner_id' },
+      userId: user.id,
+      select: 'commercial_partner_id',
+    })
 
     if (cpError || !cpUser?.commercial_partner_id) {
       return NextResponse.json({ error: 'Commercial Partner profile not found' }, { status: 404 })

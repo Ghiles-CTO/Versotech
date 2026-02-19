@@ -1,0 +1,39 @@
+{
+  "generated_at_utc": "2026-02-17T00:03:35.624495+00:00",
+  "status": "PASS",
+  "policy_version": "2026-02-15.1",
+  "global_report_json": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/output/global/run_20260217_000321/global_audit_report.json",
+  "scopes": [
+    {
+      "scope": "vc1",
+      "summary_fail_count": 0,
+      "summary_warn_count": 37,
+      "issues_csv_rows": 37,
+      "verdict": "PASS",
+      "report_json": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/vc1/output/run_20260217_010328/audit_report.json",
+      "issues_csv": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/vc1/output/run_20260217_010328/audit_issues.csv",
+      "warning_governance_status": "PASS"
+    },
+    {
+      "scope": "vc2",
+      "summary_fail_count": 0,
+      "summary_warn_count": 45,
+      "issues_csv_rows": 45,
+      "verdict": "PASS",
+      "report_json": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/vc2/output/run_20260217_010332/audit_report.json",
+      "issues_csv": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/vc2/output/run_20260217_010332/audit_issues.csv",
+      "warning_governance_status": "PASS"
+    },
+    {
+      "scope": "in",
+      "summary_fail_count": 0,
+      "summary_warn_count": 13,
+      "issues_csv_rows": 13,
+      "verdict": "PASS",
+      "report_json": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/in/output/run_20260217_010335/audit_report.json",
+      "issues_csv": "/Users/ghilesmoussaoui/Desktop/Versotech/data_verification_engine/scopes/in/output/run_20260217_010335/audit_issues.csv",
+      "warning_governance_status": "PASS"
+    }
+  ],
+  "findings": []
+}

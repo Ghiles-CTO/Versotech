@@ -1,0 +1,124 @@
+row,series,vc,legal_name,role,introducer_1,investor_match,investor_best,investor_score,introducer_match,introducer_best,introducer_score
+2,VC201,VC201,Infinitas Capital SPV V a series of Infinitas Capital Master LLC,-,,True,infinitas capital spv v a series of infinitas capital master llc,1.0,,,
+3,VC202,VC202,SESR INVESTMENTS PTE LTD,Introducer,Renaissance Bridge Capital LLC,True,sesr investments pte ltd,1.0,True,renbridge,1.0
+4,VC202,VC202,SPLENDID HEIGHT HOLDINGS LIMITED,Introducer,Bromley Capital Partners,True,splendid height holdings limited,1.0,True,bromley,1.0
+5,VC203,VC203,DOMINARI SECURITIES LLC,Introducer,Dimensional Advisors,True,dominari securities llc,1.0,True,dimensional advisors,1.0
+6,VC203,VC203,DOMINARI SECURITIES LLC,Broker,R. F. Lafferty & Co. Inc.,True,dominari securities llc,1.0,True,lafferty,1.0
+7,VC203,VC203,Georges SMITH,-,,True,georges smith,1.0,,,
+8,VC203,VC203,Julien MACHOT,-,,True,julien machot,1.0,,,
+9,VC203,VC203,Nicholas FOWLER,-,,True,nicholas fowler,1.0,,,
+11,VC203,VC203,Sebastian LATTUGA,Broker,R. F. Lafferty & Co. Inc.,True,sebastian lattuga,1.0,True,lafferty,1.0
+12,VC203,VC203,EVERLASTING HOLDINGS LLC,Introducer,"Sakal Advisory, LLC",True,everlasting holdings llc,1.0,True,sakal advisory,0.875
+14,VC203,VC203,EVERLASTING HOLDINGS LLC,Introducer,Astral Global Limited,True,everlasting holdings llc,1.0,True,astra global,1.0
+15,VC203,VC203,Tobias ENSELE,Introducer,Old City Securities LLC,True,tobias ensele,1.0,True,old city,1.0
+16,VC203,VC203,Tobias ENSELE,Introducer,Renaissance bridge Capital LLC,True,tobias ensele,1.0,True,renbridge,1.0
+17,VC203,VC203,"PEGASUS TECH VENTURES COMPANY VIII, L.P.",Introducer,Astral Global Limited,True,pegasus tech ventures company viii l p,1.0,True,astra global,1.0
+18,VC203,VC203,INS NEVADA LLC,Introducer,Rainmaker Securities,True,ins nevada llc,1.0,True,rainmaker securities,1.0
+19,VC203,VC203,INCRED GLOBAL WEALTH PTE LTD,Introducer,Renaissance Bridge Capital LLC,True,incred global wealth pte ltd,1.0,True,renbridge,1.0
+20,VC203,VC203,INCRED GLOBAL WEALTH PTE LTD,Introducer,Old City Securities LLC,True,incred global wealth pte ltd,1.0,True,old city,1.0
+21,VC203,VC203,Julien MACHOT,-,,True,julien machot,1.0,,,
+22,VC203,VC203,MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP,Introducer,Renaissance Bridge Capital LLC,True,mavan tech intelligence limited partnership,1.0,True,renbridge,1.0
+23,VC203,VC203,MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP,Introducer,Oliver Little,True,mavan tech intelligence limited partnership,1.0,True,oliver little,1.0
+24,VCL001,VC203,AGP Alternative Investment QP,Introducer,Alliance Global Partners LLC,True,agp alternative investment qp,1.0,True,agp,1.0
+25,VCL001,VC203,AGP Alternative Investment Fund VI- Series 2,Introducer,Alliance Global Partners LLC,True,agp alternative investment fund vi series 2,1.0,True,agp,1.0
+26,VCL002,VC203,AGP Alternative Investment QF,Introducer,Alliance Global Partners LLC,True,agp alternative investment qf,1.0,True,agp,1.0
+27,VCL002,VC203,AGP Alternative Investment Fund VI- Series 2,Introducer,Alliance Global Partners LLC,True,agp alternative investment fund vi series 2,1.0,True,agp,1.0
+28,VC203,VC203,AEON INC,-,,True,aeon,1.0,,,
+29,VC203,VC203,Robert VOGT IV,-,,True,robert c vogt iv,0.933,,,
+30,VC206,VC206,"AAF D Boral Mstr SPV LLC, Ser III OpenAI",Introducer,AEON INC,True,aaf d boral mstr spv llc ser iii openai,1.0,True,aeon,1.0
+31,VC206,VC206,ODIN INVESTMENTS LIMITED,-,,True,odin investments limited,1.0,,,
+32,VC206,VC206,AI DIRECT OPPORTUNITIES FUND SCSP,Introducer,Venture Spring,True,ai direct opportunities fund scsp,1.0,True,venture spring dimensional advisors,0.571
+33,VC206,VC206,AI DIRECT OPPORTUNITIES FUND SCSP,Introducer,Dimensional Advisors,True,ai direct opportunities fund scsp,1.0,True,venture spring dimensional advisors,0.727
+34,VC206,VC206,KIWI INNOVATIONS LIMITED,Introducer,Bromley Capital Partners,True,kiwi innovations limited,1.0,True,bromley,1.0
+35,VC206,VC206,Rishabh MITTAL,Introducer,Renaissance Bridge Capital LLC,True,rishabh mittal,1.0,True,renbridge,1.0
+36,VC206,VC206,Anuroop ARORA,Introducer,Renaissance Bridge Capital LLC,True,anuroop arora,1.0,True,renbridge,1.0
+37,VC206,VC206,Bharath RAM,Introducer,Renaissance Bridge Capital LLC,True,bharath ram,1.0,True,renbridge,1.0
+38,VC206,VC206,AEON INC,-,,True,aeon,1.0,,,
+39,VC206,VC206,Julien MACHOT,-,,True,julien machot,1.0,,,
+40,VC206,VC206,Jyotsna HEDGE,Introducer,Mervyn Pereira,True,jyotsna hedge,1.0,True,mervyn pereira,1.0
+41,VC206,VC206,PUTHAN N.C. MENON AND/OR SOBHA MENON RAGHAVANNAIR,Introducer,Mervyn Pereira,True,puthan n c menon and or sobha menon raghavannair,1.0,True,mervyn pereira,1.0
+42,VC206,VC206,"ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC",,,True,alta asset fund 3 a sub fund of alta asset fund vcc,1.0,,,
+43,VC206,VC206,"REDPOINT OMEGA V, L.P.",Introducer,Visual Sectors,True,redpoint omega v l p,1.0,True,visual sectors,1.0
+44,VC206,VC206,"REDPOINT OMEGA V, L.P.",Introducer,Astral Global Limited,True,redpoint omega v l p,1.0,True,astra global,1.0
+45,VC206,VC206,"REDPOINT OMEGA ASSOCIATES V, LLC",Introducer,Visual Sectors,True,redpoint omega associates v llc,1.0,True,visual sectors,1.0
+46,VC206,VC206,"ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC",,,True,alta asset fund 3 a sub fund of alta asset fund vcc,1.0,,,
+47,VC206,VC206,"ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC",,,True,alta asset fund 3 a sub fund of alta asset fund vcc,1.0,,,
+48,VC207,VC207,TARA LYNN SCHOLLEMANN,,,True,tara lynn schollemann,1.0,,,
+49,VC207,VC207,JONATHAN STONA,,,True,jonathan stona,1.0,,,
+50,VC207,VC207,PRASANNA SANTHANAM,,,True,prasanna santhanam,1.0,,,
+51,VC207,VC207,DILIP STEPHANE ROUSSENALY,,,True,dilip stephane roussenaly,1.0,,,
+52,VC207,VC207,GUSTAVO FUCHS ALBUQUERQUE,,,True,gustavo fuchs albuquerque,1.0,,,
+53,VC207,VC207,MARK SOUZA,,,True,mark souza,1.0,,,
+54,VC207,VC207,KEE-MIN NGIAM,,,True,kee min ngiam,1.0,,,
+55,VC207,VC207,ANUROOP ARORA,Introducer,Renaissance Bridge Capital LLC,True,anuroop arora,1.0,True,renbridge,1.0
+56,VC207,VC207,DIVYA SRIDHAR and SHRIVATSAN VASUDHEVAN,Introducer,Renaissance Bridge Capital LLC,True,divya and shrivatsan sridhar and vasudhevan,0.756,True,renbridge,1.0
+57,VC207,VC207,BHARATH RAM,Introducer,Renaissance Bridge Capital LLC,True,bharath ram,1.0,True,renbridge,1.0
+58,VC207,VC207,VARUN SEMBIUM VARADARAJAN,Introducer,Renaissance Bridge Capital LLC,True,varun sembium varadarajan,1.0,True,renbridge,1.0
+59,VC207,VC207,Julien MACHOT,,,True,julien machot,1.0,,,
+60,VC207,VC207,ABHINEET MISHRA,Introducer,Renaissance Bridge Capital LLC,True,abhineet mishra,1.0,True,renbridge,1.0
+61,VC207,VC207,AGP ALTERNATIVE INVESTMENT QP FUND - SERIES 4,Introducer,Alliance Global Partners LLC,True,agp alternative investment qp fund series 4,1.0,True,agp,1.0
+62,VC207,VC207,ASHUTOSH CHETAL,Introducer,Renaissance Bridge Capital LLC,True,ashutosh chetal,1.0,True,renbridge,1.0
+63,VC207,VC207,VIDHYA GOVINDARAJAN,Introducer,Renaissance Bridge Capital LLC,True,vidhya govindarajan,1.0,True,renbridge,1.0
+64,VC207,VC207,ANKUR SRIVASTAVA,Introducer,Renaissance Bridge Capital LLC,True,ankur srivastava,1.0,True,renbridge,1.0
+65,VC207,VC207,GURPREET SINGH,Introducer,Renaissance Bridge Capital LLC,True,gurpreet singh,1.0,True,renbridge,1.0
+66,VC207,VC207,AEON INC.,Broker,R. F. Lafferty & Co. Inc.,True,aeon,1.0,True,lafferty,1.0
+67,VC207,VC207,SPARKLABS GLOBAL CAPITAL X LLC,Introducer,Elena VYSOTSKAIA,True,sparklabs global capital x llc,1.0,True,elena vysotskaia,1.0
+68,VC207,VC207,Julien MACHOT,,,True,julien machot,1.0,,,
+69,VC207,VC207,MR AND MRS MATHEW KOLANGIKOMBIL THOMAS,,,True,and mathew kolangikombil thomas,1.0,,,
+70,VC207,VC207,Rishabh MITTAL,Introducer,Renaissance Bridge Capital LLC,True,rishabh mittal,1.0,True,renbridge,1.0
+71,VC207,VC207,LF GROUP SARL,,,True,lf group sarl,1.0,,,
+72,VC207,VC207,IGOR TSUKERMAN and IRENE APOTOVSKY,,,True,igor and irene tsukerman and apotovsky,0.778,,,
+73,VC209,VC209,SINO SUISSE LLC,Introducer,Bromley Capital Partners,True,sino suisse llc,1.0,True,bromley,1.0
+74,VC209,VC209,AEON INC,,,True,aeon,1.0,,,
+75,VC209,VC209,Georgi GEORGIEV,Introducer,Robin Doble,True,georgi georgiev,1.0,True,robin doble,1.0
+76,VC209,VC209,JRF INVESTMENTS DMCC,Introducer,Renaissance Bridge Capital LLC,True,jrf investments dmcc,1.0,True,renbridge,1.0
+77,VC209,VC209,"D. BORAL MASTER SPV, SERIES IV XAI",Introducer,AEON INC,True,d boral master spv series iv xai,1.0,True,aeon,1.0
+78,VC209,VC209,U.S. HMC SERIES FUND LP - SERIES II,,,True,u s hmc series fund lp series ii,1.0,,,
+79,VC209,VC209,Seri Cosmos Capital Limited,,,True,seri cosmos capital limited,1.0,,,
+80,VC209,VC209,CBH Compagnie Bancaire Helvétique SA,Broker,R. F. Lafferty & Co. Inc.,True,cbh compagnie bancaire helv tique sa,1.0,True,lafferty,1.0
+81,VC209,VC209,Jamel CHANDOUL,Introducer,Bright Views Holdings,True,jamel chandoul,1.0,True,bright views,1.0
+82,VC209,VC209,BRIGHT VIEWS HOLDINGS,,,True,bright views,1.0,,,
+83,VC209,VC209,"STP CAP V, A SERIES OF CGF2021 LLC, SYDECAR LLC",Broker,R. F. Lafferty & Co. Inc.,True,stp cap v a series of cgf2021 llc sydecar llc,1.0,True,lafferty,1.0
+84,VC209,VC209,SINO SUISSE LLC,,,True,sino suisse llc,1.0,,,
+85,VC209,VC209,CBH Compagnie Bancaire Helvétique SA,,,True,cbh compagnie bancaire helv tique sa,1.0,,,
+86,VC209,VC209,MOBILITY INNOVATION FUND LLC,Introducer,Jeffrey Wan,True,mobility innovation fund llc,1.0,True,jeffrey wan,1.0
+87,VC209,VC209,U.S. HMC SERIES FUND LP – SERIES II,,,True,u s hmc series fund lp series ii,1.0,,,
+88,VC209,VC209,MRS ANISHA BANSAL AND MR RAHUL KARKUN,,,True,anisha bansal and rahul karkun,1.0,,,
+89,VC209,VC209,"SPACEFARING VENTURES FUND 9, LLC",,,True,spacefaring ventures fund 9 llc,1.0,,,
+90,VC209,VC209,PVPL FUND LLC SERIES 3,Broker,R. F. Lafferty & Co. Inc.,True,pvpl fund llc series 3,1.0,True,lafferty,1.0
+91,VC209,VC209,PVPL FUND LLC SERIES 3,Introducer,Visual Sectors,True,pvpl fund llc series 3,1.0,True,visual sectors,1.0
+92,VC209,VC209,"PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC",Introducer,Rubix Holdings Limited,True,preamble x capital i a series of preamble x capital llc,1.0,True,rubix holdings limited,1.0
+93,VC209,VC209,Julien MACHOT,,,True,julien machot,1.0,,,
+94,VC209,VC209,"PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC",,,True,preamble x capital i a series of preamble x capital llc,1.0,,,
+95,VC209,VC209,Mohan SASANAPURI,,,True,mohan sasanapuri,1.0,,,
+96,VC209,VC209,Kartik Kumar ATTULURI,,,True,kartik kumar attuluri,1.0,,,
+97,VC209,VC209,Prabhakar Somana KONGANDA,,,True,prabhakar somana konganda,1.0,,,
+98,VC209,VC209,MADISON TRUST COMPANY (on behalf of Edward Bendickson),,,True,madison trust company on behalf of edward bendickson,1.0,,,
+99,VC209,VC209,"FRONTIERX VIII, LP",,,True,frontierx viii lp,1.0,,,
+100,VC210,VC210,Marvin HAZELL,Introducer,ANIM,True,marvin hazell,1.0,True,anim,1.0
+101,VC210,VC210,Hailey ORR,Introducer,ANIM,True,hailey orr,1.0,True,anim,1.0
+102,VC211,VC211,Anton POLETAEV,Introducer,Renaissance Bridge Capital LLC,True,anton poletaev,1.0,True,renbridge,1.0
+103,VC215,VC215,Julien MACHOT,,,True,julien machot,1.0,,,
+104,VC215,VC215,Gourav KAKKAR,Introducer,Infinyte Club Private Limited,True,gourav kakkar,1.0,True,infinyte club,1.0
+105,VC215,VC215,Gourav KAKKAR,Introducer,Set Cap,True,gourav kakkar,1.0,True,anand,1.0
+106,VC215,VC215,Rajagopalan MADHUSUDAN,Introducer,Infinyte Club Private Limited,True,rajagopalan madhusudan,1.0,True,infinyte club,1.0
+107,VC215,VC215,Rajagopalan MADHUSUDAN,Introducer,Set Cap,True,rajagopalan madhusudan,1.0,True,anand,1.0
+108,VC215,VC215,Ved NIRANJANBHAI ANTANI,Introducer,Infinyte Club Private Limited,True,ved niranjanbhai antani,1.0,True,infinyte club,1.0
+109,VC215,VC215,Ved NIRANJANBHAI ANTANI,Introducer,Set Cap,True,ved niranjanbhai antani,1.0,True,anand,1.0
+110,VC215,VC215,Mahesh NALLAPATI,Introducer,Infinyte Club Private Limited,True,mahesh nallapati,1.0,True,infinyte club,1.0
+111,VC215,VC215,Mahesh NALLAPATI,Introducer,Set Cap,True,mahesh nallapati,1.0,True,anand,1.0
+112,VC215,VC215,Varun SEMBIUM VARADARAJAN,Introducer,Renaissance Bridge Capital LLC,True,varun sembium varadarajan,1.0,True,renbridge,1.0
+113,VC215,VC215,CARTA INVESTMENTS LLC,Introducer,Infinyte Club Private Limited,True,carta investments llc,1.0,True,infinyte club,1.0
+114,VC215,VC215,CARTA INVESTMENTS LLC,Introducer,Set Cap,True,carta investments llc,1.0,True,anand,1.0
+115,VC215,VC215,STELLATRION PARTNERS,Introducer,Set Cap,True,stellatrion partners,1.0,True,anand,1.0
+116,VC215,VC215,STELLATRION PARTNERS,Introducer,Set Cap,True,stellatrion partners,1.0,True,anand,1.0
+117,VC215,VC215,"ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC",,,True,anthr synd i a series of 2h opportunities llc,1.0,,,
+118,VC215,VC215,"ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC",,,True,anthr synd i a series of 2h opportunities llc,1.0,,,
+119,VC215,VC215,"ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC",,,True,anthr synd i a series of 2h opportunities llc,1.0,,,
+120,VC215,VC215,Anuroop ARORA,Introducer,Renaissance Bridge Capital LLC,True,anuroop arora,1.0,True,renbridge,1.0
+121,VC215,VC215,AEON INC,,,True,aeon,1.0,,,
+122,VC215,VC215,"Anthropic Compartment, HAG Private Markets SARL",Introducer,Hottinger AG,True,anthropic compartment hag private markets sarl,1.0,True,hottinger ag,1.0
+123,VC215,VC215,LF GROUP SARL,,,True,lf group sarl,1.0,,,
+124,VC215,VC215,AEON INC,,,True,aeon,1.0,,,
+125,VC215,VC215,Keir BENBOW,,,True,keir benbow,1.0,,,
+126,VC215,VC215,George Guoying CHEN,,,True,georges chen,1.0,,,

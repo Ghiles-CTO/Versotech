@@ -1,0 +1,680 @@
+# VFD Color-Only Change Log (pre-change)
+
+Source: dashboardreconciliations/06_Full_Subscription_Data_VFD.xlsx
+Only rows with **colored fields beyond Currency/Shares/Current Position** are included.
+
+## IN110
+- Row 24 | William TOYE | ETH
+  - Notes: None (color FFFFC000)
+
+## IN111
+- Row 26 | Boris IPPOLITOV | EUR
+  - Price Per Share: 290.48 (color FFFF0000)
+
+## VC102
+- Row 32 | KRISTINA & CHENG-LIN SUTKAITYTE & HSU | USD
+  - Investor Name: KRISTINA & CHENG-LIN SUTKAITYTE & HSU (color FFFF0000)
+
+## VC106
+- Row 38 | Anisha Bansal and Rahul KARKUN | USD
+  - Funded Amount: 0 (color FFFF0000)
+- Row 61 | Bank SYZ AG | USD
+  - Entity Code: VC106 (color FFFF0000)
+  - Investor Name: Bank SYZ AG (color FFFF0000)
+  - Investor Type: entity (color FFFF0000)
+  - Commitment: 3763.2 (color FFFF0000)
+  - Funded Amount: 3763.2 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+  - Price Per Share: 23.52 (color FFFF0000)
+  - Cost Per Share: 14 (color FFFF0000)
+  - Subscription Fee (%): 0 (color FFFF0000)
+  - Subscription Fee Amount: 0 (color FFFF0000)
+  - Performance Fee Tier 1 (%): 0.1 (color FFFF0000)
+  - Performance Fee Tier 1 Threshold: None (color FFFF0000)
+  - Performance Fee Tier 2 (%): None (color FFFF0000)
+  - Performance Fee Tier 2 Threshold: None (color FFFF0000)
+  - Spread Per Share: 9.52 (color FFFF0000)
+  - Spread Fee Amount: 1523.2 (color FFFF0000)
+  - Management Fee (%): None (color FFFF0000)
+  - BD Fee (%): 0 (color FFFF0000)
+  - BD Fee Amount: 0 (color FFFF0000)
+  - FINRA Fee Shares: 0 (color FFFF0000)
+  - FINRA Fee Amount: 0 (color FFFF0000)
+  - Discount Rate: None (color FFFF0000)
+  - Interest Rate: None (color FFFF0000)
+  - Valuation Cap: None (color FFFF0000)
+  - Opportunity Name: J.MACHOT (color FFFF0000)
+  - Contract Date: 2021-04-27 00:00:00 (color FFFF0000)
+- Row 62 | Bank SYZ AG | USD
+  - Entity Code: VC106 (color FFFF0000)
+  - Investor Name: Bank SYZ AG (color FFFF0000)
+  - Investor Type: entity (color FFFF0000)
+  - Commitment: 15052.8 (color FFFF0000)
+  - Funded Amount: 15052.8 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+  - Price Per Share: 23.52 (color FFFF0000)
+  - Cost Per Share: 13.5 (color FFFF0000)
+  - Subscription Fee (%): 0 (color FFFF0000)
+  - Subscription Fee Amount: 0 (color FFFF0000)
+  - Performance Fee Tier 1 (%): 0.1 (color FFFF0000)
+  - Performance Fee Tier 1 Threshold: None (color FFFF0000)
+  - Performance Fee Tier 2 (%): None (color FFFF0000)
+  - Performance Fee Tier 2 Threshold: None (color FFFF0000)
+  - Spread Per Share: 10.02 (color FFFF0000)
+  - Spread Fee Amount: 6412.8 (color FFFF0000)
+  - Management Fee (%): None (color FFFF0000)
+  - BD Fee (%): 0 (color FFFF0000)
+  - BD Fee Amount: 0 (color FFFF0000)
+  - FINRA Fee Shares: 0 (color FFFF0000)
+  - FINRA Fee Amount: 0 (color FFFF0000)
+  - Discount Rate: None (color FFFF0000)
+  - Interest Rate: None (color FFFF0000)
+  - Valuation Cap: None (color FFFF0000)
+  - Opportunity Name: J.MACHOT (color FFFF0000)
+  - Contract Date: 2021-04-27 00:00:00 (color FFFF0000)
+- Row 63 | Bank SYZ AG | USD
+  - Entity Code: VC106 (color FFFF0000)
+  - Investor Name: Bank SYZ AG (color FFFF0000)
+  - Investor Type: entity (color FFFF0000)
+  - Commitment: 36361.92 (color FFFF0000)
+  - Funded Amount: 36361.92 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+  - Price Per Share: 23.52 (color FFFF0000)
+  - Cost Per Share: 16 (color FFFF0000)
+  - Subscription Fee (%): 0 (color FFFF0000)
+  - Subscription Fee Amount: 0 (color FFFF0000)
+  - Performance Fee Tier 1 (%): 0.1 (color FFFF0000)
+  - Performance Fee Tier 1 Threshold: None (color FFFF0000)
+  - Performance Fee Tier 2 (%): None (color FFFF0000)
+  - Performance Fee Tier 2 Threshold: None (color FFFF0000)
+  - Spread Per Share: 7.52 (color FFFF0000)
+  - Spread Fee Amount: 11625.92 (color FFFF0000)
+  - Management Fee (%): None (color FFFF0000)
+  - BD Fee (%): 0 (color FFFF0000)
+  - BD Fee Amount: 0 (color FFFF0000)
+  - FINRA Fee Shares: 0 (color FFFF0000)
+  - FINRA Fee Amount: 0 (color FFFF0000)
+  - Discount Rate: None (color FFFF0000)
+  - Interest Rate: None (color FFFF0000)
+  - Valuation Cap: None (color FFFF0000)
+  - Opportunity Name: JMACHOT (color FFFF0000)
+  - Sourcing Contract Ref: VEG_VC6_TR6 (color FFFF0000)
+  - Contract Date: 2021-04-27 00:00:00 (color FFFF0000)
+- Row 64 | Bank SYZ AG | USD
+  - Entity Code: VC106 (color FFFF0000)
+  - Investor Name: Bank SYZ AG (color FFFF0000)
+  - Investor Type: entity (color FFFF0000)
+  - Commitment: 46569.6 (color FFFF0000)
+  - Funded Amount: 46569.6 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+  - Price Per Share: 23.52 (color FFFF0000)
+  - Cost Per Share: 16 (color FFFF0000)
+  - Subscription Fee (%): 0 (color FFFF0000)
+  - Subscription Fee Amount: 0 (color FFFF0000)
+  - Performance Fee Tier 1 (%): 0.1 (color FFFF0000)
+  - Performance Fee Tier 1 Threshold: None (color FFFF0000)
+  - Performance Fee Tier 2 (%): None (color FFFF0000)
+  - Performance Fee Tier 2 Threshold: None (color FFFF0000)
+  - Spread Per Share: 7.52 (color FFFF0000)
+  - Spread Fee Amount: 14889.6 (color FFFF0000)
+  - Management Fee (%): None (color FFFF0000)
+  - BD Fee (%): 0 (color FFFF0000)
+  - BD Fee Amount: 0 (color FFFF0000)
+  - FINRA Fee Shares: 0 (color FFFF0000)
+  - FINRA Fee Amount: 0 (color FFFF0000)
+  - Discount Rate: None (color FFFF0000)
+  - Interest Rate: None (color FFFF0000)
+  - Valuation Cap: None (color FFFF0000)
+  - Opportunity Name: JMACHOT (color FFFF0000)
+  - Sourcing Contract Ref: VEG_VC6_TR5 (color FFFF0000)
+  - Contract Date: 2021-04-27 00:00:00 (color FFFF0000)
+- Row 65 | Bank SYZ AG | USD
+  - Entity Code: VC106 (color FFFF0000)
+  - Investor Name: Bank SYZ AG (color FFFF0000)
+  - Investor Type: entity (color FFFF0000)
+  - Commitment: 62892.48 (color FFFF0000)
+  - Funded Amount: 62892.48 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+  - Price Per Share: 23.52 (color FFFF0000)
+  - Cost Per Share: 21 (color FFFF0000)
+  - Subscription Fee (%): 0 (color FFFF0000)
+  - Subscription Fee Amount: 0 (color FFFF0000)
+  - Performance Fee Tier 1 (%): 0.1 (color FFFF0000)
+  - Performance Fee Tier 1 Threshold: None (color FFFF0000)
+  - Performance Fee Tier 2 (%): None (color FFFF0000)
+  - Performance Fee Tier 2 Threshold: None (color FFFF0000)
+  - Spread Per Share: 4.02 (color FFFF0000)
+  - Spread Fee Amount: 10749.48 (color FFFF0000)
+  - Management Fee (%): None (color FFFF0000)
+  - BD Fee (%): 0 (color FFFF0000)
+  - BD Fee Amount: 0 (color FFFF0000)
+  - FINRA Fee Shares: 0 (color FFFF0000)
+  - FINRA Fee Amount: 0 (color FFFF0000)
+  - Discount Rate: None (color FFFF0000)
+  - Interest Rate: None (color FFFF0000)
+  - Valuation Cap: None (color FFFF0000)
+  - Opportunity Name: VEGINVEST (color FFFF0000)
+  - Sourcing Contract Ref: VEG_VC6_TR8 (color FFFF0000)
+  - Contract Date: 2021-04-27 00:00:00 (color FFFF0000)
+- Row 66 | Bank SYZ AG | USD
+  - Entity Code: VC106 (color FFFF0000)
+  - Investor Name: Bank SYZ AG (color FFFF0000)
+  - Investor Type: entity (color FFFF0000)
+  - Commitment: 124444.32 (color FFFF0000)
+  - Funded Amount: 124444.32 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+  - Price Per Share: 23.52 (color FFFF0000)
+  - Cost Per Share: 14 (color FFFF0000)
+  - Subscription Fee (%): 0 (color FFFF0000)
+  - Subscription Fee Amount: 0 (color FFFF0000)
+  - Performance Fee Tier 1 (%): 0.1 (color FFFF0000)
+  - Performance Fee Tier 1 Threshold: None (color FFFF0000)
+  - Performance Fee Tier 2 (%): None (color FFFF0000)
+  - Performance Fee Tier 2 Threshold: None (color FFFF0000)
+  - Spread Per Share: 9.52 (color FFFF0000)
+  - Spread Fee Amount: 50370.32 (color FFFF0000)
+  - Management Fee (%): None (color FFFF0000)
+  - BD Fee (%): 0 (color FFFF0000)
+  - BD Fee Amount: 0 (color FFFF0000)
+  - FINRA Fee Shares: 0 (color FFFF0000)
+  - FINRA Fee Amount: 0 (color FFFF0000)
+  - Discount Rate: None (color FFFF0000)
+  - Interest Rate: None (color FFFF0000)
+  - Valuation Cap: None (color FFFF0000)
+  - Opportunity Name: JMACHOT (color FFFF0000)
+  - Sourcing Contract Ref: VEG_VC6_TR4 (color FFFF0000)
+  - Contract Date: 2021-04-27 00:00:00 (color FFFF0000)
+- Row 67 | Bank SYZ AG | USD
+  - Entity Code: VC106 (color FFFF0000)
+  - Investor Name: Bank SYZ AG (color FFFF0000)
+  - Investor Type: entity (color FFFF0000)
+  - Commitment: 129407.04 (color FFFF0000)
+  - Funded Amount: 129407.04 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+  - Price Per Share: 23.52 (color FFFF0000)
+  - Cost Per Share: 13.5 (color FFFF0000)
+  - Subscription Fee (%): 0 (color FFFF0000)
+  - Subscription Fee Amount: 0 (color FFFF0000)
+  - Performance Fee Tier 1 (%): 0.1 (color FFFF0000)
+  - Performance Fee Tier 1 Threshold: None (color FFFF0000)
+  - Performance Fee Tier 2 (%): None (color FFFF0000)
+  - Performance Fee Tier 2 Threshold: None (color FFFF0000)
+  - Spread Per Share: 10.02 (color FFFF0000)
+  - Spread Fee Amount: 55130.04 (color FFFF0000)
+  - Management Fee (%): None (color FFFF0000)
+  - BD Fee (%): 0 (color FFFF0000)
+  - BD Fee Amount: 0 (color FFFF0000)
+  - FINRA Fee Shares: 0 (color FFFF0000)
+  - FINRA Fee Amount: 0 (color FFFF0000)
+  - Discount Rate: None (color FFFF0000)
+  - Interest Rate: None (color FFFF0000)
+  - Valuation Cap: None (color FFFF0000)
+  - Opportunity Name: J.MACHOT (color FFFF0000)
+  - Contract Date: 2021-04-27 00:00:00 (color FFFF0000)
+- Row 68 | Bank SYZ AG | USD
+  - Entity Code: VC106 (color FFFF0000)
+  - Investor Name: Bank SYZ AG (color FFFF0000)
+  - Investor Type: entity (color FFFF0000)
+  - Commitment: 4661508.64 (color FFFF0000)
+  - Funded Amount: 4661508.64 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+  - Price Per Share: 23.52 (color FFFF0000)
+  - Cost Per Share: 20 (color FFFF0000)
+  - Subscription Fee (%): 0 (color FFFF0000)
+  - Subscription Fee Amount: 0 (color FFFF0000)
+  - Performance Fee Tier 1 (%): 0.1 (color FFFF0000)
+  - Performance Fee Tier 1 Threshold: None (color FFFF0000)
+  - Performance Fee Tier 2 (%): None (color FFFF0000)
+  - Performance Fee Tier 2 Threshold: None (color FFFF0000)
+  - Spread Per Share: 3.52 (color FFFF0000)
+  - Spread Fee Amount: 697639.36 (color FFFF0000)
+  - Management Fee (%): None (color FFFF0000)
+  - BD Fee (%): 0 (color FFFF0000)
+  - BD Fee Amount: 0 (color FFFF0000)
+  - FINRA Fee Shares: 0 (color FFFF0000)
+  - FINRA Fee Amount: 0 (color FFFF0000)
+  - Discount Rate: None (color FFFF0000)
+  - Interest Rate: None (color FFFF0000)
+  - Valuation Cap: None (color FFFF0000)
+  - Opportunity Name: GERSHON (color FFFF0000)
+  - Contract Date: 2021-04-27 00:00:00 (color FFFF0000)
+- Row 69 | Barbara and Heinz WINZ | USD
+  - Funded Amount: 0 (color FFFF0000)
+- Row 71 | Beatrice and Marcel KNOPF | USD
+  - Funded Amount: 0 (color FFFF0000)
+- Row 75 | Blaine ROLLINS | USD
+  - Notes: None (color FFFF0000)
+- Row 76 | Blaine ROLLINS | USD
+  - Notes: None (color FFFF0000)
+- Row 86 | Craig BROWN | USD
+  - Notes: None (color FFFFC000)
+- Row 89 | Damien Krauser | USD
+  - Notes: None (color FFFF0000)
+- Row 90 | Damien Krauser | USD
+  - Notes: None (color FFFF0000)
+- Row 105 | Eric LE SEIGNEUR | USD
+  - Notes: None (color FFFF0000)
+- Row 106 | Eric LE SEIGNEUR | USD
+  - Funded Amount: 0 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+- Row 120 | Hedgebay Securities LLC | USD
+  - Investor Name: Hedgebay Securities LLC (color FFFF0000)
+  - Funded Amount: 0 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+- Row 121 | Hedgebay Securities LLC | USD
+  - Investor Name: Hedgebay Securities LLC (color FFFF0000)
+  - Notes: None (color FFFF0000)
+- Row 122 | Hedgebay Securities LLC | USD
+  - Investor Name: Hedgebay Securities LLC (color FFFF0000)
+  - Funded Amount: 0 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+- Row 123 | Hedgebay Securities LLC | USD
+  - Investor Name: Hedgebay Securities LLC (color FFFF0000)
+  - Notes: None (color FFFF0000)
+- Row 128 | INNOSIGHT VENTURES Pte Ltd | USD
+  - Notes: None (color FFFF0000)
+- Row 129 | INNOSIGHT VENTURES Pte Ltd | USD
+  - Notes: None (color FFFF0000)
+- Row 141 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 142 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 143 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 144 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 155 | Laurence CHANG | USD
+  - Notes: None (color FFFF0000)
+- Row 156 | Laurence CHANG | USD
+  - Notes: None (color FFFF0000)
+- Row 158 | LEE RAND GROUP | USD
+  - Investor Name: LEE RAND GROUP (color FFFF0000)
+  - Investor Type: entity (color FFFF0000)
+  - Notes: None (color FFFF0000)
+- Row 159 | LEE RAND GROUP | USD
+  - Investor Name: LEE RAND GROUP (color FFFF0000)
+  - Investor Type: entity (color FFFF0000)
+  - Funded Amount: 0 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+- Row 160 | LEE RAND GROUP | USD
+  - Investor Name: LEE RAND GROUP (color FFFF0000)
+  - Investor Type: entity (color FFFF0000)
+  - Notes: None (color FFFF0000)
+- Row 161 | LEE RAND GROUP | USD
+  - Investor Name: LEE RAND GROUP (color FFFF0000)
+  - Investor Type: entity (color FFFF0000)
+  - Funded Amount: 0 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+- Row 162 | LEE RAND GROUP | USD
+  - Investor Name: LEE RAND GROUP (color FFFF0000)
+  - Investor Type: entity (color FFFF0000)
+  - Notes: None (color FFFF0000)
+- Row 163 | LEE RAND GROUP | USD
+  - Investor Name: LEE RAND GROUP (color FFFF0000)
+  - Investor Type: entity (color FFFF0000)
+  - Funded Amount: 0 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+- Row 164 | LEE RAND GROUP | USD
+  - Investor Name: LEE RAND GROUP (color FFFF0000)
+  - Investor Type: entity (color FFFF0000)
+  - Notes: None (color FFFF0000)
+- Row 180 | Murat Cem and Mehmet Can GOKER | USD
+  - Notes: None (color FFFF0000)
+- Row 181 | Murat Cem and Mehmet Can GOKER | USD
+  - Notes: None (color FFFF0000)
+- Row 184 | Nilakantan MAHESWARI & Subbiah SUBRAMANIAN | USD
+  - Funded Amount: 0 (color FFFF0000)
+- Row 185 | OEP Ltd | USD
+  - Funded Amount: 0 (color FFFF0000)
+- Row 208 | Scott FLETCHER | USD
+  - Notes: None (color FFFF0000)
+- Row 209 | Scott FLETCHER | USD
+  - Funded Amount: 0 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+- Row 228 | VERSO GROUP | USD
+  - Entity Code: VC106 (color FFFF0000)
+  - Investor Name: VERSO GROUP (color FFFF0000)
+  - Investor Type: entity (color FFFF0000)
+  - Commitment: 0 (color FFFF0000)
+  - Funded Amount: 0 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+  - Price Per Share: 20 (color FFFF0000)
+  - Cost Per Share: None (color FFFF0000)
+  - Subscription Fee (%): 0 (color FFFF0000)
+  - Subscription Fee Amount: 0 (color FFFF0000)
+  - Performance Fee Tier 1 (%): None (color FFFF0000)
+  - Performance Fee Tier 1 Threshold: None (color FFFF0000)
+  - Performance Fee Tier 2 (%): None (color FFFF0000)
+  - Performance Fee Tier 2 Threshold: None (color FFFF0000)
+  - Spread Per Share: 0 (color FFFF0000)
+  - Spread Fee Amount: 0 (color FFFF0000)
+  - Management Fee (%): None (color FFFF0000)
+  - BD Fee (%): None (color FFFF0000)
+  - BD Fee Amount: None (color FFFF0000)
+  - FINRA Fee Shares: None (color FFFF0000)
+  - FINRA Fee Amount: None (color FFFF0000)
+  - Discount Rate: None (color FFFF0000)
+  - Interest Rate: None (color FFFF0000)
+  - Valuation Cap: None (color FFFF0000)
+  - Opportunity Name: J.MACHOT (color FFFF0000)
+  - Sourcing Contract Ref: None (color FFFF0000)
+  - Contract Date: 2021-05-17 00:00:00 (color FFFF0000)
+
+## VC111
+- Row 240 | Daniel BAUMSLAG | USD
+  - Notes: None (color FFFF0000)
+- Row 241 | Daniel BAUMSLAG | USD
+  - Notes: None (color FFFF0000)
+- Row 250 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 251 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 262 | TERRA Financial & Management Services SA | USD
+  - Notes: None (color FFFF0000)
+- Row 263 | TERRA Financial & Management Services SA | USD
+  - Notes: None (color FFFF0000)
+- Row 266 | Vladimir GUSEV | USD
+  - Notes: None (color FFFF0000)
+- Row 267 | Vladimir GUSEV | USD
+  - Notes: None (color FFFF0000)
+
+## VC112
+- Row 270 | Daniel BAUMSLAG | USD
+  - Notes: None (color FFFF0000)
+- Row 271 | Daniel BAUMSLAG | USD
+  - Funded Amount: 0 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+- Row 274 | IQEQ (Switzerland) Ltd ATO Raycat Investment Trust | USD
+  - Notes: None (color FFFF0000)
+- Row 275 | IQEQ (Switzerland) Ltd ATO Raycat Investment Trust | USD
+  - Notes: None (color FFFF0000)
+- Row 276 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 277 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 278 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 279 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 280 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 281 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 282 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 283 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 284 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 285 | Liudmila ROMANOVA and Alexey ROMANOV | USD
+  - Notes: None (color FFFF0000)
+- Row 286 | OEP Ltd | USD
+  - Notes: None (color FFFF0000)
+- Row 287 | OEP Ltd | USD
+  - Notes: None (color FFFF0000)
+- Row 288 | OEP Ltd | USD
+  - Notes: None (color FFFF0000)
+
+## VC113
+- Row 304 | Dalinga AG | USD
+  - Notes: None (color FFFF0000)
+- Row 305 | Dalinga AG | USD
+  - Notes: None (color FFFF0000)
+- Row 308 | Deyan MIHOV | USD
+  - Notes: None (color FFFF0000)
+- Row 309 | Deyan MIHOV | USD
+  - Notes: None (color FFFF0000)
+- Row 313 | FRALIS SPF | USD
+  - Notes: None (color FFFF0000)
+- Row 314 | FRALIS SPF | USD
+  - Notes: None (color FFFF0000)
+- Row 323 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 324 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 325 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 326 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 327 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 328 | Julien MACHOT | USD
+  - Funded Amount: 0 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+- Row 329 | Julien MACHOT | USD
+  - Notes: None (color FFFF0000)
+- Row 335 | Mark HAYWARD | USD
+  - Notes: None (color FFFF0000)
+- Row 336 | Mark HAYWARD | USD
+  - Notes: None (color FFFF0000)
+- Row 340 | Michael RYAN | USD
+  - Notes: None (color FFFF0000)
+- Row 341 | Michael RYAN | USD
+  - Funded Amount: 0 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+- Row 342 | Michael RYAN | USD
+  - Notes: None (color FFFF0000)
+- Row 343 | Michael RYAN | USD
+  - Notes: None (color FFFF0000)
+
+## VC118
+- Row 375 | Talal CHAMSI PASHA | USD
+  - Notes: None (color FFFF0000)
+- Row 376 | Talal CHAMSI PASHA | USD
+  - Notes: None (color FFFF0000)
+
+## VC121
+- Row 378 | Julien MACHOT | CHF
+  - Notes: None (color FFFF0000)
+- Row 379 | Julien MACHOT | CHF
+  - Notes: None (color FFFF0000)
+
+## VC122
+- Row 382 | INNOVATECH COMPARTMENT 8 Anand SETHA | USD
+  - Entity Code: VC122 (color FFFF0000)
+  - Investor Name: INNOVATECH COMPARTMENT 8 Anand SETHA (color FFFF0000)
+  - Investor Type: individual (color FFFF0000)
+- Row 383 | AS ADVISORY DWC LLC | USD
+  - Entity Code: VC122 (color FFFF0000)
+  - Investor Name: AS ADVISORY DWC LLC (color FFFF0000)
+  - Investor Type: entity (color FFFF0000)
+  - Commitment: 100000 (color FFFF0000)
+  - Funded Amount: None (color FFFF0000)
+  - Notes: 100000 (color FFFF0000)
+  - Price Per Share: None (color FFFF0000)
+  - Cost Per Share: None (color FFFF0000)
+  - Subscription Fee (%): None (color FFFF0000)
+  - Subscription Fee Amount: None (color FFFF0000)
+  - Performance Fee Tier 1 (%): None (color FFFF0000)
+  - Performance Fee Tier 1 Threshold: None (color FFFF0000)
+  - Performance Fee Tier 2 (%): None (color FFFF0000)
+  - Performance Fee Tier 2 Threshold: None (color FFFF0000)
+  - Spread Per Share: None (color FFFF0000)
+  - Spread Fee Amount: None (color FFFF0000)
+  - Management Fee (%): None (color FFFF0000)
+  - BD Fee (%): None (color FFFF0000)
+  - BD Fee Amount: None (color FFFF0000)
+  - FINRA Fee Shares: None (color FFFF0000)
+  - FINRA Fee Amount: None (color FFFF0000)
+  - Discount Rate: None (color FFFF0000)
+  - Interest Rate: None (color FFFF0000)
+  - Valuation Cap: None (color FFFF0000)
+  - Contract Date: None (color FFFF0000)
+- Row 384 | Deyan D MIHOV | USD
+  - Entity Code: VC122 (color FFFF0000)
+  - Investor Name: Deyan D MIHOV (color FFFF0000)
+  - Investor Type: individual (color FFFF0000)
+  - Commitment: 75000 (color FFFF0000)
+  - Funded Amount: None (color FFFF0000)
+  - Notes: 75000 (color FFFF0000)
+  - Price Per Share: None (color FFFF0000)
+  - Cost Per Share: None (color FFFF0000)
+  - Subscription Fee (%): None (color FFFF0000)
+  - Subscription Fee Amount: None (color FFFF0000)
+  - Performance Fee Tier 1 (%): None (color FFFF0000)
+  - Performance Fee Tier 1 Threshold: None (color FFFF0000)
+  - Performance Fee Tier 2 (%): None (color FFFF0000)
+  - Performance Fee Tier 2 Threshold: None (color FFFF0000)
+  - Spread Per Share: None (color FFFF0000)
+  - Spread Fee Amount: None (color FFFF0000)
+  - Management Fee (%): None (color FFFF0000)
+  - BD Fee (%): None (color FFFF0000)
+  - BD Fee Amount: None (color FFFF0000)
+  - FINRA Fee Shares: None (color FFFF0000)
+  - FINRA Fee Amount: None (color FFFF0000)
+  - Discount Rate: None (color FFFF0000)
+  - Interest Rate: None (color FFFF0000)
+  - Valuation Cap: None (color FFFF0000)
+  - Contract Date: None (color FFFF0000)
+- Row 385 | Sheikh Yousef AL SABAH | USD
+  - Entity Code: VC122 (color FFFF0000)
+  - Investor Name: Sheikh Yousef AL SABAH (color FFFF0000)
+  - Investor Type: individual (color FFFF0000)
+  - Commitment: 50000 (color FFFF0000)
+  - Funded Amount: None (color FFFF0000)
+  - Notes: 50000 (color FFFF0000)
+  - Price Per Share: None (color FFFF0000)
+  - Cost Per Share: None (color FFFF0000)
+  - Subscription Fee (%): None (color FFFF0000)
+  - Subscription Fee Amount: None (color FFFF0000)
+  - Performance Fee Tier 1 (%): None (color FFFF0000)
+  - Performance Fee Tier 1 Threshold: None (color FFFF0000)
+  - Performance Fee Tier 2 (%): None (color FFFF0000)
+  - Performance Fee Tier 2 Threshold: None (color FFFF0000)
+  - Spread Per Share: None (color FFFF0000)
+  - Spread Fee Amount: None (color FFFF0000)
+  - Management Fee (%): None (color FFFF0000)
+  - BD Fee (%): None (color FFFF0000)
+  - BD Fee Amount: None (color FFFF0000)
+  - FINRA Fee Shares: None (color FFFF0000)
+  - FINRA Fee Amount: None (color FFFF0000)
+  - Discount Rate: None (color FFFF0000)
+  - Interest Rate: None (color FFFF0000)
+  - Valuation Cap: None (color FFFF0000)
+  - Contract Date: None (color FFFF0000)
+- Row 386 | VERSO CAPITAL ESTABLISHMENT | USD
+  - Entity Code: VC122 (color FFFF0000)
+  - Investor Name: VERSO CAPITAL ESTABLISHMENT (color FFFF0000)
+  - Investor Type: entity (color FFFF0000)
+  - Commitment: 25000 (color FFFF0000)
+  - Funded Amount: None (color FFFF0000)
+  - Notes: 25000 (color FFFF0000)
+  - Price Per Share: None (color FFFF0000)
+  - Cost Per Share: None (color FFFF0000)
+  - Subscription Fee (%): None (color FFFF0000)
+  - Subscription Fee Amount: None (color FFFF0000)
+  - Performance Fee Tier 1 (%): None (color FFFF0000)
+  - Performance Fee Tier 1 Threshold: None (color FFFF0000)
+  - Performance Fee Tier 2 (%): None (color FFFF0000)
+  - Performance Fee Tier 2 Threshold: None (color FFFF0000)
+  - Spread Per Share: None (color FFFF0000)
+  - Spread Fee Amount: None (color FFFF0000)
+  - Management Fee (%): None (color FFFF0000)
+  - BD Fee (%): None (color FFFF0000)
+  - BD Fee Amount: None (color FFFF0000)
+  - FINRA Fee Shares: None (color FFFF0000)
+  - FINRA Fee Amount: None (color FFFF0000)
+  - Discount Rate: None (color FFFF0000)
+  - Interest Rate: None (color FFFF0000)
+  - Valuation Cap: None (color FFFF0000)
+  - Contract Date: None (color FFFF0000)
+- Row 387 | LF GROUP SARL | USD
+  - Entity Code: VC122 (color FFFF0000)
+  - Investor Name: LF GROUP SARL (color FFFF0000)
+  - Investor Type: entity (color FFFF0000)
+  - Commitment: 75000 (color FFFF0000)
+  - Funded Amount: None (color FFFF0000)
+  - Notes: 75000 (color FFFF0000)
+  - Price Per Share: None (color FFFF0000)
+  - Cost Per Share: None (color FFFF0000)
+  - Subscription Fee (%): None (color FFFF0000)
+  - Subscription Fee Amount: None (color FFFF0000)
+  - Performance Fee Tier 1 (%): None (color FFFF0000)
+  - Performance Fee Tier 1 Threshold: None (color FFFF0000)
+  - Performance Fee Tier 2 (%): None (color FFFF0000)
+  - Performance Fee Tier 2 Threshold: None (color FFFF0000)
+  - Spread Per Share: None (color FFFF0000)
+  - Spread Fee Amount: None (color FFFF0000)
+  - Management Fee (%): None (color FFFF0000)
+  - BD Fee (%): None (color FFFF0000)
+  - BD Fee Amount: None (color FFFF0000)
+  - FINRA Fee Shares: None (color FFFF0000)
+  - FINRA Fee Amount: None (color FFFF0000)
+  - Discount Rate: None (color FFFF0000)
+  - Interest Rate: None (color FFFF0000)
+  - Valuation Cap: None (color FFFF0000)
+  - Contract Date: None (color FFFF0000)
+
+## VC124
+- Row 396 | OEP Ltd Julien MACHOT | GBP
+  - Investor Name: OEP Ltd Julien MACHOT (color FFFF0000)
+  - Investor Type: individual (color FFFF0000)
+- Row 397 | OEP Ltd Julien MACHOT | GBP
+  - Investor Name: OEP Ltd Julien MACHOT (color FFFF0000)
+  - Investor Type: individual (color FFFF0000)
+
+## VC126
+- Row 452 | Setcap Anand RATHI | USD
+  - Investor Name: Setcap Anand RATHI (color FFFF0000)
+- Row 453 | Setcap Anand RATHI | USD
+  - Investor Name: Setcap Anand RATHI (color FFFF0000)
+
+## VC132
+- Row 469 | Julien MACHOT | USD
+  - Entity Code: VC132 (color FFFF0000)
+  - Investor Name: Julien MACHOT (color FFFF0000)
+  - Investor Type: individual (color FFFF0000)
+  - Commitment: 16041.99 (color FFFF0000)
+  - Funded Amount: 16041.99 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+  - Price Per Share: 1 (color FFFF0000)
+  - Cost Per Share: 1 (color FFFF0000)
+  - Subscription Fee (%): 0 (color FFFF0000)
+  - Subscription Fee Amount: 0 (color FFFF0000)
+  - Performance Fee Tier 1 (%): 0 (color FFFF0000)
+  - Performance Fee Tier 1 Threshold: None (color FFFF0000)
+  - Performance Fee Tier 2 (%): None (color FFFF0000)
+  - Performance Fee Tier 2 Threshold: None (color FFFF0000)
+  - Spread Per Share: 0 (color FFFF0000)
+  - Spread Fee Amount: 0 (color FFFF0000)
+  - Management Fee (%): 0 (color FFFF0000)
+  - BD Fee (%): None (color FFFF0000)
+  - BD Fee Amount: None (color FFFF0000)
+  - FINRA Fee Shares: 0 (color FFFF0000)
+  - FINRA Fee Amount: 0 (color FFFF0000)
+  - Discount Rate: None (color FFFF0000)
+  - Interest Rate: None (color FFFF0000)
+  - Valuation Cap: None (color FFFF0000)
+  - Opportunity Name: AIRSPEEDER (color FFFF0000)
+  - Sourcing Contract Ref: SAFE Bridge (color FFFF0000)
+  - Contract Date: 2022-10-20 00:00:00 (color FFFF0000)
+
+## VC133
+- Row 485 | ZANDERA (Holdco) Ltd Michael RYAN | USD
+  - Entity Code: VC133 (color FFFF0000)
+  - Investor Name: ZANDERA (Holdco) Ltd Michael RYAN (color FFFF0000)
+  - Investor Type: individual (color FFFF0000)
+  - Commitment: 1000000 (color FFFF0000)
+  - Funded Amount: 1000000 (color FFFF0000)
+  - Notes: None (color FFFF0000)
+  - Price Per Share: 1550 (color FFFF0000)
+  - Cost Per Share: 1300 (color FFFF0000)
+  - Subscription Fee (%): 0 (color FFFF0000)
+  - Subscription Fee Amount: 0 (color FFFF0000)
+  - Performance Fee Tier 1 (%): 0.2 (color FFFF0000)
+  - Performance Fee Tier 1 Threshold: None (color FFFF0000)
+  - Performance Fee Tier 2 (%): None (color FFFF0000)
+  - Performance Fee Tier 2 Threshold: None (color FFFF0000)
+  - Spread Per Share: 0 (color FFFF0000)
+  - Spread Fee Amount: 0 (color FFFF0000)
+  - Management Fee (%): 0 (color FFFF0000)
+  - BD Fee (%): None (color FFFF0000)
+  - BD Fee Amount: None (color FFFF0000)
+  - FINRA Fee Shares: 0 (color FFFF0000)
+  - FINRA Fee Amount: 0 (color FFFF0000)
+  - Discount Rate: None (color FFFF0000)
+  - Interest Rate: None (color FFFF0000)
+  - Valuation Cap: None (color FFFF0000)
+  - Opportunity Name: EPIC GAMES (color FFFF0000)
+  - Sourcing Contract Ref: AT (color FFFF0000)
+  - Contract Date: 2022-04-21 00:00:00 (color FFFF0000)

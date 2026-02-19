@@ -1,0 +1,123 @@
+row,is_red,series,scope,legal_name,investor_best_row,investor_best_name,investor_score,investor_status,introducer_1,intro_best_row,intro_best_name,intro_score,intro_status
+2,False,VC201,series,Infinitas Capital SPV V a series of Infinitas Capital Master LLC,3,Infinitas Capital SPV V a series of Infinitas Capital Master LLC,1.0,high,,,,0.0,not_found
+3,False,VC202,series,SESR INVESTMENTS PTE LTD,3,SESR INVESTMENTS PTE LTD,1.0,high,Renaissance Bridge Capital LLC,3,Renaissance bridge Capital LLC,1.0,high
+4,False,VC202,series,SPLENDID HEIGHT HOLDINGS LIMITED,4,SPLENDID HEIGHT HOLDINGS LIMITED,1.0,high,Bromley Capital Partners,4,Bromley Capital Partners,1.0,high
+5,False,VC203,series,DOMINARI SECURITIES LLC,4,DOMINARI SECURITIES LLC,1.0,high,Dimensional Advisors,4,Dimensional Advisors,1.0,high
+6,False,VC203,series,DOMINARI SECURITIES LLC,4,DOMINARI SECURITIES LLC,1.0,high,R. F. Lafferty & Co. Inc.,4,R. F. Lafferty & Co. Inc.,1.0,high
+7,False,VC203,series,Georges SMITH,5,Georges SMITH,1.0,high,,,,0.0,not_found
+8,False,VC203,series,Julien MACHOT,6,Julien MACHOT,1.0,high,,,,0.0,not_found
+9,False,VC203,series,Nicholas FOWLER,7,Nicholas FOWLER,1.0,high,,,,0.0,not_found
+10,True,VC203,series,Sebastian LATTUGA,8,Sebastian LATTUGA,1.0,high,,,,0.0,not_found
+11,False,VC203,series,Sebastian LATTUGA,8,Sebastian LATTUGA,1.0,high,R. F. Lafferty & Co. Inc.,4,R. F. Lafferty & Co. Inc.,1.0,high
+12,False,VC203,series,EVERLASTING HOLDINGS LLC,9,EVERLASTING HOLDINGS LLC,1.0,high,"Sakal Advisory, LLC",9,Sakal Advisory,1.0,high
+13,True,VC203,series,EVERLASTING HOLDINGS LLC,9,EVERLASTING HOLDINGS LLC,1.0,high,,,,0.0,not_found
+14,False,VC203,series,EVERLASTING HOLDINGS LLC,9,EVERLASTING HOLDINGS LLC,1.0,high,Astral Global Limited,9,Astra Global Limited,0.98,high
+15,False,VC203,series,Tobias ENSELE,10,Tobias ENSELE,1.0,high,Old City Securities LLC,10,Old City Capital,0.6667,not_found
+16,False,VC203,series,Tobias ENSELE,10,Tobias ENSELE,1.0,high,Renaissance bridge Capital LLC,15,Renaissance Bridge Capital LLC,1.0,high
+17,False,VC203,series,"PEGASUS TECH VENTURES COMPANY VIII, L.P.",11,"PEGASUS TECH VENTURES COMPANY VIII, L.P.",1.0,high,Astral Global Limited,9,Astra Global Limited,0.98,high
+18,False,VC203,series,INS NEVADA LLC,12,INS NEVADA LLC,1.0,high,Rainmaker Securities,12,Rainmaker Securities,1.0,high
+19,False,VC203,series,INCRED GLOBAL WEALTH PTE LTD,13,INCRED GLOBAL WEALTH PTE LTD,1.0,high,Renaissance Bridge Capital LLC,15,Renaissance Bridge Capital LLC,1.0,high
+20,False,VC203,series,INCRED GLOBAL WEALTH PTE LTD,13,INCRED GLOBAL WEALTH PTE LTD,1.0,high,Old City Securities LLC,10,Old City Capital,0.6667,not_found
+21,False,VC203,series,Julien MACHOT,6,Julien MACHOT,1.0,high,,,,0.0,not_found
+22,False,VC203,series,MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP,15,MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP,1.0,high,Renaissance Bridge Capital LLC,15,Renaissance Bridge Capital LLC,1.0,high
+23,False,VC203,series,MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP,15,MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP,1.0,high,Oliver Little,15,Oliver Little,1.0,high
+24,False,VCL001,global_vcl,AGP Alternative Investment QP,16,AGP Alternative Investment QP,1.0,high,Alliance Global Partners LLC,16,Alliance Global Partners LLC,1.0,high
+25,False,VCL001,global_vcl,AGP Alternative Investment Fund VI- Series 2,17,AGP Alternative Investment Fund VI- Series 2,1.0,high,Alliance Global Partners LLC,16,Alliance Global Partners LLC,1.0,high
+26,False,VCL002,global_vcl,AGP Alternative Investment QF,18,AGP Alternative Investment QF,1.0,high,Alliance Global Partners LLC,16,Alliance Global Partners LLC,1.0,high
+27,False,VCL002,global_vcl,AGP Alternative Investment Fund VI- Series 2,17,AGP Alternative Investment Fund VI- Series 2,1.0,high,Alliance Global Partners LLC,16,Alliance Global Partners LLC,1.0,high
+28,False,VC203,series,AEON INC,20,AEON INC,1.0,high,,,,0.0,not_found
+29,False,VC203,series,Robert VOGT IV,21,Robert C. VOGT IV,0.98,high,,,,0.0,not_found
+30,False,VC206,series,"AAF D Boral Mstr SPV LLC, Ser III OpenAI",3,"AAF D Boral Mstr SPV LLC, Ser III OpenAI",1.0,high,AEON INC,3,Aeon,0.98,high
+31,False,VC206,series,ODIN INVESTMENTS LIMITED,4,ODIN INVESTMENTS LIMITED,1.0,high,,,,0.0,not_found
+32,False,VC206,series,AI DIRECT OPPORTUNITIES FUND SCSP,5,AI DIRECT OPPORTUNITIES FUND SCSP,1.0,high,Venture Spring,5,Venture Spring,1.0,high
+33,False,VC206,series,AI DIRECT OPPORTUNITIES FUND SCSP,5,AI DIRECT OPPORTUNITIES FUND SCSP,1.0,high,Dimensional Advisors,5,Dimensional Advisors,1.0,high
+34,False,VC206,series,KIWI INNOVATIONS LIMITED,6,KIWI INNOVATIONS LIMITED,1.0,high,Bromley Capital Partners,6,Bromley Capital,0.98,high
+35,False,VC206,series,Rishabh MITTAL,7,Rishabh MITTAL,1.0,high,Renaissance Bridge Capital LLC,6,Bromley Capital,0.49,not_found
+36,False,VC206,series,Anuroop ARORA,8,Anuroop ARORA,1.0,high,Renaissance Bridge Capital LLC,6,Bromley Capital,0.49,not_found
+37,False,VC206,series,Bharath RAM,9,Bharath RAM,1.0,high,Renaissance Bridge Capital LLC,6,Bromley Capital,0.49,not_found
+38,False,VC206,series,AEON INC,10,AEON INC,1.0,high,,,,0.0,not_found
+39,False,VC206,series,Julien MACHOT,11,Julien MACHOT,1.0,high,,,,0.0,not_found
+40,False,VC206,series,Jyotsna HEDGE,12,Jyotsna HEDGE,1.0,high,Mervyn Pereira,12,Mervyn Pereira,1.0,high
+41,False,VC206,series,PUTHAN N.C. MENON AND/OR SOBHA MENON RAGHAVANNAIR,13,PUTHAN N.C. MENON AND/OR SOBHA MENON RAGHAVANNAIR,1.0,high,Mervyn Pereira,12,Mervyn Pereira,1.0,high
+42,False,VC206,series,"ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC",14,"ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC",1.0,high,,,,0.0,not_found
+43,False,VC206,series,"REDPOINT OMEGA V, L.P.",15,"REDPOINT OMEGA V, L.P.",1.0,high,Visual Sectors,15,Visual Sectors,1.0,high
+44,False,VC206,series,"REDPOINT OMEGA V, L.P.",15,"REDPOINT OMEGA V, L.P.",1.0,high,Astral Global Limited,15,Astra Global,1.0,high
+45,False,VC206,series,"REDPOINT OMEGA ASSOCIATES V, LLC",16,"REDPOINT OMEGA ASSOCIATES V, LLC",1.0,high,Visual Sectors,15,Visual Sectors,1.0,high
+46,False,VC206,series,"ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC",14,"ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC",1.0,high,,,,0.0,not_found
+47,False,VC206,series,"ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC",14,"ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC",1.0,high,,,,0.0,not_found
+48,False,VC207,series,TARA LYNN SCHOLLEMANN,3,TARA LYNN SCHOLLEMANN,1.0,high,,,,0.0,not_found
+49,False,VC207,series,JONATHAN STONA,4,JONATHAN STONA,1.0,high,,,,0.0,not_found
+50,False,VC207,series,PRASANNA SANTHANAM,5,PRASANNA SANTHANAM,1.0,high,,,,0.0,not_found
+51,False,VC207,series,DILIP STEPHANE ROUSSENALY,6,DILIP STEPHANE ROUSSENALY,1.0,high,,,,0.0,not_found
+52,False,VC207,series,GUSTAVO FUCHS ALBUQUERQUE,7,GUSTAVO FUCHS ALBUQUERQUE,1.0,high,,,,0.0,not_found
+53,False,VC207,series,MARK SOUZA,8,MARK SOUZA,1.0,high,,,,0.0,not_found
+54,False,VC207,series,KEE-MIN NGIAM,9,KEE-MIN NGIAM,1.0,high,,,,0.0,not_found
+55,False,VC207,series,ANUROOP ARORA,10,ANUROOP ARORA,1.0,high,Renaissance Bridge Capital LLC,10,Renaissance,0.98,high
+56,False,VC207,series,DIVYA SRIDHAR and SHRIVATSAN VASUDHEVAN,11,DIVYA and SHRIVATSAN SRIDHAR AND VASUDHEVAN,0.98,high,Renaissance Bridge Capital LLC,10,Renaissance,0.98,high
+57,False,VC207,series,BHARATH RAM,12,BHARATH RAM,1.0,high,Renaissance Bridge Capital LLC,10,Renaissance,0.98,high
+58,False,VC207,series,VARUN SEMBIUM VARADARAJAN,13,VARUN SEMBIUM VARADARAJAN,1.0,high,Renaissance Bridge Capital LLC,10,Renaissance,0.98,high
+59,False,VC207,series,Julien MACHOT,14,Julien MACHOT,1.0,high,,,,0.0,not_found
+60,False,VC207,series,ABHINEET MISHRA,15,ABHINEET MISHRA,1.0,high,Renaissance Bridge Capital LLC,10,Renaissance,0.98,high
+61,False,VC207,series,AGP ALTERNATIVE INVESTMENT QP FUND - SERIES 4,16,AGP ALTERNATIVE INVESTMENT QP FUND - SERIES 4,1.0,high,Alliance Global Partners LLC,10,Renaissance,0.3077,not_found
+62,False,VC207,series,ASHUTOSH CHETAL,17,ASHUTOSH CHETAL,1.0,high,Renaissance Bridge Capital LLC,10,Renaissance,0.98,high
+63,False,VC207,series,VIDHYA GOVINDARAJAN,18,VIDHYA GOVINDARAJAN,1.0,high,Renaissance Bridge Capital LLC,10,Renaissance,0.98,high
+64,False,VC207,series,ANKUR SRIVASTAVA,19,ANKUR SRIVASTAVA,1.0,high,Renaissance Bridge Capital LLC,10,Renaissance,0.98,high
+65,False,VC207,series,GURPREET SINGH,20,GURPREET SINGH,1.0,high,Renaissance Bridge Capital LLC,10,Renaissance,0.98,high
+66,False,VC207,series,AEON INC.,21,AEON INC.,1.0,high,R. F. Lafferty & Co. Inc.,21,Lafferty,0.98,high
+67,False,VC207,series,SPARKLABS GLOBAL CAPITAL X LLC,22,SPARKLABS GLOBAL CAPITAL X LLC,1.0,high,Elena VYSOTSKAIA,22,Elena VYSOTSKAIA,1.0,high
+68,False,VC207,series,Julien MACHOT,14,Julien MACHOT,1.0,high,,,,0.0,not_found
+69,False,VC207,series,MR AND MRS MATHEW KOLANGIKOMBIL THOMAS,24,MR AND MRS MATHEW KOLANGIKOMBIL THOMAS,1.0,high,,,,0.0,not_found
+70,False,VC207,series,Rishabh MITTAL,25,Rishabh MITTAL,1.0,high,Renaissance Bridge Capital LLC,10,Renaissance,0.98,high
+71,False,VC207,series,LF GROUP SARL,26,LF GROUP SARL,1.0,high,,,,0.0,not_found
+72,False,VC207,series,IGOR TSUKERMAN and IRENE APOTOVSKY,27,IGOR and IRENE TSUKERMAN and APOTOVSKY,0.98,high,,,,0.0,not_found
+73,False,VC209,series,SINO SUISSE LLC,3,SINO SUISSE LLC,1.0,high,Bromley Capital Partners,3,Bromley Partners,0.98,high
+74,False,VC209,series,AEON INC,4,AEON INC,1.0,high,,,,0.0,not_found
+75,False,VC209,series,Georgi GEORGIEV,5,Georgi GEORGIEV,1.0,high,Robin Doble,5,Robin Doble,1.0,high
+76,False,VC209,series,JRF INVESTMENTS DMCC,6,JRF INVESTMENTS DMCC,1.0,high,Renaissance Bridge Capital LLC,6,Renaissance,0.98,high
+77,False,VC209,series,"D. BORAL MASTER SPV, SERIES IV XAI",7,"D. BORAL MASTER SPV, SERIES IV XAI",1.0,high,AEON INC,7,Aeon,0.98,high
+78,False,VC209,series,U.S. HMC SERIES FUND LP - SERIES II,8,U.S. HMC SERIES FUND LP - SERIES II,1.0,high,,,,0.0,not_found
+79,False,VC209,series,Seri Cosmos Capital Limited,9,Seri Cosmos Capital Limited,1.0,high,,,,0.0,not_found
+80,False,VC209,series,CBH Compagnie Bancaire Helvétique SA,10,"CBH Compagnie Bancaire Helvétique SA,",1.0,high,R. F. Lafferty & Co. Inc.,10,Lafferty,0.98,high
+81,False,VC209,series,Jamel CHANDOUL,11,Jamel CHANDOUL,1.0,high,Bright Views Holdings,11,Bright Views,0.98,high
+82,False,VC209,series,BRIGHT VIEWS HOLDINGS,12,BRIGHT VIEWS HOLDINGS,1.0,high,,,,0.0,not_found
+83,False,VC209,series,"STP CAP V, A SERIES OF CGF2021 LLC, SYDECAR LLC",13,"STP CAP V, A SERIES OF CGF2021 LLC, SYDECAR LLC",1.0,high,R. F. Lafferty & Co. Inc.,10,Lafferty,0.98,high
+84,False,VC209,series,SINO SUISSE LLC,3,SINO SUISSE LLC,1.0,high,,,,0.0,not_found
+85,False,VC209,series,CBH Compagnie Bancaire Helvétique SA,10,"CBH Compagnie Bancaire Helvétique SA,",1.0,high,,,,0.0,not_found
+86,False,VC209,series,MOBILITY INNOVATION FUND LLC,16,MOBILITY INNOVATION FUND LLC,1.0,high,Jeffrey Wan,16,Jeffrey Wan,1.0,high
+87,False,VC209,series,U.S. HMC SERIES FUND LP – SERIES II,8,U.S. HMC SERIES FUND LP - SERIES II,1.0,high,,,,0.0,not_found
+88,False,VC209,series,MRS ANISHA BANSAL AND MR RAHUL KARKUN,18,MRS ANISHA BANSAL AND MR RAHUL KARKUN,1.0,high,,,,0.0,not_found
+89,False,VC209,series,"SPACEFARING VENTURES FUND 9, LLC",19,"SPACEFARING VENTURES FUND 9, LLC",1.0,high,,,,0.0,not_found
+90,False,VC209,series,PVPL FUND LLC SERIES 3,20,PVPL FUND LLC SERIES 3,1.0,high,R. F. Lafferty & Co. Inc.,10,Lafferty,0.98,high
+91,False,VC209,series,PVPL FUND LLC SERIES 3,20,PVPL FUND LLC SERIES 3,1.0,high,Visual Sectors,20,Visual Sectors,1.0,high
+92,False,VC209,series,"PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC",21,"PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC",1.0,high,Rubix Holdings Limited,21,Rubix Holdings Limited,1.0,high
+93,False,VC209,series,Julien MACHOT,6,JRF INVESTMENTS DMCC,0.4242,not_found,,,,0.0,not_found
+94,False,VC209,series,"PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC",21,"PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC",1.0,high,,,,0.0,not_found
+95,False,VC209,series,Mohan SASANAPURI,22,Mohan SASANAPURI,1.0,high,,,,0.0,not_found
+96,False,VC209,series,Kartik Kumar ATTULURI,23,Kartik Kumar ATTULURI,1.0,high,,,,0.0,not_found
+97,True,VC209,series,Prabhakar Somana KONGANDA,24,Prabhakar Somana KONGANDA,1.0,high,,,,0.0,not_found
+98,False,VC209,series,MADISON TRUST COMPANY (on behalf of Edward Bendickson),25,MADISON TRUST COMPANY (on behalf of Edward Bendickson),1.0,high,,,,0.0,not_found
+99,False,VC209,series,"FRONTIERX VIII, LP",26,"FRONTIERX VIII, LP",1.0,high,,,,0.0,not_found
+100,False,VC210,series,Marvin HAZELL,3,Marvin HAZELL,1.0,high,ANIM,3,ANIM,1.0,high
+101,False,VC210,series,Hailey ORR,4,Hailey ORR,1.0,high,ANIM,3,ANIM,1.0,high
+102,False,VC211,series,Anton POLETAEV,3,ANTON POLETAEV,1.0,high,Renaissance Bridge Capital LLC,3,Renaissance,0.98,high
+103,False,VC215,series,Julien MACHOT,3,Julien MACHOT,1.0,high,,,,0.0,not_found
+104,False,VC215,series,Gourav KAKKAR,4,Gourav KAKKAR,1.0,high,Infinyte Club Private Limited,4,Infinyte Club,0.98,high
+105,False,VC215,series,Rajagopalan MADHUSUDAN,5,Rajagopalan MADHUSUDAN,1.0,high,Infinyte Club Private Limited,4,Infinyte Club,0.98,high
+106,False,VC215,series,Ved NIRANJANBHAI ANTANI,6,Ved NIRANJANBHAI ANTANI,1.0,high,Infinyte Club Private Limited,4,Infinyte Club,0.98,high
+107,False,VC215,series,Mahesh NALLAPATI,7,Mahesh NALLAPATI,1.0,high,Infinyte Club Private Limited,4,Infinyte Club,0.98,high
+108,False,VC215,series,Varun SEMBIUM VARADARAJAN,8,Varun SEMBIUM VARADARAJAN,1.0,high,Renaissance Bridge Capital LLC,8,Renaissance,0.98,high
+109,False,VC215,series,CARTA INVESTMENTS LLC,9,CARTA INVESTMENTS LLC,1.0,high,Infinyte Club Private Limited,4,Infinyte Club,0.98,high
+110,False,VC215,series,STELLATRION PARTNERS,10,STELLATRION PARTNERS,1.0,high,Set Cap,3,Bromley Capital,0.4545,not_found
+111,False,VC215,series,STELLATRION PARTNERS,10,STELLATRION PARTNERS,1.0,high,Set Cap,3,Bromley Capital,0.4545,not_found
+112,False,VC215,series,"ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC",12,"ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC",1.0,high,,,,0.0,not_found
+113,False,VC215,series,"ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC",12,"ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC",1.0,high,,,,0.0,not_found
+114,False,VC215,series,"ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC",12,"ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC",1.0,high,,,,0.0,not_found
+115,False,VC215,series,Anuroop ARORA,15,Anuroop ARORA,1.0,high,Renaissance Bridge Capital LLC,8,Renaissance,0.98,high
+116,False,VC215,series,AEON INC,16,AEON INC,1.0,high,,,,0.0,not_found
+117,False,VC215,series,"Anthropic Compartment, HAG Private Markets SARL",17,"Anthropic Compartment, HAG Private Markets SARL",1.0,high,Hottinger AG,17,Hottinger AG,1.0,high
+118,False,VC215,series,LF GROUP SARL,18,LF GROUP SARL,1.0,high,,,,0.0,not_found
+119,False,VC215,series,AEON INC,16,AEON INC,1.0,high,,,,0.0,not_found
+120,False,VC215,series,Keir BENBOW,20,Keir BENBOW,1.0,high,,,,0.0,not_found
+121,False,VC215,series,George Guoying CHEN,21,Georges CHEN,0.7097,probable,,,,0.0,not_found
+122,False,,series,,,,0.0,not_found,,,,0.0,not_found
+123,False,,series,,,,0.0,not_found,Old City Securities LLC,,,0.0,not_found

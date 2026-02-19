@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import crypto from 'crypto'
+import { resolvePrimaryPersonaLink } from '@/lib/kyc/persona-link'
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
 const ALLOWED_MIME_TYPES = [
@@ -36,11 +37,14 @@ export async function GET() {
     }
 
     // Get arranger entity for current user
-    const { data: arrangerUser, error: arrangerError } = await serviceSupabase
-      .from('arranger_users')
-      .select('arranger_id')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { link: arrangerUser, error: arrangerError } = await resolvePrimaryPersonaLink<{
+      arranger_id: string
+    }>({
+      supabase: serviceSupabase,
+      config: { userTable: 'arranger_users', entityIdColumn: 'arranger_id' },
+      userId: user.id,
+      select: 'arranger_id',
+    })
 
     if (arrangerError || !arrangerUser?.arranger_id) {
       return NextResponse.json({ error: 'Arranger profile not found' }, { status: 404 })
@@ -143,11 +147,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Get arranger entity for current user
-    const { data: arrangerUser, error: arrangerError } = await serviceSupabase
-      .from('arranger_users')
-      .select('arranger_id')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { link: arrangerUser, error: arrangerError } = await resolvePrimaryPersonaLink<{
+      arranger_id: string
+    }>({
+      supabase: serviceSupabase,
+      config: { userTable: 'arranger_users', entityIdColumn: 'arranger_id' },
+      userId: user.id,
+      select: 'arranger_id',
+    })
 
     if (arrangerError || !arrangerUser?.arranger_id) {
       return NextResponse.json({ error: 'Arranger profile not found' }, { status: 404 })

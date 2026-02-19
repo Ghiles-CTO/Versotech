@@ -1,0 +1,6250 @@
+{
+  "entity_codes": [
+    "IN110",
+    "IN111",
+    "VC102",
+    "VC106",
+    "VC111",
+    "VC112",
+    "VC113",
+    "VC118",
+    "VC121",
+    "VC122",
+    "VC124",
+    "VC126",
+    "VC132",
+    "VC133"
+  ],
+  "rows": [
+    {
+      "row": 24,
+      "data": {
+        "Entity Code": "IN110",
+        "Investor Name": "William TOYE",
+        "Investor Type": "individual",
+        "Currency": "ETH",
+        "Commitment": 15,
+        "Funded Amount": 15,
+        "Shares": 60000,
+        "Current Position": 15000,
+        "Notes": null,
+        "Price Per Share": 0.00025,
+        "Cost Per Share": 0.00025,
+        "Subscription Fee (%)": 0.02,
+        "Subscription Fee Amount": 0.3,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "ZERO DAO",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2023-06-30 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 26,
+      "data": {
+        "Entity Code": "IN111",
+        "Investor Name": "Boris IPPOLITOV",
+        "Investor Type": "individual",
+        "Currency": "EUR",
+        "Commitment": 29919.44,
+        "Funded Amount": 29919.44,
+        "Shares": 103,
+        "Current Position": 77447,
+        "Notes": null,
+        "Price Per Share": 290.48,
+        "Cost Per Share": 290.48,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.15,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": -0.48,
+        "Spread Fee Amount": -49.44,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "PAPKOT H SAS, France",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2025-02-19 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Price Per Share",
+          290.48
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 32,
+      "data": {
+        "Entity Code": "VC102",
+        "Investor Name": "KRISTINA & CHENG-LIN SUTKAITYTE & HSU",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 50000,
+        "Funded Amount": 50000,
+        "Shares": 50000,
+        "Current Position": 50000,
+        "Notes": null,
+        "Price Per Share": 1,
+        "Cost Per Share": 1,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "ISDC",
+        "Sourcing Contract Ref": "Convertible Notes",
+        "Contract Date": "2024-11-21 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Investor Name",
+          "KRISTINA & CHENG-LIN SUTKAITYTE & HSU"
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 38,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Anisha Bansal and Rahul KARKUN",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 50000,
+        "Funded Amount": 0,
+        "Shares": 2272,
+        "Current Position": 2272,
+        "Notes": null,
+        "Price Per Share": 22,
+        "Cost Per Share": 14,
+        "Subscription Fee (%)": null,
+        "Subscription Fee Amount": null,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 8.5,
+        "Spread Fee Amount": 19312,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR4",
+        "Contract Date": "2021-02-07 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Funded Amount",
+          0
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 61,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Bank SYZ AG",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 3763.2,
+        "Funded Amount": 3763.2,
+        "Shares": 160,
+        "Current Position": "=+G61",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 14,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 9.52,
+        "Spread Fee Amount": 1523.2,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "J.MACHOT",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-04-27 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Entity Code",
+          "VC106"
+        ],
+        [
+          "Investor Name",
+          "Bank SYZ AG"
+        ],
+        [
+          "Investor Type",
+          "entity"
+        ],
+        [
+          "Commitment",
+          3763.2
+        ],
+        [
+          "Funded Amount",
+          3763.2
+        ],
+        [
+          "Notes",
+          null
+        ],
+        [
+          "Price Per Share",
+          23.52
+        ],
+        [
+          "Cost Per Share",
+          14
+        ],
+        [
+          "Subscription Fee (%)",
+          0
+        ],
+        [
+          "Subscription Fee Amount",
+          0
+        ],
+        [
+          "Performance Fee Tier 1 (%)",
+          0.1
+        ],
+        [
+          "Performance Fee Tier 1 Threshold",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 Threshold",
+          null
+        ],
+        [
+          "Spread Per Share",
+          9.52
+        ],
+        [
+          "Spread Fee Amount",
+          1523.2
+        ],
+        [
+          "Management Fee (%)",
+          null
+        ],
+        [
+          "BD Fee (%)",
+          0
+        ],
+        [
+          "BD Fee Amount",
+          0
+        ],
+        [
+          "FINRA Fee Shares",
+          0
+        ],
+        [
+          "FINRA Fee Amount",
+          0
+        ],
+        [
+          "Discount Rate",
+          null
+        ],
+        [
+          "Interest Rate",
+          null
+        ],
+        [
+          "Valuation Cap",
+          null
+        ],
+        [
+          "Opportunity Name",
+          "J.MACHOT"
+        ],
+        [
+          "Contract Date",
+          "2021-04-27 00:00:00"
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 62,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Bank SYZ AG",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 15052.8,
+        "Funded Amount": 15052.8,
+        "Shares": 640,
+        "Current Position": "=+G62",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 13.5,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 10.02,
+        "Spread Fee Amount": 6412.8,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "J.MACHOT",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-04-27 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Entity Code",
+          "VC106"
+        ],
+        [
+          "Investor Name",
+          "Bank SYZ AG"
+        ],
+        [
+          "Investor Type",
+          "entity"
+        ],
+        [
+          "Commitment",
+          15052.8
+        ],
+        [
+          "Funded Amount",
+          15052.8
+        ],
+        [
+          "Notes",
+          null
+        ],
+        [
+          "Price Per Share",
+          23.52
+        ],
+        [
+          "Cost Per Share",
+          13.5
+        ],
+        [
+          "Subscription Fee (%)",
+          0
+        ],
+        [
+          "Subscription Fee Amount",
+          0
+        ],
+        [
+          "Performance Fee Tier 1 (%)",
+          0.1
+        ],
+        [
+          "Performance Fee Tier 1 Threshold",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 Threshold",
+          null
+        ],
+        [
+          "Spread Per Share",
+          10.02
+        ],
+        [
+          "Spread Fee Amount",
+          6412.8
+        ],
+        [
+          "Management Fee (%)",
+          null
+        ],
+        [
+          "BD Fee (%)",
+          0
+        ],
+        [
+          "BD Fee Amount",
+          0
+        ],
+        [
+          "FINRA Fee Shares",
+          0
+        ],
+        [
+          "FINRA Fee Amount",
+          0
+        ],
+        [
+          "Discount Rate",
+          null
+        ],
+        [
+          "Interest Rate",
+          null
+        ],
+        [
+          "Valuation Cap",
+          null
+        ],
+        [
+          "Opportunity Name",
+          "J.MACHOT"
+        ],
+        [
+          "Contract Date",
+          "2021-04-27 00:00:00"
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 63,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Bank SYZ AG",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 36361.92,
+        "Funded Amount": 36361.92,
+        "Shares": 1546,
+        "Current Position": "=+G63",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 16,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 7.52,
+        "Spread Fee Amount": 11625.92,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "JMACHOT",
+        "Sourcing Contract Ref": "VEG_VC6_TR6",
+        "Contract Date": "2021-04-27 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Entity Code",
+          "VC106"
+        ],
+        [
+          "Investor Name",
+          "Bank SYZ AG"
+        ],
+        [
+          "Investor Type",
+          "entity"
+        ],
+        [
+          "Commitment",
+          36361.92
+        ],
+        [
+          "Funded Amount",
+          36361.92
+        ],
+        [
+          "Notes",
+          null
+        ],
+        [
+          "Price Per Share",
+          23.52
+        ],
+        [
+          "Cost Per Share",
+          16
+        ],
+        [
+          "Subscription Fee (%)",
+          0
+        ],
+        [
+          "Subscription Fee Amount",
+          0
+        ],
+        [
+          "Performance Fee Tier 1 (%)",
+          0.1
+        ],
+        [
+          "Performance Fee Tier 1 Threshold",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 Threshold",
+          null
+        ],
+        [
+          "Spread Per Share",
+          7.52
+        ],
+        [
+          "Spread Fee Amount",
+          11625.92
+        ],
+        [
+          "Management Fee (%)",
+          null
+        ],
+        [
+          "BD Fee (%)",
+          0
+        ],
+        [
+          "BD Fee Amount",
+          0
+        ],
+        [
+          "FINRA Fee Shares",
+          0
+        ],
+        [
+          "FINRA Fee Amount",
+          0
+        ],
+        [
+          "Discount Rate",
+          null
+        ],
+        [
+          "Interest Rate",
+          null
+        ],
+        [
+          "Valuation Cap",
+          null
+        ],
+        [
+          "Opportunity Name",
+          "JMACHOT"
+        ],
+        [
+          "Sourcing Contract Ref",
+          "VEG_VC6_TR6"
+        ],
+        [
+          "Contract Date",
+          "2021-04-27 00:00:00"
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 64,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Bank SYZ AG",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 46569.6,
+        "Funded Amount": 46569.6,
+        "Shares": 1980,
+        "Current Position": "=+G64",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 16,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 7.52,
+        "Spread Fee Amount": 14889.6,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "JMACHOT",
+        "Sourcing Contract Ref": "VEG_VC6_TR5",
+        "Contract Date": "2021-04-27 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Entity Code",
+          "VC106"
+        ],
+        [
+          "Investor Name",
+          "Bank SYZ AG"
+        ],
+        [
+          "Investor Type",
+          "entity"
+        ],
+        [
+          "Commitment",
+          46569.6
+        ],
+        [
+          "Funded Amount",
+          46569.6
+        ],
+        [
+          "Notes",
+          null
+        ],
+        [
+          "Price Per Share",
+          23.52
+        ],
+        [
+          "Cost Per Share",
+          16
+        ],
+        [
+          "Subscription Fee (%)",
+          0
+        ],
+        [
+          "Subscription Fee Amount",
+          0
+        ],
+        [
+          "Performance Fee Tier 1 (%)",
+          0.1
+        ],
+        [
+          "Performance Fee Tier 1 Threshold",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 Threshold",
+          null
+        ],
+        [
+          "Spread Per Share",
+          7.52
+        ],
+        [
+          "Spread Fee Amount",
+          14889.6
+        ],
+        [
+          "Management Fee (%)",
+          null
+        ],
+        [
+          "BD Fee (%)",
+          0
+        ],
+        [
+          "BD Fee Amount",
+          0
+        ],
+        [
+          "FINRA Fee Shares",
+          0
+        ],
+        [
+          "FINRA Fee Amount",
+          0
+        ],
+        [
+          "Discount Rate",
+          null
+        ],
+        [
+          "Interest Rate",
+          null
+        ],
+        [
+          "Valuation Cap",
+          null
+        ],
+        [
+          "Opportunity Name",
+          "JMACHOT"
+        ],
+        [
+          "Sourcing Contract Ref",
+          "VEG_VC6_TR5"
+        ],
+        [
+          "Contract Date",
+          "2021-04-27 00:00:00"
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 65,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Bank SYZ AG",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 62892.48,
+        "Funded Amount": 62892.48,
+        "Shares": 2674,
+        "Current Position": "=+G65",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 21,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 4.02,
+        "Spread Fee Amount": 10749.48,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR8",
+        "Contract Date": "2021-04-27 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Entity Code",
+          "VC106"
+        ],
+        [
+          "Investor Name",
+          "Bank SYZ AG"
+        ],
+        [
+          "Investor Type",
+          "entity"
+        ],
+        [
+          "Commitment",
+          62892.48
+        ],
+        [
+          "Funded Amount",
+          62892.48
+        ],
+        [
+          "Notes",
+          null
+        ],
+        [
+          "Price Per Share",
+          23.52
+        ],
+        [
+          "Cost Per Share",
+          21
+        ],
+        [
+          "Subscription Fee (%)",
+          0
+        ],
+        [
+          "Subscription Fee Amount",
+          0
+        ],
+        [
+          "Performance Fee Tier 1 (%)",
+          0.1
+        ],
+        [
+          "Performance Fee Tier 1 Threshold",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 Threshold",
+          null
+        ],
+        [
+          "Spread Per Share",
+          4.02
+        ],
+        [
+          "Spread Fee Amount",
+          10749.48
+        ],
+        [
+          "Management Fee (%)",
+          null
+        ],
+        [
+          "BD Fee (%)",
+          0
+        ],
+        [
+          "BD Fee Amount",
+          0
+        ],
+        [
+          "FINRA Fee Shares",
+          0
+        ],
+        [
+          "FINRA Fee Amount",
+          0
+        ],
+        [
+          "Discount Rate",
+          null
+        ],
+        [
+          "Interest Rate",
+          null
+        ],
+        [
+          "Valuation Cap",
+          null
+        ],
+        [
+          "Opportunity Name",
+          "VEGINVEST"
+        ],
+        [
+          "Sourcing Contract Ref",
+          "VEG_VC6_TR8"
+        ],
+        [
+          "Contract Date",
+          "2021-04-27 00:00:00"
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 66,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Bank SYZ AG",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 124444.32,
+        "Funded Amount": 124444.32,
+        "Shares": 5291,
+        "Current Position": "=+G66",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 14,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 9.52,
+        "Spread Fee Amount": 50370.32,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "JMACHOT",
+        "Sourcing Contract Ref": "VEG_VC6_TR4",
+        "Contract Date": "2021-04-27 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Entity Code",
+          "VC106"
+        ],
+        [
+          "Investor Name",
+          "Bank SYZ AG"
+        ],
+        [
+          "Investor Type",
+          "entity"
+        ],
+        [
+          "Commitment",
+          124444.32
+        ],
+        [
+          "Funded Amount",
+          124444.32
+        ],
+        [
+          "Notes",
+          null
+        ],
+        [
+          "Price Per Share",
+          23.52
+        ],
+        [
+          "Cost Per Share",
+          14
+        ],
+        [
+          "Subscription Fee (%)",
+          0
+        ],
+        [
+          "Subscription Fee Amount",
+          0
+        ],
+        [
+          "Performance Fee Tier 1 (%)",
+          0.1
+        ],
+        [
+          "Performance Fee Tier 1 Threshold",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 Threshold",
+          null
+        ],
+        [
+          "Spread Per Share",
+          9.52
+        ],
+        [
+          "Spread Fee Amount",
+          50370.32
+        ],
+        [
+          "Management Fee (%)",
+          null
+        ],
+        [
+          "BD Fee (%)",
+          0
+        ],
+        [
+          "BD Fee Amount",
+          0
+        ],
+        [
+          "FINRA Fee Shares",
+          0
+        ],
+        [
+          "FINRA Fee Amount",
+          0
+        ],
+        [
+          "Discount Rate",
+          null
+        ],
+        [
+          "Interest Rate",
+          null
+        ],
+        [
+          "Valuation Cap",
+          null
+        ],
+        [
+          "Opportunity Name",
+          "JMACHOT"
+        ],
+        [
+          "Sourcing Contract Ref",
+          "VEG_VC6_TR4"
+        ],
+        [
+          "Contract Date",
+          "2021-04-27 00:00:00"
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 67,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Bank SYZ AG",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 129407.04,
+        "Funded Amount": 129407.04,
+        "Shares": 5502,
+        "Current Position": "=+G67",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 13.5,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 10.02,
+        "Spread Fee Amount": 55130.04,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "J.MACHOT",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-04-27 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Entity Code",
+          "VC106"
+        ],
+        [
+          "Investor Name",
+          "Bank SYZ AG"
+        ],
+        [
+          "Investor Type",
+          "entity"
+        ],
+        [
+          "Commitment",
+          129407.04
+        ],
+        [
+          "Funded Amount",
+          129407.04
+        ],
+        [
+          "Notes",
+          null
+        ],
+        [
+          "Price Per Share",
+          23.52
+        ],
+        [
+          "Cost Per Share",
+          13.5
+        ],
+        [
+          "Subscription Fee (%)",
+          0
+        ],
+        [
+          "Subscription Fee Amount",
+          0
+        ],
+        [
+          "Performance Fee Tier 1 (%)",
+          0.1
+        ],
+        [
+          "Performance Fee Tier 1 Threshold",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 Threshold",
+          null
+        ],
+        [
+          "Spread Per Share",
+          10.02
+        ],
+        [
+          "Spread Fee Amount",
+          55130.04
+        ],
+        [
+          "Management Fee (%)",
+          null
+        ],
+        [
+          "BD Fee (%)",
+          0
+        ],
+        [
+          "BD Fee Amount",
+          0
+        ],
+        [
+          "FINRA Fee Shares",
+          0
+        ],
+        [
+          "FINRA Fee Amount",
+          0
+        ],
+        [
+          "Discount Rate",
+          null
+        ],
+        [
+          "Interest Rate",
+          null
+        ],
+        [
+          "Valuation Cap",
+          null
+        ],
+        [
+          "Opportunity Name",
+          "J.MACHOT"
+        ],
+        [
+          "Contract Date",
+          "2021-04-27 00:00:00"
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 68,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Bank SYZ AG",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 4661508.64,
+        "Funded Amount": 4661508.64,
+        "Shares": 198193,
+        "Current Position": "=+G68",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 20,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 3.52,
+        "Spread Fee Amount": 697639.36,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "GERSHON",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-04-27 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Entity Code",
+          "VC106"
+        ],
+        [
+          "Investor Name",
+          "Bank SYZ AG"
+        ],
+        [
+          "Investor Type",
+          "entity"
+        ],
+        [
+          "Commitment",
+          4661508.64
+        ],
+        [
+          "Funded Amount",
+          4661508.64
+        ],
+        [
+          "Notes",
+          null
+        ],
+        [
+          "Price Per Share",
+          23.52
+        ],
+        [
+          "Cost Per Share",
+          20
+        ],
+        [
+          "Subscription Fee (%)",
+          0
+        ],
+        [
+          "Subscription Fee Amount",
+          0
+        ],
+        [
+          "Performance Fee Tier 1 (%)",
+          0.1
+        ],
+        [
+          "Performance Fee Tier 1 Threshold",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 Threshold",
+          null
+        ],
+        [
+          "Spread Per Share",
+          3.52
+        ],
+        [
+          "Spread Fee Amount",
+          697639.36
+        ],
+        [
+          "Management Fee (%)",
+          null
+        ],
+        [
+          "BD Fee (%)",
+          0
+        ],
+        [
+          "BD Fee Amount",
+          0
+        ],
+        [
+          "FINRA Fee Shares",
+          0
+        ],
+        [
+          "FINRA Fee Amount",
+          0
+        ],
+        [
+          "Discount Rate",
+          null
+        ],
+        [
+          "Interest Rate",
+          null
+        ],
+        [
+          "Valuation Cap",
+          null
+        ],
+        [
+          "Opportunity Name",
+          "GERSHON"
+        ],
+        [
+          "Contract Date",
+          "2021-04-27 00:00:00"
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 69,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Barbara and Heinz WINZ",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 100000,
+        "Funded Amount": 0,
+        "Shares": 4440,
+        "Current Position": 4440,
+        "Notes": null,
+        "Price Per Share": 22.52,
+        "Cost Per Share": 14,
+        "Subscription Fee (%)": 0.02,
+        "Subscription Fee Amount": 2000,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 8.52,
+        "Spread Fee Amount": 37828.8,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR4",
+        "Contract Date": "2021-02-05 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Funded Amount",
+          0
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 71,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Beatrice and Marcel KNOPF",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 50000,
+        "Funded Amount": 0,
+        "Shares": 2220,
+        "Current Position": 2220,
+        "Notes": null,
+        "Price Per Share": 22.52,
+        "Cost Per Share": 14,
+        "Subscription Fee (%)": 0.02,
+        "Subscription Fee Amount": 1000,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 8.52,
+        "Spread Fee Amount": 18914.4,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR4",
+        "Contract Date": "2021-01-29 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Funded Amount",
+          0
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 75,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Blaine ROLLINS",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 50000,
+        "Funded Amount": 50000,
+        "Shares": 2500,
+        "Current Position": "=+G75",
+        "Notes": null,
+        "Price Per Share": 20,
+        "Cost Per Share": 14,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 6.5,
+        "Spread Fee Amount": 16250,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0.1,
+        "BD Fee Amount": 0.1,
+        "FINRA Fee Shares": 2,
+        "FINRA Fee Amount": 5000,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR2",
+        "Contract Date": "2021-01-28 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 76,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Blaine ROLLINS",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 150000,
+        "Funded Amount": 150000,
+        "Shares": 7500,
+        "Current Position": "=+G76",
+        "Notes": null,
+        "Price Per Share": 20,
+        "Cost Per Share": 13.5,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 6.5,
+        "Spread Fee Amount": 48750,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0.1,
+        "BD Fee Amount": 0.1,
+        "FINRA Fee Shares": 2,
+        "FINRA Fee Amount": 15000,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR1",
+        "Contract Date": "2020-12-06 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 86,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Craig BROWN",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 50000,
+        "Funded Amount": 50000,
+        "Shares": 2500,
+        "Current Position": 2500,
+        "Notes": null,
+        "Price Per Share": 20,
+        "Cost Per Share": 14,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 6,
+        "Spread Fee Amount": 15000,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0.1,
+        "BD Fee Amount": 0.1,
+        "FINRA Fee Shares": 2,
+        "FINRA Fee Amount": 5000,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR4",
+        "Contract Date": "2021-02-10 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 89,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Damien Krauser",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 50000,
+        "Funded Amount": 50000,
+        "Shares": 2125,
+        "Current Position": "=+G89",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 21,
+        "Subscription Fee (%)": 0.02,
+        "Subscription Fee Amount": 1000,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 7.52,
+        "Spread Fee Amount": 15980,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR5",
+        "Contract Date": "2021-04-30 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 90,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Damien Krauser",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 100000,
+        "Funded Amount": 100000,
+        "Shares": 4251,
+        "Current Position": "=+G90",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 21,
+        "Subscription Fee (%)": 0.02,
+        "Subscription Fee Amount": 2000,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 4.02,
+        "Spread Fee Amount": 17089.02,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR9",
+        "Contract Date": "2021-04-30 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 105,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Eric LE SEIGNEUR",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 100000,
+        "Funded Amount": 100000,
+        "Shares": 4251,
+        "Current Position": "=+G105",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 21,
+        "Subscription Fee (%)": 0.02,
+        "Subscription Fee Amount": 2000,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 4.02,
+        "Spread Fee Amount": 17089.02,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR8",
+        "Contract Date": "2021-04-30 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 106,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Eric LE SEIGNEUR",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 100000,
+        "Funded Amount": 0,
+        "Shares": 4251,
+        "Current Position": "=+G106",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 21,
+        "Subscription Fee (%)": 0.02,
+        "Subscription Fee Amount": 2000,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 4.02,
+        "Spread Fee Amount": 17089.02,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR9",
+        "Contract Date": "2021-04-30 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Funded Amount",
+          0
+        ],
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 120,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Hedgebay Securities LLC",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 24978.24,
+        "Funded Amount": 0,
+        "Shares": 1062,
+        "Current Position": "=+G120",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 16,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 6.81,
+        "Spread Fee Amount": 7232.22,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0.71,
+        "FINRA Fee Amount": 754.02,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR5",
+        "Contract Date": "2021-03-05 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Investor Name",
+          "Hedgebay Securities LLC"
+        ],
+        [
+          "Funded Amount",
+          0
+        ],
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 121,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Hedgebay Securities LLC",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 24978.24,
+        "Funded Amount": 24978.24,
+        "Shares": 1062,
+        "Current Position": "=+G121",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 16,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 6.81,
+        "Spread Fee Amount": 7232.22,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0.71,
+        "FINRA Fee Amount": 754.02,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR5",
+        "Contract Date": "2021-03-05 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Investor Name",
+          "Hedgebay Securities LLC"
+        ],
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 122,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Hedgebay Securities LLC",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 24978.24,
+        "Funded Amount": 0,
+        "Shares": 1062,
+        "Current Position": "=+G122",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 16,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 6.81,
+        "Spread Fee Amount": 7232.22,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0.71,
+        "FINRA Fee Amount": 754.02,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR5",
+        "Contract Date": "2021-03-09 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Investor Name",
+          "Hedgebay Securities LLC"
+        ],
+        [
+          "Funded Amount",
+          0
+        ],
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 123,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Hedgebay Securities LLC",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 100007.04,
+        "Funded Amount": 100007.04,
+        "Shares": 4252,
+        "Current Position": "=+G123",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 16,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 6.81,
+        "Spread Fee Amount": 28956.12,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0.71,
+        "FINRA Fee Amount": 3018.92,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR5",
+        "Contract Date": "2021-03-06 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Investor Name",
+          "Hedgebay Securities LLC"
+        ],
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 128,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "INNOSIGHT VENTURES Pte Ltd",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 164640,
+        "Funded Amount": 164640,
+        "Shares": 7000,
+        "Current Position": "=+G128",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 21,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 4.02,
+        "Spread Fee Amount": 28140,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR8",
+        "Contract Date": "2021-03-23 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 129,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "INNOSIGHT VENTURES Pte Ltd",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 588000,
+        "Funded Amount": 588000,
+        "Shares": 25000,
+        "Current Position": "=+G129",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 16,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 7.52,
+        "Spread Fee Amount": 188000,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR5",
+        "Contract Date": "2021-03-23 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 141,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 70902,
+        "Funded Amount": 70902,
+        "Shares": 3636,
+        "Current Position": 3636,
+        "Notes": null,
+        "Price Per Share": 19.5,
+        "Cost Per Share": null,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR8",
+        "Contract Date": "2022-03-03 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 142,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 234607,
+        "Funded Amount": 234607,
+        "Shares": 20947,
+        "Current Position": 20947,
+        "Notes": null,
+        "Price Per Share": 11.2,
+        "Cost Per Share": null,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR12",
+        "Contract Date": "2021-02-09 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 143,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 434863,
+        "Funded Amount": 434863,
+        "Shares": 38827,
+        "Current Position": 38827,
+        "Notes": null,
+        "Price Per Share": 11.2,
+        "Cost Per Share": null,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR12",
+        "Contract Date": "2021-02-09 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 144,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 1360000,
+        "Funded Amount": 1360000,
+        "Shares": 68000,
+        "Current Position": 36742,
+        "Notes": null,
+        "Price Per Share": 20,
+        "Cost Per Share": 20,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "CHRIS JONES",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-03-19 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 155,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Laurence CHANG",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 50000,
+        "Funded Amount": 50000,
+        "Shares": 2500,
+        "Current Position": "=+G155",
+        "Notes": null,
+        "Price Per Share": 20,
+        "Cost Per Share": 14,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 6.5,
+        "Spread Fee Amount": 16250,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0.1,
+        "BD Fee Amount": 0.1,
+        "FINRA Fee Shares": 2,
+        "FINRA Fee Amount": 5000,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR2",
+        "Contract Date": "2021-01-26 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 156,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Laurence CHANG",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 100000,
+        "Funded Amount": 100000,
+        "Shares": 5000,
+        "Current Position": "=+G156",
+        "Notes": null,
+        "Price Per Share": 20,
+        "Cost Per Share": 13.5,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 6.5,
+        "Spread Fee Amount": 32500,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0.1,
+        "BD Fee Amount": 0.1,
+        "FINRA Fee Shares": 2,
+        "FINRA Fee Amount": 10000,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR1",
+        "Contract Date": "2020-12-22 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 158,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "LEE RAND GROUP",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 24985,
+        "Funded Amount": 24985,
+        "Shares": 1315,
+        "Current Position": "=+G158",
+        "Notes": null,
+        "Price Per Share": 19,
+        "Cost Per Share": 14,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 5,
+        "Spread Fee Amount": 6575,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR4",
+        "Contract Date": "2021-02-15 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Investor Name",
+          "LEE RAND GROUP"
+        ],
+        [
+          "Investor Type",
+          "entity"
+        ],
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 159,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "LEE RAND GROUP",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 24985,
+        "Funded Amount": 0,
+        "Shares": 1315,
+        "Current Position": "=+G159",
+        "Notes": null,
+        "Price Per Share": 19,
+        "Cost Per Share": 14,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 5,
+        "Spread Fee Amount": 6575,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR4",
+        "Contract Date": "2021-02-16 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Investor Name",
+          "LEE RAND GROUP"
+        ],
+        [
+          "Investor Type",
+          "entity"
+        ],
+        [
+          "Funded Amount",
+          0
+        ],
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 160,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "LEE RAND GROUP",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 34998,
+        "Funded Amount": 34998,
+        "Shares": 1842,
+        "Current Position": "=+G160",
+        "Notes": null,
+        "Price Per Share": 19,
+        "Cost Per Share": 14,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 5,
+        "Spread Fee Amount": 9210,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR4",
+        "Contract Date": "2021-02-16 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Investor Name",
+          "LEE RAND GROUP"
+        ],
+        [
+          "Investor Type",
+          "entity"
+        ],
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 161,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "LEE RAND GROUP",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 49989,
+        "Funded Amount": 0,
+        "Shares": 2631,
+        "Current Position": "=+G161",
+        "Notes": null,
+        "Price Per Share": 19,
+        "Cost Per Share": 14,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 5,
+        "Spread Fee Amount": 13155,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR4",
+        "Contract Date": "2021-02-15 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Investor Name",
+          "LEE RAND GROUP"
+        ],
+        [
+          "Investor Type",
+          "entity"
+        ],
+        [
+          "Funded Amount",
+          0
+        ],
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 162,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "LEE RAND GROUP",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 49989,
+        "Funded Amount": 49989,
+        "Shares": 2631,
+        "Current Position": "=+G162",
+        "Notes": null,
+        "Price Per Share": 19,
+        "Cost Per Share": 14,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 5,
+        "Spread Fee Amount": 13155,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR4",
+        "Contract Date": "2021-02-16 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Investor Name",
+          "LEE RAND GROUP"
+        ],
+        [
+          "Investor Type",
+          "entity"
+        ],
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 163,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "LEE RAND GROUP",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 49989,
+        "Funded Amount": 0,
+        "Shares": 2631,
+        "Current Position": "=+G163",
+        "Notes": null,
+        "Price Per Share": 19,
+        "Cost Per Share": 14,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 5,
+        "Spread Fee Amount": 13155,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR4",
+        "Contract Date": "2021-02-16 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Investor Name",
+          "LEE RAND GROUP"
+        ],
+        [
+          "Investor Type",
+          "entity"
+        ],
+        [
+          "Funded Amount",
+          0
+        ],
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 164,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "LEE RAND GROUP",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 199994,
+        "Funded Amount": 199994,
+        "Shares": 10526,
+        "Current Position": "=+G164",
+        "Notes": null,
+        "Price Per Share": 19,
+        "Cost Per Share": 14,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 5,
+        "Spread Fee Amount": 52630,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR4",
+        "Contract Date": "2021-02-15 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Investor Name",
+          "LEE RAND GROUP"
+        ],
+        [
+          "Investor Type",
+          "entity"
+        ],
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 180,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Murat Cem and Mehmet Can GOKER",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 350000,
+        "Funded Amount": 350000,
+        "Shares": 14880,
+        "Current Position": "=+G180",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 21,
+        "Subscription Fee (%)": 0.02,
+        "Subscription Fee Amount": 7000,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 4.02,
+        "Spread Fee Amount": 59817.6,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR8",
+        "Contract Date": "2021-05-21 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 181,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Murat Cem and Mehmet Can GOKER",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 650000,
+        "Funded Amount": 650000,
+        "Shares": 27636,
+        "Current Position": "=+G181",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 21,
+        "Subscription Fee (%)": 0.02,
+        "Subscription Fee Amount": 13000,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 6.52,
+        "Spread Fee Amount": 180186.72,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR9",
+        "Contract Date": "2021-06-27 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 184,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Nilakantan MAHESWARI & Subbiah SUBRAMANIAN",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 155000,
+        "Funded Amount": 0,
+        "Shares": 6733,
+        "Current Position": 6733,
+        "Notes": null,
+        "Price Per Share": 23.02,
+        "Cost Per Share": 14,
+        "Subscription Fee (%)": null,
+        "Subscription Fee Amount": null,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 9.02,
+        "Spread Fee Amount": 60731.66,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR4",
+        "Contract Date": "2021-02-12 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Funded Amount",
+          0
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 185,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "OEP Ltd",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 250000,
+        "Funded Amount": 0,
+        "Shares": 11905,
+        "Current Position": 11905,
+        "Notes": null,
+        "Price Per Share": 21,
+        "Cost Per Share": 13.5,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 7.5,
+        "Spread Fee Amount": 89287.5,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR2",
+        "Contract Date": "2022-01-01 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Funded Amount",
+          0
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 208,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Scott FLETCHER",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 500000,
+        "Funded Amount": 500000,
+        "Shares": 21258,
+        "Current Position": "=+G208",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": null,
+        "Subscription Fee (%)": 0.02,
+        "Subscription Fee Amount": 10000,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 3.52,
+        "Spread Fee Amount": 74828.16,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "J.MACHOT",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-06-28 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 209,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "Scott FLETCHER",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 500000,
+        "Funded Amount": 0,
+        "Shares": 21258,
+        "Current Position": "=+G209",
+        "Notes": null,
+        "Price Per Share": 23.52,
+        "Cost Per Share": 21,
+        "Subscription Fee (%)": 0.02,
+        "Subscription Fee Amount": 10000,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 6.52,
+        "Spread Fee Amount": 138602.16,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "VEGINVEST",
+        "Sourcing Contract Ref": "VEG_VC6_TR9",
+        "Contract Date": "2021-06-28 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Funded Amount",
+          0
+        ],
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 228,
+      "data": {
+        "Entity Code": "VC106",
+        "Investor Name": "VERSO GROUP",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 0,
+        "Funded Amount": 0,
+        "Shares": 0,
+        "Current Position": 0,
+        "Notes": null,
+        "Price Per Share": 20,
+        "Cost Per Share": null,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "J.MACHOT",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-05-17 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Entity Code",
+          "VC106"
+        ],
+        [
+          "Investor Name",
+          "VERSO GROUP"
+        ],
+        [
+          "Investor Type",
+          "entity"
+        ],
+        [
+          "Commitment",
+          0
+        ],
+        [
+          "Funded Amount",
+          0
+        ],
+        [
+          "Notes",
+          null
+        ],
+        [
+          "Price Per Share",
+          20
+        ],
+        [
+          "Cost Per Share",
+          null
+        ],
+        [
+          "Subscription Fee (%)",
+          0
+        ],
+        [
+          "Subscription Fee Amount",
+          0
+        ],
+        [
+          "Performance Fee Tier 1 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 1 Threshold",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 Threshold",
+          null
+        ],
+        [
+          "Spread Per Share",
+          0
+        ],
+        [
+          "Spread Fee Amount",
+          0
+        ],
+        [
+          "Management Fee (%)",
+          null
+        ],
+        [
+          "BD Fee (%)",
+          null
+        ],
+        [
+          "BD Fee Amount",
+          null
+        ],
+        [
+          "FINRA Fee Shares",
+          null
+        ],
+        [
+          "FINRA Fee Amount",
+          null
+        ],
+        [
+          "Discount Rate",
+          null
+        ],
+        [
+          "Interest Rate",
+          null
+        ],
+        [
+          "Valuation Cap",
+          null
+        ],
+        [
+          "Opportunity Name",
+          "J.MACHOT"
+        ],
+        [
+          "Sourcing Contract Ref",
+          null
+        ],
+        [
+          "Contract Date",
+          "2021-05-17 00:00:00"
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 240,
+      "data": {
+        "Entity Code": "VC111",
+        "Investor Name": "Daniel BAUMSLAG",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 50000,
+        "Funded Amount": 50000,
+        "Shares": 50000,
+        "Current Position": "=+G240",
+        "Notes": null,
+        "Price Per Share": 1,
+        "Cost Per Share": 1,
+        "Subscription Fee (%)": 0.04,
+        "Subscription Fee Amount": 2000,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": 0.06,
+        "Valuation Cap": null,
+        "Opportunity Name": "SNOWPLUS",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-11-04 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 241,
+      "data": {
+        "Entity Code": "VC111",
+        "Investor Name": "Daniel BAUMSLAG",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 150000,
+        "Funded Amount": 150000,
+        "Shares": 150000,
+        "Current Position": "=+G241",
+        "Notes": null,
+        "Price Per Share": 1,
+        "Cost Per Share": 1,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": 0.06,
+        "Valuation Cap": null,
+        "Opportunity Name": "SNOWPLUS",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-12-05 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 250,
+      "data": {
+        "Entity Code": "VC111",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 760000,
+        "Funded Amount": 760000,
+        "Shares": 760000,
+        "Current Position": 260000,
+        "Notes": null,
+        "Price Per Share": 1,
+        "Cost Per Share": 1,
+        "Subscription Fee (%)": null,
+        "Subscription Fee Amount": null,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": 0.06,
+        "Valuation Cap": null,
+        "Opportunity Name": "SNOWPLUS",
+        "Sourcing Contract Ref": null,
+        "Contract Date": null
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 251,
+      "data": {
+        "Entity Code": "VC111",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 150000,
+        "Funded Amount": 150000,
+        "Shares": 150000,
+        "Current Position": "=+G251",
+        "Notes": null,
+        "Price Per Share": 1,
+        "Cost Per Share": 1,
+        "Subscription Fee (%)": null,
+        "Subscription Fee Amount": null,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": 0.06,
+        "Valuation Cap": null,
+        "Opportunity Name": "SNOWPLUS",
+        "Sourcing Contract Ref": null,
+        "Contract Date": null
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 262,
+      "data": {
+        "Entity Code": "VC111",
+        "Investor Name": "TERRA Financial & Management Services SA",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 30000,
+        "Funded Amount": 30000,
+        "Shares": 30000,
+        "Current Position": "=+G262",
+        "Notes": null,
+        "Price Per Share": 1,
+        "Cost Per Share": 1,
+        "Subscription Fee (%)": 0.02,
+        "Subscription Fee Amount": 600,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": 0.06,
+        "Valuation Cap": null,
+        "Opportunity Name": "SNOWPLUS",
+        "Sourcing Contract Ref": null,
+        "Contract Date": null
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 263,
+      "data": {
+        "Entity Code": "VC111",
+        "Investor Name": "TERRA Financial & Management Services SA",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 50000,
+        "Funded Amount": 50000,
+        "Shares": 50000,
+        "Current Position": "=+G263",
+        "Notes": null,
+        "Price Per Share": 1,
+        "Cost Per Share": 1,
+        "Subscription Fee (%)": 0.02,
+        "Subscription Fee Amount": 1000,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": 0.06,
+        "Valuation Cap": null,
+        "Opportunity Name": "SNOWPLUS",
+        "Sourcing Contract Ref": null,
+        "Contract Date": null
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 266,
+      "data": {
+        "Entity Code": "VC111",
+        "Investor Name": "Vladimir GUSEV",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 50000,
+        "Funded Amount": 50000,
+        "Shares": 50000,
+        "Current Position": "=+G266",
+        "Notes": null,
+        "Price Per Share": 1,
+        "Cost Per Share": 1,
+        "Subscription Fee (%)": 0.04,
+        "Subscription Fee Amount": 2000,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": 0.06,
+        "Valuation Cap": null,
+        "Opportunity Name": "SNOWPLUS",
+        "Sourcing Contract Ref": null,
+        "Contract Date": null
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 267,
+      "data": {
+        "Entity Code": "VC111",
+        "Investor Name": "Vladimir GUSEV",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 100000,
+        "Funded Amount": 100000,
+        "Shares": 100000,
+        "Current Position": "=+G267",
+        "Notes": null,
+        "Price Per Share": 1,
+        "Cost Per Share": 1,
+        "Subscription Fee (%)": 0.04,
+        "Subscription Fee Amount": 4000,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": 0.06,
+        "Valuation Cap": null,
+        "Opportunity Name": "SNOWPLUS",
+        "Sourcing Contract Ref": null,
+        "Contract Date": null
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 270,
+      "data": {
+        "Entity Code": "VC112",
+        "Investor Name": "Daniel BAUMSLAG",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 25000,
+        "Funded Amount": 25000,
+        "Shares": 50352,
+        "Current Position": "=+G270",
+        "Notes": null,
+        "Price Per Share": 0.4965,
+        "Cost Per Share": 0.4965,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "BETTER BRAND",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-05-13 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 271,
+      "data": {
+        "Entity Code": "VC112",
+        "Investor Name": "Daniel BAUMSLAG",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 25000,
+        "Funded Amount": 0,
+        "Shares": 16370,
+        "Current Position": "=+G271",
+        "Notes": null,
+        "Price Per Share": 1.5271,
+        "Cost Per Share": 1.5271,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "BETTER BRAND",
+        "Sourcing Contract Ref": null,
+        "Contract Date": null
+      },
+      "extra_fields": [
+        [
+          "Funded Amount",
+          0
+        ],
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 274,
+      "data": {
+        "Entity Code": "VC112",
+        "Investor Name": "IQEQ (Switzerland) Ltd ATO Raycat Investment Trust",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 25000,
+        "Funded Amount": 25000,
+        "Shares": 16370,
+        "Current Position": "=+G274",
+        "Notes": null,
+        "Price Per Share": 1.5271,
+        "Cost Per Share": 1.5271,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "BETTER BRAND",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-10-18 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 275,
+      "data": {
+        "Entity Code": "VC112",
+        "Investor Name": "IQEQ (Switzerland) Ltd ATO Raycat Investment Trust",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 125000,
+        "Funded Amount": 125000,
+        "Shares": 12038,
+        "Current Position": "=+G275",
+        "Notes": null,
+        "Price Per Share": 1,
+        "Cost Per Share": 1,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "BETTER BRAND",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-10-18 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 276,
+      "data": {
+        "Entity Code": "VC112",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 4.45,
+        "Funded Amount": 4.45,
+        "Shares": 44444,
+        "Current Position": 22472,
+        "Notes": null,
+        "Price Per Share": 0.00010012600126,
+        "Cost Per Share": null,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "BETTER BRAND",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-08-25 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 277,
+      "data": {
+        "Entity Code": "VC112",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 250000,
+        "Funded Amount": 250000,
+        "Shares": 503524,
+        "Current Position": 470783,
+        "Notes": null,
+        "Price Per Share": 0.4965,
+        "Cost Per Share": 0.4965,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "BETTER BRAND",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-09-02 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 278,
+      "data": {
+        "Entity Code": "VC112",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 250000,
+        "Funded Amount": 250000,
+        "Shares": 629405,
+        "Current Position": 393220,
+        "Notes": null,
+        "Price Per Share": 0.3972,
+        "Cost Per Share": 0.3972,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "BETTER BRAND",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-09-02 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 279,
+      "data": {
+        "Entity Code": "VC112",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 75000,
+        "Funded Amount": 75000,
+        "Shares": 151057,
+        "Current Position": "=+G279",
+        "Notes": null,
+        "Price Per Share": 0.4965,
+        "Cost Per Share": 0.4965,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "BETTER BRAND",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-10-05 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 280,
+      "data": {
+        "Entity Code": "VC112",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 130000,
+        "Funded Amount": 130000,
+        "Shares": 85128,
+        "Current Position": "=+G280",
+        "Notes": null,
+        "Price Per Share": 1.5271,
+        "Cost Per Share": 1.5271,
+        "Subscription Fee (%)": 0.01,
+        "Subscription Fee Amount": 1300,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "BETTER BRAND",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-10-22 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 281,
+      "data": {
+        "Entity Code": "VC112",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 535000,
+        "Funded Amount": 535000,
+        "Shares": 43797,
+        "Current Position": "=+G281",
+        "Notes": null,
+        "Price Per Share": 12.2154,
+        "Cost Per Share": 12.2154,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "BETTER BRAND",
+        "Sourcing Contract Ref": "SeriesA",
+        "Contract Date": "2022-08-23 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 282,
+      "data": {
+        "Entity Code": "VC112",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 6,
+        "Funded Amount": 6,
+        "Shares": 3,
+        "Current Position": "=+G282",
+        "Notes": null,
+        "Price Per Share": 1.5271,
+        "Cost Per Share": 1.5271,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "BETTER BRAND",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2023-02-02 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 283,
+      "data": {
+        "Entity Code": "VC112",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 24.5,
+        "Funded Amount": 24.5,
+        "Shares": 61,
+        "Current Position": "=+G283",
+        "Notes": null,
+        "Price Per Share": 0.3972,
+        "Cost Per Share": 0.3972,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "BETTER BRAND",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2023-02-02 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 284,
+      "data": {
+        "Entity Code": "VC112",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 50,
+        "Funded Amount": 50,
+        "Shares": 100,
+        "Current Position": "=+G284",
+        "Notes": null,
+        "Price Per Share": 0.4965,
+        "Cost Per Share": 0.4965,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "BETTER BRAND",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2023-02-02 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 285,
+      "data": {
+        "Entity Code": "VC112",
+        "Investor Name": "Liudmila ROMANOVA and Alexey ROMANOV",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 500000,
+        "Funded Amount": 500000,
+        "Shares": 40931,
+        "Current Position": "=+G285",
+        "Notes": null,
+        "Price Per Share": 12.2154,
+        "Cost Per Share": 12.2154,
+        "Subscription Fee (%)": 0.04,
+        "Subscription Fee Amount": 20000,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "BETTER BRAND",
+        "Sourcing Contract Ref": "SeriesA",
+        "Contract Date": "2022-08-25 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 286,
+      "data": {
+        "Entity Code": "VC112",
+        "Investor Name": "OEP Ltd",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 50000,
+        "Funded Amount": 50000,
+        "Shares": 32741,
+        "Current Position": "=+G286",
+        "Notes": null,
+        "Price Per Share": 1.5271,
+        "Cost Per Share": 1.5271,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "BETTER BRAND",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-10-16 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 287,
+      "data": {
+        "Entity Code": "VC112",
+        "Investor Name": "OEP Ltd",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 50000,
+        "Funded Amount": 50000,
+        "Shares": 100704,
+        "Current Position": "=+G287",
+        "Notes": null,
+        "Price Per Share": 0.4965,
+        "Cost Per Share": 0.4965,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "BETTER BRAND",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-10-16 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 288,
+      "data": {
+        "Entity Code": "VC112",
+        "Investor Name": "OEP Ltd",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 2.2,
+        "Funded Amount": 2.2,
+        "Shares": 21972,
+        "Current Position": "=+G288",
+        "Notes": null,
+        "Price Per Share": 0.00010012600126,
+        "Cost Per Share": null,
+        "Subscription Fee (%)": null,
+        "Subscription Fee Amount": null,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "JMACHOT",
+        "Sourcing Contract Ref": null,
+        "Contract Date": null
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 304,
+      "data": {
+        "Entity Code": "VC113",
+        "Investor Name": "Dalinga AG",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 150000,
+        "Funded Amount": 150000,
+        "Shares": 5590,
+        "Current Position": "=+G304",
+        "Notes": null,
+        "Price Per Share": 26.8314,
+        "Cost Per Share": 26.495,
+        "Subscription Fee (%)": 0.04,
+        "Subscription Fee Amount": 6000,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0.3364,
+        "Spread Fee Amount": 1880.476,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "TTL",
+        "Sourcing Contract Ref": "Series A Term Sheet",
+        "Contract Date": "2021-07-06 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 305,
+      "data": {
+        "Entity Code": "VC113",
+        "Investor Name": "Dalinga AG",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 15000,
+        "Funded Amount": 15000,
+        "Shares": 559,
+        "Current Position": "=+G305",
+        "Notes": null,
+        "Price Per Share": 26.8314,
+        "Cost Per Share": 26.495,
+        "Subscription Fee (%)": 0.04,
+        "Subscription Fee Amount": 600,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0.3364,
+        "Spread Fee Amount": 188.0476,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "TTL",
+        "Sourcing Contract Ref": "Series A Term Sheet",
+        "Contract Date": "2021-07-06 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 308,
+      "data": {
+        "Entity Code": "VC113",
+        "Investor Name": "Deyan MIHOV",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 60000,
+        "Funded Amount": 60000,
+        "Shares": 2236,
+        "Current Position": "=+G308",
+        "Notes": null,
+        "Price Per Share": 26.8314,
+        "Cost Per Share": 26.495,
+        "Subscription Fee (%)": 0.04,
+        "Subscription Fee Amount": 2400,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0.3364,
+        "Spread Fee Amount": 752.1904,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "TTL",
+        "Sourcing Contract Ref": "Series A Term Sheet",
+        "Contract Date": "2021-09-18 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 309,
+      "data": {
+        "Entity Code": "VC113",
+        "Investor Name": "Deyan MIHOV",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 90000,
+        "Funded Amount": 90000,
+        "Shares": 3354,
+        "Current Position": "=+G309",
+        "Notes": null,
+        "Price Per Share": 26.8314,
+        "Cost Per Share": 26.495,
+        "Subscription Fee (%)": 0.04,
+        "Subscription Fee Amount": 3600,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0.3364,
+        "Spread Fee Amount": 1128.2856,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "TTL",
+        "Sourcing Contract Ref": "JMACHOT",
+        "Contract Date": null
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 313,
+      "data": {
+        "Entity Code": "VC113",
+        "Investor Name": "FRALIS SPF",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 500000,
+        "Funded Amount": 500000,
+        "Shares": 18634,
+        "Current Position": "=+G313",
+        "Notes": null,
+        "Price Per Share": 26.8314,
+        "Cost Per Share": 26.495,
+        "Subscription Fee (%)": 0.02,
+        "Subscription Fee Amount": 10000,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0.3364,
+        "Spread Fee Amount": 6268.4776,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "TTL",
+        "Sourcing Contract Ref": "Series A Term Sheet",
+        "Contract Date": "2021-06-29 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 314,
+      "data": {
+        "Entity Code": "VC113",
+        "Investor Name": "FRALIS SPF",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 100000,
+        "Funded Amount": 100000,
+        "Shares": 14615,
+        "Current Position": "=+G314",
+        "Notes": null,
+        "Price Per Share": 6.842,
+        "Cost Per Share": 6.842,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": 0.1,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "TTL",
+        "Sourcing Contract Ref": "SAFE",
+        "Contract Date": "2021-11-17 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 323,
+      "data": {
+        "Entity Code": "VC113",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 2000000,
+        "Funded Amount": 2000000,
+        "Shares": 75485,
+        "Current Position": 72131,
+        "Notes": null,
+        "Price Per Share": 26.495,
+        "Cost Per Share": 26.495,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "TTL",
+        "Sourcing Contract Ref": "Series A Term Sheet",
+        "Contract Date": "2021-07-06 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 324,
+      "data": {
+        "Entity Code": "VC113",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 2124000,
+        "Funded Amount": 2124000,
+        "Shares": 80166,
+        "Current Position": 35301,
+        "Notes": null,
+        "Price Per Share": 26.495,
+        "Cost Per Share": 26.495,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "TTL",
+        "Sourcing Contract Ref": "Series A Term Sheet",
+        "Contract Date": "2021-08-23 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 325,
+      "data": {
+        "Entity Code": "VC113",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 25000,
+        "Funded Amount": 25000,
+        "Shares": 3661,
+        "Current Position": "=+G325",
+        "Notes": null,
+        "Price Per Share": 6.842,
+        "Cost Per Share": 6.842,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "TTL",
+        "Sourcing Contract Ref": "SAFE",
+        "Contract Date": "2021-11-17 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 326,
+      "data": {
+        "Entity Code": "VC113",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 100000,
+        "Funded Amount": 100000,
+        "Shares": 14615,
+        "Current Position": "=+G326",
+        "Notes": null,
+        "Price Per Share": 6.842,
+        "Cost Per Share": 6.842,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "TTL",
+        "Sourcing Contract Ref": "SAFE",
+        "Contract Date": "2021-11-17 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 327,
+      "data": {
+        "Entity Code": "VC113",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 4160000,
+        "Funded Amount": 4160000,
+        "Shares": 150937,
+        "Current Position": 76398,
+        "Notes": null,
+        "Price Per Share": 27.5612,
+        "Cost Per Share": 26.495,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 1.0662,
+        "Spread Fee Amount": 160929.0294,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "TTL",
+        "Sourcing Contract Ref": "UBS",
+        "Contract Date": "2021-12-20 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 328,
+      "data": {
+        "Entity Code": "VC113",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 2000000,
+        "Funded Amount": 0,
+        "Shares": 74539,
+        "Current Position": "=+G328",
+        "Notes": null,
+        "Price Per Share": 26.8314,
+        "Cost Per Share": 26.8314,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "TTL",
+        "Sourcing Contract Ref": "SFLETCHER",
+        "Contract Date": "2022-03-29 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Funded Amount",
+          0
+        ],
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 329,
+      "data": {
+        "Entity Code": "VC113",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 50000,
+        "Funded Amount": 50000,
+        "Shares": 7307,
+        "Current Position": "=+G329",
+        "Notes": null,
+        "Price Per Share": 6.842,
+        "Cost Per Share": 6.842,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "TTL",
+        "Sourcing Contract Ref": "PETRATECH",
+        "Contract Date": "2022-09-06 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 335,
+      "data": {
+        "Entity Code": "VC113",
+        "Investor Name": "Mark HAYWARD",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 50000,
+        "Funded Amount": 50000,
+        "Shares": 1250,
+        "Current Position": "=+G335",
+        "Notes": null,
+        "Price Per Share": 40,
+        "Cost Per Share": 26.495,
+        "Subscription Fee (%)": 0.04,
+        "Subscription Fee Amount": 2000,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 13.505,
+        "Spread Fee Amount": 16881.25,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "TTL",
+        "Sourcing Contract Ref": "Series A Term Sheet",
+        "Contract Date": "2021-07-06 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 336,
+      "data": {
+        "Entity Code": "VC113",
+        "Investor Name": "Mark HAYWARD",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 80000,
+        "Funded Amount": 80000,
+        "Shares": 2000,
+        "Current Position": "=+G336",
+        "Notes": null,
+        "Price Per Share": 40,
+        "Cost Per Share": 26.495,
+        "Subscription Fee (%)": 0.04,
+        "Subscription Fee Amount": 3200,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 13.505,
+        "Spread Fee Amount": 27010,
+        "Management Fee (%)": null,
+        "BD Fee (%)": 0,
+        "BD Fee Amount": 0,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "TTL",
+        "Sourcing Contract Ref": "JMACHOT",
+        "Contract Date": "2021-10-27 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 340,
+      "data": {
+        "Entity Code": "VC113",
+        "Investor Name": "Michael RYAN",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 1000000,
+        "Funded Amount": 1000000,
+        "Shares": 25000,
+        "Current Position": "=+G340",
+        "Notes": null,
+        "Price Per Share": 40,
+        "Cost Per Share": 40,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "TTL",
+        "Sourcing Contract Ref": "ZANDERA",
+        "Contract Date": "2025-01-04 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 341,
+      "data": {
+        "Entity Code": "VC113",
+        "Investor Name": "Michael RYAN",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 1000000,
+        "Funded Amount": 0,
+        "Shares": 23809,
+        "Current Position": "=+G341",
+        "Notes": null,
+        "Price Per Share": 42,
+        "Cost Per Share": 42,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "TTL",
+        "Sourcing Contract Ref": "ZANDERA",
+        "Contract Date": "2025-01-04 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Funded Amount",
+          0
+        ],
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 342,
+      "data": {
+        "Entity Code": "VC113",
+        "Investor Name": "Michael RYAN",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 500000,
+        "Funded Amount": 500000,
+        "Shares": 12500,
+        "Current Position": "=+G342",
+        "Notes": null,
+        "Price Per Share": 40,
+        "Cost Per Share": 40,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "TTL",
+        "Sourcing Contract Ref": "ZANDERA",
+        "Contract Date": "2025-01-04 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 343,
+      "data": {
+        "Entity Code": "VC113",
+        "Investor Name": "Michael RYAN",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 600000,
+        "Funded Amount": 600000,
+        "Shares": 14634,
+        "Current Position": "=+G343",
+        "Notes": null,
+        "Price Per Share": 41,
+        "Cost Per Share": 41,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "TTL",
+        "Sourcing Contract Ref": "ZANDERA",
+        "Contract Date": "2025-01-04 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 375,
+      "data": {
+        "Entity Code": "VC118",
+        "Investor Name": "Talal CHAMSI PASHA",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 258460,
+        "Funded Amount": 258460,
+        "Shares": 39000,
+        "Current Position": "=+G375",
+        "Notes": null,
+        "Price Per Share": 6.62717,
+        "Cost Per Share": 3.42283,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 3.20434,
+        "Spread Fee Amount": 124969.26,
+        "Management Fee (%)": 0,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "IMPOSSIBLE FOODS",
+        "Sourcing Contract Ref": "JMACHOT",
+        "Contract Date": "2022-04-08 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 376,
+      "data": {
+        "Entity Code": "VC118",
+        "Investor Name": "Talal CHAMSI PASHA",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 525695,
+        "Funded Amount": 525695,
+        "Shares": 79324,
+        "Current Position": "=+G376",
+        "Notes": null,
+        "Price Per Share": 6.62717,
+        "Cost Per Share": 3.42283,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 3.20434,
+        "Spread Fee Amount": 254181.0662,
+        "Management Fee (%)": 0,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "IMPOSSIBLE FOODS",
+        "Sourcing Contract Ref": "JMACHOT",
+        "Contract Date": "2022-10-17 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 378,
+      "data": {
+        "Entity Code": "VC121",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "CHF",
+        "Commitment": 25000,
+        "Funded Amount": 25000,
+        "Shares": 43103,
+        "Current Position": "=+G378",
+        "Notes": null,
+        "Price Per Share": 0.58,
+        "Cost Per Share": 0.58,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": 0,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "GOODWALL",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2019-06-12 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 379,
+      "data": {
+        "Entity Code": "VC121",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "CHF",
+        "Commitment": 75000,
+        "Funded Amount": 75000,
+        "Shares": 129310,
+        "Current Position": "=+G379",
+        "Notes": null,
+        "Price Per Share": 0.58,
+        "Cost Per Share": 0.58,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": 0,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "GOODWALL",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-10-19 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Notes",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 382,
+      "data": {
+        "Entity Code": "VC122",
+        "Investor Name": "INNOVATECH COMPARTMENT 8 Anand SETHA",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 25000,
+        "Funded Amount": 25000,
+        "Shares": 39978,
+        "Current Position": 39978,
+        "Notes": null,
+        "Price Per Share": 0.62533,
+        "Cost Per Share": null,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": 0.8,
+        "Interest Rate": null,
+        "Valuation Cap": 20000000,
+        "Opportunity Name": "MOSH",
+        "Sourcing Contract Ref": "SAFE NOTES 2",
+        "Contract Date": "2023-10-01 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Entity Code",
+          "VC122"
+        ],
+        [
+          "Investor Name",
+          "INNOVATECH COMPARTMENT 8 Anand SETHA"
+        ],
+        [
+          "Investor Type",
+          "individual"
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 383,
+      "data": {
+        "Entity Code": "VC122",
+        "Investor Name": "AS ADVISORY DWC LLC",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 100000,
+        "Funded Amount": null,
+        "Shares": null,
+        "Current Position": null,
+        "Notes": 100000,
+        "Price Per Share": null,
+        "Cost Per Share": null,
+        "Subscription Fee (%)": null,
+        "Subscription Fee Amount": null,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": null,
+        "Sourcing Contract Ref": null,
+        "Contract Date": null
+      },
+      "extra_fields": [
+        [
+          "Entity Code",
+          "VC122"
+        ],
+        [
+          "Investor Name",
+          "AS ADVISORY DWC LLC"
+        ],
+        [
+          "Investor Type",
+          "entity"
+        ],
+        [
+          "Commitment",
+          100000
+        ],
+        [
+          "Funded Amount",
+          null
+        ],
+        [
+          "Notes",
+          100000
+        ],
+        [
+          "Price Per Share",
+          null
+        ],
+        [
+          "Cost Per Share",
+          null
+        ],
+        [
+          "Subscription Fee (%)",
+          null
+        ],
+        [
+          "Subscription Fee Amount",
+          null
+        ],
+        [
+          "Performance Fee Tier 1 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 1 Threshold",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 Threshold",
+          null
+        ],
+        [
+          "Spread Per Share",
+          null
+        ],
+        [
+          "Spread Fee Amount",
+          null
+        ],
+        [
+          "Management Fee (%)",
+          null
+        ],
+        [
+          "BD Fee (%)",
+          null
+        ],
+        [
+          "BD Fee Amount",
+          null
+        ],
+        [
+          "FINRA Fee Shares",
+          null
+        ],
+        [
+          "FINRA Fee Amount",
+          null
+        ],
+        [
+          "Discount Rate",
+          null
+        ],
+        [
+          "Interest Rate",
+          null
+        ],
+        [
+          "Valuation Cap",
+          null
+        ],
+        [
+          "Contract Date",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 384,
+      "data": {
+        "Entity Code": "VC122",
+        "Investor Name": "Deyan D MIHOV",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 75000,
+        "Funded Amount": null,
+        "Shares": null,
+        "Current Position": null,
+        "Notes": 75000,
+        "Price Per Share": null,
+        "Cost Per Share": null,
+        "Subscription Fee (%)": null,
+        "Subscription Fee Amount": null,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": null,
+        "Sourcing Contract Ref": null,
+        "Contract Date": null
+      },
+      "extra_fields": [
+        [
+          "Entity Code",
+          "VC122"
+        ],
+        [
+          "Investor Name",
+          "Deyan D MIHOV"
+        ],
+        [
+          "Investor Type",
+          "individual"
+        ],
+        [
+          "Commitment",
+          75000
+        ],
+        [
+          "Funded Amount",
+          null
+        ],
+        [
+          "Notes",
+          75000
+        ],
+        [
+          "Price Per Share",
+          null
+        ],
+        [
+          "Cost Per Share",
+          null
+        ],
+        [
+          "Subscription Fee (%)",
+          null
+        ],
+        [
+          "Subscription Fee Amount",
+          null
+        ],
+        [
+          "Performance Fee Tier 1 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 1 Threshold",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 Threshold",
+          null
+        ],
+        [
+          "Spread Per Share",
+          null
+        ],
+        [
+          "Spread Fee Amount",
+          null
+        ],
+        [
+          "Management Fee (%)",
+          null
+        ],
+        [
+          "BD Fee (%)",
+          null
+        ],
+        [
+          "BD Fee Amount",
+          null
+        ],
+        [
+          "FINRA Fee Shares",
+          null
+        ],
+        [
+          "FINRA Fee Amount",
+          null
+        ],
+        [
+          "Discount Rate",
+          null
+        ],
+        [
+          "Interest Rate",
+          null
+        ],
+        [
+          "Valuation Cap",
+          null
+        ],
+        [
+          "Contract Date",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 385,
+      "data": {
+        "Entity Code": "VC122",
+        "Investor Name": "Sheikh Yousef AL SABAH",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 50000,
+        "Funded Amount": null,
+        "Shares": null,
+        "Current Position": null,
+        "Notes": 50000,
+        "Price Per Share": null,
+        "Cost Per Share": null,
+        "Subscription Fee (%)": null,
+        "Subscription Fee Amount": null,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": null,
+        "Sourcing Contract Ref": null,
+        "Contract Date": null
+      },
+      "extra_fields": [
+        [
+          "Entity Code",
+          "VC122"
+        ],
+        [
+          "Investor Name",
+          "Sheikh Yousef AL SABAH"
+        ],
+        [
+          "Investor Type",
+          "individual"
+        ],
+        [
+          "Commitment",
+          50000
+        ],
+        [
+          "Funded Amount",
+          null
+        ],
+        [
+          "Notes",
+          50000
+        ],
+        [
+          "Price Per Share",
+          null
+        ],
+        [
+          "Cost Per Share",
+          null
+        ],
+        [
+          "Subscription Fee (%)",
+          null
+        ],
+        [
+          "Subscription Fee Amount",
+          null
+        ],
+        [
+          "Performance Fee Tier 1 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 1 Threshold",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 Threshold",
+          null
+        ],
+        [
+          "Spread Per Share",
+          null
+        ],
+        [
+          "Spread Fee Amount",
+          null
+        ],
+        [
+          "Management Fee (%)",
+          null
+        ],
+        [
+          "BD Fee (%)",
+          null
+        ],
+        [
+          "BD Fee Amount",
+          null
+        ],
+        [
+          "FINRA Fee Shares",
+          null
+        ],
+        [
+          "FINRA Fee Amount",
+          null
+        ],
+        [
+          "Discount Rate",
+          null
+        ],
+        [
+          "Interest Rate",
+          null
+        ],
+        [
+          "Valuation Cap",
+          null
+        ],
+        [
+          "Contract Date",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 386,
+      "data": {
+        "Entity Code": "VC122",
+        "Investor Name": "VERSO CAPITAL ESTABLISHMENT",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 25000,
+        "Funded Amount": null,
+        "Shares": null,
+        "Current Position": null,
+        "Notes": 25000,
+        "Price Per Share": null,
+        "Cost Per Share": null,
+        "Subscription Fee (%)": null,
+        "Subscription Fee Amount": null,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": null,
+        "Sourcing Contract Ref": null,
+        "Contract Date": null
+      },
+      "extra_fields": [
+        [
+          "Entity Code",
+          "VC122"
+        ],
+        [
+          "Investor Name",
+          "VERSO CAPITAL ESTABLISHMENT"
+        ],
+        [
+          "Investor Type",
+          "entity"
+        ],
+        [
+          "Commitment",
+          25000
+        ],
+        [
+          "Funded Amount",
+          null
+        ],
+        [
+          "Notes",
+          25000
+        ],
+        [
+          "Price Per Share",
+          null
+        ],
+        [
+          "Cost Per Share",
+          null
+        ],
+        [
+          "Subscription Fee (%)",
+          null
+        ],
+        [
+          "Subscription Fee Amount",
+          null
+        ],
+        [
+          "Performance Fee Tier 1 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 1 Threshold",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 Threshold",
+          null
+        ],
+        [
+          "Spread Per Share",
+          null
+        ],
+        [
+          "Spread Fee Amount",
+          null
+        ],
+        [
+          "Management Fee (%)",
+          null
+        ],
+        [
+          "BD Fee (%)",
+          null
+        ],
+        [
+          "BD Fee Amount",
+          null
+        ],
+        [
+          "FINRA Fee Shares",
+          null
+        ],
+        [
+          "FINRA Fee Amount",
+          null
+        ],
+        [
+          "Discount Rate",
+          null
+        ],
+        [
+          "Interest Rate",
+          null
+        ],
+        [
+          "Valuation Cap",
+          null
+        ],
+        [
+          "Contract Date",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 387,
+      "data": {
+        "Entity Code": "VC122",
+        "Investor Name": "LF GROUP SARL",
+        "Investor Type": "entity",
+        "Currency": "USD",
+        "Commitment": 75000,
+        "Funded Amount": null,
+        "Shares": null,
+        "Current Position": null,
+        "Notes": 75000,
+        "Price Per Share": null,
+        "Cost Per Share": null,
+        "Subscription Fee (%)": null,
+        "Subscription Fee Amount": null,
+        "Performance Fee Tier 1 (%)": null,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": null,
+        "Spread Fee Amount": null,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": null,
+        "Sourcing Contract Ref": null,
+        "Contract Date": null
+      },
+      "extra_fields": [
+        [
+          "Entity Code",
+          "VC122"
+        ],
+        [
+          "Investor Name",
+          "LF GROUP SARL"
+        ],
+        [
+          "Investor Type",
+          "entity"
+        ],
+        [
+          "Commitment",
+          75000
+        ],
+        [
+          "Funded Amount",
+          null
+        ],
+        [
+          "Notes",
+          75000
+        ],
+        [
+          "Price Per Share",
+          null
+        ],
+        [
+          "Cost Per Share",
+          null
+        ],
+        [
+          "Subscription Fee (%)",
+          null
+        ],
+        [
+          "Subscription Fee Amount",
+          null
+        ],
+        [
+          "Performance Fee Tier 1 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 1 Threshold",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 Threshold",
+          null
+        ],
+        [
+          "Spread Per Share",
+          null
+        ],
+        [
+          "Spread Fee Amount",
+          null
+        ],
+        [
+          "Management Fee (%)",
+          null
+        ],
+        [
+          "BD Fee (%)",
+          null
+        ],
+        [
+          "BD Fee Amount",
+          null
+        ],
+        [
+          "FINRA Fee Shares",
+          null
+        ],
+        [
+          "FINRA Fee Amount",
+          null
+        ],
+        [
+          "Discount Rate",
+          null
+        ],
+        [
+          "Interest Rate",
+          null
+        ],
+        [
+          "Valuation Cap",
+          null
+        ],
+        [
+          "Contract Date",
+          null
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 396,
+      "data": {
+        "Entity Code": "VC124",
+        "Investor Name": "OEP Ltd Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "GBP",
+        "Commitment": 50000,
+        "Funded Amount": 50000,
+        "Shares": 4125,
+        "Current Position": "=G396",
+        "Notes": null,
+        "Price Per Share": 12.12,
+        "Cost Per Share": null,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.1,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "DEADHAPPY",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2021-12-29 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Investor Name",
+          "OEP Ltd Julien MACHOT"
+        ],
+        [
+          "Investor Type",
+          "individual"
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 397,
+      "data": {
+        "Entity Code": "VC124",
+        "Investor Name": "OEP Ltd Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "GBP",
+        "Commitment": 2500,
+        "Funded Amount": 2500,
+        "Shares": 86430,
+        "Current Position": "=G397",
+        "Notes": null,
+        "Price Per Share": 0.02893,
+        "Cost Per Share": null,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.05,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": null,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "DEADHAPPY",
+        "Sourcing Contract Ref": null,
+        "Contract Date": "2023-10-10 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Investor Name",
+          "OEP Ltd Julien MACHOT"
+        ],
+        [
+          "Investor Type",
+          "individual"
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 452,
+      "data": {
+        "Entity Code": "VC126",
+        "Investor Name": "Setcap Anand RATHI",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 250000,
+        "Funded Amount": 250000,
+        "Shares": 403,
+        "Current Position": 4030,
+        "Notes": null,
+        "Price Per Share": 620,
+        "Cost Per Share": 502.953,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.025,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 117.047,
+        "Spread Fee Amount": 47169.941,
+        "Management Fee (%)": 0.02,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "SPACEX",
+        "Sourcing Contract Ref": "Tomales Bay Capital Anduril III, L.P.",
+        "Contract Date": "2021-11-22 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Investor Name",
+          "Setcap Anand RATHI"
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 453,
+      "data": {
+        "Entity Code": "VC126",
+        "Investor Name": "Setcap Anand RATHI",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 250000,
+        "Funded Amount": 250000,
+        "Shares": 3676,
+        "Current Position": "=+G453",
+        "Notes": null,
+        "Price Per Share": 68,
+        "Cost Per Share": 55,
+        "Subscription Fee (%)": null,
+        "Subscription Fee Amount": null,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 13,
+        "Spread Fee Amount": 47788,
+        "Management Fee (%)": 0.02,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": null,
+        "FINRA Fee Amount": null,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "SPACEX",
+        "Sourcing Contract Ref": "Stanley",
+        "Contract Date": "2023-03-24 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Investor Name",
+          "Setcap Anand RATHI"
+        ]
+      ],
+      "strike": false
+    },
+    {
+      "row": 469,
+      "data": {
+        "Entity Code": "VC132",
+        "Investor Name": "Julien MACHOT",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 16041.99,
+        "Funded Amount": 16041.99,
+        "Shares": 16041,
+        "Current Position": 27546,
+        "Notes": null,
+        "Price Per Share": 1,
+        "Cost Per Share": 1,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": 0,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "AIRSPEEDER",
+        "Sourcing Contract Ref": "SAFE Bridge",
+        "Contract Date": "2022-10-20 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Entity Code",
+          "VC132"
+        ],
+        [
+          "Investor Name",
+          "Julien MACHOT"
+        ],
+        [
+          "Investor Type",
+          "individual"
+        ],
+        [
+          "Commitment",
+          16041.99
+        ],
+        [
+          "Funded Amount",
+          16041.99
+        ],
+        [
+          "Notes",
+          null
+        ],
+        [
+          "Price Per Share",
+          1
+        ],
+        [
+          "Cost Per Share",
+          1
+        ],
+        [
+          "Subscription Fee (%)",
+          0
+        ],
+        [
+          "Subscription Fee Amount",
+          0
+        ],
+        [
+          "Performance Fee Tier 1 (%)",
+          0
+        ],
+        [
+          "Performance Fee Tier 1 Threshold",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 Threshold",
+          null
+        ],
+        [
+          "Spread Per Share",
+          0
+        ],
+        [
+          "Spread Fee Amount",
+          0
+        ],
+        [
+          "Management Fee (%)",
+          0
+        ],
+        [
+          "BD Fee (%)",
+          null
+        ],
+        [
+          "BD Fee Amount",
+          null
+        ],
+        [
+          "FINRA Fee Shares",
+          0
+        ],
+        [
+          "FINRA Fee Amount",
+          0
+        ],
+        [
+          "Discount Rate",
+          null
+        ],
+        [
+          "Interest Rate",
+          null
+        ],
+        [
+          "Valuation Cap",
+          null
+        ],
+        [
+          "Opportunity Name",
+          "AIRSPEEDER"
+        ],
+        [
+          "Sourcing Contract Ref",
+          "SAFE Bridge"
+        ],
+        [
+          "Contract Date",
+          "2022-10-20 00:00:00"
+        ]
+      ],
+      "strike": true
+    },
+    {
+      "row": 485,
+      "data": {
+        "Entity Code": "VC133",
+        "Investor Name": "ZANDERA (Holdco) Ltd Michael RYAN",
+        "Investor Type": "individual",
+        "Currency": "USD",
+        "Commitment": 1000000,
+        "Funded Amount": 1000000,
+        "Shares": 645,
+        "Current Position": 645,
+        "Notes": null,
+        "Price Per Share": 1550,
+        "Cost Per Share": 1300,
+        "Subscription Fee (%)": 0,
+        "Subscription Fee Amount": 0,
+        "Performance Fee Tier 1 (%)": 0.2,
+        "Performance Fee Tier 1 Threshold": null,
+        "Performance Fee Tier 2 (%)": null,
+        "Performance Fee Tier 2 Threshold": null,
+        "Spread Per Share": 0,
+        "Spread Fee Amount": 0,
+        "Management Fee (%)": 0,
+        "BD Fee (%)": null,
+        "BD Fee Amount": null,
+        "FINRA Fee Shares": 0,
+        "FINRA Fee Amount": 0,
+        "Discount Rate": null,
+        "Interest Rate": null,
+        "Valuation Cap": null,
+        "Opportunity Name": "EPIC GAMES",
+        "Sourcing Contract Ref": "AT",
+        "Contract Date": "2022-04-21 00:00:00"
+      },
+      "extra_fields": [
+        [
+          "Entity Code",
+          "VC133"
+        ],
+        [
+          "Investor Name",
+          "ZANDERA (Holdco) Ltd Michael RYAN"
+        ],
+        [
+          "Investor Type",
+          "individual"
+        ],
+        [
+          "Commitment",
+          1000000
+        ],
+        [
+          "Funded Amount",
+          1000000
+        ],
+        [
+          "Notes",
+          null
+        ],
+        [
+          "Price Per Share",
+          1550
+        ],
+        [
+          "Cost Per Share",
+          1300
+        ],
+        [
+          "Subscription Fee (%)",
+          0
+        ],
+        [
+          "Subscription Fee Amount",
+          0
+        ],
+        [
+          "Performance Fee Tier 1 (%)",
+          0.2
+        ],
+        [
+          "Performance Fee Tier 1 Threshold",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 (%)",
+          null
+        ],
+        [
+          "Performance Fee Tier 2 Threshold",
+          null
+        ],
+        [
+          "Spread Per Share",
+          0
+        ],
+        [
+          "Spread Fee Amount",
+          0
+        ],
+        [
+          "Management Fee (%)",
+          0
+        ],
+        [
+          "BD Fee (%)",
+          null
+        ],
+        [
+          "BD Fee Amount",
+          null
+        ],
+        [
+          "FINRA Fee Shares",
+          0
+        ],
+        [
+          "FINRA Fee Amount",
+          0
+        ],
+        [
+          "Discount Rate",
+          null
+        ],
+        [
+          "Interest Rate",
+          null
+        ],
+        [
+          "Valuation Cap",
+          null
+        ],
+        [
+          "Opportunity Name",
+          "EPIC GAMES"
+        ],
+        [
+          "Sourcing Contract Ref",
+          "AT"
+        ],
+        [
+          "Contract Date",
+          "2022-04-21 00:00:00"
+        ]
+      ],
+      "strike": false
+    }
+  ]
+}

@@ -81,9 +81,13 @@ export const PROOF_OF_ADDRESS_TYPES = [
   'proof_of_address',
   'signatory_proof_of_address',
   'utility_bill',
+  'government_correspondence',
+  'other',
+  'other_proof_of_address',
   'bank_statement',
   'tax_bill',
   'council_tax',
+  'council_tax_bill',
   'rental_agreement',
   'mortgage_statement',
   'member_proof_of_address',
@@ -197,6 +201,24 @@ const VALIDATION_CONFIG: Record<string, DocumentValidationConfig> = {
     enforcement: 'block_with_override',
     warningDays: 14,
   },
+  government_correspondence: {
+    category: 'proof_of_address',
+    maxAgeDays: 90,
+    enforcement: 'block_with_override',
+    warningDays: 14,
+  },
+  other: {
+    category: 'proof_of_address',
+    maxAgeDays: 90,
+    enforcement: 'block_with_override',
+    warningDays: 14,
+  },
+  other_proof_of_address: {
+    category: 'proof_of_address',
+    maxAgeDays: 90,
+    enforcement: 'block_with_override',
+    warningDays: 14,
+  },
   bank_statement: {
     category: 'proof_of_address',
     maxAgeDays: 90,
@@ -256,10 +278,11 @@ export function isIdDocument(documentType: string): boolean {
  * Check if a document type is a proof of address
  */
 export function isProofOfAddress(documentType: string): boolean {
-  return PROOF_OF_ADDRESS_TYPES.includes(documentType as any) ||
-    documentType.includes('proof_of_address') ||
-    documentType.includes('utility') ||
-    documentType.includes('statement')
+  const normalized = (documentType || '').toLowerCase().trim()
+
+  return PROOF_OF_ADDRESS_TYPES.includes(normalized as any) ||
+    normalized.includes('proof_of_address') ||
+    normalized.includes('utility')
 }
 
 /**

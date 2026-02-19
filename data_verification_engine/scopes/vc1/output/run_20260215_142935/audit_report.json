@@ -1,0 +1,1044 @@
+{
+  "summary": {
+    "rules_version": "2026-02-14.3",
+    "scope_vehicle_codes": [
+      "VC102",
+      "VC106",
+      "VC111",
+      "VC112",
+      "VC113",
+      "VC114",
+      "VC118",
+      "VC121",
+      "VC122",
+      "VC123",
+      "VC124",
+      "VC125",
+      "VC126"
+    ],
+    "dashboard_active_rows": 426,
+    "dashboard_zero_rows": 55,
+    "db_subscriptions": 426,
+    "db_positions": 352,
+    "db_introductions": 485,
+    "db_commissions": 1013,
+    "contacts_checked_rows": 0,
+    "contacts_red_rows_excluded": [],
+    "fail_count": 130,
+    "warning_count": 8,
+    "fail_by_check": {
+      "commission_base_amount_vs_funded_amount_mismatch": 130
+    },
+    "warn_by_check": {
+      "introduction_tuple_repeat_ruled": 3,
+      "introduction_missing_date_ruled": 1,
+      "performance_fee_threshold_multiplier_non_zero_ruled": 1,
+      "commission_totals_ruled_diff_spread": 3
+    },
+    "mapping_coverage": {
+      "unmapped_dashboard_rows": 0,
+      "unmapped_db_rows": 0,
+      "unmapped_commission_rows_dashboard_to_db": 0,
+      "unmapped_commission_rows_db_to_dashboard": 0,
+      "name_mapping_applied_count": 62,
+      "name_mapping_unresolved_count": 0,
+      "fallback_match_warning_count": 0
+    },
+    "rule_enforcement_summary": {
+      "introduction_integrity_check": true,
+      "subscription_formula_cross_field_check": true,
+      "commission_rate_integrity_check": true,
+      "commission_base_amount_matches_funded_check": true,
+      "dual_role_introducer_check": true,
+      "deprecated_introducer_references_check": true
+    }
+  },
+  "failures": [
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=1319a62f-544e-45bf-a208-61041f9f1e34 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=85157.0 funded_sum=0.0 delta=85157.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=24c96f5a-0b23-4e40-b562-c0570df12fd8 introducer_id=98fdce26-5a61-486e-a450-8e13dd4cfbf4 commission_base_sum=100000.0 funded_sum=150000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=24c96f5a-0b23-4e40-b562-c0570df12fd8 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=100000.0 funded_sum=150000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=35af0245-05fb-4d6c-b17e-64d0d6b180f0 introducer_id=98fdce26-5a61-486e-a450-8e13dd4cfbf4 commission_base_sum=1414728.0 funded_sum=0.0 delta=1414728.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=40af6e6d-0fe7-4f4e-b430-c0119e7f439a introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=500000.0 funded_sum=0.0 delta=500000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=69075b7c-5dfd-4bd5-b8f7-e0757fe28d64 introducer_id=98fdce26-5a61-486e-a450-8e13dd4cfbf4 commission_base_sum=500000.0 funded_sum=1000000.0 delta=-500000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=69075b7c-5dfd-4bd5-b8f7-e0757fe28d64 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=500000.0 funded_sum=1000000.0 delta=-500000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=8618f750-f156-4c86-a554-5905443e08fb introducer_id=98fdce26-5a61-486e-a450-8e13dd4cfbf4 commission_base_sum=1549144.8 funded_sum=0.0 delta=1549144.8"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=8618f750-f156-4c86-a554-5905443e08fb introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=1549144.8 funded_sum=0.0 delta=1549144.8"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=996ec13d-5df9-4b46-8581-29bf3880c052 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=50000.0 funded_sum=100000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=e7811d86-9e53-49b8-beb3-c3d5276c737c introducer_id=a2a0b0a1-817a-4039-bcbf-160b84f51567 commission_base_sum=4163030.12 funded_sum=0.0 delta=4163030.12"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 introducer_id=a2a0b0a1-817a-4039-bcbf-160b84f51567 commission_base_sum=740372.0 funded_sum=2350372.0 delta=-1610000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=684501.0 funded_sum=2350372.0 delta=-1665871.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=02e7a81c-d5bf-4839-9776-f89ae320b586 introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a commission_base_sum=1000000.0 funded_sum=0.0 delta=1000000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=077277ca-fe09-45b0-9dd4-789fa3238f84 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=75000.0 delta=-75000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=077277ca-fe09-45b0-9dd4-789fa3238f84 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=75000.0 delta=-75000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=0938fe48-c579-4031-8fba-97b348218ddf introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=105000.0 delta=-105000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=0938fe48-c579-4031-8fba-97b348218ddf introducer_id=87571ef2-b05d-4d7d-8095-2992d43b9aa8 commission_base_sum=0.0 funded_sum=105000.0 delta=-105000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=0b1c8fa8-14a1-40fd-bfdd-629ba576a1a7 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=400000.0 delta=-400000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=0b1c8fa8-14a1-40fd-bfdd-629ba576a1a7 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=400000.0 delta=-400000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=0ba0fbe1-9833-477e-9ee5-7690ef0fe97a introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=0ba0fbe1-9833-477e-9ee5-7690ef0fe97a introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=0dc9ff3f-1013-42f5-9a51-3531fe36cc7f introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=0dc9ff3f-1013-42f5-9a51-3531fe36cc7f introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=0ff7cbaa-7e95-458f-9c57-b5c92d6341b7 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=0ff7cbaa-7e95-458f-9c57-b5c92d6341b7 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=20951004-4990-4398-8890-c2a538d55bfa introducer_id=736a31b2-b8a6-4a0e-8abe-ed986014d0c4 commission_base_sum=0.0 funded_sum=600000.0 delta=-600000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=24382ea8-d04a-42e8-b75e-01cd107be49b introducer_id=736a31b2-b8a6-4a0e-8abe-ed986014d0c4 commission_base_sum=0.0 funded_sum=30000.0 delta=-30000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=2c251597-567e-4257-ba20-d01e39e183aa introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a commission_base_sum=0.0 funded_sum=150000.0 delta=-150000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=2de34a55-9382-403c-a45e-3209c3b22e8a introducer_id=736a31b2-b8a6-4a0e-8abe-ed986014d0c4 commission_base_sum=0.0 funded_sum=26000.0 delta=-26000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=37a063a2-40b3-4be0-aafe-9a68f913c473 introducer_id=6147711e-310e-45ec-8892-ac072e25c3b0 commission_base_sum=0.0 funded_sum=200000.0 delta=-200000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=409d31f7-0db4-463d-9846-09dd943ad569 introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=5f35adc5-412a-4980-88ce-5d2b6f7fa3fc introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=5f35adc5-412a-4980-88ce-5d2b6f7fa3fc introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=60fe12b2-3a1c-4fb9-b039-3b321393d5d2 introducer_id=840071c5-c1ee-4617-a120-6e596d2dc97d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=7f066910-063c-4bc6-8999-af10132b78fc introducer_id=840071c5-c1ee-4617-a120-6e596d2dc97d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=90c92efe-20ea-4a95-b960-a0a372b987e5 introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=996ec13d-5df9-4b46-8581-29bf3880c052 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=75000.0 delta=-75000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=a1985b2e-8366-4742-8dcf-f78349e01e4d introducer_id=6147711e-310e-45ec-8892-ac072e25c3b0 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=ab3bc530-2d5f-4b8c-8558-af52b7d33bad introducer_id=736a31b2-b8a6-4a0e-8abe-ed986014d0c4 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=ad515b55-94a7-4eb4-bd59-6733373e8fb3 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=250000.0 delta=-250000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=afcff2c8-e0f3-435c-85dc-0987e3005775 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=110000.0 delta=-110000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=afcff2c8-e0f3-435c-85dc-0987e3005775 introducer_id=87571ef2-b05d-4d7d-8095-2992d43b9aa8 commission_base_sum=0.0 funded_sum=110000.0 delta=-110000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=b43ec27d-0329-4918-acc0-a078f344a164 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=b43ec27d-0329-4918-acc0-a078f344a164 introducer_id=87571ef2-b05d-4d7d-8095-2992d43b9aa8 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=b65f05da-0ba0-42c3-ac7a-b5bc31084f53 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=165000.0 delta=-165000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=b65f05da-0ba0-42c3-ac7a-b5bc31084f53 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=165000.0 delta=-165000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=bcd039b7-d2d5-4191-a05d-dffacb6c8f0f introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=bcd039b7-d2d5-4191-a05d-dffacb6c8f0f introducer_id=87571ef2-b05d-4d7d-8095-2992d43b9aa8 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=c42adb05-f412-489a-b1a2-59607e1efb05 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=c42adb05-f412-489a-b1a2-59607e1efb05 introducer_id=87571ef2-b05d-4d7d-8095-2992d43b9aa8 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=da660498-c2a8-4ffa-aa4e-8b1d9b1dcd1e introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=da660498-c2a8-4ffa-aa4e-8b1d9b1dcd1e introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=e0cbd154-70d4-48fe-bf57-573d4adb53c2 introducer_id=736a31b2-b8a6-4a0e-8abe-ed986014d0c4 commission_base_sum=0.0 funded_sum=20000.0 delta=-20000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=f19450d7-1d16-4be0-893a-ab37e66ec644 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=f19450d7-1d16-4be0-893a-ab37e66ec644 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=f1b68c31-c670-48d1-b0ad-c4812388f4b7 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=f1b68c31-c670-48d1-b0ad-c4812388f4b7 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=f5ca7c9a-be30-4141-9f63-bfba0479f383 introducer_id=55b67690-c83d-4406-a2b4-935032d22739 commission_base_sum=0.0 funded_sum=130000.0 delta=-130000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=f5ca7c9a-be30-4141-9f63-bfba0479f383 introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a commission_base_sum=0.0 funded_sum=130000.0 delta=-130000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=fab2d2df-ca6a-4e18-aa08-6d8e7b1ffc64 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=fab2d2df-ca6a-4e18-aa08-6d8e7b1ffc64 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=fb853190-854c-4fa7-baee-23f82b7ee8fa introducer_id=736a31b2-b8a6-4a0e-8abe-ed986014d0c4 commission_base_sum=0.0 funded_sum=2800000.0 delta=-2800000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "deal_id=5e244c1d-847b-492f-ba7c-d35b5e2bb957 investor_id=077277ca-fe09-45b0-9dd4-789fa3238f84 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=150000.0 delta=-150000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "deal_id=5e244c1d-847b-492f-ba7c-d35b5e2bb957 investor_id=077277ca-fe09-45b0-9dd4-789fa3238f84 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=150000.0 delta=-150000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "deal_id=5e244c1d-847b-492f-ba7c-d35b5e2bb957 investor_id=0b1c8fa8-14a1-40fd-bfdd-629ba576a1a7 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=500000.0 delta=-500000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "deal_id=5e244c1d-847b-492f-ba7c-d35b5e2bb957 investor_id=0b1c8fa8-14a1-40fd-bfdd-629ba576a1a7 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=500000.0 delta=-500000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "deal_id=5e244c1d-847b-492f-ba7c-d35b5e2bb957 investor_id=0ff7cbaa-7e95-458f-9c57-b5c92d6341b7 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "deal_id=5e244c1d-847b-492f-ba7c-d35b5e2bb957 investor_id=0ff7cbaa-7e95-458f-9c57-b5c92d6341b7 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "deal_id=5e244c1d-847b-492f-ba7c-d35b5e2bb957 investor_id=bd62f55f-73cf-4ea9-b730-453ba3838de4 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=250000.0 delta=-250000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC118",
+      "row_ref": "",
+      "details": "deal_id=5e244c1d-847b-492f-ba7c-d35b5e2bb957 investor_id=bd62f55f-73cf-4ea9-b730-453ba3838de4 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=250000.0 delta=-250000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=0d18b5d6-fd7c-403b-931a-b9af09ee9715 introducer_id=8964a91a-eb92-4f65-aa47-750c417cd499 commission_base_sum=0.0 funded_sum=150000.0 delta=-150000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=0d18b5d6-fd7c-403b-931a-b9af09ee9715 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=0.0 funded_sum=150000.0 delta=-150000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=11be6624-9dd0-4a7d-b4eb-9241d6d35f07 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=200000.0 delta=-200000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=11be6624-9dd0-4a7d-b4eb-9241d6d35f07 introducer_id=25bbd020-6cba-4c48-a8be-936c3295f586 commission_base_sum=0.0 funded_sum=200000.0 delta=-200000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=4c26cb2f-083d-4a9a-8301-69795259424c introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=250000.0 delta=-250000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=4c26cb2f-083d-4a9a-8301-69795259424c introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=250000.0 delta=-250000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=50af6602-d56f-4274-b714-db711c939836 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=80000.0 delta=-80000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=50af6602-d56f-4274-b714-db711c939836 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=0.0 funded_sum=80000.0 delta=-80000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=5177d335-8401-4bf9-8487-cb3d2f9e0f7a introducer_id=0aebf77c-47a3-4011-abd4-74ee3772d78e commission_base_sum=0.0 funded_sum=70000.0 delta=-70000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=5177d335-8401-4bf9-8487-cb3d2f9e0f7a introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=0.0 funded_sum=70000.0 delta=-70000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=55e3a375-9304-4576-84aa-7cee77f60a05 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=200000.0 delta=-200000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=55e3a375-9304-4576-84aa-7cee77f60a05 introducer_id=25bbd020-6cba-4c48-a8be-936c3295f586 commission_base_sum=0.0 funded_sum=200000.0 delta=-200000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=5f35adc5-412a-4980-88ce-5d2b6f7fa3fc introducer_id=8964a91a-eb92-4f65-aa47-750c417cd499 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=5f35adc5-412a-4980-88ce-5d2b6f7fa3fc introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=68524290-1804-4f44-b45b-fcc6d54615a0 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=0.0 funded_sum=500000.0 delta=-500000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=7c94bfd1-33d2-42c6-b986-587d5e5593c2 introducer_id=0aebf77c-47a3-4011-abd4-74ee3772d78e commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=7c94bfd1-33d2-42c6-b986-587d5e5593c2 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=84c3272c-5c98-453a-b0aa-77366cc31a53 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=0.0 funded_sum=250000.0 delta=-250000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=996ec13d-5df9-4b46-8581-29bf3880c052 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=9c9e78cf-0418-4fa9-b00d-07af4db45578 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=75000.0 delta=-75000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=9c9e78cf-0418-4fa9-b00d-07af4db45578 introducer_id=25bbd020-6cba-4c48-a8be-936c3295f586 commission_base_sum=0.0 funded_sum=75000.0 delta=-75000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=ae8cc9b9-b42d-48cd-a49f-3e34f2cba628 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=150000.0 delta=-150000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=ae8cc9b9-b42d-48cd-a49f-3e34f2cba628 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=0.0 funded_sum=150000.0 delta=-150000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=afb8d124-32b7-4959-8af9-5e96f0383159 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=afb8d124-32b7-4959-8af9-5e96f0383159 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=b0f5790d-8407-4058-a16b-6656c63bd065 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=b0f5790d-8407-4058-a16b-6656c63bd065 introducer_id=25bbd020-6cba-4c48-a8be-936c3295f586 commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=b5502e75-ed90-45a8-8037-fca4fe1dbee0 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=b5502e75-ed90-45a8-8037-fca4fe1dbee0 introducer_id=25bbd020-6cba-4c48-a8be-936c3295f586 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=bcd039b7-d2d5-4191-a05d-dffacb6c8f0f introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=bcd039b7-d2d5-4191-a05d-dffacb6c8f0f introducer_id=87571ef2-b05d-4d7d-8095-2992d43b9aa8 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=bd62f55f-73cf-4ea9-b730-453ba3838de4 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=bd62f55f-73cf-4ea9-b730-453ba3838de4 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=c42adb05-f412-489a-b1a2-59607e1efb05 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=c42adb05-f412-489a-b1a2-59607e1efb05 introducer_id=87571ef2-b05d-4d7d-8095-2992d43b9aa8 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=cf8a4352-7624-4a97-bb12-d6e5ebc71c5d introducer_id=0aebf77c-47a3-4011-abd4-74ee3772d78e commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=cf8a4352-7624-4a97-bb12-d6e5ebc71c5d introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=d06aaa52-d948-4d3b-849b-e1a365843159 introducer_id=8964a91a-eb92-4f65-aa47-750c417cd499 commission_base_sum=0.0 funded_sum=200000.0 delta=-200000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=d06aaa52-d948-4d3b-849b-e1a365843159 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=0.0 funded_sum=200000.0 delta=-200000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=d8fb5171-f000-4cd7-9c2b-d69a66e05e31 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=d8fb5171-f000-4cd7-9c2b-d69a66e05e31 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=ec8893f1-9473-4d80-bd46-04b2cc8b2f3a introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=115000.0 delta=-115000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=ec8893f1-9473-4d80-bd46-04b2cc8b2f3a introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=115000.0 delta=-115000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=f0183109-5b5e-4fb0-8d57-4ff6c57c0b35 introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f commission_base_sum=0.0 funded_sum=500000.0 delta=-500000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=f1b68c31-c670-48d1-b0ad-c4812388f4b7 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=f1b68c31-c670-48d1-b0ad-c4812388f4b7 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=f8b1ac99-5655-4c49-a05a-f89271741275 introducer_id=0aebf77c-47a3-4011-abd4-74ee3772d78e commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 investor_id=f8b1ac99-5655-4c49-a05a-f89271741275 introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC102",
+      "row_ref": "",
+      "details": "deal_id=ba9c45e0-4299-4762-b8ad-5a3f619fa4fb investor_id=938db8aa-ce0c-47e9-b0f7-23ba9c20e7a1 introducer_id=41974010-e41d-40a6-9cbf-725618e7e00c commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC112",
+      "row_ref": "",
+      "details": "deal_id=c4a16193-8f6b-43e8-b664-caeb46d0de85 investor_id=0b1c8fa8-14a1-40fd-bfdd-629ba576a1a7 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=500000.0 delta=-500000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC112",
+      "row_ref": "",
+      "details": "deal_id=c4a16193-8f6b-43e8-b664-caeb46d0de85 investor_id=339f94c0-6be8-4590-bbbd-386f6fd30248 introducer_id=5a765445-bee7-4716-96f6-e2e2ca0329c7 commission_base_sum=0.0 funded_sum=50000.0 delta=-50000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC112",
+      "row_ref": "",
+      "details": "deal_id=c4a16193-8f6b-43e8-b664-caeb46d0de85 investor_id=5f35adc5-412a-4980-88ce-5d2b6f7fa3fc introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 investor_id=20264559-6a69-447d-baa5-72d7ea111fb9 introducer_id=bc23b7c7-4253-40c2-889b-97a5044c23d5 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 investor_id=6d5c9cdb-93f0-49c1-aa1e-a8a2506d9382 introducer_id=bc23b7c7-4253-40c2-889b-97a5044c23d5 commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 investor_id=76518678-13f1-4a8e-a050-1e0ef6a39d4c introducer_id=25bbd020-6cba-4c48-a8be-936c3295f586 commission_base_sum=0.0 funded_sum=600000.0 delta=-600000.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC125",
+      "row_ref": "",
+      "details": "deal_id=f73d625c-dc39-4829-919e-327dd5bdae07 investor_id=3e75e4c5-6071-410d-bb55-d4ede85ab93d introducer_id=18aecf7f-4793-405d-b7f3-d9add75f8063 commission_base_sum=0.0 funded_sum=17900.0 delta=-17900.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC125",
+      "row_ref": "",
+      "details": "deal_id=f73d625c-dc39-4829-919e-327dd5bdae07 investor_id=3e75e4c5-6071-410d-bb55-d4ede85ab93d introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=17900.0 delta=-17900.0"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC125",
+      "row_ref": "",
+      "details": "deal_id=f73d625c-dc39-4829-919e-327dd5bdae07 investor_id=698833c1-7ff3-4fa7-b7d0-733d8547cf43 introducer_id=1e9af1ef-f4c5-4e73-b895-fe271ab6dc3d commission_base_sum=0.0 funded_sum=339072.75 delta=-339072.75"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_base_amount_vs_funded_amount_mismatch",
+      "vehicle": "VC125",
+      "row_ref": "",
+      "details": "deal_id=f73d625c-dc39-4829-919e-327dd5bdae07 investor_id=938db8aa-ce0c-47e9-b0f7-23ba9c20e7a1 introducer_id=41974010-e41d-40a6-9cbf-725618e7e00c commission_base_sum=0.0 funded_sum=100000.0 delta=-100000.0"
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "warn",
+      "check": "introduction_tuple_repeat_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 count=2"
+    },
+    {
+      "severity": "warn",
+      "check": "introduction_tuple_repeat_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f investor_id=996ec13d-5df9-4b46-8581-29bf3880c052 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 count=2"
+    },
+    {
+      "severity": "warn",
+      "check": "introduction_tuple_repeat_ruled",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 count=2"
+    },
+    {
+      "severity": "warn",
+      "check": "introduction_missing_date_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introduction_id=11673e9c-1afc-4586-a5ae-83b52b7c5e29 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21"
+    },
+    {
+      "severity": "warn",
+      "check": "performance_fee_threshold_multiplier_non_zero_ruled",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "commission_id=0eb2ccb5-59d9-44b7-9d5c-07e9710c9ac6 threshold_multiplier=0.1"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "dashboard=6326296.752 db=6326296.81 delta=0.058 expected=0.058"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "dashboard=963887.6075 db=963887.62 delta=0.0125 expected=0.0125"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC114",
+      "row_ref": "",
+      "details": "dashboard=0.4 db=0.0 delta=-0.4 expected=-0.4"
+    }
+  ],
+  "mapping_coverage": {
+    "unmapped_dashboard_rows": 0,
+    "unmapped_db_rows": 0,
+    "unmapped_commission_rows_dashboard_to_db": 0,
+    "unmapped_commission_rows_db_to_dashboard": 0,
+    "name_mapping_applied_count": 62,
+    "name_mapping_unresolved_count": 0,
+    "fallback_match_warning_count": 0
+  },
+  "rule_enforcement_summary": {
+    "introduction_integrity_check": true,
+    "subscription_formula_cross_field_check": true,
+    "commission_rate_integrity_check": true,
+    "commission_base_amount_matches_funded_check": true,
+    "dual_role_introducer_check": true,
+    "deprecated_introducer_references_check": true
+  },
+  "warning_governance_status": "PENDING_TRUST_PACK"
+}

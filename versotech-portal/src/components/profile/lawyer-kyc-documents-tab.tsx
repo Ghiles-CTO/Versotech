@@ -55,18 +55,21 @@ interface LawyerKYCDocumentsTabProps {
   lawyerId: string
   lawyerName?: string
   kycStatus?: string
+  entityType?: string | null
 }
 
 export function LawyerKYCDocumentsTab({
   lawyerId,
   lawyerName,
-  kycStatus
+  kycStatus,
+  entityType
 }: LawyerKYCDocumentsTabProps) {
   const [documents, setDocuments] = useState<Document[]>([])
   const [members, setMembers] = useState<LawyerMember[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState<string | null>(null)
   const currentKycStatus = kycStatus
+  const isIndividualEntity = entityType === 'individual'
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
 
   const fetchDocuments = useCallback(async () => {
@@ -196,10 +199,18 @@ export function LawyerKYCDocumentsTab({
     })
   }
 
-  const uploadedCount = documents.filter(d =>
-    REQUIRED_DOCUMENTS.some(req => req.value === d.type)
-  ).length
-  const completionPercentage = Math.round((uploadedCount / REQUIRED_DOCUMENTS.length) * 100)
+  const uploadedCount = isIndividualEntity
+    ? new Set(
+        documents
+          .filter(d => MEMBER_DOCUMENTS.some(req => req.value === d.type))
+          .map(d => d.type)
+      ).size
+    : documents.filter(d => REQUIRED_DOCUMENTS.some(req => req.value === d.type)).length
+
+  const requiredCount = isIndividualEntity ? MEMBER_DOCUMENTS.length : REQUIRED_DOCUMENTS.length
+  const completionPercentage = requiredCount > 0
+    ? Math.round((uploadedCount / requiredCount) * 100)
+    : 0
 
   const getStatusColor = (status?: string) => {
     switch (status) {
@@ -230,7 +241,11 @@ export function LawyerKYCDocumentsTab({
               <div>
                 <CardTitle>KYC Documents</CardTitle>
                 <CardDescription>
-                  {lawyerName ? `Compliance documents for ${lawyerName}` : 'Upload required compliance documents'}
+                  {isIndividualEntity
+                    ? 'Upload your personal KYC documents'
+                    : lawyerName
+                      ? `Compliance documents for ${lawyerName}`
+                      : 'Upload required compliance documents'}
                 </CardDescription>
                 <p className="text-xs text-muted-foreground mt-1">
                   Entity: <span className="font-medium text-foreground">{lawyerName || 'Current lawyer entity'}</span>
@@ -240,7 +255,7 @@ export function LawyerKYCDocumentsTab({
             <div className="text-right">
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold text-foreground">
-                  {uploadedCount}/{REQUIRED_DOCUMENTS.length}
+                  {uploadedCount}/{requiredCount}
                 </span>
                 {currentKycStatus && (
                   <Badge variant="outline" className={cn('capitalize', getStatusColor(currentKycStatus))}>
@@ -267,7 +282,9 @@ export function LawyerKYCDocumentsTab({
           </div>
           {completionPercentage < 100 && (
             <p className="text-xs text-muted-foreground mt-2">
-              Upload all required documents to complete KYC verification
+              {isIndividualEntity
+                ? 'Upload your ID and proof of address to complete KYC verification'
+                : 'Upload all required documents to complete KYC verification'}
             </p>
           )}
         </CardContent>
@@ -387,6 +404,7 @@ export function LawyerKYCDocumentsTab({
       )}
 
       {/* Required Documents Checklist */}
+      {!isIndividualEntity && (
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Required Documents</CardTitle>
@@ -480,6 +498,7 @@ export function LawyerKYCDocumentsTab({
           )}
         </CardContent>
       </Card>
+      )}
 
       {/* Info Card */}
       <Card className="bg-blue-50/50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">

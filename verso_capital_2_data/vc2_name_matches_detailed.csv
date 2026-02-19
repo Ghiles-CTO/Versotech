@@ -1,0 +1,125 @@
+row,series,is_red,type,role,legal_name,legal_match,legal_score,legal_method,introducer_1,intro_match,intro_score,intro_method
+2,VC201,False,entity,-,Infinitas Capital SPV V a series of Infinitas Capital Master LLC,Infinitas Capital SPV V a series of Infinitas Capital Master LLC,1.0,exact_norm,,,0.0,none
+3,VC202,False,entity,Introducer,SESR INVESTMENTS PTE LTD,SESR INVESTMENTS PTE LTD,1.0,exact_norm,Renaissance Bridge Capital LLC,Renaissance bridge Capital LLC,1.0,exact_norm
+4,VC202,False,entity,Introducer,SPLENDID HEIGHT HOLDINGS LIMITED,SPLENDID HEIGHT HOLDINGS LIMITED,1.0,exact_norm,Bromley Capital Partners,Bromley Capital Partners,1.0,exact_norm
+5,VC203,False,entity,Introducer,DOMINARI SECURITIES LLC,DOMINARI SECURITIES LLC,1.0,exact_norm,Dimensional Advisors,Dimensional Advisors + Lafferty,0.97,fuzzy
+6,VC203,False,entity,Broker,DOMINARI SECURITIES LLC,DOMINARI SECURITIES LLC,1.0,exact_norm,R. F. Lafferty & Co. Inc.,Lafferty,0.97,fuzzy
+7,VC203,False,individual,-,Georges SMITH,Georges SMITH,1.0,exact_norm,,,0.0,none
+8,VC203,False,individual,-,Julien MACHOT,Julien MACHOT,1.0,exact_norm,,,0.0,none
+9,VC203,False,individual,-,Nicholas FOWLER,Nicholas FOWLER,1.0,exact_norm,,,0.0,none
+10,VC203,True,individual,Introducer,Sebastian LATTUGA,Sebastian LATTUGA,1.0,exact_norm,,,0.0,none
+11,VC203,False,individual,Broker,Sebastian LATTUGA,Sebastian LATTUGA,1.0,exact_norm,R. F. Lafferty & Co. Inc.,Lafferty,0.97,fuzzy
+12,VC203,False,entity,Introducer,EVERLASTING HOLDINGS LLC,EVERLASTING HOLDINGS LLC,1.0,exact_norm,"Sakal Advisory, LLC",Sakal Advisory + Astra Global,0.7556,fuzzy
+13,VC203,True,entity,Introducer,EVERLASTING HOLDINGS LLC,EVERLASTING HOLDINGS LLC,1.0,exact_norm,,,0.0,none
+14,VC203,False,entity,Introducer,EVERLASTING HOLDINGS LLC,EVERLASTING HOLDINGS LLC,1.0,exact_norm,Astral Global Limited,Astra Global,0.7273,fuzzy
+15,VC203,False,individual,Introducer,Tobias ENSELE,Tobias ENSELE,1.0,exact_norm,Old City Securities LLC,Rainmaker Securities,0.5581,fuzzy
+16,VC203,False,individual,Introducer,Tobias ENSELE,Tobias ENSELE,1.0,exact_norm,Renaissance bridge Capital LLC,Renaissance Bridge Capital LLC + Oliver Little,0.97,fuzzy
+17,VC203,False,entity,Introducer,"PEGASUS TECH VENTURES COMPANY VIII, L.P.","PEGASUS TECH VENTURES COMPANY VIII, L.P.",1.0,exact_norm,Astral Global Limited,Astra Global,0.7273,fuzzy
+18,VC203,False,entity,Introducer,INS NEVADA LLC,INS NEVADA LLC,1.0,exact_norm,Rainmaker Securities,Rainmaker Securities,1.0,exact_norm
+19,VC203,False,entity,Introducer,INCRED GLOBAL WEALTH PTE LTD,INCRED GLOBAL WEALTH PTE LTD,1.0,exact_norm,Renaissance Bridge Capital LLC,Renaissance Bridge Capital LLC + Oliver Little,0.97,fuzzy
+20,VC203,False,entity,Introducer,INCRED GLOBAL WEALTH PTE LTD,INCRED GLOBAL WEALTH PTE LTD,1.0,exact_norm,Old City Securities LLC,Rainmaker Securities,0.5581,fuzzy
+21,VC203,False,individual,-,Julien MACHOT,Julien MACHOT,1.0,exact_norm,,,0.0,none
+22,VC203,False,entity,Introducer,MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP,MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP,1.0,exact_norm,Renaissance Bridge Capital LLC,Renaissance Bridge Capital LLC + Oliver Little,0.97,fuzzy
+23,VC203,False,entity,Introducer,MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP,MAVAN TECH INTELLIGENCE LIMITED PARTNERSHIP,1.0,exact_norm,Oliver Little,Renaissance Bridge Capital LLC + Oliver Little,0.97,fuzzy
+24,VCL001,False,entity,Introducer,AGP Alternative Investment QP,AGP Alternative Investment QP,1.0,exact_norm,Alliance Global Partners LLC,Alliance Global Partners LLC,1.0,exact_norm
+25,VCL001,False,entity,Introducer,AGP Alternative Investment Fund VI- Series 2,AGP Alternative Investment Fund VI- Series 2,1.0,exact_norm,Alliance Global Partners LLC,Alliance Global Partners LLC,1.0,exact_norm
+26,VCL002,False,entity,Introducer,AGP Alternative Investment QF,AGP Alternative Investment QF,1.0,exact_norm,Alliance Global Partners LLC,Alliance Global Partners LLC,1.0,exact_norm
+27,VCL002,False,entity,Introducer,AGP Alternative Investment Fund VI- Series 2,AGP Alternative Investment Fund VI- Series 2,1.0,exact_norm,Alliance Global Partners LLC,Alliance Global Partners LLC,1.0,exact_norm
+28,VC203,False,entity,-,AEON INC,AEON INC,1.0,exact_norm,,,0.0,none
+29,VC203,False,individual,-,Robert VOGT IV,Robert C. VOGT IV,0.97,fuzzy,,,0.0,none
+30,VC206,False,entity,Introducer,"AAF D Boral Mstr SPV LLC, Ser III OpenAI","AAF D Boral Mstr SPV LLC, Ser III OpenAI",1.0,exact_norm,AEON INC,Aeon,0.97,fuzzy
+31,VC206,False,entity,-,ODIN INVESTMENTS LIMITED,ODIN INVESTMENTS LIMITED,1.0,exact_norm,,,0.0,none
+32,VC206,False,entity,Introducer,AI DIRECT OPPORTUNITIES FUND SCSP,AI DIRECT OPPORTUNITIES FUND SCSP,1.0,exact_norm,Venture Spring,"Venture Spring
+ Dimensional Advisors",0.97,fuzzy
+33,VC206,False,entity,Introducer,AI DIRECT OPPORTUNITIES FUND SCSP,AI DIRECT OPPORTUNITIES FUND SCSP,1.0,exact_norm,Dimensional Advisors,"Venture Spring
+ Dimensional Advisors",0.97,fuzzy
+34,VC206,False,entity,Introducer,KIWI INNOVATIONS LIMITED,KIWI INNOVATIONS LIMITED,1.0,exact_norm,Bromley Capital Partners,Bromley Capital,0.97,fuzzy
+35,VC206,False,individual,Introducer,Rishabh MITTAL,Rishabh MITTAL,1.0,exact_norm,Renaissance Bridge Capital LLC,Renaissance bridge Capital LLC,1.0,exact_norm
+36,VC206,False,individual,Introducer,Anuroop ARORA,ANUROOP ARORA,1.0,exact_norm,Renaissance Bridge Capital LLC,Renaissance bridge Capital LLC,1.0,exact_norm
+37,VC206,False,individual,Introducer,Bharath RAM,Bharath RAM,1.0,exact_norm,Renaissance Bridge Capital LLC,Renaissance bridge Capital LLC,1.0,exact_norm
+38,VC206,False,entity,-,AEON INC,AEON INC,1.0,exact_norm,,,0.0,none
+39,VC206,False,individual,-,Julien MACHOT,Julien MACHOT,1.0,exact_norm,,,0.0,none
+40,VC206,False,individual,Introducer,Jyotsna HEDGE,JYOTSNA HEDGE,1.0,exact_norm,Mervyn Pereira,Mervyn Pereira,1.0,exact_norm
+41,VC206,False,individual,Introducer,PUTHAN N.C. MENON AND/OR SOBHA MENON RAGHAVANNAIR,PUTHAN N.C. MENON AND/OR SOBHA MENON RAGHAVANNAIR,1.0,exact_norm,Mervyn Pereira,Mervyn Pereira,1.0,exact_norm
+42,VC206,False,entity,,"ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC","ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC",1.0,exact_norm,,,0.0,none
+43,VC206,False,entity,Introducer,"REDPOINT OMEGA V, L.P.","REDPOINT OMEGA V, L.P.",1.0,exact_norm,Visual Sectors,Visual Sectors,1.0,exact_norm
+44,VC206,False,entity,Introducer,"REDPOINT OMEGA V, L.P.","REDPOINT OMEGA V, L.P.",1.0,exact_norm,Astral Global Limited,Astra Global,0.7273,fuzzy
+45,VC206,False,entity,Introducer,"REDPOINT OMEGA ASSOCIATES V, LLC","REDPOINT OMEGA ASSOCIATES V, LLC",1.0,exact_norm,Visual Sectors,Visual Sectors,1.0,exact_norm
+46,VC206,False,entity,,"ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC","ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC",1.0,exact_norm,,,0.0,none
+47,VC206,False,entity,,"ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC","ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC",1.0,exact_norm,,,0.0,none
+48,VC207,False,individual,,TARA LYNN SCHOLLEMANN,TARA LYNN SCHOLLEMANN,1.0,exact_norm,,,0.0,none
+49,VC207,False,individual,,JONATHAN STONA,JONATHAN STONA,1.0,exact_norm,,,0.0,none
+50,VC207,False,individual,,PRASANNA SANTHANAM,PRASANNA SANTHANAM,1.0,exact_norm,,,0.0,none
+51,VC207,False,individual,,DILIP STEPHANE ROUSSENALY,DILIP STEPHANE ROUSSENALY,1.0,exact_norm,,,0.0,none
+52,VC207,False,individual,,GUSTAVO FUCHS ALBUQUERQUE,GUSTAVO FUCHS ALBUQUERQUE,1.0,exact_norm,,,0.0,none
+53,VC207,False,individual,,MARK SOUZA,MARK SOUZA,1.0,exact_norm,,,0.0,none
+54,VC207,False,individual,,KEE-MIN NGIAM,KEE-MIN NGIAM,1.0,exact_norm,,,0.0,none
+55,VC207,False,individual,Introducer,ANUROOP ARORA,ANUROOP ARORA,1.0,exact_norm,Renaissance Bridge Capital LLC,Renaissance,0.97,fuzzy
+56,VC207,False,individual,Introducer,DIVYA SRIDHAR and SHRIVATSAN VASUDHEVAN,DIVYA and SHRIVATSAN SRIDHAR AND VASUDHEVAN,0.97,fuzzy,Renaissance Bridge Capital LLC,Renaissance,0.97,fuzzy
+57,VC207,False,individual,Introducer,BHARATH RAM,BHARATH RAM,1.0,exact_norm,Renaissance Bridge Capital LLC,Renaissance,0.97,fuzzy
+58,VC207,False,individual,Introducer,VARUN SEMBIUM VARADARAJAN,VARUN SEMBIUM VARADARAJAN,1.0,exact_norm,Renaissance Bridge Capital LLC,Renaissance,0.97,fuzzy
+59,VC207,False,individual,,Julien MACHOT,Julien MACHOT,1.0,exact_norm,,,0.0,none
+60,VC207,False,individual,Introducer,ABHINEET MISHRA,ABHINEET MISHRA,1.0,exact_norm,Renaissance Bridge Capital LLC,Renaissance,0.97,fuzzy
+61,VC207,False,entity,Introducer,AGP ALTERNATIVE INVESTMENT QP FUND - SERIES 4,AGP ALTERNATIVE INVESTMENT QP FUND - SERIES 4,1.0,exact_norm,Alliance Global Partners LLC,Alliance Global Partners LLC,1.0,exact_norm
+62,VC207,False,individual,Introducer,ASHUTOSH CHETAL,ASHUTOSH CHETAL,1.0,exact_norm,Renaissance Bridge Capital LLC,Renaissance,0.97,fuzzy
+63,VC207,False,individual,Introducer,VIDHYA GOVINDARAJAN,VIDHYA GOVINDARAJAN,1.0,exact_norm,Renaissance Bridge Capital LLC,Renaissance,0.97,fuzzy
+64,VC207,False,individual,Introducer,ANKUR SRIVASTAVA,ANKUR SRIVASTAVA,1.0,exact_norm,Renaissance Bridge Capital LLC,Renaissance,0.97,fuzzy
+65,VC207,False,individual,Introducer,GURPREET SINGH,GURPREET SINGH,1.0,exact_norm,Renaissance Bridge Capital LLC,Renaissance,0.97,fuzzy
+66,VC207,False,entity,Broker,AEON INC.,AEON INC.,1.0,exact_norm,R. F. Lafferty & Co. Inc.,Lafferty,0.97,fuzzy
+67,VC207,False,entity,Introducer,SPARKLABS GLOBAL CAPITAL X LLC,SPARKLABS GLOBAL CAPITAL X LLC,1.0,exact_norm,Elena VYSOTSKAIA,Elena VYSOTSKAIA,1.0,exact_norm
+68,VC207,False,individual,,Julien MACHOT,Julien MACHOT,1.0,exact_norm,,,0.0,none
+69,VC207,False,individual,,MR AND MRS MATHEW KOLANGIKOMBIL THOMAS,MR AND MRS MATHEW KOLANGIKOMBIL THOMAS,1.0,exact_norm,,,0.0,none
+70,VC207,False,individual,Introducer,Rishabh MITTAL,Rishabh MITTAL,1.0,exact_norm,Renaissance Bridge Capital LLC,Renaissance,0.97,fuzzy
+71,VC207,False,entity,,LF GROUP SARL,LF GROUP SARL,1.0,exact_norm,,,0.0,none
+72,VC207,False,individual,,IGOR TSUKERMAN and IRENE APOTOVSKY,IGOR and IRENE TSUKERMAN and APOTOVSKY,0.97,fuzzy,,,0.0,none
+73,VC209,False,entity,Introducer,SINO SUISSE LLC,SINO SUISSE LLC,1.0,exact_norm,Bromley Capital Partners,Bromley Partners,0.97,fuzzy
+74,VC209,False,entity,,AEON INC,AEON INC,1.0,exact_norm,,,0.0,none
+75,VC209,False,individual,Introducer,Georgi GEORGIEV,Georgi GEORGIEV,1.0,exact_norm,Robin Doble,Robin Doble,1.0,exact_norm
+76,VC209,False,entity,Introducer,JRF INVESTMENTS DMCC,JRF INVESTMENTS DMCC,1.0,exact_norm,Renaissance Bridge Capital LLC,Renaissance,0.97,fuzzy
+77,VC209,False,entity,Introducer,"D. BORAL MASTER SPV, SERIES IV XAI","D. BORAL MASTER SPV, SERIES IV XAI",1.0,exact_norm,AEON INC,Aeon,0.97,fuzzy
+78,VC209,False,entity,,U.S. HMC SERIES FUND LP - SERIES II,U.S. HMC SERIES FUND LP - SERIES II,1.0,exact_norm,,,0.0,none
+79,VC209,False,entity,,Seri Cosmos Capital Limited,Seri Cosmos Capital Limited,1.0,exact_norm,,,0.0,none
+80,VC209,False,entity,Broker,CBH Compagnie Bancaire Helvétique SA,"CBH Compagnie Bancaire Helvétique SA,",1.0,exact_norm,R. F. Lafferty & Co. Inc.,Lafferty,0.97,fuzzy
+81,VC209,False,individual,Introducer,Jamel CHANDOUL,Jamel CHANDOUL,1.0,exact_norm,Bright Views Holdings,Bright Views,0.97,fuzzy
+82,VC209,False,entity,,BRIGHT VIEWS HOLDINGS,BRIGHT VIEWS HOLDINGS,1.0,exact_norm,,,0.0,none
+83,VC209,False,entity,Broker,"STP CAP V, A SERIES OF CGF2021 LLC, SYDECAR LLC","STP CAP V, A SERIES OF CGF2021 LLC, SYDECAR LLC",1.0,exact_norm,R. F. Lafferty & Co. Inc.,Lafferty,0.97,fuzzy
+84,VC209,False,entity,,SINO SUISSE LLC,SINO SUISSE LLC,1.0,exact_norm,,,0.0,none
+85,VC209,False,entity,,CBH Compagnie Bancaire Helvétique SA,"CBH Compagnie Bancaire Helvétique SA,",1.0,exact_norm,,,0.0,none
+86,VC209,False,entity,Introducer,MOBILITY INNOVATION FUND LLC,MOBILITY INNOVATION FUND LLC,1.0,exact_norm,Jeffrey Wan,Jeffrey Wan,1.0,exact_norm
+87,VC209,False,entity,,U.S. HMC SERIES FUND LP – SERIES II,U.S. HMC SERIES FUND LP - SERIES II,1.0,exact_norm,,,0.0,none
+88,VC209,False,individual,,MRS ANISHA BANSAL AND MR RAHUL KARKUN,MRS ANISHA BANSAL AND MR RAHUL,0.97,fuzzy,,,0.0,none
+89,VC209,False,entity,,"SPACEFARING VENTURES FUND 9, LLC","SPACEFARING VENTURES FUND 9, LLC",1.0,exact_norm,,,0.0,none
+90,VC209,False,entity,Broker,PVPL FUND LLC SERIES 3,PVPL FUND LLC SERIES 3,1.0,exact_norm,R. F. Lafferty & Co. Inc.,Lafferty,0.97,fuzzy
+91,VC209,False,entity,Introducer,PVPL FUND LLC SERIES 3,PVPL FUND LLC SERIES 3,1.0,exact_norm,Visual Sectors,Lafferty+Visual Sectors,0.97,fuzzy
+92,VC209,False,entity,Introducer,"PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC","PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC",1.0,exact_norm,Rubix Holdings Limited,Robin Doble,0.4242,fuzzy
+93,VC209,False,individual,,Julien MACHOT,Julien MACHOT,1.0,exact_norm,,,0.0,none
+94,VC209,False,entity,,"PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC","PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC",1.0,exact_norm,,,0.0,none
+95,VC209,False,individual,,Mohan SASANAPURI,JONATHAN STONA,0.5333,fuzzy,,,0.0,none
+96,VC209,False,individual,,Kartik Kumar ATTULURI,Mathieu MARIOTTI,0.5405,fuzzy,,,0.0,none
+97,VC209,True,individual,,Prabhakar Somana KONGANDA,MRS ANISHA BANSAL AND MR RAHUL,0.5,fuzzy,,,0.0,none
+98,VC209,False,entity,,MADISON TRUST COMPANY (on behalf of Edward Bendickson),"PEGASUS TECH VENTURES COMPANY VIII, L.P.",0.4,fuzzy,,,0.0,none
+99,VC209,False,entity,,"FRONTIERX VIII, LP",ANIM X II LP,0.6207,fuzzy,,,0.0,none
+100,VC210,False,individual,Introducer,Marvin HAZELL,Marvin HAZELL,1.0,exact_norm,ANIM,ANIM,1.0,exact_norm
+101,VC210,False,individual,Introducer,Hailey ORR,Hailey ORR,1.0,exact_norm,ANIM,ANIM,1.0,exact_norm
+102,VC211,False,individual,Introducer,Anton POLETAEV,ANTON POLETAEV,1.0,exact_norm,Renaissance Bridge Capital LLC,Renaissance bridge Capital LLC,1.0,exact_norm
+103,VC215,False,individual,,Julien MACHOT,Julien MACHOT,1.0,exact_norm,,,0.0,none
+104,VC215,False,individual,Introducer,Gourav KAKKAR,LF GROUP SARL,0.4615,fuzzy,Infinyte Club Private Limited,Alliance Global Partners LLC,0.4561,fuzzy
+105,VC215,False,individual,Introducer,Rajagopalan MADHUSUDAN,ALPHA OMEGA SAS,0.4324,fuzzy,Infinyte Club Private Limited,Alliance Global Partners LLC,0.4561,fuzzy
+106,VC215,False,individual,Introducer,Ved NIRANJANBHAI ANTANI,PRASANNA SANTHANAM,0.5366,fuzzy,Infinyte Club Private Limited,Alliance Global Partners LLC,0.4561,fuzzy
+107,VC215,False,individual,Introducer,Mahesh NALLAPATI,Mathieu MARIOTTI,0.5,fuzzy,Infinyte Club Private Limited,Alliance Global Partners LLC,0.4561,fuzzy
+108,VC215,False,individual,Introducer,Varun SEMBIUM VARADARAJAN,VARUN SEMBIUM VARADARAJAN,1.0,exact_norm,Renaissance Bridge Capital LLC,Renaissance bridge Capital LLC,1.0,exact_norm
+109,VC215,False,entity,Introducer,CARTA INVESTMENTS LLC,JRF INVESTMENTS DMCC,0.7317,fuzzy,Infinyte Club Private Limited,Alliance Global Partners LLC,0.4561,fuzzy
+110,VC215,False,entity,Introducer,STELLATRION PARTNERS,Sylvain GARIEL,0.5294,fuzzy,Set Cap,Gestio Capital,0.5714,fuzzy
+111,VC215,False,entity,Introducer,STELLATRION PARTNERS,Sylvain GARIEL,0.5294,fuzzy,Set Cap,Gestio Capital,0.5714,fuzzy
+112,VC215,False,entity,,"ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC","PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC",0.6062,fuzzy,,,0.0,none
+113,VC215,False,entity,,"ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC","PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC",0.6062,fuzzy,,,0.0,none
+114,VC215,False,entity,,"ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC","PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC",0.6062,fuzzy,,,0.0,none
+115,VC215,False,individual,Introducer,Anuroop ARORA,ANUROOP ARORA,1.0,exact_norm,Renaissance Bridge Capital LLC,Renaissance bridge Capital LLC,1.0,exact_norm
+116,VC215,False,entity,,AEON INC,AEON INC,1.0,exact_norm,,,0.0,none
+117,VC215,False,entity,Introducer,"Anthropic Compartment, HAG Private Markets SARL",INNOVATECH COMPARTMENT 8,0.5143,fuzzy,Hottinger AG,TERRA,0.4706,fuzzy
+118,VC215,False,entity,,LF GROUP SARL,LF GROUP SARL,1.0,exact_norm,,,0.0,none
+119,VC215,False,entity,,AEON INC,AEON INC,1.0,exact_norm,,,0.0,none
+120,VC215,False,individual,,Keir BENBOW,Keir BENBOW,1.0,exact_norm,,,0.0,none
+121,VC215,False,individual,,George Guoying CHEN,Georgi GEORGIEV,0.5882,fuzzy,,,0.0,none
+122,,False,,,,,0.0,none,,,0.0,none
+123,,False,,Broker,,,0.0,none,Old City Securities LLC,Rainmaker Securities,0.5581,fuzzy

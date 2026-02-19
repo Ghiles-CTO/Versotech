@@ -242,7 +242,7 @@ export async function POST(
 
     if (action !== 'approve') {
       const entityTable = entityType ? ENTITY_TABLES[entityType] : null
-      if (entityTable && entityId) {
+      if (entityTable && entityId && entityType) {
         const { data: entityStatus } = await serviceSupabase
           .from(entityTable)
           .select('account_approval_status')
@@ -261,6 +261,14 @@ export async function POST(
             })
             .eq('id', entityId)
         }
+
+        await cancelPendingAccountActivationApprovals(serviceSupabase, {
+          entityType,
+          entityId,
+          action,
+          rejectionReason: rejection_reason,
+          notes,
+        })
       }
     }
 
@@ -421,6 +429,81 @@ async function resolveNotificationTarget(
 
   if (!fallback?.user_id) return null
   return { userId: fallback.user_id, link: config.link }
+}
+
+async function cancelPendingAccountActivationApprovals(
+  supabase: any,
+  params: {
+    entityType: string
+    entityId: string
+    action: 'reject' | 'request_info'
+    rejectionReason?: string
+    notes?: string
+  }
+) {
+  const { entityType, entityId, action, rejectionReason, notes } = params
+
+  try {
+    const { data: pendingApprovals, error: fetchError } = await supabase
+      .from('approvals')
+      .select('id, entity_metadata')
+      .eq('entity_type', 'account_activation')
+      .eq('entity_id', entityId)
+      .eq('status', 'pending')
+
+    if (fetchError) {
+      console.error('[kyc-review] Failed to load pending account activation approvals for cancellation', {
+        entityType,
+        entityId,
+        error: fetchError,
+      })
+      return
+    }
+
+    const approvalIdsToCancel = (pendingApprovals || [])
+      .filter((approval: any) => {
+        const personaType = approval?.entity_metadata?.persona_type
+        return !personaType || personaType === entityType
+      })
+      .map((approval: any) => approval.id)
+
+    if (approvalIdsToCancel.length === 0) {
+      return
+    }
+
+    const reviewerMessage = composeReviewerMessage(rejectionReason, notes)
+    const cancellationReason = action === 'reject'
+      ? 'Auto-cancelled due to KYC rejection'
+      : 'Auto-cancelled due to KYC information request'
+    const cancellationNote = reviewerMessage
+      ? `${cancellationReason}. Reason: ${reviewerMessage}`
+      : cancellationReason
+
+    const { error: cancelError } = await supabase
+      .from('approvals')
+      .update({
+        status: 'cancelled',
+        resolved_at: new Date().toISOString(),
+        notes: cancellationNote,
+        updated_at: new Date().toISOString(),
+      })
+      .in('id', approvalIdsToCancel)
+
+    if (cancelError) {
+      console.error('[kyc-review] Failed to cancel pending account activation approvals', {
+        entityType,
+        entityId,
+        approvalIds: approvalIdsToCancel,
+        error: cancelError,
+      })
+    }
+  } catch (error) {
+    console.error('[kyc-review] Unexpected error while cancelling pending account activation approvals', {
+      entityType,
+      entityId,
+      error,
+    })
+  }
 }
 
 /**

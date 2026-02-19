@@ -1,0 +1,32 @@
+severity,check,vehicle,row_ref,details
+warn,introduction_missing_date_ruled,VC207,,introduction_id=d3b58990-9327-4c5b-b6ed-af7f16fb9858 deal_id=b77e95ee-4649-4644-933e-ed10a2118b03 investor_id=73a05f0c-c987-4b09-9c3a-b0dc2a402358
+warn,commission_totals_ruled_diff_invested_amount,VC203,,dashboard=320673.26 db=259999.5 delta=-60673.76 expected=-60673.76
+warn,commission_totals_ruled_diff_invested_amount,VC207,,dashboard=141932.1 db=115793.4 delta=-26138.7 expected=-26138.7
+warn,commission_totals_ruled_diff_invested_amount,VC209,,dashboard=704343.97 db=451663.47 delta=-252680.5 expected=-252680.5
+warn,commission_totals_ruled_diff_invested_amount,VC215,,dashboard=834528.32 db=692955.91 delta=-141572.41 expected=-141572.41
+warn,commission_combined_ruled_removed,VC203,VC203:4,investor=DOMINARI SECURITIES LLC introducer_label=Dimensional Advisors + R. F. Lafferty & Co. Inc. basis=invested_amount dashboard=96110.15 db_total=49999.5 delta=-46110.65
+warn,commission_combined_ruled_removed,VC215,VC215:4,investor=Gourav KAKKAR introducer_label=Bromley Capital + Infinyte Club basis=invested_amount dashboard=747.82 db_total=461.3 delta=-286.52
+warn,commission_combined_ruled_removed,VC215,VC215:5,investor=Rajagopalan MADHUSUDAN introducer_label=Bromley Capital + Infinyte Club basis=invested_amount dashboard=592.64 db_total=365.57 delta=-227.07
+warn,commission_combined_ruled_removed,VC215,VC215:6,investor=Ved NIRANJANBHAI ANTANI introducer_label=Bromley Capital + Infinyte Club basis=invested_amount dashboard=1211.89 db_total=747.56 delta=-464.33
+warn,commission_combined_ruled_removed,VC215,VC215:7,investor=Mahesh NALLAPATI introducer_label=Bromley Capital + Infinyte Club basis=invested_amount dashboard=515.79 db_total=318.17 delta=-197.62
+warn,commission_combined_ruled_removed,VC215,VC215:8,investor=Varun SEMBIUM VARADARAJAN introducer_label=Bromley Capital + Renaissance basis=invested_amount dashboard=2144.0 db_total=1082.61 delta=-1061.39
+warn,commission_combined_ruled_removed,VC215,VC215:9,investor=CARTA INVESTMENTS LLC introducer_label=Bromley Capital + Infinyte Club basis=invested_amount dashboard=2191.74 db_total=508.36 delta=-1683.38
+warn,commission_combined_ruled_removed,VC215,VC215:15,investor=Anuroop ARORA introducer_label=Bromley Capital + Renaissance basis=invested_amount dashboard=2786.44 db_total=1718.84 delta=-1067.6
+warn,commission_combined_ruled_removed,VC215,VC215:17,"investor=Anthropic Compartment, HAG Private Markets SARL introducer_label=Hottinger AG + Bromley Capital basis=invested_amount dashboard=786004.0 db_total=687753.5 delta=-98250.5"
+warn,commission_row_ruled_dashboard_override,VC203,33129a8c-d50e-4cf8-8d8d-5caeffd3e3ee,"investor=EVERLASTING HOLDINGS LLC introducer=Sakal Advisory, LLC basis=invested_amount expected_amount=5000.0 expected_rate=50 dashboard_amount=0.0 db_amount=5000.0 dashboard_rates=[] db_rates=[50]"
+warn,commission_row_ruled_dashboard_override,VC203,411513a9-437e-4614-bcc5-7b27fbbc3e2c,investor=EVERLASTING HOLDINGS LLC introducer=Astral Global Limited basis=invested_amount expected_amount=10000.0 expected_rate=100 dashboard_amount=0.0 db_amount=10000.0 dashboard_rates=[] db_rates=[100]
+warn,commission_row_ruled_removed,VC203,VC203:8,investor=Sebastian LATTUGA introducer=R. F. Lafferty & Co. Inc. basis=invested_amount dashboard=14563.11 db=0.0
+warn,commission_row_ruled_dashboard_override,VC206,aadad175-eefb-48b5-acf7-22fa1d4ff4de,"investor=REDPOINT OMEGA V, L.P. introducer=Astral Global Limited basis=invested_amount expected_amount=90000.0 expected_rate=122 dashboard_amount=0.0 db_amount=90000.0 dashboard_rates=[] db_rates=[122]"
+warn,commission_row_ruled_dashboard_override,VC206,bee4fe86-73ba-485e-ac94-4870a064a8b5,"investor=REDPOINT OMEGA V, L.P. introducer=Visual Sectors basis=invested_amount expected_amount=82000.0 expected_rate=111 dashboard_amount=0.0 db_amount=82000.0 dashboard_rates=[] db_rates=[111]"
+warn,commission_row_ruled_removed,VC207,VC207:21,investor=AEON INC. introducer=Lafferty basis=invested_amount dashboard=26138.7 db=0.0
+warn,commission_row_ruled_dashboard_override,VC209,VC209:20,investor=PVPL FUND LLC SERIES 3 introducer=Lafferty+Visual Sectors basis=invested_amount expected_amount=10000.0 expected_rate=10 dashboard_amount=110000.0 db_amount=10000.0 dashboard_rates=[110] db_rates=[10]
+warn,commission_row_ruled_removed,VC209,VC209:13,"investor=STP CAP V, A SERIES OF CGF2021 LLC, SYDECAR LLC introducer=Lafferty basis=invested_amount dashboard=29677.5 db=0.0"
+warn,commission_row_ruled_removed,VC209,VC209:10,"investor=CBH Compagnie Bancaire Helvétique SA, introducer=Lafferty basis=invested_amount dashboard=123003.0 db=0.0"
+warn,commission_row_ruled_removed,VC215,VC215:12,"investor=ANTHR SYND I, A SERIES OF 2H OPPORTUNITIES, LLC introducer=Bromley Capital basis=invested_amount dashboard=12742.5 db=0.0"
+warn,commission_row_ruled_removed,VC215,VC215:16,investor=AEON INC introducer=Bromley Capital basis=invested_amount dashboard=4263.0 db=0.0
+warn,commission_row_ruled_removed,VC215,VC215:20,investor=Keir BENBOW introducer=Bromley Capital basis=invested_amount dashboard=670.5 db=0.0
+warn,commission_row_ruled_removed,VC215,VC215:21,investor=Georges CHEN introducer=Bromley Capital basis=invested_amount dashboard=8400.0 db=0.0
+warn,commission_row_ruled_removed,VC215,VC215:18,investor=LF GROUP SARL introducer=Bromley Capital basis=invested_amount dashboard=937.5 db=0.0
+warn,commission_row_ruled_removed,VC215,VC215:3,investor=Julien MACHOT introducer=Bromley Capital basis=invested_amount dashboard=8416.5 db=0.0
+warn,commission_row_ruled_removed,VC215,VC215:10,investor=STELLATRION PARTNERS introducer=Bromley Capital basis=invested_amount dashboard=2904.0 db=0.0
+warn,introducer_warning_only_present,VC209,,Bright Views Holdings rows=3 amount=9000.0

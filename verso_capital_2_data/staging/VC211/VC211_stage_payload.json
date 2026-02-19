@@ -1,0 +1,107 @@
+{
+  "vc": "VC211",
+  "subs": [
+    {
+      "vc": "VC211",
+      "dash_row": 3,
+      "investor_legal_name": "Anton POLETAEV",
+      "investor_type": "individual",
+      "investor_contact_name": "-",
+      "investor_email": "Anton_Poletaev@outlook.com",
+      "commitment": 315000.0,
+      "currency": "USD",
+      "status": "funded",
+      "funded_amount": 315000.0,
+      "cost_per_share": 195.1,
+      "price_per_share": 206.0,
+      "num_shares": 1529.0,
+      "units_subscription": 1529.0,
+      "contract_date": "2025-02-25",
+      "spread_per_share": 10.9,
+      "spread_fee_amount": 16666.1,
+      "subscription_fee_percent": 0.03,
+      "subscription_fee_amount": 9450.0,
+      "bd_fee_percent": 0,
+      "bd_fee_amount": 0,
+      "finra_shares": 0,
+      "finra_fee_amount": 0,
+      "performance_fee_tier1_percent": 0,
+      "performance_fee_tier1_threshold": null,
+      "performance_fee_tier2_percent": null,
+      "performance_fee_tier2_threshold": null,
+      "management_fee_percent": 0,
+      "opportunity_name": "FIGURE AI",
+      "sourcing_contract_ref": ""
+    }
+  ],
+  "positions": [
+    {
+      "vc": "VC211",
+      "investor_legal_name": "Anton POLETAEV",
+      "units": 1529.0,
+      "cost_basis": 315000.0,
+      "as_of_date": "2025-02-25"
+    }
+  ],
+  "introductions": [
+    {
+      "vc": "VC211",
+      "dash_row": 3,
+      "investor_legal_name": "Anton POLETAEV",
+      "introduced_at": "2025-02-25",
+      "introducer_legal_name": "Renaissance Bridge Capital LLC",
+      "introducer_contact_name": "Anushka Mathur",
+      "introducer_email": "anushka@renbridgecap.com",
+      "introducer_type": "entity",
+      "introduction_status": "allocated",
+      "commission_currency": "USD",
+      "commission_status": "paid",
+      "commission_paid_at": "2025-02-25",
+      "commission_items": [
+        {
+          "basis_type": "invested_amount",
+          "rate_bps": 115,
+          "base_amount": 315000.0,
+          "accrual_amount": 3622.5,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "spread",
+          "rate_bps": 0,
+          "base_amount": 315000.0,
+          "accrual_amount": 0.0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        },
+        {
+          "basis_type": "performance_fee",
+          "rate_bps": 0,
+          "base_amount": 315000.0,
+          "accrual_amount": 0.0,
+          "tier_number": 1,
+          "threshold_multiplier": null
+        }
+      ]
+    }
+  ],
+  "checks": {
+    "dashboard_active_commitment": 315000.0,
+    "stage_active_commitment": 315000.0,
+    "dashboard_active_shares": 1529.0,
+    "stage_active_shares": 1529.0,
+    "dashboard_active_ownership": 1529.0,
+    "stage_active_ownership": 1529.0,
+    "dashboard_active_subscription_fee": 9450.0,
+    "stage_active_subscription_fee": 9450.0,
+    "dashboard_active_spread_fee": 16666.1,
+    "stage_active_spread_fee": 16666.1,
+    "dashboard_intro_subscription_fee": 3622.5,
+    "stage_intro_subscription_fee": 3622.5,
+    "dashboard_intro_spread_fee": 0.0,
+    "stage_intro_spread_fee": 0.0,
+    "subscription_count": 1,
+    "position_count": 1,
+    "introduction_count": 1
+  }
+}

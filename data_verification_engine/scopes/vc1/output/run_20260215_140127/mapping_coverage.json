@@ -1,0 +1,9 @@
+{
+  "unmapped_dashboard_rows": 0,
+  "unmapped_db_rows": 0,
+  "unmapped_commission_rows_dashboard_to_db": 0,
+  "unmapped_commission_rows_db_to_dashboard": 0,
+  "name_mapping_applied_count": 62,
+  "name_mapping_unresolved_count": 0,
+  "fallback_match_warning_count": 0
+}

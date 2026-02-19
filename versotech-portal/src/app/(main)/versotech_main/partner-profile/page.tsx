@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { PartnerProfileClient } from '@/components/partner-profile/partner-profile-client'
 import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
+import { resolvePrimaryPersonaLink } from '@/lib/kyc/persona-link'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -26,11 +27,17 @@ export default async function PartnerProfilePage() {
   const serviceSupabase = createServiceClient()
 
   // Check if user is associated with a partner
-  const { data: partnerUser } = await serviceSupabase
-    .from('partner_users')
-    .select('partner_id, role, is_primary, can_sign')
-    .eq('user_id', user.id)
-    .maybeSingle()
+  const { link: partnerUser } = await resolvePrimaryPersonaLink<{
+    partner_id: string
+    role: string
+    is_primary: boolean
+    can_sign: boolean
+  }>({
+    supabase: serviceSupabase,
+    config: { userTable: 'partner_users', entityIdColumn: 'partner_id' },
+    userId: user.id,
+    select: 'partner_id, role, is_primary, can_sign',
+  })
 
   if (!partnerUser) {
     return (

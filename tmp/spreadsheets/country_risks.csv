@@ -1,0 +1,160 @@
+country_code,country_name,country_risk_grade,business_climate_grade,needs_review
+AL,Albania,B,B,False
+DZ,Algeria,C,C,False
+AO,Angola,C,D,False
+AR,Argentina,D,B,False
+AM,Armenia,B,B,False
+AU,Australia,A2,A1,False
+AT,Austria,A3,A1,False
+AZ,Azerbaijan,B,C,False
+BS,Bahamas,B,A4,False
+BH,Bahrain,C,A4,False
+BD,Bangladesh,D,C,False
+BB,Barbados,C,A4,False
+BY,Belarus,D,D,False
+BE,Belgium,A2,A1,False
+BZ,Belize,C,C,False
+BJ,Benin,B,C,False
+BO,Bolivia,D,B,False
+BA,Bosnia & Herzegovina,C,B,False
+BW,Botswana,B,A4,False
+BR,Brazil,B,A4,False
+BG,Bulgaria,B,A3,False
+BF,Burkina Faso,D,D,False
+BI,Burundi,D,E,False
+KH,Cambodia,C,B,False
+CM,Cameroon,C,D,False
+CA,Canada,A3,A1,False
+CV,Cabo Verde,A4,B,False
+CF,Central African Republic,D,E,False
+TD,Chad,D,E,False
+CL,Chile,A4,A3,False
+CN,China,B,B,False
+CO,Colombia,C,A4,False
+CG,Congo (Republic),C,D,False
+CD,Congo (DRC),D,E,False
+CR,Costa Rica,A4,A3,False
+HR,Croatia,A3,A2,False
+CU,Cuba,E,E,False
+CY,Cyprus,A4,A3,False
+CZ,Czechia,A3,A2,False
+CI,Côte d’Ivoire,B,B,False
+DK,Denmark,A1,A1,False
+DJ,Djibouti,C,C,False
+DO,Dominican Republic,B,B,False
+EC,Ecuador,D,B,False
+EG,Egypt,C,C,False
+SV,El Salvador,D,B,False
+EE,Estonia,A3,A1,False
+ET,Ethiopia,C,D,False
+FJ,Fiji,C,A4,False
+FI,Finland,A3,A1,False
+FR,France,A3,A1,False
+GA,Gabon,C,D,False
+GE,Georgia,B,A3,False
+DE,Germany,A3,A1,False
+GH,Ghana,C,B,False
+GR,Greece,A4,A2,False
+GT,Guatemala,C,C,False
+GN,Guinea,C,D,False
+GY,Guyana,B,C,False
+HN,Honduras,C,C,False
+HK,Hong Kong,A3,A1,False
+HU,Hungary,A4,A3,False
+IS,Iceland,A3,A1,False
+IN,India,B,A4,False
+ID,Indonesia,A4,A4,False
+IR,Iran,E,D,False
+IQ,Iraq,E,E,False
+IE,Ireland,A3,A1,False
+IL,Israel,A4,A3,False
+IT,Italy,B,A2,False
+JM,Jamaica,C,A4,False
+JP,Japan,A2,A1,False
+JO,Jordan,C,B,False
+KZ,Kazakhstan,B,B,False
+KE,Kenya,C,A4,False
+KR,South Korea,A2,A1,False
+KW,Kuwait,A4,A3,False
+KG,Kyrgyzstan,C,D,False
+LA,Laos,D,D,False
+LV,Latvia,A4,A1,False
+LB,Lebanon,D,D,False
+LS,Lesotho,C,B,False
+LR,Liberia,D,E,False
+LY,Libya,E,E,False
+LT,Lithuania,A4,A1,False
+LU,Luxembourg,A1,A1,False
+MG,Madagascar,C,C,False
+MW,Malawi,D,D,False
+MY,Malaysia,A4,A3,False
+MV,Maldives,D,C,False
+ML,Mali,D,D,False
+MT,Malta,A3,A4,False
+MR,Mauritania,C,C,False
+MU,Mauritius,A4,A3,False
+MX,Mexico,B,B,False
+MD,Moldova,C,B,False
+MN,Mongolia,C,C,False
+ME,Montenegro,C,A4,False
+MA,Morocco,B,A4,False
+MZ,Mozambique,D,D,False
+MM,Myanmar,D,E,False
+NA,Namibia,B,A4,False
+NP,Nepal,C,B,False
+NL,Netherlands,A2,A1,False
+NZ,New Zealand,A3,A1,False
+NI,Nicaragua,D,C,False
+NE,Niger,D,D,False
+NG,Nigeria,C,D,False
+MK,North Macedonia,C,A4,False
+NO,Norway,A1,A1,False
+OM,Oman,B,A4,False
+PK,Pakistan,D,C,False
+PA,Panama,B,A4,False
+PG,Papua New Guinea,B,C,False
+PY,Paraguay,B,B,False
+PE,Peru,B,A4,False
+PH,Philippines,A4,B,False
+PL,Poland,A4,A2,False
+PT,Portugal,A2,A2,False
+QA,Qatar,A3,A3,False
+RO,Romania,B,A3,False
+RU,Russia,D,D,False
+RW,Rwanda,A4,A4,False
+SA,Saudi Arabia,A3,B,False
+SN,Senegal,B,B,False
+RS,Serbia,C,A4,False
+SL,Sierra Leone,D,D,False
+SG,Singapore,A3,A1,False
+SK,Slovakia,A4,A2,False
+SI,Slovenia,A3,A1,False
+ZA,South Africa,C,A4,False
+ES,Spain,A2,A1,False
+LK,Sri Lanka,D,B,False
+SD,Sudan,E,E,False
+SR,Suriname,D,C,False
+SZ,Eswatini,D,C,False
+SE,Sweden,A3,A1,False
+CH,Switzerland,A1,A1,False
+TW,Taiwan,A2,A1,False
+TJ,Tajikistan,D,D,False
+TZ,Tanzania,B,C,False
+TH,Thailand,B,A3,False
+TL,Timor-Leste,D,C,False
+TG,Togo,C,C,False
+TT,Trinidad & Tobago,B,A4,False
+TN,Tunisia,C,C,False
+TR,Türkiye,C,A4,False
+TM,Turkmenistan,D,E,False
+UG,Uganda,C,C,False
+UA,Ukraine,D,D,False
+AE,United Arab Emirates,A2,A2,False
+GB,United Kingdom,A3,A1,False
+US,United States,A2,A1,False
+UY,Uruguay,A4,A3,False
+UZ,Uzbekistan,B,B,False
+VE,Venezuela,E,E,False
+VN,Vietnam,A4,A4,False
+ZM,Zambia,D,C,False
+ZW,Zimbabwe,E,E,False
