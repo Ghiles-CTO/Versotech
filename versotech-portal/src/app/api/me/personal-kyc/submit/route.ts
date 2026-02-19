@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { checkAndUpdateEntityKYCStatus } from '@/lib/kyc/check-entity-kyc-status'
+import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
 
 // Entity type configurations
 const ENTITY_CONFIGS = {
@@ -222,8 +224,6 @@ export async function POST(request: Request) {
       { field: 'nationality', label: 'Nationality' },
       { field: 'residential_street', label: 'Residential Address' },
       { field: 'residential_country', label: 'Country of Residence' },
-      { field: 'id_type', label: 'ID Document Type' },
-      { field: 'id_number', label: 'ID Document Number' },
     ]
 
     const missingFields = requiredFields.filter(
@@ -276,11 +276,12 @@ export async function POST(request: Request) {
     const { data: statusTransition, error: statusTransitionError } = await serviceSupabase
       .from(config.memberTable)
       .update({
-        kyc_status: 'submitted',
+        kyc_status: 'approved',
+        kyc_approved_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq('id', memberId)
-      .neq('kyc_status', 'submitted')
+      .neq('kyc_status', 'approved')
       .select('id')
       .maybeSingle()
 
@@ -294,17 +295,24 @@ export async function POST(request: Request) {
 
     if (!statusTransition) {
       return NextResponse.json(
-        { error: 'Personal KYC already submitted for review' },
+        { error: 'Personal KYC already approved for this member' },
         { status: 400 }
       )
     }
 
+    const assignedTo = await resolveKycSubmissionAssignee(serviceSupabase)
+    const nowIso = new Date().toISOString()
+
     const submissionData: Record<string, unknown> = {
       document_type: 'personal_info',
-      status: 'pending',
-      submitted_at: new Date().toISOString(),
+      status: 'approved',
+      submitted_at: nowIso,
+      reviewed_at: nowIso,
+      reviewed_by: assignedTo,
+      assigned_to: assignedTo,
       metadata: {
         submission_type: 'personal_kyc',
+        auto_approved: true,
         entity_type: entityType,
         member_name: member.full_name || `${member.first_name} ${member.last_name}`,
         submitted_by_user_id: user.id,
@@ -347,10 +355,11 @@ export async function POST(request: Request) {
         .from(config.memberTable)
         .update({
           kyc_status: previousMemberStatus || 'pending',
+          kyc_approved_at: null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', memberId)
-        .eq('kyc_status', 'submitted')
+        .eq('kyc_status', 'approved')
       return NextResponse.json(
         { error: 'Failed to create KYC submission' },
         { status: 500 }
@@ -377,10 +386,16 @@ export async function POST(request: Request) {
         .eq('id', entityId)
     }
 
+    await checkAndUpdateEntityKYCStatus(
+      serviceSupabase as any,
+      entityType as any,
+      entityId
+    )
+
     return NextResponse.json({
       success: true,
       submission_id: submission.id,
-      message: 'Personal KYC submitted for review'
+      message: 'Personal KYC submitted and approved'
     })
 
   } catch (error) {

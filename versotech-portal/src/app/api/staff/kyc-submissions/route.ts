@@ -162,11 +162,11 @@ export async function GET(request: NextRequest) {
       `, { count: 'exact' })
 
     // Apply filters BEFORE pagination
-    // Support special multi-status values: 'queue' (pending+under_review), 'history' (completed)
+    // Support special multi-status values: 'queue' (pending), 'history' (completed)
     if (status === 'queue') {
-      query = query.in('status', ['pending', 'under_review'])
+      query = query.in('status', ['pending'])
     } else if (status === 'history') {
-      query = query.in('status', ['approved', 'rejected', 'expired', 'draft'])
+      query = query.in('status', ['approved', 'rejected', 'info_requested', 'expired', 'draft'])
     } else if (status) {
       query = query.eq('status', status)
     }
@@ -314,9 +314,9 @@ export async function GET(request: NextRequest) {
       total: statsData?.length || 0,
       draft: statusCounts['draft'] || 0,
       pending: statusCounts['pending'] || 0,
-      under_review: statusCounts['under_review'] || 0,
       approved: statusCounts['approved'] || 0,
       rejected: statusCounts['rejected'] || 0,
+      info_requested: statusCounts['info_requested'] || 0,
       expired: statusCounts['expired'] || 0
     }
 

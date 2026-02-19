@@ -219,7 +219,7 @@ export function GenericEntityMembersTab({
         throw new Error(data.error || 'Failed to submit member KYC')
       }
 
-      toast.success('Member personal KYC submitted for review')
+      toast.success('Member personal KYC submitted and approved')
       await loadMembers()
     } catch (err) {
       console.error('Error submitting member KYC:', err)

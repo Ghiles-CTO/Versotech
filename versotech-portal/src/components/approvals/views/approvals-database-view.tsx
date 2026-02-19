@@ -427,7 +427,12 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
                                     {approval.related_investor.legal_name}
                                   </p>
                                 )}
-                                {!approval.related_deal && !approval.related_investor && (
+                                {!approval.related_deal && !approval.related_investor && approval.entity_metadata?.entity_name && (
+                                  <p className="text-xs text-muted-foreground">
+                                    {approval.entity_metadata.entity_name}
+                                  </p>
+                                )}
+                                {!approval.related_deal && !approval.related_investor && !approval.entity_metadata?.entity_name && (
                                   <p className="text-xs text-muted-foreground font-mono">
                                     {approval.entity_id.substring(0, 12)}...
                                   </p>

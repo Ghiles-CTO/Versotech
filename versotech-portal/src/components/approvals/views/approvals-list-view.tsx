@@ -65,7 +65,12 @@ export function ApprovalsListView({
                 <h3 className="font-semibold text-lg text-foreground">
                   {approval.entity_type === 'member_invitation'
                     ? `Member Invitation: ${approval.entity_metadata?.email || 'Unknown'}`
-                    : (approval.related_deal?.name || approval.related_investor?.legal_name || 'Approval Request')}
+                    : (
+                      approval.related_deal?.name ||
+                      approval.related_investor?.legal_name ||
+                      approval.entity_metadata?.entity_name ||
+                      'Approval Request'
+                    )}
                 </h3>
                 {(approval.entity_type === 'deal_interest' || approval.entity_type === 'deal_interest_nda') && (
                   <p className="text-sm text-muted-foreground">

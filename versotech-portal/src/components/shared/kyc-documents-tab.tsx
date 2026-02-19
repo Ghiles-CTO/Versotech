@@ -521,7 +521,7 @@ export function KYCDocumentsTab({
                 max={new Date().toISOString().split('T')[0]}
               />
               <p className="text-xs text-muted-foreground">
-                Date shown on the document (utility bill date, bank statement date, etc.)
+                Date shown on the document (utility bill, government correspondence, or other).
               </p>
             </div>
           )}

@@ -233,7 +233,7 @@ export function KYCDocumentsTab() {
               <h4 className="font-medium text-sm text-slate-900 mb-2">Required Documents</h4>
               <ul className="text-sm text-slate-700 space-y-1">
                 <li>• Passport / ID</li>
-                <li>• Proof of Address (utility bill or bank statement, less than 3 months)</li>
+                <li>• Proof of Address (utility bill, government correspondence, or other, less than 3 months)</li>
               </ul>
             </div>
           )}

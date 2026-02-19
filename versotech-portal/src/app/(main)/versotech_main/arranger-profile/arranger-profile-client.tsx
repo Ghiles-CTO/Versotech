@@ -307,7 +307,7 @@ export function ArrangerProfileClient({
         throw new Error(error.error || 'Failed to submit entity KYC')
       }
 
-      toast.success('Entity information submitted for review')
+      toast.success('Entity information submitted and approved')
       window.location.reload()
     } catch (error) {
       console.error('[arranger-profile] Failed to submit entity KYC:', error)

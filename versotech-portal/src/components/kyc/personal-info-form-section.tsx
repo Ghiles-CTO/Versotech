@@ -1,5 +1,6 @@
 'use client'
 
+import * as React from 'react'
 import { User, Calendar, Globe, Phone } from 'lucide-react'
 import { Control, FieldValues, Path } from 'react-hook-form'
 import {
@@ -12,6 +13,14 @@ import {
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { CountrySelect, NationalitySelect } from './country-select'
+
+// Clamp date input year to 4 digits max
+function clampDateYear(e: React.FormEvent<HTMLInputElement>) {
+  const input = e.currentTarget
+  if (input.value && input.value.length > 10) {
+    input.value = input.value.slice(0, 10)
+  }
+}
 
 interface PersonalInfoFormSectionProps<T extends FieldValues> {
   control: Control<T>
@@ -152,6 +161,7 @@ export function PersonalInfoFormSection<T extends FieldValues>({
                   type="date"
                   value={field.value || ''}
                   disabled={disabled}
+                  onInput={clampDateYear}
                   max={new Date(Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000)
                     .toISOString()
                     .split('T')[0]}

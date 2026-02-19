@@ -30,12 +30,12 @@ import {
   FileText,
   ShieldCheck,
   X,
-  CalendarDays,
   StickyNote,
   ChevronRight,
 } from 'lucide-react'
 import { getEntityDocumentTypes, getDocumentsByCategory, DOCUMENT_CATEGORIES } from '@/constants/kyc-document-types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { isIdDocument, isProofOfAddress } from '@/lib/validation/document-validation'
 
 interface Member {
   id: string
@@ -66,7 +66,11 @@ export function KYCUploadDialog({
   const [documentCategory, setDocumentCategory] = useState<string>('')
   const [documentType, setDocumentType] = useState<string>('')
   const [customLabel, setCustomLabel] = useState<string>('')
-  const [expiryDate, setExpiryDate] = useState<string>('')
+  const [documentNumber, setDocumentNumber] = useState<string>('')
+  const [documentIssueDate, setDocumentIssueDate] = useState<string>('')
+  const [documentExpiryDate, setDocumentExpiryDate] = useState<string>('')
+  const [documentIssuingCountry, setDocumentIssuingCountry] = useState<string>('')
+  const [documentDate, setDocumentDate] = useState<string>('')
   const [notes, setNotes] = useState<string>('')
   const [uploadTarget, setUploadTarget] = useState<string>('')
   const [isUploading, setIsUploading] = useState(false)
@@ -98,11 +102,33 @@ export function KYCUploadDialog({
       setDocumentCategory('')
       setDocumentType('')
       setCustomLabel('')
-      setExpiryDate('')
+      setDocumentNumber('')
+      setDocumentIssueDate('')
+      setDocumentExpiryDate('')
+      setDocumentIssuingCountry('')
+      setDocumentDate('')
       setNotes('')
       setUploadTarget('')
     }
   }, [open])
+
+  const selectedDocumentType = useMemo(() => {
+    if (!documentType) return ''
+    if (documentType === 'custom') {
+      return customLabel.toLowerCase().trim().replace(/\s+/g, '_')
+    }
+    return documentType
+  }, [documentType, customLabel])
+
+  const requiresIdMetadata = useMemo(
+    () => !!selectedDocumentType && isIdDocument(selectedDocumentType),
+    [selectedDocumentType]
+  )
+
+  const requiresAddressDate = useMemo(
+    () => !!selectedDocumentType && isProofOfAddress(selectedDocumentType),
+    [selectedDocumentType]
+  )
 
   // When category changes, reset document type (unless custom)
   const handleCategoryChange = useCallback((value: string) => {
@@ -171,20 +197,38 @@ export function KYCUploadDialog({
       return
     }
 
+    if (
+      requiresIdMetadata &&
+      (!documentNumber || !documentIssueDate || !documentExpiryDate || !documentIssuingCountry)
+    ) {
+      toast.error('Please complete all proof of ID details before uploading')
+      return
+    }
+
+    if (requiresAddressDate && !documentDate) {
+      toast.error('Please provide the proof of address document date')
+      return
+    }
+
     setIsUploading(true)
 
     try {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('documentType', documentType === 'custom' ? customLabel.toLowerCase().replace(/\s+/g, '_') : documentType)
+      const normalizedDocumentType = documentType === 'custom'
+        ? customLabel.toLowerCase().trim().replace(/\s+/g, '_')
+        : documentType
+      formData.append('documentType', normalizedDocumentType)
 
       if (documentType === 'custom' && customLabel) {
         formData.append('customLabel', customLabel)
       }
 
-      if (expiryDate) {
-        formData.append('expiryDate', expiryDate)
-      }
+      if (documentNumber) formData.append('documentNumber', documentNumber)
+      if (documentIssueDate) formData.append('documentIssueDate', documentIssueDate)
+      if (documentExpiryDate) formData.append('documentExpiryDate', documentExpiryDate)
+      if (documentIssuingCountry) formData.append('documentIssuingCountry', documentIssuingCountry)
+      if (documentDate) formData.append('documentDate', documentDate)
 
       if (notes) {
         formData.append('notes', notes)
@@ -226,7 +270,19 @@ export function KYCUploadDialog({
   }
 
   const fileExtension = file?.name.split('.').pop()?.toUpperCase() || ''
-  const canSubmit = file && documentType && (!isEntityInvestor || uploadTarget) && (documentType !== 'custom' || customLabel.trim()) && (!usesCascading || documentCategory)
+  const hasRequiredMetadata = (!requiresIdMetadata || (
+    !!documentNumber &&
+    !!documentIssueDate &&
+    !!documentExpiryDate &&
+    !!documentIssuingCountry
+  )) && (!requiresAddressDate || !!documentDate)
+
+  const canSubmit = file &&
+    documentType &&
+    (!isEntityInvestor || uploadTarget) &&
+    (documentType !== 'custom' || customLabel.trim()) &&
+    (!usesCascading || documentCategory) &&
+    hasRequiredMetadata
 
   // Step tracking
   // Entity-level (flat): Who → Type → File (3 steps)
@@ -578,35 +634,76 @@ export function KYCUploadDialog({
             )}
           </div>
 
-          {/* Optional fields row */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <CalendarDays className="h-3 w-3" />
-                Expiry Date
-                <span className="text-muted-foreground/50">(optional)</span>
-              </Label>
-              <Input
-                type="date"
-                value={expiryDate}
-                onChange={(e) => setExpiryDate(e.target.value)}
-                className="text-sm"
-              />
+          {/* Dynamic metadata fields */}
+          {requiresIdMetadata && (
+            <div className="space-y-3 rounded-lg border border-border p-3">
+              <p className="text-xs font-medium text-muted-foreground">Proof of ID details</p>
+              <div className="space-y-2">
+                <Label className="text-xs">Document Number</Label>
+                <Input
+                  value={documentNumber}
+                  onChange={(e) => setDocumentNumber(e.target.value)}
+                  placeholder="Enter document number"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label className="text-xs">Issue Date</Label>
+                  <Input
+                    type="date"
+                    value={documentIssueDate}
+                    onChange={(e) => setDocumentIssueDate(e.target.value)}
+                    max={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Expiry Date</Label>
+                  <Input
+                    type="date"
+                    value={documentExpiryDate}
+                    onChange={(e) => setDocumentExpiryDate(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Issuing Country</Label>
+                <Input
+                  value={documentIssuingCountry}
+                  onChange={(e) => setDocumentIssuingCountry(e.target.value)}
+                  placeholder="e.g. United Kingdom"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <StickyNote className="h-3 w-3" />
-                Notes
-                <span className="text-muted-foreground/50">(optional)</span>
-              </Label>
-              <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Additional info..."
-                rows={1}
-                className="text-sm min-h-[36px] resize-none"
-              />
+          )}
+
+          {requiresAddressDate && (
+            <div className="space-y-3 rounded-lg border border-border p-3">
+              <p className="text-xs font-medium text-muted-foreground">Proof of address details</p>
+              <div className="space-y-2">
+                <Label className="text-xs">Document Date</Label>
+                <Input
+                  type="date"
+                  value={documentDate}
+                  onChange={(e) => setDocumentDate(e.target.value)}
+                  max={new Date().toISOString().split('T')[0]}
+                />
+              </div>
             </div>
+          )}
+
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <StickyNote className="h-3 w-3" />
+              Notes
+              <span className="text-muted-foreground/50">(optional)</span>
+            </Label>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Additional info..."
+              rows={1}
+              className="text-sm min-h-[36px] resize-none"
+            />
           </div>
         </form>
 

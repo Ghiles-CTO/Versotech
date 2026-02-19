@@ -188,7 +188,7 @@ export async function POST(
     }
 
     // Check if submission is in a reviewable state
-    if (!['pending', 'under_review'].includes(submission.status)) {
+    if (!['pending'].includes(submission.status)) {
       return NextResponse.json(
         { error: `Cannot review submission with status: ${submission.status}` },
         { status: 400 }
@@ -199,12 +199,12 @@ export async function POST(
 
     // Update submission
     const updateData: any = {
-      status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'pending',
+      status: action === 'approve' ? 'approved' : action === 'request_info' ? 'info_requested' : 'rejected',
       reviewed_at: new Date().toISOString(),
       reviewed_by: user.id
     }
 
-    if (action === 'reject') {
+    if (action === 'reject' || action === 'request_info') {
       updateData.rejection_reason = rejection_reason
     }
 

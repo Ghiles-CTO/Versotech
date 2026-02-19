@@ -58,7 +58,12 @@ export function ApprovalsKanbanView({ approvals, onApprovalClick }: ApprovalsKan
                           <p className="font-semibold text-sm truncate text-foreground">
                             {approval.entity_type === 'member_invitation'
                               ? approval.entity_metadata?.email || 'Unknown'
-                              : (approval.related_deal?.name || approval.related_investor?.legal_name || 'Unknown')}
+                              : (
+                                approval.related_deal?.name ||
+                                approval.related_investor?.legal_name ||
+                                approval.entity_metadata?.entity_name ||
+                                'Unknown'
+                              )}
                           </p>
                         </div>
                         <Badge className={statusColors[approval.status]}>

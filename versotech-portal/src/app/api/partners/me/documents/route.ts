@@ -8,6 +8,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import crypto from 'crypto'
 import { resolvePrimaryPersonaLink } from '@/lib/kyc/persona-link'
+import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
+import {
+  buildUploadDocumentMetadata,
+  validateUploadDocumentMetadata,
+} from '@/lib/kyc/upload-document-metadata'
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
 const ALLOWED_MIME_TYPES = [
@@ -174,6 +179,11 @@ export async function POST(request: NextRequest) {
     const documentType = formData.get('type') as string
     const documentName = formData.get('name') as string
     const partnerMemberId = formData.get('partner_member_id') as string | null
+    const documentNumber = formData.get('documentNumber') as string | null
+    const documentIssueDate = formData.get('documentIssueDate') as string | null
+    const documentExpiryDate = formData.get('documentExpiryDate') as string | null
+    const documentIssuingCountry = formData.get('documentIssuingCountry') as string | null
+    const documentDate = formData.get('documentDate') as string | null
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
@@ -182,6 +192,28 @@ export async function POST(request: NextRequest) {
     if (!documentType) {
       return NextResponse.json({ error: 'Document type is required' }, { status: 400 })
     }
+
+    const metadataValidationError = validateUploadDocumentMetadata(documentType, {
+      documentNumber,
+      documentIssueDate,
+      documentExpiryDate,
+      documentIssuingCountry,
+      documentDate,
+    })
+
+    if (metadataValidationError) {
+      return NextResponse.json({ error: metadataValidationError }, { status: 400 })
+    }
+
+    const documentMetadata = buildUploadDocumentMetadata(documentType, {
+      documentNumber,
+      documentIssueDate,
+      documentExpiryDate,
+      documentIssuingCountry,
+      documentDate,
+    })
+
+    const assignedTo = await resolveKycSubmissionAssignee(serviceSupabase)
 
     let resolvedPartnerMemberId: string | null = null
     if (partnerMemberId && partnerMemberId !== 'entity-level') {
@@ -301,8 +333,13 @@ export async function POST(request: NextRequest) {
         document_type: documentType,
         document_id: document.id,
         status: 'pending',
+        assigned_to: assignedTo,
         version: newVersion,
         previous_submission_id: previousSubmissionId,
+        document_date: documentMetadata.submission.document_date,
+        document_valid_from: documentMetadata.submission.document_valid_from,
+        document_valid_to: documentMetadata.submission.document_valid_to,
+        expiry_date: documentMetadata.submission.expiry_date,
         submitted_at: new Date().toISOString(),
         metadata: {
           file_size: file.size,
@@ -311,6 +348,7 @@ export async function POST(request: NextRequest) {
           source: 'partner_profile_upload',
           selected_partner_member_id: resolvedPartnerMemberId,
           is_reupload: !!latestSubmission,
+          document_fields: documentMetadata.metadataFields,
         }
       })
       .select('id, status')

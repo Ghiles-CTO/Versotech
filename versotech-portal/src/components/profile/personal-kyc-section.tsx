@@ -77,6 +77,8 @@ interface PersonalKYCSectionProps {
   entityType: 'investor' | 'partner' | 'introducer' | 'lawyer' | 'commercial_partner' | 'arranger'
   entityId: string
   onRefresh?: () => void
+  profileEmail?: string | null
+  profileName?: string | null
 }
 
 export function PersonalKYCSection({
@@ -84,6 +86,8 @@ export function PersonalKYCSection({
   entityType,
   entityId,
   onRefresh,
+  profileEmail,
+  profileName,
 }: PersonalKYCSectionProps) {
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -127,9 +131,7 @@ export function PersonalKYCSection({
     memberData.date_of_birth &&
     memberData.nationality &&
     memberData.residential_street &&
-    memberData.residential_country &&
-    memberData.id_type &&
-    memberData.id_number
+    memberData.residential_country
   )
 
   // Submit personal KYC for review
@@ -152,7 +154,7 @@ export function PersonalKYCSection({
         throw new Error(error.error || 'Failed to submit KYC')
       }
 
-      toast.success('Personal KYC submitted for review')
+      toast.success('Personal KYC submitted and approved')
       onRefresh?.()
     } catch (error) {
       console.error('Error submitting KYC:', error)
@@ -343,12 +345,12 @@ export function PersonalKYCSection({
           </div>
 
           {/* Submit Button */}
-          {memberData.kyc_status !== 'submitted' && (
+          {!['submitted', 'approved'].includes(memberData.kyc_status || '') && (
             <div className="pt-4 border-t">
               {isInfoComplete ? (
                 <Button onClick={handleSubmitForReview} disabled={isSubmitting}>
                   <Send className="h-4 w-4 mr-2" />
-                  {isSubmitting ? 'Submitting...' : memberData.kyc_status === 'approved' ? 'Re-submit for Review' : 'Submit for Review'}
+                  {isSubmitting ? 'Submitting...' : 'Submit for Review'}
                 </Button>
               ) : (
                 <div className="flex items-center gap-3">
@@ -389,14 +391,14 @@ export function PersonalKYCSection({
         memberName={memberData.full_name || undefined}
         initialData={{
           role: memberData.role || 'other',
-          first_name: memberData.first_name || '',
+          first_name: memberData.first_name || (profileName?.split(' ')[0]) || '',
           middle_name: memberData.middle_name,
-          last_name: memberData.last_name || '',
+          last_name: memberData.last_name || (profileName?.split(' ').slice(1).join(' ')) || '',
           name_suffix: memberData.name_suffix,
           date_of_birth: memberData.date_of_birth,
           country_of_birth: memberData.country_of_birth,
           nationality: memberData.nationality,
-          email: memberData.email,
+          email: memberData.email || profileEmail,
           phone_mobile: memberData.phone_mobile,
           phone_office: memberData.phone_office,
           residential_street: memberData.residential_street,

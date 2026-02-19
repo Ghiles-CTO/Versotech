@@ -48,6 +48,7 @@ import { toast } from 'sonner'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { QuestionnaireViewer } from '@/components/kyc/questionnaire-viewer'
+import { ProfileSnapshotViewer } from '@/components/kyc/profile-snapshot-viewer'
 import { getDocumentTypeLabel } from '@/constants/kyc-document-types'
 import { formatFileSize } from '@/lib/utils'
 
@@ -114,7 +115,7 @@ interface KYCSubmission {
   investor_member_id?: string | null
   document_type: string
   custom_label?: string | null
-  status: 'draft' | 'pending' | 'under_review' | 'approved' | 'rejected' | 'expired'
+  status: 'draft' | 'pending' | 'approved' | 'rejected' | 'info_requested' | 'expired'
   submitted_at: string
   reviewed_at?: string
   rejection_reason?: string
@@ -157,9 +158,9 @@ interface Statistics {
   total: number
   draft: number
   pending: number
-  under_review: number
   approved: number
   rejected: number
+  info_requested: number
   expired: number
 }
 
@@ -225,6 +226,7 @@ export function KYCReviewClient() {
   } = useDocumentViewer()
 
   const [viewingQuestionnaire, setViewingQuestionnaire] = useState<KYCSubmission | null>(null)
+  const [viewingProfileSnapshot, setViewingProfileSnapshot] = useState<KYCSubmission | null>(null)
 
   const handlePreview = (submission: KYCSubmission) => {
     if (!submission.document) return
@@ -349,7 +351,7 @@ export function KYCReviewClient() {
     switch (status) {
       case 'approved': return <Badge className="bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 font-medium"><CheckCircle className="w-3 h-3 mr-1" />Approved</Badge>
       case 'rejected': return <Badge className="bg-rose-500/15 text-rose-500 border border-rose-500/30 font-medium"><XCircle className="w-3 h-3 mr-1" />Rejected</Badge>
-      case 'under_review': return <Badge className="bg-blue-500/15 text-blue-400 border border-blue-500/30 font-medium"><Clock className="w-3 h-3 mr-1" />Under Review</Badge>
+      case 'info_requested': return <Badge className="bg-blue-500/15 text-blue-400 border border-blue-500/30 font-medium"><MessageSquare className="w-3 h-3 mr-1" />Info Requested</Badge>
       case 'pending': return <Badge className="bg-amber-500/15 text-amber-500 border border-amber-500/30 font-medium"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
       case 'draft': return <Badge variant="outline" className="text-muted-foreground font-medium"><Clock className="w-3 h-3 mr-1" />Draft</Badge>
       case 'expired': return <Badge variant="outline" className="text-muted-foreground font-medium"><AlertCircle className="w-3 h-3 mr-1" />Expired</Badge>
@@ -374,8 +376,8 @@ export function KYCReviewClient() {
     )
   })
 
-  const queueCount = globalStats ? globalStats.pending + globalStats.under_review : null
-  const historyCount = globalStats ? globalStats.approved + globalStats.rejected + globalStats.expired : null
+  const queueCount = globalStats ? globalStats.pending : null
+  const historyCount = globalStats ? globalStats.approved + globalStats.rejected + globalStats.info_requested + globalStats.expired : null
 
   // ─── Shared cell components ─────────────────────────────────────────────────
 
@@ -433,10 +435,16 @@ export function KYCReviewClient() {
             </span>
           </button>
         ) : (submission.document_type === 'personal_info' || submission.document_type === 'entity_info') && submission.metadata?.review_snapshot ? (
-          <div className="flex items-center gap-1">
+          <button
+            onClick={() => setViewingProfileSnapshot(submission)}
+            className="flex items-center gap-1 group text-left"
+            title="Click to view profile snapshot"
+          >
             <ClipboardList className="w-3 h-3 text-indigo-400 flex-shrink-0" />
-            <span className="text-xs text-indigo-400">Profile snapshot</span>
-          </div>
+            <span className="text-xs text-indigo-400 group-hover:underline underline-offset-2">
+              View profile snapshot
+            </span>
+          </button>
         ) : (
           <span className="text-xs text-muted-foreground/40">No attachment</span>
         )}
@@ -579,9 +587,6 @@ export function KYCReviewClient() {
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-500 text-sm font-medium border border-amber-500/20">
               <Clock className="w-3.5 h-3.5" />{globalStats.pending} Pending
             </span>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 text-sm font-medium border border-blue-500/20">
-              <Clock className="w-3.5 h-3.5" />{globalStats.under_review} Under Review
-            </span>
             <div className="w-px h-5 bg-border" />
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-500 text-sm font-medium border border-emerald-500/20">
               <CheckCircle className="w-3.5 h-3.5" />{globalStats.approved} Approved
@@ -589,6 +594,11 @@ export function KYCReviewClient() {
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-rose-500/10 text-rose-500 text-sm font-medium border border-rose-500/20">
               <XCircle className="w-3.5 h-3.5" />{globalStats.rejected} Rejected
             </span>
+            {globalStats.info_requested > 0 && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 text-sm font-medium border border-blue-500/20">
+                <MessageSquare className="w-3.5 h-3.5" />{globalStats.info_requested} Info Requested
+              </span>
+            )}
             {globalStats.expired > 0 && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted text-muted-foreground text-sm font-medium border border-border">
                 <AlertCircle className="w-3.5 h-3.5" />{globalStats.expired} Expired
@@ -746,6 +756,7 @@ export function KYCReviewClient() {
                   <SelectItem value="all">All Completed</SelectItem>
                   <SelectItem value="approved">Approved</SelectItem>
                   <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="info_requested">Info Requested</SelectItem>
                   <SelectItem value="expired">Expired</SelectItem>
                   <SelectItem value="draft">Draft</SelectItem>
                 </SelectContent>
@@ -789,11 +800,11 @@ export function KYCReviewClient() {
                       <TableCell className="py-3">
                         <div className="space-y-1">
                           {getStatusBadge(submission.status)}
-                          {submission.status === 'rejected' && submission.rejection_reason && (
+                          {(submission.status === 'rejected' || submission.status === 'info_requested') && submission.rejection_reason && (
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <p className="text-xs text-rose-400 max-w-[200px] truncate cursor-help mt-1">
+                                  <p className={`text-xs max-w-[200px] truncate cursor-help mt-1 ${submission.status === 'info_requested' ? 'text-blue-400' : 'text-rose-400'}`}>
                                     {submission.rejection_reason}
                                   </p>
                                 </TooltipTrigger>
@@ -916,6 +927,24 @@ export function KYCReviewClient() {
           investorName={viewingQuestionnaire.investor?.display_name || viewingQuestionnaire.investor?.legal_name || 'Unknown'}
           submittedAt={viewingQuestionnaire.submitted_at}
           metadata={viewingQuestionnaire.metadata || {}}
+        />
+      )}
+
+      {/* ── Profile Snapshot Viewer ──────────────────────────────────────────── */}
+      {viewingProfileSnapshot && (
+        <ProfileSnapshotViewer
+          open={!!viewingProfileSnapshot}
+          onClose={() => setViewingProfileSnapshot(null)}
+          entityName={
+            viewingProfileSnapshot.counterparty_entity?.legal_name ||
+            viewingProfileSnapshot.investor?.display_name ||
+            viewingProfileSnapshot.investor?.legal_name ||
+            'Unknown'
+          }
+          submittedAt={viewingProfileSnapshot.submitted_at}
+          documentType={viewingProfileSnapshot.document_type as 'personal_info' | 'entity_info'}
+          snapshot={viewingProfileSnapshot.metadata?.review_snapshot || {}}
+          memberName={viewingProfileSnapshot.investor_member?.full_name}
         />
       )}
 

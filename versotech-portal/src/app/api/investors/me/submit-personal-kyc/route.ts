@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
+import { checkAndUpdateEntityKYCStatus } from '@/lib/kyc/check-entity-kyc-status'
+import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
 
 /**
  * POST /api/investors/me/submit-personal-kyc
@@ -43,8 +45,6 @@ export async function POST() {
         nationality,
         residential_street,
         residential_country,
-        id_type,
-        id_number,
         email,
         phone,
         account_approval_status
@@ -70,8 +70,6 @@ export async function POST() {
       { field: 'nationality', label: 'Nationality' },
       { field: 'residential_street', label: 'Residential Address' },
       { field: 'residential_country', label: 'Country of Residence' },
-      { field: 'id_type', label: 'ID Document Type' },
-      { field: 'id_number', label: 'ID Document Number' },
     ]
 
     const missingFields = requiredFields.filter(({ field }) => !investor[field])
@@ -91,7 +89,7 @@ export async function POST() {
       .eq('investor_id', investor.id)
       .eq('document_type', 'personal_info')
       .is('investor_member_id', null)
-      .in('status', ['pending', 'under_review'])
+      .in('status', ['pending', 'under_review', 'approved'])
       .limit(1)
       .maybeSingle()
 
@@ -126,15 +124,22 @@ export async function POST() {
       )
     }
 
+    const assignedTo = await resolveKycSubmissionAssignee(serviceSupabase)
+    const nowIso = new Date().toISOString()
+
     const { data: submission, error: submissionError } = await serviceSupabase
       .from('kyc_submissions')
       .insert({
         investor_id: investor.id,
         document_type: 'personal_info',
-        status: 'pending',
-        submitted_at: new Date().toISOString(),
+        status: 'approved',
+        submitted_at: nowIso,
+        reviewed_at: nowIso,
+        reviewed_by: assignedTo,
+        assigned_to: assignedTo,
         metadata: {
           submission_type: 'personal_kyc_individual',
+          auto_approved: true,
           entity_type: 'investor',
           entity_name: investor.display_name || investor.legal_name,
           submitted_by_user_id: user.id,
@@ -145,8 +150,6 @@ export async function POST() {
             nationality: investor.nationality,
             residential_street: investor.residential_street,
             residential_country: investor.residential_country,
-            id_type: investor.id_type,
-            id_number: investor.id_number,
             email: investor.email,
             phone: investor.phone,
           }
@@ -193,10 +196,16 @@ export async function POST() {
       .update(investorUpdateData)
       .eq('id', investor.id)
 
+    await checkAndUpdateEntityKYCStatus(
+      serviceSupabase as any,
+      'investor',
+      investor.id
+    )
+
     return NextResponse.json({
       success: true,
       submission_id: submission.id,
-      message: 'Personal KYC submitted for review',
+      message: 'Personal KYC submitted and approved',
     })
   } catch (error) {
     console.error('[submit-personal-kyc] Internal error:', error)

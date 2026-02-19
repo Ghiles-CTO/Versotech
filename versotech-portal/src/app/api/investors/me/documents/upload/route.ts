@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { createClient } from '@/lib/supabase/server'
 import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
+import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
+import {
+  buildUploadDocumentMetadata,
+  validateUploadDocumentMetadata,
+} from '@/lib/kyc/upload-document-metadata'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const ALLOWED_MIME_TYPES = [
@@ -55,7 +60,12 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File
     const documentType = formData.get('documentType') as string
     const customLabel = formData.get('customLabel') as string | null // User-defined label for custom document types
-    const expiryDate = formData.get('expiryDate') as string | null
+    const legacyExpiryDate = formData.get('expiryDate') as string | null
+    const documentNumber = formData.get('documentNumber') as string | null
+    const documentIssueDate = formData.get('documentIssueDate') as string | null
+    const documentExpiryDate = (formData.get('documentExpiryDate') as string | null) || legacyExpiryDate
+    const documentIssuingCountry = formData.get('documentIssuingCountry') as string | null
+    const documentDate = formData.get('documentDate') as string | null
     const notes = formData.get('notes') as string | null
     const taskId = formData.get('taskId') as string | null
     const entityId = formData.get('entityId') as string | null // For counterparty entity KYC
@@ -75,6 +85,31 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    const metadataValidationError = validateUploadDocumentMetadata(documentType, {
+      documentNumber,
+      documentIssueDate,
+      documentExpiryDate,
+      documentIssuingCountry,
+      documentDate,
+    })
+
+    if (metadataValidationError) {
+      return NextResponse.json(
+        { error: metadataValidationError },
+        { status: 400 }
+      )
+    }
+
+    const documentMetadata = buildUploadDocumentMetadata(documentType, {
+      documentNumber,
+      documentIssueDate,
+      documentExpiryDate,
+      documentIssuingCountry,
+      documentDate,
+    })
+
+    const assignedTo = await resolveKycSubmissionAssignee(serviceSupabase)
 
     // No validation on document type - users can specify any type
     // customLabel provides user-friendly display name for custom types
@@ -310,14 +345,19 @@ export async function POST(request: NextRequest) {
         status: 'pending',
         version: newVersion,
         previous_submission_id: previousSubmissionId,
-        expiry_date: expiryDate || null,
+        assigned_to: assignedTo,
+        document_date: documentMetadata.submission.document_date,
+        document_valid_from: documentMetadata.submission.document_valid_from,
+        document_valid_to: documentMetadata.submission.document_valid_to,
+        expiry_date: documentMetadata.submission.expiry_date,
         metadata: {
           file_size: file.size,
           mime_type: file.type,
           original_filename: file.name,
           notes: notes || null,
           is_reupload: !!latestSubmission,
-          entity_id: entityId || null
+          entity_id: entityId || null,
+          document_fields: documentMetadata.metadataFields,
         }
       })
       .select()

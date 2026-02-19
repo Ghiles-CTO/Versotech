@@ -18,6 +18,11 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { ENTITY_REQUIRED_DOCS } from '@/constants/kyc-document-types'
+import { isIdDocument, isProofOfAddress } from '@/lib/validation/document-validation'
+import {
+  DocumentMetadataDialog,
+  type UploadMetadataFields,
+} from '@/components/profile/document-metadata-dialog'
 
 interface Document {
   id: string
@@ -46,9 +51,15 @@ const REQUIRED_DOCUMENTS = ENTITY_REQUIRED_DOCS.map(doc => ({
   value: doc.value,
 }))
 
+const MEMBER_ID_DOCUMENT_TYPES = ['passport', 'national_id', 'drivers_license', 'residence_permit', 'other_government_id']
+
+const MEMBER_PROOF_OF_ADDRESS_TYPES = ['utility_bill', 'government_correspondence', 'other']
+
 const MEMBER_DOCUMENTS = [
   { label: 'Passport / Government ID', value: 'passport' },
   { label: 'Proof of Address (Utility Bill)', value: 'utility_bill' },
+  { label: 'Proof of Address (Government Correspondence)', value: 'government_correspondence' },
+  { label: 'Proof of Address (Other)', value: 'other' },
 ]
 
 interface IntroducerKYCDocumentsTabProps {
@@ -68,6 +79,12 @@ export function IntroducerKYCDocumentsTab({
   const [members, setMembers] = useState<IntroducerMember[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState<string | null>(null)
+  const [metadataDialogOpen, setMetadataDialogOpen] = useState(false)
+  const [pendingUpload, setPendingUpload] = useState<{
+    file: File
+    documentType: string
+    memberId?: string
+  } | null>(null)
   const currentKycStatus = kycStatus
   const isIndividualEntity = entityType === 'individual'
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
@@ -95,7 +112,12 @@ export function IntroducerKYCDocumentsTab({
     fetchDocuments()
   }, [fetchDocuments])
 
-  const handleUpload = async (file: File, documentType: string, memberId?: string) => {
+  const handleUpload = async (
+    file: File,
+    documentType: string,
+    memberId?: string,
+    metadata?: UploadMetadataFields
+  ) => {
     if (!introducerId) return
 
     const maxSize = 50 * 1024 * 1024
@@ -127,6 +149,11 @@ export function IntroducerKYCDocumentsTab({
       formData.append('file', file)
       formData.append('type', documentType)
       formData.append('name', file.name.replace(/\.[^/.]+$/, ''))
+      if (metadata?.documentNumber) formData.append('documentNumber', metadata.documentNumber)
+      if (metadata?.documentIssueDate) formData.append('documentIssueDate', metadata.documentIssueDate)
+      if (metadata?.documentExpiryDate) formData.append('documentExpiryDate', metadata.documentExpiryDate)
+      if (metadata?.documentIssuingCountry) formData.append('documentIssuingCountry', metadata.documentIssuingCountry)
+      if (metadata?.documentDate) formData.append('documentDate', metadata.documentDate)
       if (memberId && memberId !== 'entity-level') {
         formData.append('introducer_member_id', memberId)
       }
@@ -157,6 +184,15 @@ export function IntroducerKYCDocumentsTab({
         fileInputRefs.current[inputKey]!.value = ''
       }
     }
+  }
+
+  const queueUpload = (file: File, documentType: string, memberId?: string) => {
+    if (isIdDocument(documentType) || isProofOfAddress(documentType)) {
+      setPendingUpload({ file, documentType, memberId })
+      setMetadataDialogOpen(true)
+      return
+    }
+    void handleUpload(file, documentType, memberId)
   }
 
   const handleDownload = async (doc: Document) => {
@@ -200,14 +236,13 @@ export function IntroducerKYCDocumentsTab({
   }
 
   const uploadedCount = isIndividualEntity
-    ? new Set(
-        documents
-          .filter(d => MEMBER_DOCUMENTS.some(req => req.value === d.type))
-          .map(d => d.type)
-      ).size
+    ? (
+        (documents.some(d => MEMBER_ID_DOCUMENT_TYPES.includes(d.type)) ? 1 : 0) +
+        (documents.some(d => MEMBER_PROOF_OF_ADDRESS_TYPES.includes(d.type)) ? 1 : 0)
+      )
     : documents.filter(d => REQUIRED_DOCUMENTS.some(req => req.value === d.type)).length
 
-  const requiredCount = isIndividualEntity ? MEMBER_DOCUMENTS.length : REQUIRED_DOCUMENTS.length
+  const requiredCount = isIndividualEntity ? 2 : REQUIRED_DOCUMENTS.length
   const completionPercentage = requiredCount > 0
     ? Math.round((uploadedCount / requiredCount) * 100)
     : 0
@@ -356,7 +391,7 @@ export function IntroducerKYCDocumentsTab({
                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.txt"
                               onChange={(e) => {
                                 const file = e.target.files?.[0]
-                                if (file) handleUpload(file, docType.value)
+                                if (file) queueUpload(file, docType.value)
                               }}
                               disabled={isUploading}
                             />
@@ -465,7 +500,7 @@ export function IntroducerKYCDocumentsTab({
                                 accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.txt"
                                 onChange={(e) => {
                                   const file = e.target.files?.[0]
-                                  if (file) handleUpload(file, docType.value, member.id)
+                                  if (file) queueUpload(file, docType.value, member.id)
                                 }}
                                 disabled={isUploading}
                               />
@@ -513,6 +548,27 @@ export function IntroducerKYCDocumentsTab({
           </div>
         </CardContent>
       </Card>
+
+      <DocumentMetadataDialog
+        open={metadataDialogOpen}
+        onOpenChange={(open) => {
+          setMetadataDialogOpen(open)
+          if (!open) setPendingUpload(null)
+        }}
+        documentType={pendingUpload?.documentType || null}
+        isSubmitting={!!uploading}
+        onConfirm={(metadata) => {
+          if (!pendingUpload) return
+          setMetadataDialogOpen(false)
+          void handleUpload(
+            pendingUpload.file,
+            pendingUpload.documentType,
+            pendingUpload.memberId,
+            metadata
+          )
+          setPendingUpload(null)
+        }}
+      />
     </div>
   )
 }

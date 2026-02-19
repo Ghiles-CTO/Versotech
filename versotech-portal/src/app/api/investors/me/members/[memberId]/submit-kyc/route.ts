@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { checkAndUpdateEntityKYCStatus } from '@/lib/kyc/check-entity-kyc-status'
+import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
 
 /**
  * POST /api/investors/me/members/[memberId]/submit-kyc
  *
- * Submits a member's personal KYC for review.
- * Creates a kyc_submissions record and updates member kyc_status to 'submitted'.
+ * Submits a member's personal KYC.
+ * Creates an auto-approved personal_info submission and updates member kyc_status to 'approved'.
  */
 export async function POST(
   request: Request,
@@ -66,8 +68,6 @@ export async function POST(
       { field: 'nationality', label: 'Nationality' },
       { field: 'residential_street', label: 'Residential Address' },
       { field: 'residential_country', label: 'Country of Residence' },
-      { field: 'id_type', label: 'ID Document Type' },
-      { field: 'id_number', label: 'ID Document Number' },
     ]
 
     const missingFields = requiredFields.filter(
@@ -90,7 +90,7 @@ export async function POST(
       .eq('investor_id', member.investor_id)
       .eq('investor_member_id', member.id)
       .eq('document_type', 'personal_info')
-      .in('status', ['pending', 'under_review'])
+      .in('status', ['pending', 'under_review', 'approved'])
       .limit(1)
       .maybeSingle()
 
@@ -102,14 +102,16 @@ export async function POST(
     }
 
     const previousMemberStatus = member.kyc_status
+    const nowIso = new Date().toISOString()
     const { data: reserveTransition, error: reserveTransitionError } = await serviceSupabase
       .from('investor_members')
       .update({
-        kyc_status: 'submitted',
-        updated_at: new Date().toISOString(),
+        kyc_status: 'approved',
+        kyc_approved_at: nowIso,
+        updated_at: nowIso,
       })
       .eq('id', memberId)
-      .neq('kyc_status', 'submitted')
+      .neq('kyc_status', 'approved')
       .select('id')
       .maybeSingle()
 
@@ -123,10 +125,12 @@ export async function POST(
 
     if (!reserveTransition) {
       return NextResponse.json(
-        { error: 'Personal KYC already submitted for review' },
+        { error: 'Personal KYC already approved' },
         { status: 400 }
       )
     }
+
+    const assignedTo = await resolveKycSubmissionAssignee(serviceSupabase)
 
     // Create KYC submission record
     const { data: submission, error: submissionError } = await serviceSupabase
@@ -135,10 +139,14 @@ export async function POST(
         investor_id: member.investor_id,
         investor_member_id: member.id,
         document_type: 'personal_info',
-        status: 'pending',
-        submitted_at: new Date().toISOString(),
+        status: 'approved',
+        submitted_at: nowIso,
+        reviewed_at: nowIso,
+        reviewed_by: assignedTo,
+        assigned_to: assignedTo,
         metadata: {
           submission_type: 'personal_kyc',
+          auto_approved: true,
           member_name: member.full_name || `${member.first_name} ${member.last_name}`,
           submitted_by_user_id: user.id,
           review_snapshot: {
@@ -170,10 +178,11 @@ export async function POST(
         .from('investor_members')
         .update({
           kyc_status: previousMemberStatus || 'pending',
+          kyc_approved_at: null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', memberId)
-        .eq('kyc_status', 'submitted')
+        .eq('kyc_status', 'approved')
       return NextResponse.json(
         { error: 'Failed to create KYC submission' },
         { status: 500 }
@@ -200,10 +209,16 @@ export async function POST(
         .eq('id', member.investor_id)
     }
 
+    await checkAndUpdateEntityKYCStatus(
+      serviceSupabase as any,
+      'investor',
+      member.investor_id
+    )
+
     return NextResponse.json({
       success: true,
       submission_id: submission.id,
-      message: 'Personal KYC submitted for review'
+      message: 'Personal KYC submitted and approved'
     })
 
   } catch (error) {

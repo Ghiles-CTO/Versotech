@@ -37,6 +37,14 @@ import { Loader2, User, MapPin, FileText, IdCard, Calendar, Globe, Phone, Lucide
 import { CountrySelect, NationalitySelect } from '@/components/kyc/country-select'
 import { cn } from '@/lib/utils'
 
+// Clamp date input year to 4 digits max
+function clampDateYear(e: React.FormEvent<HTMLInputElement>) {
+  const input = e.currentTarget
+  if (input.value && input.value.length > 10) {
+    input.value = input.value.slice(0, 10)
+  }
+}
+
 // Entity types supported
 type EntityType = 'investor' | 'partner' | 'introducer' | 'lawyer' | 'arranger' | 'commercial_partner'
 
@@ -150,7 +158,7 @@ export function EntityKYCEditDialog({
   showPersonalInfo = true,
   showAddress = true,
   showTaxInfo = true,
-  showIdentification = true,
+  showIdentification = false,
 }: EntityKYCEditDialogProps) {
   const [isSaving, setIsSaving] = useState(false)
 
@@ -369,6 +377,7 @@ export function EntityKYCEditDialog({
                               type="date"
                               value={field.value || ''}
                               className="h-11"
+                              onInput={clampDateYear}
                               max={new Date(Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000)
                                 .toISOString()
                                 .split('T')[0]}
@@ -811,6 +820,7 @@ export function EntityKYCEditDialog({
                               type="date"
                               value={field.value || ''}
                               className="h-11"
+                              onInput={clampDateYear}
                               max={new Date().toISOString().split('T')[0]}
                             />
                           </FormControl>
@@ -830,6 +840,7 @@ export function EntityKYCEditDialog({
                               type="date"
                               value={field.value || ''}
                               className="h-11"
+                              onInput={clampDateYear}
                               min={new Date().toISOString().split('T')[0]}
                             />
                           </FormControl>
@@ -872,6 +883,7 @@ export function EntityKYCEditDialog({
                               type="date"
                               value={field.value || ''}
                               className="h-11"
+                              onInput={clampDateYear}
                               max={new Date().toISOString().split('T')[0]}
                             />
                           </FormControl>
@@ -894,6 +906,7 @@ export function EntityKYCEditDialog({
                               type="date"
                               value={field.value || ''}
                               className="h-11"
+                              onInput={clampDateYear}
                             />
                           </FormControl>
                           <FormDescription className="text-xs">

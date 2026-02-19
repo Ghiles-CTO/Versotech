@@ -582,9 +582,15 @@ export function ApprovalsPageClient({
                                     </div>
                                   )}
                                   {!approval.related_investor && !approval.related_deal && (
-                                    <div className="text-sm text-muted-foreground font-mono">
-                                      {approval.entity_id.substring(0, 8)}...
-                                    </div>
+                                    approval.entity_metadata?.entity_name ? (
+                                      <div className="text-sm text-muted-foreground">
+                                        {approval.entity_metadata.entity_name}
+                                      </div>
+                                    ) : (
+                                      <div className="text-sm text-muted-foreground font-mono">
+                                        {approval.entity_id.substring(0, 8)}...
+                                      </div>
+                                    )
                                   )}
                                   {(() => {
                                     // For deal_subscription approvals, use derived_amount

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ProfileImageUpload } from '@/components/profile/profile-image-upload'
 import { ProfileForm } from '@/components/profile/profile-form'
 import { PasswordChangeForm } from '@/components/profile/password-change-form'
@@ -40,6 +40,10 @@ import { MembersManagementTab } from '@/components/members/members-management-ta
 import { PersonalKYCSection, type MemberKYCData } from '@/components/profile/personal-kyc-section'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { IndividualKycDisplay, EntityKYCEditDialog, EntityAddressEditDialog, EntityInfoEditDialog } from '@/components/shared'
+import {
+  extractApprovedKycDocumentMetadata,
+  type ApprovedKycDocumentMetadata,
+} from '@/lib/kyc/approved-document-metadata'
 
 // Types for investor entity data passed from server
 type InvestorInfo = {
@@ -165,6 +169,7 @@ export function ProfilePageClient({
   const [showEntityInfoDialog, setShowEntityInfoDialog] = useState(false)
   const [isSubmittingEntityKyc, setIsSubmittingEntityKyc] = useState(false)
   const [isSubmittingPersonalKyc, setIsSubmittingPersonalKyc] = useState(false)
+  const [approvedDocMetadata, setApprovedDocMetadata] = useState<ApprovedKycDocumentMetadata | null>(null)
   const isStaff = variant === 'staff'
 
   // Submit entity KYC for review
@@ -189,7 +194,7 @@ export function ProfilePageClient({
         throw new Error(error.error || 'Failed to submit entity KYC')
       }
 
-      toast.success('Entity KYC submitted for review')
+      toast.success('Entity information submitted and approved')
       window.location.reload()
     } catch (error) {
       console.error('Error submitting entity KYC:', error)
@@ -213,7 +218,7 @@ export function ProfilePageClient({
         throw new Error(error.error || 'Failed to submit personal KYC')
       }
 
-      toast.success('Personal information submitted for review')
+      toast.success('Personal information submitted and approved')
       window.location.reload()
     } catch (error) {
       console.error('Error submitting personal KYC:', error)
@@ -227,6 +232,42 @@ export function ProfilePageClient({
   const hasInvestorEntity = !!investorInfo
   const isIndividual = investorInfo?.type === 'individual'
   const isEntity = hasInvestorEntity && investorInfo?.type !== 'individual'
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadApprovedDocumentMetadata = async () => {
+      if (!hasInvestorEntity || !isIndividual) {
+        setApprovedDocMetadata(null)
+        return
+      }
+
+      try {
+        const response = await fetch('/api/investors/me/kyc-submissions', { cache: 'no-store' })
+        if (!response.ok) return
+        const data = await response.json()
+        if (cancelled) return
+
+        const submissions = Array.isArray(data?.submissions) ? data.submissions : []
+        setApprovedDocMetadata(
+          extractApprovedKycDocumentMetadata(submissions, {
+            memberColumn: 'investor_member_id',
+            memberId: null,
+          })
+        )
+      } catch (error) {
+        if (!cancelled) {
+          console.error('[profile-page] Failed to load approved KYC document metadata:', error)
+        }
+      }
+    }
+
+    void loadApprovedDocumentMetadata()
+
+    return () => {
+      cancelled = true
+    }
+  }, [hasInvestorEntity, isIndividual])
 
   // Debug logging on client
   console.log('[ProfilePageClient] Props received:', {
@@ -689,6 +730,8 @@ export function ProfilePageClient({
               entityType="investor"
               entityId={investorInfo.id}
               onRefresh={() => window.location.reload()}
+              profileEmail={profile.email}
+              profileName={profile.display_name || profile.full_name}
             />
           )}
 
@@ -716,11 +759,12 @@ export function ProfilePageClient({
                   is_us_taxpayer: investorInfo.is_us_taxpayer,
                   us_taxpayer_id: investorInfo.us_taxpayer_id,
                   country_of_tax_residency: investorInfo.country_of_tax_residency,
-                  id_type: investorInfo.id_type,
-                  id_number: investorInfo.id_number,
-                  id_issue_date: investorInfo.id_issue_date,
-                  id_expiry_date: investorInfo.id_expiry_date,
-                  id_issuing_country: investorInfo.id_issuing_country,
+                  id_type: approvedDocMetadata?.id_type || investorInfo.id_type,
+                  id_number: approvedDocMetadata?.id_number || investorInfo.id_number,
+                  id_issue_date: approvedDocMetadata?.id_issue_date || investorInfo.id_issue_date,
+                  id_expiry_date: approvedDocMetadata?.id_expiry_date || investorInfo.id_expiry_date,
+                  id_issuing_country: approvedDocMetadata?.id_issuing_country || investorInfo.id_issuing_country,
+                  proof_of_address_date: approvedDocMetadata?.proof_of_address_date || investorInfo.proof_of_address_date || null,
                 }}
                 onEdit={() => setShowKycDialog(true)}
                 title="Personal KYC Information"
@@ -868,24 +912,20 @@ export function ProfilePageClient({
           entityId={investorInfo.id}
           entityName={investorInfo.display_name || investorInfo.legal_name}
           initialData={{
-            first_name: investorInfo.first_name ?? undefined,
+            first_name: investorInfo.first_name ?? (profile.display_name?.split(' ')[0]) ?? undefined,
             middle_name: investorInfo.middle_name ?? undefined,
-            last_name: investorInfo.last_name ?? undefined,
+            last_name: investorInfo.last_name ?? (profile.display_name?.split(' ').slice(1).join(' ')) ?? undefined,
             name_suffix: investorInfo.name_suffix ?? undefined,
             date_of_birth: investorInfo.date_of_birth ?? undefined,
             nationality: investorInfo.nationality ?? undefined,
             country_of_birth: investorInfo.country_of_birth ?? undefined,
+            email: investorInfo.email ?? profile.email ?? undefined,
             phone_mobile: investorInfo.phone_mobile ?? undefined,
             phone_office: investorInfo.phone_office ?? undefined,
             is_us_citizen: investorInfo.is_us_citizen === true,
             is_us_taxpayer: investorInfo.is_us_taxpayer === true,
             us_taxpayer_id: investorInfo.us_taxpayer_id ?? undefined,
             country_of_tax_residency: investorInfo.country_of_tax_residency ?? undefined,
-            id_type: investorInfo.id_type ?? undefined,
-            id_number: investorInfo.id_number ?? undefined,
-            id_issue_date: investorInfo.id_issue_date ?? undefined,
-            id_expiry_date: investorInfo.id_expiry_date ?? undefined,
-            id_issuing_country: investorInfo.id_issuing_country ?? undefined,
             residential_street: investorInfo.residential_street ?? undefined,
             residential_city: investorInfo.residential_city ?? undefined,
             residential_state: investorInfo.residential_state ?? undefined,

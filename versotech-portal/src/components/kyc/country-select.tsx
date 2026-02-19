@@ -266,7 +266,7 @@ export function CountrySelect({
           aria-expanded={open}
           aria-required={required}
           disabled={disabled}
-          className={cn('w-full justify-between font-normal', className)}
+          className={cn('w-full h-11 justify-between font-normal', className)}
         >
           {selectedCountry ? selectedCountry.name : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -277,7 +277,7 @@ export function CountrySelect({
           <CommandInput placeholder="Search country..." />
           <CommandList>
             <CommandEmpty>No country found.</CommandEmpty>
-            <CommandGroup className="max-h-[300px] overflow-auto">
+            <CommandGroup>
               {COUNTRIES.map((country) => (
                 <CommandItem
                   key={country.code}

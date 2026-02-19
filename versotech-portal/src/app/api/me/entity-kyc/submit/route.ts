@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
+import { checkAndUpdateEntityKYCStatus } from '@/lib/kyc/check-entity-kyc-status'
+import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
 
 // Entity type configurations
 const ENTITY_CONFIGS = {
@@ -161,7 +163,7 @@ export async function submitEntityKycForUser(params: {
 
     // Check if already submitted or approved
     if (entity.kyc_status === 'submitted') {
-      return { status: 400, payload: { error: 'Entity KYC already submitted for review' } }
+      return { status: 400, payload: { error: 'Entity KYC information already submitted' } }
     }
 
     if (entity.kyc_status === 'approved') {
@@ -245,13 +247,13 @@ export async function submitEntityKycForUser(params: {
       }
     }
 
-    // Prevent duplicate queue entries when an existing submission is still in review
+    // Prevent duplicate submissions while an entity_info record already exists in-flight or approved.
     const { data: existingPendingSubmission, error: existingPendingError } = await serviceSupabase
       .from('kyc_submissions')
       .select('id')
       .eq(config.submissionEntityIdColumn, entityId)
       .eq('document_type', 'entity_info')
-      .in('status', ['pending', 'under_review'])
+      .in('status', ['pending', 'under_review', 'approved'])
       .order('submitted_at', { ascending: false })
       .limit(1)
       .maybeSingle()
@@ -265,7 +267,7 @@ export async function submitEntityKycForUser(params: {
     }
 
     if (existingPendingSubmission) {
-      return { status: 400, payload: { error: 'Entity KYC already submitted for review' } }
+      return { status: 400, payload: { error: 'Entity KYC information already submitted' } }
     }
 
     // Validate required fields before status transition.
@@ -312,15 +314,22 @@ export async function submitEntityKycForUser(params: {
     }
 
     if (!reserveTransition) {
-      return { status: 400, payload: { error: 'Entity KYC already submitted for review' } }
+      return { status: 400, payload: { error: 'Entity KYC information already submitted' } }
     }
+
+    const assignedTo = await resolveKycSubmissionAssignee(serviceSupabase)
+    const nowIso = new Date().toISOString()
 
     const submissionData: Record<string, unknown> = {
       document_type: 'entity_info',
-      status: 'pending',
-      submitted_at: new Date().toISOString(),
+      status: 'approved',
+      submitted_at: nowIso,
+      reviewed_at: nowIso,
+      reviewed_by: assignedTo,
+      assigned_to: assignedTo,
       metadata: {
         submission_type: 'entity_kyc',
+        auto_approved: true,
         entity_type: entityType,
         entity_name: entity.legal_name || entity.name || entity.firm_name || entity.display_name,
         submitted_by_user_id: userId,
@@ -349,7 +358,7 @@ export async function submitEntityKycForUser(params: {
       if (isUniqueViolation) {
         return {
           status: 400,
-          payload: { error: 'Entity KYC already submitted for review' },
+          payload: { error: 'Entity KYC information already submitted' },
         }
       }
 
@@ -395,12 +404,18 @@ export async function submitEntityKycForUser(params: {
         .eq('id', entityId)
     }
 
+    await checkAndUpdateEntityKYCStatus(
+      serviceSupabase as any,
+      entityType as any,
+      entityId
+    )
+
     return {
       status: 200,
       payload: {
         success: true,
         submission_id: submission.id,
-        message: 'Entity KYC submitted for review',
+        message: 'Entity KYC submitted and approved',
       },
     }
   } catch (error) {

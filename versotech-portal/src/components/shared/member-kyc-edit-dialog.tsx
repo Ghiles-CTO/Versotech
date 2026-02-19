@@ -47,6 +47,14 @@ import {
 } from 'lucide-react'
 import { CountrySelect, NationalitySelect } from '@/components/kyc/country-select'
 
+// Clamp date input year to 4 digits max
+function clampDateYear(e: React.FormEvent<HTMLInputElement>) {
+  const input = e.currentTarget
+  if (input.value && input.value.length > 10) {
+    input.value = input.value.slice(0, 10)
+  }
+}
+
 // Entity types that have members
 type EntityType = 'investor' | 'partner' | 'introducer' | 'lawyer' | 'arranger' | 'commercial_partner'
 
@@ -135,6 +143,7 @@ interface MemberKYCEditDialogProps {
   apiEndpoint: string
   onSuccess?: () => void
   mode?: 'create' | 'edit'
+  showIdentification?: boolean
 }
 
 // Section wrapper component for visual separation
@@ -178,6 +187,7 @@ export function MemberKYCEditDialog({
   apiEndpoint,
   onSuccess,
   mode = 'edit',
+  showIdentification = false,
 }: MemberKYCEditDialogProps) {
   const [isSaving, setIsSaving] = useState(false)
 
@@ -510,6 +520,7 @@ export function MemberKYCEditDialog({
                             type="date"
                             value={field.value || ''}
                             className="h-11"
+                            onInput={clampDateYear}
                             max={new Date(Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000)
                               .toISOString()
                               .split('T')[0]}
@@ -877,169 +888,174 @@ export function MemberKYCEditDialog({
                 </div>
               </FormSection>
 
-              {/* Identification Document Section */}
-              <FormSection
-                icon={IdCard}
-                title="Identification Document"
-                description="Government-issued ID for verification"
-              >
-                {/* ID Type and Number */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="id_type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Document Type</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value || ''}
-                        >
+              {showIdentification && (
+                <FormSection
+                  icon={IdCard}
+                  title="Identification Document"
+                  description="Government-issued ID for verification"
+                >
+                  {/* ID Type and Number */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="id_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Document Type</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value || ''}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-11">
+                                <SelectValue placeholder="Select ID type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {ID_TYPES.map((type) => (
+                                <SelectItem key={type.value} value={type.value}>
+                                  {type.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="id_number"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Document Number</FormLabel>
                           <FormControl>
-                            <SelectTrigger className="h-11">
-                              <SelectValue placeholder="Select ID type" />
-                            </SelectTrigger>
+                            <Input
+                              {...field}
+                              value={field.value || ''}
+                              placeholder="Enter document number"
+                              className="h-11"
+                            />
                           </FormControl>
-                          <SelectContent>
-                            {ID_TYPES.map((type) => (
-                              <SelectItem key={type.value} value={type.value}>
-                                {type.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="id_number"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Document Number</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value || ''}
-                            placeholder="Enter document number"
-                            className="h-11"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                {/* Issue and Expiry Dates */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="id_issue_date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Issue Date</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="date"
-                            value={field.value || ''}
-                            className="h-11"
-                            max={new Date().toISOString().split('T')[0]}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="id_expiry_date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Expiry Date</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="date"
-                            value={field.value || ''}
-                            className="h-11"
-                            min={new Date().toISOString().split('T')[0]}
-                          />
-                        </FormControl>
-                        <FormDescription className="text-xs">
-                          Must be valid for at least 6 months
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="id_issuing_country"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Issuing Country</FormLabel>
-                        <FormControl>
-                          <CountrySelect
-                            value={field.value}
-                            onChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                  {/* Issue and Expiry Dates */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="id_issue_date"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Issue Date</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="date"
+                              value={field.value || ''}
+                              className="h-11"
+                              onInput={clampDateYear}
+                              max={new Date().toISOString().split('T')[0]}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="id_expiry_date"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Expiry Date</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="date"
+                              value={field.value || ''}
+                              className="h-11"
+                              onInput={clampDateYear}
+                              min={new Date().toISOString().split('T')[0]}
+                            />
+                          </FormControl>
+                          <FormDescription className="text-xs">
+                            Must be valid for at least 6 months
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="id_issuing_country"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Issuing Country</FormLabel>
+                          <FormControl>
+                            <CountrySelect
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                {/* Proof of Address Dates */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
-                  <FormField
-                    control={form.control}
-                    name="proof_of_address_date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Proof of Address Date</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="date"
-                            value={field.value || ''}
-                            className="h-11"
-                            max={new Date().toISOString().split('T')[0]}
-                          />
-                        </FormControl>
-                        <FormDescription className="text-xs">
-                          Date on utility bill or address proof
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="proof_of_address_expiry"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Proof of Address Expiry</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="date"
-                            value={field.value || ''}
-                            className="h-11"
-                          />
-                        </FormControl>
-                        <FormDescription className="text-xs">
-                          When this proof needs renewal (typically 3 months)
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </FormSection>
+                  {/* Proof of Address Dates */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
+                    <FormField
+                      control={form.control}
+                      name="proof_of_address_date"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Proof of Address Date</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="date"
+                              value={field.value || ''}
+                              className="h-11"
+                              onInput={clampDateYear}
+                              max={new Date().toISOString().split('T')[0]}
+                            />
+                          </FormControl>
+                          <FormDescription className="text-xs">
+                            Date on utility bill or address proof
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="proof_of_address_expiry"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Proof of Address Expiry</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="date"
+                              value={field.value || ''}
+                              className="h-11"
+                              onInput={clampDateYear}
+                            />
+                          </FormControl>
+                          <FormDescription className="text-xs">
+                            When this proof needs renewal (typically 3 months)
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </FormSection>
+              )}
             </div>
 
             {/* Fixed footer */}

@@ -15,6 +15,10 @@ import { KYCDocumentsTab } from '@/components/shared/kyc-documents-tab'
 import { BankDetailsTab } from '@/components/shared/bank-details-tab'
 import { IndividualKycDisplay, EntityKYCEditDialog } from '@/components/shared'
 import { StaffEntityMembersTab } from '@/components/staff/shared/staff-entity-members-tab'
+import {
+  extractApprovedKycDocumentMetadata,
+  type ApprovedKycDocumentMetadata,
+} from '@/lib/kyc/approved-document-metadata'
 
 type InvestorDetail = {
   id: string
@@ -101,11 +105,50 @@ interface InvestorDetailClientProps {
 export function InvestorDetailClient({ investor, capitalMetrics, metricsAvailable }: InvestorDetailClientProps) {
   const [tabsReady, setTabsReady] = useState(false)
   const [kycDialogOpen, setKycDialogOpen] = useState(false)
+  const [approvedDocMetadata, setApprovedDocMetadata] = useState<ApprovedKycDocumentMetadata | null>(null)
   const hasMetrics = metricsAvailable !== false
 
   useEffect(() => {
     setTabsReady(true)
   }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadApprovedDocumentMetadata = async () => {
+      if (investor.type !== 'individual') {
+        setApprovedDocMetadata(null)
+        return
+      }
+
+      try {
+        const response = await fetch(
+          `/api/staff/kyc-submissions?investor_id=${investor.id}&status=history&page=1&pageSize=200`,
+          { cache: 'no-store' }
+        )
+        if (!response.ok) return
+        const data = await response.json()
+        if (cancelled) return
+        const submissions = Array.isArray(data?.submissions) ? data.submissions : []
+        setApprovedDocMetadata(
+          extractApprovedKycDocumentMetadata(submissions, {
+            memberColumn: 'investor_member_id',
+            memberId: null,
+          })
+        )
+      } catch (error) {
+        if (!cancelled) {
+          console.error('[investor-detail] Failed to load approved KYC document metadata:', error)
+        }
+      }
+    }
+
+    void loadApprovedDocumentMetadata()
+
+    return () => {
+      cancelled = true
+    }
+  }, [investor.id, investor.type])
 
   return (
     <div className="space-y-6">
@@ -366,11 +409,12 @@ export function InvestorDetailClient({ investor, capitalMetrics, metricsAvailabl
                 is_us_taxpayer: investor.is_us_taxpayer,
                 us_taxpayer_id: investor.us_taxpayer_id,
                 country_of_tax_residency: investor.tax_residency,
-                id_type: investor.id_type,
-                id_number: investor.id_number,
-                id_issue_date: investor.id_issue_date,
-                id_expiry_date: investor.id_expiry_date,
-                id_issuing_country: investor.id_issuing_country,
+                id_type: approvedDocMetadata?.id_type || investor.id_type,
+                id_number: approvedDocMetadata?.id_number || investor.id_number,
+                id_issue_date: approvedDocMetadata?.id_issue_date || investor.id_issue_date,
+                id_expiry_date: approvedDocMetadata?.id_expiry_date || investor.id_expiry_date,
+                id_issuing_country: approvedDocMetadata?.id_issuing_country || investor.id_issuing_country,
+                proof_of_address_date: approvedDocMetadata?.proof_of_address_date || investor.proof_of_address_date || null,
               }}
               showEditButton={true}
               onEdit={() => setKycDialogOpen(true)}
@@ -461,11 +505,6 @@ export function InvestorDetailClient({ investor, capitalMetrics, metricsAvailabl
             is_us_taxpayer: investor.is_us_taxpayer ?? undefined,
             us_taxpayer_id: investor.us_taxpayer_id ?? undefined,
             country_of_tax_residency: investor.tax_residency ?? undefined,
-            id_type: investor.id_type ?? undefined,
-            id_number: investor.id_number ?? undefined,
-            id_issue_date: investor.id_issue_date ?? undefined,
-            id_expiry_date: investor.id_expiry_date ?? undefined,
-            id_issuing_country: investor.id_issuing_country ?? undefined,
           }}
           onSuccess={() => window.location.reload()}
         />
