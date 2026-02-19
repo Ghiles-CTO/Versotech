@@ -45,10 +45,10 @@
     }
 
     .verso-logo {
-      font-family: 'League Spartan', Arial, sans-serif;
-      font-size: 22pt;
+      font-family: 'League Spartan', 'Arial Black', sans-serif;
+      font-size: 28pt;
       font-weight: 700;
-      letter-spacing: 8px;
+      letter-spacing: 0.15em;
       text-align: center;
       margin: 0;
     }
@@ -173,23 +173,25 @@
       vertical-align: middle;
     }
 
-    .page-footer {
+    .running-footer {
+      position: fixed;
+      bottom: 0.3cm;
+      left: 2cm;
+      right: 2cm;
+      border-top: 1px solid #ccc;
+      padding-top: 4px;
       text-align: center;
-      margin-top: 0.5cm;
-      padding-top: 0.3cm;
+      font-size: 7.4pt;
+      color: #333;
     }
 
-    .page-number {
-      font-weight: bold;
-      font-size: 10pt;
-      margin-bottom: 3px;
-    }
-
-    .verso-footer {
-      font-family: 'League Spartan', Arial, sans-serif;
-      font-weight: 700;
-      font-size: 11pt;
-      letter-spacing: 3px;
+    .footer-logo {
+      font-family: 'League Spartan', 'Arial Black', sans-serif;
+      font-weight: 900;
+      font-size: 9pt;
+      letter-spacing: 0.15em;
+      color: #000;
+      text-transform: uppercase;
     }
 
     /* Page breaks - applied to content sections */
@@ -265,7 +267,7 @@
       <td class="label-cell">City / Country:</td>
       <td>{{ $json.party_a_city_country }}</td>
     </tr>
-    <tr>
+    <tr style="display: {{ $json.is_entity_investor ? 'table-row' : 'none' }}">
       <td class="label-cell">Represented by:</td>
       <td>{{ $json.party_a_representative_name }}, {{ $json.party_a_representative_title }}</td>
     </tr>
@@ -292,10 +294,6 @@
 
   <p class="intro">This NDA-NDNC Agreement ("NDA-NDNC" or "Agreement") is by and between the Parties, herein identified, in regard to all information related the Project ("Project") and its investment ("Investment") here mentioned. Party A is the Receiving Party ("Receiving Party") and Party B is the Disclosing Party ("Disclosing Party").</p>
 
-  <div class="page-footer">
-    <div class="page-number">1</div>
-    <div class="verso-footer">VERSO</div>
-  </div>
 </div>
 
 <!-- ==================== PAGE 2+ (Clauses - flows naturally) ==================== -->
@@ -387,9 +385,11 @@
     </tr>
   </table>
 
-  <div class="page-footer">
-    <div class="verso-footer">VERSO</div>
-  </div>
+</div>
+
+<!-- Running footer: appears on every page via position:fixed -->
+<div class="running-footer">
+  <span class="footer-logo">VERSO</span>
 </div>
 
 </body>

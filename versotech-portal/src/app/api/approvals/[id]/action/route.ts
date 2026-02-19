@@ -766,7 +766,7 @@ async function handleEntityApproval(
                 member_id: null,
                 full_name: fallbackName,
                 email: fallbackEmail,
-                title: 'Investor'
+                title: null
               }]
               console.log('👤 [NDA] Individual investor - single signatory')
             }
@@ -823,10 +823,11 @@ async function handleEntityApproval(
                 party_a_registered_address: partyARegisteredAddress,
                 party_a_city_country: partyACityCountry,
                 party_a_representative_name: signatory.full_name,
-                party_a_representative_title: signatory.title || (isEntityInvestor ? 'Authorized Representative' : 'Investor'),
+                party_a_representative_title: signatory.title || (isEntityInvestor ? 'Authorized Representative' : ''),
+                is_entity_investor: isEntityInvestor,
 
-                // Party B (VERSO)
-                party_b_name: projectDescription,
+                // Party B (VERSO) - use vehicle name directly (it's the legal entity name)
+                party_b_name: vehicleName,
                 party_b_registered_address: vehicleAddress,
                 party_b_city_country: vehicleDomicile,
                 party_b_representative_name: managingPartnerName,
