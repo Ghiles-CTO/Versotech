@@ -282,7 +282,9 @@ export async function POST(
     }, { status: 400 })
   }
 
-  // Get subscription with investor details including user_id from join table
+  // Get subscription with investor details
+  // NOTE: do not require investor_users join here; signature workflow must still run
+  // for investors that have not been linked to user accounts yet.
   console.log('🔍 [READY-FOR-SIGNATURE] Fetching subscription...')
   const { data: subscription } = await serviceSupabase
     .from('subscriptions')
@@ -293,8 +295,7 @@ export async function POST(
         type,
         legal_name,
         display_name,
-        email,
-        investor_users!inner(user_id)
+        email
       ),
       vehicle:vehicles(id, name)
     `)
@@ -712,11 +713,11 @@ export async function POST(
       .eq('id', targetDocumentId)
 
     const now = new Date().toISOString()
+    // Always record the latest send attempt for operational visibility.
     await serviceSupabase
       .from('subscriptions')
       .update({ pack_sent_at: now })
       .eq('id', subscriptionId)
-      .is('pack_sent_at', null)
     await serviceSupabase
       .from('subscriptions')
       .update({ pack_generated_at: now })

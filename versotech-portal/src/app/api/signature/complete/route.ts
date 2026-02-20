@@ -4,6 +4,40 @@ import { resolveAgentIdForTask } from '@/lib/agents'
 import { buildExecutedDocumentName, formatCounterpartyName } from '@/lib/documents/executed-document-name'
 import crypto from 'crypto'
 
+function normalizeWebhookSignature(rawSignature: string): string | null {
+  const trimmed = rawSignature.trim()
+  if (!trimmed) return null
+
+  // Accept either plain hex or provider-style "sha256=<hex>" header value.
+  const value = trimmed.includes('=') ? trimmed.split('=').pop() || '' : trimmed
+  if (!/^[a-f0-9]{64}$/i.test(value)) return null
+
+  return value.toLowerCase()
+}
+
+function verifyWebhookSignature(
+  rawBody: string,
+  receivedSignature: string,
+  webhookSecret: string
+): boolean {
+  const normalized = normalizeWebhookSignature(receivedSignature)
+  if (!normalized) return false
+
+  const expectedSignature = crypto
+    .createHmac('sha256', webhookSecret)
+    .update(rawBody)
+    .digest('hex')
+
+  const receivedBuffer = Buffer.from(normalized, 'hex')
+  const expectedBuffer = Buffer.from(expectedSignature, 'hex')
+
+  if (receivedBuffer.length !== expectedBuffer.length) {
+    return false
+  }
+
+  return crypto.timingSafeEqual(receivedBuffer, expectedBuffer)
+}
+
 /**
  * Handle signature completion webhook
  * Supports both workflow-based signatures and Direct Subscribe flow signatures
@@ -22,23 +56,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized - no signature' }, { status: 401 })
   }
 
-  // Calculate expected signature using HMAC-SHA256
   const webhookSecret = process.env.ESIGN_WEBHOOK_SECRET
   if (!webhookSecret) {
     console.error('❌ ESIGN_WEBHOOK_SECRET not configured')
     return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
   }
 
-  const expectedSignature = crypto
-    .createHmac('sha256', webhookSecret)
-    .update(rawBody)
-    .digest('hex')
-
-  // Compare signatures (constant-time comparison to prevent timing attacks)
-  const signatureValid = crypto.timingSafeEqual(
-    Buffer.from(receivedSignature),
-    Buffer.from(expectedSignature)
-  )
+  // Compare signatures (constant-time comparison after safe normalization/length check)
+  const signatureValid = verifyWebhookSignature(rawBody, receivedSignature, webhookSecret)
 
   if (!signatureValid) {
     console.error('❌ Invalid webhook signature')
