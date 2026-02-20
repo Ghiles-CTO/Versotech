@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Form,
@@ -33,9 +32,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { Loader2, User, MapPin, FileText, IdCard, Calendar, Globe, Phone, LucideIcon } from 'lucide-react'
+import { Loader2, User, MapPin, FileText, IdCard, LucideIcon } from 'lucide-react'
 import { CountrySelect, NationalitySelect } from '@/components/kyc/country-select'
-import { cn } from '@/lib/utils'
 
 // Clamp date input year to 4 digits max
 function clampDateYear(e: React.FormEvent<HTMLInputElement>) {
@@ -87,7 +85,6 @@ const individualKycEditSchema = z.object({
 
   // Proof of Address Document Dates
   proof_of_address_date: z.string().optional().nullable(),
-  proof_of_address_expiry: z.string().optional().nullable(),
 })
 
 type IndividualKycEditForm = z.infer<typeof individualKycEditSchema>
@@ -116,12 +113,11 @@ interface EntityKYCEditDialogProps {
   showIdentification?: boolean
 }
 
-// Section wrapper component for visual separation
+// Compact section header
 function FormSection({
   icon: Icon,
   title,
-  description,
-  children
+  children,
 }: {
   icon: LucideIcon
   title: string
@@ -129,19 +125,14 @@ function FormSection({
   children: React.ReactNode
 }) {
   return (
-    <div className="rounded-lg border bg-card p-6 space-y-5">
-      <div className="flex items-start gap-3 pb-4 border-b">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-          <Icon className="h-5 w-5 text-primary" />
-        </div>
-        <div>
-          <h3 className="font-semibold text-lg">{title}</h3>
-          {description && (
-            <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
-          )}
-        </div>
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Icon className="h-4 w-4 text-muted-foreground" />
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{title}</h3>
       </div>
-      {children}
+      <div className="space-y-3">
+        {children}
+      </div>
     </div>
   )
 }
@@ -193,7 +184,6 @@ export function EntityKYCEditDialog({
       id_expiry_date: initialData?.id_expiry_date || '',
       id_issuing_country: initialData?.id_issuing_country || '',
       proof_of_address_date: initialData?.proof_of_address_date || '',
-      proof_of_address_expiry: initialData?.proof_of_address_expiry || '',
     },
   })
 
@@ -265,8 +255,8 @@ export function EntityKYCEditDialog({
                   title="Personal Information"
                   description="Your legal name and personal details"
                 >
-                  {/* Full Name Row */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                  {/* Name Row 1: First + Last */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="first_name"
@@ -278,13 +268,35 @@ export function EntityKYCEditDialog({
                               {...field}
                               value={field.value || ''}
                               placeholder="John"
-                              className="h-11"
+                              className="h-10"
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                    <FormField
+                      control={form.control}
+                      name="last_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Last Name *</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ''}
+                              placeholder="Smith"
+                              className="h-10"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Name Row 2: Middle + M.I. + Suffix */}
+                  <div className="grid grid-cols-3 sm:grid-cols-[2fr_1fr_1fr] gap-4">
                     <FormField
                       control={form.control}
                       name="middle_name"
@@ -296,7 +308,7 @@ export function EntityKYCEditDialog({
                               {...field}
                               value={field.value || ''}
                               placeholder="William"
-                              className="h-11"
+                              className="h-10"
                             />
                           </FormControl>
                           <FormMessage />
@@ -315,25 +327,7 @@ export function EntityKYCEditDialog({
                               value={field.value || ''}
                               placeholder="W"
                               maxLength={5}
-                              className="h-11"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="last_name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Last Name *</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              value={field.value || ''}
-                              placeholder="Smith"
-                              className="h-11"
+                              className="h-10"
                             />
                           </FormControl>
                           <FormMessage />
@@ -351,7 +345,7 @@ export function EntityKYCEditDialog({
                               {...field}
                               value={field.value || ''}
                               placeholder="Jr., III"
-                              className="h-11"
+                              className="h-10"
                             />
                           </FormControl>
                           <FormMessage />
@@ -361,22 +355,19 @@ export function EntityKYCEditDialog({
                   </div>
 
                   {/* Birth Info Row */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-1">
                     <FormField
                       control={form.control}
                       name="date_of_birth"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                            Date of Birth
-                          </FormLabel>
+                          <FormLabel>Date of Birth</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               type="date"
                               value={field.value || ''}
-                              className="h-11"
+                              className="h-10"
                               onInput={clampDateYear}
                               max={new Date(Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000)
                                 .toISOString()
@@ -392,10 +383,7 @@ export function EntityKYCEditDialog({
                       name="country_of_birth"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <Globe className="h-4 w-4 text-muted-foreground" />
-                            Country of Birth
-                          </FormLabel>
+                          <FormLabel>Country of Birth</FormLabel>
                           <FormControl>
                             <CountrySelect
                               value={field.value}
@@ -411,10 +399,7 @@ export function EntityKYCEditDialog({
                       name="nationality"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <Globe className="h-4 w-4 text-muted-foreground" />
-                            Nationality
-                          </FormLabel>
+                          <FormLabel>Nationality</FormLabel>
                           <FormControl>
                             <NationalitySelect
                               value={field.value}
@@ -428,7 +413,7 @@ export function EntityKYCEditDialog({
                   </div>
 
                   {/* Contact Info Row */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-1">
                     <FormField
                       control={form.control}
                       name="email"
@@ -441,7 +426,7 @@ export function EntityKYCEditDialog({
                               type="email"
                               value={field.value || ''}
                               placeholder="john@example.com"
-                              className="h-11"
+                              className="h-10"
                             />
                           </FormControl>
                           <FormMessage />
@@ -453,17 +438,14 @@ export function EntityKYCEditDialog({
                       name="phone_mobile"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <Phone className="h-4 w-4 text-muted-foreground" />
-                            Mobile Phone
-                          </FormLabel>
+                          <FormLabel>Mobile Phone</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               type="tel"
                               value={field.value || ''}
                               placeholder="+1 (555) 123-4567"
-                              className="h-11"
+                              className="h-10"
                             />
                           </FormControl>
                           <FormMessage />
@@ -475,17 +457,14 @@ export function EntityKYCEditDialog({
                       name="phone_office"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <Phone className="h-4 w-4 text-muted-foreground" />
-                            Office Phone
-                          </FormLabel>
+                          <FormLabel>Office Phone</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               type="tel"
                               value={field.value || ''}
                               placeholder="+1 (555) 987-6543"
-                              className="h-11"
+                              className="h-10"
                             />
                           </FormControl>
                           <FormMessage />
@@ -503,60 +482,60 @@ export function EntityKYCEditDialog({
                   title="Residential Address"
                   description="Your current permanent residence"
                 >
-                  {/* Street Address */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="residential_street"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Street Address *</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              value={field.value || ''}
-                              placeholder="123 Main Street"
-                              className="h-11"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="residential_line_2"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Apartment / Suite / Unit</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              value={field.value || ''}
-                              placeholder="Apt 4B"
-                              className="h-11"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  {/* Street Address - full width */}
+                  <FormField
+                    control={form.control}
+                    name="residential_street"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Street Address</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ''}
+                            placeholder="123 Main Street"
+                            className="h-10"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                  {/* City, State, Postal */}
+                  {/* Apt/Suite - full width */}
+                  <FormField
+                    control={form.control}
+                    name="residential_line_2"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Apartment / Suite / Unit</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ''}
+                            placeholder="Apt 4B"
+                            className="h-10"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* City, State, Postal, Country */}
                   <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                     <FormField
                       control={form.control}
                       name="residential_city"
                       render={({ field }) => (
-                        <FormItem className="sm:col-span-2">
-                          <FormLabel>City *</FormLabel>
+                        <FormItem>
+                          <FormLabel>City</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               value={field.value || ''}
                               placeholder="New York"
-                              className="h-11"
+                              className="h-10"
                             />
                           </FormControl>
                           <FormMessage />
@@ -574,7 +553,7 @@ export function EntityKYCEditDialog({
                               {...field}
                               value={field.value || ''}
                               placeholder="NY"
-                              className="h-11"
+                              className="h-10"
                             />
                           </FormControl>
                           <FormMessage />
@@ -592,23 +571,19 @@ export function EntityKYCEditDialog({
                               {...field}
                               value={field.value || ''}
                               placeholder="10001"
-                              className="h-11"
+                              className="h-10"
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </div>
-
-                  {/* Country */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="residential_country"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Country *</FormLabel>
+                          <FormLabel>Country</FormLabel>
                           <FormControl>
                             <CountrySelect
                               value={field.value}
@@ -631,7 +606,7 @@ export function EntityKYCEditDialog({
                   description="Tax residency and compliance details"
                 >
                   {/* US Person Status */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="is_us_citizen"
@@ -682,7 +657,7 @@ export function EntityKYCEditDialog({
 
                   {/* US Taxpayer ID (conditional) */}
                   {watchIsUsTaxpayer && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
                         name="us_taxpayer_id"
@@ -694,7 +669,7 @@ export function EntityKYCEditDialog({
                                 {...field}
                                 value={field.value || ''}
                                 placeholder="XXX-XX-XXXX"
-                                className="h-11"
+                                className="h-10"
                               />
                             </FormControl>
                             <FormDescription className="text-xs">
@@ -736,7 +711,7 @@ export function EntityKYCEditDialog({
                               {...field}
                               value={field.value || ''}
                               placeholder="Enter your tax ID"
-                              className="h-11"
+                              className="h-10"
                             />
                           </FormControl>
                           <FormDescription className="text-xs">
@@ -764,13 +739,13 @@ export function EntityKYCEditDialog({
                       name="id_type"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Document Type *</FormLabel>
+                          <FormLabel>Document Type</FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             value={field.value || ''}
                           >
                             <FormControl>
-                              <SelectTrigger className="h-11">
+                              <SelectTrigger className="h-10">
                                 <SelectValue placeholder="Select ID type" />
                               </SelectTrigger>
                             </FormControl>
@@ -791,13 +766,13 @@ export function EntityKYCEditDialog({
                       name="id_number"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Document Number *</FormLabel>
+                          <FormLabel>Document Number</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               value={field.value || ''}
                               placeholder="Enter document number"
-                              className="h-11"
+                              className="h-10"
                             />
                           </FormControl>
                           <FormMessage />
@@ -819,7 +794,7 @@ export function EntityKYCEditDialog({
                               {...field}
                               type="date"
                               value={field.value || ''}
-                              className="h-11"
+                              className="h-10"
                               onInput={clampDateYear}
                               max={new Date().toISOString().split('T')[0]}
                             />
@@ -833,13 +808,13 @@ export function EntityKYCEditDialog({
                       name="id_expiry_date"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Expiry Date *</FormLabel>
+                          <FormLabel>Expiry Date</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               type="date"
                               value={field.value || ''}
-                              className="h-11"
+                              className="h-10"
                               onInput={clampDateYear}
                               min={new Date().toISOString().split('T')[0]}
                             />
@@ -856,7 +831,7 @@ export function EntityKYCEditDialog({
                       name="id_issuing_country"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Issuing Country *</FormLabel>
+                          <FormLabel>Issuing Country</FormLabel>
                           <FormControl>
                             <CountrySelect
                               value={field.value}
@@ -869,54 +844,30 @@ export function EntityKYCEditDialog({
                     />
                   </div>
 
-                  {/* Proof of Address Dates */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
-                    <FormField
-                      control={form.control}
-                      name="proof_of_address_date"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Proof of Address Date</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="date"
-                              value={field.value || ''}
-                              className="h-11"
-                              onInput={clampDateYear}
-                              max={new Date().toISOString().split('T')[0]}
-                            />
-                          </FormControl>
-                          <FormDescription className="text-xs">
-                            Date on utility bill or address proof
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="proof_of_address_expiry"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Proof of Address Expiry</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="date"
-                              value={field.value || ''}
-                              className="h-11"
-                              onInput={clampDateYear}
-                            />
-                          </FormControl>
-                          <FormDescription className="text-xs">
-                            When this proof needs renewal (typically 3 months)
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  {/* Proof of Address Date */}
+                  <FormField
+                    control={form.control}
+                    name="proof_of_address_date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Proof of Address Date</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="date"
+                            value={field.value || ''}
+                            className="h-10"
+                            onInput={clampDateYear}
+                            max={new Date().toISOString().split('T')[0]}
+                          />
+                        </FormControl>
+                        <FormDescription className="text-xs">
+                          Date on utility bill or address proof
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </FormSection>
               )}
             </div>

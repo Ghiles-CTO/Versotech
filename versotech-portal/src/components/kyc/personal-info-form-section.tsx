@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { User, Calendar, Globe, Phone } from 'lucide-react'
+import { User } from 'lucide-react'
 import { Control, FieldValues, Path } from 'react-hook-form'
 import {
   FormControl,
@@ -41,9 +41,9 @@ export function PersonalInfoFormSection<T extends FieldValues>({
   }
 
   const content = (
-    <div className="space-y-6">
-      {/* Name Fields - Row 1 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div className="space-y-3">
+      {/* Name Row 1: First + Last */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={control}
           name={fieldName('first_name')}
@@ -56,6 +56,7 @@ export function PersonalInfoFormSection<T extends FieldValues>({
                   value={field.value || ''}
                   placeholder="John"
                   disabled={disabled}
+                  className="h-10"
                 />
               </FormControl>
               <FormMessage />
@@ -63,6 +64,29 @@ export function PersonalInfoFormSection<T extends FieldValues>({
           )}
         />
 
+        <FormField
+          control={control}
+          name={fieldName('last_name')}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Last Name *</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  value={field.value || ''}
+                  placeholder="Smith"
+                  disabled={disabled}
+                  className="h-10"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      {/* Name Row 2: Middle + M.I. + Suffix */}
+      <div className="grid grid-cols-3 md:grid-cols-[2fr_1fr_1fr] gap-4">
         <FormField
           control={control}
           name={fieldName('middle_name')}
@@ -75,6 +99,7 @@ export function PersonalInfoFormSection<T extends FieldValues>({
                   value={field.value || ''}
                   placeholder="William"
                   disabled={disabled}
+                  className="h-10"
                 />
               </FormControl>
               <FormMessage />
@@ -95,6 +120,7 @@ export function PersonalInfoFormSection<T extends FieldValues>({
                   placeholder="W"
                   maxLength={5}
                   disabled={disabled}
+                  className="h-10"
                 />
               </FormControl>
               <FormMessage />
@@ -102,28 +128,6 @@ export function PersonalInfoFormSection<T extends FieldValues>({
           )}
         />
 
-        <FormField
-          control={control}
-          name={fieldName('last_name')}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Last Name *</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  value={field.value || ''}
-                  placeholder="Smith"
-                  disabled={disabled}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-
-      {/* Name Fields - Row 2 (Suffix) */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <FormField
           control={control}
           name={fieldName('name_suffix')}
@@ -134,8 +138,9 @@ export function PersonalInfoFormSection<T extends FieldValues>({
                 <Input
                   {...field}
                   value={field.value || ''}
-                  placeholder="Jr., III, etc."
+                  placeholder="Jr., III"
                   disabled={disabled}
+                  className="h-10"
                 />
               </FormControl>
               <FormMessage />
@@ -145,22 +150,20 @@ export function PersonalInfoFormSection<T extends FieldValues>({
       </div>
 
       {/* Birth Info */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-1">
         <FormField
           control={control}
           name={fieldName('date_of_birth')}
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Date of Birth *
-              </FormLabel>
+              <FormLabel>Date of Birth *</FormLabel>
               <FormControl>
                 <Input
                   {...field}
                   type="date"
                   value={field.value || ''}
                   disabled={disabled}
+                  className="h-10"
                   onInput={clampDateYear}
                   max={new Date(Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000)
                     .toISOString()
@@ -177,10 +180,7 @@ export function PersonalInfoFormSection<T extends FieldValues>({
           name={fieldName('country_of_birth')}
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="flex items-center gap-2">
-                <Globe className="h-4 w-4" />
-                Country of Birth *
-              </FormLabel>
+              <FormLabel>Country of Birth *</FormLabel>
               <FormControl>
                 <CountrySelect
                   value={field.value}
@@ -199,10 +199,7 @@ export function PersonalInfoFormSection<T extends FieldValues>({
           name={fieldName('nationality')}
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="flex items-center gap-2">
-                <Globe className="h-4 w-4" />
-                Nationality *
-              </FormLabel>
+              <FormLabel>Nationality *</FormLabel>
               <FormControl>
                 <NationalitySelect
                   value={field.value}
@@ -218,7 +215,7 @@ export function PersonalInfoFormSection<T extends FieldValues>({
       </div>
 
       {/* Contact Info */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-1">
         <FormField
           control={control}
           name={fieldName('email')}
@@ -232,6 +229,7 @@ export function PersonalInfoFormSection<T extends FieldValues>({
                   value={field.value || ''}
                   placeholder="john@example.com"
                   disabled={disabled}
+                  className="h-10"
                 />
               </FormControl>
               <FormMessage />
@@ -244,10 +242,7 @@ export function PersonalInfoFormSection<T extends FieldValues>({
           name={fieldName('phone_mobile')}
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                Mobile Phone *
-              </FormLabel>
+              <FormLabel>Mobile Phone *</FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -255,6 +250,7 @@ export function PersonalInfoFormSection<T extends FieldValues>({
                   value={field.value || ''}
                   placeholder="+1 (555) 123-4567"
                   disabled={disabled}
+                  className="h-10"
                 />
               </FormControl>
               <FormMessage />
@@ -267,10 +263,7 @@ export function PersonalInfoFormSection<T extends FieldValues>({
           name={fieldName('phone_office')}
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                Office Phone
-              </FormLabel>
+              <FormLabel>Office Phone</FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -278,6 +271,7 @@ export function PersonalInfoFormSection<T extends FieldValues>({
                   value={field.value || ''}
                   placeholder="+1 (555) 987-6543"
                   disabled={disabled}
+                  className="h-10"
                 />
               </FormControl>
               <FormMessage />
