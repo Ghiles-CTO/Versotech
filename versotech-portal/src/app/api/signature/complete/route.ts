@@ -437,16 +437,29 @@ async function handleNDACompletion(
         .eq('id', dealId)
         .single()
 
-      await supabase.from('investor_notifications').insert({
-        user_id: investorUsers[0].user_id,
-        investor_id: investorId,
-        title: 'Data room unlocked',
-        message: `Your NDA for ${deal?.name || 'the deal'} is complete. The data room is now available.`,
-        link: `/versotech_main/opportunities/${dealId}`,
-        metadata: { type: 'nda_complete', deal_id: dealId },
-        agent_id: agentId
-      })
-      console.log('✅ [NDA] Notification created')
+      const { data: existingNotification } = await supabase
+        .from('investor_notifications')
+        .select('id')
+        .eq('user_id', investorUsers[0].user_id)
+        .eq('investor_id', investorId)
+        .contains('metadata', { type: 'nda_complete', deal_id: dealId })
+        .limit(1)
+        .maybeSingle()
+
+      if (!existingNotification) {
+        await supabase.from('investor_notifications').insert({
+          user_id: investorUsers[0].user_id,
+          investor_id: investorId,
+          title: 'Data room unlocked',
+          message: `Your NDA for ${deal?.name || 'the deal'} is complete. The data room is now available.`,
+          link: `/versotech_main/opportunities/${dealId}`,
+          metadata: { type: 'nda_complete', deal_id: dealId },
+          agent_id: agentId
+        })
+        console.log('✅ [NDA] Notification created')
+      } else {
+        console.log('⏭️ [NDA] Data-room notification already exists, skipping duplicate')
+      }
     }
   } else {
     console.log('⏭️ [NDA] Direct Subscribe path - skipping data room access grant')
@@ -459,16 +472,29 @@ async function handleNDACompletion(
         .eq('id', dealId)
         .single()
 
-      await supabase.from('investor_notifications').insert({
-        user_id: investorUsers[0].user_id,
-        investor_id: investorId,
-        title: 'NDA signed',
-        message: `Your NDA for ${deal?.name || 'the deal'} is complete. Please complete the subscription pack signing.`,
-        link: `/versotech_main/opportunities/${dealId}`,
-        metadata: { type: 'nda_complete_direct_subscribe', deal_id: dealId },
-        agent_id: agentId
-      })
-      console.log('✅ [NDA] Direct Subscribe notification created')
+      const { data: existingNotification } = await supabase
+        .from('investor_notifications')
+        .select('id')
+        .eq('user_id', investorUsers[0].user_id)
+        .eq('investor_id', investorId)
+        .contains('metadata', { type: 'nda_complete_direct_subscribe', deal_id: dealId })
+        .limit(1)
+        .maybeSingle()
+
+      if (!existingNotification) {
+        await supabase.from('investor_notifications').insert({
+          user_id: investorUsers[0].user_id,
+          investor_id: investorId,
+          title: 'NDA signed',
+          message: `Your NDA for ${deal?.name || 'the deal'} is complete. Please complete the subscription pack signing.`,
+          link: `/versotech_main/opportunities/${dealId}`,
+          metadata: { type: 'nda_complete_direct_subscribe', deal_id: dealId },
+          agent_id: agentId
+        })
+        console.log('✅ [NDA] Direct Subscribe notification created')
+      } else {
+        console.log('⏭️ [NDA] Direct-subscribe notification already exists, skipping duplicate')
+      }
     }
   }
 
