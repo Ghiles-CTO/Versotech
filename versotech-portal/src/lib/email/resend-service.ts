@@ -541,7 +541,7 @@ export async function sendInvitationEmail(params: {
     <div class="content">
       <p>Hello ${fullName},</p>
       <p>Thank you for creating your account.</p>
-      <p>VERSO TECH is a secure platform that provides you with comprehensive access to your investment portfolio, performance analytics, and exclusive deal opportunities.</p>
+      <p>VERSOTECH is a secure platform that provides you with comprehensive access to your investment portfolio, performance analytics, and exclusive deal opportunities.</p>
       <p>Through your personalized dashboard, you'll be able to:</p>
       <ul style="margin: 0 0 20px 20px; padding: 0; color: #333333;">
         <li style="margin-bottom: 8px;">Monitor your portfolio performance in real-time</li>
