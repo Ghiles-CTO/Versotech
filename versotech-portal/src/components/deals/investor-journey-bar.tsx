@@ -38,7 +38,7 @@ interface InvestorJourneyBarProps {
   compact?: boolean
 }
 
-type SummaryKey = keyof JourneySummary | 'subscription_requested'
+type SummaryKey = keyof JourneySummary
 type StageStatus = 'completed' | 'current' | 'pending'
 
 interface StageDefinition {
@@ -47,13 +47,9 @@ interface StageDefinition {
   index: number
 }
 
-interface ExtendedSummary extends JourneySummary {
-  subscription_requested: string | null
-}
-
 const LINEAR_STAGES: StageDefinition[] = [
   { name: 'Viewed',                    key: 'viewed',                 index: 1 },
-  { name: 'Confirm Interest',          key: 'subscription_requested', index: 2 },
+  { name: 'Confirm Interest',          key: 'interest_confirmed',     index: 2 },
   { name: 'Subscription Pack Signed',  key: 'signed',                 index: 3 },
   { name: 'Funded',                    key: 'funded',                 index: 4 },
   { name: 'Completed',                 key: 'active',                 index: 5 },
@@ -72,7 +68,6 @@ function formatDate(dateString: string | null): string {
 export function InvestorJourneyBar({
   stages,
   summary,
-  subscriptionSubmittedAt,
   className,
   compact = false,
 }: InvestorJourneyBarProps) {
@@ -93,22 +88,10 @@ export function InvestorJourneyBar({
     signed: null, funded: null, active: null,
   })
 
-  const extendedSummary: ExtendedSummary = {
-    ...effectiveSummary,
-    subscription_requested:
-      subscriptionSubmittedAt ||
-      effectiveSummary.pack_generated ||
-      effectiveSummary.pack_sent ||
-      effectiveSummary.signed ||
-      effectiveSummary.funded ||
-      effectiveSummary.active ||
-      null,
-  }
-
   // Determine which step is "current" (first not-yet-completed step)
   let lastCompleted = -1
   LINEAR_STAGES.forEach((stage, idx) => {
-    if (extendedSummary[stage.key]) lastCompleted = idx
+    if (effectiveSummary[stage.key]) lastCompleted = idx
   })
   const currentIndex =
     lastCompleted === -1 ? 0
@@ -116,7 +99,7 @@ export function InvestorJourneyBar({
     : lastCompleted + 1
 
   const getStatus = (stage: StageDefinition, idx: number): StageStatus => {
-    if (extendedSummary[stage.key]) return 'completed'
+    if (effectiveSummary[stage.key]) return 'completed'
     if (lastCompleted > idx) return 'completed' // a later step is done, so treat this as done too
     if (idx === currentIndex) return 'current'
     return 'pending'
@@ -129,8 +112,8 @@ export function InvestorJourneyBar({
           {LINEAR_STAGES.map((stage, idx) => {
             const isLast = idx === LINEAR_STAGES.length - 1
             const status = getStatus(stage, idx)
-            const completedAt = extendedSummary[stage.key]
-            const prevCompleted = idx > 0 && !!extendedSummary[LINEAR_STAGES[idx - 1].key]
+            const completedAt = effectiveSummary[stage.key]
+            const prevCompleted = idx > 0 && !!effectiveSummary[LINEAR_STAGES[idx - 1].key]
 
             return (
               <div key={stage.key} className={cn('flex items-start', !isLast && 'flex-1')}>

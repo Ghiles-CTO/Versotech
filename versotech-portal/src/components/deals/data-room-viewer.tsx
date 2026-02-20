@@ -266,14 +266,9 @@ export function DataRoomViewer({
       <Card className="border-amber-200 bg-amber-50 dark:bg-amber-900/20">
         <CardContent className="py-8 text-center">
           <Lock className="h-12 w-12 mx-auto text-amber-500 mb-4" />
-          <h3 className="text-lg font-semibold text-amber-800 dark:text-amber-200 mb-2">
+          <h3 className="text-lg font-semibold text-amber-800 dark:text-amber-200 mb-4">
             Data Room Access Required
           </h3>
-          <p className="text-amber-700 dark:text-amber-300 mb-4 max-w-md mx-auto">
-            {requiresNda
-              ? 'Sign the NDA to unlock access to the full data room with deal documents, financials, and more.'
-              : 'Express interest in this deal to unlock access to the data room.'}
-          </p>
           {onRequestAccess && (
             <Button onClick={onRequestAccess} className="bg-amber-600 hover:bg-amber-700">
               {requiresNda ? 'Sign NDA to Unlock' : 'Request Access'}

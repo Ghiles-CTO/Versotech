@@ -439,6 +439,14 @@ export default async function OpportunitiesPage() {
   let investorInterests: DealInterest[] = []
   let ndaAccessRecords: DataRoomAccess[] = []
   let subscriptionRecords: SubscriptionSubmission[] = []
+  const subscriptionProgressMap = new Map<string, {
+    deal_id: string
+    pack_generated_at: string | null
+    pack_sent_at: string | null
+    signed_at: string | null
+    funded_at: string | null
+    activated_at: string | null
+  }>()
 
   if (dealIds.length > 0) {
     const { data: feeStructures } = await serviceSupabase
@@ -553,6 +561,71 @@ export default async function OpportunitiesPage() {
         .order('submitted_at', { ascending: false })
 
       subscriptionRecords = subscriptionData ?? []
+
+      // Also fetch subscription progress timestamps from the subscriptions table
+      // These drive the 5-step progress bar (generated → sent → signed → funded → active)
+      const { data: subscriptionProgressData } = await serviceSupabase
+        .from('subscriptions')
+        .select(`
+          id,
+          deal_id,
+          investor_id,
+          pack_generated_at,
+          pack_sent_at,
+          signed_at,
+          funded_at,
+          activated_at
+        `)
+        .in('deal_id', dealIds)
+        .in('investor_id', investorIds)
+        .order('created_at', { ascending: false })
+
+      if (subscriptionProgressData && subscriptionProgressData.length > 0) {
+        // Check actual signature completion for subscriptions that have signed_at set
+        // subscriptions.signed_at can be set prematurely in multi-signatory flows
+        const subIdsWithSignedAt = subscriptionProgressData
+          .filter(sp => sp.signed_at && !sp.funded_at)
+          .map(sp => sp.id)
+
+        const sigCompletionMap = new Map<string, boolean>()
+        if (subIdsWithSignedAt.length > 0) {
+          const { data: sigRequests } = await serviceSupabase
+            .from('signature_requests')
+            .select('subscription_id, status')
+            .in('subscription_id', subIdsWithSignedAt)
+            .eq('document_type', 'subscription')
+
+          if (sigRequests) {
+            // Group by subscription_id and check if ALL are signed
+            const bySubId = new Map<string, string[]>()
+            for (const sr of sigRequests) {
+              const arr = bySubId.get(sr.subscription_id) || []
+              arr.push(sr.status)
+              bySubId.set(sr.subscription_id, arr)
+            }
+            for (const [subId, statuses] of bySubId) {
+              sigCompletionMap.set(subId, statuses.length > 0 && statuses.every(s => s === 'signed'))
+            }
+          }
+        }
+
+        for (const sp of subscriptionProgressData) {
+          if (!subscriptionProgressMap.has(sp.deal_id)) {
+            // Only trust signed_at if ALL signatories have actually signed
+            const allSigned = sp.signed_at
+              ? (sp.funded_at ? true : sigCompletionMap.get(sp.id) ?? true)
+              : false
+            subscriptionProgressMap.set(sp.deal_id, {
+              deal_id: sp.deal_id,
+              pack_generated_at: sp.pack_generated_at,
+              pack_sent_at: sp.pack_sent_at,
+              signed_at: allSigned ? sp.signed_at : null,
+              funded_at: sp.funded_at,
+              activated_at: sp.activated_at,
+            })
+          }
+        }
+      }
     }
   }
 
@@ -588,6 +661,7 @@ export default async function OpportunitiesPage() {
       interestByDeal={interestByDeal}
       accessByDeal={accessByDeal}
       subscriptionByDeal={subscriptionByDeal}
+      subscriptionProgressByDeal={subscriptionProgressMap}
       primaryInvestorId={primaryInvestorId}
       accountApprovalStatus={accountApprovalStatus}
       kycStatus={investorKycStatus}

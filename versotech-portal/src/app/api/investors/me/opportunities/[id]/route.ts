@@ -554,10 +554,13 @@ export async function GET(request: Request, { params }: RouteParams) {
     }
 
     // Calculate current journey stage
+    // Use actual document completion for signed stage, not subscription.signed_at
+    // which may be set prematurely in multi-signatory flows
+    const subPackComplete = subscriptionDocuments?.subscription_pack.status === 'complete'
     let currentStage = 0
     if (subscription?.activated_at) currentStage = 10
     else if (subscription?.funded_at) currentStage = 9
-    else if (subscription?.signed_at) currentStage = 8
+    else if (subPackComplete && subscription?.signed_at) currentStage = 8
     else if (subscription?.pack_sent_at) currentStage = 7
     else if (subscription?.pack_generated_at) currentStage = 6
     else if (membership?.data_room_granted_at) currentStage = 5
@@ -620,7 +623,7 @@ export async function GET(request: Request, { params }: RouteParams) {
           data_room_access: membership?.data_room_granted_at || null,
           pack_generated: subscription?.pack_generated_at || null,
           pack_sent: subscription?.pack_sent_at || null,
-          signed: subscription?.signed_at || null,
+          signed: (subscriptionDocuments?.subscription_pack.status === 'complete' ? subscription?.signed_at : null) || null,
           funded: subscription?.funded_at || null,
           active: subscription?.activated_at || null
         }
@@ -647,6 +650,8 @@ export async function GET(request: Request, { params }: RouteParams) {
       },
 
       // Subscription status
+      // Use actual document completion (all signatories signed) instead of trusting
+      // subscriptions.signed_at which may be set prematurely in multi-signatory flows
       subscription: subscription ? {
         id: subscription.id,
         status: subscription.status,
@@ -655,11 +660,13 @@ export async function GET(request: Request, { params }: RouteParams) {
         funded_amount: subscription.funded_amount,
         pack_generated_at: subscription.pack_generated_at,
         pack_sent_at: subscription.pack_sent_at,
-        signed_at: subscription.signed_at,
+        signed_at: subscriptionDocuments?.subscription_pack.status === 'complete'
+          ? subscription.signed_at
+          : null,
         funded_at: subscription.funded_at,
         activated_at: subscription.activated_at,
         created_at: subscription.created_at,
-        is_signed: !!subscription.signed_at,
+        is_signed: subscriptionDocuments?.subscription_pack.status === 'complete',
         is_funded: !!subscription.funded_at,
         is_active: !!subscription.activated_at,
         documents: subscriptionDocuments

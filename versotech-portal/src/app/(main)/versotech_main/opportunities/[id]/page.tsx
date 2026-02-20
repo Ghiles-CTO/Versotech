@@ -884,7 +884,6 @@ export default function OpportunityDetailPage() {
             <InvestorJourneyBar
               summary={journeySummary}
               currentStage={opportunity.journey.current_stage}
-              subscriptionSubmittedAt={subscriptionSubmittedAt}
             />
           </CardContent>
         </Card>

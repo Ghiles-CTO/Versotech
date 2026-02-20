@@ -261,12 +261,22 @@ interface SubscriptionSubmission {
   submitted_at: string
 }
 
+interface SubscriptionProgress {
+  deal_id: string
+  pack_generated_at: string | null
+  pack_sent_at: string | null
+  signed_at: string | null
+  funded_at: string | null
+  activated_at: string | null
+}
+
 interface InvestorDealsListClientProps {
   dealsData: InvestorDeal[]
   feeStructureMap: Map<string, FeeStructure>
   interestByDeal: Map<string, DealInterest>
   accessByDeal: Map<string, DataRoomAccess>
   subscriptionByDeal: Map<string, SubscriptionSubmission>
+  subscriptionProgressByDeal: Map<string, SubscriptionProgress>
   primaryInvestorId: string | null
   accountApprovalStatus?: string | null
   kycStatus?: string | null
@@ -530,6 +540,7 @@ export function InvestorDealsListClient({
   interestByDeal,
   accessByDeal,
   subscriptionByDeal,
+  subscriptionProgressByDeal,
   primaryInvestorId,
   accountApprovalStatus = null,
   kycStatus = null,
@@ -1290,7 +1301,7 @@ export function InvestorDealsListClient({
                 My Subscriptions
               </h2>
               <p className="text-sm text-muted-foreground">
-                Track your in-progress subscriptions (Stages 6-9)
+                Track your in-progress subscriptions
               </p>
             </div>
             <Badge variant="outline" className="text-amber-600 border-amber-300">
@@ -1301,6 +1312,17 @@ export function InvestorDealsListClient({
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {subscriptionsInProgress.map(({ deal, subscription, stageMeta }) => {
               const StageIcon = stageMeta.icon
+
+              // 5-step progress matching the detail page (subscription-status-card)
+              const progress = subscriptionProgressByDeal.get(deal.id)
+              const isActive = !!progress?.activated_at
+              const isFunded = isActive || !!progress?.funded_at
+              const isSigned = isFunded || !!progress?.signed_at
+              const isSent = isSigned || !!progress?.pack_sent_at
+              const isGenerated = isSent || !!progress?.pack_generated_at
+              const progressSteps = [isGenerated, isSent, isSigned, isFunded, isActive]
+              const completedSteps = progressSteps.filter(Boolean).length
+              const progressPercent = (completedSteps / progressSteps.length) * 100
 
               return (
                 <Card
@@ -1338,21 +1360,16 @@ export function InvestorDealsListClient({
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0 space-y-3">
-                    {/* Progress indicator */}
+                    {/* Progress indicator — synced with detail page (5 steps) */}
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                         <div
-                          className={cn(
-                            'h-full rounded-full transition-all',
-                            stageMeta.stage === 6 ? 'w-1/4 bg-blue-500' :
-                            stageMeta.stage === 7 ? 'w-2/4 bg-indigo-500' :
-                            stageMeta.stage === 8 ? 'w-3/4 bg-purple-500' :
-                            'w-full bg-emerald-500'
-                          )}
+                          className="h-full rounded-full transition-all bg-emerald-500"
+                          style={{ width: `${progressPercent}%` }}
                         />
                       </div>
                       <span className="text-xs text-muted-foreground">
-                        Stage {stageMeta.stage}/10
+                        {completedSteps}/{progressSteps.length}
                       </span>
                     </div>
 
