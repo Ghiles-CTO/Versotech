@@ -560,6 +560,22 @@ async function handleSubscriptionCompletion(
     return
   }
 
+  const { data: existingSubscriptionState } = await supabase
+    .from('subscriptions')
+    .select('id, status, signed_at')
+    .eq('id', subscriptionId)
+    .maybeSingle()
+
+  const alreadyCommitted = !!existingSubscriptionState &&
+    existingSubscriptionState.status === 'committed' &&
+    !!existingSubscriptionState.signed_at
+
+  if (alreadyCommitted) {
+    console.log('⏭️ [SUBSCRIPTION] Duplicate completion webhook - subscription already committed')
+    await checkAndPublishSubscriptionDocument(supabase, subscriptionId)
+    return
+  }
+
   const now = new Date().toISOString()
 
   // Update subscription with signed_at and status
