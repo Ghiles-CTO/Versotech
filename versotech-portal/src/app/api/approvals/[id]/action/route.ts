@@ -1034,173 +1034,179 @@ async function handleEntityApproval(
 
           let subscriptionId = existingSub?.id
 
-          if (!existingSub) {
-            // Fetch deal's default fee plan to auto-link
-            const { data: defaultFeePlan } = await supabase
-              .from('fee_plans')
-              .select('id')
-              .eq('deal_id', submission.deal_id)
-              .eq('is_default', true)
-              .eq('is_active', true)
-              .single()
+	          // Fetch deal's default fee plan to auto-link
+	          const { data: defaultFeePlan } = await supabase
+	            .from('fee_plans')
+	            .select('id')
+	            .eq('deal_id', submission.deal_id)
+	            .eq('is_default', true)
+	            .eq('is_active', true)
+	            .single()
 
-            // Fetch fee structure BEFORE creating subscription to copy fee fields
-            // This ensures the subscription record has the correct fee percentages for fee event calculation
-            // NOTE: Use order().limit(1) instead of .maybeSingle() because deals can have multiple published fee structures
-            const { data: feeStructureForSub } = await supabase
-              .from('deal_fee_structures')
-              .select('subscription_fee_percent, management_fee_percent, carried_interest_percent, price_per_share_text, price_per_share, cost_per_share, payment_deadline_days')
-              .eq('deal_id', submission.deal_id)
-              .eq('status', 'published')
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .single()
+	          // Fetch fee structure before insert/update to keep subscription fields in sync
+	          const { data: feeStructureForSub } = await supabase
+	            .from('deal_fee_structures')
+	            .select('subscription_fee_percent, management_fee_percent, carried_interest_percent, price_per_share_text, price_per_share, cost_per_share, payment_deadline_days')
+	            .eq('deal_id', submission.deal_id)
+	            .eq('status', 'published')
+	            .order('created_at', { ascending: false })
+	            .limit(1)
+	            .single()
 
-            // Get latest valuation for fallback price_per_share
-            const { data: latestValuation } = await supabase
-              .from('valuations')
-              .select('nav_per_unit')
-              .eq('vehicle_id', submission.deal.vehicle_id)
-              .order('as_of_date', { ascending: false })
-              .limit(1)
-              .maybeSingle()
+	          // Get latest valuation for fallback price_per_share
+	          const { data: latestValuation } = await supabase
+	            .from('valuations')
+	            .select('nav_per_unit')
+	            .eq('vehicle_id', submission.deal.vehicle_id)
+	            .order('as_of_date', { ascending: false })
+	            .limit(1)
+	            .maybeSingle()
 
-            // Get fee components for management_fee_frequency and performance threshold
-            let managementFeeFrequency: string | null = null
-            let performanceFeeThreshold: number | null = null
-            if (defaultFeePlan?.id) {
-              const { data: feeComponents } = await supabase
-                .from('fee_components')
-                .select('kind, frequency, hurdle_rate_bps')
-                .eq('fee_plan_id', defaultFeePlan.id)
-                .in('kind', ['management', 'performance'])
+	          // Get fee components for management_fee_frequency and performance threshold
+	          let managementFeeFrequency: string | null = null
+	          let performanceFeeThreshold: number | null = null
+	          if (defaultFeePlan?.id) {
+	            const { data: feeComponents } = await supabase
+	              .from('fee_components')
+	              .select('kind, frequency, hurdle_rate_bps')
+	              .eq('fee_plan_id', defaultFeePlan.id)
+	              .in('kind', ['management', 'performance'])
 
-              if (feeComponents) {
-                const mgmtComponent = feeComponents.find((c: { kind: string; frequency?: string | null; hurdle_rate_bps?: number | null }) => c.kind === 'management')
-                const perfComponent = feeComponents.find((c: { kind: string; frequency?: string | null; hurdle_rate_bps?: number | null }) => c.kind === 'performance')
-                managementFeeFrequency = mgmtComponent?.frequency || null
-                // Convert hurdle_rate_bps (basis points) to percentage
-                performanceFeeThreshold = perfComponent?.hurdle_rate_bps
-                  ? perfComponent.hurdle_rate_bps / 100
-                  : null
-              }
-            }
+	            if (feeComponents) {
+	              const mgmtComponent = feeComponents.find((c: { kind: string; frequency?: string | null; hurdle_rate_bps?: number | null }) => c.kind === 'management')
+	              const perfComponent = feeComponents.find((c: { kind: string; frequency?: string | null; hurdle_rate_bps?: number | null }) => c.kind === 'performance')
+	              managementFeeFrequency = mgmtComponent?.frequency || null
+	              // Convert hurdle_rate_bps (basis points) to percentage
+	              performanceFeeThreshold = perfComponent?.hurdle_rate_bps
+	                ? perfComponent.hurdle_rate_bps / 100
+	                : null
+	            }
+	          }
 
-            // Check for introduction (introducer linking)
-            const { data: introduction } = await supabase
-              .from('introductions')
-              .select('id, introducer_id')
-              .eq('prospect_investor_id', submission.investor_id)
-              .eq('deal_id', submission.deal_id)
-              .in('status', ['allocated', 'joined'])
-              .maybeSingle()
+	          // Check for introduction (introducer linking)
+	          const { data: introduction } = await supabase
+	            .from('introductions')
+	            .select('id, introducer_id')
+	            .eq('prospect_investor_id', submission.investor_id)
+	            .eq('deal_id', submission.deal_id)
+	            .in('status', ['allocated', 'joined'])
+	            .maybeSingle()
 
-            // Calculate price_per_share: use numeric field from fee structure, fallback to text parsing, then valuation
-            let pricePerShare: number | null = null
-            // Prefer numeric price_per_share field
-            if (feeStructureForSub?.price_per_share != null && feeStructureForSub.price_per_share > 0) {
-              pricePerShare = feeStructureForSub.price_per_share
-            }
-            // Fallback: parse from text field (for backwards compatibility)
-            else if (feeStructureForSub?.price_per_share_text) {
-              const parsed = parseFloat(feeStructureForSub.price_per_share_text.replace(/[^\d.]/g, ''))
-              if (!isNaN(parsed) && parsed > 0) {
-                pricePerShare = parsed
-              }
-            }
-            // Final fallback: use latest valuation NAV
-            if (pricePerShare === null && latestValuation?.nav_per_unit) {
-              pricePerShare = latestValuation.nav_per_unit
-            }
+	          // Calculate price_per_share: use numeric field from fee structure, fallback to text parsing, then valuation
+	          let pricePerShare: number | null = null
+	          if (feeStructureForSub?.price_per_share != null && feeStructureForSub.price_per_share > 0) {
+	            pricePerShare = feeStructureForSub.price_per_share
+	          } else if (feeStructureForSub?.price_per_share_text) {
+	            const parsed = parseFloat(feeStructureForSub.price_per_share_text.replace(/[^\d.]/g, ''))
+	            if (!isNaN(parsed) && parsed > 0) {
+	              pricePerShare = parsed
+	            }
+	          }
+	          if (pricePerShare === null && latestValuation?.nav_per_unit) {
+	            pricePerShare = latestValuation.nav_per_unit
+	          }
 
-            // Get cost_per_share from fee structure (CEO-set acquisition cost)
-            const costPerShare: number | null = feeStructureForSub?.cost_per_share ?? null
+	          const costPerShare: number | null = feeStructureForSub?.cost_per_share ?? null
+	          const numShares = pricePerShare ? Math.floor(amount / pricePerShare) : null
+	          const spreadPerShare = (pricePerShare !== null && costPerShare !== null && pricePerShare > 0 && costPerShare >= 0)
+	            ? pricePerShare - costPerShare
+	            : null
+	          const spreadFeeAmount = (spreadPerShare !== null && numShares !== null && numShares > 0)
+	            ? spreadPerShare * numShares
+	            : null
 
-            // Calculate num_shares (draft - staff can adjust later)
-            const numShares = pricePerShare ? Math.floor(amount / pricePerShare) : null
+	          // Normalize percent: if > 1, it's whole number format (2 = 2%), convert to decimal
+	          const feePercent = feeStructureForSub?.subscription_fee_percent || 0
+	          const normalizedPercent = feePercent > 1 ? feePercent / 100 : feePercent
+	          const subscriptionFeeAmount = normalizedPercent > 0
+	            ? amount * normalizedPercent
+	            : null
 
-            // Calculate spread (price - cost) and spread fee amount
-            // Use explicit null checks to handle zero values correctly
-            const spreadPerShare = (pricePerShare !== null && costPerShare !== null && pricePerShare > 0 && costPerShare >= 0)
-              ? pricePerShare - costPerShare
-              : null
-            const spreadFeeAmount = (spreadPerShare !== null && numShares !== null && numShares > 0)
-              ? spreadPerShare * numShares
-              : null
+	          const fundingDueAt = feeStructureForSub?.payment_deadline_days
+	            ? new Date(Date.now() + feeStructureForSub.payment_deadline_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+	            : null
 
-            // Pre-calculate subscription fee amount for fee events consistency
-            // Normalize percent: if > 1, it's whole number format (2 = 2%), convert to decimal
-            const feePercent = feeStructureForSub?.subscription_fee_percent || 0
-            const normalizedPercent = feePercent > 1 ? feePercent / 100 : feePercent
-            const subscriptionFeeAmount = normalizedPercent > 0
-              ? amount * normalizedPercent
-              : null
+	          const subscriptionCurrency =
+	            submission.deal.currency ||
+	            submission.payload_json?.currency ||
+	            submission.deal.vehicle?.currency ||
+	            'USD'
 
-            // Calculate funding deadline
-            const fundingDueAt = feeStructureForSub?.payment_deadline_days
-              ? new Date(Date.now() + feeStructureForSub.payment_deadline_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-              : null
+	          const subscriptionPatch = {
+	            fee_plan_id: defaultFeePlan?.id || null,
+	            commitment: amount,
+	            currency: subscriptionCurrency,
+	            effective_date: submission.effective_date || new Date().toISOString(),
+	            acknowledgement_notes: `Approved from submission ${submission.id}. Awaiting subscription pack signature.`,
+	            // Copy fee fields from deal_fee_structures for fee event calculation
+	            subscription_fee_percent: feeStructureForSub?.subscription_fee_percent ?? null,
+	            management_fee_percent: feeStructureForSub?.management_fee_percent ?? null,
+	            performance_fee_tier1_percent: feeStructureForSub?.carried_interest_percent ?? null,
+	            opportunity_name: submission.deal.vehicle?.investment_name || submission.deal.name,
+	            price_per_share: pricePerShare,
+	            cost_per_share: costPerShare,
+	            spread_per_share: spreadPerShare,
+	            spread_fee_amount: spreadFeeAmount,
+	            num_shares: numShares,
+	            subscription_fee_amount: subscriptionFeeAmount,
+	            management_fee_frequency: managementFeeFrequency,
+	            performance_fee_tier1_threshold: performanceFeeThreshold,
+	            funding_due_at: fundingDueAt,
+	            introducer_id: introduction?.introducer_id || null,
+	            introduction_id: introduction?.id || null,
+	          }
 
-            const subscriptionCurrency =
-              submission.deal.currency ||
-              submission.payload_json?.currency ||
-              submission.deal.vehicle?.currency ||
-              'USD'
+	          if (!existingSub) {
+	            const { data: newSubscription, error: createSubError } = await supabase
+	              .from('subscriptions')
+	              .insert({
+	                investor_id: submission.investor_id,
+	                vehicle_id: submission.deal.vehicle_id,
+	                deal_id: submission.deal_id,
+	                status: 'pending',
+	                subscription_date: new Date().toISOString(),
+	                ...subscriptionPatch,
+	              })
+	              .select()
+	              .single()
 
-            const { data: newSubscription, error: createSubError } = await supabase
-              .from('subscriptions')
-              .insert({
-                investor_id: submission.investor_id,
-                vehicle_id: submission.deal.vehicle_id,
-                deal_id: submission.deal_id,
-                fee_plan_id: defaultFeePlan?.id || null,
-                commitment: amount,
-                currency: subscriptionCurrency,
-                status: 'pending',
-                subscription_date: new Date().toISOString(),
-                effective_date: submission.effective_date || new Date().toISOString(),
-                acknowledgement_notes: `Approved from submission ${submission.id}. Awaiting subscription pack signature.`,
-                // Copy fee fields from deal_fee_structures for fee event calculation
-                subscription_fee_percent: feeStructureForSub?.subscription_fee_percent ?? null,
-                management_fee_percent: feeStructureForSub?.management_fee_percent ?? null,
-                performance_fee_tier1_percent: feeStructureForSub?.carried_interest_percent ?? null,
-                // NEW: Populate additional fields for complete subscription record
-                opportunity_name: submission.deal.vehicle?.investment_name || submission.deal.name,
-                price_per_share: pricePerShare,
-                cost_per_share: costPerShare,
-                spread_per_share: spreadPerShare,
-                spread_fee_amount: spreadFeeAmount,
-                num_shares: numShares,
-                subscription_fee_amount: subscriptionFeeAmount,
-                management_fee_frequency: managementFeeFrequency,
-                performance_fee_tier1_threshold: performanceFeeThreshold,
-                funding_due_at: fundingDueAt,
-                introducer_id: introduction?.introducer_id || null,
-                introduction_id: introduction?.id || null,
-              })
-              .select()
-              .single()
+	            if (createSubError || !newSubscription) {
+	              console.error('Error creating subscription:', createSubError)
+	              return { success: false, error: 'Failed to create subscription' }
+	            }
 
-            if (createSubError || !newSubscription) {
-              console.error('Error creating subscription:', createSubError)
-              return { success: false, error: 'Failed to create subscription' }
-            }
+	            subscriptionId = newSubscription.id
+	          } else {
+	            const { data: updatedSubscription, error: updateSubError } = await supabase
+	              .from('subscriptions')
+	              .update({
+	                status: 'pending',
+	                ...subscriptionPatch,
+	              })
+	              .eq('id', existingSub.id)
+	              .select('id')
+	              .single()
 
-            subscriptionId = newSubscription.id
+	            if (updateSubError || !updatedSubscription) {
+	              console.error('Error refreshing existing subscription:', updateSubError)
+	              return { success: false, error: 'Failed to update existing subscription' }
+	            }
 
-            // Link subscription back to submission for easy lookup
-            await supabase
-              .from('deal_subscription_submissions')
-              .update({ formal_subscription_id: subscriptionId })
-              .eq('id', submission.id)
-          }
+	            subscriptionId = updatedSubscription.id
+	          }
+
+	          // Link subscription back to submission for easy lookup
+	          await supabase
+	            .from('deal_subscription_submissions')
+	            .update({ formal_subscription_id: subscriptionId })
+	            .eq('id', submission.id)
 
             // AUTO-TRIGGER SUBSCRIPTION PACK WORKFLOW
             try {
               // Fetch all required data for subscription pack
               const { data: investorData } = await supabase
                 .from('investors')
-                .select('legal_name, type, registered_address, entity_identifier')
+                .select('legal_name, display_name, type, registered_address, entity_identifier, id_number, id_type, residential_street, residential_line_2, residential_city, residential_state, residential_postal_code, residential_country')
                 .eq('id', submission.investor_id)
                 .single()
 

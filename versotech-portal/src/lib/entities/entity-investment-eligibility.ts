@@ -93,10 +93,10 @@ export async function canEntityInvest(
     }
   }
 
-  // 1. Check entity KYC status
+  // 1. Check entity KYC status (and type for individual investor handling)
   const { data: entity, error: entityError } = await supabase
     .from(entityTable)
-    .select('id, kyc_status')
+    .select('id, kyc_status, type')
     .eq('id', entityId)
     .single()
 
@@ -126,9 +126,11 @@ export async function canEntityInvest(
     })
   }
 
-  // 2. Get all signatory members and check their CEO approval status
-  // We need to check members where can_sign = true OR is_signatory = true
-  const { data: members, error: membersError } = await supabase
+  // 2. Get signatory members and check their CEO approval status
+  // For individual investors, ALL members are implicitly signatories (it's one person)
+  const isIndividual = (entity as { type?: string }).type === 'individual'
+
+  let membersQuery = supabase
     .from(userTable)
     .select(`
       user_id,
@@ -143,7 +145,13 @@ export async function canEntityInvest(
       )
     `)
     .eq(entityIdColumn, entityId)
-    .or('can_sign.eq.true,role.eq.admin,role.eq.owner')  // Check signatories
+
+  // For entity-type investors, only fetch signatories. For individuals, fetch all members.
+  if (!isIndividual) {
+    membersQuery = membersQuery.or('can_sign.eq.true,role.eq.admin,role.eq.owner')
+  }
+
+  const { data: members, error: membersError } = await membersQuery
 
   if (membersError) {
     console.error('Error fetching members:', membersError)
@@ -159,14 +167,19 @@ export async function canEntityInvest(
     }
   }
 
-  // Filter to actual signatories (can_sign = true)
-  const signatories = members?.filter(m => m.can_sign === true) || []
-  signatoryCount = signatories.length
-
-  // If no explicit signatories, check admin/owner members
-  const signatoriesToCheck = signatoryCount > 0
-    ? signatories
-    : (members?.filter(m => ['admin', 'owner'].includes(m.role)) || [])
+  // For individual investors, all members are signatories.
+  // For entities, filter to can_sign=true, falling back to admin/owner.
+  let signatoriesToCheck: typeof members = []
+  if (isIndividual) {
+    signatoriesToCheck = members || []
+  } else {
+    const signatories = members?.filter(m => m.can_sign === true) || []
+    signatoryCount = signatories.length
+    signatoriesToCheck = signatoryCount > 0
+      ? signatories
+      : (members?.filter(m => ['admin', 'owner'].includes(m.role)) || [])
+  }
+  signatoryCount = signatoriesToCheck.length
 
   if (signatoriesToCheck.length === 0) {
     blockers.push({
@@ -254,7 +267,8 @@ export async function canEntityInvest(
     }
 
     // Check individual KYC status via kyc_submissions
-    if (!hasApprovedKyc) {
+    // For individual investors, entity KYC IS the person's KYC — skip member-level check
+    if (!isIndividual && !hasApprovedKyc) {
       blockers.push({
         type: 'member_kyc',
         message: `Member "${memberName}" KYC is not approved`,
@@ -267,7 +281,8 @@ export async function canEntityInvest(
     }
 
     // Count approved signatories
-    if (member.ceo_approval_status === 'approved' && hasApprovedKyc) {
+    const kycPassed = isIndividual || hasApprovedKyc
+    if (member.ceo_approval_status === 'approved' && kycPassed) {
       approvedSignatoryCount++
     }
   }

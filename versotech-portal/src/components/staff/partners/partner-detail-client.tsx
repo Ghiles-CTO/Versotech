@@ -878,7 +878,7 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
             // Additional KYC fields
             middle_initial: partner.middle_initial ?? undefined,
             proof_of_address_date: partner.proof_of_address_date ?? undefined,
-            proof_of_address_expiry: partner.proof_of_address_expiry ?? undefined,
+
             tax_id_number: partner.tax_id_number ?? undefined,
           }}
           onSuccess={() => router.refresh()}

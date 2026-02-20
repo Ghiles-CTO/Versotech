@@ -20,6 +20,8 @@ const FIELD_LABELS: Record<string, string> = {
   nationality: 'Nationality',
   email: 'Email',
   phone: 'Phone',
+  phone_mobile: 'Mobile Phone',
+  phone_office: 'Office Phone',
   residential_street: 'Street Address',
   residential_city: 'City',
   residential_state: 'State / Region',
@@ -27,6 +29,13 @@ const FIELD_LABELS: Record<string, string> = {
   residential_country: 'Country',
   id_type: 'ID Type',
   id_number: 'ID Number',
+  id_issue_date: 'ID Issue Date',
+  id_expiry_date: 'ID Expiry Date',
+  id_expiry: 'ID Expiry Date',
+  id_issuing_country: 'ID Issuing Country',
+  proof_of_address_date: 'Proof of Address Date',
+  proof_of_address_type: 'Proof of Address Type',
+  proof_of_address_issuer: 'Proof of Address Issuer',
   legal_name: 'Legal Name',
   entity_type: 'Entity Type',
   country_of_incorporation: 'Country of Incorporation',
@@ -48,11 +57,8 @@ interface SectionDef {
   fields: string[]
 }
 
-// Fields to exclude from personal info snapshot (handled by separate document uploads)
-const PERSONAL_EXCLUDED_FIELDS = new Set([
-  'id_type', 'id_number', 'id_expiry', 'id_issuing_country',
-  'proof_of_address_date', 'proof_of_address_issuer', 'proof_of_address_type',
-])
+// Hide deprecated legacy fields while keeping current KYC details visible.
+const PERSONAL_EXCLUDED_FIELDS = new Set<string>(['proof_of_address_expiry'])
 
 const PERSONAL_INFO_SECTIONS: SectionDef[] = [
   {

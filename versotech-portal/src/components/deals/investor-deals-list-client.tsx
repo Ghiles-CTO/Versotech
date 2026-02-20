@@ -813,7 +813,8 @@ export function InvestorDealsListClient({
     sortBy,
     interestByDeal,
     accessByDeal,
-    subscriptionByDeal
+    subscriptionByDeal,
+    accountApprovalStatus
   ])
 
   // Count active filters
@@ -2003,7 +2004,7 @@ export function InvestorDealsListClient({
             </Button>
             <Button
               onClick={handleSubscribe}
-              disabled={subscribeLoading || !subscribeAmount || (subscribeDealMin !== null && parseDisplayAmount(subscribeAmount) < subscribeDealMin) || (subscribeDealMax !== null && parseDisplayAmount(subscribeAmount) > subscribeDealMax)}
+              disabled={subscribeLoading || !subscribeAmount || parseDisplayAmount(subscribeAmount) <= 0}
               className={cn(
                 'h-11 px-8 rounded-lg text-sm font-semibold gap-2 transition-all duration-200',
                 'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white',

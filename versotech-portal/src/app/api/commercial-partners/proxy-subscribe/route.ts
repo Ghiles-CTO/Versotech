@@ -78,7 +78,7 @@ export async function POST(request: Request) {
     // Verify deal exists and is open
     const { data: deal, error: dealError } = await serviceSupabase
       .from('deals')
-      .select('id, name, status, vehicle_id, minimum_investment, maximum_investment')
+      .select('id, name, status, vehicle_id')
       .eq('id', deal_id)
       .single()
 
@@ -128,21 +128,6 @@ export async function POST(request: Request) {
         error: 'Client KYC not complete',
         message: 'Client investor must complete KYC before subscribing.',
         kyc_status: clientInvestor.kyc_status
-      }, { status: 400 })
-    }
-
-    // Check commitment limits
-    if (deal.minimum_investment && commitment < deal.minimum_investment) {
-      return NextResponse.json({
-        error: 'Below minimum investment',
-        message: `Minimum investment is ${deal.minimum_investment}`
-      }, { status: 400 })
-    }
-
-    if (deal.maximum_investment && commitment > deal.maximum_investment) {
-      return NextResponse.json({
-        error: 'Exceeds maximum investment',
-        message: `Maximum investment is ${deal.maximum_investment}`
       }, { status: 400 })
     }
 

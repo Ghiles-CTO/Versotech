@@ -1887,7 +1887,7 @@ export default function OpportunityDetailPage() {
             </Button>
             <Button
               onClick={handleSubscribe}
-              disabled={actionLoading || !subscribeAmount || (subscribeMinAmount !== null && parseDisplayAmount(subscribeAmount) < subscribeMinAmount) || (subscribeMaxAmount !== null && parseDisplayAmount(subscribeAmount) > subscribeMaxAmount)}
+              disabled={actionLoading || !subscribeAmount || parseDisplayAmount(subscribeAmount) <= 0}
               className={cn(
                 'h-11 px-8 rounded-lg text-sm font-semibold gap-2 transition-all duration-200',
                 'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white',

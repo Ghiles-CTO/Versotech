@@ -588,7 +588,7 @@ export function LawyerDetailClient({ lawyer, metrics, deals }: LawyerDetailClien
             // Additional KYC fields
             middle_initial: lawyer.middle_initial ?? undefined,
             proof_of_address_date: lawyer.proof_of_address_date ?? undefined,
-            proof_of_address_expiry: lawyer.proof_of_address_expiry ?? undefined,
+
             tax_id_number: lawyer.tax_id_number ?? undefined,
           }}
           onSuccess={() => window.location.reload()}

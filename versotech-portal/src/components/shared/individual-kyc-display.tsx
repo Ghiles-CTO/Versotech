@@ -339,22 +339,17 @@ export function IndividualKycDisplay({
             )}
 
             {/* Proof Document Dates */}
-            {showProofDates && (data.proof_of_address_date || data.proof_of_address_expiry) && (
+            {showProofDates && data.proof_of_address_date && (
               <div>
                 <h4 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
                   <FileText className="h-4 w-4" />
                   Proof Document Validation
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                   <Field
                     icon={Calendar}
                     label="Proof of Address Date"
                     value={formatDate(data.proof_of_address_date)}
-                  />
-                  <Field
-                    icon={Calendar}
-                    label="Proof of Address Expiry"
-                    value={formatDate(data.proof_of_address_expiry)}
                   />
                 </div>
               </div>
