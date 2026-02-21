@@ -15,6 +15,9 @@ export async function GET(request: NextRequest) {
   const type = request.nextUrl.searchParams.get('type')
   const createdByMe = request.nextUrl.searchParams.get('created_by_me') === 'true'
   const dealId = request.nextUrl.searchParams.get('deal_id')
+  const includeTasks = request.nextUrl.searchParams.get('include_tasks') === 'true'
+  const taskLimitRaw = Number(request.nextUrl.searchParams.get('task_limit') ?? 2)
+  const taskLimit = Number.isFinite(taskLimitRaw) ? Math.min(Math.max(taskLimitRaw, 1), 20) : 2
 
   // Check if user is a lawyer (lawyers use 'notifications' table, others use 'investor_notifications')
   const { data: personas } = await serviceSupabase.rpc('get_user_personas', { p_user_id: user.id })
@@ -22,6 +25,7 @@ export async function GET(request: NextRequest) {
 
   let data: any[] = []
   let uniqueTypes: string[] = []
+  let tasks: any[] = []
 
   if (isLawyer) {
     const maxFetch = offset + limit
@@ -42,7 +46,7 @@ export async function GET(request: NextRequest) {
 
     let investorQuery = serviceSupabase
       .from('investor_notifications')
-      .select('id, user_id, investor_id, title, message, link, read_at, created_at, type, created_by, deal_id, agent_id, agent:agent_id (id, name, avatar_url)')
+      .select('id, user_id, investor_id, title, message, link, action_url, read_at, created_at, type, created_by, deal_id, agent_id, agent:agent_id (id, name, avatar_url)')
 
     if (createdByMe) {
       investorQuery = investorQuery.eq('created_by', user.id)
@@ -83,7 +87,12 @@ export async function GET(request: NextRequest) {
       deal_id: null
     }))
 
-    data = [...notificationRows, ...(investorResult.data || [])]
+    const investorRows = (investorResult.data || []).map((n: any) => ({
+      ...n,
+      link: n.link ?? n.action_url ?? null
+    }))
+
+    data = [...notificationRows, ...investorRows]
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(offset, offset + limit)
 
@@ -116,7 +125,7 @@ export async function GET(request: NextRequest) {
     // Non-lawyers use 'investor_notifications' table
     let query = serviceSupabase
       .from('investor_notifications')
-      .select('id, user_id, investor_id, title, message, link, read_at, created_at, type, created_by, deal_id, agent_id, agent:agent_id (id, name, avatar_url)')
+      .select('id, user_id, investor_id, title, message, link, action_url, read_at, created_at, type, created_by, deal_id, agent_id, agent:agent_id (id, name, avatar_url)')
 
     if (createdByMe) {
       // Show notifications I created for others
@@ -145,7 +154,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch notifications' }, { status: 500 })
     }
 
-    data = notifData || []
+    data = (notifData || []).map((n: any) => ({
+      ...n,
+      link: n.link ?? n.action_url ?? null
+    }))
 
     // Get unique notification types for filter dropdown
     const { data: typesData } = await serviceSupabase
@@ -157,9 +169,50 @@ export async function GET(request: NextRequest) {
     uniqueTypes = [...new Set((typesData || []).map(t => t.type).filter(Boolean))]
   }
 
+  if (includeTasks) {
+    const { data: investorLinks, error: investorLinksError } = await serviceSupabase
+      .from('investor_users')
+      .select('investor_id')
+      .eq('user_id', user.id)
+
+    if (investorLinksError) {
+      console.error('Failed to fetch investor links for tasks:', investorLinksError)
+    }
+
+    const investorIds = (investorLinks || [])
+      .map((link: { investor_id: string | null }) => link.investor_id)
+      .filter(Boolean) as string[]
+
+    let tasksQuery = serviceSupabase
+      .from('tasks')
+      .select('id, title, description, status, priority, due_at, kind, category, created_at, instructions')
+      .in('kind', ['deal_nda_signature', 'subscription_pack_signature'])
+      .eq('category', 'signatures')
+      .in('status', ['pending', 'in_progress'])
+
+    if (investorIds.length > 0) {
+      tasksQuery = tasksQuery.or(
+        `owner_user_id.eq.${user.id},owner_investor_id.in.(${investorIds.join(',')})`
+      )
+    } else {
+      tasksQuery = tasksQuery.eq('owner_user_id', user.id)
+    }
+
+    const { data: taskRows, error: taskError } = await tasksQuery
+      .order('created_at', { ascending: false })
+      .limit(taskLimit)
+
+    if (taskError) {
+      console.error('Failed to fetch signature tasks for dropdown:', taskError)
+    } else {
+      tasks = taskRows || []
+    }
+  }
+
   return NextResponse.json({
     notifications: data,
-    types: uniqueTypes
+    types: uniqueTypes,
+    tasks
   })
 }
 

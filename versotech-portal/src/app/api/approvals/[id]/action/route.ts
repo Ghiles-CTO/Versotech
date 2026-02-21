@@ -9,6 +9,7 @@ import { sendInvitationEmail } from '@/lib/email/resend-service'
 import { getAppUrl } from '@/lib/signature/token'
 import { handleDealClose, handleTermsheetClose } from '@/lib/deals/deal-close-handler'
 import { buildSubscriptionPackPayload } from '@/lib/subscription-pack/payload-builder'
+import { applySubscriptionPackPageNumbers } from '@/lib/subscription/page-numbering'
 
 const ACCOUNT_ACTIVATION_ENTITY_TABLES = [
   'investors',
@@ -77,6 +78,34 @@ function getFileExtension(mimeType: string): string {
   if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return '.docx'
   if (mimeType.includes('word')) return '.docx'
   return '.pdf' // Default to PDF since that's our new output_format default
+}
+
+/**
+ * Normalize n8n response envelopes into the actual payload object/string.
+ * n8n can return plain payloads, arrays, or [{ json: ... }] wrappers.
+ */
+function normalizeN8nResponsePayload(n8nResponse: any): any {
+  let candidate = n8nResponse
+
+  if (Array.isArray(candidate)) {
+    candidate = candidate[0]
+  }
+
+  if (
+    candidate &&
+    typeof candidate === 'object' &&
+    !Buffer.isBuffer(candidate) &&
+    Array.isArray(candidate.data) &&
+    candidate.data.length === 1
+  ) {
+    candidate = candidate.data[0]
+  }
+
+  if (candidate && typeof candidate === 'object' && 'json' in candidate && candidate.json) {
+    candidate = candidate.json
+  }
+
+  return candidate
 }
 
 export async function POST(
@@ -1253,14 +1282,14 @@ async function handleEntityApproval(
                   }]
                   console.warn('[SUBSCRIPTION PACK] No signatories marked, using representative fallback')
                 }
-              } else {
-                // For individual investors: single signatory
-                signatories = [{
-                  name: investorData?.legal_name || '',
-                  title: 'Investor',
-                  number: 1
-                }]
-              }
+	              } else {
+	                // For individual investors: single signatory
+	                signatories = [{
+	                  name: investorData?.legal_name || '',
+	                  title: '',
+	                  number: 1
+	                }]
+	              }
 
               // Generate pre-rendered HTML for signatories (n8n doesn't support Handlebars {{#each}})
               // ANCHOR ID CONVENTION: First subscriber is 'party_a', subsequent are 'party_a_2', 'party_a_3', etc.
@@ -1282,31 +1311,28 @@ async function handleEntityApproval(
 
               // Page 2 - Subscription Form: Subscriber signatures with anchors (right column)
               // Parent div needs position:relative for anchor's position:absolute to work
-              const signatoriesFormHtml = signatories.map(s => `
-            <div class="signature-block-inline" style="position:relative;margin-bottom: 0.5cm;">
-                <div class="signature-line" style="position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number, 'form')}</span></div>
-                Name: ${s.name}<br>
-                Title: ${s.title}
-            </div>`).join('')
+	              const signatoriesFormHtml = signatories.map(s => `
+	            <div class="signature-block-inline" style="position:relative;margin-bottom: 0.5cm;">
+	                <div class="signature-line" style="position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number, 'form')}</span></div>
+	                Name: ${s.name}${s.title ? `<br>Title: ${s.title}` : ''}
+	            </div>`).join('')
 
               // Page 12 - Main Agreement: Subscriber signatures with anchors
               // Increased spacing: min-height 4cm, margin-top 3cm for ~85pt signature space
               // Parent div needs position:relative for anchor's position:absolute to work
               const signatoriesSignatureHtml = signatories.map(s => `
-<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
-    <p><strong>The Subscriber</strong>, represented by Authorized Signatory ${s.number}</p>
-    <div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number)}</span></div>
-    <p style="margin-top: 0.3cm;">Name: ${s.name}<br>
-    Title: ${s.title}</p>
-</div>`).join('')
+	<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
+	    <p><strong>The Subscriber</strong>, represented by Authorized Signatory ${s.number}</p>
+	    <div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number)}</span></div>
+	    <p style="margin-top: 0.3cm;">Name: ${s.name}${s.title ? `<br>Title: ${s.title}` : ''}</p>
+	</div>`).join('')
 
               // Legacy: Keep signatoriesTableHtml for backwards compatibility (no anchors)
-              const signatoriesTableHtml = signatories.map(s => `
-            <div style="margin-bottom: 0.5cm;">
-                <div class="signature-line"></div>
-                Name: ${s.name}<br>
-                Title: ${s.title}
-            </div>`).join('')
+	              const signatoriesTableHtml = signatories.map(s => `
+	            <div style="margin-bottom: 0.5cm;">
+	                <div class="signature-line"></div>
+	                Name: ${s.name}${s.title ? `<br>Title: ${s.title}` : ''}
+	            </div>`).join('')
 
               // NOTE: issuer and arranger signature HTML with anchors are generated after feeStructure is fetched
 
@@ -1329,7 +1355,7 @@ async function handleEntityApproval(
               if (investorData && vehicleData && feeStructure && user) {
                 // Get CEO signer dynamically (instead of hardcoded fallback)
                 const ceoSigner = await getCeoSigner(supabase)
-                const issuerName = ceoSigner?.displayName || feeStructure.issuer_signatory_name || ''
+                const issuerName = ceoSigner?.displayName || feeStructure.issuer_signatory_name || 'Julien Machot'
                 const issuerTitle = ceoSigner?.title || feeStructure.issuer_signatory_title || 'Authorized Signatory'
 
                 // Pre-rendered HTML for issuer (party_b) and arranger (party_c) signature blocks
@@ -1430,12 +1456,31 @@ async function handleEntityApproval(
                     workflow_run_id: result.workflow_run_id
                   })
 
+                  const markWorkflowRunFailed = async (errorMessage: string) => {
+                    if (!result.workflow_run_id) return
+
+                    await supabase
+                      .from('workflow_runs')
+                      .update({
+                        status: 'failed',
+                        error_message: errorMessage,
+                        completed_at: new Date().toISOString(),
+                      })
+                      .eq('id', result.workflow_run_id)
+                      .neq('status', 'completed')
+                  }
+
                   // Handle n8n response with binary file
                   if (result.n8n_response) {
                     try {
-                      const n8nResponse = result.n8n_response
-                      console.log('📦 n8n response structure:', Object.keys(n8nResponse))
-                      console.log('📦 Full n8n response:', JSON.stringify(n8nResponse, null, 2))
+                      const n8nResponse = normalizeN8nResponsePayload(result.n8n_response)
+                      const responseKeys = n8nResponse && typeof n8nResponse === 'object'
+                        ? Object.keys(n8nResponse)
+                        : []
+                      console.log('📦 n8n normalized response structure:', responseKeys)
+                      if (n8nResponse && typeof n8nResponse === 'object') {
+                        console.log('📦 Full normalized n8n response:', JSON.stringify(n8nResponse, null, 2))
+                      }
 
                       // Extract data for filename generation
                       const entityCode = submission.deal?.vehicle?.entity_code || 'UNKNOWN'
@@ -1501,6 +1546,16 @@ async function handleEntityApproval(
                         console.log('✅ File signature valid for', fileName)
                       }
 
+                      if (mimeType === 'application/pdf') {
+                        const numberingResult = await applySubscriptionPackPageNumbers(fileBuffer)
+                        fileBuffer = numberingResult.pdfBuffer
+                        console.log('✅ Applied centered page numbers to approval-generated subscription pack:', {
+                          total_pages: numberingResult.totalPages,
+                          numbered_pages: numberingResult.numberedPages,
+                          appendix_start_page: numberingResult.appendixStartPage
+                        })
+                      }
+
                       // Upload to Supabase Storage (deal-documents bucket)
                       const fileKey = `subscriptions/${submission.id}/draft/${fileName}`
                       const { error: uploadError } = await supabase.storage
@@ -1512,6 +1567,7 @@ async function handleEntityApproval(
 
                       if (uploadError) {
                         console.error('❌ Failed to upload subscription pack:', uploadError)
+                        await markWorkflowRunFailed(`Failed to upload generated subscription pack: ${uploadError.message}`)
                       } else {
                         console.log('✅ Subscription pack uploaded to storage:', fileKey)
 
@@ -1551,13 +1607,14 @@ async function handleEntityApproval(
                             // Countersigner info - stored at generation time, read at signing time
                             countersigner_type: 'ceo',
                             countersigner_name: countersignerName,
-                            countersigner_title: countersignerTitle
+                            countersigner_title: countersignerTitle,
                           })
-                          .select()
+                          .select('id')
                           .single()
 
                         if (docError) {
                           console.error('❌ Failed to create document record:', docError)
+                          await markWorkflowRunFailed(`Failed to create subscription pack document record: ${docError.message}`)
                         } else {
                           console.log('✅ Subscription pack document created:', docRecord.id)
 
@@ -1576,7 +1633,9 @@ async function handleEntityApproval(
                               completed_at: new Date().toISOString(),
                               result_doc_id: docRecord.id,
                               output_data: {
-                                ...result.n8n_response,
+                                ...(n8nResponse && typeof n8nResponse === 'object'
+                                  ? n8nResponse
+                                  : { raw: String(n8nResponse ?? '') }),
                                 document_id: docRecord.id,
                                 file_key: fileKey
                               }
@@ -1619,8 +1678,13 @@ async function handleEntityApproval(
                       }
                     } catch (docError) {
                       console.error('❌ Error processing subscription pack document:', docError)
+                      await markWorkflowRunFailed(
+                        `Subscription pack post-processing failed: ${docError instanceof Error ? docError.message : 'Unknown error'}`
+                      )
                       // Don't fail the approval if document processing fails
                     }
+                  } else {
+                    await markWorkflowRunFailed('Workflow returned no response payload')
                   }
                 }
               }

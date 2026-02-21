@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Bell } from 'lucide-react'
+import { Bell, FileSignature } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -29,6 +29,13 @@ type NotificationItem = {
     name: string
     avatar_url: string | null
   } | null
+}
+
+type SignatureTaskItem = {
+  id: string
+  title: string
+  description?: string
+  due_at?: string | null
 }
 
 interface HeaderNotificationsProps {
@@ -58,6 +65,7 @@ export function HeaderNotifications({ href, userId, userRole }: HeaderNotificati
   const [open, setOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [items, setItems] = useState<NotificationItem[]>([])
+  const [tasks, setTasks] = useState<SignatureTaskItem[]>([])
   const [loading, setLoading] = useState(false)
 
   const refreshCounts = async () => {
@@ -75,10 +83,15 @@ export function HeaderNotifications({ href, userId, userRole }: HeaderNotificati
   const refreshItems = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/notifications?limit=5')
-      if (!response.ok) return
+      const response = await fetch('/api/notifications?limit=5&include_tasks=true&task_limit=2')
+      if (!response.ok) {
+        setItems([])
+        setTasks([])
+        return
+      }
       const data = await response.json()
       setItems(data.notifications ?? [])
+      setTasks(data.tasks ?? [])
     } catch (error) {
       console.error('[HeaderNotifications] Failed to load notifications', error)
     } finally {
@@ -98,9 +111,10 @@ export function HeaderNotifications({ href, userId, userRole }: HeaderNotificati
   }, [open])
 
   const unreadLabel = useMemo(() => {
-    if (unreadCount <= 0) return null
-    return unreadCount > 9 ? '9+' : String(unreadCount)
-  }, [unreadCount])
+    const totalPending = unreadCount + tasks.length
+    if (totalPending <= 0) return null
+    return totalPending > 9 ? '9+' : String(totalPending)
+  }, [unreadCount, tasks.length])
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -130,14 +144,24 @@ export function HeaderNotifications({ href, userId, userRole }: HeaderNotificati
         )}
       >
         <DropdownMenuLabel className="flex items-center justify-between">
-          <span className={isDark ? 'text-white' : 'text-gray-900'}>Notifications</span>
-          {unreadCount > 0 && (
+          <span className={isDark ? 'text-white' : 'text-gray-900'}>Notifications & Tasks</span>
+          {(unreadCount + tasks.length) > 0 && (
             <Badge variant="secondary" className="text-xs">
-              {unreadCount} new
+              {unreadCount + tasks.length} pending
             </Badge>
           )}
         </DropdownMenuLabel>
-        <div className="px-3 pb-2">
+        <div className="px-3 pb-2 grid grid-cols-2 gap-2">
+          <Button
+            asChild
+            variant="secondary"
+            className={cn(
+              'w-full justify-center text-sm',
+              isDark ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+            )}
+          >
+            <Link href="/versotech_main/tasks">Open tasks</Link>
+          </Button>
           <Button
             asChild
             variant="secondary"
@@ -155,12 +179,68 @@ export function HeaderNotifications({ href, userId, userRole }: HeaderNotificati
           <div className="p-4 text-center text-sm text-muted-foreground">
             Loading notifications...
           </div>
-        ) : items.length === 0 ? (
+        ) : items.length === 0 && tasks.length === 0 ? (
           <div className="p-4 text-center text-sm text-muted-foreground">
-            No notifications yet.
+            No notifications or tasks.
           </div>
         ) : (
           <div className="max-h-80 overflow-y-auto">
+            {tasks.length > 0 && (
+              <>
+                <div className={cn(
+                  'px-3 pt-3 pb-2 text-[11px] font-semibold uppercase tracking-wide',
+                  isDark ? 'text-gray-400' : 'text-gray-500'
+                )}>
+                  Latest Signature Tasks ({tasks.length})
+                </div>
+                {tasks.map((task) => (
+                  <DropdownMenuItem
+                    key={`task-${task.id}`}
+                    asChild
+                    className={cn(
+                      'flex items-start gap-3 p-3 cursor-pointer',
+                      isDark ? 'focus:bg-white/10 bg-white/5' : 'focus:bg-gray-50 bg-amber-50/60'
+                    )}
+                  >
+                    <Link href="/versotech_main/tasks" className="flex items-start gap-3 w-full">
+                      <div className={cn(
+                        'h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0',
+                        isDark ? 'bg-white/10' : 'bg-amber-100'
+                      )}>
+                        <FileSignature className="h-4 w-4 text-amber-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className={cn(
+                          'text-sm font-medium leading-snug line-clamp-2 break-words',
+                          isDark ? 'text-white' : 'text-gray-900'
+                        )}>
+                          {task.title}
+                        </div>
+                        {task.description && (
+                          <div className={cn(
+                            'text-xs leading-snug line-clamp-2 break-words',
+                            isDark ? 'text-gray-400' : 'text-gray-500'
+                          )}>
+                            {task.description}
+                          </div>
+                        )}
+                        {task.due_at && (
+                          <div className={cn(
+                            'text-xs mt-1',
+                            isDark ? 'text-gray-500' : 'text-gray-400'
+                          )}>
+                            Due {new Date(task.due_at).toLocaleDateString()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="h-2 w-2 rounded-full bg-amber-500 flex-shrink-0 mt-2" />
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator className={isDark ? 'bg-white/10' : 'bg-gray-100'} />
+              </>
+            )}
+
             {items.map((item) => (
               <DropdownMenuItem
                 key={item.id}

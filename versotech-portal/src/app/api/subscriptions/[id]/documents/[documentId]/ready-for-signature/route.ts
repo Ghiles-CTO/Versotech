@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { getCeoSigner } from '@/lib/staff/ceo-signer'
 import { convertDocxToPdf } from '@/lib/gotenberg/convert'
+import { applySubscriptionPackPageNumbers } from '@/lib/subscription/page-numbering'
 
 // Schema for multi-signatory support with optional arranger countersigning
 const requestSchema = z.object({
@@ -243,9 +244,9 @@ export async function POST(
         status: 'final',
         ready_for_signature: false,
         current_version: 1,
-        created_by: user.id
+        created_by: user.id,
       })
-      .select()
+      .select('id, subscription_id, deal_id, vehicle_id, folder_id, type, name, file_key, mime_type, file_size_bytes, status, ready_for_signature, current_version, created_by')
       .single()
 
     if (pdfDocError || !pdfDocument) {
@@ -263,7 +264,6 @@ export async function POST(
       .from('documents')
       .update({
         status: 'draft',
-        metadata: { converted_to_pdf: pdfDocument.id, converted_at: new Date().toISOString() }
       })
       .eq('id', document.id)
 
@@ -419,6 +419,54 @@ export async function POST(
     return data.signedUrl
   }
 
+  const normalizeSubscriptionPackPageNumbers = async (targetDocument: any): Promise<void> => {
+    const supportedTypes = new Set(['subscription_draft', 'subscription_pack', 'subscription_final'])
+    if (targetDocument?.mime_type !== 'application/pdf') return
+    if (!supportedTypes.has(String(targetDocument?.type || ''))) return
+
+    try {
+      const { data: pdfBlob, error: downloadError } = await serviceSupabase.storage
+        .from('deal-documents')
+        .download(targetDocument.file_key)
+
+      if (downloadError || !pdfBlob) {
+        console.warn('⚠️ [READY-FOR-SIGNATURE] Failed to download PDF for page-number normalization:', downloadError?.message)
+        return
+      }
+
+      const rawPdfBuffer = Buffer.from(await pdfBlob.arrayBuffer())
+      const numberingResult = await applySubscriptionPackPageNumbers(rawPdfBuffer)
+
+      const { error: uploadError } = await serviceSupabase.storage
+        .from('deal-documents')
+        .upload(targetDocument.file_key, numberingResult.pdfBuffer, {
+          contentType: 'application/pdf',
+          upsert: true,
+        })
+
+      if (uploadError) {
+        console.warn('⚠️ [READY-FOR-SIGNATURE] Failed to upload page-number-normalized PDF:', uploadError.message)
+        return
+      }
+
+      await serviceSupabase
+        .from('documents')
+        .update({
+          file_size_bytes: numberingResult.pdfBuffer.length,
+        })
+        .eq('id', targetDocument.id)
+
+      console.log('✅ [READY-FOR-SIGNATURE] Normalized centered page numbers before signature flow:', {
+        document_id: targetDocument.id,
+        total_pages: numberingResult.totalPages,
+        numbered_pages: numberingResult.numberedPages,
+        appendix_start_page: numberingResult.appendixStartPage,
+      })
+    } catch (error) {
+      console.warn('⚠️ [READY-FOR-SIGNATURE] Page-number normalization skipped:', error)
+    }
+  }
+
   const clearPendingSignatureRequests = async (targetDocumentId: string): Promise<void> => {
     const { error } = await serviceSupabase
       .from('signature_requests')
@@ -510,6 +558,8 @@ export async function POST(
 
   const runSignatureWorkflowForDocument = async (targetDocument: any): Promise<NextResponse> => {
     const targetDocumentId = targetDocument.id as string
+
+    await normalizeSubscriptionPackPageNumbers(targetDocument)
 
     // Check for existing signature requests to prevent duplicates
     console.log('🔍 [READY-FOR-SIGNATURE] Checking existing requests for document:', targetDocumentId)

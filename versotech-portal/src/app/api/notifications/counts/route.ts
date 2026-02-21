@@ -43,18 +43,12 @@ export async function GET() {
     const isLawyerPersona = personas?.some((p: { persona_type: string }) => p.persona_type === 'lawyer') || false
 
     const [
-      taskResult,
       notificationsResult,
       lawyerNotificationsResult,
       participantResult,
       membershipResult,
       investorLinksResult
     ] = await Promise.all([
-      serviceSupabase
-        .from('tasks')
-        .select('id', { count: 'exact', head: true })
-        .eq('owner_user_id', user.id)
-        .in('status', TASK_STATUSES),
       serviceSupabase
         .from('investor_notifications')
         .select('id', { count: 'exact', head: true })
@@ -81,9 +75,6 @@ export async function GET() {
         .eq('user_id', user.id)
     ])
 
-    if (taskResult.error) {
-      console.error('[notifications/counts] Task count error:', taskResult.error)
-    }
     if (notificationsResult.error) {
       console.error('[notifications/counts] Notification count error:', notificationsResult.error)
     }
@@ -100,7 +91,31 @@ export async function GET() {
       console.error('[notifications/counts] Investor link error:', investorLinksResult.error)
     }
 
-    const taskCount = taskResult.count ?? 0
+    const investorIds =
+      investorLinksResult.data?.map((row) => row.investor_id).filter(Boolean) ?? []
+
+    let taskCount = 0
+    let taskCountQuery = serviceSupabase
+      .from('tasks')
+      .select('id', { count: 'exact', head: true })
+      .in('status', TASK_STATUSES)
+
+    if (investorIds.length > 0) {
+      taskCountQuery = taskCountQuery.or(
+        `owner_user_id.eq.${user.id},owner_investor_id.in.(${investorIds.join(',')})`
+      )
+    } else {
+      taskCountQuery = taskCountQuery.eq('owner_user_id', user.id)
+    }
+
+    const taskResult = await taskCountQuery
+
+    if (taskResult.error) {
+      console.error('[notifications/counts] Task count error:', taskResult.error)
+    } else {
+      taskCount = taskResult.count ?? 0
+    }
+
     const notificationCount = (notificationsResult.count ?? 0) + (lawyerNotificationsResult.count ?? 0)
 
     const conversationIds =
@@ -133,9 +148,6 @@ export async function GET() {
       const membershipIds =
         membershipResult.data?.map((row) => row.deal_id).filter(Boolean) ?? []
       membershipIds.forEach((id) => accessibleDealIds.add(id))
-
-      const investorIds =
-        investorLinksResult.data?.map((row) => row.investor_id).filter(Boolean) ?? []
 
       if (investorIds.length > 0) {
         const [interestResult, submissionResult, allocationResult] = await Promise.all([

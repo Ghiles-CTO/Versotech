@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -72,6 +72,23 @@
             margin-bottom: 0.2cm;
         }
 
+        h3.inline-number {
+            display: inline;
+            margin: 0 0.2cm 0 0;
+        }
+
+        h3.inline-number + p {
+            display: inline;
+            margin: 0;
+            text-align: justify;
+        }
+
+        h3.inline-number + p::after {
+            content: "";
+            display: block;
+            margin-bottom: 0.2cm;
+        }
+
         /* Tables */
         table {
             width: 100%;
@@ -109,6 +126,24 @@
             border: none;
         }
 
+        table.summary-table td,
+        table.summary-table th,
+        table.summary-signature-table td,
+        table.summary-signature-table th {
+            border: 1px solid #000;
+            background: #ffffff;
+            padding: 8px;
+        }
+
+        table.summary-signature-table td {
+            padding-right: 8px;
+        }
+
+        .issuer-signer-meta {
+            text-align: left;
+            margin-top: 0.2cm;
+        }
+
         .label-cell {
             font-weight: bold;
             width: 40%;
@@ -129,6 +164,10 @@
 
         .small {
             font-size: 9pt;
+        }
+
+        .currency-value {
+            white-space: nowrap;
         }
 
         p {
@@ -166,11 +205,53 @@
             position: relative;
             border-top: 1px solid #000;
             width: 60%;
-            margin: 3cm 0 0.2cm 0;  /* Increased top margin from 0.8cm to 3cm for signature space */
+            margin: 3cm 0 0.2cm 0;
         }
 
         .signature-line.wire-line {
             width: 42%;
+            margin-top: 2.1cm;
+        }
+
+        .signature-line.form-line {
+            margin-top: 3cm;
+        }
+
+        /* Page 2 only: tighten layout so summary tables + signature table stay on one page */
+        .summary-page h1 {
+            margin-top: 0;
+            margin-bottom: 0.25cm;
+        }
+
+        .summary-page h2 {
+            margin-top: 0.2cm;
+            margin-bottom: 0.2cm;
+        }
+
+        .summary-page > p {
+            margin: 0.12cm 0;
+        }
+
+        .summary-page table {
+            margin: 0.18cm 0;
+        }
+
+        .summary-page table td,
+        .summary-page table th {
+            padding: 6px;
+        }
+
+        .summary-page .summary-signature-table {
+            margin-top: 0.45cm !important;
+        }
+
+        .summary-page .signature-block-inline {
+            margin-bottom: 0.3cm !important;
+        }
+
+        .summary-page .signature-line,
+        .summary-page .signature-line.form-line {
+            margin-top: 2.25cm;
         }
 
         .signature-line.main-line {
@@ -179,6 +260,37 @@
 
         .signature-line.tcs-line {
             margin-left: 12%;
+        }
+
+        .tcs-signer-meta {
+            margin-left: 12%;
+            width: 60%;
+            text-align: left;
+        }
+
+        .signature-line.appendix-line {
+            width: 65%;
+            margin-top: 0.6cm;
+        }
+
+        .signature-inline-row {
+            text-align: left;
+            margin-top: 1.1cm;
+            margin-bottom: 0.2cm;
+        }
+
+        .signature-inline-row.tight {
+            margin-top: 0.9cm;
+        }
+
+        .signature-inline-line {
+            display: inline-block;
+            width: 46%;
+            border-top: 1px solid #000;
+            position: relative;
+            vertical-align: middle;
+            margin-left: 0.45cm;
+            transform: translateY(-1px);
         }
 
         .sig-anchor {
@@ -198,6 +310,44 @@
             margin: 0.5cm 0;
             background-color: #f9f9f9;
             page-break-inside: avoid;
+        }
+
+        .wire-box p {
+            margin: 0.08cm 0;
+        }
+
+        .wire-section {
+            page-break-inside: avoid;
+            break-inside: avoid;
+            display: block;
+        }
+
+        .wire-signoff {
+            margin-top: 0.3cm;
+        }
+
+        .signature-meta-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.25cm 0 0 0;
+        }
+
+        .signature-meta-table td {
+            border: none;
+            padding: 2px 0;
+            vertical-align: middle;
+        }
+
+        .signature-meta-table tr.signature-row td {
+            padding-bottom: 0.7cm;
+            vertical-align: bottom;
+        }
+
+
+        .signature-meta-label {
+            width: 22%;
+            white-space: nowrap;
+            font-weight: normal;
         }
 
         /* Section headings - prevent orphans */
@@ -230,7 +380,8 @@
 
             .signature-block,
             .signature-block-inline,
-            .wire-box {
+            .wire-box,
+            .wire-section {
                 page-break-inside: avoid;
             }
 
@@ -253,7 +404,7 @@
     <div class="cover-title">SUBSCRIPTION PACK</div>
     <div class="cover-series">
         VERSO CAPITAL 2 SCSP SERIES {{ $json.series_number }}<br>
-        {{ $json.series_title }}
+        {{ $json.series_cover_subtitle }}
     </div>
 
     <img src="{{ $json.investment_logo_url }}" alt="{{ $json.ultimate_investment }}" class="cover-logo">
@@ -261,19 +412,20 @@
     <div class="cover-footer">
         <strong>VERSO CAPITAL 2 SCSP SERIES {{ $json.series_number }}</strong><br>
         2, Avenue Charles de Gaulle, L1653 Luxembourg<br>
-        {{ $json.issuer_website }}
+        {{ $json.issuer_website || 'www.versoholdings.com' }}
     </div>
 </div>
 
 <div class="page-break"></div>
 
 <!-- PAGE 2: SUBSCRIPTION SUMMARY -->
+<div class="summary-page">
 <h1>SUBSCRIPTION SUMMARY</h1>
-<h2>VERSO CAPITAL 2 SCSP SERIES {{ $json.series_number }} "{{ $json.series_title }}"</h2>
+<h2>{{ $json.series_summary_heading }}</h2>
 
 <p><strong>Find the summary of your subscription in Series {{ $json.series_number }}:</strong></p>
 
-<table class="compact">
+<table class="compact summary-table">
     <tr>
         <td class="label-cell">Subscriber:</td>
         <td>{{ $json.subscriber_name }}</td>
@@ -284,31 +436,31 @@
     </tr>
 </table>
 
-<table class="compact">
+<table class="compact summary-table">
     <tr>
         <td class="label-cell">Total Subscription:</td>
-        <td>{{ $json.currency_code }} {{ $json.subscription_amount }}</td>
+        <td class="currency-value">{{ $json.currency_code }} {{ $json.subscription_amount_display }}</td>
     </tr>
     <tr>
         <td class="label-cell">Total Number of Shares:</td>
-        <td>{{ $json.certificates_count }} Equity Certificates</td>
+        <td>{{ $json.certificates_count_display }} Equity Certificates</td>
     </tr>
     <tr>
         <td class="label-cell">Price per Share:</td>
-        <td>{{ $json.currency_code }} {{ $json.price_per_share }}*</td>
+        <td class="currency-value">{{ $json.currency_code }} {{ $json.price_per_share_display }}{{ $json.price_per_share_marker }}</td>
     </tr>
     <tr>
         <td class="label-cell"><strong>Total Subscription Amount:</strong></td>
-        <td><strong>{{ $json.currency_code }} {{ $json.total_subscription_price }}</strong></td>
+        <td class="currency-value"><strong>{{ $json.currency_code }} {{ $json.total_subscription_price_display }}</strong></td>
     </tr>
 </table>
 
-<table class="compact">
+<table class="compact summary-table">
     <tr>
         <td class="label-cell">Applicable Terms:</td>
         <td>
             • <strong>Subscription Fee (one-off):</strong> {{ $json.subscription_fee_text }}<br>
-            • <strong>Management Fee:</strong> {{ $json.management_fee_text }}<br>
+            • <strong>Management Fee (upfront one-off):</strong> {{ $json.management_fee_text }}<br>
             • <strong>Performance Fee:</strong> {{ $json.performance_fee_text }}<br>
         </td>
     </tr>
@@ -318,25 +470,28 @@
     </tr>
 </table>
 
-<table class="compact" style="margin-top: 1cm;">
+<table class="compact summary-signature-table" style="margin-top: 1cm;">
     <tr>
         <td style="width: 50%; text-align: center;">
             <strong>VERSO Capital 2 SCSP Series {{ $json.series_number }}</strong><br>
             duly represented by its general partner<br>
             <strong>VERSO Capital 2 GP SARL</strong><br><br>
-            <div class="signature-line"><span class="sig-anchor">SIG_ANCHOR:party_b_form</span></div>
-            Name: {{ $json.issuer_name }}<br>
-            Title: {{ $json.issuer_title }}
+            <div class="signature-line form-line"><span class="sig-anchor">SIG_ANCHOR:party_b_form</span></div>
+            <div class="issuer-signer-meta">
+                Name: {{ $json.issuer_name || 'Julien Machot' }}<br>
+                Title: {{ $json.issuer_title || 'Authorized Signatory' }}
+            </div>
         </td>
         <td style="width: 50%; vertical-align: top;">
-            <strong>The Subscriber</strong><br>
-            Represented by<br><br>
+            <strong>The Subscriber</strong>, represented by its<br>
+            Authorized Signatory (-ies)<br><br>
 {{ $json.signatories_form_html }}
         </td>
     </tr>
 </table>
 
-<p class="small" style="margin-top: 1cm;"><strong>* IMPORTANT NOTICE:</strong> The Price per Share may be amended by the Issuer prior any Capital Call or Funding in order to reflect the exact Price per Share of the recent Qualified Financing. The Issuer shall then issue a Side Letter to provide confirmation of the new Price per Share and as a result of the exact total Number of Shares corresponding to the present Subscription.</p>
+{{ $json.price_per_share_notice_html }}
+</div>
 
 <div class="page-break"></div>
 
@@ -348,9 +503,9 @@
 <ul>
     <li><strong>SPV / Vehicle:</strong> VERSO Capital 2 SCSP Series {{ $json.series_number }}, Luxembourg</li>
     <li><strong>Subscriber:</strong> {{ $json.subscriber_name }}</li>
-    <li><strong>Escrow Agent:</strong> {{ $json.wire_escrow_agent }}, Law Firm, Luxembourg</li>
-    <li><strong>Exclusive Arranger:</strong> {{ $json.wire_arranger }}, Cat II Reg. Firm, BVI</li>
-    <li><strong>Contact us:</strong> {{ $json.wire_contact_email }}</li>
+    <li><strong>Escrow Agent:</strong> {{ $json.wire_escrow_agent || 'Elvinger Hoss Prussen' }}, Law Firm, Luxembourg</li>
+    <li><strong>Exclusive Arranger:</strong> {{ $json.wire_arranger || 'VERSO Management Ltd' }}, Cat II Reg. Firm, BVI</li>
+    <li><strong>Contact us:</strong> {{ $json.wire_contact_email || 'jmachot@versoholdings.com' }}</li>
 </ul>
 
 <h2>B. INSTRUCTIONS</h2>
@@ -360,25 +515,27 @@
     <li>Subscribers are invited to wire the funds to the Escrow Account below:</li>
 </ol>
 
-<div class="wire-box">
-    <p><strong>Bank:</strong> {{ $json.wire_bank_name }}</p>
-    <p><strong>Bank Address:</strong> {{ $json.wire_bank_address }}</p>
-    <p><strong>Holder:</strong> {{ $json.wire_account_holder }}</p>
-    <p><strong>Law Firm Address:</strong> {{ $json.wire_law_firm_address }}</p>
-    <p><strong>Description:</strong> {{ $json.wire_description }}</p>
-    <p><strong>IBAN:</strong> {{ $json.wire_iban }}</p>
-    <p><strong>BIC:</strong> {{ $json.wire_bic }}</p>
-    <p><strong>Amount:</strong> {{ $json.currency_code }} {{ $json.total_subscription_price }} only</p>
-    <p><strong>Currency:</strong> {{ $json.currency_code }} (FYI: {{ $json.currency_long }})</p>
-    <p><strong>Reference:</strong> {{ $json.wire_reference }}</p>
-</div>
+<div class="wire-section">
+    <div class="wire-box">
+        <p><strong>Bank:</strong> {{ $json.wire_bank_name || 'Banque de Luxembourg' }}</p>
+        <p><strong>Bank Address:</strong> {{ $json.wire_bank_address || '14, boulevard Royal, L-2449 Luxembourg, Grand Duchy of Luxembourg' }}</p>
+        <p><strong>Holder:</strong> {{ $json.wire_account_holder || 'Elvinger Hoss Prussen - Escrow Account' }}</p>
+        <p><strong>Law Firm Address:</strong> {{ $json.wire_law_firm_address || '2 Place Winston Churchill, L-1340 Luxembourg, Grand Duchy of Luxembourg' }}</p>
+        <p><strong>Description:</strong> {{ $json.wire_description }}</p>
+        <p><strong>IBAN:</strong> {{ $json.wire_iban || 'LU28 0019 4855 4447 1000' }}</p>
+        <p><strong>BIC:</strong> {{ $json.wire_bic || 'BLUXLULL' }}</p>
+        <p><strong>Amount:</strong> {{ $json.currency_code }} {{ $json.total_subscription_price_display }} only</p>
+        <p><strong>Currency:</strong> {{ $json.currency_code }} (FYI: {{ $json.currency_long }})</p>
+        <p><strong>Reference:</strong> {{ $json.wire_reference_display }}</p>
+    </div>
 
-<p style="margin-top: 1cm;">Thank you for your consideration,</p>
+    <p style="margin-top: 1cm;">Thank you for your consideration,</p>
 
-<div class="signature-block">
-    <div class="signature-line wire-line"><span class="sig-anchor">SIG_ANCHOR:party_b_wire</span></div>
-    <p>Name: {{ $json.issuer_name }}<br>
-    Title: {{ $json.issuer_title }}</p>
+    <div class="signature-block wire-signoff">
+        <div class="signature-line wire-line"><span class="sig-anchor">SIG_ANCHOR:party_b_wire</span></div>
+        <p>Name: {{ $json.issuer_name || 'Julien Machot' }}<br>
+        Title: {{ $json.issuer_title || 'Authorized Signatory' }}</p>
+    </div>
 </div>
 
 <div class="page-break"></div>
@@ -397,8 +554,6 @@
     <p style="text-align: center;"><strong>VERSO Management</strong></p>
     <p style="text-align: center;">as Arranger</p>
 
-    <img src="{{ $json.investment_logo_url }}" alt="{{ $json.ultimate_investment }}" style="width: 150px; margin: 2cm 0;">
-
     <h2>EQUITY CERTIFICATES SUBSCRIPTION AGREEMENT</h2>
     <p style="text-align: center;"><strong>STRICTLY PRIVATE AND CONFIDENTIAL</strong></p>
 </div>
@@ -411,9 +566,9 @@
 
 <p><strong>THIS EQUITY CERTIFICATES SUBSCRIPTION AGREEMENT</strong> (the "<strong>Agreement</strong>") is dated {{ $json.agreement_date }} and is made by and between:</p>
 
-<p class="clause"><strong>A.</strong> {{ $json.subscriber_block }} (the "<strong>Subscriber</strong>");</p>
+<p class="clause"><strong>A.</strong> {{ $json.subscriber_clause_text }} (the "<strong>Subscriber</strong>");</p>
 
-<p class="clause"><strong>B. VERSO Capital 2 SCSP</strong>, a Luxembourg special limited partnership (<em>société en commandite spéciale</em>) with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, registered with the Luxembourg Register of Commerce and Companies under number {{ $json.issuer_rcc_number }} duly represented by its general partner <strong>{{ $json.issuer_gp_name }}</strong>, a private limited liability company (<em>société à responsabilité limitée</em>) established under the laws of the Grand Duchy of Luxembourg, with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, registered with the Luxembourg Register of Trade and Companies under number {{ $json.issuer_gp_rcc_number }} (the "<strong>Issuer</strong>");</p>
+<p class="clause"><strong>B. VERSO Capital 2 SCSP</strong>, a Luxembourg special limited partnership (<em>société en commandite spéciale</em>) with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, registered with the Luxembourg Register of Commerce and Companies under number {{ $json.issuer_rcc_number_display }} duly represented by its general partner <strong>{{ $json.issuer_gp_name }}</strong>, a private limited liability company (<em>société à responsabilité limitée</em>) established under the laws of the Grand Duchy of Luxembourg, with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, registered with the Luxembourg Register of Trade and Companies under number {{ $json.issuer_gp_rcc_number_display }} (the "<strong>Issuer</strong>");</p>
 
 <p class="clause"><strong>C. VERSO Management Ltd</strong>, a limited liability company with registered office at Trident Chambers, Wickhams Cay, P.O. Box 146, Road Town, Tortola VG1110 British Virgin Islands and registered with the Registrar of Corporate Affairs under number 1901463 and holder of the Category II licensed under the auspice of the FSC Financial Services Commission of the BVI (the "<strong>Arranger</strong>", and together with the Subscriber and the Issuer, the "<strong>Parties</strong>" or individually, a "<strong>Party</strong>").</p>
 
@@ -434,7 +589,7 @@
 <p class="clause">Except as otherwise defined herein or where the context shall otherwise require, all capitalised but undefined words below shall have the meaning ascribed to them in the T&Cs</p>
 
 <h3>1.3. In this Agreement:</h3>
-<p class="sub-clause">1.3.1. Clause headings are inserted for convenience only and shall not affect the construction of this Agreement and unless otherwise specified, all references to Clauses refer to Clauses of this Agreement and all references to Conditions refers to Conditions of the T&Cs.</p>
+<p class="sub-clause">1.3.1. Clause headings are inserted for convenience only and shall not affect the construction of this Agreement and unless otherwise specified, all references to Clauses refer to Clauses of this Agreement and all references to Conditions refer to Conditions of the T&Cs.</p>
 
 <p class="sub-clause">1.3.2. Unless the context otherwise requires, words denoting the singular number shall include the plural and vice versa and words denoting any gender shall include all genders.</p>
 
@@ -448,9 +603,9 @@
 
 <h2>2. SUBSCRIPTION AND SUBSCRIPTION PRICE</h2>
 
-<p>The Subscriber hereby agrees to subscribe for <strong>{{ $json.certificates_count }}</strong> Certificates with a par value of <strong>{{ $json.currency_code }} {{ $json.price_per_share }}</strong> each, (the "<strong>Subscribed ECs</strong>") for a total amount of <strong>{{ $json.currency_code }} {{ $json.subscription_amount }}</strong> only (the "<strong>Certificates Subscription Price</strong>"), by way of wire transfer of clear available funds (taking into consideration any bank fees which shall be borne by the Subscriber) to the Paying Agent's Account within two (2) days of the date of the present Agreement or no later than {{ $json.payment_deadline_date }} Close of Business Luxembourg 5:00pm (including sharing a SWIFT copy with the Issuer).</p>
+<p>The Subscriber hereby agrees to subscribe for <strong>{{ $json.certificates_count_display }}</strong> Certificates with a par value of <strong>{{ $json.currency_code }} {{ $json.price_per_share_display }}</strong> each, (the "<strong>Subscribed ECs</strong>") for a total amount of <strong>{{ $json.currency_code }} {{ $json.subscription_amount_display }}</strong> only (the "<strong>Certificates Subscription Price</strong>"), by way of wire transfer of clear available funds (taking into consideration any bank fees which shall be borne by the Subscriber) to the Paying Agent's Account within two (2) days of the date of the present Agreement or no later than {{ $json.payment_deadline_date }} Close of Business Luxembourg 5:00pm (including sharing a SWIFT copy with the Issuer).</p>
 
-<p>The total amount payable by the Subscriber upon Subscription, consisting of the Certificates Subscription Price, Management Fee and the one-off Subscription Fee at {{ $json.subscription_fee_rate }} shall amount to <strong>{{ $json.currency_code }} {{ $json.total_subscription_price }}</strong> only (the "<strong>Total Subscription Price</strong>", the date of receipt of which shall be referred to as the "<strong>Closing Date</strong>").</p>
+<p>The total amount payable by the Subscriber upon Subscription, consisting of the Certificates Subscription Price, Management Fee and the one-off Subscription Fee at {{ $json.subscription_fee_rate }} shall amount to <strong>{{ $json.currency_code }} {{ $json.total_subscription_price_display }}</strong> only (the "<strong>Total Subscription Price</strong>", the date of receipt of which shall be referred to as the "<strong>Closing Date</strong>").</p>
 
 <h2>3. MANAGEMENT FEE</h2>
 
@@ -538,7 +693,7 @@
 
 <h2>10. PENALTY CLAUSE</h2>
 
-<p>In the event the Subscriber does not fulfil its payment obligations with respect to the Total Subscription Amount within the timeframes provided for under this Agreement, the Subscriber undertakes to pay to the Issuer, as penalty fees, an amount corresponding to 3.00% of the Certificates Subscription Price and after 30 calendar day of delay, an additional 0.50% Certificates Subscription Price per month of subsequent delay (the "<strong>Default Penalty Fee</strong>").</p>
+<p>In the event the Subscriber does not fulfil its payment obligations with respect to the Total Subscription Amount within the timeframes provided for under this Agreement, the Subscriber undertakes to pay to the Issuer, as penalty fees, an amount corresponding to 3.00% of the Certificates Subscription Price and after 30 calendar days of delay, an additional 0.50% of the Certificates Subscription Price per month of subsequent delay (the "<strong>Default Penalty Fee</strong>").</p>
 
 <p>The Parties agree that to the extent the present penalty clause is found to be manifestly excessive by a competent court, the Parties agree that shall be reduced to any amount as the court shall deem reasonable.</p>
 
@@ -548,7 +703,7 @@
 
 <h2>12. SPECIFIC PERFORMANCE</h2>
 
-<p>Each Party agrees that monetary damages may not be a sufficient remedy for any breach or threatened breach of this Agreement, and that the other Parties shall be entitled to seek equitable relief, including injection and specific performance, in the event of any such breach or threatened breach without the necessity of posting any bond or other security or provision that monetary damages would be difficult to calculate or be an inadequate remedy.</p>
+<p>Each Party agrees that monetary damages may not be a sufficient remedy for any breach or threatened breach of this Agreement, and that the other Parties shall be entitled to seek equitable relief, including injunction and specific performance, in the event of any such breach or threatened breach without the necessity of posting any bond or other security or proving that monetary damages would be difficult to calculate or be an inadequate remedy.</p>
 
 <h2>13. SEVERABILITY</h2>
 
@@ -556,7 +711,7 @@
 
 <h2>14. ENTIRE AGREEMENT</h2>
 
-<p>This Agreement constitutes the whole agreement between the parties relation to the subject matter of this agreement to the exclusion of any terms implied by law that may be excluded by contract. This Agreement supersedes and extinguishes any and all prior discussions, correspondence, negotiations, drafts, arrangements, understandings or agreements in relation to the subject matter of this Agreement.</p>
+<p>This Agreement constitutes the whole agreement between the parties in relation to the subject matter of this Agreement to the exclusion of any terms implied by law that may be excluded by contract. This Agreement supersedes and extinguishes any and all prior discussions, correspondence, negotiations, drafts, arrangements, understandings or agreements in relation to the subject matter of this Agreement.</p>
 
 <h2>15. AMENDMENTS AND MODIFICATIONS</h2>
 
@@ -564,7 +719,7 @@
 
 <h2>16. ONE ORIGINAL AND ELECTRONIC SIGNATURE</h2>
 
-<p>The Parties have expressly agreed to sign this agreement by electronic signatures, within the meaning of the provisions of articles 1322-1 et seq. Of the Luxembourg civil code, through DocuSign services.</p>
+<p>The Parties have expressly agreed to sign this Agreement by electronic signatures, within the meaning of the provisions of articles 1322-1 et seq. of the Luxembourg civil code, through DocuSign services.</p>
 
 <p>The Parties therefore acknowledge and agree that the electronic version of this agreement constitutes an original document and is perfectly valid and enforceable between them...</p>
 
@@ -686,7 +841,7 @@
     </tr>
     <tr>
         <td class="bold">"Escrow Agency Fee"</td>
-        <td>means the fee to be paid by the Issuer according to the escrow agency agreement concluded with {{ $json.wire_escrow_agent }}, a law firm with the Luxembourg Bar, with main office on {{ $json.wire_law_firm_address }}.</td>
+        <td>means the fee to be paid by the Issuer according to the escrow agency agreement concluded with {{ $json.wire_escrow_agent || 'Elvinger Hoss Prussen' }}, a law firm with the Luxembourg Bar, with main office on {{ $json.wire_law_firm_address || '2 Place Winston Churchill, L-1340 Luxembourg, Grand Duchy of Luxembourg' }}.</td>
     </tr>
     <tr>
         <td class="bold">"Event of Default"</td>
@@ -714,7 +869,7 @@
     </tr>
     <tr>
         <td class="bold">"General Partner"</td>
-        <td>means {{ $json.issuer_gp_name }}, a private limited liability company (société à responsabilité limitée) established under the laws of the Grand Duchy of Luxembourg, with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, registered with the Luxembourg Register of Trade and Companies under number {{ $json.issuer_gp_rcc_number }}</td>
+        <td>means {{ $json.issuer_gp_name }}, a private limited liability company (société à responsabilité limitée) established under the laws of the Grand Duchy of Luxembourg, with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, registered with the Luxembourg Register of Trade and Companies under number {{ $json.issuer_gp_rcc_number_display }}</td>
     </tr>
     <tr>
         <td class="bold">"Holder"</td>
@@ -790,7 +945,7 @@
     </tr>
     <tr>
         <td class="bold">"Paying Agent"</td>
-        <td>means {{ $json.wire_escrow_agent }}, a law firm with the Luxembourg Bar, with main office on {{ $json.wire_law_firm_address }}.</td>
+        <td>means {{ $json.wire_escrow_agent || 'Elvinger Hoss Prussen' }}, a law firm with the Luxembourg Bar, with main office on {{ $json.wire_law_firm_address || '2 Place Winston Churchill, L-1340 Luxembourg, Grand Duchy of Luxembourg' }}.</td>
     </tr>
     <tr>
         <td class="bold">"Paying Agent Account"</td>
@@ -913,11 +1068,11 @@
 <p class="clause">2.1.4. The payment of the Certificates Subscription Price and the One-Off Fee(s) shall occur on the Closing Date (the "<strong>Certificates Payment Date</strong>"), under the following bank account on behalf of the Issuer by the Paying Agent (the "<strong>Paying Agent Account</strong>"):</p>
 
 <div class="wire-box">
-    <p><strong>Bank:</strong> {{ $json.wire_bank_name }}</p>
-    <p><strong>Holder:</strong> {{ $json.wire_account_holder }}</p>
-    <p><strong>IBAN:</strong> {{ $json.wire_iban }}</p>
-    <p><strong>BIC:</strong> {{ $json.wire_bic }}</p>
-    <p><strong>Reference:</strong> {{ $json.wire_reference }}</p>
+    <p><strong>Bank:</strong> {{ $json.wire_bank_name || 'Banque de Luxembourg' }}</p>
+    <p><strong>Holder:</strong> {{ $json.wire_account_holder || 'Elvinger Hoss Prussen - Escrow Account' }}</p>
+    <p><strong>IBAN:</strong> {{ $json.wire_iban || 'LU28 0019 4855 4447 1000' }}</p>
+    <p><strong>BIC:</strong> {{ $json.wire_bic || 'BLUXLULL' }}</p>
+    <p><strong>Reference:</strong> {{ $json.wire_reference_display }}</p>
     <p><strong>Currency:</strong> {{ $json.currency_code }} ({{ $json.currency_long }})</p>
 </div>
 
@@ -949,20 +1104,20 @@
 
 <h2>4. THE AGENT</h2>
 
-<h3>4.1</h3>
+<h3 class="inline-number">4.1.</h3>
 <p>By signing the Subscription Agreement, each Holder expressly and irrevocably authorises the Agent (acting as Holder's Agent) to act on its behalf as its agent in relation to this Agreement and irrevocably authorises (i) the Agent to receive the subscription proceeds (or as the case may be to instruct the Paying Agent to receive the subscription proceeds), and (ii) on its behalf to supply all information concerning itself, its financial condition and otherwise to the relevant persons contemplated under this Agreement, and (iii) any party to this Agreement to give any notice, demand or other communication to be given to or served on such Holder pursuant to this Agreement to the Agent on its behalf...</p>
 
-<h3>4.2</h3>
+<h3 class="inline-number">4.2.</h3>
 <p>Every act, omission, agreement, undertaking, settlement, waiver, notice or other communication given or made by the Holders' Agent under these Terms and Conditions, or in connection with these Terms and Conditions (whether or not known to any other Holder and whether occurring before or after such other Holder became an Holder under these Terms and Conditions) shall be binding for all purposes on all other Holders...</p>
 
 <div class="page-break"></div>
 
 <h2>5. EQUITY RETURN AND COSTS</h2>
 
-<h3>5.1</h3>
+<h3 class="inline-number">5.1.</h3>
 <p>Each Certificate will constitute a zero coupon security, due and payable at Final Redemption Date, and are to be computed at the level of the Issuer.</p>
 
-<h3>5.2</h3>
+<h3 class="inline-number">5.2.</h3>
 <p>The Equity Return under all the Certificates represents:</p>
 
 <p style="text-align: center; font-weight: bold; margin: 0.5cm 0;">
@@ -983,19 +1138,19 @@
 
 <h2>6. EQUITY RETURN CALCULATION</h2>
 
-<h3>6.1</h3>
+<h3 class="inline-number">6.1.</h3>
 <p>The Equity Return is calculated as defined above; for the avoidance of doubt, it shall be paid in cash in case of Redemption in Cash and in kind in case of Redemption in Kind.</p>
 
-<h3>6.2</h3>
+<h3 class="inline-number">6.2.</h3>
 <p>In case of payment of the Equity Return in kind, the payment shall be carried out by transferring the number of Underlying Shares to the Subscriber corresponding to the value of the Equity Return to be paid to the Subscriber according to Condition 5 ("Equity Return and Costs").</p>
 
-<h3>6.3</h3>
+<h3 class="inline-number">6.3.</h3>
 <p>The Equity Return shall be made to the Holders on each Redemption Date (the "<strong>Equity Return Payment Date</strong>").</p>
 
-<h3>6.4</h3>
+<h3 class="inline-number">6.4.</h3>
 <p>The last Equity Return Payment Date shall be the Final Redemption Date.</p>
 
-<h3>6.5</h3>
+<h3 class="inline-number">6.5.</h3>
 <p>If the Issuer fails to pay any amount payable by it under these Terms and Conditions on its due date, interest shall accrue on the overdue Equity Return amount from the due date up to the date of actual payment at the Luxembourg statutory interest rate (<em>taux d'intérêt légal</em>) for commercial transactions. Any interest accruing shall be immediately payable but will not be compounded.</p>
 
 <div class="page-break"></div>
@@ -1025,7 +1180,7 @@
 
 <h3>7.4. Calculations</h3>
 
-<p>On each Calculation Date, the Calculation Agent (or the Issuer itself, as the case may be) shall calculate the amounts due and payable on the immediately following Payment Date and the identity of the Holders as at 12:00 pm (UCT) on such date. The person or entity who appears on the Certificates Register at such date and time will be entitled to the relevant payment on the immediately following Payment Date.</p>
+<p>On each Calculation Date, the Calculation Agent (or the Issuer itself, as the case may be) shall calculate the amounts due and payable on the immediately following Payment Date and the identity of the Holders as at 12:00 pm (UTC) on such date. The person or entity who appears on the Certificates Register at such date and time will be entitled to the relevant payment on the immediately following Payment Date.</p>
 
 <h2>8. REPRESENTATIONS AND WARRANTIES OF THE ISSUER</h2>
 
@@ -1055,7 +1210,7 @@
 
 <h2>9. COVENANTS OF THE ISSUER</h2>
 
-<h3>9.1.</h3>
+<h3 class="inline-number">9.1.</h3>
 <p>The Issuer hereby covenants that, so long as any of the Certificates remains outstanding, it will:</p>
 
 <p class="clause">a) at all times keep such books of account as may be necessary to comply with all applicable laws so as to enable the financial statements of the Issuer to be prepared and allow free access to the same at all reasonable times during normal business hours at the registered office in accordance with article 470-2 and 461-6 of the Company Law;</p>
@@ -1074,7 +1229,7 @@
 
 <p class="clause">h) promptly upon a request by the Arranger, it shall supply to the Arranger a certificate signed by two of its managers on its behalf certifying that no Event of Default is continuing (or if an Event of Default is continuing, specifying the Event of Default and the steps, if any, being taken to remedy it).</p>
 
-<h3>9.2.</h3>
+<h3 class="inline-number">9.2.</h3>
 <p>The Issuer agrees that unless specifically provided otherwise in the present Terms and Conditions it will not, without the prior written consent of the Holders given at a Holder's Meeting:</p>
 
 <p class="clause">(a) engage in any activity which is not reasonably incidental to any of the activities which these Terms and Conditions provide or envisage;</p>
@@ -1216,7 +1371,7 @@
 
 <h2>14. EVENT OF DEFAULT</h2>
 
-<h3>14.1.</h3>
+<h3 class="inline-number">14.1.</h3>
 <p>Each of the events or circumstances set out below is an Event of Default:</p>
 
 <ul>
@@ -1229,10 +1384,10 @@
 
 <p>unless the default is capable of remedy and is remedied by the Issuer or the Underlying Company within ten (10) Business Days of the Issuer or the Underlying Company becoming aware of the failure to comply.</p>
 
-<h3>14.2.</h3>
+<h3 class="inline-number">14.2.</h3>
 <p>Upon the occurrence of an Event of Default which is continuing, the Issuer may declare the outstanding Certificates and all other amounts accrued or outstanding immediately due and payable by notice in accordance with the provisions of Condition 15 ("Notices").</p>
 
-<h3>14.3.</h3>
+<h3 class="inline-number">14.3.</h3>
 <p>If an Event of Default has occurred and is continuing, the Issuer shall redeem all Certificates at the price set out in the Redemption Event and the Issuer shall, if instructed in writing by the Meeting, subject to the quiet enjoyment rights of the Underlying Shares, exercise any right remedies deemed appropriate.</p>
 
 <h2>15. NOTICES</h2>
@@ -1249,7 +1404,7 @@ L-1653 Luxembourg Grand Duchy of Luxembourg</p>
 <strong>VERSO Management Ltd, as Agent</strong><br>
 Trident Chambers, Wickhams Cay, P.O. Box 146, Road Town,<br>
 Tortola VG1110 British Virgin Islands<br>
-c/o {{ $json.arranger_name }}, Director</p>
+c/o {{ $json.arranger_name || 'Julien Machot' }}, {{ $json.arranger_title || 'Director' }}</p>
 
 <div class="page-break"></div>
 
@@ -1298,13 +1453,13 @@ c/o {{ $json.arranger_name }}, Director</p>
 
 <h2>18. RESTRICTIONS ON ISSUANCE AND SALE</h2>
 
-<h3>18.1.</h3>
+<h3 class="inline-number">18.1.</h3>
 <p>Certificates will not be offered or sold to the public in the Grand Duchy of Luxembourg and are offered in circumstances that do not require the approval of a prospectus by the CSSF and the publication of such prospectus in accordance with the law of 16 July 2019 on prospectuses for securities, as amended and the Regulation (EU) 2017/1129, as amended (the "<strong>Prospectus Regulation</strong>"). The Certificates are offered to a limited number of non qualified Investors, in all cases under circumstances designed to preclude a public issuance. This document may not be reproduced or used for any purpose, or furnished to any person other than as provided under these Terms and Conditions and the Subscription Agreements. Each Holder confirms by signing the Subscription Agreement, that he is a Qualified INVESTOR entitled to hold directly or indirectly the Underlying Shares.</p>
 
-<h3>18.2.</h3>
+<h3 class="inline-number">18.2.</h3>
 <p>The Certificates are not intended to be offered, sold or otherwise made available to and should not be offered, sold or otherwise made available at any time to any retail INVESTOR in the European Economic Area ("<strong>EEA</strong>"). For these purposes, a retail INVESTOR means a person who is one (or more) of: (i) a retail client as defined in point (11) of Article 4(1) of MiFID II; (ii) a customer within the meaning of Directive 2002/92/EC, where that customer would not qualify as a professional client as defined in point (10) of Article 4(1) of MiFID II; or (iii) not a qualified INVESTOR as defined in the Prospectus Regulation. Consequently, no key information document required by Regulation (EU) No 1286/2014 (the "<strong>PRIIPs Regulation</strong>") for offering or selling the Certificates or otherwise making them available to retail Investors in the EEA has been prepared and therefore offering or selling the Certificates or otherwise making them available to any retail INVESTOR in the EEA may be unlawful under the PRIIPS Regulation.</p>
 
-<h3>18.3.</h3>
+<h3 class="inline-number">18.3.</h3>
 <p>The Certificates described in these Terms and Conditions, have not been, and will not be, registered under the United States Securities Act of 1933 as amended, or the securities laws of any state of the United States or other relevant jurisdiction. and it has not been registered under the United States Investment Company Act of 1940, as amended. The Certificates may not be offered, sold, pledged or otherwise transferred within the United States except (1) to a ''qualified institutional buyer'' within the meaning of rule 144a under the Securities Act, and (2) to a person that is not a ''U.S. Person'' as defined in rule 902 of regulations under the Securities Act. Failure to comply with this directive may result in a violation of the Securities Act or the applicable laws of other jurisdictions.</p>
 
 <div class="page-break"></div>
@@ -1350,16 +1505,16 @@ c/o {{ $json.arranger_name }}, Director</p>
 
 <div class="signature-block" style="text-align: center;">
     <p><strong>VERSO Capital 2 SCSP</strong> duly represented by its general partner <strong>VERSO Capital 2 GP SARL</strong>, as Issuer</p>
-    <div class="signature-line tcs-line" style="margin-left: auto; margin-right: auto;"><span class="sig-anchor">SIG_ANCHOR:party_b_tcs</span></div>
-    <p>Name: {{ $json.issuer_name }}<br>
-    Title: {{ $json.issuer_title }}</p>
+    <div class="signature-line tcs-line"><span class="sig-anchor">SIG_ANCHOR:party_b_tcs</span></div>
+    <p class="tcs-signer-meta">Name: {{ $json.issuer_name || 'Julien Machot' }}<br>
+    Title: {{ $json.issuer_title || 'Authorized Signatory' }}</p>
 </div>
 
 <div class="signature-block" style="text-align: center;">
     <p><strong>Verso Management Ltd.</strong>, for the purposes of acknowledging and accepting the powers and responsibilities attributed to it under these Terms and Conditions</p>
-    <div class="signature-line tcs-line" style="margin-left: auto; margin-right: auto;"><span class="sig-anchor">SIG_ANCHOR:party_c_tcs</span></div>
-    <p>Name: {{ $json.arranger_name }}<br>
-    Title: {{ $json.arranger_title }}</p>
+    <div class="signature-line tcs-line"><span class="sig-anchor">SIG_ANCHOR:party_c_tcs</span></div>
+    <p class="tcs-signer-meta">Name: {{ $json.arranger_name || 'Julien Machot' }}<br>
+    Title: {{ $json.arranger_title || 'Director' }}</p>
 </div>
 
 <div class="page-break"></div>
@@ -1371,19 +1526,35 @@ c/o {{ $json.arranger_name }}, Director</p>
 
 <p><strong>To:</strong> VERSO Capital 2 SCSP, duly represented by VERSO Capital 2 GP SARL (the "<strong>Issuer</strong>")</p>
 
-<p><strong>From:</strong> {{ $json.subscriber_name }} (the "<strong>Subscriber</strong>")</p>
+<p><strong>From:</strong> [**] (the "<strong>Subscriber</strong>")</p>
 
-<p><strong>THIS ACCESSION UNDERTAKING</strong> is made on {{ $json.agreement_date }} by the Subscriber (the "<strong>Acceding Holder</strong>") in relation to the equity certificates subscription agreement (the "<strong>Agreement</strong>") between, <strong>VERSO Capital 2 SCSP</strong>, a Luxembourg special limited partnership (<em>société en commandite spéciale</em>) with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, in the process of registration with the Luxembourg Register of Commerce and Companies duly represented by its general partner <strong>VERSO Capital 2 GP SARL</strong>, a private limited liability company (<em>société à responsabilité limitée</em>) established under the laws of the Grand Duchy of Luxembourg, with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, registered with the Luxembourg Register of Trade and Companies under number {{ $json.issuer_gp_rcc_number }} and {{ $json.subscriber_name }}. Terms defined in the Agreement shall, unless otherwise defined in this Accession Undertaking, bear the same meanings when used in this Accession Undertaking.</p>
+<p><strong>THIS ACCESSION UNDERTAKING</strong> is made on [**] by the Subscriber (the "<strong>Acceding Holder</strong>") in relation to the equity certificates subscription agreement (the "<strong>Agreement</strong>") between, <strong>VERSO Capital 2 SCSP</strong>, a Luxembourg special limited partnership (<em>société en commandite spéciale</em>) with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, in the process of registration with the Luxembourg Register of Commerce and Companies duly represented by its general partner <strong>VERSO Capital 2 GP SARL</strong>, a private limited liability company (<em>société à responsabilité limitée</em>) established under the laws of the Grand Duchy of Luxembourg, with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, registered with the Luxembourg Register of Trade and Companies under number B290857 and [Selling Subscriber]. Terms defined in the Agreement shall, unless otherwise defined in this Accession Undertaking, bear the same meanings when used in this Accession Undertaking.</p>
 
 <p>In consideration of the Acceding Holder being accepted as a Holder for the purposes of the Agreement, the Acceding Holder confirms that, as from the date of the present Agreement, it</p>
 
-<ul>
-    <li>intends to be party to the Agreement as a Holder, and</li>
-    <li>undertakes to perform all the obligations expressed in the Agreement to be assumed by a Holder, and</li>
-    <li>agrees that it shall be bound by all the provisions of the Agreement, as if it had been an original party to the Agreement.</li>
-</ul>
+<p>- intends to be party to the Agreement as a Holder, and</p>
+<p>- undertakes to perform all the obligations expressed in the Agreement to be assumed by a Holder, and</p>
+<p>- agrees that it shall be bound by all the provisions of the Agreement, as if it had been an original party to the Agreement.</p>
 
 <p>This Accession Undertaking and any non-contractual obligations arising out of or in connection with it are governed by the laws of the Grand Duchy of Luxembourg. This Accession Undertaking has been entered into on the date stated above and is delivered on the date stated above.</p>
+
+<p style="margin-top: 1.4cm;">[**]</p>
+<div class="signature-block">
+    <table class="signature-meta-table">
+        <tr class="signature-row">
+            <td class="signature-meta-label">Signature:</td>
+            <td><div class="signature-line appendix-line"></div></td>
+        </tr>
+        <tr>
+            <td class="signature-meta-label">Name:</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td class="signature-meta-label">Title:</td>
+            <td></td>
+        </tr>
+    </table>
+</div>
 
 </body>
 </html>

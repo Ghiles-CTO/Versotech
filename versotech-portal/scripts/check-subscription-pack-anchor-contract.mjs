@@ -2,6 +2,54 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
+function ensurePdfjsPolyfills() {
+  const g = globalThis
+
+  if (typeof g.DOMMatrix === 'undefined') {
+    g.DOMMatrix = class DOMMatrix {
+      constructor(init) {
+        this.a = 1; this.b = 0; this.c = 0; this.d = 1; this.e = 0; this.f = 0
+        this.isIdentity = true
+        if (Array.isArray(init) && init.length >= 6) {
+          ;[this.a, this.b, this.c, this.d, this.e, this.f] = init
+        }
+      }
+      inverse() { return new DOMMatrix() }
+      multiply() { return new DOMMatrix() }
+      scale() { return new DOMMatrix() }
+      translate() { return new DOMMatrix() }
+      transformPoint(p) { return p }
+      static fromMatrix() { return new DOMMatrix() }
+      static fromFloat32Array() { return new DOMMatrix() }
+      static fromFloat64Array() { return new DOMMatrix() }
+    }
+  }
+
+  if (typeof g.ImageData === 'undefined') {
+    g.ImageData = class ImageData {
+      constructor(width, height) {
+        this.width = width
+        this.height = height
+        this.data = new Uint8ClampedArray(width * height * 4)
+      }
+    }
+  }
+
+  if (typeof g.Path2D === 'undefined') {
+    g.Path2D = class Path2D {
+      addPath() {}
+      closePath() {}
+      moveTo() {}
+      lineTo() {}
+      bezierCurveTo() {}
+      quadraticCurveTo() {}
+      arc() {}
+      arcTo() {}
+      rect() {}
+    }
+  }
+}
+
 function usage() {
   console.log('Usage: node scripts/check-subscription-pack-anchor-contract.mjs --pdf <unsigned.pdf> [--subscribers <n>]')
   console.log('Example: node scripts/check-subscription-pack-anchor-contract.mjs --pdf /tmp/subpack.pdf --subscribers 2')
@@ -64,6 +112,7 @@ async function main() {
   }
 
   const root = process.cwd()
+  ensurePdfjsPolyfills()
   const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs')
   const workerPath = path.join(root, 'node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs')
   pdfjsLib.GlobalWorkerOptions.workerSrc = pathToFileURL(workerPath).toString()

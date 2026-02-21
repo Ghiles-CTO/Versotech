@@ -315,7 +315,8 @@ function getSignatureXPosition(
   if (signaturePosition === 'party_b') {
     if (label === 'tcs') return 0.43
     if (label === 'main_agreement') return 0.29
-    if (label === 'subscription_form') return 0.20
+    // Page 2/3 form signature line sits inside the left table cell.
+    if (label === 'subscription_form') return 0.26
     return 0.25
   }
 

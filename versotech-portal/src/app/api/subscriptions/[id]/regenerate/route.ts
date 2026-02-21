@@ -5,6 +5,7 @@ import { triggerWorkflow } from '@/lib/trigger-workflow'
 import { convertDocxToPdf } from '@/lib/gotenberg/convert'
 import { getCeoSigner } from '@/lib/staff/ceo-signer'
 import { buildSubscriptionPackPayload } from '@/lib/subscription-pack/payload-builder'
+import { applySubscriptionPackPageNumbers } from '@/lib/subscription/page-numbering'
 
 const STAFF_ROLES = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo']
 
@@ -105,7 +106,15 @@ export async function POST(
           display_name,
           type,
           registered_address,
-          entity_identifier
+          entity_identifier,
+          id_number,
+          id_type,
+          residential_street,
+          residential_line_2,
+          residential_city,
+          residential_state,
+          residential_postal_code,
+          residential_country
         ),
         vehicle:vehicles!subscriptions_vehicle_id_fkey (
           id,
@@ -223,14 +232,14 @@ export async function POST(
         }]
         console.warn('[REGENERATE] No signatories marked, using representative fallback')
       }
-    } else {
-      // For individual investors: single signatory
-      signatories = [{
-        name: subscription.investor?.legal_name || '',
-        title: 'Investor',
-        number: 1
-      }]
-    }
+	    } else {
+	      // For individual investors: single signatory
+	      signatories = [{
+	        name: subscription.investor?.legal_name || '',
+	        title: '',
+	        number: 1
+	      }]
+	    }
 
     // Generate pre-rendered HTML for signatories (n8n doesn't support Handlebars {{#each}})
     // ANCHOR ID CONVENTION: First subscriber is 'party_a', subsequent are 'party_a_2', 'party_a_3', etc.
@@ -252,32 +261,29 @@ export async function POST(
 
     // Page 2 - Subscription Form: Subscriber signatures with anchors (right column)
     // Parent div needs position:relative for anchor's position:absolute to work
-    const signatoriesFormHtml = signatories.map(s => `
-            <div class="signature-block-inline" style="position:relative;margin-bottom: 0.5cm;">
-                <div class="signature-line" style="position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number, 'form')}</span></div>
-                Name: ${s.name}<br>
-                Title: ${s.title}
-            </div>`).join('')
+	    const signatoriesFormHtml = signatories.map(s => `
+	            <div class="signature-block-inline" style="position:relative;margin-bottom: 0.5cm;">
+	                <div class="signature-line" style="position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number, 'form')}</span></div>
+	                Name: ${s.name}${s.title ? `<br>Title: ${s.title}` : ''}
+	            </div>`).join('')
 
     // Page 12 - Main Agreement: Subscriber signatures with anchors
     // Increased spacing: margin-bottom 1.5cm, min-height 4cm, margin-top 3cm on signature line
     // This provides ~85pt of space for signature image (50pt) + timestamp (12pt) + name (12pt) + buffer (10pt)
     // Parent div needs position:relative for anchor's position:absolute to work
     const signatoriesSignatureHtml = signatories.map(s => `
-<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
-    <p><strong>The Subscriber</strong>, represented by Authorized Signatory ${s.number}</p>
-    <div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number)}</span></div>
-    <p style="margin-top: 0.3cm;">Name: ${s.name}<br>
-    Title: ${s.title}</p>
-</div>`).join('')
+	<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
+	    <p><strong>The Subscriber</strong>, represented by Authorized Signatory ${s.number}</p>
+	    <div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number)}</span></div>
+	    <p style="margin-top: 0.3cm;">Name: ${s.name}${s.title ? `<br>Title: ${s.title}` : ''}</p>
+	</div>`).join('')
 
     // Legacy: Keep signatoriesTableHtml for backwards compatibility (no anchors)
-    const signatoriesTableHtml = signatories.map(s => `
-            <div style="margin-bottom: 0.5cm;">
-                <div class="signature-line"></div>
-                Name: ${s.name}<br>
-                Title: ${s.title}
-            </div>`).join('')
+	    const signatoriesTableHtml = signatories.map(s => `
+	            <div style="margin-bottom: 0.5cm;">
+	                <div class="signature-line"></div>
+	                Name: ${s.name}${s.title ? `<br>Title: ${s.title}` : ''}
+	            </div>`).join('')
 
     // Fetch fee structure for the deal (get most recent published one)
     const { data: feeStructure } = await serviceSupabase
@@ -302,7 +308,7 @@ export async function POST(
 
     // Get CEO signer for issuer block (party_b)
     const ceoSigner = await getCeoSigner(serviceSupabase)
-    const issuerName = ceoSigner?.displayName || feeStructure.issuer_signatory_name || ''
+    const issuerName = ceoSigner?.displayName || feeStructure.issuer_signatory_name || 'Julien Machot'
     const issuerTitle = ceoSigner?.title || feeStructure.issuer_signatory_title || 'Authorized Signatory'
     console.log('[REGENERATE] Issuer signer:', { name: issuerName, title: issuerTitle })
 
@@ -545,6 +551,16 @@ export async function POST(
 
         console.log('📄 Final document:', { format: outputFormat, fileName, size: fileBuffer.length })
 
+        if (outputFormat === 'pdf') {
+          const numberingResult = await applySubscriptionPackPageNumbers(fileBuffer)
+          fileBuffer = numberingResult.pdfBuffer
+          console.log('✅ Applied centered page numbers to regenerated subscription pack:', {
+            total_pages: numberingResult.totalPages,
+            numbered_pages: numberingResult.numberedPages,
+            appendix_start_page: numberingResult.appendixStartPage
+          })
+        }
+
         // Upload to Supabase Storage with regenerated- prefix
         // Use service client to bypass RLS policies on storage bucket
         const fileKey = `subscriptions/${subscriptionId}/regenerated/${Date.now()}-${fileName}`
@@ -597,9 +613,9 @@ export async function POST(
             file_size_bytes: fileBuffer.length,
             status: 'draft',
             current_version: 1,
-            created_by: user.id
+            created_by: user.id,
           })
-          .select()
+          .select('id')
           .single()
 
         if (docError) {

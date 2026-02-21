@@ -18,13 +18,13 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import {
   Bell,
   AlertCircle,
-  CheckCheck
+  CheckCheck,
+  FileSignature
 } from 'lucide-react'
 import Link from 'next/link'
 
 interface NotificationItem {
   id: string
-  type: 'notification'
   title: string
   description?: string
   href: string
@@ -37,6 +37,16 @@ interface NotificationItem {
   } | null
 }
 
+interface SignatureTaskItem {
+  id: string
+  title: string
+  description?: string
+  status: 'pending' | 'in_progress'
+  due_at?: string | null
+  created_at: string
+  href: string
+}
+
 interface NotificationCenterProps {
   className?: string
 }
@@ -45,6 +55,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
   const [mounted, setMounted] = useState(false)
   const [open, setOpen] = useState(false)
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
+  const [signatureTasks, setSignatureTasks] = useState<SignatureTaskItem[]>([])
   const [loading, setLoading] = useState(true)
   const { activePersona } = usePersona()
   const { theme } = useTheme()
@@ -63,15 +74,15 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
 
     setLoading(true)
     try {
-      const response = await fetch('/api/notifications?limit=10')
+      const response = await fetch('/api/notifications?limit=8&include_tasks=true&task_limit=2')
       if (!response.ok) {
         setNotifications([])
+        setSignatureTasks([])
         return
       }
       const data = await response.json()
       const items: NotificationItem[] = (data.notifications ?? []).map((n: any) => ({
         id: `notif-${n.id}`,
-        type: 'notification' as const,
         title: n.title,
         description: n.message,
         href: n.link || '/versotech_main/notifications',
@@ -80,6 +91,17 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
         agent: n.agent ?? null,
       }))
       setNotifications(items)
+
+      const taskItems: SignatureTaskItem[] = (data.tasks ?? []).map((t: any) => ({
+        id: `task-${t.id}`,
+        title: t.title,
+        description: t.description,
+        status: t.status,
+        due_at: t.due_at,
+        created_at: t.created_at,
+        href: '/versotech_main/tasks',
+      }))
+      setSignatureTasks(taskItems)
     } catch (error) {
       console.error('[NotificationCenter] Error fetching notifications:', error)
     } finally {
@@ -91,7 +113,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
     fetchNotifications()
   }, [fetchNotifications])
 
-  const unreadCount = notifications.filter(n => !n.read).length
+  const unreadCount = notifications.filter(n => !n.read).length + signatureTasks.length
 
   // Extract real DB id from prefixed bell item id
   function stripIdPrefix(id: string): string {
@@ -102,7 +124,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
 
   // Mark a single notification as read (optimistic update + API call)
   async function markNotificationRead(item: NotificationItem) {
-    if (item.type !== 'notification' || item.read) return
+    if (item.read) return
     // Optimistic update
     setNotifications(prev => prev.map(n => n.id === item.id ? { ...n, read: true } : n))
     try {
@@ -118,12 +140,10 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
 
   // Mark all notification-type items as read
   async function markAllNotificationsRead() {
-    const notifItems = notifications.filter(n => n.type === 'notification' && !n.read)
+    const notifItems = notifications.filter(n => !n.read)
     if (notifItems.length === 0) return
     // Optimistic update
-    setNotifications(prev => prev.map(n =>
-      n.type === 'notification' ? { ...n, read: true } : n
-    ))
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
     try {
       await fetch('/api/notifications', {
         method: 'PATCH',
@@ -215,7 +235,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
       >
         <DropdownMenuLabel className="flex items-center justify-between">
           <span className={isDark ? "text-white" : "text-gray-900"}>
-            Notifications
+            Notifications & Tasks
           </span>
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
@@ -242,7 +262,21 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
           </div>
         </DropdownMenuLabel>
 
-        <div className="px-3 pb-2">
+        <div className="px-3 pb-2 grid grid-cols-2 gap-2">
+          <Button
+            asChild
+            variant="secondary"
+            className={cn(
+              "w-full justify-center text-sm",
+              isDark
+                ? "bg-white/10 text-white hover:bg-white/20"
+                : "bg-gray-100 text-gray-900 hover:bg-gray-200"
+            )}
+          >
+            <Link href="/versotech_main/tasks">
+              Open tasks
+            </Link>
+          </Button>
           <Button
             asChild
             variant="secondary"
@@ -268,83 +302,137 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
               isDark ? "border-white/20 border-t-white" : "border-gray-200 border-t-gray-600"
             )} />
           </div>
-        ) : notifications.length === 0 ? (
+        ) : notifications.length === 0 && signatureTasks.length === 0 ? (
           <div className={cn(
             "p-4 text-center text-sm",
             isDark ? "text-gray-500" : "text-gray-500"
           )}>
-            No notifications
+            No notifications or tasks
           </div>
         ) : (
           <div className="max-h-80 overflow-y-auto">
-            {notifications.map((item) => (
-                <DropdownMenuItem
-                  key={item.id}
-                  asChild
-                  className={cn(
-                    "flex items-start gap-3 p-3 cursor-pointer",
-                    isDark
-                      ? "focus:bg-white/10"
-                      : "focus:bg-gray-50",
-                    !item.read && (isDark ? "bg-white/5" : "bg-blue-50/50")
-                  )}
-                >
-                  <Link
-                    href={item.href}
-                    className="flex items-start gap-3 w-full"
-                    onClick={() => markNotificationRead(item)}
-                  >
-                    <div className={cn(
-                      "h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0",
-                      isDark ? "bg-white/10" : "bg-gray-100"
-                    )}>
-                      <AlertCircle className="h-4 w-4 text-orange-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className={cn(
-                        "text-sm font-medium leading-snug line-clamp-2 break-words",
-                        isDark ? "text-white" : "text-gray-900"
-                      )}>
-                        {item.title}
-                      </div>
-                      {item.description && (
-                        <div className={cn(
-                          "text-xs leading-snug line-clamp-2 break-words",
-                          isDark ? "text-gray-400" : "text-gray-500"
-                        )}>
-                          {item.description}
-                        </div>
-                      )}
-                      {item.agent?.name && (
-                        <div className={cn(
-                          "text-[10px] mt-1 flex items-center gap-1",
-                          isDark ? "text-gray-400" : "text-gray-500"
-                        )}>
-                          <Avatar className="h-4 w-4">
-                            {item.agent.avatar_url && (
-                              <AvatarImage src={item.agent.avatar_url} alt={item.agent.name} />
-                            )}
-                            <AvatarFallback className="text-[6px]">
-                              {item.agent.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
-                            </AvatarFallback>
-                          </Avatar>
-                          From {item.agent.name}
-                        </div>
-                      )}
-                      <div className={cn(
-                        "text-xs mt-1",
-                        isDark ? "text-gray-500" : "text-gray-400"
-                      )}>
-                        {formatTime(item.created_at)}
-                        {item.deal_name && ` • ${item.deal_name}`}
-                      </div>
-                    </div>
-                    {!item.read && (
-                      <div className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0 mt-2" />
+            {signatureTasks.length > 0 && (
+              <>
+                <div className={cn(
+                  "px-3 pt-3 pb-2 text-[11px] font-semibold uppercase tracking-wide",
+                  isDark ? "text-gray-400" : "text-gray-500"
+                )}>
+                  Latest Signature Tasks ({signatureTasks.length})
+                </div>
+                {signatureTasks.map((task) => (
+                  <DropdownMenuItem
+                    key={task.id}
+                    asChild
+                    className={cn(
+                      "flex items-start gap-3 p-3 cursor-pointer",
+                      isDark ? "focus:bg-white/10 bg-white/5" : "focus:bg-gray-50 bg-amber-50/60"
                     )}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
+                  >
+                    <Link href={task.href} className="flex items-start gap-3 w-full">
+                      <div className={cn(
+                        "h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0",
+                        isDark ? "bg-white/10" : "bg-amber-100"
+                      )}>
+                        <FileSignature className="h-4 w-4 text-amber-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className={cn(
+                          "text-sm font-medium leading-snug line-clamp-2 break-words",
+                          isDark ? "text-white" : "text-gray-900"
+                        )}>
+                          {task.title}
+                        </div>
+                        {task.description && (
+                          <div className={cn(
+                            "text-xs leading-snug line-clamp-2 break-words",
+                            isDark ? "text-gray-400" : "text-gray-500"
+                          )}>
+                            {task.description}
+                          </div>
+                        )}
+                        <div className={cn(
+                          "text-xs mt-1",
+                          isDark ? "text-gray-500" : "text-gray-400"
+                        )}>
+                          {task.due_at ? `Due ${new Date(task.due_at).toLocaleDateString()}` : formatTime(task.created_at)}
+                        </div>
+                      </div>
+                      <div className="h-2 w-2 rounded-full bg-amber-500 flex-shrink-0 mt-2" />
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator className={isDark ? "bg-white/10" : "bg-gray-100"} />
+              </>
+            )}
+
+            {notifications.map((item) => (
+              <DropdownMenuItem
+                key={item.id}
+                asChild
+                className={cn(
+                  "flex items-start gap-3 p-3 cursor-pointer",
+                  isDark
+                    ? "focus:bg-white/10"
+                    : "focus:bg-gray-50",
+                  !item.read && (isDark ? "bg-white/5" : "bg-blue-50/50")
+                )}
+              >
+                <Link
+                  href={item.href}
+                  className="flex items-start gap-3 w-full"
+                  onClick={() => markNotificationRead(item)}
+                >
+                  <div className={cn(
+                    "h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0",
+                    isDark ? "bg-white/10" : "bg-gray-100"
+                  )}>
+                    <AlertCircle className="h-4 w-4 text-orange-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className={cn(
+                      "text-sm font-medium leading-snug line-clamp-2 break-words",
+                      isDark ? "text-white" : "text-gray-900"
+                    )}>
+                      {item.title}
+                    </div>
+                    {item.description && (
+                      <div className={cn(
+                        "text-xs leading-snug line-clamp-2 break-words",
+                        isDark ? "text-gray-400" : "text-gray-500"
+                      )}>
+                        {item.description}
+                      </div>
+                    )}
+                    {item.agent?.name && (
+                      <div className={cn(
+                        "text-[10px] mt-1 flex items-center gap-1",
+                        isDark ? "text-gray-400" : "text-gray-500"
+                      )}>
+                        <Avatar className="h-4 w-4">
+                          {item.agent.avatar_url && (
+                            <AvatarImage src={item.agent.avatar_url} alt={item.agent.name} />
+                          )}
+                          <AvatarFallback className="text-[6px]">
+                            {item.agent.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
+                        From {item.agent.name}
+                      </div>
+                    )}
+                    <div className={cn(
+                      "text-xs mt-1",
+                      isDark ? "text-gray-500" : "text-gray-400"
+                    )}>
+                      {formatTime(item.created_at)}
+                      {item.deal_name && ` • ${item.deal_name}`}
+                    </div>
+                  </div>
+                  {!item.read && (
+                    <div className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0 mt-2" />
+                  )}
+                </Link>
+              </DropdownMenuItem>
+            ))}
           </div>
         )}
 

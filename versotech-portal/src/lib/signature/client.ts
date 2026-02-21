@@ -774,6 +774,7 @@ export async function createSignatureRequest(
               type: 'signature_required',
               title: notifTitle,
               message: messageParts.join(''),
+              link: '/versotech_main/tasks',
               action_url: `/versotech_main/tasks`,
               metadata: {
                 signature_request_id: signatureRequest.id,

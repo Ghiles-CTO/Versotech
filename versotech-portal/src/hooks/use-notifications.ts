@@ -109,18 +109,53 @@ export function useNotifications(userRole: string, userId?: string) {
 
     const subscriptions: any[] = []
 
-    subscriptions.push(
-      supabaseClient
-        .channel(`notifications_tasks_${userId}`)
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'tasks', filter: `owner_user_id=eq.${userId}` },
-          () => {
-            void fetchCounts(true)
-          }
+    const subscribeToTaskChannels = async () => {
+      subscriptions.push(
+        supabaseClient
+          .channel(`notifications_tasks_${userId}`)
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'tasks', filter: `owner_user_id=eq.${userId}` },
+            () => {
+              void fetchCounts(true)
+            }
+          )
+          .subscribe()
+      )
+
+      const { data: investorLinks, error: investorLinksError } = await supabaseClient
+        .from('investor_users')
+        .select('investor_id')
+        .eq('user_id', userId)
+
+      if (investorLinksError) {
+        console.warn('Failed to load investor links for task subscriptions:', investorLinksError.message)
+        return
+      }
+
+      if (!isMounted) return
+
+      const investorIds = Array.from(
+        new Set((investorLinks ?? []).map((link) => link.investor_id).filter(Boolean))
+      )
+
+      investorIds.forEach((investorId) => {
+        subscriptions.push(
+          supabaseClient
+            .channel(`notifications_tasks_investor_${investorId}`)
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'tasks', filter: `owner_investor_id=eq.${investorId}` },
+              () => {
+                void fetchCounts(true)
+              }
+            )
+            .subscribe()
         )
-        .subscribe()
-    )
+      })
+    }
+
+    void subscribeToTaskChannels()
 
     subscriptions.push(
       supabaseClient
