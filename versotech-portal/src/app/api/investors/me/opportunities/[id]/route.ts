@@ -804,7 +804,8 @@ export async function POST(request: Request, { params }: RouteParams) {
 
     if (action === 'express_interest') {
       if (!existingMembership) {
-        // Create membership and express interest in one go
+        // Create membership with viewed_at only — interest_confirmed_at should only
+        // be set when the investor submits a subscription (Subscribe Directly flow)
         await serviceSupabase
           .from('deal_memberships')
           .insert({
@@ -812,16 +813,14 @@ export async function POST(request: Request, { params }: RouteParams) {
             user_id: user.id,
             investor_id: investorId,
             role: 'investor',
-            viewed_at: new Date().toISOString(),
-            interest_confirmed_at: new Date().toISOString()
+            viewed_at: new Date().toISOString()
           })
-      } else if (!existingMembership.interest_confirmed_at) {
-        // Update existing membership
+      } else if (!existingMembership.viewed_at) {
+        // Ensure viewed_at is set
         await serviceSupabase
           .from('deal_memberships')
           .update({
-            interest_confirmed_at: new Date().toISOString(),
-            viewed_at: existingMembership.viewed_at || new Date().toISOString()
+            viewed_at: new Date().toISOString()
           })
           .eq('deal_id', dealId)
           .eq('user_id', user.id)

@@ -225,17 +225,18 @@ export async function POST(
     return NextResponse.json({ error: 'Failed to submit interest' }, { status: 500 })
   }
 
-  // Update deal_memberships.interest_confirmed_at if not already set
-  // This ensures the journey stage tracking is accurate
+  // Ensure viewed_at is set on the membership (interest expression implies viewing)
+  // NOTE: Do NOT set interest_confirmed_at here — that should only be set when the
+  // investor submits a subscription (confirms commitment amount via Subscribe Directly).
+  // This route handles data room access requests, which is a different action.
   await serviceSupabase
     .from('deal_memberships')
     .update({
-      interest_confirmed_at: new Date().toISOString(),
-      viewed_at: new Date().toISOString() // Ensure viewed is also set
+      viewed_at: new Date().toISOString()
     })
     .eq('deal_id', dealId)
     .eq('investor_id', resolvedInvestorId)
-    .is('interest_confirmed_at', null) // Only update if not already set
+    .is('viewed_at', null) // Only update if not already set
 
   // Track analytics event
   await trackDealEvent({

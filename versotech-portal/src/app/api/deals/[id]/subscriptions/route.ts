@@ -304,6 +304,17 @@ export async function POST(
     return NextResponse.json({ error: 'Failed to submit subscription' }, { status: 500 })
   }
 
+  // Set interest_confirmed_at on membership — submitting a subscription IS confirming interest
+  await serviceSupabase
+    .from('deal_memberships')
+    .update({
+      interest_confirmed_at: new Date().toISOString(),
+      viewed_at: new Date().toISOString()
+    })
+    .eq('deal_id', dealId)
+    .eq('investor_id', resolvedInvestorId)
+    .is('interest_confirmed_at', null)
+
   await trackDealEvent({
     supabase: serviceSupabase,
     dealId,
