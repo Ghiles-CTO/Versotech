@@ -52,6 +52,7 @@ type InvestorInfo = {
   display_name: string | null
   type: string | null
   status: string | null
+  account_approval_status: string | null
   kyc_status: string | null
   onboarding_status: string | null
   country: string | null
@@ -141,7 +142,7 @@ interface ProfilePageClientProps {
 
 // Status badge configurations
 const STATUS_BADGES: Record<string, { label: string; className: string; icon: typeof CheckCircle2 }> = {
-  active: { label: 'Active', className: 'bg-emerald-100 text-emerald-800 border-emerald-200', icon: CheckCircle2 },
+  active: { label: 'Profile Live', className: 'bg-emerald-100 text-emerald-800 border-emerald-200', icon: CheckCircle2 },
   pending: { label: 'Pending', className: 'bg-amber-100 text-amber-800 border-amber-200', icon: Clock },
   inactive: { label: 'Inactive', className: 'bg-gray-100 text-gray-800 border-gray-200', icon: AlertCircle },
   suspended: { label: 'Suspended', className: 'bg-red-100 text-red-800 border-red-200', icon: AlertCircle },
@@ -152,6 +153,14 @@ const KYC_BADGES: Record<string, { label: string; className: string }> = {
   pending: { label: 'KYC Pending', className: 'bg-amber-100 text-amber-800 border-amber-200' },
   rejected: { label: 'KYC Rejected', className: 'bg-red-100 text-red-800 border-red-200' },
   not_started: { label: 'KYC Not Started', className: 'bg-gray-100 text-gray-800 border-gray-200' },
+}
+
+const ACCOUNT_APPROVAL_BADGES: Record<string, { label: string; className: string }> = {
+  approved: { label: 'Account Approved', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+  pending_onboarding: { label: 'Onboarding Required', className: 'bg-amber-100 text-amber-800 border-amber-200' },
+  pending_approval: { label: 'Awaiting Approval', className: 'bg-amber-100 text-amber-800 border-amber-200' },
+  incomplete: { label: 'Account Incomplete', className: 'bg-gray-100 text-gray-800 border-gray-200' },
+  unauthorized: { label: 'Account Restricted', className: 'bg-red-100 text-red-800 border-red-200' },
 }
 
 export function ProfilePageClient({
@@ -297,6 +306,11 @@ export function ProfilePageClient({
   const statusBadge = STATUS_BADGES[investorInfo?.status || 'pending'] || STATUS_BADGES.pending
   const StatusIcon = statusBadge.icon
   const kycBadge = KYC_BADGES[investorInfo?.kyc_status || 'not_started'] || KYC_BADGES.not_started
+  const accountApprovalStatusKey = (investorInfo?.account_approval_status || 'pending_onboarding').toLowerCase()
+  const accountApprovalBadge = ACCOUNT_APPROVAL_BADGES[accountApprovalStatusKey] || {
+    label: 'Account Pending',
+    className: 'bg-gray-100 text-gray-800 border-gray-200',
+  }
 
   // Staff layout - keep the original grid layout
   if (isStaff) {
@@ -420,6 +434,9 @@ export function ProfilePageClient({
             <Badge className={statusBadge.className}>
               <StatusIcon className="h-3 w-3 mr-1" />
               {statusBadge.label}
+            </Badge>
+            <Badge className={accountApprovalBadge.className}>
+              {accountApprovalBadge.label}
             </Badge>
             <Badge className={kycBadge.className}>
               {kycBadge.label}

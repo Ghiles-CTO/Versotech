@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { isStaffUser } from '@/lib/api-auth'
 import { z } from 'zod'
 import { getAppUrl } from '@/lib/signature/token'
 import { sendInvitationEmail } from '@/lib/email/resend-service'
@@ -71,7 +72,7 @@ const inviteEntityUserSchema = z.object({
   display_name: z.string().min(2, 'Display name must be at least 2 characters'),
   title: z.string().nullable().optional(), // Allow null from client
   role: z.string().nullable().optional(), // Will use entity-specific default if not provided
-  is_primary: z.boolean().default(false),
+  is_primary: z.boolean().default(true),
   is_signatory: z.boolean().optional().default(false),
   can_sign: z.boolean().optional().default(false),
 })
@@ -89,15 +90,10 @@ export async function POST(request: NextRequest) {
     // Use service client for admin operations (bypasses RLS)
     const supabase = createServiceClient()
 
-    // Check if user has super_admin or manage_investors permission
-    const { data: permissions } = await supabase
-      .from('staff_permissions')
-      .select('permission')
-      .eq('user_id', user.id)
-      .in('permission', ['super_admin', 'manage_investors'])
-
-    if (!permissions || permissions.length === 0) {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+    // Keep invite authorization aligned with staff invite UX to avoid split behavior.
+    const canInvite = await isStaffUser(authSupabase, user)
+    if (!canInvite) {
+      return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
     }
 
     // Parse and validate request body
@@ -105,6 +101,8 @@ export async function POST(request: NextRequest) {
     const validatedData = inviteEntityUserSchema.parse(body)
 
     const { entity_type, entity_id, email, display_name, title, is_primary, is_signatory, can_sign } = validatedData
+    const normalizedEmail = email.trim().toLowerCase()
+    const linkCanSign = Boolean(is_signatory || can_sign)
 
     // Use entity-specific default role if not provided, and validate
     const role = validatedData.role || DEFAULT_ROLE_BY_ENTITY[entity_type]
@@ -131,7 +129,7 @@ export async function POST(request: NextRequest) {
     const { data: existingProfile } = await supabase
       .from('profiles')
       .select('id')
-      .eq('email', email)
+      .eq('email', normalizedEmail)
       .single()
 
     if (existingProfile) {
@@ -156,12 +154,11 @@ export async function POST(request: NextRequest) {
         [entityIdColumn]: entity_id,
         role: role,
         is_primary: is_primary,
+        can_sign: linkCanSign,
+        ceo_approval_status: 'approved',
+        ceo_approved_at: new Date().toISOString(),
+        created_by: user.id,
         created_at: new Date().toISOString(),
-      }
-
-      // Add lawyer-specific fields (only can_sign exists in lawyer_users table)
-      if (entity_type === 'lawyer') {
-        junctionData.can_sign = can_sign
       }
 
       const { error: linkError } = await supabase
@@ -182,9 +179,10 @@ export async function POST(request: NextRequest) {
         entity_id: entity_id,
         action_details: {
           user_id: existingProfile.id,
-          email: email,
+          email: normalizedEmail,
           role: role,
           is_primary: is_primary,
+          is_signatory: linkCanSign,
         },
         timestamp: new Date().toISOString()
       })
@@ -232,7 +230,7 @@ export async function POST(request: NextRequest) {
       .select('id, status')
       .eq('entity_type', entity_type)
       .eq('entity_id', entity_id)
-      .eq('email', email.toLowerCase())
+      .eq('email', normalizedEmail)
       .eq('status', 'pending')
       .maybeSingle()
 
@@ -250,9 +248,9 @@ export async function POST(request: NextRequest) {
         entity_type,
         entity_id,
         entity_name: entityName,
-        email: email.toLowerCase(),
+        email: normalizedEmail,
         role: role,
-        is_signatory: is_signatory || can_sign, // Map can_sign to is_signatory
+        is_signatory: linkCanSign, // Map can_sign to is_signatory
         invited_by: user.id,
         invited_by_name: inviterName,
         status: 'pending',
@@ -260,7 +258,12 @@ export async function POST(request: NextRequest) {
         sent_at: new Date().toISOString(),
         reminder_count: 0,
         last_reminded_at: null,
-        metadata: { display_name }
+        metadata: {
+          display_name,
+          title: title || null,
+          is_primary,
+          can_sign: linkCanSign,
+        }
       })
       .select()
       .single()
@@ -275,7 +278,7 @@ export async function POST(request: NextRequest) {
 
     // Send invitation email via Resend
     const emailResult = await sendInvitationEmail({
-      email: email,
+      email: normalizedEmail,
       inviteeName: display_name,
       entityName: entityName,
       entityType: entity_type,
@@ -307,11 +310,11 @@ export async function POST(request: NextRequest) {
       entity_id: entity_id,
       action_details: {
         invitation_id: invitation.id,
-        email: email,
+        email: normalizedEmail,
         display_name: display_name,
         role: role,
         is_primary: is_primary,
-        is_signatory: is_signatory,
+        is_signatory: linkCanSign,
         email_sent: emailResult.success
       },
       timestamp: new Date().toISOString()
@@ -320,7 +323,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       invitation_id: invitation.id,
-      message: `Invitation sent to ${email}`,
+      message: `Invitation sent to ${normalizedEmail}`,
       is_new_user: true,
       email_sent: true,
       accept_url: acceptUrl // For debugging/testing

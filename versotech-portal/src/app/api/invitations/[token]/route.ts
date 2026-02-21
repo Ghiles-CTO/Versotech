@@ -187,19 +187,18 @@ export async function POST(
       }, { status: 400 })
     }
 
-    // Verify email matches (optional - we can allow any logged-in user to accept)
+    // Enforce that the signed-in account matches the invited email.
     const { data: profile } = await serviceSupabase
       .from('profiles')
       .select('email, display_name')
       .eq('id', user.id)
       .maybeSingle()
 
-    // Uncomment if you want strict email matching:
-    // if (profile?.email?.toLowerCase() !== invitation.email.toLowerCase()) {
-    //   return NextResponse.json({
-    //     error: 'This invitation was sent to a different email address'
-    //   }, { status: 403 })
-    // }
+    if (!profile?.email || profile.email.toLowerCase() !== invitation.email.toLowerCase()) {
+      return NextResponse.json({
+        error: `This invitation was sent to ${invitation.email}. Please sign in with that email to continue.`
+      }, { status: 403 })
+    }
 
     // Check if user is already a member
     // Note: We select 'user_id' instead of 'id' because some tables use composite keys
@@ -371,12 +370,15 @@ export async function POST(
       // Non-staff entity types - create junction table records
       let insertData: Record<string, any>
 
+      const invitationMetadata = (invitation.metadata as Record<string, any> | null) || {}
+      const invitationIsPrimary = Boolean(invitationMetadata.is_primary)
+
       if (invitation.entity_type === 'ceo') {
         // CEO uses singleton pattern - no entity_id column
         insertData = {
           user_id: user.id,
           role: invitation.role,
-          is_primary: false,
+          is_primary: invitationIsPrimary,
           can_sign: invitation.is_signatory || false,
           title: invitation.role === 'admin' ? 'Administrator' : invitation.role
         }
@@ -386,7 +388,7 @@ export async function POST(
           user_id: user.id,
           [entityIdColumn]: invitation.entity_id,
           role: invitation.role,
-          is_primary: false,
+          is_primary: invitationIsPrimary,
           created_by: invitation.invited_by,
           // CEO pre-approved this member via the invitation approval workflow
           ceo_approval_status: 'approved',

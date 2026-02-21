@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useTransition } from 'react'
+import React, { useEffect, useState, useTransition } from 'react'
 import { z } from 'zod'
 import {
   Dialog,
@@ -90,6 +90,57 @@ const ENTITY_TYPES = {
 
 type EntityType = keyof typeof ENTITY_TYPES
 
+type StaffMember = {
+  id: string
+  display_name: string
+  email: string
+  role: string
+}
+
+const INVITE_ROLE_OPTIONS_BY_ENTITY: Record<EntityType, { value: string; label: string }[]> = {
+  investor: [
+    { value: 'admin', label: 'Admin' },
+    { value: 'member', label: 'Member' },
+    { value: 'viewer', label: 'Viewer' },
+  ],
+  arranger: [
+    { value: 'admin', label: 'Admin' },
+    { value: 'member', label: 'Member' },
+    { value: 'viewer', label: 'Viewer' },
+  ],
+  lawyer: [
+    { value: 'admin', label: 'Admin' },
+    { value: 'member', label: 'Member' },
+    { value: 'viewer', label: 'Viewer' },
+  ],
+  partner: [
+    { value: 'admin', label: 'Admin' },
+    { value: 'member', label: 'Member' },
+    { value: 'viewer', label: 'Viewer' },
+  ],
+  introducer: [
+    { value: 'admin', label: 'Admin' },
+    { value: 'contact', label: 'Contact' },
+    { value: 'payment_contact', label: 'Payment Contact' },
+    { value: 'legal_contact', label: 'Legal Contact' },
+  ],
+  commercial_partner: [
+    { value: 'admin', label: 'Admin' },
+    { value: 'contact', label: 'Contact' },
+    { value: 'billing_contact', label: 'Billing Contact' },
+    { value: 'technical_contact', label: 'Technical Contact' },
+  ],
+}
+
+const DEFAULT_INVITE_ROLE_BY_ENTITY: Record<EntityType, string> = {
+  investor: 'member',
+  arranger: 'member',
+  lawyer: 'member',
+  partner: 'member',
+  introducer: 'contact',
+  commercial_partner: 'contact',
+}
+
 // Schemas for each entity type
 const investorSchema = z.object({
   type: z.enum(['individual', 'institutional', 'entity', 'family_office', 'fund']),
@@ -107,6 +158,8 @@ const investorSchema = z.object({
   email: z.string().email().optional().or(z.literal('')),
   phone: z.string().optional(),
   country: z.string().optional(),
+  tax_residency: z.string().optional(),
+  primary_rm: z.union([z.string().uuid(), z.literal('')]).optional(),
 }).refine((data) => {
   // For individual: first_name is required
   if (data.type === 'individual') {
@@ -253,6 +306,9 @@ const userInviteSchema = z.object({
   email: z.string().email('Valid email required'),
   display_name: z.string().min(2, 'Display name required'),
   title: z.string().optional(),
+  role: z.string().min(1, 'Role is required'),
+  is_primary: z.boolean().default(true),
+  is_signatory: z.boolean().default(false),
 })
 
 interface AddAccountModalProps {
@@ -270,6 +326,8 @@ export function AddAccountModal({
   const [entityType, setEntityType] = useState<EntityType | null>(null)
   const [isPending, startTransition] = useTransition()
   const [inviteUser, setInviteUser] = useState(false)
+  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([])
+  const [staffLoading, setStaffLoading] = useState(false)
 
   // Form state for each entity type
   const [formData, setFormData] = useState<Record<string, string | number | boolean | null | undefined>>({})
@@ -277,14 +335,54 @@ export function AddAccountModal({
     email: '',
     display_name: '',
     title: '',
+    role: 'member',
+    is_primary: true,
+    is_signatory: false,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    if (!open) return
+
+    let isMounted = true
+
+    const fetchStaffMembers = async () => {
+      setStaffLoading(true)
+      try {
+        const response = await fetch('/api/staff/available')
+        if (!response.ok) return
+        const data = await response.json()
+        if (isMounted) {
+          setStaffMembers(Array.isArray(data.staff) ? data.staff : [])
+        }
+      } catch (error) {
+        console.error('Failed to fetch staff members:', error)
+      } finally {
+        if (isMounted) {
+          setStaffLoading(false)
+        }
+      }
+    }
+
+    fetchStaffMembers()
+
+    return () => {
+      isMounted = false
+    }
+  }, [open])
 
   const resetForm = () => {
     setStep('type')
     setEntityType(null)
     setFormData({})
-    setInviteData({ email: '', display_name: '', title: '' })
+    setInviteData({
+      email: '',
+      display_name: '',
+      title: '',
+      role: 'member',
+      is_primary: true,
+      is_signatory: false,
+    })
     setInviteUser(false)
     setErrors({})
   }
@@ -315,6 +413,8 @@ export function AddAccountModal({
         email: '',
         phone: '',
         country: '',
+        tax_residency: '',
+        primary_rm: '',
       },
       introducer: {
         type: 'individual',
@@ -389,6 +489,12 @@ export function AddAccountModal({
       },
     }
     setFormData(defaults[type] || {})
+    setInviteData((prev) => ({
+      ...prev,
+      role: DEFAULT_INVITE_ROLE_BY_ENTITY[type],
+      is_primary: true,
+      is_signatory: type === 'investor' && defaults[type].type === 'individual',
+    }))
   }
 
   const handleCreate = () => {
@@ -532,7 +638,10 @@ export function AddAccountModal({
               email: inviteData.email,
               display_name: inviteData.display_name,
               title: inviteData.title || null,
-              is_primary: true,
+              role: inviteData.role,
+              is_primary: inviteData.is_primary,
+              is_signatory: inviteData.is_signatory,
+              can_sign: inviteData.is_signatory,
             }),
           })
 
@@ -570,6 +679,14 @@ export function AddAccountModal({
       const next = { ...prev, [key]: value }
       return next
     })
+
+    if (inviteUser && entityType === 'investor' && key === 'type') {
+      setInviteData(prev => ({
+        ...prev,
+        is_signatory: value === 'individual',
+      }))
+    }
+
     // Clear error for this field
     if (errors[key]) {
       setErrors(prev => {
@@ -709,7 +826,52 @@ export function AddAccountModal({
             {renderFormField('email', 'Email', 'email', undefined, 'investor@example.com')}
             {renderFormField('phone', 'Phone', 'text', undefined, '+1 (555) 123-4567')}
           </div>
-          {renderFormField('country', formData.type === 'individual' ? 'Country of Residence' : 'Country', 'text', undefined, 'United States')}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {renderFormField('country', formData.type === 'individual' ? 'Country of Residence' : 'Country', 'text', undefined, 'United States')}
+            {renderFormField('tax_residency', 'Tax Residency', 'text', undefined, 'United States')}
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="primary_rm" className="text-sm">
+              Relationship Manager
+            </Label>
+            <Select
+              value={typeof formData.primary_rm === 'string' && formData.primary_rm ? formData.primary_rm : undefined}
+              onValueChange={(value) => updateFormData('primary_rm', value)}
+            >
+              <SelectTrigger id="primary_rm">
+                <SelectValue
+                  placeholder={staffLoading ? 'Loading staff...' : 'Select a relationship manager (optional)'}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {staffMembers.length > 0 ? (
+                  staffMembers.map((staff) => (
+                    <SelectItem key={staff.id} value={staff.id}>
+                      {staff.display_name} ({staff.role})
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="none" disabled>
+                    {staffLoading ? 'Loading staff...' : 'No staff available'}
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+            {typeof formData.primary_rm === 'string' && formData.primary_rm && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-0 text-xs"
+                onClick={() => updateFormData('primary_rm', '')}
+              >
+                Clear selection
+              </Button>
+            )}
+            {errors['primary_rm'] && (
+              <p className="text-xs text-destructive">{errors['primary_rm']}</p>
+            )}
+          </div>
         </div>
       ),
       introducer: (
@@ -993,12 +1155,46 @@ export function AddAccountModal({
         </div>
         <Switch
           checked={inviteUser}
-          onCheckedChange={setInviteUser}
+          onCheckedChange={(checked) => {
+            setInviteUser(checked)
+            if (checked && entityType) {
+              setInviteData(prev => ({
+                ...prev,
+                role: prev.role || DEFAULT_INVITE_ROLE_BY_ENTITY[entityType],
+                is_primary: true,
+                is_signatory: entityType === 'investor' && formData.type === 'individual',
+              }))
+            }
+          }}
         />
       </div>
 
       {inviteUser && (
         <div className="space-y-3 pl-6 border-l-2 border-muted">
+          <div className="space-y-1.5">
+            <Label htmlFor="invite_role" className="text-sm">
+              Role
+              {errors['invite_role'] && <span className="text-destructive ml-1">*</span>}
+            </Label>
+            <Select
+              value={inviteData.role}
+              onValueChange={(value) => setInviteData(prev => ({ ...prev, role: value }))}
+            >
+              <SelectTrigger id="invite_role">
+                <SelectValue placeholder="Select role" />
+              </SelectTrigger>
+              <SelectContent>
+                {(entityType ? INVITE_ROLE_OPTIONS_BY_ENTITY[entityType] : []).map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors['invite_role'] && (
+              <p className="text-xs text-destructive">{errors['invite_role']}</p>
+            )}
+          </div>
           <div className="space-y-1.5">
             <Label htmlFor="invite_email" className="text-sm">
               Email Address
@@ -1037,6 +1233,38 @@ export function AddAccountModal({
               value={inviteData.title}
               onChange={(e) => setInviteData(prev => ({ ...prev, title: e.target.value }))}
               placeholder="Director, Partner, etc."
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="space-y-0.5">
+              <Label htmlFor="invite_is_primary" className="text-sm font-medium">
+                Primary Contact
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Main point of contact for this entity
+              </p>
+            </div>
+            <Switch
+              id="invite_is_primary"
+              checked={inviteData.is_primary}
+              onCheckedChange={(checked) => setInviteData(prev => ({ ...prev, is_primary: checked }))}
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="space-y-0.5">
+              <Label htmlFor="invite_is_signatory" className="text-sm font-medium">
+                Can Sign Documents
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {entityType === 'investor' && formData.type === 'individual'
+                  ? 'Enabled by default for individual investors'
+                  : 'Enable if this user can sign on behalf of the entity'}
+              </p>
+            </div>
+            <Switch
+              id="invite_is_signatory"
+              checked={inviteData.is_signatory}
+              onCheckedChange={(checked) => setInviteData(prev => ({ ...prev, is_signatory: checked }))}
             />
           </div>
         </div>

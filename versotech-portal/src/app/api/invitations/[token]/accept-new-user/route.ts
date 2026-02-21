@@ -174,9 +174,12 @@ export async function POST(
     const entityIdColumn = ENTITY_ID_COLUMNS[invitation.entity_type]
 
     // Handle staff entity type separately - they don't have a junction table
+    const invitationMetadata = (invitation.metadata as Record<string, any> | null) || {}
+    const invitationIsPrimary = Boolean(invitationMetadata.is_primary)
+
     if (invitation.entity_type === 'staff') {
       // Staff: Update profile with staff role and create permissions
-      const metadata = (invitation.metadata as Record<string, any>) || {}
+      const metadata = invitationMetadata
 
       // Build update object - only include is_super_admin if explicitly set in metadata
       const profileUpdate: Record<string, any> = {
@@ -247,7 +250,7 @@ export async function POST(
           .insert({
             user_id: authData.user.id,
             role: 'admin',
-            is_primary: false,
+            is_primary: invitationIsPrimary,
             can_sign: true,
             title: metadata.title || invitation.role || 'Staff',
             created_by: invitation.invited_by,
@@ -272,7 +275,7 @@ export async function POST(
         insertData = {
           user_id: authData.user.id,
           role: invitation.role,
-          is_primary: false,
+          is_primary: invitationIsPrimary,
           can_sign: invitation.is_signatory || false,
           title: invitation.role === 'admin' ? 'Administrator' : invitation.role
         }
@@ -282,7 +285,7 @@ export async function POST(
           user_id: authData.user.id,
           [entityIdColumn]: invitation.entity_id,
           role: invitation.role,
-          is_primary: false,
+          is_primary: invitationIsPrimary,
           created_by: invitation.invited_by,
           // CEO pre-approved this member via the invitation approval workflow
           ceo_approval_status: 'approved',

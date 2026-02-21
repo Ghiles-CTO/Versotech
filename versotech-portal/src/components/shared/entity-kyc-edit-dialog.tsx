@@ -34,6 +34,7 @@ import {
 import { toast } from 'sonner'
 import { Loader2, User, MapPin, FileText, IdCard, LucideIcon } from 'lucide-react'
 import { CountrySelect, NationalitySelect } from '@/components/kyc/country-select'
+import { normalizeKycEditPayload } from '@/lib/kyc/normalize-edit-payload'
 
 // Clamp date input year to 4 digits max
 function clampDateYear(e: React.FormEvent<HTMLInputElement>) {
@@ -192,18 +193,29 @@ export function EntityKYCEditDialog({
   const handleSubmit = async (data: IndividualKycEditForm) => {
     setIsSaving(true)
     try {
+      const normalizedPayload = normalizeKycEditPayload(data, {
+        showPersonalInfo,
+        showAddress,
+        showTaxInfo,
+        showIdentification,
+      })
+
       const response = await fetch(apiEndpoint, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           entity_id: entityId,
-          ...data,
+          ...normalizedPayload,
         }),
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to save KYC data')
+        const errorData = await response.json().catch(() => ({}))
+        const fieldErrors = errorData?.details?.fieldErrors as Record<string, string[] | undefined> | undefined
+        const firstFieldError = fieldErrors
+          ? Object.values(fieldErrors).flat().find((message): message is string => Boolean(message))
+          : null
+        throw new Error(firstFieldError || errorData.error || 'Failed to save KYC data')
       }
 
       toast.success('KYC information updated successfully')

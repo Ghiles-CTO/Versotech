@@ -96,7 +96,7 @@ const updateInvestorSchema = z.object({
   tax_id_number: z.string().max(50).optional().nullable(),
 
   // ID Document
-  id_type: z.enum(['passport', 'national_id', 'drivers_license', 'residence_permit', 'other_government_id']).optional().nullable(),
+  id_type: z.enum(['passport', 'national_id', 'drivers_license', 'residence_permit', 'other_government_id', 'other']).optional().nullable().or(z.literal('')),
   id_number: z.string().max(50).optional().nullable(),
   id_issue_date: z.string().optional().nullable(),
   id_expiry_date: z.string().optional().nullable(),
@@ -289,6 +289,13 @@ export async function PATCH(request: Request) {
       if (field in updateData && updateData[field] === '') {
         updateData[field] = null
       }
+    }
+
+    // Normalize legacy/empty id_type values.
+    if (updateData.id_type === '') {
+      updateData.id_type = null
+    } else if (updateData.id_type === 'other') {
+      updateData.id_type = 'other_government_id'
     }
 
     updateData.updated_at = new Date().toISOString()

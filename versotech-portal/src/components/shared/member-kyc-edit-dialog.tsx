@@ -42,6 +42,7 @@ import {
   LucideIcon,
 } from 'lucide-react'
 import { CountrySelect, NationalitySelect } from '@/components/kyc/country-select'
+import { normalizeKycEditPayload } from '@/lib/kyc/normalize-edit-payload'
 
 // Clamp date input year to 4 digits max
 function clampDateYear(e: React.FormEvent<HTMLInputElement>) {
@@ -263,6 +264,10 @@ export function MemberKYCEditDialog({
     try {
       const method = mode === 'create' ? 'POST' : 'PATCH'
       const url = mode === 'create' ? apiEndpoint : `${apiEndpoint}/${memberId}`
+      const normalizedPayload = normalizeKycEditPayload(data, {
+        showIdentification,
+        showOwnershipInfo: isUBO,
+      })
 
       const response = await fetch(url, {
         method,
@@ -270,13 +275,17 @@ export function MemberKYCEditDialog({
         body: JSON.stringify({
           entity_id: entityId,
           member_id: memberId,
-          ...data,
+          ...normalizedPayload,
         }),
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || `Failed to ${mode} member`)
+        const errorData = await response.json().catch(() => ({}))
+        const fieldErrors = errorData?.details?.fieldErrors as Record<string, string[] | undefined> | undefined
+        const firstFieldError = fieldErrors
+          ? Object.values(fieldErrors).flat().find((message): message is string => Boolean(message))
+          : null
+        throw new Error(firstFieldError || errorData.error || `Failed to ${mode} member`)
       }
 
       toast.success(mode === 'create' ? 'Member added successfully' : 'Member updated successfully')

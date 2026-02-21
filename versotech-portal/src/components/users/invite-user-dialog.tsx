@@ -132,7 +132,7 @@ export function InviteUserDialog({
       display_name: '',
       title: '',
       role: defaultRole,
-      is_primary: false,
+      is_primary: true,
       is_signatory: false,
       can_sign: false,
     },
@@ -140,7 +140,6 @@ export function InviteUserDialog({
 
   const isPrimary = watch('is_primary')
   const isSignatory = watch('is_signatory')
-  const canSign = watch('can_sign')
   const role = watch('role')
 
   const onSubmit = async (data: InviteUserFormData) => {
@@ -153,6 +152,7 @@ export function InviteUserDialog({
           entity_type: entityType,
           entity_id: entityId,
           ...data,
+          can_sign: data.is_signatory,
         }),
       })
 
@@ -275,20 +275,25 @@ export function InviteUserDialog({
             />
           </div>
 
-          {entityType === 'lawyer' && (
+          {(entityType === 'lawyer' || entityType === 'investor') && (
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div className="space-y-0.5">
-                <Label htmlFor="can_sign" className="text-sm font-medium">
+                <Label htmlFor="is_signatory" className="text-sm font-medium">
                   Can Sign Documents
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Has authority to sign on behalf of the law firm
+                  {entityType === 'investor'
+                    ? 'Enable if this user can sign on behalf of the investor'
+                    : 'Has authority to sign on behalf of the law firm'}
                 </p>
               </div>
               <Switch
-                id="can_sign"
-                checked={canSign}
-                onCheckedChange={(checked) => setValue('can_sign', checked)}
+                id="is_signatory"
+                checked={isSignatory}
+                onCheckedChange={(checked) => {
+                  setValue('is_signatory', checked)
+                  setValue('can_sign', checked)
+                }}
               />
             </div>
           )}

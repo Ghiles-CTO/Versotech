@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import {
   Dialog,
   DialogContent,
@@ -23,6 +22,7 @@ import {
 import { Loader2, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Switch } from '@/components/ui/switch'
 
 type ExistingUser = {
   id: string
@@ -38,12 +38,14 @@ type AddUserToInvestorModalProps = {
 }
 
 export function AddUserToInvestorModal({ investorId, open, onOpenChange }: AddUserToInvestorModalProps) {
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [loadingUsers, setLoadingUsers] = useState(false)
   const [mode, setMode] = useState<'existing' | 'invite'>('existing')
   const [email, setEmail] = useState('')
   const [selectedUserId, setSelectedUserId] = useState('')
+  const [inviteRole, setInviteRole] = useState<'admin' | 'member' | 'viewer'>('member')
+  const [isPrimary, setIsPrimary] = useState(true)
+  const [isSignatory, setIsSignatory] = useState(false)
   const [existingUsers, setExistingUsers] = useState<ExistingUser[]>([])
 
   // Fetch existing users when modal opens
@@ -85,18 +87,30 @@ export function AddUserToInvestorModal({ investorId, open, onOpenChange }: AddUs
     setLoading(true)
 
     try {
-      const submitEmail = mode === 'existing' 
-        ? existingUsers.find(u => u.id === selectedUserId)?.email 
-        : email
+      const selectedUser = mode === 'existing'
+        ? existingUsers.find(u => u.id === selectedUserId)
+        : null
 
-      console.log('[AddUser] Sending request:', { mode, email: submitEmail, userId: selectedUserId })
+      const submitEmail = mode === 'existing' ? selectedUser?.email : email
+      const submitDisplayName = mode === 'existing'
+        ? (selectedUser?.display_name || selectedUser?.email?.split('@')[0] || 'Investor User')
+        : email.trim().split('@')[0]
+
+      console.log('[AddUser] Sending request:', { mode, email: submitEmail, userId: selectedUserId, inviteRole, isPrimary, isSignatory })
       
-      const response = await fetch(`/api/staff/investors/${investorId}/users`, {
+      const response = await fetch('/api/admin/entity-invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
+          entity_type: 'investor',
+          entity_id: investorId,
           email: submitEmail?.trim().toLowerCase(),
-          user_id: mode === 'existing' ? selectedUserId : undefined
+          display_name: submitDisplayName,
+          title: null,
+          role: inviteRole,
+          is_primary: isPrimary,
+          is_signatory: isSignatory,
+          can_sign: isSignatory,
         }),
       })
 
@@ -107,7 +121,7 @@ export function AddUserToInvestorModal({ investorId, open, onOpenChange }: AddUs
         throw new Error(data.error || 'Failed to add user')
       }
 
-      if (data.invited) {
+      if (data.is_new_user) {
         toast.success(`Invitation sent to ${submitEmail}. They will receive an email to set up their account.`)
       } else {
         toast.success(`User ${submitEmail} has been linked to this investor.`)
@@ -116,6 +130,9 @@ export function AddUserToInvestorModal({ investorId, open, onOpenChange }: AddUs
       setEmail('')
       setSelectedUserId('')
       setMode('existing')
+      setInviteRole('member')
+      setIsPrimary(true)
+      setIsSignatory(false)
       onOpenChange(false)
       
       // Force hard refresh to show new user
@@ -226,6 +243,40 @@ export function AddUserToInvestorModal({ investorId, open, onOpenChange }: AddUs
               </div>
             </TabsContent>
           </Tabs>
+
+          <div className="space-y-3 pt-2 border-t border-white/10">
+            <div className="space-y-2">
+              <Label htmlFor="invite_role" className="text-white">
+                Member Role <span className="text-red-400">*</span>
+              </Label>
+              <Select value={inviteRole} onValueChange={(value) => setInviteRole(value as 'admin' | 'member' | 'viewer')}>
+                <SelectTrigger id="invite_role" className="bg-white/5 border-white/10 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-zinc-950 border-white/10">
+                  <SelectItem value="admin" className="text-white">Admin</SelectItem>
+                  <SelectItem value="member" className="text-white">Member</SelectItem>
+                  <SelectItem value="viewer" className="text-white">Viewer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center justify-between rounded-md border border-white/10 px-3 py-2">
+              <div className="space-y-0.5">
+                <Label htmlFor="invite_is_primary" className="text-sm text-white">Primary Contact</Label>
+                <p className="text-xs text-gray-400">Enabled by default for investor invites</p>
+              </div>
+              <Switch id="invite_is_primary" checked={isPrimary} onCheckedChange={setIsPrimary} />
+            </div>
+
+            <div className="flex items-center justify-between rounded-md border border-white/10 px-3 py-2">
+              <div className="space-y-0.5">
+                <Label htmlFor="invite_is_signatory" className="text-sm text-white">Can Sign Documents</Label>
+                <p className="text-xs text-gray-400">Enable if this user can sign on behalf of the investor</p>
+              </div>
+              <Switch id="invite_is_signatory" checked={isSignatory} onCheckedChange={setIsSignatory} />
+            </div>
+          </div>
 
           <DialogFooter>
             <Button
