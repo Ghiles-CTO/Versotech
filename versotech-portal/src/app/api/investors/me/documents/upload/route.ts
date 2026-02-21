@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { createClient } from '@/lib/supabase/server'
 import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
-import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
 import {
   buildUploadDocumentMetadata,
   validateUploadDocumentMetadata,
@@ -108,8 +107,6 @@ export async function POST(request: NextRequest) {
       documentIssuingCountry,
       documentDate,
     })
-
-    const assignedTo = await resolveKycSubmissionAssignee(serviceSupabase)
 
     // No validation on document type - users can specify any type
     // customLabel provides user-friendly display name for custom types
@@ -345,7 +342,6 @@ export async function POST(request: NextRequest) {
         status: 'pending',
         version: newVersion,
         previous_submission_id: previousSubmissionId,
-        assigned_to: assignedTo,
         document_date: documentMetadata.submission.document_date,
         document_valid_from: documentMetadata.submission.document_valid_from,
         document_valid_to: documentMetadata.submission.document_valid_to,

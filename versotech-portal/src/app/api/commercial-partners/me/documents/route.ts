@@ -8,7 +8,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import crypto from 'crypto'
 import { resolvePrimaryPersonaLink } from '@/lib/kyc/persona-link'
-import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
 import {
   buildUploadDocumentMetadata,
   validateUploadDocumentMetadata,
@@ -213,8 +212,6 @@ export async function POST(request: NextRequest) {
       documentDate,
     })
 
-    const assignedTo = await resolveKycSubmissionAssignee(serviceSupabase)
-
     let resolvedCommercialPartnerMemberId: string | null = null
     if (commercialPartnerMemberId && commercialPartnerMemberId !== 'entity-level') {
       const { data: memberCheck, error: memberError } = await serviceSupabase
@@ -333,7 +330,6 @@ export async function POST(request: NextRequest) {
         document_type: documentType,
         document_id: document.id,
         status: 'pending',
-        assigned_to: assignedTo,
         version: newVersion,
         previous_submission_id: previousSubmissionId,
         document_date: documentMetadata.submission.document_date,

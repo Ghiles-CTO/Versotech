@@ -136,7 +136,6 @@ export async function POST() {
         submitted_at: nowIso,
         reviewed_at: nowIso,
         reviewed_by: assignedTo,
-        assigned_to: assignedTo,
         metadata: {
           submission_type: 'personal_kyc_individual',
           auto_approved: true,

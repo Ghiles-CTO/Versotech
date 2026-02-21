@@ -326,7 +326,6 @@ export async function submitEntityKycForUser(params: {
       submitted_at: nowIso,
       reviewed_at: nowIso,
       reviewed_by: assignedTo,
-      assigned_to: assignedTo,
       metadata: {
         submission_type: 'entity_kyc',
         auto_approved: true,
