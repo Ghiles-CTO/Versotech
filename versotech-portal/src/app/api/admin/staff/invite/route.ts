@@ -83,14 +83,31 @@ export async function POST(request: NextRequest) {
 
     const inviterName = inviterProfile?.display_name || inviterProfile?.email || 'VERSO'
 
+    // Use CEO entity as the canonical internal entity for staff invitations.
+    // This keeps staff invitation records compatible with environments where
+    // member_invitations.entity_id is required for non-CEO entity types.
+    const { data: ceoEntity, error: ceoEntityError } = await supabase
+      .from('ceo_entity')
+      .select('id, display_name')
+      .limit(1)
+      .maybeSingle()
+
+    if (ceoEntityError || !ceoEntity?.id) {
+      console.error('Failed to resolve CEO entity for staff invitation:', ceoEntityError)
+      return NextResponse.json({ error: 'Failed to resolve staff entity' }, { status: 500 })
+    }
+
+    const staffEntityId = ceoEntity.id
+    const staffEntityName = ceoEntity.display_name || 'VERSO'
+
     // Create member_invitation record
     // Staff invitations are auto-approved (CEO is doing the inviting)
     const { data: invitation, error: invitationError } = await supabase
       .from('member_invitations')
       .insert({
         entity_type: 'staff',
-        entity_id: null, // Staff don't have a specific entity - they're internal team
-        entity_name: 'VERSO',
+        entity_id: staffEntityId,
+        entity_name: staffEntityName,
         email: normalizedEmail,
         role: validatedData.role,
         is_signatory: false,
@@ -124,7 +141,7 @@ export async function POST(request: NextRequest) {
     const emailResult = await sendInvitationEmail({
       email: normalizedEmail,
       inviteeName: validatedData.display_name,
-      entityName: 'VERSO',
+      entityName: staffEntityName,
       entityType: 'staff',
       role: validatedData.role,
       inviterName,

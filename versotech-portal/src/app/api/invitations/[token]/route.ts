@@ -262,6 +262,32 @@ export async function POST(
     if (invitation.entity_type === 'staff') {
       // Staff: Update profile with staff role and create permissions
       const metadata = (invitation.metadata as Record<string, any>) || {}
+      const { data: currentStaffProfile, error: currentStaffProfileError } = await serviceSupabase
+        .from('profiles')
+        .select('role, title, is_super_admin')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (currentStaffProfileError || !currentStaffProfile) {
+        console.error('Error loading current staff profile state:', currentStaffProfileError)
+        return NextResponse.json({ error: 'Failed to load profile' }, { status: 500 })
+      }
+
+      const rollbackStaffProfile = async () => {
+        const { error: rollbackError } = await serviceSupabase
+          .from('profiles')
+          .update({
+            role: currentStaffProfile.role,
+            title: currentStaffProfile.title ?? null,
+            is_super_admin: currentStaffProfile.is_super_admin,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id)
+
+        if (rollbackError) {
+          console.error('Failed to rollback staff profile update:', rollbackError)
+        }
+      }
 
       // Build update object - only include is_super_admin if explicitly set in metadata
       const profileUpdate: Record<string, any> = {
@@ -309,11 +335,17 @@ export async function POST(
       // CRITICAL: Staff users must also be added to ceo_users for CEO entity access
       // This gives them the 'ceo' persona via get_user_personas() RPC
       // Check first to avoid duplicate key errors (user_id is primary key)
-      const { data: existingCeoUser } = await serviceSupabase
+      const { data: existingCeoUser, error: ceoLookupError } = await serviceSupabase
         .from('ceo_users')
         .select('user_id')
         .eq('user_id', user.id)
         .maybeSingle()
+
+      if (ceoLookupError) {
+        console.error('Error checking staff ceo_users link:', ceoLookupError)
+        await rollbackStaffProfile()
+        return NextResponse.json({ error: 'Failed to configure staff access' }, { status: 500 })
+      }
 
       if (!existingCeoUser) {
         const { error: ceoUserError } = await serviceSupabase
@@ -328,9 +360,11 @@ export async function POST(
             created_at: new Date().toISOString()
           })
 
-        if (ceoUserError) {
+        // Ignore duplicate key errors (race condition), fail on everything else.
+        if (ceoUserError && ceoUserError.code !== '23505') {
           console.error('Error adding staff to ceo_users:', ceoUserError)
-          // Continue - this is not a critical failure, user can be added manually
+          await rollbackStaffProfile()
+          return NextResponse.json({ error: 'Failed to configure staff access' }, { status: 500 })
         }
       }
     } else {

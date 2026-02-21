@@ -137,6 +137,14 @@ export async function POST(
       }, { status: 500 })
     }
 
+    const rollbackNewUser = async () => {
+      await serviceSupabase
+        .from('profiles')
+        .delete()
+        .eq('id', authData.user.id)
+      await serviceSupabase.auth.admin.deleteUser(authData.user.id)
+    }
+
     // Create profile record
     const { error: profileError } = await serviceSupabase
       .from('profiles')
@@ -152,7 +160,11 @@ export async function POST(
 
     if (profileError) {
       console.error('Error creating profile:', profileError)
-      // User is created but profile failed - try to continue
+      // Prevent orphaned auth users without profile records.
+      await rollbackNewUser()
+      return NextResponse.json({
+        error: 'Failed to create account profile. Please try again.'
+      }, { status: 500 })
     }
 
     // Create the user-entity link
@@ -186,6 +198,10 @@ export async function POST(
 
       if (profileUpdateError) {
         console.error('Error updating staff profile:', profileUpdateError)
+        await rollbackNewUser()
+        return NextResponse.json({
+          error: 'Failed to configure your staff access. Please ask support to resend your invitation.'
+        }, { status: 500 })
       }
 
       // Create staff permissions from metadata
@@ -211,11 +227,19 @@ export async function POST(
       // CRITICAL: Staff users must also be added to ceo_users for CEO entity access
       // This gives them the 'ceo' persona via get_user_personas() RPC
       // Check first to avoid duplicate key errors (user_id is primary key)
-      const { data: existingCeoUser } = await serviceSupabase
+      const { data: existingCeoUser, error: ceoLookupError } = await serviceSupabase
         .from('ceo_users')
         .select('user_id')
         .eq('user_id', authData.user.id)
         .maybeSingle()
+
+      if (ceoLookupError) {
+        console.error('Error checking staff ceo_users link:', ceoLookupError)
+        await rollbackNewUser()
+        return NextResponse.json({
+          error: 'Failed to configure your staff access. Please ask support to resend your invitation.'
+        }, { status: 500 })
+      }
 
       if (!existingCeoUser) {
         const { error: ceoUserError } = await serviceSupabase
@@ -230,9 +254,13 @@ export async function POST(
             created_at: new Date().toISOString()
           })
 
-        if (ceoUserError) {
+        // Ignore duplicate key errors (race condition), fail on everything else.
+        if (ceoUserError && ceoUserError.code !== '23505') {
           console.error('Error adding staff to ceo_users:', ceoUserError)
-          // Continue - this is not a critical failure, user can be added manually
+          await rollbackNewUser()
+          return NextResponse.json({
+            error: 'Failed to configure your staff access. Please ask support to resend your invitation.'
+          }, { status: 500 })
         }
       }
     } else {
@@ -273,7 +301,12 @@ export async function POST(
 
       if (junctionError) {
         console.error('Error creating membership:', junctionError)
-        // Continue - user can still login and may be linked manually
+        // Prevent a half-created account (valid auth user but no entity access).
+        await rollbackNewUser()
+
+        return NextResponse.json({
+          error: 'Failed to link your account to the invited entity. Please ask support to resend your invitation.'
+        }, { status: 500 })
       }
     }
 
