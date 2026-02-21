@@ -1,9 +1,9 @@
 'use client'
 
-import { LayoutGrid, Table, List, Kanban } from 'lucide-react'
+import { Table, List, Kanban } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-export type ViewType = 'table' | 'kanban' | 'list' | 'database'
+export type ViewType = 'table' | 'kanban' | 'list'
 
 interface ApprovalViewSwitcherProps {
   currentView: ViewType
@@ -20,7 +20,7 @@ export function ApprovalViewSwitcher({
 
   return (
     <Tabs value={currentView} onValueChange={handleValueChange}>
-      <TabsList className="grid w-full grid-cols-4 max-w-md">
+      <TabsList className="grid w-full grid-cols-3 max-w-sm">
         <TabsTrigger value="table" className="flex items-center gap-2">
           <Table className="h-4 w-4" />
           <span className="hidden sm:inline">Table</span>
@@ -32,10 +32,6 @@ export function ApprovalViewSwitcher({
         <TabsTrigger value="list" className="flex items-center gap-2">
           <List className="h-4 w-4" />
           <span className="hidden sm:inline">List</span>
-        </TabsTrigger>
-        <TabsTrigger value="database" className="flex items-center gap-2">
-          <LayoutGrid className="h-4 w-4" />
-          <span className="hidden sm:inline">Grid</span>
         </TabsTrigger>
       </TabsList>
     </Tabs>
