@@ -1,11 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Checkbox } from '@/components/ui/checkbox'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   CheckCircle2,
   XCircle,
@@ -13,17 +11,18 @@ import {
   AlertTriangle,
   RefreshCw,
   Download,
-  HandCoins,
-  Package
+  Search,
+  X,
+  UserCheck
 } from 'lucide-react'
-import { Approval, ApprovalStats, SLAStatus } from '@/types/approvals'
+import { Approval, ApprovalStats } from '@/types/approvals'
 import { ApprovalActionDialog } from './approval-action-dialog'
 import { ApprovalFilters, FilterState } from './approval-filters'
 import { ApprovalDetailDrawer } from './approval-detail-drawer'
 import { ApprovalViewSwitcher, ViewType } from './approval-view-switcher'
 import { ApprovalsKanbanView } from './views/approvals-kanban-view'
 import { ApprovalsListView } from './views/approvals-list-view'
-import { ApprovalsDatabaseView } from './views/approvals-database-view'
+import { ApprovalsTableView } from './views/approvals-table-view'
 import { exportApprovalsToCSV } from '@/lib/export-csv'
 import { toast } from 'sonner'
 
@@ -34,48 +33,6 @@ interface ApprovalsPageClientProps {
     pending: number
     approved: number
     rejected: number
-  }
-}
-
-// Calculate SLA status from deadline
-function calculateSLAStatus(slaBreachAt: string | null | undefined): SLAStatus {
-  if (!slaBreachAt) {
-    return { text: 'No SLA', isOverdue: false, urgency: 'low' }
-  }
-
-  const now = new Date()
-  const sla = new Date(slaBreachAt)
-  const diffMs = sla.getTime() - now.getTime()
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-
-  if (diffHours < 0) {
-    return {
-      text: `${Math.abs(diffHours)}h overdue`,
-      isOverdue: true,
-      urgency: 'high',
-      hoursRemaining: diffHours
-    }
-  } else if (diffHours < 4) {
-    return {
-      text: `${diffHours}h remaining`,
-      isOverdue: false,
-      urgency: 'high',
-      hoursRemaining: diffHours
-    }
-  } else if (diffHours < 12) {
-    return {
-      text: `${diffHours}h remaining`,
-      isOverdue: false,
-      urgency: 'medium',
-      hoursRemaining: diffHours
-    }
-  } else {
-    return {
-      text: `${diffHours}h remaining`,
-      isOverdue: false,
-      urgency: 'low',
-      hoursRemaining: diffHours
-    }
   }
 }
 
@@ -90,9 +47,6 @@ export function ApprovalsPageClient({
   const [isLoading, setIsLoading] = useState(false)
 
   // Track initial mount to prevent API call from overwriting server data
-  // The server passes initialApprovals with correct data for the preferred view,
-  // but the useEffect below fires before localStorage view is loaded, causing
-  // a race condition where pending-only data overwrites the complete dataset
   const [isInitialMount, setIsInitialMount] = useState(true)
 
   // Filter state
@@ -103,7 +57,7 @@ export function ApprovalsPageClient({
     overdue_only: false
   })
 
-  // Pagination state - initialize total from initial data
+  // Pagination state
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 50,
@@ -123,24 +77,50 @@ export function ApprovalsPageClient({
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false)
   const [detailDrawerApproval, setDetailDrawerApproval] = useState<Approval | null>(null)
 
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('')
+
   // View state
   const [currentView, setCurrentView] = useState<ViewType>('table')
 
-  // Filter approvals based on current view
+  // Filter approvals based on current view and search query
   // Kanban shows all statuses, other views show only pending
   const visibleApprovals = useMemo(() => {
-    if (currentView === 'kanban') {
-      return approvals
-    }
-    // Table, List, Database views only show pending items
-    return approvals.filter(a => a.status === 'pending')
-  }, [approvals, currentView])
+    let filtered = currentView === 'kanban'
+      ? approvals
+      : approvals.filter(a => a.status === 'pending')
 
-  // Load view preference from localStorage
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      filtered = filtered.filter(a => {
+        const dealName = a.related_deal?.name?.toLowerCase() || ''
+        const investorName = a.related_investor?.legal_name?.toLowerCase() || ''
+        const entityName = (a.entity_metadata?.entity_name as string)?.toLowerCase() || ''
+        const requesterName = a.requested_by_profile?.display_name?.toLowerCase() || ''
+        const email = (a.entity_metadata?.email as string)?.toLowerCase() || ''
+        const entityIdPrefix = a.entity_id?.toLowerCase() || ''
+        return (
+          dealName.includes(q) ||
+          investorName.includes(q) ||
+          entityName.includes(q) ||
+          requesterName.includes(q) ||
+          email.includes(q) ||
+          entityIdPrefix.includes(q)
+        )
+      })
+    }
+
+    return filtered
+  }, [approvals, currentView, searchQuery])
+
+  // Load view preference from localStorage (fallback 'database' → 'table')
   useEffect(() => {
     const savedView = localStorage.getItem('approvals-view-preference')
-    if (savedView && ['table', 'kanban', 'list', 'database'].includes(savedView)) {
+    if (savedView && ['table', 'kanban', 'list'].includes(savedView)) {
       setCurrentView(savedView as ViewType)
+    } else if (savedView === 'database') {
+      setCurrentView('table')
+      localStorage.setItem('approvals-view-preference', 'table')
     }
   }, [])
 
@@ -149,8 +129,7 @@ export function ApprovalsPageClient({
     localStorage.setItem('approvals-view-preference', currentView)
   }, [currentView])
 
-  // Reset pagination when view changes to avoid offset issues
-  // (e.g., switching from table view page 3 to Kanban which may have fewer items)
+  // Reset pagination when view changes
   useEffect(() => {
     setPagination(prev => ({ ...prev, page: 1 }))
   }, [currentView])
@@ -159,19 +138,12 @@ export function ApprovalsPageClient({
   const refreshData = useCallback(async () => {
     setIsLoading(true)
     try {
-      // Build query params from filters
       const params = new URLSearchParams()
-
-      // ALWAYS fetch all statuses to ensure data consistency across views
-      // The visibleApprovals memo handles filtering for non-kanban views
-      // This prevents data loss when user applies filter in table then switches to kanban
       params.append('status', 'pending,approved,rejected')
       const thirtyDaysAgo = new Date()
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
       params.append('decided_after', thirtyDaysAgo.toISOString())
 
-      // Kanban view needs ALL items without pagination to show complete board
-      // Other views (table, list, database) use standard pagination
       const effectiveLimit = currentView === 'kanban' ? 500 : pagination.limit
       params.append('limit', effectiveLimit.toString())
       if (currentView !== 'kanban') {
@@ -209,23 +181,21 @@ export function ApprovalsPageClient({
     }
   }, [filters, pagination.page, pagination.limit, initialStats, initialCounts, currentView])
 
-  // Handle approve button click
+  // Handle approve/reject button clicks → open dialog
   const handleApproveClick = (approval: Approval) => {
     setSelectedApproval(approval)
     setDialogAction('approve')
     setDialogOpen(true)
   }
 
-  // Handle reject button click
   const handleRejectClick = (approval: Approval) => {
     setSelectedApproval(approval)
     setDialogAction('reject')
     setDialogOpen(true)
   }
 
-  // Handle successful action
   const handleActionSuccess = () => {
-    setSelectedIds(new Set()) // Clear selection after action
+    setSelectedIds(new Set())
     refreshData()
   }
 
@@ -245,7 +215,6 @@ export function ApprovalsPageClient({
       })
 
       if (!response.ok) throw new Error('Approval failed')
-
       toast.success('Approval approved successfully')
       await refreshData()
     } catch (error) {
@@ -265,7 +234,6 @@ export function ApprovalsPageClient({
       })
 
       if (!response.ok) throw new Error('Rejection failed')
-
       toast.success('Approval rejected')
       await refreshData()
     } catch (error) {
@@ -276,11 +244,7 @@ export function ApprovalsPageClient({
   }
 
   // Refresh when filters or pagination change
-  // Note: currentView is intentionally NOT included - server provides complete data
-  // for all views, so we don't need to refetch when switching views. User can
-  // manually refresh if needed via the Refresh button.
   useEffect(() => {
-    // Skip initial mount - we already have correct server data from initialApprovals
     if (isInitialMount) {
       setIsInitialMount(false)
       return
@@ -351,7 +315,7 @@ export function ApprovalsPageClient({
     }
   }
 
-  // Export to CSV handler
+  // Export to CSV
   const handleExport = () => {
     try {
       if (!visibleApprovals || visibleApprovals.length === 0) {
@@ -369,478 +333,136 @@ export function ApprovalsPageClient({
     }
   }
 
-  // Quick action: Review overdue items
-  const handleReviewOverdue = async () => {
-    if (stats.overdue_count === 0) {
-      toast.info('No overdue items')
-      return
-    }
-    const newFilters = { 
-      entity_types: [], 
-      priorities: [], 
-      assigned_to_me: false, 
-      overdue_only: true 
-    }
-    setFilters(newFilters)
-    setPagination(prev => ({ ...prev, page: 1 }))
-  }
-
-  const handleReviewInterests = async () => {
-    const newFilters = {
-      entity_types: ['deal_interest'] as any[],
-      priorities: [],
-      assigned_to_me: false,
-      overdue_only: false
-    }
-    setFilters(newFilters)
-    setPagination(prev => ({ ...prev, page: 1 }))
-  }
-
-  const handleReviewSubscriptions = async () => {
-    const newFilters = {
-      entity_types: ['deal_subscription'] as any[],
-      priorities: [],
-      assigned_to_me: false,
-      overdue_only: false
-    }
-    setFilters(newFilters)
-    setPagination(prev => ({ ...prev, page: 1 }))
-  }
-
-  // Quick action: Clear all filters
-  const handleClearFilters = async () => {
-    const newFilters = { 
-      entity_types: [], 
-      priorities: [], 
-      assigned_to_me: false, 
-      overdue_only: false 
-    }
-    setFilters(newFilters)
-    setPagination(prev => ({ ...prev, page: 1 }))
-    setSelectedIds(new Set())
-  }
-
   return (
     <>
-      <div className="space-y-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
-              <Clock className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.total_pending}</div>
-              <p className="text-xs text-muted-foreground mt-1">Requiring review</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">SLA Breaches</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats.overdue_count}</div>
-              <p className="text-xs text-muted-foreground mt-1">Past deadline</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Avg Processing Time</CardTitle>
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {stats.avg_processing_time_hours.toFixed(1)}h
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">Last 30 days</p>
-            </CardContent>
-          </Card>
+      <div className="space-y-6">
+        {/* Compact Stats Bar */}
+        <div className="flex items-center gap-6 px-4 py-3 rounded-lg border border-border bg-muted/30 text-sm overflow-x-auto">
+          <div className="flex items-center gap-2 shrink-0">
+            <Clock className="h-4 w-4 text-amber-600" />
+            <span className="text-muted-foreground">Pending</span>
+            <span className="font-semibold text-amber-600">{stats.total_pending}</span>
+          </div>
+          <div className="h-4 w-px bg-border shrink-0" />
+          <div className="flex items-center gap-2 shrink-0">
+            <AlertTriangle className="h-4 w-4 text-rose-600" />
+            <span className="text-muted-foreground">Overdue</span>
+            <span className="font-semibold text-rose-600">{stats.overdue_count}</span>
+          </div>
+          <div className="h-4 w-px bg-border shrink-0" />
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-muted-foreground">Avg Processing</span>
+            <span className="font-semibold text-foreground">{stats.avg_processing_time_hours.toFixed(1)}h</span>
+          </div>
+          <div className="h-4 w-px bg-border shrink-0" />
+          <div className="flex items-center gap-2 shrink-0">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            <span className="text-muted-foreground">Approved 30d</span>
+            <span className="font-semibold text-emerald-600">{stats.total_approved_30d}</span>
+          </div>
+          <div className="h-4 w-px bg-border shrink-0" />
+          <div className="flex items-center gap-2 shrink-0">
+            <XCircle className="h-4 w-4 text-rose-600" />
+            <span className="text-muted-foreground">Rejected 30d</span>
+            <span className="font-semibold text-rose-600">{stats.total_rejected_30d}</span>
+          </div>
         </div>
 
-        {/* Approvals Table */}
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Pending Approvals</CardTitle>
-                  <CardDescription>
-                    Review deal approvals across commitments, interests, and data-room workflows
-                  </CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <ApprovalFilters
-                    onFilterChange={setFilters}
-                    currentFilters={filters}
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleExport}
-                    disabled={!visibleApprovals || visibleApprovals.length === 0}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => refreshData()}
-                    disabled={isLoading}
-                  >
-                    <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                    Refresh
-                  </Button>
-                </div>
-              </div>
-
-              {/* View Switcher */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-muted-foreground">View:</span>
-                  <ApprovalViewSwitcher
-                    currentView={currentView}
-                    onViewChange={setCurrentView}
-                  />
-                </div>
-                <Badge variant="secondary" className="text-sm">
-                  {visibleApprovals.length} approval{visibleApprovals.length !== 1 ? 's' : ''}
-                </Badge>
-              </div>
+        {/* Toolbar */}
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="relative w-64">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search approvals..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 pr-8 h-9"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
-          </CardHeader>
-          <CardContent>
-            {/* Table View */}
-            {currentView === 'table' && (
-              <>
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-12">
-                          <Checkbox
-                            checked={selectedIds.size === visibleApprovals.length && visibleApprovals.length > 0}
-                            onCheckedChange={toggleSelectAll}
-                            aria-label="Select all"
-                          />
-                        </TableHead>
-                        <TableHead>Request Type / User</TableHead>
-                        <TableHead>Deal / Investor</TableHead>
-                        <TableHead>SLA Status</TableHead>
-                        <TableHead>Assigned To</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {visibleApprovals && visibleApprovals.length > 0 ? (
-                        visibleApprovals.map((approval) => {
-                          const slaStatus = calculateSLAStatus(approval.sla_breach_at)
-
-                          return (
-                            <TableRow
-                              key={approval.id}
-                              className={`cursor-pointer hover:bg-white/5 transition-colors ${selectedIds.has(approval.id) ? 'bg-muted/50' : ''}`}
-                              onClick={() => handleApprovalClick(approval)}
-                            >
-                              <TableCell className="w-12" onClick={(e) => e.stopPropagation()}>
-                                <Checkbox
-                                  checked={selectedIds.has(approval.id)}
-                                  onCheckedChange={() => toggleSelection(approval.id)}
-                                  aria-label={`Select approval ${approval.id}`}
-                                />
-                              </TableCell>
-                              <TableCell>
-                                <div>
-                                  <div className="font-medium text-foreground">
-                                    {approval.entity_type === 'deal_interest' || approval.entity_type === 'deal_interest_nda'
-                                      ? 'DATA ROOM ACCESS REQUEST'
-                                      : approval.entity_type.replace(/_/g, ' ').toUpperCase()}
-                                  </div>
-                                  <div className="text-sm text-muted-foreground">
-                                    {approval.requested_by_profile?.display_name || 'Unknown User'}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {new Date(approval.created_at).toLocaleDateString()}
-                                  </div>
-                                </div>
-                              </TableCell>
-
-                              <TableCell>
-                                <div>
-                                  {approval.related_investor && (
-                                    <div className="font-medium text-foreground">
-                                      {approval.related_investor.legal_name}
-                                    </div>
-                                  )}
-                                  {approval.related_deal && (
-                                    <div className="text-sm text-muted-foreground">
-                                      {approval.related_deal.name}
-                                    </div>
-                                  )}
-                                  {!approval.related_investor && !approval.related_deal && (
-                                    approval.entity_metadata?.entity_name ? (
-                                      <div className="text-sm text-muted-foreground">
-                                        {approval.entity_metadata.entity_name}
-                                      </div>
-                                    ) : (
-                                      <div className="text-sm text-muted-foreground font-mono">
-                                        {approval.entity_id.substring(0, 8)}...
-                                      </div>
-                                    )
-                                  )}
-                                  {(() => {
-                                    // For deal_subscription approvals, use derived_amount
-                                    if (approval.entity_type === 'deal_subscription') {
-                                      const derivedAmount = approval.entity_metadata?.derived_amount
-                                      if (derivedAmount) {
-                                        const currency = approval.entity_metadata?.payload?.currency || 'USD'
-                                        const numeric = parseFloat(derivedAmount)
-                                        if (!Number.isNaN(numeric)) {
-                                          return (
-                                            <div className="text-xs text-muted-foreground mt-1">
-                                              {currency} {numeric.toLocaleString()}
-                                            </div>
-                                          )
-                                        }
-                                      }
-                                    }
-
-                                    // For other approval types, use indicative_amount or requested_amount
-                                    const indicativeAmount = approval.entity_metadata?.indicative_amount
-                                    const requestedAmount = approval.entity_metadata?.requested_amount || approval.entity_metadata?.amount
-                                    const indicativeCurrency = approval.entity_metadata?.indicative_currency || ''
-
-                                    let formattedAmount: string | null = null
-                                    if (indicativeAmount) {
-                                      const numeric = parseFloat(indicativeAmount)
-                                      if (!Number.isNaN(numeric)) {
-                                        formattedAmount = `${indicativeCurrency} ${numeric.toLocaleString()}`.trim()
-                                      }
-                                    } else if (requestedAmount) {
-                                      const numeric = parseFloat(requestedAmount)
-                                      if (!Number.isNaN(numeric)) {
-                                        formattedAmount = `$${numeric.toLocaleString()}`
-                                      }
-                                    }
-
-                                    return formattedAmount ? (
-                                      <div className="text-xs text-muted-foreground mt-1">
-                                        {formattedAmount}
-                                      </div>
-                                    ) : null
-                                  })()}
-                                </div>
-                              </TableCell>
-
-                              <TableCell>
-                                <Badge
-                                  variant={
-                                    slaStatus.isOverdue
-                                      ? 'destructive'
-                                      : slaStatus.urgency === 'high'
-                                      ? 'destructive'
-                                      : slaStatus.urgency === 'medium'
-                                      ? 'default'
-                                      : 'secondary'
-                                  }
-                                >
-                                  {slaStatus.text}
-                                </Badge>
-                              </TableCell>
-
-                              <TableCell>
-                                <span className="text-sm text-muted-foreground">
-                                  {approval.assigned_to_profile?.display_name || 'Unassigned'}
-                                </span>
-                              </TableCell>
-
-                              <TableCell onClick={(e) => e.stopPropagation()}>
-                                {/* Only show action buttons for pending approvals */}
-                                {approval.status === 'pending' ? (
-                                  <div className="flex gap-2">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => handleApproveClick(approval)}
-                                      className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950"
-                                    >
-                                      <CheckCircle2 className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => handleRejectClick(approval)}
-                                      className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
-                                    >
-                                      <XCircle className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <Badge variant="secondary" className="text-xs">
-                                    {approval.status}
-                                  </Badge>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          )
-                        })
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                            {isLoading ? 'Loading approvals...' : 'No pending approvals found'}
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {/* Pagination */}
-                <div className="flex items-center justify-between mt-4">
-                  <p className="text-sm text-muted-foreground">
-                    Showing {visibleApprovals.length > 0 ? ((pagination.page - 1) * pagination.limit) + 1 : 0}-
-                    {Math.min(pagination.page * pagination.limit, Math.max(pagination.total, visibleApprovals.length))} of {Math.max(pagination.total, visibleApprovals.length)} approvals
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={pagination.page === 1 || isLoading}
-                      onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-                    >
-                      Previous
-                    </Button>
-                    <span className="inline-flex items-center px-3 text-sm text-muted-foreground">
-                      Page {pagination.page} of {Math.ceil(pagination.total / pagination.limit) || 1}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={pagination.page >= Math.ceil(pagination.total / pagination.limit) || isLoading}
-                      onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
-
-            {/* Kanban View */}
-            {currentView === 'kanban' && (
-              <ApprovalsKanbanView
-                approvals={visibleApprovals}
-                onApprovalClick={handleApprovalClick}
-              />
-            )}
-
-            {/* List View */}
-            {currentView === 'list' && (
-              <ApprovalsListView
-                approvals={visibleApprovals}
-                onApprovalClick={handleApprovalClick}
-                onApprove={handleDrawerApprove}
-                onReject={handleDrawerReject}
-              />
-            )}
-
-            {/* Database/Grid View */}
-            {currentView === 'database' && (
-              <ApprovalsDatabaseView
-                approvals={visibleApprovals}
-                onApprovalClick={handleApprovalClick}
-              />
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions & Performance */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button 
-                className="w-full justify-start" 
-                variant="outline"
-                onClick={handleReviewOverdue}
-                disabled={stats.overdue_count === 0}
-              >
-                <Clock className="mr-2 h-4 w-4 text-red-600" />
-                Review Overdue ({stats.overdue_count})
-              </Button>
-              <Button
-                className="w-full justify-start"
-                variant="outline"
-                onClick={handleReviewInterests}
-              >
-                <HandCoins className="mr-2 h-4 w-4 text-purple-600" />
-                Data Room Access Requests
-              </Button>
-              <Button
-                className="w-full justify-start"
-                variant="outline"
-                onClick={handleReviewSubscriptions}
-              >
-                <Package className="mr-2 h-4 w-4 text-sky-600" />
-                Subscription Approvals
-              </Button>
-              <Button 
-                className="w-full justify-start" 
-                variant="outline"
-                onClick={handleClearFilters}
-                disabled={
-                  filters.entity_types.length === 0 && 
-                  filters.priorities.length === 0 && 
-                  !filters.assigned_to_me && 
-                  !filters.overdue_only
-                }
-              >
-                <XCircle className="mr-2 h-4 w-4 text-muted-foreground" />
-                Clear All Filters
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">SLA Performance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">On-time approvals (24h)</span>
-                  <span className="font-medium text-green-600">
-                    {stats.approval_rate_24h.toFixed(0)}%
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Overdue items</span>
-                  <span className="font-medium text-red-600">{stats.overdue_count}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Average processing</span>
-                  <span className="font-medium">
-                    {stats.avg_processing_time_hours.toFixed(1)}h
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Approved (30d)</span>
-                  <span className="font-medium text-green-600">{stats.total_approved_30d}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Rejected (30d)</span>
-                  <span className="font-medium text-red-600">{stats.total_rejected_30d}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            <ApprovalViewSwitcher
+              currentView={currentView}
+              onViewChange={setCurrentView}
+            />
+            <ApprovalFilters
+              onFilterChange={setFilters}
+              currentFilters={filters}
+            />
+            <Button
+              variant={filters.assigned_to_me ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilters(prev => ({ ...prev, assigned_to_me: !prev.assigned_to_me }))}
+            >
+              <UserCheck className="h-4 w-4 mr-1.5" />
+              Mine
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="text-sm">
+              {visibleApprovals.length} item{visibleApprovals.length !== 1 ? 's' : ''}
+            </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              disabled={!visibleApprovals || visibleApprovals.length === 0}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refreshData()}
+              disabled={isLoading}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </div>
+
+        {/* View Content */}
+        {currentView === 'table' && (
+          <ApprovalsTableView
+            approvals={visibleApprovals}
+            selectedIds={selectedIds}
+            onToggleSelection={toggleSelection}
+            onToggleSelectAll={toggleSelectAll}
+            onApprovalClick={handleApprovalClick}
+            onApproveClick={handleApproveClick}
+            onRejectClick={handleRejectClick}
+            isLoading={isLoading}
+            pagination={pagination}
+            onPageChange={(page) => setPagination(prev => ({ ...prev, page }))}
+          />
+        )}
+
+        {currentView === 'kanban' && (
+          <ApprovalsKanbanView
+            approvals={visibleApprovals}
+            onApprovalClick={handleApprovalClick}
+            onApproveClick={handleApproveClick}
+            onRejectClick={handleRejectClick}
+          />
+        )}
+
+        {currentView === 'list' && (
+          <ApprovalsListView
+            approvals={visibleApprovals}
+            onApprovalClick={handleApprovalClick}
+            onApproveClick={handleApproveClick}
+            onRejectClick={handleRejectClick}
+          />
+        )}
       </div>
 
       {/* Bulk Action Bar */}
