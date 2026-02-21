@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { TourProvider, useTour } from '@/contexts/tour-context'
 import { TourSpotlight } from './tour-spotlight'
 import { TourTooltip } from './tour-tooltip'
 import { TourWelcomeModal } from './tour-welcome-modal'
-import { getTourSteps, type TourStep } from '@/config/platform-tour'
+import { TOUR_VERSION, getTourSteps, type TourStep } from '@/config/platform-tour'
 import confetti from 'canvas-confetti'
 
 interface TourContentProps {
@@ -15,10 +16,28 @@ interface TourContentProps {
 
 function TourContent({ steps, persona }: TourContentProps) {
   const { isActive, currentStep } = useTour()
-
-  if (!isActive || !steps[currentStep]) return null
-
+  const router = useRouter()
+  const pathname = usePathname()
   const step = steps[currentStep]
+
+  useEffect(() => {
+    if (!isActive || !step || !step.navigateTo || !step.target) return
+    const navigateTo = step.navigateTo
+
+    const timer = setTimeout(() => {
+      const targetExists = Boolean(document.querySelector(step.target))
+      if (targetExists) return
+
+      const stepRoute = navigateTo.split('?')[0] || navigateTo
+      if (stepRoute && pathname !== stepRoute) {
+        router.push(navigateTo)
+      }
+    }, 120)
+
+    return () => clearTimeout(timer)
+  }, [currentStep, isActive, pathname, router, step])
+
+  if (!isActive || !step) return null
 
   return (
     <>
@@ -97,8 +116,15 @@ export function PlatformTour({
 
   const steps = getTourSteps(activePersona)
 
+  useEffect(() => {
+    setShowWelcome(!hasCompletedTour)
+    setIsCompleted(hasCompletedTour)
+    completionTriggeredRef.current = false
+  }, [activePersona, hasCompletedTour])
+
   // Extract step IDs for analytics
   const stepIds = steps.map(step => step.id || step.target)
+  const persistenceKey = `verso_tour_progress:${activePersona}:${TOUR_VERSION}`
 
   const handleComplete = useCallback(async () => {
     if (isCompleted) return // Already completed, no need to call API again
@@ -114,14 +140,18 @@ export function PlatformTour({
 
       await fetch('/api/profiles/tour-completed', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          personaKey: activePersona,
+          version: TOUR_VERSION,
+        }),
       })
       setIsCompleted(true)
     } catch (error) {
       console.error('Failed to save tour completion:', error)
       completionTriggeredRef.current = false // Allow retry on error
     }
-  }, [isCompleted])
+  }, [activePersona, isCompleted])
 
   const handleSkipFromWelcome = useCallback(async () => {
     setShowWelcome(false)
@@ -129,13 +159,17 @@ export function PlatformTour({
     try {
       await fetch('/api/profiles/tour-completed', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          personaKey: activePersona,
+          version: TOUR_VERSION,
+        }),
       })
       setIsCompleted(true)
     } catch (error) {
       console.error('Failed to save tour skip:', error)
     }
-  }, [])
+  }, [activePersona])
 
   // Analytics callbacks (can be connected to your analytics service)
   const analytics = {
@@ -161,6 +195,7 @@ export function PlatformTour({
       stepIds={stepIds}
       enableKeyboardNav={true}
       enablePersistence={true}
+      persistenceKey={persistenceKey}
     >
       {children}
 

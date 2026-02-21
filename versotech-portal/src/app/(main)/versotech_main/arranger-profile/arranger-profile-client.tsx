@@ -27,6 +27,7 @@ import {
   X,
   Camera,
   Upload,
+  Globe,
   Users,
   Bell,
   Send,
@@ -60,6 +61,13 @@ type ArrangerInfo = {
   email: string | null
   phone: string | null
   address: string | null
+  address_line_1?: string | null
+  address_line_2?: string | null
+  city?: string | null
+  state_province?: string | null
+  postal_code?: string | null
+  country?: string | null
+  website?: string | null
   kyc_status: string
   kyc_approved_at: string | null
   kyc_expires_at: string | null
@@ -232,6 +240,8 @@ export function ArrangerProfileClient({
   const [showAddressDialog, setShowAddressDialog] = useState(false)
   const [isSubmittingEntityKyc, setIsSubmittingEntityKyc] = useState(false)
   const logoInputRef = useRef<HTMLInputElement>(null)
+  const canEditEntityProfile = arrangerUserInfo.role === 'admin' || arrangerUserInfo.is_primary
+  const usesAddressDialog = (arrangerInfo?.type ?? 'entity') !== 'individual'
 
   // Edit form data
   const [entityForm, setEntityForm] = useState({
@@ -251,6 +261,7 @@ export function ArrangerProfileClient({
     email: arrangerInfo?.email || '',
     phone: arrangerInfo?.phone || '',
     address: arrangerInfo?.address || '',
+    website: arrangerInfo?.website || '',
   })
 
   if (!arrangerInfo) {
@@ -418,6 +429,7 @@ export function ArrangerProfileClient({
       email: arrangerInfo.email || '',
       phone: arrangerInfo.phone || '',
       address: arrangerInfo.address || '',
+      website: arrangerInfo.website || '',
     })
     setIsEditingContact(false)
   }
@@ -474,8 +486,15 @@ export function ArrangerProfileClient({
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
           <div
-            className="relative h-16 w-16 rounded-xl bg-primary/10 flex items-center justify-center cursor-pointer group overflow-hidden"
-            onClick={() => logoInputRef.current?.click()}
+            className={cn(
+              'relative h-16 w-16 rounded-xl bg-primary/10 flex items-center justify-center group overflow-hidden',
+              canEditEntityProfile ? 'cursor-pointer' : 'cursor-default'
+            )}
+            onClick={() => {
+              if (canEditEntityProfile) {
+                logoInputRef.current?.click()
+              }
+            }}
           >
             {arrangerInfo.logo_url ? (
               <Image
@@ -487,20 +506,22 @@ export function ArrangerProfileClient({
             ) : (
               <Building2 className="h-8 w-8 text-primary" />
             )}
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              {isUploadingLogo ? (
-                <Loader2 className="h-5 w-5 text-white animate-spin" />
-              ) : (
-                <Camera className="h-5 w-5 text-white" />
-              )}
-            </div>
+            {canEditEntityProfile && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                {isUploadingLogo ? (
+                  <Loader2 className="h-5 w-5 text-white animate-spin" />
+                ) : (
+                  <Camera className="h-5 w-5 text-white" />
+                )}
+              </div>
+            )}
             <input
               ref={logoInputRef}
               type="file"
               accept="image/png,image/jpeg,image/webp"
               className="hidden"
               onChange={handleLogoUpload}
-              disabled={isUploadingLogo}
+              disabled={isUploadingLogo || !canEditEntityProfile}
             />
           </div>
           <div>
@@ -699,12 +720,12 @@ export function ArrangerProfileClient({
                   <CardTitle>Entity Details</CardTitle>
                   <CardDescription>Legal and registration information</CardDescription>
                 </div>
-                {!isEditingEntity ? (
+                {!isEditingEntity && canEditEntityProfile ? (
                   <Button variant="outline" size="sm" onClick={() => setIsEditingEntity(true)}>
                     <Edit className="h-4 w-4 mr-2" />
                     Edit
                   </Button>
-                ) : (
+                ) : isEditingEntity ? (
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={handleCancelEntity} disabled={isSaving}>
                       <X className="h-4 w-4 mr-2" />
@@ -719,7 +740,7 @@ export function ArrangerProfileClient({
                       Save
                     </Button>
                   </div>
-                )}
+                ) : null}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -835,12 +856,12 @@ export function ArrangerProfileClient({
                   <CardTitle>Regulatory Information</CardTitle>
                   <CardDescription>Licensing and compliance details</CardDescription>
                 </div>
-                {!isEditingRegulatory ? (
+                {!isEditingRegulatory && canEditEntityProfile ? (
                   <Button variant="outline" size="sm" onClick={() => setIsEditingRegulatory(true)}>
                     <Edit className="h-4 w-4 mr-2" />
                     Edit
                   </Button>
-                ) : (
+                ) : isEditingRegulatory ? (
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={handleCancelRegulatory} disabled={isSaving}>
                       <X className="h-4 w-4 mr-2" />
@@ -855,7 +876,7 @@ export function ArrangerProfileClient({
                       Save
                     </Button>
                   </div>
-                )}
+                ) : null}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -933,7 +954,7 @@ export function ArrangerProfileClient({
           </Card>
         </TabsContent>
 
-        {/* Contact Tab - EDITABLE */}
+        {/* Contact Tab */}
         <TabsContent value="contact">
           <Card>
             <CardHeader>
@@ -942,12 +963,19 @@ export function ArrangerProfileClient({
                   <CardTitle>Contact Information</CardTitle>
                   <CardDescription>How to reach the arranger entity</CardDescription>
                 </div>
-                {!isEditingContact ? (
+                {usesAddressDialog ? (
+                  canEditEntityProfile && (
+                    <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                  )
+                ) : !isEditingContact && canEditEntityProfile ? (
                   <Button variant="outline" size="sm" onClick={() => setIsEditingContact(true)}>
                     <Edit className="h-4 w-4 mr-2" />
                     Edit
                   </Button>
-                ) : (
+                ) : isEditingContact ? (
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={handleCancelContact} disabled={isSaving}>
                       <X className="h-4 w-4 mr-2" />
@@ -962,48 +990,146 @@ export function ArrangerProfileClient({
                       Save
                     </Button>
                   </div>
-                )}
+                ) : null}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <EditableField
-                  label="Email"
-                  value={arrangerInfo.email}
-                  field="email"
-                  isEditing={isEditingContact}
-                  editValue={contactForm.email}
-                  onChange={(_, v) => setContactForm(f => ({ ...f, email: v }))}
-                  type="email"
-                  icon={isEditingContact ? undefined : Mail}
-                />
-                <EditableField
-                  label="Phone"
-                  value={arrangerInfo.phone}
-                  field="phone"
-                  isEditing={isEditingContact}
-                  editValue={contactForm.phone}
-                  onChange={(_, v) => setContactForm(f => ({ ...f, phone: v }))}
-                  type="tel"
-                  icon={isEditingContact ? undefined : Phone}
-                />
-                <EditableField
-                  label="Address"
-                  value={arrangerInfo.address}
-                  field="address"
-                  isEditing={isEditingContact}
-                  editValue={contactForm.address}
-                  onChange={(_, v) => setContactForm(f => ({ ...f, address: v }))}
-                  multiline
-                  icon={isEditingContact ? undefined : MapPin}
-                  className="md:col-span-2"
-                />
-              </div>
+              {usesAddressDialog ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <EditableField
+                      label="Email"
+                      value={arrangerInfo.email}
+                      field="email"
+                      isEditing={false}
+                      editValue=""
+                      onChange={() => {}}
+                      type="email"
+                      icon={Mail}
+                    />
+                    <EditableField
+                      label="Main Phone"
+                      value={arrangerInfo.phone}
+                      field="phone"
+                      isEditing={false}
+                      editValue=""
+                      onChange={() => {}}
+                      type="tel"
+                      icon={Phone}
+                    />
+                    <EditableField
+                      label="Mobile Phone"
+                      value={arrangerInfo.phone_mobile ?? null}
+                      field="phone_mobile"
+                      isEditing={false}
+                      editValue=""
+                      onChange={() => {}}
+                      type="tel"
+                      icon={Phone}
+                    />
+                    <EditableField
+                      label="Office Phone"
+                      value={arrangerInfo.phone_office ?? null}
+                      field="phone_office"
+                      isEditing={false}
+                      editValue=""
+                      onChange={() => {}}
+                      type="tel"
+                      icon={Phone}
+                    />
+                    <EditableField
+                      label="Website"
+                      value={arrangerInfo.website ?? null}
+                      field="website"
+                      isEditing={false}
+                      editValue=""
+                      onChange={() => {}}
+                      icon={Globe}
+                      className="md:col-span-2"
+                    />
+                  </div>
 
-              {!arrangerInfo.email && !arrangerInfo.phone && !arrangerInfo.address && !isEditingContact && (
-                <div className="text-center py-8 text-muted-foreground">
-                  No contact information on file. Click Edit to add.
-                </div>
+                  <div className="border-t pt-4">
+                    <Label className="text-muted-foreground">Registered Address</Label>
+                    {(arrangerInfo.address_line_1 ||
+                      arrangerInfo.address ||
+                      arrangerInfo.city ||
+                      arrangerInfo.state_province ||
+                      arrangerInfo.postal_code ||
+                      arrangerInfo.country) ? (
+                      <div className="mt-2 space-y-1">
+                        <div className="font-medium flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          {arrangerInfo.address_line_1 || arrangerInfo.address}
+                        </div>
+                        {arrangerInfo.address_line_2 && (
+                          <div className="text-muted-foreground">{arrangerInfo.address_line_2}</div>
+                        )}
+                        {(arrangerInfo.city || arrangerInfo.state_province || arrangerInfo.postal_code || arrangerInfo.country) && (
+                          <div className="text-muted-foreground">
+                            {[arrangerInfo.city, arrangerInfo.state_province, arrangerInfo.postal_code, arrangerInfo.country]
+                              .filter(Boolean)
+                              .join(', ')}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-sm mt-2">No registered address information available</p>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <EditableField
+                      label="Email"
+                      value={arrangerInfo.email}
+                      field="email"
+                      isEditing={isEditingContact}
+                      editValue={contactForm.email}
+                      onChange={(_, v) => setContactForm(f => ({ ...f, email: v }))}
+                      type="email"
+                      icon={isEditingContact ? undefined : Mail}
+                    />
+                    <EditableField
+                      label="Phone"
+                      value={arrangerInfo.phone}
+                      field="phone"
+                      isEditing={isEditingContact}
+                      editValue={contactForm.phone}
+                      onChange={(_, v) => setContactForm(f => ({ ...f, phone: v }))}
+                      type="tel"
+                      icon={isEditingContact ? undefined : Phone}
+                    />
+                    <EditableField
+                      label="Website"
+                      value={arrangerInfo.website ?? null}
+                      field="website"
+                      isEditing={isEditingContact}
+                      editValue={contactForm.website}
+                      onChange={(_, v) => setContactForm(f => ({ ...f, website: v }))}
+                      icon={isEditingContact ? undefined : Globe}
+                      className="md:col-span-2"
+                    />
+                    <EditableField
+                      label="Address"
+                      value={arrangerInfo.address}
+                      field="address"
+                      isEditing={isEditingContact}
+                      editValue={contactForm.address}
+                      onChange={(_, v) => setContactForm(f => ({ ...f, address: v }))}
+                      multiline
+                      icon={isEditingContact ? undefined : MapPin}
+                      className="md:col-span-2"
+                    />
+                  </div>
+
+                  {!arrangerInfo.email && !arrangerInfo.phone && !arrangerInfo.address && !arrangerInfo.website && !isEditingContact && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No contact information on file. Click Edit to add.
+                    </div>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
@@ -1120,11 +1246,17 @@ export function ArrangerProfileClient({
           entityType="arranger"
           entityName={arrangerInfo.legal_name}
           initialData={{
-            address_line_1: arrangerInfo.address ?? '',
+            address_line_1: arrangerInfo.address_line_1 ?? arrangerInfo.address ?? '',
+            address_line_2: arrangerInfo.address_line_2 ?? '',
+            city: arrangerInfo.city ?? '',
+            state_province: arrangerInfo.state_province ?? '',
+            postal_code: arrangerInfo.postal_code ?? '',
+            country: arrangerInfo.country ?? '',
             email: arrangerInfo.email ?? '',
             phone: arrangerInfo.phone ?? '',
             phone_mobile: arrangerInfo.phone_mobile ?? '',
             phone_office: arrangerInfo.phone_office ?? '',
+            website: arrangerInfo.website ?? '',
           }}
           apiEndpoint="/api/arrangers/me/profile"
           onSuccess={() => window.location.reload()}

@@ -23,6 +23,8 @@ export interface TourStep {
   highlightPadding?: number // Custom padding around highlighted element
 }
 
+export const TOUR_VERSION = '3.0.0'
+
 // ============================================================================
 // INVESTOR (Entity) TOUR - 6 steps
 // For companies/entities investing through the platform
@@ -1036,20 +1038,99 @@ const staffTour: TourStep[] = [
 // TOUR STEPS REGISTRY
 // Maps persona types to their tour configurations
 // ============================================================================
+const withNavigateTo = (
+  steps: TourStep[],
+  routesById: Record<string, string>
+): TourStep[] => {
+  return steps.map((step) => ({
+    ...step,
+    navigateTo: routesById[step.id] || step.navigateTo,
+  }))
+}
+
+const investorRoutes = {
+  dashboard: '/versotech_main/dashboard',
+  opportunities: '/versotech_main/opportunities',
+  portfolio: '/versotech_main/portfolio',
+  documents: '/versotech_main/documents',
+  inbox: '/versotech_main/inbox',
+  profile: '/versotech_main/profile',
+}
+
+const ceoRoutes = {
+  dashboard: '/versotech_main/dashboard',
+  approvals: '/versotech_main/approvals',
+  deals: '/versotech_main/deals',
+  reconciliation: '/versotech_main/reconciliation',
+  audit: '/versotech_main/audit',
+  admin: '/versotech_main/admin',
+}
+
+const staffRoutes = {
+  dashboard: '/versotech_main/dashboard',
+  approvals: '/versotech_main/approvals',
+  deals: '/versotech_main/deals',
+  investors: '/versotech_main/investors',
+  subscriptions: '/versotech_main/subscriptions',
+  messages: '/versotech_main/messages',
+}
+
+const arrangerRoutes = {
+  dashboard: '/versotech_main/dashboard',
+  mandates: '/versotech_main/my-mandates',
+  'subscription-packs': '/versotech_main/subscription-packs',
+  'fee-plans': '/versotech_main/fee-plans',
+  introducers: '/versotech_main/my-introducers',
+  profile: '/versotech_main/arranger-profile',
+}
+
+const introducerRoutes = {
+  dashboard: '/versotech_main/dashboard',
+  introductions: '/versotech_main/introductions',
+  agreements: '/versotech_main/introducer-agreements',
+  commissions: '/versotech_main/my-commissions',
+  versosign: '/versotech_main/versosign',
+  profile: '/versotech_main/introducer-profile',
+}
+
+const partnerRoutes = {
+  dashboard: '/versotech_main/dashboard',
+  opportunities: '/versotech_main/opportunities',
+  transactions: '/versotech_main/partner-transactions',
+  commissions: '/versotech_main/my-commissions',
+  profile: '/versotech_main/partner-profile',
+}
+
+const commercialPartnerRoutes = {
+  dashboard: '/versotech_main/dashboard',
+  opportunities: '/versotech_main/opportunities',
+  'client-transactions': '/versotech_main/client-transactions',
+  commissions: '/versotech_main/my-commissions',
+  profile: '/versotech_main/commercial-partner-profile',
+}
+
+const lawyerRoutes = {
+  dashboard: '/versotech_main/dashboard',
+  'assigned-deals': '/versotech_main/assigned-deals',
+  escrow: '/versotech_main/escrow',
+  versosign: '/versotech_main/versosign',
+  profile: '/versotech_main/lawyer-profile',
+}
+
 export const TOUR_STEPS: Record<string, TourStep[]> = {
   // Investor variants
-  investor: investorEntityTour, // Default to entity (more comprehensive)
-  investor_entity: investorEntityTour,
-  investor_individual: investorIndividualTour,
+  investor: withNavigateTo(investorEntityTour, investorRoutes), // Default to entity (more comprehensive)
+  investor_entity: withNavigateTo(investorEntityTour, investorRoutes),
+  investor_individual: withNavigateTo(investorIndividualTour, investorRoutes),
 
   // Business personas
-  ceo: ceoTour,
-  staff: staffTour,
-  arranger: arrangerTour,
-  introducer: introducerTour,
-  partner: partnerTour,
-  commercial_partner: commercialPartnerTour,
-  lawyer: lawyerTour,
+  ceo: withNavigateTo(ceoTour, ceoRoutes),
+  staff: withNavigateTo(staffTour, staffRoutes),
+  arranger: withNavigateTo(arrangerTour, arrangerRoutes),
+  introducer: withNavigateTo(introducerTour, introducerRoutes),
+  partner: withNavigateTo(partnerTour, partnerRoutes),
+  commercial_partner: withNavigateTo(commercialPartnerTour, commercialPartnerRoutes),
+  lawyer: withNavigateTo(lawyerTour, lawyerRoutes),
 }
 
 /**
@@ -1066,44 +1147,44 @@ export function getTourSteps(persona: string): TourStep[] {
 export function getWelcomeMessage(persona: string): { title: string; description: string } {
   const messages: Record<string, { title: string; description: string }> = {
     investor: {
-      title: 'Welcome to VERSO Investor Portal!',
-      description: 'Let us show you around. This quick tour will help you discover investment opportunities and manage your portfolio.'
+      title: 'Welcome to VERSOTECH Investor Workspace',
+      description: 'This walkthrough covers Dashboard, Investment Opportunities, Portfolio, Inbox, and Profile so you can move from review to execution quickly.'
     },
     investor_entity: {
-      title: 'Welcome to VERSO Investor Portal!',
-      description: 'Let us show you around. This tour will help you manage your entity\'s investments and coordinate with your team.'
+      title: 'Welcome to VERSOTECH Investor Workspace',
+      description: 'You will see where to track entity-level portfolio activity, manage members, and complete required actions in Inbox and Profile.'
     },
     investor_individual: {
-      title: 'Welcome to VERSO!',
-      description: 'Let us show you around. This quick tour will help you discover investment opportunities and track your portfolio.'
+      title: 'Welcome to VERSOTECH',
+      description: 'We will walk through the pages you use most: Dashboard, Investment Opportunities, Portfolio, Inbox, and Profile.'
     },
     ceo: {
-      title: 'Welcome to VERSO Executive Portal!',
-      description: 'This tour will give you an overview of the platform\'s management capabilities and executive controls.'
+      title: 'Welcome to VERSOTECH Executive Workspace',
+      description: 'This tour focuses on executive controls: Approvals, Deals, Reconciliation, Audit, and Admin.'
     },
     staff: {
-      title: 'Welcome to VERSO Staff Portal!',
-      description: 'This tour will help you get familiar with the tools you\'ll use to support the platform.'
+      title: 'Welcome to VERSOTECH Staff Workspace',
+      description: 'You will cover the operational flow across Approvals, Deals, Investors, Subscriptions, and Messages.'
     },
     arranger: {
-      title: 'Welcome to VERSO Arranger Portal!',
-      description: 'Let us show you how to manage your mandates, track subscriptions, and work with your partner network.'
+      title: 'Welcome to VERSOTECH Arranger Workspace',
+      description: 'This walkthrough maps your core workflow from My Mandates to Subscription Packs, Fee Plans, and introducer coordination.'
     },
     introducer: {
-      title: 'Welcome to VERSO Introducer Portal!',
-      description: 'This tour will show you how to track introductions, manage agreements, and monitor your commissions.'
+      title: 'Welcome to VERSOTECH Introducer Workspace',
+      description: 'You will review where to track introductions, agreements, commissions, and signature tasks.'
     },
     partner: {
-      title: 'Welcome to VERSO Partner Portal!',
-      description: 'Let us show you how to access deals for your clients and track your partnership activity.'
+      title: 'Welcome to VERSOTECH Partner Workspace',
+      description: 'This tour covers opportunities, transaction tracking, and commission operations for your referred clients.'
     },
     commercial_partner: {
-      title: 'Welcome to VERSO Commercial Partner Portal!',
-      description: 'This tour will show you how to manage client investments and execute transactions on their behalf.'
+      title: 'Welcome to VERSOTECH Commercial Partner Workspace',
+      description: 'You will see the end-to-end placement flow: opportunities, client transactions, commissions, and profile controls.'
     },
     lawyer: {
-      title: 'Welcome to VERSO Legal Portal!',
-      description: 'This tour will help you navigate your assigned matters, document reviews, and escrow management.'
+      title: 'Welcome to VERSOTECH Legal Workspace',
+      description: 'This walkthrough focuses on assigned deals, escrow actions, and legal document execution in VersoSign.'
     }
   }
 

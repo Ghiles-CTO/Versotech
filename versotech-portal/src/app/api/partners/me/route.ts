@@ -178,7 +178,7 @@ export async function PATCH(request: NextRequest) {
     // Find partner entity for current user
     const { data: partnerUser, error: partnerUserError } = await serviceSupabase
       .from('partner_users')
-      .select('partner_id, role')
+      .select('partner_id, role, is_primary')
       .eq('user_id', user.id)
       .maybeSingle()
 
@@ -186,10 +186,10 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Partner profile not found' }, { status: 404 })
     }
 
-    // Only admin users can update the partner profile
-    if (partnerUser.role !== 'admin') {
+    // Admins and primary contacts can update entity profile details
+    if (partnerUser.role !== 'admin' && !partnerUser.is_primary) {
       return NextResponse.json(
-        { error: 'Only admin users can update the partner profile' },
+        { error: 'Only admin or primary users can update the partner profile' },
         { status: 403 }
       )
     }

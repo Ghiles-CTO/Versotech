@@ -15,7 +15,6 @@ import {
   MoreHorizontal,
   Loader2,
   Send,
-  AlertCircle,
   Edit,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -478,17 +477,10 @@ export function MembersManagementTab({
                           </div>
                         </TableCell>
                         <TableCell>
-                          {member.can_sign && !member.signature_specimen_url ? (
-                            <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/30">
-                              <AlertCircle className="w-3 h-3 mr-1" />
-                              Needs Signature
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30">
-                              <CheckCircle2 className="w-3 h-3 mr-1" />
-                              Active
-                            </Badge>
-                          )}
+                          <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30">
+                            <CheckCircle2 className="w-3 h-3 mr-1" />
+                            Active
+                          </Badge>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
                           {formatDate(member.created_at)}

@@ -45,13 +45,17 @@ const PersonaContext = createContext<PersonaContextState | undefined>(undefined)
 
 const ACTIVE_PERSONA_KEY = 'verso_active_persona'
 const ACTIVE_PERSONA_TYPE_COOKIE = 'verso_active_persona_type'
+const ACTIVE_PERSONA_ID_COOKIE = 'verso_active_persona_id'
+const ACTIVE_TOUR_PERSONA_COOKIE = 'verso_active_tour_persona'
 
 /**
- * Set a cookie that the server can read to determine active persona type
+ * Set cookies that the server can read to determine active persona identity.
  */
-function setPersonaCookie(personaType: string) {
+function setPersonaCookie(personaType: string, personaId: string) {
   // Set cookie with 1 year expiry, accessible to server
   document.cookie = `${ACTIVE_PERSONA_TYPE_COOKIE}=${personaType}; path=/; max-age=31536000; SameSite=Lax`
+  document.cookie = `${ACTIVE_PERSONA_ID_COOKIE}=${personaId}; path=/; max-age=31536000; SameSite=Lax`
+  document.cookie = `${ACTIVE_TOUR_PERSONA_COOKIE}=${personaType}; path=/; max-age=31536000; SameSite=Lax`
 }
 
 interface PersonaProviderProps {
@@ -133,15 +137,21 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
       setActivePersona(selectedPersona)
       // Set cookie for server-side persona detection on initial load
       if (selectedPersona) {
-        // Check if the current cookie is stale (from a different user/session)
-        const currentCookie = document.cookie
+        // Check if the current cookies are stale (from a different user/session)
+        const currentTypeCookie = document.cookie
           .split('; ')
           .find(row => row.startsWith(ACTIVE_PERSONA_TYPE_COOKIE))
           ?.split('=')[1]
+        const currentIdCookie = document.cookie
+          .split('; ')
+          .find(row => row.startsWith(ACTIVE_PERSONA_ID_COOKIE))
+          ?.split('=')[1]
 
-        const cookieWasStale = currentCookie && currentCookie !== selectedPersona.persona_type
+        const cookieWasStale =
+          (currentTypeCookie && currentTypeCookie !== selectedPersona.persona_type) ||
+          (currentIdCookie && currentIdCookie !== selectedPersona.entity_id)
 
-        setPersonaCookie(selectedPersona.persona_type)
+        setPersonaCookie(selectedPersona.persona_type, selectedPersona.entity_id)
 
         // If cookie was stale, the server rendered the wrong dashboard
         // Force a refresh to get the correct server-side render
@@ -166,7 +176,7 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
     // Persist to localStorage for future sessions
     localStorage.setItem(ACTIVE_PERSONA_KEY, persona.entity_id)
     // Set cookie for server-side persona detection
-    setPersonaCookie(persona.persona_type)
+    setPersonaCookie(persona.persona_type, persona.entity_id)
     // Use client-side navigation - MUCH faster than window.location.href
     // router.push preserves React context and only re-renders necessary components
     router.push('/versotech_main/dashboard')
@@ -208,6 +218,10 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
       }
 
       setActivePersona(selectedPersona ?? null)
+      if (selectedPersona) {
+        localStorage.setItem(ACTIVE_PERSONA_KEY, selectedPersona.entity_id)
+        setPersonaCookie(selectedPersona.persona_type, selectedPersona.entity_id)
+      }
       setIsLoading(false)
     }
   }, [initialPersonas, refreshPersonas])

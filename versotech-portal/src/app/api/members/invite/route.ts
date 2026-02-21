@@ -5,6 +5,7 @@ import { sendInvitationEmail } from '@/lib/email/resend-service'
 // Valid entity types for member invitations
 const VALID_ENTITY_TYPES = ['partner', 'investor', 'introducer', 'commercial_partner', 'lawyer', 'arranger'] as const
 type EntityType = typeof VALID_ENTITY_TYPES[number]
+const VALID_MEMBER_ROLES = ['admin', 'member', 'viewer', 'owner'] as const
 
 // Entity table mapping
 const ENTITY_TABLES: Record<EntityType, string> = {
@@ -60,7 +61,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { entity_type, entity_id, email, role = 'member', is_signatory = false } = body
+    const { entity_type, entity_id, email, role: rawRole, is_signatory = false } = body
+    const normalizedRole = typeof rawRole === 'string' && rawRole.trim().length > 0
+      ? rawRole.trim().toLowerCase()
+      : 'member'
 
     // Validate required fields
     if (!entity_type || !entity_id || !email) {
@@ -82,6 +86,14 @@ export async function POST(request: NextRequest) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
       return NextResponse.json({ error: 'Invalid email format' }, { status: 400 })
+    }
+
+    // Validate role value
+    if (!VALID_MEMBER_ROLES.includes(normalizedRole as (typeof VALID_MEMBER_ROLES)[number])) {
+      return NextResponse.json(
+        { error: `Invalid role. Must be one of: ${VALID_MEMBER_ROLES.join(', ')}` },
+        { status: 400 }
+      )
     }
 
     const serviceSupabase = createServiceClient()
@@ -201,7 +213,7 @@ export async function POST(request: NextRequest) {
         entity_id,
         entity_name: entityName,
         email: email.toLowerCase(),
-        role,
+        role: normalizedRole,
         is_signatory,
         invited_by: user.id,
         invited_by_name: inviterName,
@@ -225,7 +237,7 @@ export async function POST(request: NextRequest) {
       invitation: {
         id: invitation.id,
         email: invitation.email,
-        role: invitation.role,
+        role: normalizedRole,
         is_signatory: invitation.is_signatory,
         status: 'pending_approval'
       },

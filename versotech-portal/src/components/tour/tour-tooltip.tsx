@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
+import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { X, ArrowRight, ArrowLeft, ChevronRight, Check, ChevronDown, ChevronUp, Keyboard } from 'lucide-react'
@@ -119,10 +120,12 @@ function TooltipArrow({ side, className = '' }: { side: ArrowSide; className?: s
 
 export function TourTooltip({ step, stepNumber, persona = 'investor' }: TourTooltipProps) {
   const { isActive, totalSteps, nextStep, prevStep, skipTour } = useTour()
+  const pathname = usePathname()
   const [position, setPosition] = useState<Position | null>(null)
   const [mounted, setMounted] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [targetMissing, setTargetMissing] = useState(false)
   const tooltipRef = useRef<HTMLDivElement>(null)
 
   // Get persona colors or default to blue
@@ -146,6 +149,7 @@ export function TourTooltip({ step, stepNumber, persona = 'investor' }: TourTool
   useEffect(() => {
     if (!isActive || !mounted) {
       setPosition(null)
+      setTargetMissing(false)
       return
     }
 
@@ -162,6 +166,7 @@ export function TourTooltip({ step, stepNumber, persona = 'investor' }: TourTool
 
       const target = document.querySelector(step.target)
       if (!target) {
+        setTargetMissing(true)
         // Target not found - position in center of screen
         setPosition({
           top: window.innerHeight / 2 - 100,
@@ -170,6 +175,8 @@ export function TourTooltip({ step, stepNumber, persona = 'investor' }: TourTool
         })
         return
       }
+
+      setTargetMissing(false)
 
       const targetRect = target.getBoundingClientRect()
       const tooltipWidth = 400 // Wider tooltip
@@ -257,6 +264,7 @@ export function TourTooltip({ step, stepNumber, persona = 'investor' }: TourTool
 
   const progress = ((stepNumber + 1) / totalSteps) * 100
   const hasExtendedContent = step.features && step.features.length > 0
+  const isOnExpectedRoute = step.navigateTo ? pathname === step.navigateTo.split('?')[0] : true
 
   // Mobile bottom sheet variant
   if (isMobile) {
@@ -313,6 +321,16 @@ export function TourTooltip({ step, stepNumber, persona = 'investor' }: TourTool
               <p className="text-base text-muted-foreground leading-relaxed pl-7">
                 {step.content}
               </p>
+
+              {targetMissing && (
+                <div className="mt-3 ml-7 p-3 bg-amber-50 dark:bg-amber-500/10 rounded-lg border border-amber-200 dark:border-amber-500/20">
+                  <p className="text-sm text-amber-700 dark:text-amber-400 leading-relaxed">
+                    <strong>Note:</strong> {isOnExpectedRoute
+                      ? 'This feature is unavailable in your current context. You can continue to the next step.'
+                      : 'Taking you to the right section for this step.'}
+                  </p>
+                </div>
+              )}
 
               {/* Features (if any) */}
               {hasExtendedContent && (
@@ -452,6 +470,16 @@ export function TourTooltip({ step, stepNumber, persona = 'investor' }: TourTool
               <p className="text-base text-muted-foreground leading-relaxed pl-7">
                 {step.content}
               </p>
+
+              {targetMissing && (
+                <div className="mt-3 ml-7 p-3 bg-amber-50 dark:bg-amber-500/10 rounded-lg border border-amber-200 dark:border-amber-500/20">
+                  <p className="text-sm text-amber-700 dark:text-amber-400 leading-relaxed">
+                    <strong>Note:</strong> {isOnExpectedRoute
+                      ? 'This feature is unavailable in your current context. You can continue to the next step.'
+                      : 'Taking you to the right section for this step.'}
+                  </p>
+                </div>
+              )}
 
               {/* Expandable detailed content and features */}
               {hasExtendedContent && (

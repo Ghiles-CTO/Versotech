@@ -204,6 +204,7 @@ export function CommercialPartnerProfileClient({
   const [showAddressDialog, setShowAddressDialog] = useState(false)
   const [isSubmittingEntityKyc, setIsSubmittingEntityKyc] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const canEditEntityProfile = cpUserInfo.role === 'admin' || cpUserInfo.is_primary
 
   // Edit state
   const [editData, setEditData] = useState({
@@ -380,7 +381,7 @@ export function CommercialPartnerProfileClient({
         </div>
 
         <div className="flex gap-2">
-          {isEditing ? (
+          {canEditEntityProfile && isEditing ? (
             <>
               <Button variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
                 <X className="h-4 w-4 mr-2" />
@@ -395,12 +396,12 @@ export function CommercialPartnerProfileClient({
                 Save Changes
               </Button>
             </>
-          ) : (
+          ) : canEditEntityProfile ? (
             <Button variant="outline" onClick={() => setIsEditing(true)}>
               <Edit className="h-4 w-4 mr-2" />
               Edit Profile
             </Button>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -711,7 +712,7 @@ export function CommercialPartnerProfileClient({
                   Your regulatory status and licensing details
                 </CardDescription>
               </div>
-              {cpInfo?.type !== 'individual' && (
+              {cpInfo?.type !== 'individual' && canEditEntityProfile && (
                 <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
                   <Edit className="h-4 w-4 mr-2" />
                   Edit

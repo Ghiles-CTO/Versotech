@@ -2,6 +2,7 @@
  * Introducer Profile API
  * GET /api/introducers/me/profile - Get introducer's own profile
  * PUT /api/introducers/me/profile - Update profile directly (self-service)
+ * PATCH /api/introducers/me/profile - Alias of PUT for shared dialogs
  */
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
@@ -199,7 +200,7 @@ export async function PUT(request: NextRequest) {
     // Find introducer entity for current user
     const { data: introducerUser, error: introducerUserError } = await serviceSupabase
       .from('introducer_users')
-      .select('introducer_id, role')
+      .select('introducer_id, role, is_primary')
       .eq('user_id', user.id)
       .maybeSingle()
 
@@ -207,10 +208,10 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Introducer profile not found' }, { status: 404 })
     }
 
-    // Only admin users can update the introducer profile
-    if (introducerUser.role !== 'admin') {
+    // Admins and primary contacts can update entity profile details
+    if (introducerUser.role !== 'admin' && !introducerUser.is_primary) {
       return NextResponse.json(
-        { error: 'Only admin users can update the introducer profile' },
+        { error: 'Only admin or primary users can update the introducer profile' },
         { status: 403 }
       )
     }
@@ -267,4 +268,8 @@ export async function PUT(request: NextRequest) {
     console.error('Unexpected error in PUT /api/introducers/me/profile:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
+}
+
+export async function PATCH(request: NextRequest) {
+  return PUT(request)
 }

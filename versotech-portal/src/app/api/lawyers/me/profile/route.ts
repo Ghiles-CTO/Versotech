@@ -163,7 +163,7 @@ export async function PATCH(request: NextRequest) {
     // Find lawyer entity for current user
     const { data: lawyerUser, error: lawyerUserError } = await serviceSupabase
       .from('lawyer_users')
-      .select('lawyer_id, role')
+      .select('lawyer_id, role, is_primary')
       .eq('user_id', user.id)
       .maybeSingle()
 
@@ -171,10 +171,10 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Lawyer profile not found' }, { status: 404 })
     }
 
-    // Only admin users can update the lawyer profile
-    if (lawyerUser.role !== 'admin') {
+    // Admins and primary contacts can update entity profile details
+    if (lawyerUser.role !== 'admin' && !lawyerUser.is_primary) {
       return NextResponse.json(
-        { error: 'Only admin users can update the lawyer profile' },
+        { error: 'Only admin or primary users can update the lawyer profile' },
         { status: 403 }
       )
     }

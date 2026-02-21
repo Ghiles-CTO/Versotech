@@ -319,7 +319,7 @@ export function LawyerProfileClient({
   const kycStyle = KYC_STATUS_STYLES[kycStatus] || KYC_STATUS_STYLES.not_started
   const KycIcon = kycStyle.icon
 
-  const canEdit = lawyerUserInfo.role === 'admin'
+  const canEdit = lawyerUserInfo.role === 'admin' || lawyerUserInfo.is_primary
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">

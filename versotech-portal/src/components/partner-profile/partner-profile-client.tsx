@@ -147,6 +147,7 @@ export function PartnerProfileClient({
   const statusBadge = STATUS_BADGES[partnerInfo.status] || STATUS_BADGES.pending
   const StatusIcon = statusBadge.icon
   const kycBadge = KYC_BADGES[partnerInfo.kyc_status || 'not_started'] || KYC_BADGES.not_started
+  const canEditEntityProfile = partnerUserInfo.role === 'admin' || partnerUserInfo.is_primary
 
   const handleSubmitEntityKyc = async () => {
     setIsSubmittingEntityKyc(true)
@@ -326,10 +327,12 @@ export function PartnerProfileClient({
                     Contact Information
                   </CardTitle>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
+                {canEditEntityProfile && (
+                  <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                )}
               </CardHeader>
               <CardContent className="space-y-4">
                 {partnerInfo.contact_name && (

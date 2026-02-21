@@ -226,6 +226,7 @@ export function IntroducerProfileClient({
   const [showKycDialog, setShowKycDialog] = useState(false)
   const [showAddressDialog, setShowAddressDialog] = useState(false)
   const [isSubmittingEntityKyc, setIsSubmittingEntityKyc] = useState(false)
+  const canEditEntityProfile = introducerUserInfo.role === 'admin' || introducerUserInfo.is_primary
 
   // Edit state
   const [editData, setEditData] = useState({
@@ -403,7 +404,7 @@ export function IntroducerProfileClient({
         </div>
 
         <div className="flex gap-2">
-          {isEditing ? (
+          {canEditEntityProfile && isEditing ? (
             <>
               <Button variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
                 <X className="h-4 w-4 mr-2" />
@@ -418,12 +419,12 @@ export function IntroducerProfileClient({
                 Save Changes
               </Button>
             </>
-          ) : (
+          ) : canEditEntityProfile ? (
             <Button variant="outline" onClick={() => setIsEditing(true)}>
               <Edit className="h-4 w-4 mr-2" />
               Edit Profile
             </Button>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -609,10 +610,12 @@ export function IntroducerProfileClient({
                   Registered address and contact information
                 </CardDescription>
               </div>
-              <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
+              {canEditEntityProfile && (
+                <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

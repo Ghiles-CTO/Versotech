@@ -1,14 +1,27 @@
 import { ReactNode } from 'react'
 import { getProfile } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { PersonaProvider, Persona } from '@/contexts/persona-context'
 import { UnifiedAppLayout } from '@/components/layout/unified-app-layout'
 import { ProxyModeProvider, ProxyModeBanner } from '@/components/commercial-partner'
 import { PlatformTour } from '@/components/tour'
 import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
+import { TOUR_VERSION } from '@/config/platform-tour'
 
 export const dynamic = 'force-dynamic'
+
+const ACTIVE_PERSONA_TYPE_COOKIE = 'verso_active_persona_type'
+const ACTIVE_PERSONA_ID_COOKIE = 'verso_active_persona_id'
+
+type TourStateEntry = {
+  completed?: boolean
+  completedAt?: string
+  version?: string
+}
+
+type PlatformTourState = Record<string, TourStateEntry>
 
 const PERSONA_MEMBER_CONFIG: Partial<
   Record<Persona['persona_type'], { memberTable: string; entityIdColumn: string }>
@@ -43,12 +56,16 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
     console.error('[UnifiedPortalLayout] Error fetching personas:', personasError)
   }
 
+  const cookieStore = await cookies()
+  const activePersonaTypeCookie = cookieStore.get(ACTIVE_PERSONA_TYPE_COOKIE)?.value
+  const activePersonaIdCookie = cookieStore.get(ACTIVE_PERSONA_ID_COOKIE)?.value
+
   let userPersonas: Persona[] = (personas || []) as Persona[]
 
   // Fetch tour completion status
   const { data: tourStatus } = await supabase
     .from('profiles')
-    .select('has_completed_platform_tour')
+    .select('has_completed_platform_tour, platform_tour_state')
     .eq('id', profile.id)
     .single()
 
@@ -80,9 +97,11 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
     }
   }
 
-  // Determine active persona for tour using priority order
-  // This MUST match the priority order in persona-context.tsx
-  // CEO gets highest priority (1), investor gets lowest (8)
+  // Determine active persona for tour.
+  // Source of truth order:
+  // 1) Active persona id + type cookie
+  // 2) Active persona type cookie
+  // 3) Priority fallback (matches persona-context)
   const personaPriority: Record<string, number> = {
     'ceo': 1,
     'staff': 2,
@@ -94,13 +113,31 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
     'investor': 8,
   }
 
+  let selectedPersonaForTour: Persona | null = null
+  if (activePersonaIdCookie) {
+    selectedPersonaForTour = userPersonas.find((persona) =>
+      persona.entity_id === activePersonaIdCookie &&
+      (!activePersonaTypeCookie || persona.persona_type === activePersonaTypeCookie)
+    ) || null
+  }
+
+  if (!selectedPersonaForTour && activePersonaTypeCookie) {
+    selectedPersonaForTour = userPersonas.find(
+      (persona) => persona.persona_type === activePersonaTypeCookie
+    ) || null
+  }
+
+  if (!selectedPersonaForTour && userPersonas.length > 0) {
+    selectedPersonaForTour = userPersonas.reduce((best, current) => {
+      const bestPriority = personaPriority[best.persona_type] ?? 99
+      const currentPriority = personaPriority[current.persona_type] ?? 99
+      return currentPriority < bestPriority ? current : best
+    })
+  }
+
   // Type as string to allow extended investor types (investor_entity, investor_individual)
-  let activePersonaForTour: string = userPersonas.length > 0
-    ? userPersonas.reduce((best, current) => {
-        const bestPriority = personaPriority[best.persona_type] ?? 99
-        const currentPriority = personaPriority[current.persona_type] ?? 99
-        return currentPriority < bestPriority ? current : best
-      }).persona_type
+  let activePersonaForTour: string = selectedPersonaForTour
+    ? selectedPersonaForTour.persona_type
     : 'investor'
 
   // For investor persona, differentiate between entity and individual
@@ -108,7 +145,9 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
   // Individual investors see simpler tour (personal portfolio focus)
   if (activePersonaForTour === 'investor') {
     // Find the investor persona to get the entity_id
-    const investorPersona = userPersonas.find(p => p.persona_type === 'investor')
+    const investorPersona =
+      (selectedPersonaForTour?.persona_type === 'investor' ? selectedPersonaForTour : null) ||
+      userPersonas.find(p => p.persona_type === 'investor')
     if (investorPersona) {
       // Query the investors table to check if entity or individual
       const { data: investor } = await supabase
@@ -123,6 +162,20 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
         : 'investor_individual'
     }
   }
+
+  const rawTourState = tourStatus?.platform_tour_state
+  const platformTourState: PlatformTourState =
+    rawTourState && typeof rawTourState === 'object' && !Array.isArray(rawTourState)
+      ? (rawTourState as PlatformTourState)
+      : {}
+  const activeTourState = platformTourState[activePersonaForTour]
+  const hasPersonaScopedCompletion = Boolean(
+    activeTourState?.completed && activeTourState?.version === TOUR_VERSION
+  )
+  const hasLegacyCompletion = Boolean(tourStatus?.has_completed_platform_tour)
+  // Backward compatibility: existing users with only legacy completion should not be forced
+  // through the tour until they explicitly restart it.
+  const hasCompletedTour = hasPersonaScopedCompletion || hasLegacyCompletion
 
   // Auto-link/create member rows for persona-backed users on login.
   // If the user's email is not in members for that entity, create a linked member record.
@@ -159,7 +212,7 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
         <ProxyModeBanner />
         <PlatformTour
           activePersona={activePersonaForTour}
-          hasCompletedTour={tourStatus?.has_completed_platform_tour ?? false}
+          hasCompletedTour={hasCompletedTour}
         >
           <UnifiedAppLayout profile={profile}>
             {children}

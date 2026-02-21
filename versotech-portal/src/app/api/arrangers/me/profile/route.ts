@@ -2,6 +2,7 @@
  * Arranger Profile API
  * GET /api/arrangers/me/profile - Get arranger's own profile
  * PUT /api/arrangers/me/profile - Update profile directly (self-service)
+ * PATCH /api/arrangers/me/profile - Alias of PUT for shared dialogs
  */
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
@@ -143,12 +144,20 @@ export async function PUT(request: NextRequest) {
     // Find arranger entity for current user
     const { data: arrangerUser, error: arrangerUserError } = await serviceSupabase
       .from('arranger_users')
-      .select('arranger_id')
+      .select('arranger_id, role, is_primary')
       .eq('user_id', user.id)
       .maybeSingle()
 
     if (arrangerUserError || !arrangerUser?.arranger_id) {
       return NextResponse.json({ error: 'Arranger profile not found' }, { status: 404 })
+    }
+
+    // Admins and primary contacts can update entity profile details
+    if (arrangerUser.role !== 'admin' && !arrangerUser.is_primary) {
+      return NextResponse.json(
+        { error: 'Only admin or primary users can update the arranger profile' },
+        { status: 403 }
+      )
     }
 
     // Parse and validate request body
@@ -199,4 +208,8 @@ export async function PUT(request: NextRequest) {
     console.error('Unexpected error in PUT /api/arrangers/me/profile:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
+}
+
+export async function PATCH(request: NextRequest) {
+  return PUT(request)
 }

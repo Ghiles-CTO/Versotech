@@ -2,8 +2,8 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode, useRef } from 'react'
 
-// Storage key for tour progress persistence
-const STORAGE_KEY = 'verso_tour_progress'
+// Default storage key for tour progress persistence
+const DEFAULT_STORAGE_KEY = 'verso_tour_progress'
 
 // Analytics interface for tracking tour events
 interface TourAnalytics {
@@ -68,6 +68,7 @@ interface TourProviderProps {
   stepIds?: string[]
   enableKeyboardNav?: boolean
   enablePersistence?: boolean
+  persistenceKey?: string
 }
 
 export function TourProvider({
@@ -77,7 +78,8 @@ export function TourProvider({
   analytics,
   stepIds = [],
   enableKeyboardNav = true,
-  enablePersistence = true
+  enablePersistence = true,
+  persistenceKey = DEFAULT_STORAGE_KEY,
 }: TourProviderProps) {
   const [isActive, setIsActive] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
@@ -88,12 +90,16 @@ export function TourProvider({
   const tourStartTime = useRef<number | null>(null)
   const stepStartTime = useRef<number | null>(null)
 
+  useEffect(() => {
+    setStepIdsState(stepIds)
+  }, [stepIds])
+
   // Load persisted progress on mount
   useEffect(() => {
     if (!enablePersistence) return
 
     try {
-      const stored = localStorage.getItem(STORAGE_KEY)
+      const stored = localStorage.getItem(persistenceKey)
       if (stored) {
         const progress: StoredProgress = JSON.parse(stored)
         // Only resume if within last 24 hours
@@ -107,7 +113,7 @@ export function TourProvider({
     } catch {
       // Ignore localStorage errors
     }
-  }, [enablePersistence, totalSteps])
+  }, [enablePersistence, totalSteps, persistenceKey])
 
   // Persist progress whenever it changes
   useEffect(() => {
@@ -120,11 +126,11 @@ export function TourProvider({
         startTime: tourStartTime.current || Date.now(),
         lastActiveTime: Date.now()
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
+      localStorage.setItem(persistenceKey, JSON.stringify(progress))
     } catch {
       // Ignore localStorage errors
     }
-  }, [currentStep, isPaused, isActive, enablePersistence])
+  }, [currentStep, isPaused, isActive, enablePersistence, persistenceKey])
 
   // Track step views
   useEffect(() => {
@@ -138,12 +144,12 @@ export function TourProvider({
   const clearPersistedProgress = useCallback(() => {
     if (enablePersistence) {
       try {
-        localStorage.removeItem(STORAGE_KEY)
+        localStorage.removeItem(persistenceKey)
       } catch {
         // Ignore
       }
     }
-  }, [enablePersistence])
+  }, [enablePersistence, persistenceKey])
 
   const startTour = useCallback(() => {
     setCurrentStep(0)
