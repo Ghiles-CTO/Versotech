@@ -13,6 +13,8 @@ const ALLOWED_TOUR_PERSONA_KEYS = new Set([
   'lawyer',
 ])
 
+const MAX_UPDATE_RETRIES = 3
+
 type TourStateEntry = {
   completed?: boolean
   completedAt?: string
@@ -20,6 +22,13 @@ type TourStateEntry = {
 }
 
 type PlatformTourState = Record<string, TourStateEntry>
+
+function parseTourState(value: unknown): PlatformTourState {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as PlatformTourState
+  }
+  return {}
+}
 
 export async function POST(request: Request) {
   try {
@@ -44,7 +53,12 @@ export async function POST(request: Request) {
       ? rawVersion.trim()
       : 'legacy'
 
-    const isPersonaKeyValid = ALLOWED_TOUR_PERSONA_KEYS.has(personaKey)
+    if (!ALLOWED_TOUR_PERSONA_KEYS.has(personaKey)) {
+      return NextResponse.json(
+        { error: 'Invalid personaKey' },
+        { status: 400 }
+      )
+    }
 
     const supabase = await createClient()
 
@@ -56,11 +70,10 @@ export async function POST(request: Request) {
       )
     }
 
-    let nextState: PlatformTourState | undefined
-    if (isPersonaKeyValid) {
+    for (let attempt = 0; attempt < MAX_UPDATE_RETRIES; attempt += 1) {
       const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
-        .select('platform_tour_state')
+        .select('platform_tour_state, updated_at')
         .eq('id', user.id)
         .single()
 
@@ -72,63 +85,62 @@ export async function POST(request: Request) {
         )
       }
 
-      const currentStateRaw = existingProfile?.platform_tour_state
-      const currentState: PlatformTourState =
-        currentStateRaw && typeof currentStateRaw === 'object' && !Array.isArray(currentStateRaw)
-          ? (currentStateRaw as PlatformTourState)
-          : {}
+      const currentState = parseTourState(existingProfile?.platform_tour_state)
+      const updatedAt = existingProfile?.updated_at ?? null
+      const nextUpdatedAt = new Date().toISOString()
 
-      nextState = {
+      const nextState: PlatformTourState = {
         ...currentState,
         [personaKey]: {
           completed: true,
-          completedAt: new Date().toISOString(),
+          completedAt: nextUpdatedAt,
           version,
         },
       }
-    } else {
-      console.warn('[tour-completed] Missing/invalid personaKey. Falling back to legacy completion only.')
+
+      let updateQuery = supabase
+        .from('profiles')
+        .update({
+          has_completed_platform_tour: true,
+          platform_tour_state: nextState,
+          updated_at: nextUpdatedAt,
+        })
+        .eq('id', user.id)
+
+      if (updatedAt) {
+        updateQuery = updateQuery.eq('updated_at', updatedAt)
+      } else {
+        updateQuery = updateQuery.is('updated_at', null)
+      }
+
+      const { data: updatedRows, error: updateError } = await updateQuery.select('id')
+      if (updateError) {
+        console.error('[tour-completed] Update error:', updateError)
+        return NextResponse.json(
+          { error: 'Failed to update profile', details: updateError.message },
+          { status: 500 }
+        )
+      }
+
+      if (updatedRows && updatedRows.length > 0) {
+        return NextResponse.json({
+          success: true,
+          message: `Platform tour marked as completed for ${personaKey}`,
+          personaKey,
+          version,
+        })
+      }
     }
 
-    const updatePayload: {
-      has_completed_platform_tour: boolean
-      platform_tour_state?: PlatformTourState
-    } = {
-      has_completed_platform_tour: true,
-    }
-
-    if (nextState) {
-      updatePayload.platform_tour_state = nextState
-    }
-
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update(updatePayload)
-      .eq('id', user.id)
-
-    if (updateError) {
-      console.error('[tour-completed] Update error:', updateError)
-      return NextResponse.json(
-        { error: 'Failed to update profile', details: updateError.message },
-        { status: 500 }
-      )
-    }
-
-    if (!isPersonaKeyValid) {
-      return NextResponse.json({
-        success: true,
-        message: 'Platform tour marked as completed (legacy mode)',
-        personaKey: null,
-        version: null,
-      })
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: `Platform tour marked as completed for ${personaKey}`,
-      personaKey,
-      version,
-    })
+    return NextResponse.json(
+      {
+        error: 'Profile update conflict. Please retry.',
+        code: 'tour_update_conflict',
+      },
+      {
+        status: 409,
+      }
+    )
   } catch (error) {
     console.error('[tour-completed] Error:', error)
     return NextResponse.json(

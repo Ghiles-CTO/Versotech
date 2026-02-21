@@ -151,6 +151,13 @@ export function TourProvider({
     }
   }, [enablePersistence, persistenceKey])
 
+  const finalizeTour = useCallback(() => {
+    setIsActive(false)
+    setCurrentStep(0)
+    setIsPaused(false)
+    clearPersistedProgress()
+  }, [clearPersistedProgress])
+
   const startTour = useCallback(() => {
     setCurrentStep(0)
     setIsActive(true)
@@ -159,7 +166,7 @@ export function TourProvider({
     stepStartTime.current = Date.now()
   }, [])
 
-  const nextStep = useCallback(() => {
+  const nextStep = useCallback(async () => {
     // Track step completion
     if (analytics?.onStepComplete && stepStartTime.current) {
       const stepId = stepIdsState[currentStep] || `step-${currentStep}`
@@ -171,21 +178,22 @@ export function TourProvider({
       setCurrentStep(prev => prev + 1)
       stepStartTime.current = Date.now()
     } else {
-      // Last step - complete the tour
-      setIsActive(false)
-      setCurrentStep(0)
-      setIsPaused(false)
-      clearPersistedProgress()
+      try {
+        await onComplete()
 
-      // Track tour completion
-      if (analytics?.onTourComplete && tourStartTime.current) {
-        const totalDuration = Date.now() - tourStartTime.current
-        analytics.onTourComplete(totalDuration)
+        // Track tour completion only after successful completion save
+        if (analytics?.onTourComplete && tourStartTime.current) {
+          const totalDuration = Date.now() - tourStartTime.current
+          analytics.onTourComplete(totalDuration)
+        }
+
+        // Last step - complete the tour
+        finalizeTour()
+      } catch (error) {
+        console.error('[TourProvider] Failed to complete tour:', error)
       }
-
-      onComplete()
     }
-  }, [currentStep, totalSteps, onComplete, analytics, stepIdsState, clearPersistedProgress])
+  }, [currentStep, totalSteps, onComplete, analytics, stepIdsState, finalizeTour])
 
   const prevStep = useCallback(() => {
     if (currentStep > 0) {
@@ -200,26 +208,29 @@ export function TourProvider({
       analytics.onTourSkip(currentStep)
     }
 
-    setIsActive(false)
-    setCurrentStep(0)
-    setIsPaused(false)
-    clearPersistedProgress()
-    await onComplete()
-  }, [onComplete, analytics, currentStep, clearPersistedProgress])
+    try {
+      await onComplete()
+      finalizeTour()
+    } catch (error) {
+      console.error('[TourProvider] Failed to skip tour:', error)
+    }
+  }, [onComplete, analytics, currentStep, finalizeTour])
 
   const completeTour = useCallback(async () => {
-    // Track tour completion
-    if (analytics?.onTourComplete && tourStartTime.current) {
-      const totalDuration = Date.now() - tourStartTime.current
-      analytics.onTourComplete(totalDuration)
-    }
+    try {
+      await onComplete()
 
-    setIsActive(false)
-    setCurrentStep(0)
-    setIsPaused(false)
-    clearPersistedProgress()
-    await onComplete()
-  }, [onComplete, analytics, clearPersistedProgress])
+      // Track tour completion only after successful completion save
+      if (analytics?.onTourComplete && tourStartTime.current) {
+        const totalDuration = Date.now() - tourStartTime.current
+        analytics.onTourComplete(totalDuration)
+      }
+
+      finalizeTour()
+    } catch (error) {
+      console.error('[TourProvider] Failed to complete tour:', error)
+    }
+  }, [onComplete, analytics, finalizeTour])
 
   // Enhanced actions
   const goToStep = useCallback((step: number) => {

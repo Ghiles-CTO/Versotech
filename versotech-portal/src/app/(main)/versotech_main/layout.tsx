@@ -169,13 +169,9 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
       ? (rawTourState as PlatformTourState)
       : {}
   const activeTourState = platformTourState[activePersonaForTour]
-  const hasPersonaScopedCompletion = Boolean(
+  const hasCompletedTour = Boolean(
     activeTourState?.completed && activeTourState?.version === TOUR_VERSION
   )
-  const hasLegacyCompletion = Boolean(tourStatus?.has_completed_platform_tour)
-  // Backward compatibility: existing users with only legacy completion should not be forced
-  // through the tour until they explicitly restart it.
-  const hasCompletedTour = hasPersonaScopedCompletion || hasLegacyCompletion
 
   // Auto-link/create member rows for persona-backed users on login.
   // If the user's email is not in members for that entity, create a linked member record.

@@ -29,6 +29,19 @@ import { useTour } from '@/contexts/tour-context'
 import { getWelcomeMessage, getTourSteps } from '@/config/platform-tour'
 import { useMemo } from 'react'
 
+const ACTIVE_TOUR_PERSONA_COOKIE = 'verso_active_tour_persona'
+const ALLOWED_TOUR_PERSONA_KEYS = new Set([
+  'investor_entity',
+  'investor_individual',
+  'ceo',
+  'staff',
+  'arranger',
+  'introducer',
+  'partner',
+  'commercial_partner',
+  'lawyer',
+])
+
 interface TourWelcomeModalProps {
   open: boolean
   onClose: () => void
@@ -226,12 +239,46 @@ export function TourWelcomeModal({ open, onClose, onSkip, persona = 'investor' }
  * For use in settings/profile pages to let users restart the tour
  */
 export function TourRestartButton({ className = '' }: { className?: string }) {
+  const readCookie = (name: string): string | null => {
+    if (typeof document === 'undefined') return null
+
+    const prefix = `${name}=`
+    for (const chunk of document.cookie.split('; ')) {
+      if (chunk.startsWith(prefix)) {
+        const rawValue = chunk.slice(prefix.length)
+        return decodeURIComponent(rawValue)
+      }
+    }
+
+    return null
+  }
+
   const handleRestartTour = async () => {
     try {
-      await fetch('/api/profiles/tour-reset', {
+      const activeTourPersona = readCookie(ACTIVE_TOUR_PERSONA_COOKIE)
+      const body = ALLOWED_TOUR_PERSONA_KEYS.has(activeTourPersona || '')
+        ? { personaKey: activeTourPersona }
+        : { all: true }
+
+      const response = await fetch('/api/profiles/tour-reset', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       })
+
+      if (!response.ok) {
+        let message = 'Failed to reset tour'
+        try {
+          const payload = await response.json()
+          if (payload?.error && typeof payload.error === 'string') {
+            message = payload.error
+          }
+        } catch {
+          // Keep default message
+        }
+        throw new Error(message)
+      }
+
       // Reload to show welcome modal
       window.location.reload()
     } catch (error) {

@@ -46,7 +46,6 @@ const PersonaContext = createContext<PersonaContextState | undefined>(undefined)
 const ACTIVE_PERSONA_KEY = 'verso_active_persona'
 const ACTIVE_PERSONA_TYPE_COOKIE = 'verso_active_persona_type'
 const ACTIVE_PERSONA_ID_COOKIE = 'verso_active_persona_id'
-const ACTIVE_TOUR_PERSONA_COOKIE = 'verso_active_tour_persona'
 
 /**
  * Set cookies that the server can read to determine active persona identity.
@@ -55,7 +54,6 @@ function setPersonaCookie(personaType: string, personaId: string) {
   // Set cookie with 1 year expiry, accessible to server
   document.cookie = `${ACTIVE_PERSONA_TYPE_COOKIE}=${personaType}; path=/; max-age=31536000; SameSite=Lax`
   document.cookie = `${ACTIVE_PERSONA_ID_COOKIE}=${personaId}; path=/; max-age=31536000; SameSite=Lax`
-  document.cookie = `${ACTIVE_TOUR_PERSONA_COOKIE}=${personaType}; path=/; max-age=31536000; SameSite=Lax`
 }
 
 interface PersonaProviderProps {

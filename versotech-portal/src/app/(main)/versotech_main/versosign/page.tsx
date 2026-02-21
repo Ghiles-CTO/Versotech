@@ -71,6 +71,7 @@ export default async function VersoSignPage() {
   // Get ACTIVE persona from cookie - filter tasks by active persona only
   const cookieStore = await cookies()
   const activePersonaType = cookieStore.get('verso_active_persona_type')?.value
+  const activePersonaId = cookieStore.get('verso_active_persona_id')?.value
 
   // Determine which persona queries should run based on ACTIVE persona
   const shouldShowStaffTasks = isStaff && (activePersonaType === 'ceo' || activePersonaType === 'staff' || !activePersonaType)
@@ -87,7 +88,13 @@ export default async function VersoSignPage() {
       .from('partner_users')
       .select('partner_id')
       .eq('user_id', user.id)
-    partnerIds = partnerLinks?.map(link => link.partner_id) || []
+    const allPartnerIds = partnerLinks?.map(link => link.partner_id) || []
+    if (activePersonaType === 'partner' && activePersonaId) {
+      const scopedPartnerIds = allPartnerIds.filter(id => id === activePersonaId)
+      partnerIds = scopedPartnerIds.length > 0 ? scopedPartnerIds : allPartnerIds
+    } else {
+      partnerIds = allPartnerIds
+    }
   }
 
   // Get arranger IDs if user has arranger persona
@@ -97,7 +104,13 @@ export default async function VersoSignPage() {
       .from('arranger_users')
       .select('arranger_id')
       .eq('user_id', user.id)
-    arrangerIds = arrangerLinks?.map(link => link.arranger_id) || []
+    const allArrangerIds = arrangerLinks?.map(link => link.arranger_id) || []
+    if (activePersonaType === 'arranger' && activePersonaId) {
+      const scopedArrangerIds = allArrangerIds.filter(id => id === activePersonaId)
+      arrangerIds = scopedArrangerIds.length > 0 ? scopedArrangerIds : allArrangerIds
+    } else {
+      arrangerIds = allArrangerIds
+    }
   }
 
   // Get introducer IDs if user has introducer persona
@@ -107,7 +120,13 @@ export default async function VersoSignPage() {
       .from('introducer_users')
       .select('introducer_id')
       .eq('user_id', user.id)
-    introducerIds = introducerLinks?.map(link => link.introducer_id) || []
+    const allIntroducerIds = introducerLinks?.map(link => link.introducer_id) || []
+    if (activePersonaType === 'introducer' && activePersonaId) {
+      const scopedIntroducerIds = allIntroducerIds.filter(id => id === activePersonaId)
+      introducerIds = scopedIntroducerIds.length > 0 ? scopedIntroducerIds : allIntroducerIds
+    } else {
+      introducerIds = allIntroducerIds
+    }
   }
 
   // Get commercial partner IDs if user has commercial_partner persona
@@ -117,7 +136,15 @@ export default async function VersoSignPage() {
       .from('commercial_partner_users')
       .select('commercial_partner_id')
       .eq('user_id', user.id)
-    commercialPartnerIds = cpLinks?.map(link => link.commercial_partner_id) || []
+    const allCommercialPartnerIds = cpLinks?.map(link => link.commercial_partner_id) || []
+    if (activePersonaType === 'commercial_partner' && activePersonaId) {
+      const scopedCommercialPartnerIds = allCommercialPartnerIds.filter(id => id === activePersonaId)
+      commercialPartnerIds = scopedCommercialPartnerIds.length > 0
+        ? scopedCommercialPartnerIds
+        : allCommercialPartnerIds
+    } else {
+      commercialPartnerIds = allCommercialPartnerIds
+    }
   }
 
   // Get CEO entity ID if user is a CEO member
@@ -197,7 +224,13 @@ export default async function VersoSignPage() {
       .select('investor_id')
       .eq('user_id', user.id)
 
-    investorIds = investorLinks?.map(link => link.investor_id) || []
+    const allInvestorIds = investorLinks?.map(link => link.investor_id) || []
+    if (activePersonaType === 'investor' && activePersonaId) {
+      const scopedInvestorIds = allInvestorIds.filter(id => id === activePersonaId)
+      investorIds = scopedInvestorIds.length > 0 ? scopedInvestorIds : allInvestorIds
+    } else {
+      investorIds = allInvestorIds
+    }
   }
 
   // Get lawyer IDs if user has lawyer persona
@@ -207,7 +240,13 @@ export default async function VersoSignPage() {
       .from('lawyer_users')
       .select('lawyer_id')
       .eq('user_id', user.id)
-    lawyerIds = lawyerLinks?.map(link => link.lawyer_id) || []
+    const allLawyerIds = lawyerLinks?.map(link => link.lawyer_id) || []
+    if (activePersonaType === 'lawyer' && activePersonaId) {
+      const scopedLawyerIds = allLawyerIds.filter(id => id === activePersonaId)
+      lawyerIds = scopedLawyerIds.length > 0 ? scopedLawyerIds : allLawyerIds
+    } else {
+      lawyerIds = allLawyerIds
+    }
   }
 
   // Fetch signature tasks for this user using ADDITIVE model

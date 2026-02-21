@@ -9,6 +9,8 @@ import { TourWelcomeModal } from './tour-welcome-modal'
 import { TOUR_VERSION, getTourSteps, type TourStep } from '@/config/platform-tour'
 import confetti from 'canvas-confetti'
 
+const ACTIVE_TOUR_PERSONA_COOKIE = 'verso_active_tour_persona'
+
 interface TourContentProps {
   steps: TourStep[]
   persona: string
@@ -122,6 +124,10 @@ export function PlatformTour({
     completionTriggeredRef.current = false
   }, [activePersona, hasCompletedTour])
 
+  useEffect(() => {
+    document.cookie = `${ACTIVE_TOUR_PERSONA_COOKIE}=${activePersona}; path=/; max-age=31536000; SameSite=Lax`
+  }, [activePersona])
+
   // Extract step IDs for analytics
   const stepIds = steps.map(step => step.id || step.target)
   const persistenceKey = `verso_tour_progress:${activePersona}:${TOUR_VERSION}`
@@ -138,7 +144,7 @@ export function PlatformTour({
       triggerConfetti()
       triggerHaptic()
 
-      await fetch('/api/profiles/tour-completed', {
+      const response = await fetch('/api/profiles/tour-completed', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -146,10 +152,25 @@ export function PlatformTour({
           version: TOUR_VERSION,
         }),
       })
+
+      if (!response.ok) {
+        let message = 'Failed to save tour completion'
+        try {
+          const payload = await response.json()
+          if (payload?.error && typeof payload.error === 'string') {
+            message = payload.error
+          }
+        } catch {
+          // Keep default message
+        }
+        throw new Error(message)
+      }
+
       setIsCompleted(true)
     } catch (error) {
       console.error('Failed to save tour completion:', error)
       completionTriggeredRef.current = false // Allow retry on error
+      throw error
     }
   }, [activePersona, isCompleted])
 
@@ -157,7 +178,7 @@ export function PlatformTour({
     setShowWelcome(false)
     // Don't trigger confetti on skip
     try {
-      await fetch('/api/profiles/tour-completed', {
+      const response = await fetch('/api/profiles/tour-completed', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -165,9 +186,24 @@ export function PlatformTour({
           version: TOUR_VERSION,
         }),
       })
+
+      if (!response.ok) {
+        let message = 'Failed to save tour skip'
+        try {
+          const payload = await response.json()
+          if (payload?.error && typeof payload.error === 'string') {
+            message = payload.error
+          }
+        } catch {
+          // Keep default message
+        }
+        throw new Error(message)
+      }
+
       setIsCompleted(true)
     } catch (error) {
       console.error('Failed to save tour skip:', error)
+      setShowWelcome(true)
     }
   }, [activePersona])
 
