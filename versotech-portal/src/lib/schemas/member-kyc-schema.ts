@@ -7,6 +7,94 @@
 
 import { z } from 'zod'
 
+export type MemberEntityType =
+  | 'investor'
+  | 'partner'
+  | 'introducer'
+  | 'lawyer'
+  | 'commercial_partner'
+  | 'arranger'
+
+const ROLE_NORMALIZATION_MAP: Record<string, string> = {
+  ubo: 'beneficial_owner',
+  signatory: 'authorized_signatory',
+  authorized_representative: 'authorized_signatory',
+  beneficiary: 'beneficial_owner',
+  trustee: 'other',
+  managing_member: 'other',
+  general_partner: 'partner',
+  limited_partner: 'partner',
+}
+
+const ENTITY_ALLOWED_ROLES: Record<MemberEntityType, Set<string>> = {
+  investor: new Set([
+    'director',
+    'shareholder',
+    'beneficial_owner',
+    'authorized_signatory',
+    'officer',
+    'partner',
+    'other',
+  ]),
+  partner: new Set([
+    'director',
+    'shareholder',
+    'beneficial_owner',
+    'authorized_signatory',
+    'officer',
+    'partner',
+    'other',
+  ]),
+  introducer: new Set([
+    'director',
+    'shareholder',
+    'beneficial_owner',
+    'authorized_signatory',
+    'officer',
+    'partner',
+    'other',
+  ]),
+  commercial_partner: new Set([
+    'director',
+    'shareholder',
+    'beneficial_owner',
+    'authorized_signatory',
+    'officer',
+    'partner',
+    'other',
+  ]),
+  arranger: new Set([
+    'director',
+    'shareholder',
+    'beneficial_owner',
+    'authorized_signatory',
+    'officer',
+    'partner',
+    'other',
+  ]),
+  lawyer: new Set([
+    'partner',
+    'associate',
+    'counsel',
+    'paralegal',
+    'other',
+  ]),
+}
+
+export function normalizeMemberRole(role: string, entityType?: MemberEntityType): string {
+  const loweredRole = role.toLowerCase()
+  const normalized = ROLE_NORMALIZATION_MAP[loweredRole] || loweredRole
+
+  if (!entityType) return normalized
+
+  const allowedRoles = ENTITY_ALLOWED_ROLES[entityType]
+  if (!allowedRoles.has(normalized)) {
+    return 'other'
+  }
+
+  return normalized
+}
+
 /**
  * Full member KYC schema with all individual fields
  * Matches the fields in MemberKYCEditDialog component
@@ -28,6 +116,9 @@ export const memberKycSchema = z.object({
     'managing_member',
     'general_partner',
     'limited_partner',
+    'associate',
+    'counsel',
+    'paralegal',
     'other'
   ]),
   role_title: z.string().max(100).optional().nullable(),
@@ -117,6 +208,9 @@ export const createMemberSchema = memberKycSchema.extend({
     'managing_member',
     'general_partner',
     'limited_partner',
+    'associate',
+    'counsel',
+    'paralegal',
     'other'
   ]), // Required
 }).refine(
@@ -155,20 +249,40 @@ export function computeFullName(data: {
  */
 export function prepareMemberData(
   data: Partial<MemberKycData>,
-  options?: { computeFullName?: boolean }
+  options?: {
+    computeFullName?: boolean
+    entityType?: MemberEntityType
+  }
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {}
 
   // Copy all defined values, converting empty strings to null
   for (const [key, value] of Object.entries(data)) {
     if (value !== undefined) {
-      result[key] = value === '' ? null : value
+      if (key === 'role' && typeof value === 'string') {
+        result[key] = normalizeMemberRole(value, options?.entityType)
+      } else {
+        result[key] = value === '' ? null : value
+      }
     }
   }
 
   // Compute full_name if structured name fields are provided
   if (options?.computeFullName && (data.first_name || data.last_name)) {
     result.full_name = computeFullName(data)
+  }
+
+  const normalizedRole = typeof result.role === 'string' ? result.role : null
+  if (normalizedRole === 'beneficial_owner' && result.is_beneficial_owner === undefined) {
+    result.is_beneficial_owner = true
+  }
+  if (normalizedRole === 'authorized_signatory') {
+    if (result.is_signatory === undefined) {
+      result.is_signatory = true
+    }
+    if (result.can_sign === undefined) {
+      result.can_sign = true
+    }
   }
 
   return result

@@ -65,7 +65,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     const { data: introducerUser } = await serviceSupabase
       .from('introducer_users')
-      .select('introducer_id')
+      .select('introducer_id, role, is_primary')
       .eq('user_id', user.id)
       .maybeSingle()
 
@@ -75,13 +75,25 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     const { data: existingMember } = await serviceSupabase
       .from('introducer_members')
-      .select('id')
+      .select('id, email')
       .eq('id', memberId)
       .eq('introducer_id', introducerUser.introducer_id)
       .single()
 
     if (!existingMember) {
       return NextResponse.json({ error: 'Member not found' }, { status: 404 })
+    }
+
+    const canManageMembers = introducerUser.role === 'admin' || introducerUser.is_primary === true
+    const isSelfMember =
+      typeof existingMember.email === 'string' &&
+      typeof user.email === 'string' &&
+      existingMember.email.trim().toLowerCase() === user.email.trim().toLowerCase()
+    if (!canManageMembers && !isSelfMember) {
+      return NextResponse.json(
+        { error: 'Only admin or primary users can manage members' },
+        { status: 403 }
+      )
     }
 
     const body = await request.json()
@@ -94,7 +106,10 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       )
     }
 
-    const updateData = prepareMemberData(parsed.data, { computeFullName: true })
+    const updateData = prepareMemberData(parsed.data, {
+      computeFullName: true,
+      entityType: 'introducer',
+    })
 
     const { data: updatedMember, error: updateError } = await serviceSupabase
       .from('introducer_members')
@@ -131,12 +146,20 @@ export async function DELETE(request: Request, { params }: RouteParams) {
 
     const { data: introducerUser } = await serviceSupabase
       .from('introducer_users')
-      .select('introducer_id')
+      .select('introducer_id, role, is_primary')
       .eq('user_id', user.id)
       .maybeSingle()
 
     if (!introducerUser?.introducer_id) {
       return NextResponse.json({ error: 'No introducer profile found' }, { status: 404 })
+    }
+
+    const canManageMembers = introducerUser.role === 'admin' || introducerUser.is_primary === true
+    if (!canManageMembers) {
+      return NextResponse.json(
+        { error: 'Only admin or primary users can manage members' },
+        { status: 403 }
+      )
     }
 
     const { data: existingMember } = await serviceSupabase

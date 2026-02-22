@@ -71,7 +71,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     const { data: partnerUser } = await serviceSupabase
       .from('partner_users')
-      .select('partner_id')
+      .select('partner_id, role, is_primary')
       .eq('user_id', user.id)
       .maybeSingle()
 
@@ -82,13 +82,25 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     // Verify member belongs to user's partner
     const { data: existingMember } = await serviceSupabase
       .from('partner_members')
-      .select('id')
+      .select('id, email')
       .eq('id', memberId)
       .eq('partner_id', partnerUser.partner_id)
       .single()
 
     if (!existingMember) {
       return NextResponse.json({ error: 'Member not found' }, { status: 404 })
+    }
+
+    const canManageMembers = partnerUser.role === 'admin' || partnerUser.is_primary === true
+    const isSelfMember =
+      typeof existingMember.email === 'string' &&
+      typeof user.email === 'string' &&
+      existingMember.email.trim().toLowerCase() === user.email.trim().toLowerCase()
+    if (!canManageMembers && !isSelfMember) {
+      return NextResponse.json(
+        { error: 'Only admin or primary users can manage members' },
+        { status: 403 }
+      )
     }
 
     const body = await request.json()
@@ -101,7 +113,10 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       )
     }
 
-    const updateData = prepareMemberData(parsed.data, { computeFullName: true })
+    const updateData = prepareMemberData(parsed.data, {
+      computeFullName: true,
+      entityType: 'partner',
+    })
 
     const { data: updatedMember, error: updateError } = await serviceSupabase
       .from('partner_members')
@@ -141,12 +156,20 @@ export async function DELETE(request: Request, { params }: RouteParams) {
 
     const { data: partnerUser } = await serviceSupabase
       .from('partner_users')
-      .select('partner_id')
+      .select('partner_id, role, is_primary')
       .eq('user_id', user.id)
       .maybeSingle()
 
     if (!partnerUser?.partner_id) {
       return NextResponse.json({ error: 'No partner profile found' }, { status: 404 })
+    }
+
+    const canManageMembers = partnerUser.role === 'admin' || partnerUser.is_primary === true
+    if (!canManageMembers) {
+      return NextResponse.json(
+        { error: 'Only admin or primary users can manage members' },
+        { status: 403 }
+      )
     }
 
     const { data: existingMember } = await serviceSupabase

@@ -45,6 +45,7 @@ import { MembersManagementTab } from '@/components/members/members-management-ta
 import { CommercialPartnerKYCDocumentsTab } from '@/components/profile/commercial-partner-kyc-documents-tab'
 import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
 import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
+import { ProfileOverviewShell, OverviewSectionCard, OverviewFieldGrid, OverviewField } from '@/components/profile/overview'
 import { EntityKYCEditDialog, EntityAddressEditDialog, IndividualKycDisplay } from '@/components/shared'
 import { PersonalKYCSection, MemberKYCData } from '@/components/profile/personal-kyc-section'
 
@@ -308,13 +309,14 @@ export function CommercialPartnerProfileClient({
       })
 
       if (!response.ok) {
-        throw new Error('Failed to upload logo')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to upload logo')
       }
 
       toast.success('Logo updated successfully')
       window.location.reload()
-    } catch {
-      toast.error('Failed to upload logo')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to upload logo')
     } finally {
       setIsUploadingLogo(false)
     }
@@ -345,20 +347,23 @@ export function CommercialPartnerProfileClient({
               accept="image/*"
               className="hidden"
               onChange={handleLogoUpload}
+              disabled={!canEditEntityProfile || isUploadingLogo}
             />
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute -bottom-2 -right-2 h-7 w-7 rounded-full"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploadingLogo}
-            >
-              {isUploadingLogo ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <Camera className="h-3 w-3" />
-              )}
-            </Button>
+            {canEditEntityProfile && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute -bottom-2 -right-2 h-7 w-7 rounded-full"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingLogo}
+              >
+                {isUploadingLogo ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Camera className="h-3 w-3" />
+                )}
+              </Button>
+            )}
           </div>
 
           <div>
@@ -512,17 +517,13 @@ export function CommercialPartnerProfileClient({
 
         {/* Profile Tab */}
         <TabsContent value="profile" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                Commercial Partner Information
-              </CardTitle>
-              <CardDescription>
-                Your commercial partner entity details
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+          <ProfileOverviewShell>
+          <OverviewSectionCard
+            title="Commercial Partner Information"
+            description="Your commercial partner entity details"
+            icon={Building2}
+            contentClassName="space-y-6"
+          >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">Name</p>
@@ -597,61 +598,42 @@ export function CommercialPartnerProfileClient({
                   type="textarea"
                 />
               </div>
-            </CardContent>
-          </Card>
+          </OverviewSectionCard>
 
-          {/* User Account Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Mail className="h-5 w-5" />
-                Your Account
-              </CardTitle>
-              <CardDescription>
-                Your personal account linked to this commercial partner
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Name</p>
-                  <p className="text-sm font-medium">{profile?.full_name || '-'}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Email</p>
-                  <p className="text-sm font-medium">{userEmail}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Role</p>
-                  <p className="text-sm font-medium capitalize">{cpUserInfo.role}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Can Sign Documents</p>
-                  <p className="text-sm font-medium">
-                    {cpUserInfo.can_sign ? (
-                      <span className="flex items-center gap-1 text-green-600">
-                        <CheckCircle2 className="h-4 w-4" /> Yes
-                      </span>
-                    ) : (
-                      <span className="text-gray-500">No</span>
-                    )}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Can Execute for Clients</p>
-                  <p className="text-sm font-medium">
-                    {cpUserInfo.can_execute_for_clients ? (
-                      <span className="flex items-center gap-1 text-green-600">
-                        <CheckCircle2 className="h-4 w-4" /> Yes
-                      </span>
-                    ) : (
-                      <span className="text-gray-500">No</span>
-                    )}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <OverviewSectionCard
+            title="Your Account"
+            description="Your personal account linked to this commercial partner"
+            icon={Mail}
+          >
+            <OverviewFieldGrid>
+              <OverviewField label="Name" value={profile?.full_name || '-'} />
+              <OverviewField label="Email" value={userEmail} />
+              <OverviewField label="Role" value={cpUserInfo.role} valueClassName="capitalize" />
+              <OverviewField label="Can Sign Documents" value={cpUserInfo.can_sign ? 'Yes' : 'No'} />
+              <OverviewField label="Can Execute for Clients" value={cpUserInfo.can_execute_for_clients ? 'Yes' : 'No'} />
+            </OverviewFieldGrid>
+          </OverviewSectionCard>
+
+          {cpInfo && (
+            <OverviewSectionCard
+              title="Address & Contact"
+              description="Contact and jurisdiction details"
+              icon={Globe}
+              action={cpInfo.type !== 'individual' && canEditEntityProfile ? (
+                <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              ) : undefined}
+            >
+              <OverviewFieldGrid>
+                <OverviewField label="Jurisdiction" value={cpInfo.jurisdiction || '-'} />
+                <OverviewField label="Phone" value={cpInfo.contact_phone || cpInfo.phone_mobile || cpInfo.phone_office || '-'} />
+                <OverviewField label="Email" value={cpInfo.contact_email || cpInfo.email || '-'} />
+                <OverviewField label="Website" value={cpInfo.website || '-'} />
+              </OverviewFieldGrid>
+            </OverviewSectionCard>
+          )}
 
           {/* Personal KYC Section - For the logged-in user's member record */}
           {cpInfo && (
@@ -694,9 +676,11 @@ export function CommercialPartnerProfileClient({
                 id_issuing_country: cpInfo.id_issuing_country,
               }}
               onEdit={() => setShowKycDialog(true)}
+              showEditButton={canEditEntityProfile}
               title="Personal KYC Information"
             />
           )}
+          </ProfileOverviewShell>
         </TabsContent>
 
         {/* Regulatory Tab */}

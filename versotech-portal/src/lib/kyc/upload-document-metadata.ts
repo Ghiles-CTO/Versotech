@@ -27,11 +27,26 @@ function clean(value: string | null): string | null {
   return trimmed || null
 }
 
+const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/
+
+function isValidDateOnly(value: string): boolean {
+  if (!DATE_ONLY_REGEX.test(value)) return false
+
+  const [year, month, day] = value.split('-').map(Number)
+  const parsed = new Date(Date.UTC(year, month - 1, day))
+  return (
+    parsed.getUTCFullYear() === year &&
+    parsed.getUTCMonth() === month - 1 &&
+    parsed.getUTCDate() === day
+  )
+}
+
 /**
  * Validate document metadata based on selected document type.
  *
  * Rules:
- * - ID documents require: document number, issue date, expiry date, issuing country
+ * - ID documents require: expiry date only
+ *   (document number, issue date, and issuing country are optional)
  * - Proof of address documents require: document date
  */
 export function validateUploadDocumentMetadata(
@@ -46,11 +61,20 @@ export function validateUploadDocumentMetadata(
     documentDate: clean(rawInput.documentDate),
   }
 
+  const dateFieldValidations: Array<{ value: string | null; label: string }> = [
+    { value: input.documentIssueDate, label: 'Issue date' },
+    { value: input.documentExpiryDate, label: 'Expiry date' },
+    { value: input.documentDate, label: 'Document date' },
+  ]
+
+  for (const field of dateFieldValidations) {
+    if (field.value && !isValidDateOnly(field.value)) {
+      return `${field.label} must be a valid date in YYYY-MM-DD format`
+    }
+  }
+
   if (isIdDocument(documentType)) {
-    if (!input.documentNumber) return 'Document number is required for ID documents'
-    if (!input.documentIssueDate) return 'Issue date is required for ID documents'
     if (!input.documentExpiryDate) return 'Expiry date is required for ID documents'
-    if (!input.documentIssuingCountry) return 'Issuing country is required for ID documents'
   }
 
   if (isProofOfAddress(documentType) && !input.documentDate) {
@@ -86,4 +110,3 @@ export function buildUploadDocumentMetadata(
     },
   }
 }
-

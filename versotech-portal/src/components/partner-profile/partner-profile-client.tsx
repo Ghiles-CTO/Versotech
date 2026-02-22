@@ -30,6 +30,13 @@ import { GenericEntityMembersTab } from '@/components/profile/generic-entity-mem
 import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
 import { PreferencesEditor } from '@/components/profile/preferences-editor'
 import { GDPRControls } from '@/components/profile/gdpr-controls'
+import {
+  ProfileOverviewShell,
+  OverviewSectionCard,
+  OverviewField,
+  OverviewFieldGrid,
+  OverviewBadgeRow,
+} from '@/components/profile/overview'
 import { EntityKYCEditDialog, EntityAddressEditDialog, IndividualKycDisplay } from '@/components/shared'
 import { PersonalKYCSection, MemberKYCData } from '@/components/profile/personal-kyc-section'
 import { formatDate } from '@/lib/format'
@@ -230,35 +237,19 @@ export function PartnerProfileClient({
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Personal Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Your Information
-                </CardTitle>
-                <CardDescription>
-                  Your account details within this partner entity
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Full Name</Label>
-                  <div className="font-medium">
-                    {profile?.full_name || 'Not set'}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Email</Label>
-                  <div className="font-medium flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    {profile?.email || userEmail}
-                  </div>
-                </div>
+          <ProfileOverviewShell>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <OverviewSectionCard
+                title="Your Information"
+                description="Your account details within this partner entity"
+                icon={User}
+                contentClassName="space-y-4"
+              >
+                <OverviewField label="Full Name" value={profile?.full_name || 'Not set'} />
+                <OverviewField label="Email" value={profile?.email || userEmail} icon={Mail} />
                 <div className="space-y-2">
                   <Label className="text-muted-foreground">Role</Label>
-                  <div className="flex items-center gap-2">
+                  <OverviewBadgeRow>
                     <Badge variant="outline" className="capitalize">
                       {partnerUserInfo.role}
                     </Badge>
@@ -270,109 +261,58 @@ export function PartnerProfileClient({
                         Signatory
                       </Badge>
                     )}
-                  </div>
+                  </OverviewBadgeRow>
                 </div>
-              </CardContent>
-            </Card>
+              </OverviewSectionCard>
 
-            {/* Partner Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
-                  Partner Entity
-                </CardTitle>
-                <CardDescription>
-                  Organization details
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Name</Label>
-                  <div className="font-medium">
-                    {partnerInfo.name}
-                  </div>
-                </div>
+              <OverviewSectionCard
+                title="Partner Entity"
+                description="Organization details"
+                icon={Building2}
+                contentClassName="space-y-4"
+              >
+                <OverviewField label="Name" value={partnerInfo.name} />
                 {partnerInfo.legal_name && (
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Legal Name</Label>
-                    <div className="font-medium">
-                      {partnerInfo.legal_name}
-                    </div>
-                  </div>
+                  <OverviewField label="Legal Name" value={partnerInfo.legal_name} />
                 )}
                 <div className="space-y-2">
                   <Label className="text-muted-foreground">Partner Type</Label>
-                  <div className="flex items-center gap-2">
+                  <OverviewBadgeRow>
                     <Badge variant="outline" className="capitalize">
                       {partnerInfo.partner_type.replace(/_/g, ' ')}
                     </Badge>
                     <Badge variant="outline" className="capitalize">
                       {partnerInfo.type.replace(/_/g, ' ')}
                     </Badge>
-                  </div>
+                  </OverviewBadgeRow>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </OverviewSectionCard>
+            </div>
 
           {/* Contact & Address */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Contact Info */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Phone className="h-5 w-5" />
-                    Contact Information
-                  </CardTitle>
-                </div>
-                {canEditEntityProfile && (
+            <OverviewSectionCard
+              title="Contact Information"
+              description="Primary communication channels"
+              icon={Phone}
+              action={
+                canEditEntityProfile ? (
                   <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
                     <Edit className="h-4 w-4 mr-2" />
                     Edit
                   </Button>
-                )}
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {partnerInfo.contact_name && (
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Contact Name</Label>
-                    <div className="font-medium">{partnerInfo.contact_name}</div>
-                  </div>
-                )}
-                {(partnerInfo.email || partnerInfo.contact_email) && (
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Email</Label>
-                    <div className="font-medium flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      {partnerInfo.email || partnerInfo.contact_email}
-                    </div>
-                  </div>
-                )}
-                {(partnerInfo.phone || partnerInfo.contact_phone) && (
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Phone</Label>
-                    <div className="font-medium flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      {partnerInfo.phone || partnerInfo.contact_phone}
-                    </div>
-                  </div>
-                )}
-                {partnerInfo.phone_mobile && (
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Mobile</Label>
-                    <div className="font-medium flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      {partnerInfo.phone_mobile}
-                    </div>
-                  </div>
-                )}
-                {partnerInfo.website && (
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Website</Label>
-                    <div className="font-medium flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-muted-foreground" />
+                ) : undefined
+              }
+            >
+              <OverviewFieldGrid>
+                <OverviewField label="Contact Name" value={partnerInfo.contact_name || '-'} />
+                <OverviewField label="Email" value={partnerInfo.email || partnerInfo.contact_email || '-'} icon={Mail} />
+                <OverviewField label="Phone" value={partnerInfo.phone || partnerInfo.contact_phone || '-'} icon={Phone} />
+                <OverviewField label="Mobile" value={partnerInfo.phone_mobile || '-'} icon={Phone} />
+                <OverviewField
+                  label="Website"
+                  value={
+                    partnerInfo.website ? (
                       <a
                         href={partnerInfo.website}
                         target="_blank"
@@ -381,45 +321,25 @@ export function PartnerProfileClient({
                       >
                         {partnerInfo.website}
                       </a>
-                    </div>
-                  </div>
-                )}
-                {!partnerInfo.contact_name && !partnerInfo.email && !partnerInfo.contact_email && !partnerInfo.phone && !partnerInfo.contact_phone && !partnerInfo.website && (
-                  <p className="text-muted-foreground text-sm">No contact information available</p>
-                )}
-              </CardContent>
-            </Card>
+                    ) : (
+                      '-'
+                    )
+                  }
+                  icon={Globe}
+                />
+              </OverviewFieldGrid>
+            </OverviewSectionCard>
 
-            {/* Address */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
-                  Address
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {partnerInfo.address_line_1 ? (
-                  <>
-                    <div className="font-medium">
-                      {partnerInfo.address_line_1}
-                    </div>
-                    {partnerInfo.address_line_2 && (
-                      <div className="text-muted-foreground">{partnerInfo.address_line_2}</div>
-                    )}
-                    {(partnerInfo.city || partnerInfo.state_province || partnerInfo.postal_code || partnerInfo.country) && (
-                      <div className="text-muted-foreground">
-                        {[partnerInfo.city, partnerInfo.state_province, partnerInfo.postal_code, partnerInfo.country]
-                          .filter(Boolean)
-                          .join(', ')}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <p className="text-muted-foreground text-sm">No address information available</p>
-                )}
-              </CardContent>
-            </Card>
+            <OverviewSectionCard title="Registered Address" description="Official entity address" icon={MapPin}>
+              <OverviewFieldGrid>
+                <OverviewField label="Address Line 1" value={partnerInfo.address_line_1 || '-'} />
+                <OverviewField label="Address Line 2" value={partnerInfo.address_line_2 || '-'} />
+                <OverviewField label="City" value={partnerInfo.city || '-'} />
+                <OverviewField label="State / Province" value={partnerInfo.state_province || '-'} />
+                <OverviewField label="Postal Code" value={partnerInfo.postal_code || '-'} />
+                <OverviewField label="Country" value={partnerInfo.country || '-'} />
+              </OverviewFieldGrid>
+            </OverviewSectionCard>
           </div>
 
           {/* Personal KYC Section - For the logged-in user's member record */}
@@ -460,6 +380,7 @@ export function PartnerProfileClient({
                 id_issuing_country: partnerInfo.id_issuing_country,
               }}
               onEdit={() => setShowKycDialog(true)}
+              showEditButton={canEditEntityProfile}
               title="Personal KYC Information"
             />
           )}
@@ -501,6 +422,7 @@ export function PartnerProfileClient({
               </CardContent>
             </Card>
           )}
+          </ProfileOverviewShell>
         </TabsContent>
 
         {/* Team Members Tab (User Accounts) */}

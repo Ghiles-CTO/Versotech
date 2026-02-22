@@ -41,6 +41,13 @@ import { PersonalKYCSection, type MemberKYCData } from '@/components/profile/per
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { IndividualKycDisplay, EntityKYCEditDialog, EntityAddressEditDialog, EntityInfoEditDialog } from '@/components/shared'
 import {
+  ProfileOverviewShell,
+  OverviewSectionCard,
+  OverviewField,
+  OverviewFieldGrid,
+  OverviewBadgeRow,
+} from '@/components/profile/overview'
+import {
   extractApprovedKycDocumentMetadata,
   type ApprovedKycDocumentMetadata,
 } from '@/lib/kyc/approved-document-metadata'
@@ -490,36 +497,20 @@ export function ProfilePageClient({
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Your Info Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Your Information
-                </CardTitle>
-                <CardDescription>
-                  Your account details within this investor entity
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Full Name</Label>
-                  <div className="font-medium">
-                    {profile.display_name || 'Not set'}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Email</Label>
-                  <div className="font-medium flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    {profile.email || userEmail}
-                  </div>
-                </div>
+          <ProfileOverviewShell>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <OverviewSectionCard
+                title="Your Information"
+                description="Your account details within this investor entity"
+                icon={User}
+                contentClassName="space-y-4"
+              >
+                <OverviewField label="Full Name" value={profile.display_name || 'Not set'} />
+                <OverviewField label="Email" value={profile.email || userEmail} icon={Mail} />
                 {hasInvestorEntity && (
                   <div className="space-y-2">
                     <Label className="text-muted-foreground">Role</Label>
-                    <div className="flex items-center gap-2">
+                    <OverviewBadgeRow>
                       <Badge variant="outline" className="capitalize">
                         {investorUserInfo?.role || 'member'}
                       </Badge>
@@ -531,59 +522,38 @@ export function ProfilePageClient({
                           Signatory
                         </Badge>
                       )}
-                    </div>
+                    </OverviewBadgeRow>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </OverviewSectionCard>
 
-            {/* Investor Entity Info - Only for ENTITY type, not individual */}
-            {isEntity && investorInfo && (
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Building2 className="h-5 w-5" />
-                      Entity Information
-                    </CardTitle>
-                    <CardDescription>
-                      Organization details
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {!['approved', 'submitted', 'pending_review'].includes(investorInfo.kyc_status || '') && (
-                      <Button variant="outline" size="sm" onClick={() => setShowEntityInfoDialog(true)}>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-                      </Button>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Display Name</Label>
-                    <div className="font-medium">
-                      {investorInfo.display_name || '-'}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Legal Name</Label>
-                    <div className="font-medium">{investorInfo.legal_name || '-'}</div>
-                  </div>
+              {isEntity && investorInfo && (
+                <OverviewSectionCard
+                  title="Entity Information"
+                  description="Organization details"
+                  icon={Building2}
+                  contentClassName="space-y-4"
+                  action={!['approved', 'submitted', 'pending_review'].includes(investorInfo.kyc_status || '') ? (
+                    <Button variant="outline" size="sm" onClick={() => setShowEntityInfoDialog(true)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                  ) : undefined}
+                >
+                  <OverviewField label="Display Name" value={investorInfo.display_name || '-'} />
+                  <OverviewField label="Legal Name" value={investorInfo.legal_name || '-'} />
                   {investorInfo.country_of_incorporation && (
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">Country of Incorporation</Label>
-                      <div className="font-medium">{investorInfo.country_of_incorporation}</div>
-                    </div>
+                    <OverviewField label="Country of Incorporation" value={investorInfo.country_of_incorporation} />
                   )}
                   <div className="space-y-2">
                     <Label className="text-muted-foreground">Type</Label>
-                    <Badge variant="outline" className="capitalize">
-                      {(investorInfo.type || 'entity').replace(/_/g, ' ')}
-                    </Badge>
+                    <OverviewBadgeRow>
+                      <Badge variant="outline" className="capitalize">
+                        {(investorInfo.type || 'entity').replace(/_/g, ' ')}
+                      </Badge>
+                    </OverviewBadgeRow>
                   </div>
 
-                  {/* Submit Entity KYC Button */}
                   {!['approved', 'submitted', 'pending_review'].includes(investorInfo.kyc_status || '') && (
                     <div className="pt-4 border-t">
                       {(investorUserInfo?.is_primary || investorUserInfo?.role === 'admin') ? (
@@ -610,133 +580,71 @@ export function ProfilePageClient({
                       </Badge>
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
+                </OverviewSectionCard>
+              )}
+            </div>
           {/* Contact & Address for ENTITY investors only (individual investors show this in IndividualKycDisplay) */}
           {isEntity && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Contact Info */}
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Phone className="h-5 w-5" />
-                      Contact Information
-                    </CardTitle>
-                  </div>
+              <OverviewSectionCard
+                title="Contact Information"
+                description="How counterparties can reach this entity"
+                icon={Phone}
+                action={
                   <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
                     <Edit className="h-4 w-4 mr-2" />
                     Edit
                   </Button>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {investorInfo!.email && (
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">Email</Label>
-                      <div className="font-medium flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        {investorInfo!.email}
-                      </div>
-                    </div>
-                  )}
-                  {investorInfo!.phone && (
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">Phone</Label>
-                      <div className="font-medium flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        {investorInfo!.phone}
-                      </div>
-                    </div>
-                  )}
-                  {investorInfo!.phone_mobile && (
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">Mobile</Label>
-                      <div className="font-medium flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        {investorInfo!.phone_mobile}
-                      </div>
-                    </div>
-                  )}
-                  {investorInfo!.website && (
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">Website</Label>
-                      <div className="font-medium flex items-center gap-2">
-                        <Globe className="h-4 w-4 text-muted-foreground" />
-                        <a href={investorInfo!.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                }
+              >
+                <OverviewFieldGrid>
+                  <OverviewField label="Email" value={investorInfo!.email || '-'} icon={Mail} />
+                  <OverviewField label="Phone" value={investorInfo!.phone || '-'} icon={Phone} />
+                  <OverviewField label="Mobile" value={investorInfo!.phone_mobile || '-'} icon={Phone} />
+                  <OverviewField
+                    label="Website"
+                    value={
+                      investorInfo!.website ? (
+                        <a
+                          href={investorInfo!.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
                           {investorInfo!.website}
                         </a>
-                      </div>
-                    </div>
-                  )}
-                  {!investorInfo!.email && !investorInfo!.phone && !investorInfo!.phone_mobile && !investorInfo!.website && (
-                    <p className="text-muted-foreground text-sm">No contact information available</p>
-                  )}
-                </CardContent>
-              </Card>
+                      ) : (
+                        '-'
+                      )
+                    }
+                    icon={Globe}
+                  />
+                </OverviewFieldGrid>
+              </OverviewSectionCard>
 
-              {/* Address */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5" />
-                    {isEntity ? 'Registered Address' : 'Address'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {isEntity ? (
-                    // Entity address display - use registered_* columns
-                    investorInfo!.registered_address_line_1 ? (
-                      <>
-                        <div className="font-medium">
-                          {investorInfo!.registered_address_line_1}
-                        </div>
-                        {investorInfo!.registered_address_line_2 && (
-                          <div className="text-muted-foreground">{investorInfo!.registered_address_line_2}</div>
-                        )}
-                        {(investorInfo!.registered_city || investorInfo!.registered_state || investorInfo!.registered_postal_code || investorInfo!.registered_country) && (
-                          <div className="text-muted-foreground">
-                            {[
-                              investorInfo!.registered_city,
-                              investorInfo!.registered_state,
-                              investorInfo!.registered_postal_code,
-                              investorInfo!.registered_country
-                            ].filter(Boolean).join(', ')}
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <p className="text-muted-foreground text-sm">No address information available</p>
-                    )
-                  ) : (
-                    // Individual address display - use residential_* columns
-                    investorInfo!.residential_street ? (
-                      <>
-                        <div className="font-medium">
-                          {investorInfo!.residential_street}
-                        </div>
-                        {investorInfo!.residential_line_2 && (
-                          <div className="text-muted-foreground">{investorInfo!.residential_line_2}</div>
-                        )}
-                        {(investorInfo!.residential_city || investorInfo!.residential_state || investorInfo!.residential_postal_code || investorInfo!.residential_country) && (
-                          <div className="text-muted-foreground">
-                            {[
-                              investorInfo!.residential_city,
-                              investorInfo!.residential_state,
-                              investorInfo!.residential_postal_code,
-                              investorInfo!.residential_country
-                            ].filter(Boolean).join(', ')}
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <p className="text-muted-foreground text-sm">No address information available</p>
-                    )
-                  )}
-                </CardContent>
-              </Card>
+              <OverviewSectionCard
+                title="Registered Address"
+                description="Official legal registration address"
+                icon={MapPin}
+              >
+                <OverviewFieldGrid>
+                  <OverviewField
+                    label="Address Line 1"
+                    value={investorInfo!.registered_address_line_1 || '-'}
+                  />
+                  <OverviewField
+                    label="Address Line 2"
+                    value={investorInfo!.registered_address_line_2 || '-'}
+                  />
+                  <OverviewField label="City" value={investorInfo!.registered_city || '-'} />
+                  <OverviewField label="State / Province" value={investorInfo!.registered_state || '-'} />
+                  <OverviewField
+                    label="Postal Code"
+                    value={investorInfo!.registered_postal_code || '-'}
+                  />
+                  <OverviewField label="Country" value={investorInfo!.registered_country || '-'} />
+                </OverviewFieldGrid>
+              </OverviewSectionCard>
             </div>
           )}
 
@@ -844,6 +752,7 @@ export function ProfilePageClient({
               </CardContent>
             </Card>
           )}
+          </ProfileOverviewShell>
         </TabsContent>
 
         {/* KYC Tab */}

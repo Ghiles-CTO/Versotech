@@ -1,14 +1,15 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import type { ComponentType, ReactNode } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import {
   User,
   Phone,
   MapPin,
   FileText,
-  IdCard,
   Calendar,
   Globe,
   Flag,
@@ -72,8 +73,6 @@ interface IndividualKycDisplayProps {
   showContact?: boolean
   showAddress?: boolean
   showTaxInfo?: boolean
-  showIdentification?: boolean
-  showProofDates?: boolean
 }
 
 // Helper to format dates
@@ -84,18 +83,6 @@ function formatDate(dateStr: string | null | undefined): string {
   } catch {
     return dateStr
   }
-}
-
-// Helper to format ID type
-function formatIdType(idType: string | null | undefined): string {
-  if (!idType) return '-'
-  const types: Record<string, string> = {
-    passport: 'Passport',
-    national_id: 'National ID',
-    drivers_license: "Driver's License",
-    residence_permit: 'Residence Permit',
-  }
-  return types[idType] || idType
 }
 
 // Helper to build full name
@@ -109,67 +96,71 @@ function buildFullName(data: IndividualKycData): string {
   return parts.join(' ') || '-'
 }
 
-// Helper to build full address
-function buildFullAddress(data: IndividualKycData): string {
-  const parts = [
-    data.residential_street,
-    data.residential_line_2,
-    [data.residential_city, data.residential_state, data.residential_postal_code]
-      .filter(Boolean)
-      .join(', '),
-    data.residential_country,
-  ].filter(Boolean)
-  return parts.join('\n') || '-'
+function hasValue(value: ReactNode): boolean {
+  return value !== null && value !== undefined && !(typeof value === 'string' && value.trim().length === 0)
 }
 
-// Field display component
 function Field({
   icon: Icon,
   label,
   value,
-  className = '',
+  className,
 }: {
-  icon?: React.ComponentType<{ className?: string }>
+  icon?: ComponentType<{ className?: string }>
   label: string
-  value: React.ReactNode
+  value: ReactNode
   className?: string
 }) {
   return (
-    <div className={`flex items-start gap-3 ${className}`}>
-      {Icon && <Icon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />}
-      <div className="min-w-0 flex-1">
-        <div className="text-xs text-muted-foreground">{label}</div>
-        <div className="text-sm font-medium text-foreground break-words">
-          {value || '-'}
-        </div>
+    <div className={cn('rounded-md border border-border/70 bg-background p-3', className)}>
+      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
+      <div className="mt-1 min-h-5 text-sm font-medium text-foreground break-words">
+        <span className="inline-flex items-start gap-2">
+          {Icon ? <Icon className="h-4 w-4 text-muted-foreground" /> : null}
+          {hasValue(value) ? value : '-'}
+        </span>
       </div>
     </div>
   )
 }
 
-// Boolean field with badge
+function Section({
+  icon: Icon,
+  title,
+  children,
+  className,
+}: {
+  icon: ComponentType<{ className?: string }>
+  title: string
+  children: ReactNode
+  className?: string
+}) {
+  return (
+    <section className={cn('rounded-lg border border-border/70 bg-muted/20 p-4', className)}>
+      <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+        <Icon className="h-4 w-4 text-muted-foreground" />
+        {title}
+      </h4>
+      {children}
+    </section>
+  )
+}
+
 function BooleanField({
   icon: Icon,
   label,
   value,
 }: {
-  icon?: React.ComponentType<{ className?: string }>
+  icon?: ComponentType<{ className?: string }>
   label: string
   value: boolean | null | undefined
 }) {
   return (
-    <div className="flex items-start gap-3">
-      {Icon && <Icon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />}
-      <div>
-        <div className="text-xs text-muted-foreground">{label}</div>
-        <Badge
-          variant="outline"
-          className={
-            value
-              ? 'bg-green-500/10 text-green-400 border-green-500/30'
-              : 'bg-gray-500/10 text-gray-400 border-gray-500/30'
-          }
-        >
+    <div className="rounded-md border border-border/70 bg-background p-3">
+      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
+      <div className="mt-1">
+        <Badge variant={value ? 'secondary' : 'outline'} className="font-medium">
+          {Icon ? <Icon className="h-3 w-3 mr-1" /> : null}
           {value ? (
             <>
               <CheckCircle className="h-3 w-3 mr-1" />
@@ -197,36 +188,36 @@ export function IndividualKycDisplay({
   showContact = true,
   showAddress = true,
   showTaxInfo = true,
-  showIdentification = true,
-  showProofDates = true,
 }: IndividualKycDisplayProps) {
   const hasAnyData =
     data.first_name ||
     data.last_name ||
     data.date_of_birth ||
     data.nationality ||
-    data.residential_street ||
-    data.id_number
+    data.residential_street
 
   return (
     <Card className={className}>
-      <CardHeader className="flex flex-row items-center justify-between pb-4">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <User className="h-5 w-5" />
-          {title}
-        </CardTitle>
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-1">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <User className="h-5 w-5" />
+            {title}
+          </CardTitle>
+          <CardDescription>Personal details used for KYC verification.</CardDescription>
+        </div>
         {showEditButton && onEdit && (
-          <Button variant="outline" size="sm" onClick={onEdit} className="gap-2">
+          <Button variant="outline" size="sm" onClick={onEdit} className="gap-2 self-start">
             <Edit className="h-4 w-4" />
             Edit
           </Button>
         )}
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         {!hasAnyData ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <User className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>No KYC information available</p>
+          <div className="rounded-lg border border-dashed border-border p-8 text-center text-muted-foreground">
+            <User className="h-10 w-10 mx-auto mb-3 opacity-60" />
+            <p className="text-sm">No KYC information available yet.</p>
             {showEditButton && onEdit && (
               <Button variant="outline" size="sm" onClick={onEdit} className="mt-4">
                 Add KYC Information
@@ -234,14 +225,10 @@ export function IndividualKycDisplay({
             )}
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Personal Information */}
             {showPersonalInfo && (
-              <div>
-                <h4 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  Personal Information
-                </h4>
+              <Section icon={User} title="Personal Information">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <Field label="Full Name" value={buildFullName(data)} />
                   <Field
@@ -252,49 +239,37 @@ export function IndividualKycDisplay({
                   <Field icon={Globe} label="Nationality" value={data.nationality} />
                   <Field icon={Flag} label="Country of Birth" value={data.country_of_birth} />
                 </div>
-              </div>
+              </Section>
             )}
 
             {/* Contact Information */}
             {showContact && (
-              <div>
-                <h4 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-                  <Phone className="h-4 w-4" />
-                  Contact Information
-                </h4>
+              <Section icon={Phone} title="Contact Information">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <Field label="Email" value={data.email} />
                   <Field icon={Phone} label="Mobile" value={data.phone_mobile} />
                   <Field icon={Phone} label="Office" value={data.phone_office} />
-                  {data.email && <Field label="Email" value={data.email} />}
                 </div>
-              </div>
+              </Section>
             )}
 
             {/* Residential Address */}
             {showAddress && (
-              <div>
-                <h4 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  Residential Address
-                </h4>
+              <Section icon={MapPin} title="Residential Address">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field label="Street Address" value={data.residential_street} />
+                  <Field label="Address Line 1" value={data.residential_street} />
                   <Field label="Address Line 2" value={data.residential_line_2} />
                   <Field label="City" value={data.residential_city} />
                   <Field label="State/Province" value={data.residential_state} />
                   <Field label="Postal Code" value={data.residential_postal_code} />
                   <Field icon={Globe} label="Country" value={data.residential_country} />
                 </div>
-              </div>
+              </Section>
             )}
 
             {/* Tax Information */}
             {showTaxInfo && (
-              <div>
-                <h4 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Tax Information
-                </h4>
+              <Section icon={FileText} title="Tax Information">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <BooleanField icon={Flag} label="US Citizen" value={data.is_us_citizen} />
                   <BooleanField icon={Building2} label="US Taxpayer" value={data.is_us_taxpayer} />
@@ -310,50 +285,9 @@ export function IndividualKycDisplay({
                     <Field label="Tax ID Number" value={data.tax_id_number} />
                   )}
                 </div>
-              </div>
+              </Section>
             )}
 
-            {/* Identification Document */}
-            {showIdentification && (
-              <div>
-                <h4 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-                  <IdCard className="h-4 w-4" />
-                  Identification Document
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <Field icon={IdCard} label="ID Type" value={formatIdType(data.id_type)} />
-                  <Field label="ID Number" value={data.id_number} />
-                  <Field
-                    icon={Calendar}
-                    label="Issue Date"
-                    value={formatDate(data.id_issue_date)}
-                  />
-                  <Field
-                    icon={Calendar}
-                    label="Expiry Date"
-                    value={formatDate(data.id_expiry_date)}
-                  />
-                  <Field icon={Globe} label="Issuing Country" value={data.id_issuing_country} />
-                </div>
-              </div>
-            )}
-
-            {/* Proof Document Dates */}
-            {showProofDates && data.proof_of_address_date && (
-              <div>
-                <h4 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Proof Document Validation
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                  <Field
-                    icon={Calendar}
-                    label="Proof of Address Date"
-                    value={formatDate(data.proof_of_address_date)}
-                  />
-                </div>
-              </div>
-            )}
           </div>
         )}
       </CardContent>

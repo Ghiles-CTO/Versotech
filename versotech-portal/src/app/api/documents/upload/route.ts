@@ -2,7 +2,25 @@ import { createClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { validateDocument, isIdDocument, isProofOfAddress } from '@/lib/validation/document-validation'
+import { validateDocument } from '@/lib/validation/document-validation'
+
+const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/
+
+function parseStrictDateInput(value: string | null, label: string): { date: Date | null; error: string | null } {
+  if (!value) return { date: null, error: null }
+
+  const normalized = value.trim()
+  if (!DATE_ONLY_REGEX.test(normalized)) {
+    return { date: null, error: `${label} must be in YYYY-MM-DD format` }
+  }
+
+  const parsed = new Date(normalized)
+  if (Number.isNaN(parsed.getTime())) {
+    return { date: null, error: `${label} is not a valid date` }
+  }
+
+  return { date: parsed, error: null }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -69,9 +87,24 @@ export async function POST(request: NextRequest) {
     // ============================================================
     // Phase 5: STRICT Document Validation
     // ============================================================
-    const documentDate = documentDateStr ? new Date(documentDateStr) : null
-    const documentExpiryDate = documentExpiryDateStr ? new Date(documentExpiryDateStr) : null
-    const documentIssueDate = documentIssueDateStr ? new Date(documentIssueDateStr) : null
+    const parsedDocumentDate = parseStrictDateInput(documentDateStr, 'Document date')
+    if (parsedDocumentDate.error) {
+      return NextResponse.json({ error: parsedDocumentDate.error }, { status: 400 })
+    }
+
+    const parsedExpiryDate = parseStrictDateInput(documentExpiryDateStr, 'Document expiry date')
+    if (parsedExpiryDate.error) {
+      return NextResponse.json({ error: parsedExpiryDate.error }, { status: 400 })
+    }
+
+    const parsedIssueDate = parseStrictDateInput(documentIssueDateStr, 'Document issue date')
+    if (parsedIssueDate.error) {
+      return NextResponse.json({ error: parsedIssueDate.error }, { status: 400 })
+    }
+
+    const documentDate = parsedDocumentDate.date
+    const documentExpiryDate = parsedExpiryDate.date
+    const documentIssueDate = parsedIssueDate.date
 
     // Validate document based on type
     const validationResult = validateDocument({

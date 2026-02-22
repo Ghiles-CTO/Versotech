@@ -1,8 +1,8 @@
 /**
  * Introducer Profile API
  * GET /api/introducers/me/profile - Get introducer's own profile
- * PUT /api/introducers/me/profile - Update profile directly (self-service)
- * PATCH /api/introducers/me/profile - Alias of PUT for shared dialogs
+ * PATCH /api/introducers/me/profile - Update profile directly (self-service)
+ * PUT /api/introducers/me/profile - Upload logo (multipart form)
  */
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
@@ -183,11 +183,11 @@ export async function GET() {
 }
 
 /**
- * PUT /api/introducers/me/profile
+ * PATCH /api/introducers/me/profile
  * Update profile directly - self-service for introducers
  * Note: Commission rates and payment terms are NOT updateable (managed by arrangers)
  */
-export async function PUT(request: NextRequest) {
+export async function PATCH(request: NextRequest) {
   const supabase = await createClient()
   const serviceSupabase = createServiceClient()
 
@@ -265,11 +265,114 @@ export async function PUT(request: NextRequest) {
       introducer: updatedIntroducer,
     })
   } catch (error) {
-    console.error('Unexpected error in PUT /api/introducers/me/profile:', error)
+    console.error('Unexpected error in PATCH /api/introducers/me/profile:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-export async function PATCH(request: NextRequest) {
-  return PUT(request)
+const BUCKET = 'public-assets'
+const LOGO_FOLDER = 'introducer-logos'
+
+/**
+ * PUT /api/introducers/me/profile
+ * Upload introducer logo - multipart form data
+ */
+export async function PUT(request: NextRequest) {
+  const supabase = await createClient()
+  const serviceSupabase = createServiceClient()
+
+  try {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: introducerUser, error: introducerUserError } = await serviceSupabase
+      .from('introducer_users')
+      .select('introducer_id, role, is_primary')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (introducerUserError || !introducerUser?.introducer_id) {
+      return NextResponse.json({ error: 'Introducer profile not found' }, { status: 404 })
+    }
+
+    if (introducerUser.role !== 'admin' && !introducerUser.is_primary) {
+      return NextResponse.json(
+        { error: 'Only admin or primary users can upload the introducer logo' },
+        { status: 403 }
+      )
+    }
+
+    const introducerId = introducerUser.introducer_id
+    const formData = await request.formData()
+    const file = formData.get('file') as File | null
+    const uploadType = formData.get('type') as string | null
+
+    if (!file || uploadType !== 'logo') {
+      return NextResponse.json({ error: 'No logo file provided' }, { status: 400 })
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      return NextResponse.json({ error: 'Invalid file type. Allowed: JPEG, PNG, WEBP' }, { status: 400 })
+    }
+
+    const maxSize = 2 * 1024 * 1024
+    if (file.size > maxSize) {
+      return NextResponse.json({ error: 'File size must be less than 2MB' }, { status: 400 })
+    }
+
+    const fileExt = file.type.split('/')[1]
+    const filePath = `${LOGO_FOLDER}/${introducerId}/logo.${fileExt}`
+    const arrayBuffer = await file.arrayBuffer()
+    const uint8Array = new Uint8Array(arrayBuffer)
+
+    const { data: existingFiles } = await serviceSupabase.storage
+      .from(BUCKET)
+      .list(`${LOGO_FOLDER}/${introducerId}`)
+
+    if (existingFiles && existingFiles.length > 0) {
+      const filesToDelete = existingFiles.map(fileMeta => `${LOGO_FOLDER}/${introducerId}/${fileMeta.name}`)
+      await serviceSupabase.storage.from(BUCKET).remove(filesToDelete)
+    }
+
+    const { error: uploadError } = await serviceSupabase.storage
+      .from(BUCKET)
+      .upload(filePath, uint8Array, {
+        contentType: file.type,
+        upsert: true,
+      })
+
+    if (uploadError) {
+      console.error('Logo upload error:', uploadError)
+      return NextResponse.json({ error: 'Failed to upload logo' }, { status: 500 })
+    }
+
+    const { data: { publicUrl } } = serviceSupabase.storage
+      .from(BUCKET)
+      .getPublicUrl(filePath)
+
+    const { data: updatedIntroducer, error: updateError } = await serviceSupabase
+      .from('introducers')
+      .update({ logo_url: publicUrl })
+      .eq('id', introducerId)
+      .select()
+      .single()
+
+    if (updateError) {
+      console.error('Error updating introducer logo URL:', updateError)
+      await serviceSupabase.storage.from(BUCKET).remove([filePath])
+      return NextResponse.json({ error: 'Failed to save logo URL' }, { status: 500 })
+    }
+
+    return NextResponse.json({
+      message: 'Logo uploaded successfully',
+      logo_url: publicUrl,
+      introducer: updatedIntroducer,
+    })
+  } catch (error) {
+    console.error('Unexpected error in PUT /api/introducers/me/profile:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }

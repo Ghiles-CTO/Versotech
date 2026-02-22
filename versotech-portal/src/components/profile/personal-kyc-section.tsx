@@ -16,7 +16,6 @@ import {
   Mail,
   MapPin,
   Calendar,
-  CreditCard,
   Globe,
   FileText,
 } from 'lucide-react'
@@ -79,6 +78,15 @@ interface PersonalKYCSectionProps {
   onRefresh?: () => void
   profileEmail?: string | null
   profileName?: string | null
+}
+
+const MEMBER_API_ENDPOINTS: Record<PersonalKYCSectionProps['entityType'], string> = {
+  investor: '/api/investors/me/members',
+  partner: '/api/partners/me/members',
+  introducer: '/api/introducers/me/members',
+  lawyer: '/api/lawyers/me/members',
+  commercial_partner: '/api/commercial-partners/me/members',
+  arranger: '/api/arrangers/me/members',
 }
 
 export function PersonalKYCSection({
@@ -281,41 +289,8 @@ export function PersonalKYCSection({
             </div>
           </div>
 
-          {/* ID Document & Tax Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
-            {/* ID Document */}
-            <div className="space-y-4">
-              <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-                <CreditCard className="h-4 w-4" />
-                ID Document
-              </h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-muted-foreground text-xs">Document Type</Label>
-                  <div className="font-medium capitalize">
-                    {memberData.id_type?.replace(/_/g, ' ') || '-'}
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground text-xs">Document Number</Label>
-                  <div className="font-medium">{memberData.id_number || '-'}</div>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground text-xs">Issue Date</Label>
-                  <div className="font-medium">{formatDate(memberData.id_issue_date)}</div>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground text-xs">Expiry Date</Label>
-                  <div className="font-medium">{formatDate(memberData.id_expiry_date)}</div>
-                </div>
-                <div className="col-span-2">
-                  <Label className="text-muted-foreground text-xs">Issuing Country</Label>
-                  <div className="font-medium">{memberData.id_issuing_country || '-'}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Tax Information */}
+          {/* Tax Information */}
+          <div className="pt-4 border-t">
             <div className="space-y-4">
               <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
                 <FileText className="h-4 w-4" />
@@ -339,6 +314,10 @@ export function PersonalKYCSection({
                 <div className="col-span-2">
                   <Label className="text-muted-foreground text-xs">Tax Residency</Label>
                   <div className="font-medium">{memberData.country_of_tax_residency || '-'}</div>
+                </div>
+                <div className="col-span-2">
+                  <Label className="text-muted-foreground text-xs">Tax ID Number</Label>
+                  <div className="font-medium">{memberData.tax_id_number || '-'}</div>
                 </div>
               </div>
             </div>
@@ -412,13 +391,8 @@ export function PersonalKYCSection({
           us_taxpayer_id: memberData.us_taxpayer_id,
           country_of_tax_residency: memberData.country_of_tax_residency,
           tax_id_number: memberData.tax_id_number,
-          id_type: memberData.id_type,
-          id_number: memberData.id_number,
-          id_issue_date: memberData.id_issue_date,
-          id_expiry_date: memberData.id_expiry_date,
-          id_issuing_country: memberData.id_issuing_country,
         }}
-        apiEndpoint={`/api/${entityType}s/me/members`}
+        apiEndpoint={MEMBER_API_ENDPOINTS[entityType]}
         onSuccess={() => {
           setShowEditDialog(false)
           onRefresh?.()

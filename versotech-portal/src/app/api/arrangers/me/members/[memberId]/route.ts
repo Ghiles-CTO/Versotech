@@ -76,7 +76,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     // Get arranger ID
     const { data: arrangerUser } = await serviceSupabase
       .from('arranger_users')
-      .select('arranger_id')
+      .select('arranger_id, role, is_primary')
       .eq('user_id', user.id)
       .maybeSingle()
 
@@ -87,13 +87,25 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     // Verify member belongs to user's arranger
     const { data: existingMember } = await serviceSupabase
       .from('arranger_members')
-      .select('id')
+      .select('id, email')
       .eq('id', memberId)
       .eq('arranger_id', arrangerUser.arranger_id)
       .single()
 
     if (!existingMember) {
       return NextResponse.json({ error: 'Member not found' }, { status: 404 })
+    }
+
+    const canManageMembers = arrangerUser.role === 'admin' || arrangerUser.is_primary === true
+    const isSelfMember =
+      typeof existingMember.email === 'string' &&
+      typeof user.email === 'string' &&
+      existingMember.email.trim().toLowerCase() === user.email.trim().toLowerCase()
+    if (!canManageMembers && !isSelfMember) {
+      return NextResponse.json(
+        { error: 'Only admin or primary users can manage members' },
+        { status: 403 }
+      )
     }
 
     // Parse and validate request body
@@ -108,7 +120,10 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     }
 
     // Prepare update data
-    const updateData = prepareMemberData(parsed.data, { computeFullName: true })
+    const updateData = prepareMemberData(parsed.data, {
+      computeFullName: true,
+      entityType: 'arranger',
+    })
 
     // Update member
     const { data: updatedMember, error: updateError } = await serviceSupabase
@@ -151,12 +166,20 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     // Get arranger ID
     const { data: arrangerUser } = await serviceSupabase
       .from('arranger_users')
-      .select('arranger_id')
+      .select('arranger_id, role, is_primary')
       .eq('user_id', user.id)
       .maybeSingle()
 
     if (!arrangerUser?.arranger_id) {
       return NextResponse.json({ error: 'No arranger profile found' }, { status: 404 })
+    }
+
+    const canManageMembers = arrangerUser.role === 'admin' || arrangerUser.is_primary === true
+    if (!canManageMembers) {
+      return NextResponse.json(
+        { error: 'Only admin or primary users can manage members' },
+        { status: 403 }
+      )
     }
 
     // Verify member belongs to user's arranger

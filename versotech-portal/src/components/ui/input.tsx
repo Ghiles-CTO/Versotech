@@ -1,8 +1,19 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { clampDateInputYear } from "@/lib/forms/date-input"
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+function Input({ className, type, onInput, ...props }: React.ComponentProps<"input">) {
+  const handleInput = React.useCallback(
+    (event: React.FormEvent<HTMLInputElement>) => {
+      if (type === 'date') {
+        clampDateInputYear(event)
+      }
+      onInput?.(event)
+    },
+    [onInput, type]
+  )
+
   return (
     <input
       type={type}
@@ -13,6 +24,7 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
         "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
         className
       )}
+      onInput={handleInput}
       {...props}
     />
   )

@@ -6,7 +6,7 @@
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { createMemberSchema, prepareMemberData, computeFullName } from '@/lib/schemas/member-kyc-schema'
+import { createMemberSchema, prepareMemberData } from '@/lib/schemas/member-kyc-schema'
 
 /**
  * GET /api/arrangers/me/members
@@ -97,12 +97,20 @@ export async function POST(request: Request) {
     // Get arranger ID
     const { data: arrangerUser, error: linkError } = await serviceSupabase
       .from('arranger_users')
-      .select('arranger_id')
+      .select('arranger_id, role, is_primary')
       .eq('user_id', user.id)
       .maybeSingle()
 
     if (linkError || !arrangerUser?.arranger_id) {
       return NextResponse.json({ error: 'No arranger profile found' }, { status: 404 })
+    }
+
+    const canManageMembers = arrangerUser.role === 'admin' || arrangerUser.is_primary === true
+    if (!canManageMembers) {
+      return NextResponse.json(
+        { error: 'Only admin or primary users can manage members' },
+        { status: 403 }
+      )
     }
 
     const arrangerId = arrangerUser.arranger_id
@@ -136,7 +144,10 @@ export async function POST(request: Request) {
     }
 
     // Prepare member data
-    const memberData = prepareMemberData(parsed.data, { computeFullName: true })
+    const memberData = prepareMemberData(parsed.data, {
+      computeFullName: true,
+      entityType: 'arranger',
+    })
 
     // Create new member
     const { data: newMember, error: insertError } = await serviceSupabase

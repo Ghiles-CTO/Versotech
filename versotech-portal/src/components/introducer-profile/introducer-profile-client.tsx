@@ -47,6 +47,7 @@ import { MembersManagementTab } from '@/components/members/members-management-ta
 import { IntroducerKYCDocumentsTab } from '@/components/profile/introducer-kyc-documents-tab'
 import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
 import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
+import { ProfileOverviewShell, OverviewSectionCard, OverviewField, OverviewFieldGrid } from '@/components/profile/overview'
 
 // Import shared KYC dialog components
 import { EntityKYCEditDialog, EntityAddressEditDialog, IndividualKycDisplay } from '@/components/shared'
@@ -329,13 +330,14 @@ export function IntroducerProfileClient({
       })
 
       if (!response.ok) {
-        throw new Error('Failed to upload logo')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to upload logo')
       }
 
       toast.success('Logo updated successfully')
       window.location.reload()
-    } catch {
-      toast.error('Failed to upload logo')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to upload logo')
     } finally {
       setIsUploadingLogo(false)
     }
@@ -371,20 +373,23 @@ export function IntroducerProfileClient({
               accept="image/*"
               className="hidden"
               onChange={handleLogoUpload}
+              disabled={!canEditEntityProfile || isUploadingLogo}
             />
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute -bottom-2 -right-2 h-7 w-7 rounded-full"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploadingLogo}
-            >
-              {isUploadingLogo ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <Camera className="h-3 w-3" />
-              )}
-            </Button>
+            {canEditEntityProfile && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute -bottom-2 -right-2 h-7 w-7 rounded-full"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingLogo}
+              >
+                {isUploadingLogo ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Camera className="h-3 w-3" />
+                )}
+              </Button>
+            )}
           </div>
 
           <div>
@@ -528,17 +533,13 @@ export function IntroducerProfileClient({
 
         {/* Profile Tab */}
         <TabsContent value="profile" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                Introducer Information
-              </CardTitle>
-              <CardDescription>
-                Your introducer entity details
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+          <ProfileOverviewShell>
+          <OverviewSectionCard
+            title="Introducer Information"
+            description="Your introducer entity details"
+            icon={Building2}
+            contentClassName="space-y-6"
+          >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">Legal Name</p>
@@ -595,54 +596,61 @@ export function IntroducerProfileClient({
                   type="textarea"
                 />
               </div>
-            </CardContent>
-          </Card>
+          </OverviewSectionCard>
 
+          <OverviewSectionCard
+            title="Your Account"
+            description="Your personal account linked to this introducer"
+            icon={Mail}
+          >
+            <OverviewFieldGrid>
+              <OverviewField label="Name" value={profile?.full_name || '-'} />
+              <OverviewField label="Email" value={userEmail} />
+              <OverviewField label="Role" value={introducerUserInfo.role} valueClassName="capitalize" />
+              <OverviewField label="Can Sign Documents" value={introducerUserInfo.can_sign ? 'Yes' : 'No'} />
+            </OverviewFieldGrid>
+          </OverviewSectionCard>
           {/* Address & Contact Card */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Globe className="h-5 w-5" />
-                  Address & Contact
-                </CardTitle>
-                <CardDescription>
-                  Registered address and contact information
-                </CardDescription>
-              </div>
-              {canEditEntityProfile && (
+          <OverviewSectionCard
+            title="Address & Contact"
+            description="Registered address and communication details"
+            icon={Globe}
+            action={
+              canEditEntityProfile ? (
                 <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
                   <Edit className="h-4 w-4 mr-2" />
                   Edit
                 </Button>
-              )}
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Address</p>
-                  <p className="text-sm font-medium">
-                    {[
-                      introducerInfo?.address_line_1,
-                      introducerInfo?.address_line_2,
-                      introducerInfo?.city,
-                      introducerInfo?.state_province,
-                      introducerInfo?.postal_code,
-                      introducerInfo?.country
-                    ].filter(Boolean).join(', ') || '-'}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Phone</p>
-                  <p className="text-sm font-medium">{introducerInfo?.phone || introducerInfo?.phone_mobile || '-'}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Website</p>
-                  <p className="text-sm font-medium">{introducerInfo?.website || '-'}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              ) : undefined
+            }
+          >
+            <OverviewFieldGrid>
+              <OverviewField label="Address Line 1" value={introducerInfo?.address_line_1 || '-'} />
+              <OverviewField label="Address Line 2" value={introducerInfo?.address_line_2 || '-'} />
+              <OverviewField label="City" value={introducerInfo?.city || '-'} />
+              <OverviewField label="State / Province" value={introducerInfo?.state_province || '-'} />
+              <OverviewField label="Postal Code" value={introducerInfo?.postal_code || '-'} />
+              <OverviewField label="Country" value={introducerInfo?.country || '-'} />
+              <OverviewField label="Phone" value={introducerInfo?.phone || introducerInfo?.phone_mobile || '-'} />
+              <OverviewField
+                label="Website"
+                value={
+                  introducerInfo?.website ? (
+                    <a
+                      href={introducerInfo.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      {introducerInfo.website}
+                    </a>
+                  ) : (
+                    '-'
+                  )
+                }
+              />
+            </OverviewFieldGrid>
+          </OverviewSectionCard>
 
           {/* Personal KYC Section - For the logged-in user's member record */}
           {introducerInfo && (
@@ -685,50 +693,11 @@ export function IntroducerProfileClient({
                 id_issuing_country: introducerInfo?.id_issuing_country,
               }}
               onEdit={() => setShowKycDialog(true)}
+              showEditButton={canEditEntityProfile}
               title="Personal KYC Information"
             />
           )}
-
-          {/* User Account Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Mail className="h-5 w-5" />
-                Your Account
-              </CardTitle>
-              <CardDescription>
-                Your personal account linked to this introducer
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Name</p>
-                  <p className="text-sm font-medium">{profile?.full_name || '-'}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Email</p>
-                  <p className="text-sm font-medium">{userEmail}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Role</p>
-                  <p className="text-sm font-medium capitalize">{introducerUserInfo.role}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Can Sign Documents</p>
-                  <p className="text-sm font-medium">
-                    {introducerUserInfo.can_sign ? (
-                      <span className="flex items-center gap-1 text-green-600">
-                        <CheckCircle2 className="h-4 w-4" /> Yes
-                      </span>
-                    ) : (
-                      <span className="text-gray-500">No</span>
-                    )}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          </ProfileOverviewShell>
         </TabsContent>
 
         {/* Agreement Tab */}

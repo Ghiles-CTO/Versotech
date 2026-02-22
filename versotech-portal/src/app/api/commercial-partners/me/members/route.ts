@@ -92,12 +92,20 @@ export async function POST(request: Request) {
 
     const { data: cpUser, error: linkError } = await serviceSupabase
       .from('commercial_partner_users')
-      .select('commercial_partner_id')
+      .select('commercial_partner_id, role, is_primary')
       .eq('user_id', user.id)
       .maybeSingle()
 
     if (linkError || !cpUser?.commercial_partner_id) {
       return NextResponse.json({ error: 'No commercial partner profile found' }, { status: 404 })
+    }
+
+    const canManageMembers = cpUser.role === 'admin' || cpUser.is_primary === true
+    if (!canManageMembers) {
+      return NextResponse.json(
+        { error: 'Only admin or primary users can manage members' },
+        { status: 403 }
+      )
     }
 
     const cpId = cpUser.commercial_partner_id
@@ -128,7 +136,10 @@ export async function POST(request: Request) {
       )
     }
 
-    const memberData = prepareMemberData(parsed.data, { computeFullName: true })
+    const memberData = prepareMemberData(parsed.data, {
+      computeFullName: true,
+      entityType: 'commercial_partner',
+    })
 
     const { data: newMember, error: insertError } = await serviceSupabase
       .from('commercial_partner_members')

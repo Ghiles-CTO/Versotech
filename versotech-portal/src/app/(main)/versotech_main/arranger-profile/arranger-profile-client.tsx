@@ -45,6 +45,7 @@ import { ArrangerKYCDocumentsTab } from '@/components/profile/arranger-kyc-docum
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
 import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
+import { ProfileOverviewShell, OverviewSectionCard } from '@/components/profile/overview'
 import { EntityKYCEditDialog, EntityAddressEditDialog, IndividualKycDisplay } from '@/components/shared'
 import { PersonalKYCSection, MemberKYCData } from '@/components/profile/personal-kyc-section'
 
@@ -713,71 +714,66 @@ export function ArrangerProfileClient({
 
         {/* Entity Details Tab - EDITABLE */}
         <TabsContent value="details">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
+          <ProfileOverviewShell>
+          <OverviewSectionCard
+            title="Entity Details"
+            description="Legal and registration information"
+            contentClassName="space-y-4"
+            action={!isEditingEntity && canEditEntityProfile ? (
+              <Button variant="outline" size="sm" onClick={() => setIsEditingEntity(true)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            ) : isEditingEntity ? (
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleCancelEntity} disabled={isSaving}>
+                  <X className="h-4 w-4 mr-2" />
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleSaveEntity} disabled={isSaving}>
+                  {isSaving ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Save
+                </Button>
+              </div>
+            ) : null}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <EditableField
+                label="Legal Name"
+                value={arrangerInfo.legal_name}
+                field="legal_name"
+                isEditing={isEditingEntity}
+                editValue={entityForm.legal_name}
+                onChange={(_, v) => setEntityForm(f => ({ ...f, legal_name: v }))}
+              />
+              <EditableField
+                label="Registration Number"
+                value={arrangerInfo.registration_number}
+                field="registration_number"
+                isEditing={isEditingEntity}
+                editValue={entityForm.registration_number}
+                onChange={(_, v) => setEntityForm(f => ({ ...f, registration_number: v }))}
+              />
+              <EditableField
+                label="Tax ID"
+                value={arrangerInfo.tax_id}
+                field="tax_id"
+                isEditing={isEditingEntity}
+                editValue={entityForm.tax_id}
+                onChange={(_, v) => setEntityForm(f => ({ ...f, tax_id: v }))}
+              />
+              {arrangerInfo.created_at && !isEditingEntity && (
                 <div>
-                  <CardTitle>Entity Details</CardTitle>
-                  <CardDescription>Legal and registration information</CardDescription>
+                  <label className="text-sm font-medium text-muted-foreground">Member Since</label>
+                  <p className="text-foreground mt-1">{formatDate(arrangerInfo.created_at)}</p>
                 </div>
-                {!isEditingEntity && canEditEntityProfile ? (
-                  <Button variant="outline" size="sm" onClick={() => setIsEditingEntity(true)}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                ) : isEditingEntity ? (
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={handleCancelEntity} disabled={isSaving}>
-                      <X className="h-4 w-4 mr-2" />
-                      Cancel
-                    </Button>
-                    <Button size="sm" onClick={handleSaveEntity} disabled={isSaving}>
-                      {isSaving ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <Save className="h-4 w-4 mr-2" />
-                      )}
-                      Save
-                    </Button>
-                  </div>
-                ) : null}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <EditableField
-                  label="Legal Name"
-                  value={arrangerInfo.legal_name}
-                  field="legal_name"
-                  isEditing={isEditingEntity}
-                  editValue={entityForm.legal_name}
-                  onChange={(_, v) => setEntityForm(f => ({ ...f, legal_name: v }))}
-                />
-                <EditableField
-                  label="Registration Number"
-                  value={arrangerInfo.registration_number}
-                  field="registration_number"
-                  isEditing={isEditingEntity}
-                  editValue={entityForm.registration_number}
-                  onChange={(_, v) => setEntityForm(f => ({ ...f, registration_number: v }))}
-                />
-                <EditableField
-                  label="Tax ID"
-                  value={arrangerInfo.tax_id}
-                  field="tax_id"
-                  isEditing={isEditingEntity}
-                  editValue={entityForm.tax_id}
-                  onChange={(_, v) => setEntityForm(f => ({ ...f, tax_id: v }))}
-                />
-                {arrangerInfo.created_at && !isEditingEntity && (
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Member Since</label>
-                    <p className="text-foreground mt-1">{formatDate(arrangerInfo.created_at)}</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+              )}
+            </div>
+          </OverviewSectionCard>
 
           {/* Personal KYC Section - For the logged-in user's member record */}
           <PersonalKYCSection
@@ -818,10 +814,12 @@ export function ArrangerProfileClient({
                 id_issuing_country: arrangerInfo.id_issuing_country,
               }}
               onEdit={() => setShowKycDialog(true)}
+              showEditButton={canEditEntityProfile}
               title="Personal KYC Information"
               className="mt-6"
             />
           )}
+          </ProfileOverviewShell>
         </TabsContent>
 
         {/* Members Tab */}

@@ -97,12 +97,20 @@ export async function POST(request: Request) {
     // Get partner ID
     const { data: partnerUser, error: linkError } = await serviceSupabase
       .from('partner_users')
-      .select('partner_id')
+      .select('partner_id, role, is_primary')
       .eq('user_id', user.id)
       .maybeSingle()
 
     if (linkError || !partnerUser?.partner_id) {
       return NextResponse.json({ error: 'No partner profile found' }, { status: 404 })
+    }
+
+    const canManageMembers = partnerUser.role === 'admin' || partnerUser.is_primary === true
+    if (!canManageMembers) {
+      return NextResponse.json(
+        { error: 'Only admin or primary users can manage members' },
+        { status: 403 }
+      )
     }
 
     const partnerId = partnerUser.partner_id
@@ -136,7 +144,10 @@ export async function POST(request: Request) {
     }
 
     // Prepare member data
-    const memberData = prepareMemberData(parsed.data, { computeFullName: true })
+    const memberData = prepareMemberData(parsed.data, {
+      computeFullName: true,
+      entityType: 'partner',
+    })
 
     // Create new member
     const { data: newMember, error: insertError } = await serviceSupabase

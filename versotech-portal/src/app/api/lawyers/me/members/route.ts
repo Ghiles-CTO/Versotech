@@ -86,7 +86,7 @@ export async function POST(request: Request) {
 
     const { data: lawyerUser, error: linkError } = await serviceSupabase
       .from('lawyer_users')
-      .select('lawyer_id, role')
+      .select('lawyer_id, role, is_primary')
       .eq('user_id', user.id)
       .maybeSingle()
 
@@ -94,9 +94,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No lawyer profile found' }, { status: 404 })
     }
 
-    // Only admin users can add members
-    if (lawyerUser.role !== 'admin') {
-      return NextResponse.json({ error: 'Only admin users can add members' }, { status: 403 })
+    const canManageMembers = lawyerUser.role === 'admin' || lawyerUser.is_primary === true
+    if (!canManageMembers) {
+      return NextResponse.json(
+        { error: 'Only admin or primary users can manage members' },
+        { status: 403 }
+      )
     }
 
     const lawyerId = lawyerUser.lawyer_id
@@ -111,7 +114,10 @@ export async function POST(request: Request) {
       )
     }
 
-    const memberData = prepareMemberData(parsed.data, { computeFullName: true })
+    const memberData = prepareMemberData(parsed.data, {
+      computeFullName: true,
+      entityType: 'lawyer',
+    })
 
     const { data: newMember, error: insertError } = await serviceSupabase
       .from('lawyer_members')

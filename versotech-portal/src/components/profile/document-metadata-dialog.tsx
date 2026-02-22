@@ -65,12 +65,7 @@ export function DocumentMetadataDialog({
 
   const isValid = useMemo(() => {
     if (requiresIdFields) {
-      return Boolean(
-        metadata.documentNumber &&
-        metadata.documentIssueDate &&
-        metadata.documentExpiryDate &&
-        metadata.documentIssuingCountry
-      )
+      return Boolean(metadata.documentExpiryDate)
     }
     if (requiresAddressDate) {
       return Boolean(metadata.documentDate)
@@ -88,15 +83,20 @@ export function DocumentMetadataDialog({
         <DialogHeader>
           <DialogTitle>Document Details Required</DialogTitle>
           <DialogDescription>
-            Add required metadata for {getDocumentTypeLabel(documentType).toLowerCase()} before upload.
+            Add metadata for {getDocumentTypeLabel(documentType).toLowerCase()} before upload.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           {requiresIdFields && (
             <>
+              <p className="text-xs text-muted-foreground">
+                Expiry date is required. Other fields are optional.
+              </p>
               <div className="space-y-2">
-                <Label htmlFor="documentNumber">Document Number</Label>
+                <Label htmlFor="documentNumber">
+                  Document Number <span className="text-muted-foreground">(optional)</span>
+                </Label>
                 <Input
                   id="documentNumber"
                   value={metadata.documentNumber}
@@ -106,7 +106,9 @@ export function DocumentMetadataDialog({
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label htmlFor="documentIssueDate">Issue Date</Label>
+                  <Label htmlFor="documentIssueDate">
+                    Issue Date <span className="text-muted-foreground">(optional)</span>
+                  </Label>
                   <Input
                     id="documentIssueDate"
                     type="date"
@@ -116,7 +118,7 @@ export function DocumentMetadataDialog({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="documentExpiryDate">Expiry Date</Label>
+                  <Label htmlFor="documentExpiryDate">Expiry Date <span className="text-red-500">*</span></Label>
                   <Input
                     id="documentExpiryDate"
                     type="date"
@@ -126,7 +128,9 @@ export function DocumentMetadataDialog({
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="documentIssuingCountry">Issuing Country</Label>
+                <Label htmlFor="documentIssuingCountry">
+                  Issuing Country <span className="text-muted-foreground">(optional)</span>
+                </Label>
                 <Input
                   id="documentIssuingCountry"
                   value={metadata.documentIssuingCountry}
@@ -139,7 +143,7 @@ export function DocumentMetadataDialog({
 
           {requiresAddressDate && (
             <div className="space-y-2">
-              <Label htmlFor="documentDate">Document Date</Label>
+              <Label htmlFor="documentDate">Document Date <span className="text-red-500">*</span></Label>
               <Input
                 id="documentDate"
                 type="date"

@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     // Find arranger entity for current user
     const { data: arrangerUser, error: arrangerUserError } = await serviceSupabase
       .from('arranger_users')
-      .select('arranger_id')
+      .select('arranger_id, role, is_primary')
       .eq('user_id', user.id)
       .maybeSingle()
 
@@ -39,6 +39,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Arranger profile not found' },
         { status: 404 }
+      )
+    }
+
+    if (arrangerUser.role !== 'admin' && !arrangerUser.is_primary) {
+      return NextResponse.json(
+        { error: 'Only admin or primary users can upload the arranger logo' },
+        { status: 403 }
       )
     }
 
@@ -166,7 +173,7 @@ export async function DELETE() {
     // Find arranger entity for current user
     const { data: arrangerUser, error: arrangerUserError } = await serviceSupabase
       .from('arranger_users')
-      .select('arranger_id')
+      .select('arranger_id, role, is_primary')
       .eq('user_id', user.id)
       .maybeSingle()
 
@@ -174,6 +181,13 @@ export async function DELETE() {
       return NextResponse.json(
         { error: 'Arranger profile not found' },
         { status: 404 }
+      )
+    }
+
+    if (arrangerUser.role !== 'admin' && !arrangerUser.is_primary) {
+      return NextResponse.json(
+        { error: 'Only admin or primary users can remove the arranger logo' },
+        { status: 403 }
       )
     }
 

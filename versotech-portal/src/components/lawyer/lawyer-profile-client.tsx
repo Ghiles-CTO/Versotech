@@ -35,6 +35,13 @@ import { PasswordChangeForm } from '@/components/profile/password-change-form'
 import { PreferencesEditor } from '@/components/profile/preferences-editor'
 import { GDPRControls } from '@/components/profile/gdpr-controls'
 import { LawyerKYCDocumentsTab } from '@/components/profile/lawyer-kyc-documents-tab'
+import {
+  ProfileOverviewShell,
+  OverviewSectionCard,
+  OverviewField,
+  OverviewFieldGrid,
+  OverviewBadgeRow,
+} from '@/components/profile/overview'
 import { EntityAddressEditDialog, EntityKYCEditDialog, IndividualKycDisplay } from '@/components/shared'
 import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
 import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
@@ -454,6 +461,7 @@ export function LawyerProfileClient({
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
+          <ProfileOverviewShell>
           {/* KYC Status Card */}
           <Card className={cn('border-l-4', kycStatus === 'approved' ? 'border-l-green-500' : kycStatus === 'rejected' ? 'border-l-red-500' : 'border-l-yellow-500')}>
             <CardContent className="py-4">
@@ -478,166 +486,122 @@ export function LawyerProfileClient({
           </Card>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Firm Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
-                  Firm Information
-                </CardTitle>
-                <CardDescription>
-                  Your law firm details
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Legal Name</Label>
-                  <div className="font-medium">
-                    {lawyerInfo?.firm_name || 'Not set'}
-                  </div>
-                </div>
+            <OverviewSectionCard
+              title="Firm Information"
+              description="Your law firm details"
+              icon={Building2}
+              contentClassName="space-y-4"
+            >
+              <OverviewField label="Legal Name" value={lawyerInfo?.firm_name || 'Not set'} />
+              <EditableField
+                label="Display Name"
+                value={lawyerInfo?.display_name}
+                field="display_name"
+                isEditing={isEditing}
+                editValue={editData.display_name}
+                onEditChange={handleEditChange}
+              />
+              <EditableField
+                label="Contact Person"
+                value={lawyerInfo?.primary_contact_name}
+                field="primary_contact_name"
+                isEditing={isEditing}
+                editValue={editData.primary_contact_name}
+                onEditChange={handleEditChange}
+              />
+              <EditableField
+                label="Contact Email"
+                value={lawyerInfo?.email}
+                field="primary_contact_email"
+                isEditing={isEditing}
+                editValue={editData.primary_contact_email}
+                onEditChange={handleEditChange}
+                type="email"
+                icon={Mail}
+              />
+              <EditableField
+                label="Contact Phone"
+                value={lawyerInfo?.phone}
+                field="primary_contact_phone"
+                isEditing={isEditing}
+                editValue={editData.primary_contact_phone}
+                onEditChange={handleEditChange}
+                type="tel"
+                icon={Phone}
+              />
+            </OverviewSectionCard>
 
-                <EditableField
-                  label="Display Name"
-                  value={lawyerInfo?.display_name}
-                  field="display_name"
-                  isEditing={isEditing}
-                  editValue={editData.display_name}
-                  onEditChange={handleEditChange}
-                />
-
-                <EditableField
-                  label="Contact Person"
-                  value={lawyerInfo?.primary_contact_name}
-                  field="primary_contact_name"
-                  isEditing={isEditing}
-                  editValue={editData.primary_contact_name}
-                  onEditChange={handleEditChange}
-                />
-
-                <EditableField
-                  label="Contact Email"
-                  value={lawyerInfo?.email}
-                  field="primary_contact_email"
-                  isEditing={isEditing}
-                  editValue={editData.primary_contact_email}
-                  onEditChange={handleEditChange}
-                  type="email"
-                  icon={Mail}
-                />
-
-                <EditableField
-                  label="Contact Phone"
-                  value={lawyerInfo?.phone}
-                  field="primary_contact_phone"
-                  isEditing={isEditing}
-                  editValue={editData.primary_contact_phone}
-                  onEditChange={handleEditChange}
-                  type="tel"
-                  icon={Phone}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Personal Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Your Account
-                </CardTitle>
-                <CardDescription>
-                  Your personal account linked to this law firm
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Full Name</Label>
-                  <div className="font-medium">
-                    {profile?.full_name || 'Not set'}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Email</Label>
-                  <div className="font-medium flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    {profile?.email || userEmail}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Role</Label>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="capitalize">
-                      {lawyerUserInfo.role}
+            <OverviewSectionCard
+              title="Your Account"
+              description="Your personal account linked to this law firm"
+              icon={User}
+              contentClassName="space-y-4"
+            >
+              <OverviewField label="Full Name" value={profile?.full_name || 'Not set'} />
+              <OverviewField label="Email" value={profile?.email || userEmail} icon={Mail} />
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Role</Label>
+                <OverviewBadgeRow>
+                  <Badge variant="outline" className="capitalize">
+                    {lawyerUserInfo.role}
+                  </Badge>
+                  {lawyerUserInfo.is_primary && (
+                    <Badge variant="secondary">Primary Contact</Badge>
+                  )}
+                  {lawyerUserInfo.can_sign && (
+                    <Badge className="bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800">
+                      Signatory
                     </Badge>
-                    {lawyerUserInfo.is_primary && (
-                      <Badge variant="secondary">Primary Contact</Badge>
-                    )}
-                    {lawyerUserInfo.can_sign && (
-                      <Badge className="bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800">
-                        Signatory
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Address & Contact Card */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
-                  Address & Contact
-                </CardTitle>
-                <CardDescription>
-                  Firm address and contact details
-                </CardDescription>
+                  )}
+                </OverviewBadgeRow>
               </div>
-              {canEdit && (
+            </OverviewSectionCard>
+          </div>
+          {/* Address & Contact Card */}
+          <OverviewSectionCard
+            title="Address & Contact"
+            description="Firm address and communication details"
+            icon={Building2}
+            action={
+              canEdit ? (
                 <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
                   <Edit className="h-4 w-4 mr-2" />
                   Edit
                 </Button>
-              )}
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Address</Label>
-                  <div className="font-medium">
-                    {[
-                      lawyerInfo?.address_line_1,
-                      lawyerInfo?.address_line_2,
-                      lawyerInfo?.city,
-                      lawyerInfo?.state_province,
-                      lawyerInfo?.postal_code,
-                      lawyerInfo?.country
-                    ].filter(Boolean).join(', ') || 'Not set'}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Phone</Label>
-                  <div className="font-medium flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    {lawyerInfo?.phone || lawyerInfo?.phone_office || lawyerInfo?.phone_mobile || 'Not set'}
-                  </div>
-                </div>
-                {lawyerInfo?.website && (
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Website</Label>
-                    <div className="font-medium">
-                      <a href={lawyerInfo.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                        {lawyerInfo.website}
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+              ) : undefined
+            }
+          >
+            <OverviewFieldGrid columns={3}>
+              <OverviewField label="Address Line 1" value={lawyerInfo?.address_line_1 || '-'} />
+              <OverviewField label="Address Line 2" value={lawyerInfo?.address_line_2 || '-'} />
+              <OverviewField label="City" value={lawyerInfo?.city || '-'} />
+              <OverviewField label="State / Province" value={lawyerInfo?.state_province || '-'} />
+              <OverviewField label="Postal Code" value={lawyerInfo?.postal_code || '-'} />
+              <OverviewField label="Country" value={lawyerInfo?.country || '-'} />
+              <OverviewField
+                label="Phone"
+                value={lawyerInfo?.phone || lawyerInfo?.phone_office || lawyerInfo?.phone_mobile || '-'}
+                icon={Phone}
+              />
+              <OverviewField
+                label="Website"
+                value={
+                  lawyerInfo?.website ? (
+                    <a
+                      href={lawyerInfo.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      {lawyerInfo.website}
+                    </a>
+                  ) : (
+                    '-'
+                  )
+                }
+              />
+            </OverviewFieldGrid>
+          </OverviewSectionCard>
 
           {/* Personal KYC Section - For the logged-in user's member record */}
           {lawyerInfo && (
@@ -704,9 +668,11 @@ export function LawyerProfileClient({
                 id_issuing_country: lawyerInfo.id_issuing_country,
               }}
               onEdit={() => setShowKycDialog(true)}
+              showEditButton={canEdit}
               title="Personal KYC Information"
             />
           )}
+          </ProfileOverviewShell>
         </TabsContent>
 
         {/* Members Tab */}

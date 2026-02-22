@@ -197,11 +197,8 @@ export function KYCUploadDialog({
       return
     }
 
-    if (
-      requiresIdMetadata &&
-      (!documentNumber || !documentIssueDate || !documentExpiryDate || !documentIssuingCountry)
-    ) {
-      toast.error('Please complete all proof of ID details before uploading')
+    if (requiresIdMetadata && !documentExpiryDate) {
+      toast.error('Please provide the ID expiry date before uploading')
       return
     }
 
@@ -270,12 +267,7 @@ export function KYCUploadDialog({
   }
 
   const fileExtension = file?.name.split('.').pop()?.toUpperCase() || ''
-  const hasRequiredMetadata = (!requiresIdMetadata || (
-    !!documentNumber &&
-    !!documentIssueDate &&
-    !!documentExpiryDate &&
-    !!documentIssuingCountry
-  )) && (!requiresAddressDate || !!documentDate)
+  const hasRequiredMetadata = (!requiresIdMetadata || !!documentExpiryDate) && (!requiresAddressDate || !!documentDate)
 
   const canSubmit = file &&
     documentType &&
@@ -637,9 +629,15 @@ export function KYCUploadDialog({
           {/* Dynamic metadata fields */}
           {requiresIdMetadata && (
             <div className="space-y-3 rounded-lg border border-border p-3">
-              <p className="text-xs font-medium text-muted-foreground">Proof of ID details</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                Proof of ID details
+                <span className="ml-1 font-normal">(expiry date required, other fields optional)</span>
+              </p>
               <div className="space-y-2">
-                <Label className="text-xs">Document Number</Label>
+                <Label className="text-xs">
+                  Document Number
+                  <span className="ml-1 text-muted-foreground">(optional)</span>
+                </Label>
                 <Input
                   value={documentNumber}
                   onChange={(e) => setDocumentNumber(e.target.value)}
@@ -648,7 +646,10 @@ export function KYCUploadDialog({
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label className="text-xs">Issue Date</Label>
+                  <Label className="text-xs">
+                    Issue Date
+                    <span className="ml-1 text-muted-foreground">(optional)</span>
+                  </Label>
                   <Input
                     type="date"
                     value={documentIssueDate}
@@ -657,7 +658,9 @@ export function KYCUploadDialog({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs">Expiry Date</Label>
+                  <Label className="text-xs">
+                    Expiry Date <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     type="date"
                     value={documentExpiryDate}
@@ -666,7 +669,10 @@ export function KYCUploadDialog({
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-xs">Issuing Country</Label>
+                <Label className="text-xs">
+                  Issuing Country
+                  <span className="ml-1 text-muted-foreground">(optional)</span>
+                </Label>
                 <Input
                   value={documentIssuingCountry}
                   onChange={(e) => setDocumentIssuingCountry(e.target.value)}

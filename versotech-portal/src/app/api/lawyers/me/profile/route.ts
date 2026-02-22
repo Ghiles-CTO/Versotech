@@ -253,7 +253,7 @@ export async function PUT(request: NextRequest) {
     // Find lawyer entity for current user
     const { data: lawyerUser, error: lawyerUserError } = await serviceSupabase
       .from('lawyer_users')
-      .select('lawyer_id, role')
+      .select('lawyer_id, role, is_primary')
       .eq('user_id', user.id)
       .maybeSingle()
 
@@ -261,10 +261,9 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Lawyer profile not found' }, { status: 404 })
     }
 
-    // Only admin users can upload logo
-    if (lawyerUser.role !== 'admin') {
+    if (lawyerUser.role !== 'admin' && !lawyerUser.is_primary) {
       return NextResponse.json(
-        { error: 'Only admin users can upload the firm logo' },
+        { error: 'Only admin or primary users can upload the firm logo' },
         { status: 403 }
       )
     }
