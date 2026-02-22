@@ -4,21 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "2f0258ac39f539c4",
+        "id": "6f7477127c1ecfcd",
         "type": "tabs",
         "children": [
           {
-            "id": "f682a23a77e40854",
+            "id": "529c12afa6f8f60e",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "VERSO/launch/E2E_PROCESS_DOCUMENTATION.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "E2E_PROCESS_DOCUMENTATION"
+              "title": "New tab"
             }
           }
         ]
@@ -183,8 +179,10 @@
       "bases:Create new base": false
     }
   },
-  "active": "f682a23a77e40854",
+  "active": "4268fe46dbcf54c1",
   "lastOpenFiles": [
+    "VERSO/launch/E2E_PROCESS_DOCUMENTATION.md",
+    "Untitled.base",
     "versotech-portal/src/components/dashboard/enhanced-kpi-cards.tsx",
     "versotech-portal/src/components/dashboard/news-feed.tsx",
     "versotech-portal/src/components/documents/staff/sidebar/AccountsTree.tsx",
@@ -201,16 +199,13 @@
     "assets/julienmachot _FO114749F2845 BLACK.png",
     "assets/Unconfirmed 821700.crdownload",
     "assets",
-    "archive/assets",
     "VERSO/launch/ARCHITECTURE_DEEP_DIVE.md",
-    "dashboardreconciliations/vc_firms_db_match_report.txt",
     "VERSO/launch/screenshots/145_interest_detail.png",
     "VERSO/launch/screenshots/144_interests_detail.png",
     "VERSO/launch/screenshots/143_interests_list.png",
     "VERSO/launch/E2E_TEST_RESULTS.md",
     "VERSO/launch/E2E_TESTING_CHECKLIST.md",
     "VERSO/User Guides/ceo-staff/04-subscription-approval.md",
-    "VERSO/launch/E2E_PROCESS_DOCUMENTATION.md",
     "VERSO/User Guides/ceo-staff/06-data-room-extensions.md",
     "VERSO/User Guides/ceo-staff/02-kyc-review.md",
     "VERSO/User Guides/arranger/08-data-room-management.md",
