@@ -735,34 +735,32 @@ export function ProfilePageClient({
                 </section>
 
                 {/* Submit Entity Info */}
-                {!['approved', 'submitted', 'pending_review'].includes(investorInfo.kyc_status || '') && (
-                  <div className="pt-2">
-                    {canSubmitEntityInfo ? (
-                      <Button
-                        onClick={handleSubmitEntityKyc}
-                        disabled={isSubmittingEntityKyc || isEntitySubmitBlocked || !entityHasUnsubmittedChanges}
-                        size="sm"
-                      >
-                        <Send className="h-4 w-4 mr-2" />
-                        {isSubmittingEntityKyc ? 'Submitting...' : entitySubmitButtonLabel}
-                      </Button>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        Only primary contacts can submit entity information for review.
-                      </p>
-                    )}
-                    {canSubmitEntityInfo && isEntitySubmitBlocked && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Submission is already in progress.
-                      </p>
-                    )}
-                    {canSubmitEntityInfo && !isEntitySubmitBlocked && !entityHasUnsubmittedChanges && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        No new changes to submit.
-                      </p>
-                    )}
-                  </div>
-                )}
+                <div className="pt-2">
+                  {canSubmitEntityInfo ? (
+                    <Button
+                      onClick={handleSubmitEntityKyc}
+                      disabled={isSubmittingEntityKyc || isEntitySubmitBlocked || !entityHasUnsubmittedChanges}
+                      size="sm"
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      {isSubmittingEntityKyc ? 'Submitting...' : entitySubmitButtonLabel}
+                    </Button>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Only primary contacts can submit entity information for review.
+                    </p>
+                  )}
+                  {canSubmitEntityInfo && isEntitySubmitBlocked && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Submission is already in progress.
+                    </p>
+                  )}
+                  {canSubmitEntityInfo && !isEntitySubmitBlocked && !entityHasUnsubmittedChanges && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      No new changes to submit.
+                    </p>
+                  )}
+                </div>
               </OverviewSectionCard>
             )}
 
