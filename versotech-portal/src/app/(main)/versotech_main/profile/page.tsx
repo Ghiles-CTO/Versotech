@@ -51,6 +51,7 @@ export default async function ProfilePage({
   // ALWAYS check if user has an investor link - we need this data regardless of persona
   let investorInfo = null
   let investorUserInfo = null
+  let latestEntityInfoSnapshot: Record<string, unknown> | null = null
 
   // Check if user is associated with an investor
   const { link: investorUser, error: investorUserError } = await resolvePrimaryInvestorLink(
@@ -268,6 +269,24 @@ export default async function ProfilePage({
         is_primary: investorUser.is_primary,
         can_sign: investorUser.can_sign || false
       }
+
+      const { data: latestEntityInfoSubmission, error: latestEntityInfoError } = await serviceSupabase
+        .from('kyc_submissions')
+        .select('metadata')
+        .eq('investor_id', investor.id)
+        .eq('document_type', 'entity_info')
+        .order('submitted_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (latestEntityInfoError) {
+        console.error('[ProfilePage] Error fetching latest entity_info snapshot:', latestEntityInfoError)
+      } else {
+        const reviewSnapshot = (latestEntityInfoSubmission?.metadata as Record<string, unknown> | undefined)?.review_snapshot
+        if (reviewSnapshot && typeof reviewSnapshot === 'object' && !Array.isArray(reviewSnapshot)) {
+          latestEntityInfoSnapshot = reviewSnapshot as Record<string, unknown>
+        }
+      }
     }
   }
 
@@ -319,6 +338,7 @@ export default async function ProfilePage({
       investorInfo={investorInfo}
       investorUserInfo={investorUserInfo}
       memberInfo={memberInfo}
+      latestEntityInfoSnapshot={latestEntityInfoSnapshot}
     />
   )
 }

@@ -5,6 +5,109 @@ import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
 import { checkAndUpdateEntityKYCStatus } from '@/lib/kyc/check-entity-kyc-status'
 import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
 
+type FieldSpec = {
+  key: string
+  label: string
+  candidates?: readonly string[]
+}
+
+const DEFAULT_ENTITY_SNAPSHOT_FIELDS: FieldSpec[] = [
+  { key: 'display_name', label: 'Display Name' },
+  { key: 'legal_name', label: 'Legal Name', candidates: ['legal_name', 'name', 'firm_name', 'display_name'] },
+  { key: 'name', label: 'Name' },
+  { key: 'firm_name', label: 'Firm Name' },
+  { key: 'entity_type', label: 'Entity Type', candidates: ['type'] },
+  { key: 'country_of_incorporation', label: 'Country of Incorporation' },
+  { key: 'registration_number', label: 'Registration Number' },
+  { key: 'tax_id', label: 'Tax ID' },
+  { key: 'partner_type', label: 'Partner Type' },
+  { key: 'cp_type', label: 'Commercial Partner Type' },
+  { key: 'jurisdiction', label: 'Jurisdiction' },
+  { key: 'regulator', label: 'Regulator' },
+  { key: 'license_number', label: 'License Number' },
+  { key: 'license_type', label: 'License Type' },
+  { key: 'regulatory_status', label: 'Regulatory Status' },
+  { key: 'regulatory_number', label: 'Regulatory Number' },
+  { key: 'representative_name', label: 'Representative Name' },
+  { key: 'representative_title', label: 'Representative Title' },
+  { key: 'address_line_1', label: 'Address Line 1', candidates: ['address_line_1', 'street_address', 'registered_address_line_1', 'registered_address'] },
+  { key: 'address_line_2', label: 'Address Line 2', candidates: ['address_line_2', 'registered_address_line_2'] },
+  { key: 'city', label: 'City', candidates: ['city', 'registered_city'] },
+  { key: 'state_province', label: 'State / Province', candidates: ['state_province', 'registered_state'] },
+  { key: 'postal_code', label: 'Postal Code', candidates: ['postal_code', 'registered_postal_code'] },
+  { key: 'country', label: 'Country', candidates: ['country', 'registered_country'] },
+  { key: 'registered_address_line_1', label: 'Registered Address Line 1', candidates: ['registered_address_line_1', 'registered_address', 'address_line_1', 'street_address'] },
+  { key: 'registered_address_line_2', label: 'Registered Address Line 2', candidates: ['registered_address_line_2', 'address_line_2'] },
+  { key: 'registered_city', label: 'Registered City', candidates: ['registered_city', 'city'] },
+  { key: 'registered_state', label: 'Registered State', candidates: ['registered_state', 'state_province'] },
+  { key: 'registered_postal_code', label: 'Registered Postal Code', candidates: ['registered_postal_code', 'postal_code'] },
+  { key: 'registered_country', label: 'Registered Country', candidates: ['registered_country', 'country'] },
+  { key: 'email', label: 'Email', candidates: ['email', 'contact_email', 'primary_contact_email'] },
+  { key: 'contact_email', label: 'Contact Email', candidates: ['contact_email', 'email', 'primary_contact_email'] },
+  { key: 'phone', label: 'Phone', candidates: ['phone', 'contact_phone', 'primary_contact_phone'] },
+  { key: 'contact_phone', label: 'Contact Phone', candidates: ['contact_phone', 'phone', 'primary_contact_phone'] },
+  { key: 'phone_mobile', label: 'Mobile Phone' },
+  { key: 'phone_office', label: 'Office Phone' },
+  { key: 'website', label: 'Website' },
+  { key: 'contact_name', label: 'Contact Name', candidates: ['contact_name', 'primary_contact_name'] },
+  { key: 'primary_contact_name', label: 'Primary Contact Name', candidates: ['primary_contact_name', 'contact_name'] },
+  { key: 'primary_contact_email', label: 'Primary Contact Email', candidates: ['primary_contact_email', 'contact_email', 'email'] },
+  { key: 'primary_contact_phone', label: 'Primary Contact Phone', candidates: ['primary_contact_phone', 'contact_phone', 'phone'] },
+]
+
+const hasMeaningfulValue = (value: unknown): boolean => {
+  if (value === null || value === undefined) return false
+  if (typeof value === 'string') return value.trim().length > 0
+  if (Array.isArray(value)) return value.length > 0
+  return true
+}
+
+const resolveFieldValue = (
+  entity: Record<string, unknown>,
+  field: FieldSpec
+): unknown => {
+  const candidates = field.candidates && field.candidates.length > 0 ? field.candidates : [field.key]
+  for (const candidate of candidates) {
+    const value = entity[candidate]
+    if (hasMeaningfulValue(value)) {
+      return typeof value === 'string' ? value.trim() : value
+    }
+  }
+  return null
+}
+
+const normalizeComparableSnapshotValue = (value: unknown): string | null => {
+  if (value === null || value === undefined) return null
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? trimmed : null
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value)
+  }
+  if (Array.isArray(value)) {
+    return value.length > 0 ? JSON.stringify(value) : null
+  }
+  return JSON.stringify(value)
+}
+
+const extractReviewSnapshot = (metadata: unknown): Record<string, unknown> | null => {
+  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) return null
+  const reviewSnapshot = (metadata as Record<string, unknown>).review_snapshot
+  if (!reviewSnapshot || typeof reviewSnapshot !== 'object' || Array.isArray(reviewSnapshot)) return null
+  return reviewSnapshot as Record<string, unknown>
+}
+
+const snapshotsMatch = (
+  nextSnapshot: Record<string, unknown>,
+  previousSnapshot: Record<string, unknown>
+): boolean =>
+  Object.keys(nextSnapshot).every(
+    (key) =>
+      normalizeComparableSnapshotValue(nextSnapshot[key]) ===
+      normalizeComparableSnapshotValue(previousSnapshot[key])
+  )
+
 // Entity type configurations
 const ENTITY_CONFIGS = {
   investor: {
@@ -15,10 +118,10 @@ const ENTITY_CONFIGS = {
     userEntityIdColumn: 'investor_id',
     submissionEntityIdColumn: 'investor_id',
     requiredFields: [
-      { field: 'legal_name', label: 'Legal Name' },
-      { field: 'country_of_incorporation', label: 'Country of Incorporation' },
-      { field: 'registered_address_line_1', label: 'Registered Address' },
-      { field: 'registered_country', label: 'Registered Country' },
+      { key: 'legal_name', label: 'Legal Name', candidates: ['legal_name', 'display_name'] },
+      { key: 'country_of_incorporation', label: 'Country of Incorporation', candidates: ['country_of_incorporation', 'country'] },
+      { key: 'registered_address_line_1', label: 'Registered Address', candidates: ['registered_address_line_1', 'registered_address', 'address_line_1', 'street_address'] },
+      { key: 'registered_country', label: 'Registered Country', candidates: ['registered_country', 'country'] },
     ],
   },
   partner: {
@@ -29,8 +132,8 @@ const ENTITY_CONFIGS = {
     userEntityIdColumn: 'partner_id',
     submissionEntityIdColumn: 'partner_id',
     requiredFields: [
-      { field: 'legal_name', label: 'Legal Name' },
-      { field: 'country', label: 'Country' },
+      { key: 'legal_name', label: 'Legal Name', candidates: ['legal_name', 'name'] },
+      { key: 'country', label: 'Country' },
     ],
   },
   introducer: {
@@ -41,8 +144,8 @@ const ENTITY_CONFIGS = {
     userEntityIdColumn: 'introducer_id',
     submissionEntityIdColumn: 'introducer_id',
     requiredFields: [
-      { field: 'legal_name', label: 'Legal Name' },
-      { field: 'country', label: 'Country' },
+      { key: 'legal_name', label: 'Legal Name', candidates: ['legal_name', 'display_name', 'contact_name'] },
+      { key: 'country', label: 'Country', candidates: ['country', 'country_of_incorporation'] },
     ],
   },
   lawyer: {
@@ -53,8 +156,8 @@ const ENTITY_CONFIGS = {
     userEntityIdColumn: 'lawyer_id',
     submissionEntityIdColumn: 'lawyer_id',
     requiredFields: [
-      { field: 'firm_name', label: 'Firm Name' },
-      { field: 'country', label: 'Country' },
+      { key: 'firm_name', label: 'Firm Name', candidates: ['firm_name', 'display_name'] },
+      { key: 'country', label: 'Country', candidates: ['country', 'country_of_incorporation'] },
     ],
   },
   commercial_partner: {
@@ -65,8 +168,8 @@ const ENTITY_CONFIGS = {
     userEntityIdColumn: 'commercial_partner_id',
     submissionEntityIdColumn: 'commercial_partner_id',
     requiredFields: [
-      { field: 'name', label: 'Name' },
-      { field: 'jurisdiction', label: 'Jurisdiction' },
+      { key: 'name', label: 'Name', candidates: ['name', 'legal_name'] },
+      { key: 'jurisdiction', label: 'Jurisdiction', candidates: ['jurisdiction', 'country'] },
     ],
   },
   arranger: {
@@ -77,10 +180,10 @@ const ENTITY_CONFIGS = {
     userEntityIdColumn: 'arranger_id',
     submissionEntityIdColumn: 'arranger_entity_id',
     requiredFields: [
-      { field: 'legal_name', label: 'Legal Name' },
-      { field: 'registration_number', label: 'Registration Number' },
-      { field: 'regulator', label: 'Regulator' },
-      { field: 'license_number', label: 'License Number' },
+      { key: 'legal_name', label: 'Legal Name' },
+      { key: 'registration_number', label: 'Registration Number' },
+      { key: 'regulator', label: 'Regulator' },
+      { key: 'license_number', label: 'License Number' },
     ],
   },
 } as const
@@ -152,6 +255,7 @@ export async function submitEntityKycForUser(params: {
     if (entityError || !entity) {
       return { status: 404, payload: { error: 'Entity not found' } }
     }
+    const entityRecord = entity as Record<string, unknown>
 
     // Only allow for entity-type (not individual)
     if (entity.type === 'individual') {
@@ -159,15 +263,6 @@ export async function submitEntityKycForUser(params: {
         status: 400,
         payload: { error: 'Entity KYC submission is not applicable for individual entities' },
       }
-    }
-
-    // Check if already submitted or approved
-    if (entity.kyc_status === 'submitted') {
-      return { status: 400, payload: { error: 'Entity KYC information already submitted' } }
-    }
-
-    if (entity.kyc_status === 'approved') {
-      return { status: 400, payload: { error: 'Entity KYC already approved' } }
     }
 
     // Ensure at least one active member exists so entity KYC cannot become silently stuck.
@@ -253,7 +348,7 @@ export async function submitEntityKycForUser(params: {
       .select('id')
       .eq(config.submissionEntityIdColumn, entityId)
       .eq('document_type', 'entity_info')
-      .in('status', ['pending', 'under_review', 'approved'])
+      .in('status', ['pending', 'under_review'])
       .order('submitted_at', { ascending: false })
       .limit(1)
       .maybeSingle()
@@ -272,7 +367,7 @@ export async function submitEntityKycForUser(params: {
 
     // Validate required fields before status transition.
     const missingFields = config.requiredFields.filter(
-      ({ field }) => !entity[field as keyof typeof entity]
+      (field) => !hasMeaningfulValue(resolveFieldValue(entityRecord, field))
     )
 
     if (missingFields.length > 0) {
@@ -280,13 +375,68 @@ export async function submitEntityKycForUser(params: {
         status: 400,
         payload: {
           error: 'Please complete all required entity fields before submitting',
-          missing: missingFields.map(f => f.label),
+          missing: missingFields.map((f) => f.label),
         },
       }
     }
 
-    // Idempotency gate: only one request can transition this entity to submitted.
+    const requiredSnapshot = Object.fromEntries(
+      config.requiredFields.map((field) => [field.key, resolveFieldValue(entityRecord, field)])
+    )
+
+    const detailedSnapshot = Object.fromEntries(
+      DEFAULT_ENTITY_SNAPSHOT_FIELDS
+        .map((field) => [field.key, resolveFieldValue(entityRecord, field)])
+        .filter(([, value]) => value !== null)
+    )
+
+    const normalizedLegalName = resolveFieldValue(entityRecord, {
+      key: 'legal_name',
+      label: 'Legal Name',
+      candidates: ['legal_name', 'name', 'firm_name', 'display_name'],
+    })
+    const normalizedCountry = resolveFieldValue(entityRecord, {
+      key: 'country',
+      label: 'Country',
+      candidates: ['country', 'registered_country', 'country_of_incorporation', 'jurisdiction'],
+    })
+
+    const nextReviewSnapshot: Record<string, unknown> = {
+      ...detailedSnapshot,
+      ...requiredSnapshot,
+      legal_name: normalizedLegalName,
+      country: normalizedCountry,
+    }
+
+    const { data: latestEntityInfoSubmission, error: latestEntityInfoError } = await serviceSupabase
+      .from('kyc_submissions')
+      .select('metadata')
+      .eq(config.submissionEntityIdColumn, entityId)
+      .eq('document_type', 'entity_info')
+      .order('submitted_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (latestEntityInfoError) {
+      console.error('Error checking latest entity KYC submission snapshot:', latestEntityInfoError)
+      return {
+        status: 500,
+        payload: { error: 'Failed to validate latest submitted entity information' },
+      }
+    }
+
+    const latestReviewSnapshot = extractReviewSnapshot(latestEntityInfoSubmission?.metadata)
+    if (latestReviewSnapshot && snapshotsMatch(nextReviewSnapshot, latestReviewSnapshot)) {
+      return {
+        status: 400,
+        payload: { error: 'No entity information changes to submit' },
+      }
+    }
+
+    // Idempotency gate: transition to submitted once; if already submitted we still allow
+    // creating a fresh auto-approved entity_info snapshot (resubmission after edits).
     const previousEntityKycStatus = entity.kyc_status
+    const shouldReserveTransition = entity.kyc_status !== 'submitted'
     const reserveUpdateData: Record<string, unknown> = {
       kyc_status: 'submitted',
       updated_at: new Date().toISOString(),
@@ -297,24 +447,26 @@ export async function submitEntityKycForUser(params: {
       reserveUpdateData.kyc_submitted_by = userId
     }
 
-    const { data: reserveTransition, error: reserveTransitionError } = await serviceSupabase
-      .from(config.entityTable)
-      .update(reserveUpdateData)
-      .eq('id', entityId)
-      .neq('kyc_status', 'submitted')
-      .select('id')
-      .maybeSingle()
+    if (shouldReserveTransition) {
+      const { data: reserveTransition, error: reserveTransitionError } = await serviceSupabase
+        .from(config.entityTable)
+        .update(reserveUpdateData)
+        .eq('id', entityId)
+        .neq('kyc_status', 'submitted')
+        .select('id')
+        .maybeSingle()
 
-    if (reserveTransitionError) {
-      console.error('Error transitioning entity to submitted:', reserveTransitionError)
-      return {
-        status: 500,
-        payload: { error: 'Failed to reserve entity KYC submission' },
+      if (reserveTransitionError) {
+        console.error('Error transitioning entity to submitted:', reserveTransitionError)
+        return {
+          status: 500,
+          payload: { error: 'Failed to reserve entity KYC submission' },
+        }
       }
-    }
 
-    if (!reserveTransition) {
-      return { status: 400, payload: { error: 'Entity KYC information already submitted' } }
+      if (!reserveTransition) {
+        return { status: 400, payload: { error: 'Entity KYC information already submitted' } }
+      }
     }
 
     const assignedTo = await resolveKycSubmissionAssignee(serviceSupabase)
@@ -332,13 +484,7 @@ export async function submitEntityKycForUser(params: {
         entity_type: entityType,
         entity_name: entity.legal_name || entity.name || entity.firm_name || entity.display_name,
         submitted_by_user_id: userId,
-        review_snapshot: {
-          ...Object.fromEntries(
-            config.requiredFields.map(({ field }) => [field, entity[field as keyof typeof entity]])
-          ),
-          legal_name: entity.legal_name || entity.name || entity.firm_name || entity.display_name || null,
-          country: entity.country || entity.registered_country || entity.jurisdiction || null,
-        },
+        review_snapshot: nextReviewSnapshot,
       },
     }
 
@@ -363,22 +509,24 @@ export async function submitEntityKycForUser(params: {
 
       console.error('Error creating KYC submission:', submissionError)
 
-      // Best-effort rollback for non-idempotent failures.
-      const rollbackData: Record<string, unknown> = {
-        kyc_status: previousEntityKycStatus || 'pending',
-        updated_at: new Date().toISOString(),
-      }
+      // Best-effort rollback only when this request performed the submitted transition.
+      if (shouldReserveTransition) {
+        const rollbackData: Record<string, unknown> = {
+          kyc_status: previousEntityKycStatus || 'pending',
+          updated_at: new Date().toISOString(),
+        }
 
-      if (entityType === 'arranger') {
-        rollbackData.kyc_submitted_at = entity.kyc_submitted_at || null
-        rollbackData.kyc_submitted_by = entity.kyc_submitted_by || null
-      }
+        if (entityType === 'arranger') {
+          rollbackData.kyc_submitted_at = entity.kyc_submitted_at || null
+          rollbackData.kyc_submitted_by = entity.kyc_submitted_by || null
+        }
 
-      await serviceSupabase
-        .from(config.entityTable)
-        .update(rollbackData)
-        .eq('id', entityId)
-        .eq('kyc_status', 'submitted')
+        await serviceSupabase
+          .from(config.entityTable)
+          .update(rollbackData)
+          .eq('id', entityId)
+          .eq('kyc_status', 'submitted')
+      }
 
       return { status: 500, payload: { error: 'Failed to create KYC submission' } }
     }
@@ -391,7 +539,7 @@ export async function submitEntityKycForUser(params: {
 
     const existingAccountStatus = entityStatus?.account_approval_status?.toLowerCase() ?? null
     const shouldUpdateAccountStatus =
-      !existingAccountStatus || ['pending_onboarding', 'new', 'incomplete'].includes(existingAccountStatus)
+      !existingAccountStatus || ['pending_onboarding', 'new', 'incomplete', 'rejected'].includes(existingAccountStatus)
 
     if (shouldUpdateAccountStatus) {
       await serviceSupabase
@@ -414,7 +562,7 @@ export async function submitEntityKycForUser(params: {
       payload: {
         success: true,
         submission_id: submission.id,
-        message: 'Entity KYC submitted and approved',
+        message: 'Entity KYC submitted',
       },
     }
   } catch (error) {

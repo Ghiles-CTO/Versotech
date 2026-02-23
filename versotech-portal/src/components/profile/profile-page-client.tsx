@@ -29,7 +29,6 @@ import {
   Clock,
   Mail,
   Phone,
-  MapPin,
   Edit,
   Shield,
   Globe,
@@ -39,7 +38,7 @@ import { toast } from 'sonner'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { PersonalKYCSection, type MemberKYCData } from '@/components/profile/personal-kyc-section'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { IndividualKycDisplay, EntityKYCEditDialog, EntityAddressEditDialog, EntityInfoEditDialog } from '@/components/shared'
+import { IndividualKycDisplay, EntityKYCEditDialog, EntityOverviewEditDialog } from '@/components/shared'
 import {
   ProfileOverviewShell,
   OverviewSectionCard,
@@ -145,6 +144,7 @@ interface ProfilePageClientProps {
   investorInfo?: InvestorInfo | null
   investorUserInfo?: InvestorUserInfo | null
   memberInfo?: MemberKYCData | null
+  latestEntityInfoSnapshot?: Record<string, unknown> | null
 }
 
 // Status badge configurations
@@ -170,6 +170,66 @@ const ACCOUNT_APPROVAL_BADGES: Record<string, { label: string; className: string
   unauthorized: { label: 'Account Restricted', className: 'bg-red-100 text-red-800 border-red-200' },
 }
 
+const normalizeEntityFieldValue = (value: unknown): string | null => {
+  if (value === null || value === undefined) return null
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? trimmed : null
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value)
+  }
+  return JSON.stringify(value)
+}
+
+const pickSnapshotValue = (
+  snapshot: Record<string, unknown> | null | undefined,
+  keys: readonly string[]
+): unknown => {
+  if (!snapshot) return null
+  for (const key of keys) {
+    const value = snapshot[key]
+    if (value !== undefined && value !== null && !(typeof value === 'string' && value.trim() === '')) {
+      return value
+    }
+  }
+  return null
+}
+
+const hasEntityOverviewChanges = (
+  investorInfo: InvestorInfo | null | undefined,
+  snapshot: Record<string, unknown> | null | undefined
+): boolean => {
+  if (!investorInfo) return false
+  if (!snapshot || Object.keys(snapshot).length === 0) return true
+
+  const checks: Array<{ current: unknown; keys: readonly string[] }> = [
+    { current: investorInfo.display_name, keys: ['display_name'] },
+    { current: investorInfo.legal_name, keys: ['legal_name'] },
+    { current: investorInfo.country_of_incorporation, keys: ['country_of_incorporation'] },
+    { current: investorInfo.email, keys: ['email', 'contact_email', 'primary_contact_email'] },
+    { current: investorInfo.phone, keys: ['phone', 'contact_phone', 'primary_contact_phone'] },
+    { current: investorInfo.phone_mobile, keys: ['phone_mobile'] },
+    { current: investorInfo.phone_office, keys: ['phone_office'] },
+    { current: investorInfo.website, keys: ['website'] },
+    {
+      current: investorInfo.registered_address_line_1,
+      keys: ['registered_address_line_1', 'address_line_1', 'registered_address'],
+    },
+    { current: investorInfo.registered_address_line_2, keys: ['registered_address_line_2', 'address_line_2'] },
+    { current: investorInfo.registered_city, keys: ['registered_city', 'city'] },
+    { current: investorInfo.registered_state, keys: ['registered_state', 'state_province'] },
+    { current: investorInfo.registered_postal_code, keys: ['registered_postal_code', 'postal_code'] },
+    { current: investorInfo.registered_country, keys: ['registered_country', 'country'] },
+  ]
+
+  return checks.some(
+    ({ current, keys }) =>
+      normalizeEntityFieldValue(current) !==
+      normalizeEntityFieldValue(pickSnapshotValue(snapshot, keys))
+  )
+}
+
 export function ProfilePageClient({
   userEmail,
   profile: initialProfile,
@@ -178,15 +238,32 @@ export function ProfilePageClient({
   investorInfo,
   investorUserInfo,
   memberInfo,
+  latestEntityInfoSnapshot,
 }: ProfilePageClientProps) {
   const [profile, setProfile] = useState(initialProfile)
   const [showKycDialog, setShowKycDialog] = useState(false)
-  const [showAddressDialog, setShowAddressDialog] = useState(false)
-  const [showEntityInfoDialog, setShowEntityInfoDialog] = useState(false)
+  const [showEntityOverviewDialog, setShowEntityOverviewDialog] = useState(false)
   const [isSubmittingEntityKyc, setIsSubmittingEntityKyc] = useState(false)
   const [isSubmittingPersonalKyc, setIsSubmittingPersonalKyc] = useState(false)
   const [approvedDocMetadata, setApprovedDocMetadata] = useState<ApprovedKycDocumentMetadata | null>(null)
+  // Use server-passed investorInfo instead of client-side fetching
+  const hasInvestorEntity = !!investorInfo
+  const isIndividual = investorInfo?.type === 'individual'
+  const isEntity = hasInvestorEntity && investorInfo?.type !== 'individual'
   const isStaff = variant === 'staff'
+  const entityKycStatus = (investorInfo?.kyc_status || '').toLowerCase()
+  const isEntitySubmitBlocked = ['pending_review', 'pending', 'under_review'].includes(entityKycStatus)
+  const canSubmitEntityInfo = !!(investorUserInfo?.is_primary || investorUserInfo?.role === 'admin')
+  const entityHasUnsubmittedChanges = isEntity
+    ? hasEntityOverviewChanges(investorInfo, latestEntityInfoSnapshot)
+    : false
+  const entitySubmitButtonLabel = isEntitySubmitBlocked
+    ? 'Entity Info Submitted'
+    : !entityHasUnsubmittedChanges
+      ? 'No Changes to Submit'
+      : entityKycStatus === 'approved' || entityKycStatus === 'submitted'
+        ? 'Submit Updated Entity Info'
+        : 'Submit Entity Info'
 
   // Submit entity KYC for review
   const handleSubmitEntityKyc = async () => {
@@ -210,7 +287,7 @@ export function ProfilePageClient({
         throw new Error(error.error || 'Failed to submit entity KYC')
       }
 
-      toast.success('Entity information submitted and approved')
+      toast.success('Entity information submitted')
       window.location.reload()
     } catch (error) {
       console.error('Error submitting entity KYC:', error)
@@ -243,11 +320,6 @@ export function ProfilePageClient({
       setIsSubmittingPersonalKyc(false)
     }
   }
-
-  // Use server-passed investorInfo instead of client-side fetching
-  const hasInvestorEntity = !!investorInfo
-  const isIndividual = investorInfo?.type === 'individual'
-  const isEntity = hasInvestorEntity && investorInfo?.type !== 'individual'
 
   useEffect(() => {
     let cancelled = false
@@ -529,22 +601,17 @@ export function ProfilePageClient({
 
               {isEntity && investorInfo && (
                 <OverviewSectionCard
-                  title="Entity Information"
-                  description="Organization details"
+                  title="Entity Overview"
+                  description="Legal details, contact information, and registered address"
                   icon={Building2}
-                  contentClassName="space-y-4"
-                  action={!['approved', 'submitted', 'pending_review'].includes(investorInfo.kyc_status || '') ? (
-                    <Button variant="outline" size="sm" onClick={() => setShowEntityInfoDialog(true)}>
+                  contentClassName="space-y-6"
+                  action={(
+                    <Button variant="outline" size="sm" onClick={() => setShowEntityOverviewDialog(true)}>
                       <Edit className="h-4 w-4 mr-2" />
                       Edit
                     </Button>
-                  ) : undefined}
-                >
-                  <OverviewField label="Display Name" value={investorInfo.display_name || '-'} />
-                  <OverviewField label="Legal Name" value={investorInfo.legal_name || '-'} />
-                  {investorInfo.country_of_incorporation && (
-                    <OverviewField label="Country of Incorporation" value={investorInfo.country_of_incorporation} />
                   )}
+                >
                   <div className="space-y-2">
                     <Label className="text-muted-foreground">Type</Label>
                     <OverviewBadgeRow>
@@ -554,99 +621,84 @@ export function ProfilePageClient({
                     </OverviewBadgeRow>
                   </div>
 
-                  {!['approved', 'submitted', 'pending_review'].includes(investorInfo.kyc_status || '') && (
-                    <div className="pt-4 border-t">
-                      {(investorUserInfo?.is_primary || investorUserInfo?.role === 'admin') ? (
-                        <Button
-                          onClick={handleSubmitEntityKyc}
-                          disabled={isSubmittingEntityKyc}
-                          size="sm"
-                        >
-                          <Send className="h-4 w-4 mr-2" />
-                          {isSubmittingEntityKyc ? 'Submitting...' : 'Submit Entity Info for Review'}
-                        </Button>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          Only primary contacts can submit entity information for review.
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  {investorInfo.kyc_status === 'submitted' && (
-                    <div className="pt-4 border-t">
-                      <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                        <Send className="h-3 w-3 mr-1" />
-                        Entity Info Submitted for Review
-                      </Badge>
-                    </div>
-                  )}
+                  <OverviewFieldGrid>
+                    <OverviewField label="Display Name" value={investorInfo.display_name || '-'} />
+                    <OverviewField label="Legal Name" value={investorInfo.legal_name || '-'} />
+                    <OverviewField
+                      label="Country of Incorporation"
+                      value={investorInfo.country_of_incorporation || '-'}
+                    />
+                  </OverviewFieldGrid>
+
+                  <div className="border-t pt-4 space-y-4">
+                    <h4 className="text-sm font-medium">Contact Information</h4>
+                    <OverviewFieldGrid>
+                      <OverviewField label="Email" value={investorInfo.email || '-'} icon={Mail} />
+                      <OverviewField label="Phone" value={investorInfo.phone || '-'} icon={Phone} />
+                      <OverviewField label="Mobile" value={investorInfo.phone_mobile || '-'} icon={Phone} />
+                      <OverviewField label="Office Phone" value={investorInfo.phone_office || '-'} icon={Phone} />
+                      <OverviewField
+                        label="Website"
+                        value={
+                          investorInfo.website ? (
+                            <a
+                              href={investorInfo.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline"
+                            >
+                              {investorInfo.website}
+                            </a>
+                          ) : (
+                            '-'
+                          )
+                        }
+                        icon={Globe}
+                      />
+                    </OverviewFieldGrid>
+                  </div>
+
+                  <div className="border-t pt-4 space-y-4">
+                    <h4 className="text-sm font-medium">Registered Address</h4>
+                    <OverviewFieldGrid>
+                      <OverviewField label="Address Line 1" value={investorInfo.registered_address_line_1 || '-'} />
+                      <OverviewField label="Address Line 2" value={investorInfo.registered_address_line_2 || '-'} />
+                      <OverviewField label="City" value={investorInfo.registered_city || '-'} />
+                      <OverviewField label="State / Province" value={investorInfo.registered_state || '-'} />
+                      <OverviewField label="Postal Code" value={investorInfo.registered_postal_code || '-'} />
+                      <OverviewField label="Country" value={investorInfo.registered_country || '-'} />
+                    </OverviewFieldGrid>
+                  </div>
+
+                  <div className="pt-4 border-t">
+                    {canSubmitEntityInfo ? (
+                      <Button
+                        onClick={handleSubmitEntityKyc}
+                        disabled={isSubmittingEntityKyc || isEntitySubmitBlocked || !entityHasUnsubmittedChanges}
+                        size="sm"
+                      >
+                        <Send className="h-4 w-4 mr-2" />
+                        {isSubmittingEntityKyc ? 'Submitting...' : entitySubmitButtonLabel}
+                      </Button>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Only primary contacts can submit entity information for review.
+                      </p>
+                    )}
+                    {canSubmitEntityInfo && isEntitySubmitBlocked && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Submission is already in progress.
+                      </p>
+                    )}
+                    {canSubmitEntityInfo && !isEntitySubmitBlocked && !entityHasUnsubmittedChanges && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        No new changes to submit.
+                      </p>
+                    )}
+                  </div>
                 </OverviewSectionCard>
               )}
             </div>
-          {/* Contact & Address for ENTITY investors only (individual investors show this in IndividualKycDisplay) */}
-          {isEntity && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <OverviewSectionCard
-                title="Contact Information"
-                description="How counterparties can reach this entity"
-                icon={Phone}
-                action={
-                  <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                }
-              >
-                <OverviewFieldGrid>
-                  <OverviewField label="Email" value={investorInfo!.email || '-'} icon={Mail} />
-                  <OverviewField label="Phone" value={investorInfo!.phone || '-'} icon={Phone} />
-                  <OverviewField label="Mobile" value={investorInfo!.phone_mobile || '-'} icon={Phone} />
-                  <OverviewField
-                    label="Website"
-                    value={
-                      investorInfo!.website ? (
-                        <a
-                          href={investorInfo!.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline"
-                        >
-                          {investorInfo!.website}
-                        </a>
-                      ) : (
-                        '-'
-                      )
-                    }
-                    icon={Globe}
-                  />
-                </OverviewFieldGrid>
-              </OverviewSectionCard>
-
-              <OverviewSectionCard
-                title="Registered Address"
-                description="Official legal registration address"
-                icon={MapPin}
-              >
-                <OverviewFieldGrid>
-                  <OverviewField
-                    label="Address Line 1"
-                    value={investorInfo!.registered_address_line_1 || '-'}
-                  />
-                  <OverviewField
-                    label="Address Line 2"
-                    value={investorInfo!.registered_address_line_2 || '-'}
-                  />
-                  <OverviewField label="City" value={investorInfo!.registered_city || '-'} />
-                  <OverviewField label="State / Province" value={investorInfo!.registered_state || '-'} />
-                  <OverviewField
-                    label="Postal Code"
-                    value={investorInfo!.registered_postal_code || '-'}
-                  />
-                  <OverviewField label="Country" value={investorInfo!.registered_country || '-'} />
-                </OverviewFieldGrid>
-              </OverviewSectionCard>
-            </div>
-          )}
 
           {/* Personal KYC Section for Entity Members */}
           {isEntity && investorInfo && (
@@ -863,55 +915,28 @@ export function ProfilePageClient({
         />
       )}
 
-      {/* Address/Contact Edit Dialog */}
-      {hasInvestorEntity && investorInfo && (
-        <EntityAddressEditDialog
-          open={showAddressDialog}
-          onOpenChange={setShowAddressDialog}
-          entityType="investor"
-          entityName={investorInfo.display_name || investorInfo.legal_name}
-          initialData={isEntity ? {
-            // Entity address mapping - use registered_* columns
-            email: investorInfo.email ?? undefined,
-            phone: investorInfo.phone ?? undefined,
-            phone_mobile: investorInfo.phone_mobile ?? undefined,
-            phone_office: investorInfo.phone_office ?? undefined,
-            website: investorInfo.website ?? undefined,
-            address_line_1: investorInfo.registered_address_line_1 ?? undefined,
-            address_line_2: investorInfo.registered_address_line_2 ?? undefined,
-            city: investorInfo.registered_city ?? undefined,
-            state_province: investorInfo.registered_state ?? undefined,
-            postal_code: investorInfo.registered_postal_code ?? undefined,
-            country: investorInfo.registered_country ?? undefined,
-          } : {
-            // Individual address mapping - use residential_* columns
-            email: investorInfo.email ?? undefined,
-            phone: investorInfo.phone ?? undefined,
-            phone_mobile: investorInfo.phone_mobile ?? undefined,
-            phone_office: investorInfo.phone_office ?? undefined,
-            website: investorInfo.website ?? undefined,
-            address_line_1: investorInfo.residential_street ?? undefined,
-            address_line_2: investorInfo.residential_line_2 ?? undefined,
-            city: investorInfo.residential_city ?? undefined,
-            state_province: investorInfo.residential_state ?? undefined,
-            postal_code: investorInfo.residential_postal_code ?? undefined,
-            country: investorInfo.residential_country ?? undefined,
-          }}
-          apiEndpoint="/api/investors/me"
-          onSuccess={() => window.location.reload()}
-        />
-      )}
-
-      {/* Entity Info Edit Dialog (display name, legal name) */}
       {isEntity && investorInfo && (
-        <EntityInfoEditDialog
-          open={showEntityInfoDialog}
-          onOpenChange={setShowEntityInfoDialog}
+        <EntityOverviewEditDialog
+          open={showEntityOverviewDialog}
+          onOpenChange={setShowEntityOverviewDialog}
+          entityName={investorInfo.display_name || investorInfo.legal_name}
           initialData={{
             display_name: investorInfo.display_name,
             legal_name: investorInfo.legal_name,
             country_of_incorporation: investorInfo.country_of_incorporation,
+            email: investorInfo.email,
+            phone: investorInfo.phone,
+            phone_mobile: investorInfo.phone_mobile,
+            phone_office: investorInfo.phone_office,
+            website: investorInfo.website,
+            address_line_1: investorInfo.registered_address_line_1,
+            address_line_2: investorInfo.registered_address_line_2,
+            city: investorInfo.registered_city,
+            state_province: investorInfo.registered_state,
+            postal_code: investorInfo.registered_postal_code,
+            country: investorInfo.registered_country,
           }}
+          apiEndpoint="/api/investors/me"
           onSuccess={() => window.location.reload()}
         />
       )}
