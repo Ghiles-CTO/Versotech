@@ -115,6 +115,7 @@ export function PlatformTour({
   const [showWelcome, setShowWelcome] = useState(!hasCompletedTour)
   const [isCompleted, setIsCompleted] = useState(hasCompletedTour)
   const completionTriggeredRef = useRef(false)
+  const skipTriggeredRef = useRef(false)
 
   const steps = getTourSteps(activePersona)
 
@@ -122,6 +123,7 @@ export function PlatformTour({
     setShowWelcome(!hasCompletedTour)
     setIsCompleted(hasCompletedTour)
     completionTriggeredRef.current = false
+    skipTriggeredRef.current = false
   }, [activePersona, hasCompletedTour])
 
   useEffect(() => {
@@ -131,6 +133,34 @@ export function PlatformTour({
   // Extract step IDs for analytics
   const stepIds = steps.map(step => step.id || step.target)
   const persistenceKey = `verso_tour_progress:${activePersona}:${TOUR_VERSION}`
+
+  const persistTourOutcome = useCallback(async (action: 'completed' | 'skipped') => {
+    const response = await fetch('/api/profiles/tour-completed', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        personaKey: activePersona,
+        version: TOUR_VERSION,
+        action,
+      }),
+    })
+
+    if (response.ok) return
+
+    let message = action === 'completed'
+      ? 'Failed to save tour completion'
+      : 'Failed to save tour skip'
+
+    try {
+      const payload = await response.json()
+      if (payload?.error && typeof payload.error === 'string') {
+        message = payload.error
+      }
+    } catch {
+      // Keep default message
+    }
+    throw new Error(message)
+  }, [activePersona])
 
   const handleComplete = useCallback(async () => {
     if (isCompleted) return // Already completed, no need to call API again
@@ -143,69 +173,38 @@ export function PlatformTour({
       // Trigger celebration effects
       triggerConfetti()
       triggerHaptic()
-
-      const response = await fetch('/api/profiles/tour-completed', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          personaKey: activePersona,
-          version: TOUR_VERSION,
-        }),
-      })
-
-      if (!response.ok) {
-        let message = 'Failed to save tour completion'
-        try {
-          const payload = await response.json()
-          if (payload?.error && typeof payload.error === 'string') {
-            message = payload.error
-          }
-        } catch {
-          // Keep default message
-        }
-        throw new Error(message)
-      }
-
+      await persistTourOutcome('completed')
       setIsCompleted(true)
     } catch (error) {
       console.error('Failed to save tour completion:', error)
       completionTriggeredRef.current = false // Allow retry on error
       throw error
     }
-  }, [activePersona, isCompleted])
+  }, [isCompleted, persistTourOutcome])
 
-  const handleSkipFromWelcome = useCallback(async () => {
-    setShowWelcome(false)
-    // Don't trigger confetti on skip
+  const handleSkipTour = useCallback(async () => {
+    if (isCompleted) return
+    if (skipTriggeredRef.current) return
+    skipTriggeredRef.current = true
+
     try {
-      const response = await fetch('/api/profiles/tour-completed', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          personaKey: activePersona,
-          version: TOUR_VERSION,
-        }),
-      })
-
-      if (!response.ok) {
-        let message = 'Failed to save tour skip'
-        try {
-          const payload = await response.json()
-          if (payload?.error && typeof payload.error === 'string') {
-            message = payload.error
-          }
-        } catch {
-          // Keep default message
-        }
-        throw new Error(message)
-      }
-
+      await persistTourOutcome('skipped')
       setIsCompleted(true)
     } catch (error) {
       console.error('Failed to save tour skip:', error)
+      skipTriggeredRef.current = false
+      throw error
+    }
+  }, [isCompleted, persistTourOutcome])
+
+  const handleSkipFromWelcome = useCallback(async () => {
+    setShowWelcome(false)
+    try {
+      await handleSkipTour()
+    } catch {
       setShowWelcome(true)
     }
-  }, [activePersona])
+  }, [handleSkipTour])
 
   // Analytics callbacks (can be connected to your analytics service)
   const analytics = {
@@ -227,6 +226,7 @@ export function PlatformTour({
     <TourProvider
       totalSteps={steps.length}
       onComplete={handleComplete}
+      onSkip={handleSkipTour}
       analytics={analytics}
       stepIds={stepIds}
       enableKeyboardNav={true}

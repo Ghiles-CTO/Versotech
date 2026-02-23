@@ -189,38 +189,67 @@ export async function processAgentChatReply(
 
   const agent = await resolveComplianceChatAgent(supabase, { requireActive: true })
   if (!agent) {
+    const complianceMetadata = asRecord(metadataRoot.compliance)
+    const alreadyNotifiedAt = safeTrim(complianceMetadata.agent_unavailable_notified_at)
+    if (alreadyNotifiedAt) {
+      return { ok: true, status: 'agent_inactive_suppressed' as const }
+    }
+
+    const unavailableNotifiedAt = new Date().toISOString()
     const assistantName = agentChatMeta?.agent_name || "Wayne O'Connor"
     const assistantAvatarUrl = agentChatMeta?.agent_avatar_url || null
 
-    const { error: unavailableInsertError } = await supabase.from('messages').insert({
-      conversation_id: params.conversationId,
-      sender_id: null,
-      message_type: 'system',
-      body:
-        "I'm currently unavailable due to a temporary issue. Please continue sharing your question here and a human compliance officer will follow up.",
-      metadata: {
-        ai_generated: true,
-        assistant_name: assistantName,
-        assistant_agent_id: assignedAgentIdFromMetadata,
-        assistant_avatar_url: assistantAvatarUrl,
-        provider: 'disabled',
-        model: 'agent_inactive',
-        source: 'compliance_assistant',
-        fallback: true,
-        error: 'Compliance agent is inactive',
-        reply_to_message_id: sourceMessage.id,
-        kyc_context_used: kycContext.documents.length > 0,
-        kyc_context_docs: kycContext.documents.map((doc) => ({
-          document_id: doc.documentId,
-          submission_id: doc.submissionId,
-          citation: doc.citation,
-        })),
-      },
-    })
+    const { data: unavailableMessage, error: unavailableInsertError } = await supabase
+      .from('messages')
+      .insert({
+        conversation_id: params.conversationId,
+        sender_id: null,
+        message_type: 'system',
+        body:
+          "I'm currently unavailable due to a temporary issue. Please continue sharing your question here and a human compliance officer will follow up.",
+        metadata: {
+          ai_generated: true,
+          assistant_name: assistantName,
+          assistant_agent_id: assignedAgentIdFromMetadata,
+          assistant_avatar_url: assistantAvatarUrl,
+          provider: 'disabled',
+          model: 'agent_inactive',
+          source: 'compliance_assistant',
+          fallback: true,
+          error: 'Compliance agent is inactive',
+          reply_to_message_id: sourceMessage.id,
+          kyc_context_used: kycContext.documents.length > 0,
+          kyc_context_docs: kycContext.documents.map((doc) => ({
+            document_id: doc.documentId,
+            submission_id: doc.submissionId,
+            citation: doc.citation,
+          })),
+        },
+      })
+      .select('id')
+      .single()
 
     if (unavailableInsertError) {
       console.error('[agent-chat] Failed to insert inactive-agent reply:', unavailableInsertError)
       return { ok: false, status: 'reply_failed' as const, error: unavailableInsertError.message }
+    }
+
+    const nextMetadata: Record<string, any> = {
+      ...metadataRoot,
+      compliance: {
+        ...complianceMetadata,
+        updated_at: unavailableNotifiedAt,
+        agent_unavailable_notified_at: unavailableNotifiedAt,
+        agent_unavailable_notified_message_id: unavailableMessage?.id || null,
+      },
+    }
+
+    const { error: metadataUpdateError } = await supabase
+      .from('conversations')
+      .update({ metadata: nextMetadata })
+      .eq('id', params.conversationId)
+    if (metadataUpdateError) {
+      console.error('[agent-chat] Failed to persist inactive-agent marker:', metadataUpdateError)
     }
 
     try {

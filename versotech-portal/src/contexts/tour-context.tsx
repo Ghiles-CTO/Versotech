@@ -34,6 +34,7 @@ interface TourContextType {
   prevStep: () => void
   skipTour: () => Promise<void>
   completeTour: () => Promise<void>
+  closeTour: () => void
 
   // Enhanced actions
   goToStep: (step: number) => void
@@ -64,6 +65,7 @@ interface TourProviderProps {
   children: ReactNode
   totalSteps: number
   onComplete: () => Promise<void>
+  onSkip?: () => Promise<void>
   analytics?: TourAnalytics
   stepIds?: string[]
   enableKeyboardNav?: boolean
@@ -75,6 +77,7 @@ export function TourProvider({
   children,
   totalSteps,
   onComplete,
+  onSkip,
   analytics,
   stepIds = [],
   enableKeyboardNav = true,
@@ -209,12 +212,13 @@ export function TourProvider({
     }
 
     try {
-      await onComplete()
+      const skipHandler = onSkip || onComplete
+      await skipHandler()
       finalizeTour()
     } catch (error) {
       console.error('[TourProvider] Failed to skip tour:', error)
     }
-  }, [onComplete, analytics, currentStep, finalizeTour])
+  }, [onSkip, onComplete, analytics, currentStep, finalizeTour])
 
   const completeTour = useCallback(async () => {
     try {
@@ -231,6 +235,27 @@ export function TourProvider({
       console.error('[TourProvider] Failed to complete tour:', error)
     }
   }, [onComplete, analytics, finalizeTour])
+
+  const closeTour = useCallback(() => {
+    if (!isActive) return
+
+    setIsActive(false)
+    setIsPaused(true)
+
+    if (!enablePersistence) return
+
+    try {
+      const progress: StoredProgress = {
+        currentStep,
+        isPaused: true,
+        startTime: tourStartTime.current || Date.now(),
+        lastActiveTime: Date.now()
+      }
+      localStorage.setItem(persistenceKey, JSON.stringify(progress))
+    } catch {
+      // Ignore localStorage errors
+    }
+  }, [isActive, enablePersistence, currentStep, persistenceKey])
 
   // Enhanced actions
   const goToStep = useCallback((step: number) => {
@@ -274,15 +299,17 @@ export function TourProvider({
 
   // Keyboard navigation - using refs to avoid stale closures
   const skipTourRef = useRef(skipTour)
+  const closeTourRef = useRef(closeTour)
   const nextStepRef = useRef(nextStep)
   const prevStepRef = useRef(prevStep)
 
   // Keep refs updated
   useEffect(() => {
     skipTourRef.current = skipTour
+    closeTourRef.current = closeTour
     nextStepRef.current = nextStep
     prevStepRef.current = prevStep
-  }, [skipTour, nextStep, prevStep])
+  }, [skipTour, closeTour, nextStep, prevStep])
 
   useEffect(() => {
     if (!enableKeyboardNav || !isActive || isPaused) return
@@ -300,7 +327,7 @@ export function TourProvider({
       switch (e.key) {
         case 'Escape':
           e.preventDefault()
-          skipTourRef.current()
+          closeTourRef.current()
           break
         case 'ArrowRight':
         case 'Enter':
@@ -332,6 +359,7 @@ export function TourProvider({
       prevStep,
       skipTour,
       completeTour,
+      closeTour,
 
       // Enhanced actions
       goToStep,

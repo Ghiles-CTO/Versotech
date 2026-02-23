@@ -8,6 +8,12 @@
  */
 
 const AUTH_KEY_HINTS = ['supabase', 'sb-', 'auth', 'supabase.auth.token']
+const PERSONA_STORAGE_KEYS = ['verso_active_persona']
+const PERSONA_COOKIE_NAMES = [
+  'verso_active_persona_type',
+  'verso_active_persona_id',
+  'verso_active_tour_persona',
+]
 
 const removeAuthKeys = (storage: Storage) => {
   const keysToRemove = new Set<string>()
@@ -95,6 +101,31 @@ class SessionManager {
     console.info('[auth-session] Cleared auth cookies:', authCookieNames)
   }
 
+  private clearPersonaState(): void {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    PERSONA_STORAGE_KEYS.forEach((key) => {
+      window.localStorage.removeItem(key)
+      window.sessionStorage.removeItem(key)
+    })
+
+    const paths = ['/', '/versoholdings', '/versotech', '/versotech_main']
+    const domains = [window.location.hostname, `.${window.location.hostname}`, '']
+
+    PERSONA_COOKIE_NAMES.forEach((name) => {
+      paths.forEach((path) => {
+        domains.forEach((domain) => {
+          const domainStr = domain ? `domain=${domain};` : ''
+          document.cookie = `${name}=; ${domainStr}path=${path}; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0`
+        })
+      })
+    })
+
+    console.info('[auth-session] Cleared persisted persona state')
+  }
+
   /**
    * Clear all auth data - localStorage, sessionStorage, and cookies
    * This is the most comprehensive cleanup and should be used before re-authentication
@@ -112,6 +143,7 @@ class SessionManager {
 
     // Clear cookies
     this.clearAuthCookies()
+    this.clearPersonaState()
   }
 
   /**

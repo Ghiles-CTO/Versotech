@@ -66,8 +66,22 @@ export async function POST(
       compliance.updated_at = now
     }
 
-    if (action === 'assign' && assignedAgentId) {
-      compliance.assigned_agent_id = assignedAgentId
+    if (action === 'assign') {
+      if (!assignedAgentId) {
+        return NextResponse.json({ error: 'assignedAgentId is required' }, { status: 400 })
+      }
+
+      const { data: assignedAgent, error: assignedAgentError } = await serviceSupabase
+        .from('ai_agents')
+        .select('id, is_active')
+        .eq('id', assignedAgentId)
+        .maybeSingle()
+
+      if (assignedAgentError || !assignedAgent || assignedAgent.is_active !== true) {
+        return NextResponse.json({ error: 'Invalid or inactive agent assignment' }, { status: 400 })
+      }
+
+      compliance.assigned_agent_id = assignedAgent.id
       compliance.updated_at = now
     }
 

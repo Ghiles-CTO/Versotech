@@ -229,6 +229,17 @@ function mergeNavItems(personas: Persona[]): NavItem[] {
   return merged
 }
 
+function normalizePath(path: string): string {
+  if (!path || path === '/') return '/'
+  return path.endsWith('/') ? path.replace(/\/+$/, '') || '/' : path
+}
+
+function isNavItemActive(pathname: string, href: string): boolean {
+  const currentPath = normalizePath(pathname)
+  const targetPath = normalizePath(href)
+  return currentPath === targetPath || currentPath.startsWith(`${targetPath}/`)
+}
+
 function useSidebarNotifications() {
   const [notificationUser, setNotificationUser] = useState<{ id?: string; role: string }>({
     role: 'investor',
@@ -422,10 +433,7 @@ export function PersonaSidebar() {
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto scrollbar-hide px-3 py-2 space-y-1">
         {filteredNavItems.map((item) => {
-          const isDashboard = item.name === 'Dashboard'
-          const isActive = isDashboard
-            ? pathname === item.href
-            : pathname === item.href || pathname.startsWith(`${item.href}/`)
+          const isActive = isNavItemActive(pathname, item.href)
           const Icon = item.icon
           const badgeCount = item.notificationKey && !notificationsLoading ? counts[item.notificationKey] : item.badge
 
@@ -498,7 +506,7 @@ export function PersonaSidebar() {
         <Link href="/versotech_main/help" className="block group relative">
           <div className={cn(
             "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-            pathname === '/versotech_main/help'
+            isNavItemActive(pathname, '/versotech_main/help')
               ? isDark
                 ? "bg-gradient-to-r from-blue-600/20 to-blue-600/5 text-blue-400"
                 : "bg-blue-50 text-blue-700"
@@ -508,7 +516,7 @@ export function PersonaSidebar() {
           )}>
             <HelpCircle className={cn(
               "h-5 w-5 transition-colors",
-              pathname === '/versotech_main/help'
+              isNavItemActive(pathname, '/versotech_main/help')
                 ? isDark ? "text-blue-400" : "text-blue-600"
                 : isDark ? "text-gray-500 group-hover:text-white" : "text-gray-400 group-hover:text-gray-600"
             )} />
@@ -600,9 +608,7 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto scrollbar-hide px-3 py-2 space-y-1">
         {navItems.map((item) => {
-          const isActive = item.name === 'Dashboard'
-            ? pathname === item.href
-            : pathname === item.href || pathname.startsWith(`${item.href}/`)
+          const isActive = isNavItemActive(pathname, item.href)
           const Icon = item.icon
           const badgeCount = item.notificationKey && !notificationsLoading ? counts[item.notificationKey] : item.badge
           // Generate data-tour attribute from item name (lowercase, hyphenated)
@@ -651,7 +657,7 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
         >
           <div className={cn(
             "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-            pathname === '/versotech_main/help'
+            isNavItemActive(pathname, '/versotech_main/help')
               ? isDark
                 ? "bg-gradient-to-r from-blue-600/20 to-blue-600/5 text-blue-400"
                 : "bg-blue-50 text-blue-700"
@@ -661,7 +667,7 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
           )}>
             <HelpCircle className={cn(
               "h-5 w-5",
-              pathname === '/versotech_main/help'
+              isNavItemActive(pathname, '/versotech_main/help')
                 ? isDark ? "text-blue-400" : "text-blue-600"
                 : ""
             )} />

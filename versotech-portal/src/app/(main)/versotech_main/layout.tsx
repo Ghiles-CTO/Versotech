@@ -100,8 +100,7 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
   // Determine active persona for tour.
   // Source of truth order:
   // 1) Active persona id + type cookie
-  // 2) Active persona type cookie
-  // 3) Priority fallback (matches persona-context)
+  // 2) Priority fallback (matches persona-context)
   const personaPriority: Record<string, number> = {
     'ceo': 1,
     'staff': 2,
@@ -118,12 +117,6 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
     selectedPersonaForTour = userPersonas.find((persona) =>
       persona.entity_id === activePersonaIdCookie &&
       (!activePersonaTypeCookie || persona.persona_type === activePersonaTypeCookie)
-    ) || null
-  }
-
-  if (!selectedPersonaForTour && activePersonaTypeCookie) {
-    selectedPersonaForTour = userPersonas.find(
-      (persona) => persona.persona_type === activePersonaTypeCookie
     ) || null
   }
 

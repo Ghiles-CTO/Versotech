@@ -119,7 +119,7 @@ function TooltipArrow({ side, className = '' }: { side: ArrowSide; className?: s
 }
 
 export function TourTooltip({ step, stepNumber, persona = 'investor' }: TourTooltipProps) {
-  const { isActive, totalSteps, nextStep, prevStep, skipTour } = useTour()
+  const { isActive, totalSteps, nextStep, prevStep, skipTour, closeTour } = useTour()
   const pathname = usePathname()
   const [position, setPosition] = useState<Position | null>(null)
   const [mounted, setMounted] = useState(false)
@@ -297,7 +297,7 @@ export function TourTooltip({ step, stepNumber, persona = 'investor' }: TourTool
                     variant="ghost"
                     size="icon"
                     className={`h-8 w-8 ${colors.text} hover:bg-black/5 dark:hover:bg-white/5`}
-                    onClick={skipTour}
+                    onClick={closeTour}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -542,7 +542,7 @@ export function TourTooltip({ step, stepNumber, persona = 'investor' }: TourTool
               {/* Keyboard hints */}
               <div className="flex items-center gap-3 mb-4 text-xs text-muted-foreground/70">
                 <Keyboard className="h-3.5 w-3.5" />
-                <span className="font-mono">[Esc]</span> skip
+                <span className="font-mono">[Esc]</span> close
                 <span className="font-mono">[{'\u2190'}] [{'\u2192'}]</span> navigate
               </div>
 

@@ -46,6 +46,53 @@ const PersonaContext = createContext<PersonaContextState | undefined>(undefined)
 const ACTIVE_PERSONA_KEY = 'verso_active_persona'
 const ACTIVE_PERSONA_TYPE_COOKIE = 'verso_active_persona_type'
 const ACTIVE_PERSONA_ID_COOKIE = 'verso_active_persona_id'
+const PERSONA_PRIORITY: Record<Persona['persona_type'], number> = {
+  ceo: 1,
+  staff: 2,
+  arranger: 3,
+  introducer: 4,
+  partner: 5,
+  commercial_partner: 6,
+  lawyer: 7,
+  investor: 8,
+}
+
+function readCookie(name: string): string | null {
+  const prefix = `${name}=`
+  for (const chunk of document.cookie.split('; ')) {
+    if (chunk.startsWith(prefix)) {
+      return decodeURIComponent(chunk.slice(prefix.length))
+    }
+  }
+  return null
+}
+
+function selectPersonaByPriority(allPersonas: Persona[]): Persona | null {
+  if (allPersonas.length === 0) return null
+  return allPersonas.reduce((best, current) => {
+    const bestPriority = PERSONA_PRIORITY[best.persona_type] ?? 99
+    const currentPriority = PERSONA_PRIORITY[current.persona_type] ?? 99
+    return currentPriority < bestPriority ? current : best
+  })
+}
+
+function selectPersonaFromContext(allPersonas: Persona[]): Persona | null {
+  if (allPersonas.length === 0) return null
+
+  const cookiePersonaId = readCookie(ACTIVE_PERSONA_ID_COOKIE)
+  const cookiePersonaType = readCookie(ACTIVE_PERSONA_TYPE_COOKIE)
+  if (cookiePersonaId) {
+    const cookiePersona = allPersonas.find((persona) =>
+      persona.entity_id === cookiePersonaId &&
+      (!cookiePersonaType || persona.persona_type === cookiePersonaType)
+    )
+    if (cookiePersona) {
+      return cookiePersona
+    }
+  }
+
+  return selectPersonaByPriority(allPersonas)
+}
 
 /**
  * Set cookies that the server can read to determine active persona identity.
@@ -96,41 +143,7 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
       const fetchedPersonas = (data || []) as Persona[]
       setPersonas(fetchedPersonas)
 
-      // Restore active persona from localStorage or pick primary/first
-      const savedPersonaId = localStorage.getItem(ACTIVE_PERSONA_KEY)
-      let selectedPersona: Persona | null = null
-
-      if (savedPersonaId) {
-        selectedPersona = fetchedPersonas.find(p => p.entity_id === savedPersonaId) || null
-      }
-
-      if (!selectedPersona) {
-        // Priority order for default persona selection:
-        // 1. CEO (highest - Verso Capital management)
-        // 2. Staff (ops, rm)
-        // 3. Business personas (arranger, introducer, partner, commercial_partner)
-        // 4. Investor (lowest priority since they're often dual-persona with business roles)
-        const personaPriority: Record<string, number> = {
-          'ceo': 1,      // CEO is highest priority
-          'staff': 2,
-          'arranger': 3,
-          'introducer': 4,
-          'partner': 5,
-          'commercial_partner': 6,
-          'lawyer': 7,
-          'investor': 8, // Investor is lowest priority for dual-persona users
-        }
-
-        // ALWAYS apply priority order to select highest-priority persona
-        // This ensures CEO users always default to CEO view
-        if (fetchedPersonas.length > 0) {
-          selectedPersona = fetchedPersonas.reduce((best, current) => {
-            const bestPriority = personaPriority[best.persona_type] ?? 99
-            const currentPriority = personaPriority[current.persona_type] ?? 99
-            return currentPriority < bestPriority ? current : best
-          })
-        }
-      }
+      const selectedPersona = selectPersonaFromContext(fetchedPersonas)
 
       setActivePersona(selectedPersona)
       // Set cookie for server-side persona detection on initial load
@@ -150,6 +163,7 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
           (currentIdCookie && currentIdCookie !== selectedPersona.entity_id)
 
         setPersonaCookie(selectedPersona.persona_type, selectedPersona.entity_id)
+        localStorage.setItem(ACTIVE_PERSONA_KEY, selectedPersona.entity_id)
 
         // If cookie was stale, the server rendered the wrong dashboard
         // Force a refresh to get the correct server-side render
@@ -185,35 +199,7 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
     if (!initialPersonas.length) {
       refreshPersonas()
     } else {
-      // Set active from initial personas
-      const savedPersonaId = localStorage.getItem(ACTIVE_PERSONA_KEY)
-      let selectedPersona = savedPersonaId
-        ? initialPersonas.find(p => p.entity_id === savedPersonaId)
-        : null
-
-      if (!selectedPersona) {
-        // Same priority order as refreshPersonas
-        const personaPriority: Record<string, number> = {
-          'ceo': 1,
-          'staff': 2,
-          'arranger': 3,
-          'introducer': 4,
-          'partner': 5,
-          'commercial_partner': 6,
-          'lawyer': 7,
-          'investor': 8,
-        }
-
-        // ALWAYS apply priority order to select highest-priority persona
-        // This ensures CEO users always default to CEO view
-        if (initialPersonas.length > 0) {
-          selectedPersona = initialPersonas.reduce((best, current) => {
-            const bestPriority = personaPriority[best.persona_type] ?? 99
-            const currentPriority = personaPriority[current.persona_type] ?? 99
-            return currentPriority < bestPriority ? current : best
-          })
-        }
-      }
+      const selectedPersona = selectPersonaFromContext(initialPersonas)
 
       setActivePersona(selectedPersona ?? null)
       if (selectedPersona) {

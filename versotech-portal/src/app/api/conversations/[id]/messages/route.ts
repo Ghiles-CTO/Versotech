@@ -173,18 +173,35 @@ export async function POST(
       }
     })
     const conversationMetadata = ((conversation as { metadata?: unknown })?.metadata || {}) as Record<string, any>
+    const complianceMetadata =
+      conversationMetadata.compliance && typeof conversationMetadata.compliance === 'object'
+        ? (conversationMetadata.compliance as Record<string, any>)
+        : {}
     const bodyText = typeof body === 'string' ? body.trim() : ''
     const isAiAuthoredInput = (messageMetadata as Record<string, any> | undefined)?.ai_generated === true
     const isEligibleAgentThread = isAgentChatConversation(conversationMetadata)
+    const isComplianceResolved =
+      typeof complianceMetadata.status === 'string' &&
+      complianceMetadata.status.toLowerCase() === 'resolved'
     // Allow AI replies for the thread owner even if they also have staff roles (e.g. CEO
     // with investor persona). Only block AI when a different staff member responds manually.
     const isThreadOwner = conversation.created_by === userId
     const isStaffInterveningManually = isStaff && !isThreadOwner
     const agentReplyEligible = Boolean(
-      !isStaffInterveningManually && isEligibleAgentThread && bodyText && !isAiAuthoredInput
+      !isStaffInterveningManually &&
+        isEligibleAgentThread &&
+        !isComplianceResolved &&
+        bodyText &&
+        !isAiAuthoredInput
     )
 
-    if (!isStaffInterveningManually && isAgentChatConversation(conversationMetadata) && bodyText && !isAiAuthoredInput) {
+    if (
+      !isStaffInterveningManually &&
+      isEligibleAgentThread &&
+      !isComplianceResolved &&
+      bodyText &&
+      !isAiAuthoredInput
+    ) {
       await markAgentChatFirstContact(serviceSupabase, {
         conversationId,
         conversationMetadata,
@@ -205,4 +222,3 @@ export async function POST(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-
