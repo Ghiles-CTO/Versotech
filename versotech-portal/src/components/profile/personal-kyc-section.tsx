@@ -1,23 +1,25 @@
 'use client'
 
+import type { ComponentType, ReactNode } from 'react'
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
 import {
   User,
   Edit,
   Send,
-  CheckCircle2,
-  Clock,
   AlertCircle,
   Phone,
-  Mail,
   MapPin,
   Calendar,
   Globe,
   FileText,
+  Flag,
+  Building2,
+  CheckCircle,
+  XCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { MemberKYCEditDialog } from '@/components/shared/member-kyc-edit-dialog'
@@ -63,13 +65,6 @@ export type MemberKYCData = {
   kyc_notes: string | null
 }
 
-// KYC Status badges
-const KYC_STATUS_BADGES: Record<string, { label: string; className: string; icon: typeof CheckCircle2 }> = {
-  approved: { label: 'Approved', className: 'bg-emerald-100 text-emerald-800 border-emerald-200', icon: CheckCircle2 },
-  submitted: { label: 'Submitted', className: 'bg-blue-100 text-blue-800 border-blue-200', icon: Send },
-  pending: { label: 'Pending', className: 'bg-amber-100 text-amber-800 border-amber-200', icon: Clock },
-  rejected: { label: 'Rejected', className: 'bg-red-100 text-red-800 border-red-200', icon: AlertCircle },
-}
 
 interface PersonalKYCSectionProps {
   memberData: MemberKYCData | null
@@ -79,6 +74,92 @@ interface PersonalKYCSectionProps {
   profileEmail?: string | null
   profileName?: string | null
 }
+
+// --- Visual helpers (same style as IndividualKycDisplay) ---
+
+function hasValue(value: ReactNode): boolean {
+  return value !== null && value !== undefined && !(typeof value === 'string' && value.trim().length === 0)
+}
+
+function Field({
+  icon: Icon,
+  label,
+  value,
+  className,
+}: {
+  icon?: ComponentType<{ className?: string }>
+  label: string
+  value: ReactNode
+  className?: string
+}) {
+  return (
+    <div className={cn('rounded-md border border-border/70 bg-background p-3', className)}>
+      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
+      <div className="mt-1 min-h-5 text-sm font-medium text-foreground break-words">
+        <span className="inline-flex items-start gap-2">
+          {Icon ? <Icon className="h-4 w-4 text-muted-foreground" /> : null}
+          {hasValue(value) ? value : '-'}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function Section({
+  icon: Icon,
+  title,
+  children,
+  className,
+}: {
+  icon: ComponentType<{ className?: string }>
+  title: string
+  children: ReactNode
+  className?: string
+}) {
+  return (
+    <section className={cn('rounded-lg border border-border/70 bg-muted/20 p-4', className)}>
+      <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+        <Icon className="h-4 w-4 text-muted-foreground" />
+        {title}
+      </h4>
+      {children}
+    </section>
+  )
+}
+
+function BooleanField({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon?: ComponentType<{ className?: string }>
+  label: string
+  value: boolean | null | undefined
+}) {
+  return (
+    <div className="rounded-md border border-border/70 bg-background p-3">
+      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
+      <div className="mt-1">
+        <Badge variant={value ? 'secondary' : 'outline'} className="font-medium">
+          {Icon ? <Icon className="h-3 w-3 mr-1" /> : null}
+          {value ? (
+            <>
+              <CheckCircle className="h-3 w-3 mr-1" />
+              Yes
+            </>
+          ) : (
+            <>
+              <XCircle className="h-3 w-3 mr-1" />
+              No
+            </>
+          )}
+        </Badge>
+      </div>
+    </div>
+  )
+}
+
+// --- End visual helpers ---
 
 const MEMBER_API_ENDPOINTS: Record<PersonalKYCSectionProps['entityType'], string> = {
   investor: '/api/investors/me/members',
@@ -99,9 +180,6 @@ export function PersonalKYCSection({
 }: PersonalKYCSectionProps) {
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const statusBadge = KYC_STATUS_BADGES[memberData?.kyc_status || 'pending'] || KYC_STATUS_BADGES.pending
-  const StatusIcon = statusBadge.icon
 
   // Format date for display
   const formatDate = (dateStr: string | null) => {
@@ -211,117 +289,54 @@ export function PersonalKYCSection({
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Badge className={statusBadge.className}>
-              <StatusIcon className="h-3 w-3 mr-1" />
-              {statusBadge.label}
-            </Badge>
             <Button variant="outline" size="sm" onClick={() => setShowEditDialog(true)}>
               <Edit className="h-4 w-4 mr-2" />
               Edit
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Personal Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Identity Section */}
-            <div className="space-y-4">
-              <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Identity
-              </h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-muted-foreground text-xs">Full Name</Label>
-                  <div className="font-medium">
-                    {[memberData.first_name, memberData.middle_name, memberData.last_name, memberData.name_suffix]
-                      .filter(Boolean)
-                      .join(' ') || '-'}
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground text-xs">Date of Birth</Label>
-                  <div className="font-medium flex items-center gap-1">
-                    <Calendar className="h-3 w-3 text-muted-foreground" />
-                    {formatDate(memberData.date_of_birth)}
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground text-xs">Nationality</Label>
-                  <div className="font-medium flex items-center gap-1">
-                    <Globe className="h-3 w-3 text-muted-foreground" />
-                    {memberData.nationality || '-'}
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground text-xs">Country of Birth</Label>
-                  <div className="font-medium">{memberData.country_of_birth || '-'}</div>
-                </div>
-              </div>
+        <CardContent className="space-y-4">
+          {/* Personal Information */}
+          <Section icon={User} title="Personal Information">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Field
+                label="Full Name"
+                value={
+                  [memberData.first_name, memberData.middle_name, memberData.last_name, memberData.name_suffix]
+                    .filter(Boolean)
+                    .join(' ') || '-'
+                }
+              />
+              <Field icon={Calendar} label="Date of Birth" value={formatDate(memberData.date_of_birth)} />
+              <Field icon={Globe} label="Nationality" value={memberData.nationality} />
+              <Field icon={Flag} label="Country of Birth" value={memberData.country_of_birth} />
             </div>
+          </Section>
 
-            {/* Contact Section */}
-            <div className="space-y-4">
-              <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                Contact
-              </h4>
-              <div className="space-y-3">
-                {memberData.email && (
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span>{memberData.email}</span>
-                  </div>
-                )}
-                {(memberData.phone || memberData.phone_mobile) && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span>{memberData.phone_mobile || memberData.phone}</span>
-                  </div>
-                )}
-                {getFullAddress() && (
-                  <div className="flex items-start gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                    <span className="text-sm">{getFullAddress()}</span>
-                  </div>
-                )}
-              </div>
+          {/* Contact Information */}
+          <Section icon={Phone} title="Contact Information">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Field label="Email" value={memberData.email} />
+              <Field icon={Phone} label="Mobile" value={memberData.phone_mobile} />
+              <Field icon={Phone} label="Office Phone" value={memberData.phone_office} />
+              <Field icon={MapPin} label="Address" value={getFullAddress()} />
             </div>
-          </div>
+          </Section>
 
           {/* Tax Information */}
-          <div className="pt-4 border-t">
-            <div className="space-y-4">
-              <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Tax Information
-              </h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-muted-foreground text-xs">US Citizen</Label>
-                  <div className="font-medium">{memberData.is_us_citizen ? 'Yes' : 'No'}</div>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground text-xs">US Taxpayer</Label>
-                  <div className="font-medium">{memberData.is_us_taxpayer ? 'Yes' : 'No'}</div>
-                </div>
-                {memberData.is_us_taxpayer && memberData.us_taxpayer_id && (
-                  <div className="col-span-2">
-                    <Label className="text-muted-foreground text-xs">US Taxpayer ID</Label>
-                    <div className="font-medium">{memberData.us_taxpayer_id}</div>
-                  </div>
-                )}
-                <div className="col-span-2">
-                  <Label className="text-muted-foreground text-xs">Tax Residency</Label>
-                  <div className="font-medium">{memberData.country_of_tax_residency || '-'}</div>
-                </div>
-                <div className="col-span-2">
-                  <Label className="text-muted-foreground text-xs">Tax ID Number</Label>
-                  <div className="font-medium">{memberData.tax_id_number || '-'}</div>
-                </div>
-              </div>
+          <Section icon={FileText} title="Tax Information">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <BooleanField icon={Flag} label="US Citizen" value={memberData.is_us_citizen} />
+              <BooleanField icon={Building2} label="US Taxpayer" value={memberData.is_us_taxpayer} />
+              {memberData.is_us_taxpayer && (
+                <Field label="US Taxpayer ID" value={memberData.us_taxpayer_id} />
+              )}
+              <Field icon={Globe} label="Tax Residency" value={memberData.country_of_tax_residency} />
+              {memberData.tax_id_number && (
+                <Field label="Tax ID Number" value={memberData.tax_id_number} />
+              )}
             </div>
-          </div>
+          </Section>
 
           {/* Submit Button */}
           {!['submitted', 'approved'].includes(memberData.kyc_status || '') && (
