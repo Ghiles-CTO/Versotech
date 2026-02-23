@@ -17,6 +17,7 @@ export default [
       '.next.bak/**',
       'out/**',
       'build/**',
+      'public/pdf.worker.min.mjs',
       'next-env.d.ts',
       'src/__tests__/**',
       'apply-migration.js',
