@@ -1,11 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Upload, CheckCircle, XCircle, Clock, Download, AlertCircle, Info, Loader2, FileText, User } from 'lucide-react'
+import { Upload, CheckCircle, XCircle, Clock, Download, AlertCircle, Loader2, FileText, User, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   Table,
   TableBody,
@@ -17,6 +16,10 @@ import {
 import { toast } from 'sonner'
 import { KYCUploadDialog } from './kyc-upload-dialog'
 import { getDocumentTypeLabel } from '@/constants/kyc-document-types'
+import { isIdDocument, isProofOfAddress } from '@/lib/validation/document-validation'
+import { useDocumentViewer } from '@/hooks/useDocumentViewer'
+import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
+import { getFileTypeCategory } from '@/constants/document-preview.constants'
 
 interface KYCSubmission {
   id: string
@@ -29,6 +32,8 @@ interface KYCSubmission {
   version: number
   metadata?: any
   rejection_reason?: string | null
+  document_date?: string | null
+  document_valid_to?: string | null
   document?: {
     id: string
     name: string
@@ -61,6 +66,7 @@ export function KYCDocumentsTab() {
   const [loading, setLoading] = useState(true)
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const viewer = useDocumentViewer()
 
   useEffect(() => {
     loadSubmissions()
@@ -180,6 +186,26 @@ export function KYCDocumentsTab() {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
   }
 
+  const getRelevantDate = (submission: KYCSubmission) => {
+    if (isProofOfAddress(submission.document_type)) {
+      return submission.document_date
+    }
+    if (isIdDocument(submission.document_type)) {
+      return submission.expiry_date || submission.document_valid_to
+    }
+    return null
+  }
+
+  const getRelevantDateLabel = (submission: KYCSubmission) => {
+    if (isProofOfAddress(submission.document_type)) {
+      return 'Document Date'
+    }
+    if (isIdDocument(submission.document_type)) {
+      return 'Expiry Date'
+    }
+    return 'Date'
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -256,7 +282,7 @@ export function KYCDocumentsTab() {
                     {isEntityInvestor && <TableHead>Member</TableHead>}
                     <TableHead>Status</TableHead>
                     <TableHead>Uploaded</TableHead>
-                    <TableHead>Expiry</TableHead>
+                    <TableHead>Date</TableHead>
                     <TableHead>File</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -302,7 +328,19 @@ export function KYCDocumentsTab() {
                         {formatDate(submission.created_at)}
                       </TableCell>
                       <TableCell className="text-gray-600">
-                        {submission.expiry_date ? formatDate(submission.expiry_date) : '—'}
+                        {(() => {
+                          const relevantDate = getRelevantDate(submission)
+                          if (!relevantDate) return '—'
+
+                          return (
+                            <div className="flex flex-col">
+                              <span className="text-sm text-gray-900">{formatDate(relevantDate)}</span>
+                              <span className="text-xs text-gray-500">
+                                {getRelevantDateLabel(submission)}
+                              </span>
+                            </div>
+                          )
+                        })()}
                       </TableCell>
                       <TableCell>
                         {submission.document && (
@@ -318,18 +356,37 @@ export function KYCDocumentsTab() {
                       </TableCell>
                       <TableCell>
                         {submission.document && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDownload(submission.document!.id, submission.document!.name)}
-                            disabled={downloadingId === submission.document.id}
-                          >
-                            {downloadingId === submission.document.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Download className="h-4 w-4" />
+                          <div className="flex items-center gap-1">
+                            {getFileTypeCategory(submission.document.name, submission.document.mime_type) !== 'unsupported' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => viewer.openPreview({
+                                  id: submission.document!.id,
+                                  name: submission.document!.name,
+                                  file_name: submission.document!.name,
+                                  mime_type: submission.document!.mime_type,
+                                  file_size_bytes: submission.document!.file_size_bytes,
+                                })}
+                                title="Preview"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
                             )}
-                          </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDownload(submission.document!.id, submission.document!.name)}
+                              disabled={downloadingId === submission.document.id}
+                              title="Download"
+                            >
+                              {downloadingId === submission.document.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Download className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
                         )}
                       </TableCell>
                     </TableRow>
@@ -349,6 +406,17 @@ export function KYCDocumentsTab() {
         category={isEntityInvestor ? 'entity' : 'individual'}
         members={isEntityInvestor ? investorMembers : []}
         memberType={isEntityInvestor ? 'investor' : undefined}
+      />
+
+      <DocumentViewerFullscreen
+        isOpen={viewer.isOpen}
+        document={viewer.document}
+        previewUrl={viewer.previewUrl}
+        isLoading={viewer.isLoading}
+        error={viewer.error}
+        onClose={viewer.closePreview}
+        onDownload={viewer.downloadDocument}
+        watermark={viewer.watermark}
       />
     </div>
   )

@@ -12,7 +12,8 @@ import {
   Loader2,
   Shield,
   AlertCircle,
-  User
+  User,
+  Eye,
 } from 'lucide-react'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { toast } from 'sonner'
@@ -23,6 +24,9 @@ import {
   DocumentMetadataDialog,
   type UploadMetadataFields,
 } from '@/components/profile/document-metadata-dialog'
+import { useDocumentViewer } from '@/hooks/useDocumentViewer'
+import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
+import { getFileTypeCategory } from '@/constants/document-preview.constants'
 
 interface Document {
   id: string
@@ -85,6 +89,7 @@ export function IntroducerKYCDocumentsTab({
     documentType: string
     memberId?: string
   } | null>(null)
+  const viewer = useDocumentViewer()
   const currentKycStatus = kycStatus
   const isIndividualEntity = entityType === 'individual'
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
@@ -218,6 +223,18 @@ export function IntroducerKYCDocumentsTab({
       console.error('Download error:', error)
       toast.error('Failed to download document')
     }
+  }
+
+  const canPreviewDocument = (doc: Document) =>
+    getFileTypeCategory(doc.file_name || doc.name) !== 'unsupported'
+
+  const handlePreview = (doc: Document) => {
+    void viewer.openPreview({
+      id: doc.id,
+      name: doc.name,
+      file_name: doc.file_name,
+      file_size_bytes: doc.file_size_bytes,
+    })
   }
 
   const formatFileSize = (bytes?: number) => {
@@ -373,15 +390,28 @@ export function IntroducerKYCDocumentsTab({
 
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {uploaded ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDownload(uploaded)}
-                            className="h-8 w-8 p-0"
-                            title="Download"
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            {canPreviewDocument(uploaded) && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handlePreview(uploaded)}
+                                className="h-8 w-8 p-0"
+                                title="Preview"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDownload(uploaded)}
+                              className="h-8 w-8 p-0"
+                              title="Download"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </div>
                         ) : (
                           <>
                             <Input
@@ -482,15 +512,28 @@ export function IntroducerKYCDocumentsTab({
 
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {uploaded ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDownload(uploaded)}
-                              className="h-7 w-7 p-0"
-                              title="Download"
-                            >
-                              <Download className="h-3.5 w-3.5" />
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              {canPreviewDocument(uploaded) && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handlePreview(uploaded)}
+                                  className="h-7 w-7 p-0"
+                                  title="Preview"
+                                >
+                                  <Eye className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDownload(uploaded)}
+                                className="h-7 w-7 p-0"
+                                title="Download"
+                              >
+                                <Download className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
                           ) : (
                             <>
                               <Input
@@ -568,6 +611,17 @@ export function IntroducerKYCDocumentsTab({
           )
           setPendingUpload(null)
         }}
+      />
+
+      <DocumentViewerFullscreen
+        isOpen={viewer.isOpen}
+        document={viewer.document}
+        previewUrl={viewer.previewUrl}
+        isLoading={viewer.isLoading}
+        error={viewer.error}
+        onClose={viewer.closePreview}
+        onDownload={viewer.downloadDocument}
+        watermark={viewer.watermark}
       />
     </div>
   )
