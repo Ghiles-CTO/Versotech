@@ -187,7 +187,7 @@ export function ApprovalsListView({
               {onRejectClick && (
                 <Button
                   size="sm"
-                  variant="destructive"
+                  variant={approval.entity_type === 'account_activation' ? 'secondary' : 'destructive'}
                   onClick={(e) => {
                     e.stopPropagation()
                     onRejectClick(approval)
@@ -195,7 +195,7 @@ export function ApprovalsListView({
                   className="min-w-[100px]"
                 >
                   <XCircle className="h-4 w-4 mr-2" />
-                  Reject
+                  {approval.entity_type === 'account_activation' ? 'Request Info' : 'Reject'}
                 </Button>
               )}
             </div>

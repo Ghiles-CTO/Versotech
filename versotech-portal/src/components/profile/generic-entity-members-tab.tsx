@@ -386,7 +386,7 @@ export function GenericEntityMembersTab({
                     <TableCell>{getKYCStatusBadge(member.kyc_status)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        {member.kyc_status !== 'submitted' && member.kyc_status !== 'approved' && (
+                        {!['submitted', 'pending_review', 'under_review'].includes(member.kyc_status || '') && (
                           <Button
                             variant="outline"
                             size="sm"

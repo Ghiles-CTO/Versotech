@@ -4,6 +4,28 @@ import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
 import { checkAndUpdateEntityKYCStatus } from '@/lib/kyc/check-entity-kyc-status'
 import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
 
+const normalizeSnapshotValue = (value: unknown): string | null => {
+  if (value === null || value === undefined) return null
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? trimmed : null
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value)
+  }
+  return JSON.stringify(value)
+}
+
+const snapshotsMatch = (
+  nextSnapshot: Record<string, unknown>,
+  previousSnapshot: Record<string, unknown>
+) =>
+  Object.keys(nextSnapshot).every(
+    (key) =>
+      normalizeSnapshotValue(nextSnapshot[key]) ===
+      normalizeSnapshotValue(previousSnapshot[key])
+  )
+
 /**
  * POST /api/investors/me/submit-personal-kyc
  *
@@ -83,13 +105,52 @@ export async function POST() {
       )
     }
 
+    const reviewSnapshot: Record<string, unknown> = {
+      first_name: investor.first_name,
+      last_name: investor.last_name,
+      date_of_birth: investor.date_of_birth,
+      nationality: investor.nationality,
+      residential_street: investor.residential_street,
+      residential_country: investor.residential_country,
+      email: investor.email,
+      phone: investor.phone,
+    }
+
+    const { data: latestSubmission, error: latestSubmissionError } = await serviceSupabase
+      .from('kyc_submissions')
+      .select('metadata')
+      .eq('investor_id', investor.id)
+      .eq('document_type', 'personal_info')
+      .is('investor_member_id', null)
+      .order('submitted_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (latestSubmissionError) {
+      console.error('[submit-personal-kyc] Failed to load latest submission snapshot:', latestSubmissionError)
+      return NextResponse.json({ error: 'Failed to validate previous personal KYC submission' }, { status: 500 })
+    }
+
+    const latestSnapshotRaw = (latestSubmission?.metadata as Record<string, unknown> | undefined)?.review_snapshot
+    if (
+      latestSnapshotRaw &&
+      typeof latestSnapshotRaw === 'object' &&
+      !Array.isArray(latestSnapshotRaw) &&
+      snapshotsMatch(reviewSnapshot, latestSnapshotRaw as Record<string, unknown>)
+    ) {
+      return NextResponse.json(
+        { error: 'No personal information changes to submit' },
+        { status: 400 }
+      )
+    }
+
     const { data: existingPending } = await serviceSupabase
       .from('kyc_submissions')
       .select('id')
       .eq('investor_id', investor.id)
       .eq('document_type', 'personal_info')
       .is('investor_member_id', null)
-      .in('status', ['pending', 'under_review', 'approved'])
+      .in('status', ['pending', 'under_review'])
       .limit(1)
       .maybeSingle()
 
@@ -142,16 +203,7 @@ export async function POST() {
           entity_type: 'investor',
           entity_name: investor.display_name || investor.legal_name,
           submitted_by_user_id: user.id,
-          review_snapshot: {
-            first_name: investor.first_name,
-            last_name: investor.last_name,
-            date_of_birth: investor.date_of_birth,
-            nationality: investor.nationality,
-            residential_street: investor.residential_street,
-            residential_country: investor.residential_country,
-            email: investor.email,
-            phone: investor.phone,
-          }
+          review_snapshot: reviewSnapshot,
         }
       })
       .select('id')
@@ -180,7 +232,7 @@ export async function POST() {
 
     const currentAccountStatus = investor.account_approval_status?.toLowerCase() ?? null
     const shouldSetIncomplete = !currentAccountStatus ||
-      ['pending_onboarding', 'new', 'incomplete'].includes(currentAccountStatus)
+      ['pending_onboarding', 'new', 'incomplete', 'rejected'].includes(currentAccountStatus)
 
     const investorUpdateData: Record<string, unknown> = {
       updated_at: new Date().toISOString(),

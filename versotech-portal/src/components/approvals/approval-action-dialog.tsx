@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
   SelectContent,
@@ -25,7 +26,7 @@ import { toast } from 'sonner'
 
 interface ApprovalActionDialogProps {
   approval: Approval | null
-  action: 'approve' | 'reject' | null
+  action: 'approve' | 'reject' | 'request_info' | null
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess: () => void
@@ -42,6 +43,14 @@ const REJECTION_REASONS = [
   { value: 'other', label: 'Other (please specify)' }
 ]
 
+const REQUEST_INFO_SECTION_OPTIONS = [
+  { value: 'general', label: 'General Information' },
+  { value: 'entity_info', label: 'Entity Information' },
+  { value: 'personal_info', label: 'Personal Information' },
+  { value: 'documents', label: 'KYC Documents' },
+  { value: 'members', label: 'Members / Signatories' },
+]
+
 export function ApprovalActionDialog({
   approval,
   action,
@@ -51,11 +60,13 @@ export function ApprovalActionDialog({
 }: ApprovalActionDialogProps) {
   const [notes, setNotes] = useState('')
   const [rejectionReason, setRejectionReason] = useState('')
+  const [requestSections, setRequestSections] = useState<string[]>(['general'])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleClose = () => {
     setNotes('')
     setRejectionReason('')
+    setRequestSections(['general'])
     onOpenChange(false)
   }
 
@@ -68,7 +79,13 @@ export function ApprovalActionDialog({
       return
     }
 
+    if (action === 'request_info' && !notes.trim()) {
+      toast.error('Please provide what information is missing')
+      return
+    }
+
     setIsSubmitting(true)
+    const actionLabel = action === 'request_info' ? 'request more information for' : action
 
     try {
       const response = await fetch(`/api/approvals/${approval.id}/action`, {
@@ -80,22 +97,23 @@ export function ApprovalActionDialog({
         body: JSON.stringify({
           action,
           notes: notes.trim() || undefined,
-          rejection_reason: action === 'reject' ? rejectionReason : undefined
+          rejection_reason: action === 'reject' || action === 'request_info' ? rejectionReason || undefined : undefined,
+          request_sections: action === 'request_info' ? requestSections : undefined,
         })
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || `Failed to ${action} approval`)
+        throw new Error(data.error || `Failed to ${actionLabel} this approval`)
       }
 
       toast.success(data.message || `Successfully ${action}d approval`)
       handleClose()
       onSuccess()
     } catch (error) {
-      console.error(`Error ${action}ing approval:`, error)
-      toast.error(error instanceof Error ? error.message : `Failed to ${action} approval`)
+      console.error(`Error processing ${action}:`, error)
+      toast.error(error instanceof Error ? error.message : `Failed to ${actionLabel} this approval`)
     } finally {
       setIsSubmitting(false)
     }
@@ -104,6 +122,7 @@ export function ApprovalActionDialog({
   if (!approval || !action) return null
 
   const isApprove = action === 'approve'
+  const isRequestInfo = action === 'request_info'
   const entityAmount = approval.entity_metadata?.requested_amount ||
     approval.entity_metadata?.amount
 
@@ -117,6 +136,11 @@ export function ApprovalActionDialog({
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
                 Approve Request
               </>
+            ) : isRequestInfo ? (
+              <>
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+                Request More Information
+              </>
             ) : (
               <>
                 <XCircle className="h-5 w-5 text-red-600" />
@@ -127,6 +151,8 @@ export function ApprovalActionDialog({
           <DialogDescription>
             {isApprove
               ? 'Review the details below and confirm your approval.'
+              : isRequestInfo
+              ? 'Specify what is missing. The approval stays pending until resubmission.'
               : 'Provide a reason for rejection. The requester will be notified.'
             }
           </DialogDescription>
@@ -193,11 +219,11 @@ export function ApprovalActionDialog({
           {!isApprove && (
             <div className="space-y-2">
               <Label htmlFor="rejection-reason" className="text-sm font-medium">
-                Rejection Reason *
+                {isRequestInfo ? 'Reason (Optional)' : 'Rejection Reason *'}
               </Label>
               <Select value={rejectionReason} onValueChange={setRejectionReason}>
                 <SelectTrigger id="rejection-reason">
-                  <SelectValue placeholder="Select a reason" />
+                  <SelectValue placeholder={isRequestInfo ? 'Select a reason (optional)' : 'Select a reason'} />
                 </SelectTrigger>
                 <SelectContent>
                   {REJECTION_REASONS.map((reason) => (
@@ -210,16 +236,43 @@ export function ApprovalActionDialog({
             </div>
           )}
 
+          {isRequestInfo && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Requested Sections</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-lg border border-border p-3">
+                {REQUEST_INFO_SECTION_OPTIONS.map((option) => (
+                  <label key={option.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                    <Checkbox
+                      checked={requestSections.includes(option.value)}
+                      onCheckedChange={(checked) => {
+                        setRequestSections((prev) => {
+                          if (checked) {
+                            return prev.includes(option.value) ? prev : [...prev, option.value]
+                          }
+                          const next = prev.filter(section => section !== option.value)
+                          return next.length > 0 ? next : ['general']
+                        })
+                      }}
+                    />
+                    <span>{option.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Notes Field */}
           <div className="space-y-2">
             <Label htmlFor="notes" className="text-sm font-medium">
-              {isApprove ? 'Additional Notes (Optional)' : 'Additional Details *'}
+              {isApprove ? 'Additional Notes (Optional)' : isRequestInfo ? 'What should be updated? *' : 'Additional Details *'}
             </Label>
             <Textarea
               id="notes"
               placeholder={
                 isApprove
                   ? 'Add any notes about this approval...'
+                  : isRequestInfo
+                  ? 'Specify exactly what information or documents should be corrected...'
                   : 'Provide specific details about why this request is being rejected...'
               }
               value={notes}
@@ -230,6 +283,8 @@ export function ApprovalActionDialog({
             <p className="text-xs text-muted-foreground">
               {isApprove
                 ? 'Notes will be saved in the approval history.'
+                : isRequestInfo
+                ? 'This message will be sent to the investor and shown in their profile.'
                 : 'This message will be sent to the requester along with the rejection reason.'
               }
             </p>
@@ -245,9 +300,9 @@ export function ApprovalActionDialog({
             Cancel
           </Button>
           <Button
-            variant={isApprove ? 'default' : 'destructive'}
+            variant={isApprove ? 'default' : isRequestInfo ? 'secondary' : 'destructive'}
             onClick={handleSubmit}
-            disabled={isSubmitting || (!isApprove && !rejectionReason)}
+            disabled={isSubmitting || (!isApprove && !isRequestInfo && !rejectionReason) || (isRequestInfo && !notes.trim())}
           >
             {isSubmitting ? (
               <>
@@ -259,6 +314,11 @@ export function ApprovalActionDialog({
                   <>
                     <CheckCircle2 className="mr-2 h-4 w-4" />
                     Confirm Approval
+                  </>
+                ) : isRequestInfo ? (
+                  <>
+                    <AlertTriangle className="mr-2 h-4 w-4" />
+                    Request Info
                   </>
                 ) : (
                   <>

@@ -71,7 +71,7 @@ export function ApprovalsPageClient({
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedApproval, setSelectedApproval] = useState<Approval | null>(null)
-  const [dialogAction, setDialogAction] = useState<'approve' | 'reject' | null>(null)
+  const [dialogAction, setDialogAction] = useState<'approve' | 'reject' | 'request_info' | null>(null)
 
   // Detail drawer state
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false)
@@ -190,7 +190,7 @@ export function ApprovalsPageClient({
 
   const handleRejectClick = (approval: Approval) => {
     setSelectedApproval(approval)
-    setDialogAction('reject')
+    setDialogAction(approval.entity_type === 'account_activation' ? 'request_info' : 'reject')
     setDialogOpen(true)
   }
 
@@ -226,15 +226,21 @@ export function ApprovalsPageClient({
 
   const handleDrawerReject = async (approvalId: string, reason: string) => {
     try {
+      const targetApproval = approvals.find(approval => approval.id === approvalId)
+      const isAccountActivation = targetApproval?.entity_type === 'account_activation'
       const response = await fetch(`/api/approvals/${approvalId}/action`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ action: 'reject', rejection_reason: reason })
+        body: JSON.stringify(
+          isAccountActivation
+            ? { action: 'request_info', notes: reason, request_sections: ['general'] }
+            : { action: 'reject', rejection_reason: reason }
+        )
       })
 
       if (!response.ok) throw new Error('Rejection failed')
-      toast.success('Approval rejected')
+      toast.success(isAccountActivation ? 'More information requested' : 'Approval rejected')
       await refreshData()
     } catch (error) {
       console.error('Error rejecting:', error)

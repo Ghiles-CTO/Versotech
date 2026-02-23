@@ -75,7 +75,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     const { data: existingMember } = await serviceSupabase
       .from('commercial_partner_members')
-      .select('id, email')
+      .select('id, email, kyc_status')
       .eq('id', memberId)
       .eq('commercial_partner_id', cpUser.commercial_partner_id)
       .single()
@@ -111,10 +111,15 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       entityType: 'commercial_partner',
     })
 
+    const kycReset = (existingMember.kyc_status === 'approved' || existingMember.kyc_status === 'submitted')
+      ? { kyc_status: 'pending' as const, kyc_approved_at: null }
+      : {}
+
     const { data: updatedMember, error: updateError } = await serviceSupabase
       .from('commercial_partner_members')
       .update({
         ...updateData,
+        ...kycReset,
         updated_at: new Date().toISOString()
       })
       .eq('id', memberId)

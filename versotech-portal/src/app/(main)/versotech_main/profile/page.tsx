@@ -4,6 +4,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { ProfilePageClient } from '@/components/profile/profile-page-client'
 import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
 import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
+import { resolveActivePersona, type PersonaIdentity } from '@/lib/persona/active-persona'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -24,9 +25,21 @@ export default async function ProfilePage({
     redirect('/versotech_main/login')
   }
 
-  // Get active persona from cookie (set by persona switcher)
   const cookieStore = await cookies()
-  const activePersonaType = cookieStore.get('verso_active_persona_type')?.value
+  const cookiePersonaType = cookieStore.get('verso_active_persona_type')?.value
+  const cookiePersonaId = cookieStore.get('verso_active_persona_id')?.value
+
+  const { data: personas, error: personaError } = await supabase.rpc('get_user_personas', {
+    p_user_id: user.id,
+  })
+  if (personaError) {
+    console.warn('[ProfilePage] Persona lookup failed:', personaError.message)
+  }
+  const activePersona = resolveActivePersona((personas || []) as PersonaIdentity[], {
+    cookiePersonaType,
+    cookiePersonaId,
+  })
+  const activePersonaType = activePersona?.persona_type ?? null
 
   // Fetch complete profile data
   const { data: profile, error } = await supabase
@@ -52,6 +65,8 @@ export default async function ProfilePage({
   let investorInfo = null
   let investorUserInfo = null
   let latestEntityInfoSnapshot: Record<string, unknown> | null = null
+  let latestPersonalInfoSnapshot: Record<string, unknown> | null = null
+  let accountRequestInfo: Record<string, unknown> | null = null
 
   // Check if user is associated with an investor
   const { link: investorUser, error: investorUserError } = await resolvePrimaryInvestorLink(
@@ -287,6 +302,47 @@ export default async function ProfilePage({
           latestEntityInfoSnapshot = reviewSnapshot as Record<string, unknown>
         }
       }
+
+      const { data: latestPersonalInfoSubmission, error: latestPersonalInfoError } = await serviceSupabase
+        .from('kyc_submissions')
+        .select('metadata')
+        .eq('investor_id', investor.id)
+        .eq('document_type', 'personal_info')
+        .is('investor_member_id', null)
+        .order('submitted_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (latestPersonalInfoError) {
+        console.error('[ProfilePage] Error fetching latest personal_info snapshot:', latestPersonalInfoError)
+      } else {
+        const reviewSnapshot = (latestPersonalInfoSubmission?.metadata as Record<string, unknown> | undefined)?.review_snapshot
+        if (reviewSnapshot && typeof reviewSnapshot === 'object' && !Array.isArray(reviewSnapshot)) {
+          latestPersonalInfoSnapshot = reviewSnapshot as Record<string, unknown>
+        }
+      }
+
+      const { data: pendingAccountApproval, error: pendingAccountApprovalError } = await serviceSupabase
+        .from('approvals')
+        .select('entity_metadata')
+        .eq('entity_type', 'account_activation')
+        .eq('entity_id', investor.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (pendingAccountApprovalError) {
+        console.error('[ProfilePage] Error fetching pending account request-info metadata:', pendingAccountApprovalError)
+      } else {
+        const requestInfo = (pendingAccountApproval?.entity_metadata as Record<string, unknown> | undefined)?.request_info
+        if (requestInfo && typeof requestInfo === 'object' && !Array.isArray(requestInfo)) {
+          const active = (requestInfo as Record<string, unknown>).active === true
+          if (active) {
+            accountRequestInfo = requestInfo as Record<string, unknown>
+          }
+        }
+      }
     }
   }
 
@@ -339,6 +395,8 @@ export default async function ProfilePage({
       investorUserInfo={investorUserInfo}
       memberInfo={memberInfo}
       latestEntityInfoSnapshot={latestEntityInfoSnapshot}
+      latestPersonalInfoSnapshot={latestPersonalInfoSnapshot}
+      accountRequestInfo={accountRequestInfo}
     />
   )
 }

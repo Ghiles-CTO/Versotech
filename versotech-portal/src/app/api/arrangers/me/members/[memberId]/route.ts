@@ -87,7 +87,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     // Verify member belongs to user's arranger
     const { data: existingMember } = await serviceSupabase
       .from('arranger_members')
-      .select('id, email')
+      .select('id, email, kyc_status')
       .eq('id', memberId)
       .eq('arranger_id', arrangerUser.arranger_id)
       .single()
@@ -125,11 +125,16 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       entityType: 'arranger',
     })
 
+    const kycReset = (existingMember.kyc_status === 'approved' || existingMember.kyc_status === 'submitted')
+      ? { kyc_status: 'pending' as const, kyc_approved_at: null }
+      : {}
+
     // Update member
     const { data: updatedMember, error: updateError } = await serviceSupabase
       .from('arranger_members')
       .update({
         ...updateData,
+        ...kycReset,
         updated_at: new Date().toISOString()
       })
       .eq('id', memberId)

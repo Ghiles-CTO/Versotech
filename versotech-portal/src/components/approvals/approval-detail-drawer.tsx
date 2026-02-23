@@ -148,6 +148,7 @@ export function ApprovalDetailDrawer({
   }, [approval])
 
   if (!approval) return null
+  const isAccountActivationApproval = approval.entity_type === 'account_activation'
 
   const handleApprove = async () => {
     if (!onApprove) return
@@ -164,7 +165,11 @@ export function ApprovalDetailDrawer({
 
   const handleReject = async () => {
     if (!onReject) return
-    const reason = prompt('Please provide a rejection reason:')
+    const reason = prompt(
+      isAccountActivationApproval
+        ? 'What information should the investor update?'
+        : 'Please provide a rejection reason:'
+    )
     if (!reason) return
 
     setIsRejecting(true)
@@ -312,11 +317,13 @@ export function ApprovalDetailDrawer({
                   <Button
                     onClick={handleReject}
                     disabled={isRejecting}
-                    variant="destructive"
-                    className="flex-1 text-white"
+                    variant={isAccountActivationApproval ? 'secondary' : 'destructive'}
+                    className={isAccountActivationApproval ? 'flex-1' : 'flex-1 text-white'}
                   >
                     <XCircle className="h-4 w-4 mr-2" />
-                    {isRejecting ? 'Rejecting...' : 'Reject'}
+                    {isRejecting
+                      ? (isAccountActivationApproval ? 'Requesting info...' : 'Rejecting...')
+                      : (isAccountActivationApproval ? 'Request Info' : 'Reject')}
                   </Button>
                 )}
               </div>

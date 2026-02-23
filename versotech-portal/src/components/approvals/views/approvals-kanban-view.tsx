@@ -114,11 +114,15 @@ export function ApprovalsKanbanView({ approvals, onApprovalClick, onApproveClick
                         <Button
                           variant="outline"
                           size="sm"
-                          className="flex-1 h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                          className={
+                            approval.entity_type === 'account_activation'
+                              ? 'flex-1 h-7 text-xs text-amber-700 hover:text-amber-800 hover:bg-amber-50 dark:hover:bg-amber-950'
+                              : 'flex-1 h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950'
+                          }
                           onClick={() => onRejectClick(approval)}
                         >
                           <XCircle className="h-3 w-3 mr-1" />
-                          Reject
+                          {approval.entity_type === 'account_activation' ? 'Request Info' : 'Reject'}
                         </Button>
                       )}
                     </div>

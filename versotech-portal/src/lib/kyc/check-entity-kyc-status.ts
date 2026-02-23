@@ -93,6 +93,9 @@ type SubmissionRow = {
   id: string
   document_type: string
   status: string
+  submitted_at?: string | null
+  reviewed_at?: string | null
+  metadata?: Record<string, unknown> | null
   investor_member_id?: string | null
   partner_member_id?: string | null
   introducer_member_id?: string | null
@@ -108,6 +111,259 @@ type MemberRow = {
   role?: string | null
   is_signatory?: boolean | null
   linked_user_id?: string | null
+}
+
+type AccountRequestInfoSection =
+  | 'general'
+  | 'entity_info'
+  | 'personal_info'
+  | 'documents'
+  | 'members'
+
+type AccountRequestInfoState = {
+  active: boolean
+  requested_at: string | null
+  requested_by: string | null
+  reason: string | null
+  details: string | null
+  sections: AccountRequestInfoSection[]
+}
+
+type AccountActivationApprovalState = {
+  hasPending: boolean
+  hasApproved: boolean
+  pendingApprovalId: string | null
+  pendingEntityMetadata: Record<string, unknown> | null
+  activeRequestInfo: AccountRequestInfoState | null
+}
+
+function isAccountRequestInfoSection(value: unknown): value is AccountRequestInfoSection {
+  return (
+    value === 'general' ||
+    value === 'entity_info' ||
+    value === 'personal_info' ||
+    value === 'documents' ||
+    value === 'members'
+  )
+}
+
+function parseActiveAccountRequestInfo(entityMetadata: unknown): AccountRequestInfoState | null {
+  if (!entityMetadata || typeof entityMetadata !== 'object' || Array.isArray(entityMetadata)) {
+    return null
+  }
+
+  const requestInfo = (entityMetadata as Record<string, unknown>).request_info
+  if (!requestInfo || typeof requestInfo !== 'object' || Array.isArray(requestInfo)) {
+    return null
+  }
+
+  const parsed = requestInfo as Record<string, unknown>
+  if (parsed.active !== true) {
+    return null
+  }
+
+  const rawSections = Array.isArray(parsed.sections) ? parsed.sections : []
+  const sections = rawSections.filter(isAccountRequestInfoSection)
+
+  return {
+    active: true,
+    requested_at: typeof parsed.requested_at === 'string' ? parsed.requested_at : null,
+    requested_by: typeof parsed.requested_by === 'string' ? parsed.requested_by : null,
+    reason: typeof parsed.reason === 'string' ? parsed.reason : null,
+    details: typeof parsed.details === 'string' ? parsed.details : null,
+    sections: sections.length > 0 ? sections : ['general'],
+  }
+}
+
+function getSubmissionDecisionTimestamp(submission: SubmissionRow): number | null {
+  const rawValue = submission.reviewed_at || submission.submitted_at
+  if (!rawValue) return null
+  const parsed = Date.parse(rawValue)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function getFreshApprovedSubmissionsAfter(
+  approvedSubmissions: SubmissionRow[],
+  requestedAt: string | null
+) {
+  if (!requestedAt) return approvedSubmissions
+  const requestedAtMs = Date.parse(requestedAt)
+  if (!Number.isFinite(requestedAtMs)) return approvedSubmissions
+
+  return approvedSubmissions.filter((submission) => {
+    const decisionTime = getSubmissionDecisionTimestamp(submission)
+    return decisionTime !== null && decisionTime > requestedAtMs
+  })
+}
+
+function hasSatisfiedActiveRequestInfo(params: {
+  requestInfo: AccountRequestInfoState
+  entityType: KYCEntityType
+  isIndividual: boolean
+  submissionMemberColumn: string
+  relevantMembers: MemberRow[]
+  approvedSubmissions: SubmissionRow[]
+}) {
+  const {
+    requestInfo,
+    entityType,
+    isIndividual,
+    submissionMemberColumn,
+    relevantMembers,
+    approvedSubmissions,
+  } = params
+
+  const freshApprovedSubmissions = getFreshApprovedSubmissionsAfter(
+    approvedSubmissions,
+    requestInfo.requested_at
+  )
+
+  if (freshApprovedSubmissions.length === 0) {
+    return false
+  }
+
+  const sectionSet = new Set<AccountRequestInfoSection>(
+    requestInfo.sections.length > 0 ? requestInfo.sections : ['general']
+  )
+  const checks: boolean[] = []
+
+  if (sectionSet.has('general')) {
+    checks.push(freshApprovedSubmissions.length > 0)
+  }
+
+  if (sectionSet.has('entity_info')) {
+    checks.push(
+      hasApprovedSubmissionForType(
+        freshApprovedSubmissions,
+        'entity_info',
+        submissionMemberColumn,
+        null
+      )
+    )
+  }
+
+  if (sectionSet.has('documents')) {
+    if (isIndividual && entityType === 'investor') {
+      checks.push(
+        hasApprovedIdDocument(freshApprovedSubmissions, submissionMemberColumn, null) &&
+        hasApprovedProofOfAddress(freshApprovedSubmissions, submissionMemberColumn, null)
+      )
+    } else if (isIndividual) {
+      checks.push(
+        relevantMembers.length > 0 &&
+        relevantMembers.every((member) =>
+          hasApprovedIdDocument(
+            freshApprovedSubmissions,
+            submissionMemberColumn,
+            member.id,
+            false
+          ) &&
+          hasApprovedProofOfAddress(
+            freshApprovedSubmissions,
+            submissionMemberColumn,
+            member.id,
+            false
+          )
+        )
+      )
+    } else {
+      const requiredEntityDocs = REQUIRED_ENTITY_DOCUMENTS[entityType] || []
+      checks.push(
+        requiredEntityDocs.every((documentType) =>
+          hasApprovedEntityDocument(
+            freshApprovedSubmissions,
+            documentType,
+            submissionMemberColumn
+          )
+        )
+      )
+    }
+  }
+
+  if (sectionSet.has('personal_info')) {
+    if (isIndividual && entityType === 'investor') {
+      checks.push(
+        hasApprovedSubmissionForType(
+          freshApprovedSubmissions,
+          'personal_info',
+          submissionMemberColumn,
+          null
+        )
+      )
+    } else {
+      checks.push(
+        relevantMembers.length > 0 &&
+        relevantMembers.every((member) =>
+          hasApprovedSubmissionForType(
+            freshApprovedSubmissions,
+            'personal_info',
+            submissionMemberColumn,
+            member.id
+          )
+        )
+      )
+    }
+  }
+
+  if (sectionSet.has('members')) {
+    const hasFreshMemberEvidence = freshApprovedSubmissions.some(
+      (submission) => !!(submission as any)[submissionMemberColumn]
+    )
+
+    const allMembersCurrentlyApproved =
+      relevantMembers.length > 0 &&
+      relevantMembers.every((member) => {
+        const hasPersonalInfo = hasApprovedSubmissionForType(
+          approvedSubmissions,
+          'personal_info',
+          submissionMemberColumn,
+          member.id
+        )
+        return (
+          hasPersonalInfo &&
+          hasApprovedIdDocument(approvedSubmissions, submissionMemberColumn, member.id, false) &&
+          hasApprovedProofOfAddress(approvedSubmissions, submissionMemberColumn, member.id, false)
+        )
+      })
+
+    checks.push(allMembersCurrentlyApproved && hasFreshMemberEvidence)
+  }
+
+  return checks.length > 0 && checks.every(Boolean)
+}
+
+async function clearActiveRequestInfoMarker(params: {
+  supabase: SupabaseClient
+  approvalId: string
+  currentEntityMetadata: Record<string, unknown> | null
+  requestInfo: AccountRequestInfoState
+}) {
+  const { supabase, approvalId, currentEntityMetadata, requestInfo } = params
+  const resolvedAt = new Date().toISOString()
+  const metadata = currentEntityMetadata ? { ...currentEntityMetadata } : {}
+  const history = Array.isArray(metadata.request_info_history)
+    ? metadata.request_info_history.filter((entry) => !!entry && typeof entry === 'object')
+    : []
+
+  const resolvedInfo = {
+    ...requestInfo,
+    active: false,
+    resolved_at: resolvedAt,
+  }
+
+  await supabase
+    .from('approvals')
+    .update({
+      entity_metadata: {
+        ...metadata,
+        request_info: resolvedInfo,
+        last_request_info: resolvedInfo,
+        request_info_history: [...history, resolvedInfo],
+      },
+      updated_at: resolvedAt,
+    })
+    .eq('id', approvalId)
+    .eq('status', 'pending')
 }
 
 function getSubmissionEntityColumn(entityType: KYCEntityType) {
@@ -450,18 +706,30 @@ async function createAccountActivationApproval(
 async function getAccountActivationApprovalState(
   supabase: SupabaseClient,
   entityId: string
-): Promise<{ hasPending: boolean; hasApproved: boolean }> {
+): Promise<AccountActivationApprovalState> {
   const { data } = await supabase
     .from('approvals')
-    .select('status')
+    .select('id, status, entity_metadata, created_at')
     .eq('entity_type', 'account_activation')
     .eq('entity_id', entityId)
     .in('status', ['pending', 'approved'])
+    .order('created_at', { ascending: false })
 
-  const rows = (data || []) as Array<{ status?: string | null }>
+  const rows = (data || []) as Array<{
+    id: string
+    status?: string | null
+    entity_metadata?: Record<string, unknown> | null
+  }>
+  const latestPending = rows.find(row => normalizeStatus(row.status) === 'pending') || null
+
   return {
     hasPending: rows.some(row => normalizeStatus(row.status) === 'pending'),
     hasApproved: rows.some(row => normalizeStatus(row.status) === 'approved'),
+    pendingApprovalId: latestPending?.id || null,
+    pendingEntityMetadata: latestPending?.entity_metadata || null,
+    activeRequestInfo: latestPending
+      ? parseActiveAccountRequestInfo(latestPending.entity_metadata)
+      : null,
   }
 }
 
@@ -501,6 +769,9 @@ export async function checkAndUpdateEntityKYCStatus(
         id,
         document_type,
         status,
+        submitted_at,
+        reviewed_at,
+        metadata,
         investor_member_id,
         partner_member_id,
         introducer_member_id,
@@ -652,6 +923,21 @@ export async function checkAndUpdateEntityKYCStatus(
     const currentAccountStatus = normalizeStatus(entity.account_approval_status)
 
     if (!requirementsMet) {
+      if (currentKycStatus === 'approved' && currentAccountStatus !== 'approved') {
+        const pendingKycUpdate: Record<string, unknown> = {
+          kyc_status: 'pending',
+          updated_at: new Date().toISOString(),
+        }
+
+        if (entityType !== 'investor') {
+          pendingKycUpdate.kyc_approved_at = null
+        }
+
+        await supabase
+          .from(config.entityTable)
+          .update(pendingKycUpdate)
+          .eq('id', entityId)
+      }
       return
     }
 
@@ -674,6 +960,30 @@ export async function checkAndUpdateEntityKYCStatus(
     }
 
     const activationState = await getAccountActivationApprovalState(supabase, entityId)
+
+    if (activationState.activeRequestInfo) {
+      const requestInfoSatisfied = hasSatisfiedActiveRequestInfo({
+        requestInfo: activationState.activeRequestInfo,
+        entityType,
+        isIndividual,
+        submissionMemberColumn,
+        relevantMembers,
+        approvedSubmissions,
+      })
+
+      if (!requestInfoSatisfied) {
+        return
+      }
+
+      if (activationState.pendingApprovalId) {
+        await clearActiveRequestInfoMarker({
+          supabase,
+          approvalId: activationState.pendingApprovalId,
+          currentEntityMetadata: activationState.pendingEntityMetadata,
+          requestInfo: activationState.activeRequestInfo,
+        })
+      }
+    }
 
     // Manual lock path:
     // If this entity had a previously approved activation and is no longer approved at account level,

@@ -142,6 +142,8 @@ interface ProfilePageClientProps {
   investorUserInfo?: InvestorUserInfo | null
   memberInfo?: MemberKYCData | null
   latestEntityInfoSnapshot?: Record<string, unknown> | null
+  latestPersonalInfoSnapshot?: Record<string, unknown> | null
+  accountRequestInfo?: Record<string, unknown> | null
 }
 
 // Status badge configurations
@@ -229,6 +231,44 @@ const hasEntityOverviewChanges = (
   )
 }
 
+const hasPersonalInfoOverviewChanges = (
+  investorInfo: InvestorInfo | null | undefined,
+  snapshot: Record<string, unknown> | null | undefined
+): boolean => {
+  if (!investorInfo) return false
+  if (!snapshot || Object.keys(snapshot).length === 0) return true
+
+  const checks: Array<{ current: unknown; keys: readonly string[] }> = [
+    { current: investorInfo.first_name, keys: ['first_name'] },
+    { current: investorInfo.middle_name, keys: ['middle_name'] },
+    { current: investorInfo.last_name, keys: ['last_name'] },
+    { current: investorInfo.name_suffix, keys: ['name_suffix'] },
+    { current: investorInfo.date_of_birth, keys: ['date_of_birth'] },
+    { current: investorInfo.country_of_birth, keys: ['country_of_birth'] },
+    { current: investorInfo.nationality, keys: ['nationality'] },
+    { current: investorInfo.email, keys: ['email'] },
+    { current: investorInfo.phone_mobile, keys: ['phone_mobile'] },
+    { current: investorInfo.phone_office, keys: ['phone_office'] },
+    { current: investorInfo.residential_street, keys: ['residential_street', 'address_line_1'] },
+    { current: investorInfo.residential_line_2, keys: ['residential_line_2', 'address_line_2'] },
+    { current: investorInfo.residential_city, keys: ['residential_city', 'city'] },
+    { current: investorInfo.residential_state, keys: ['residential_state', 'state_province'] },
+    { current: investorInfo.residential_postal_code, keys: ['residential_postal_code', 'postal_code'] },
+    { current: investorInfo.residential_country, keys: ['residential_country', 'country'] },
+    { current: investorInfo.is_us_citizen, keys: ['is_us_citizen'] },
+    { current: investorInfo.is_us_taxpayer, keys: ['is_us_taxpayer'] },
+    { current: investorInfo.us_taxpayer_id, keys: ['us_taxpayer_id'] },
+    { current: investorInfo.country_of_tax_residency, keys: ['country_of_tax_residency', 'tax_residency'] },
+    { current: investorInfo.tax_id_number, keys: ['tax_id_number'] },
+  ]
+
+  return checks.some(
+    ({ current, keys }) =>
+      normalizeEntityFieldValue(current) !==
+      normalizeEntityFieldValue(pickSnapshotValue(snapshot, keys))
+  )
+}
+
 export function ProfilePageClient({
   userEmail,
   profile: initialProfile,
@@ -238,6 +278,8 @@ export function ProfilePageClient({
   investorUserInfo,
   memberInfo,
   latestEntityInfoSnapshot,
+  latestPersonalInfoSnapshot,
+  accountRequestInfo,
 }: ProfilePageClientProps) {
   const [profile, setProfile] = useState(initialProfile)
   const [showKycDialog, setShowKycDialog] = useState(false)
@@ -251,11 +293,33 @@ export function ProfilePageClient({
   const isEntity = hasInvestorEntity && investorInfo?.type !== 'individual'
   const isStaff = variant === 'staff'
   const entityKycStatus = (investorInfo?.kyc_status || '').toLowerCase()
-  const isEntitySubmitBlocked = ['pending_review', 'pending', 'under_review'].includes(entityKycStatus)
+  const activeRequestSections = Array.isArray(accountRequestInfo?.sections)
+    ? accountRequestInfo.sections.filter((section): section is string => typeof section === 'string')
+    : []
+  const hasActiveAccountInfoRequest = !!accountRequestInfo
+  const requestTouchesEntityInfo = !hasActiveAccountInfoRequest
+    ? false
+    : activeRequestSections.length === 0 ||
+      activeRequestSections.includes('general') ||
+      activeRequestSections.includes('entity_info') ||
+      activeRequestSections.includes('documents') ||
+      activeRequestSections.includes('members')
+  const requestTouchesPersonalInfo = !hasActiveAccountInfoRequest
+    ? false
+    : activeRequestSections.length === 0 ||
+      activeRequestSections.includes('general') ||
+      activeRequestSections.includes('personal_info') ||
+      activeRequestSections.includes('documents') ||
+      activeRequestSections.includes('members')
+  const isEntitySubmitBlocked = !hasActiveAccountInfoRequest && ['pending_review', 'pending', 'under_review'].includes(entityKycStatus)
   const canSubmitEntityInfo = !!(investorUserInfo?.is_primary || investorUserInfo?.role === 'admin')
   const entityHasUnsubmittedChanges = isEntity
     ? hasEntityOverviewChanges(investorInfo, latestEntityInfoSnapshot)
     : false
+  const personalHasUnsubmittedChanges = isIndividual
+    ? hasPersonalInfoOverviewChanges(investorInfo, latestPersonalInfoSnapshot)
+    : false
+  const personalSubmitInFlight = ['submitted', 'pending_review', 'under_review'].includes(entityKycStatus)
   const entitySubmitButtonLabel = isEntitySubmitBlocked
     ? 'Entity Info Submitted'
     : !entityHasUnsubmittedChanges
@@ -739,7 +803,12 @@ export function ProfilePageClient({
                   {canSubmitEntityInfo ? (
                     <Button
                       onClick={handleSubmitEntityKyc}
-                      disabled={isSubmittingEntityKyc || isEntitySubmitBlocked || !entityHasUnsubmittedChanges}
+                      disabled={
+                        isSubmittingEntityKyc ||
+                        isEntitySubmitBlocked ||
+                        !entityHasUnsubmittedChanges ||
+                        (hasActiveAccountInfoRequest && !requestTouchesEntityInfo)
+                      }
                       size="sm"
                     >
                       <Send className="h-4 w-4 mr-2" />
@@ -753,6 +822,16 @@ export function ProfilePageClient({
                   {canSubmitEntityInfo && isEntitySubmitBlocked && (
                     <p className="text-xs text-muted-foreground mt-2">
                       Submission is already in progress.
+                    </p>
+                  )}
+                  {canSubmitEntityInfo && hasActiveAccountInfoRequest && !requestTouchesEntityInfo && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Current request for more information is focused on personal/member details.
+                    </p>
+                  )}
+                  {canSubmitEntityInfo && hasActiveAccountInfoRequest && requestTouchesEntityInfo && entityHasUnsubmittedChanges && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      More information was requested. Update the fields and submit again.
                     </p>
                   )}
                   {canSubmitEntityInfo && !isEntitySubmitBlocked && !entityHasUnsubmittedChanges && (
@@ -811,35 +890,44 @@ export function ProfilePageClient({
                 title="Personal KYC Information"
               />
 
-              {!['approved', 'submitted', 'pending_review'].includes(investorInfo.kyc_status || '') && (
+              {(personalHasUnsubmittedChanges || personalSubmitInFlight || hasActiveAccountInfoRequest) && (
                 <Card>
                   <CardContent className="pt-6">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
+                      <div className="space-y-1">
                         <p className="font-medium text-foreground">Submit Personal Information for Review</p>
                         <p className="text-sm text-muted-foreground">
                           Required before final KYC completion and account activation.
                         </p>
+                        {hasActiveAccountInfoRequest && requestTouchesPersonalInfo && (
+                          <p className="text-xs text-muted-foreground">
+                            More information was requested on your personal or member details.
+                          </p>
+                        )}
+                        {personalSubmitInFlight && (
+                          <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                            <Send className="h-3 w-3 mr-1" />
+                            Personal Info Submitted
+                          </Badge>
+                        )}
+                        {!personalSubmitInFlight && !personalHasUnsubmittedChanges && (
+                          <p className="text-xs text-muted-foreground">No personal information changes to submit.</p>
+                        )}
                       </div>
                       <Button
                         onClick={handleSubmitPersonalKyc}
-                        disabled={isSubmittingPersonalKyc}
+                        disabled={
+                          isSubmittingPersonalKyc ||
+                          personalSubmitInFlight ||
+                          !personalHasUnsubmittedChanges ||
+                          (hasActiveAccountInfoRequest && !requestTouchesPersonalInfo)
+                        }
                         size="sm"
                       >
                         <Send className="h-4 w-4 mr-2" />
                         {isSubmittingPersonalKyc ? 'Submitting...' : 'Submit Personal Info'}
                       </Button>
                     </div>
-                  </CardContent>
-                </Card>
-              )}
-              {investorInfo.kyc_status === 'submitted' && (
-                <Card>
-                  <CardContent className="pt-6">
-                    <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                      <Send className="h-3 w-3 mr-1" />
-                      Personal Info Submitted for Review
-                    </Badge>
                   </CardContent>
                 </Card>
               )}

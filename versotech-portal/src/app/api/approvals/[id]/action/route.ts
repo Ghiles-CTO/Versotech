@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 import { triggerWorkflow } from '@/lib/trigger-workflow'
 import { createSignatureRequest } from '@/lib/signature/client'
 import { getCeoSigner } from '@/lib/staff/ceo-signer'
-import { sendInvitationEmail } from '@/lib/email/resend-service'
+import { sendAccountStatusEmail, sendInvitationEmail } from '@/lib/email/resend-service'
 import { getAppUrl } from '@/lib/signature/token'
 import { handleDealClose, handleTermsheetClose } from '@/lib/deals/deal-close-handler'
 import { buildSubscriptionPackPayload } from '@/lib/subscription-pack/payload-builder'
@@ -19,6 +19,23 @@ const ACCOUNT_ACTIVATION_ENTITY_TABLES = [
   'commercial_partners',
   'arranger_entities',
 ] as const
+
+const ACCOUNT_REQUEST_INFO_ALLOWED_SECTIONS = new Set([
+  'general',
+  'entity_info',
+  'personal_info',
+  'documents',
+  'members',
+])
+
+const ACCOUNT_ACTIVATION_USER_TABLES: Record<string, { userTable: string; entityIdColumn: string }> = {
+  investors: { userTable: 'investor_users', entityIdColumn: 'investor_id' },
+  partners: { userTable: 'partner_users', entityIdColumn: 'partner_id' },
+  lawyers: { userTable: 'lawyer_users', entityIdColumn: 'lawyer_id' },
+  introducers: { userTable: 'introducer_users', entityIdColumn: 'introducer_id' },
+  commercial_partners: { userTable: 'commercial_partner_users', entityIdColumn: 'commercial_partner_id' },
+  arranger_entities: { userTable: 'arranger_users', entityIdColumn: 'arranger_id' },
+}
 
 function resolveAccountActivationEntityTable(metadata: any): string | null {
   const entityTable = metadata?.entity_table
@@ -41,6 +58,222 @@ function getApprovalEntityLabel(entityType: string): string {
   }
 
   return labels[entityType] || entityType.replace(/_/g, ' ')
+}
+
+function parseAccountRequestInfoSections(rawSections: unknown): string[] {
+  if (!Array.isArray(rawSections)) {
+    return ['general']
+  }
+
+  const parsed = rawSections
+    .filter((section): section is string => typeof section === 'string')
+    .map(section => section.trim())
+    .filter(section => ACCOUNT_REQUEST_INFO_ALLOWED_SECTIONS.has(section))
+
+  return parsed.length > 0 ? parsed : ['general']
+}
+
+async function getAccountActivationRecipients(
+  supabase: any,
+  entityTable: string,
+  entityId: string
+) {
+  const mapping = ACCOUNT_ACTIVATION_USER_TABLES[entityTable]
+  if (!mapping) {
+    return {
+      userIds: [] as string[],
+      primaryProfile: null as { id: string; email: string | null; display_name: string | null } | null,
+    }
+  }
+
+  const { data: entityUsers } = await supabase
+    .from(mapping.userTable)
+    .select('user_id, is_primary, created_at')
+    .eq(mapping.entityIdColumn, entityId)
+    .eq('is_active', true)
+    .order('created_at', { ascending: true })
+
+  const rows = (entityUsers || []) as Array<{
+    user_id?: string | null
+    is_primary?: boolean | null
+    created_at?: string | null
+  }>
+  const userIds = rows
+    .map(row => row.user_id)
+    .filter((id): id is string => typeof id === 'string')
+
+  if (userIds.length === 0) {
+    return {
+      userIds,
+      primaryProfile: null as { id: string; email: string | null; display_name: string | null } | null,
+    }
+  }
+
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, email, display_name')
+    .in('id', userIds)
+
+  const profileRows = (profiles || []) as Array<{
+    id: string
+    email: string | null
+    display_name: string | null
+  }>
+
+  const primaryRow =
+    rows.find(row => row.is_primary && typeof row.user_id === 'string') ||
+    rows[0] ||
+    null
+
+  const primaryProfile = primaryRow?.user_id
+    ? profileRows.find(profile => profile.id === primaryRow.user_id) || null
+    : null
+
+  return {
+    userIds,
+    primaryProfile,
+  }
+}
+
+async function handleAccountActivationRequestInfo(params: {
+  supabase: any
+  approval: any
+  actorId: string
+  notes?: string
+  reason?: string
+  requestSections?: unknown
+}) {
+  const {
+    supabase,
+    approval,
+    actorId,
+    notes,
+    reason,
+    requestSections,
+  } = params
+
+  const metadata = approval.entity_metadata || {}
+  const entityTable = resolveAccountActivationEntityTable(metadata)
+  if (!entityTable) {
+    return { success: false, status: 400, error: 'Account activation metadata is missing entity target' }
+  }
+
+  const nowIso = new Date().toISOString()
+  const sections = parseAccountRequestInfoSections(requestSections)
+  const details = (notes || '').trim()
+  const cleanedReason = (reason || '').trim()
+  const detailsMessage = details || cleanedReason || 'Please update your submitted information and resubmit.'
+
+  const requestInfoPayload = {
+    active: true,
+    requested_at: nowIso,
+    requested_by: actorId,
+    reason: cleanedReason || null,
+    details: detailsMessage,
+    sections,
+  }
+
+  const existingHistory = Array.isArray(metadata.request_info_history)
+    ? metadata.request_info_history.filter((entry: unknown) => !!entry && typeof entry === 'object')
+    : []
+
+  const nextMetadata = {
+    ...metadata,
+    request_info: requestInfoPayload,
+    last_request_info: requestInfoPayload,
+    request_info_history: [...existingHistory, requestInfoPayload],
+  }
+
+  const { data: updatedApproval, error: approvalUpdateError, count } = await supabase
+    .from('approvals')
+    .update(
+      {
+        entity_metadata: nextMetadata,
+        notes: details || approval.notes || null,
+        updated_at: nowIso,
+        approved_by: null,
+        approved_at: null,
+        resolved_at: null,
+        rejection_reason: null,
+      },
+      { count: 'exact' }
+    )
+    .eq('id', approval.id)
+    .eq('status', 'pending')
+    .select('id')
+    .maybeSingle()
+
+  if (approvalUpdateError) {
+    console.error('[AccountActivation] Failed to request more info:', approvalUpdateError)
+    return { success: false, status: 500, error: 'Failed to update approval request' }
+  }
+
+  if (count === 0 || !updatedApproval) {
+    return {
+      success: false,
+      status: 409,
+      error: 'This approval was already processed by another user. Please refresh the page.',
+    }
+  }
+
+  const { error: entityUpdateError } = await supabase
+    .from(entityTable)
+    .update({
+      account_approval_status: 'incomplete',
+      updated_at: nowIso,
+    })
+    .eq('id', approval.entity_id)
+
+  if (entityUpdateError) {
+    console.error('[AccountActivation] Failed to set account status to incomplete:', entityUpdateError)
+  }
+
+  const recipients = await getAccountActivationRecipients(supabase, entityTable, approval.entity_id)
+  if (recipients.userIds.length > 0) {
+    await supabase
+      .from('investor_notifications')
+      .insert(
+        recipients.userIds.map((userId: string) => ({
+          user_id: userId,
+          title: 'More Information Requested',
+          message: detailsMessage,
+          type: 'account_more_info_requested',
+          link: '/versotech_main/profile?tab=overview',
+          metadata: {
+            approval_id: approval.id,
+            entity_type: approval.entity_type,
+            entity_id: approval.entity_id,
+            request_sections: sections,
+            reason: cleanedReason || undefined,
+          },
+        }))
+      )
+  }
+
+  if (recipients.primaryProfile?.email) {
+    try {
+      await sendAccountStatusEmail({
+        email: recipients.primaryProfile.email,
+        displayName: recipients.primaryProfile.display_name || recipients.primaryProfile.email,
+        status: 'more_info',
+        reasons: detailsMessage,
+        dealLink: `${getAppUrl()}/versotech_main/profile?tab=overview`,
+      })
+    } catch (emailError) {
+      console.error('[AccountActivation] Failed sending more-info email:', emailError)
+    }
+  }
+
+  return {
+    success: true,
+    status: 200,
+    notificationData: {
+      type: 'account_more_info_requested',
+      entity_id: approval.entity_id,
+      entity_table: entityTable,
+      sections,
+    },
+  }
 }
 
 /**
@@ -115,12 +348,12 @@ export async function POST(
   try {
     const { id } = await params
     const body = await request.json()
-    const { action, notes, rejection_reason } = body
+    const { action, notes, rejection_reason, request_sections } = body
 
     // Validate action
-    if (!['approve', 'reject'].includes(action)) {
+    if (!['approve', 'reject', 'request_info'].includes(action)) {
       return NextResponse.json(
-        { error: 'Invalid action. Must be approve or reject.' },
+        { error: 'Invalid action. Must be approve, reject, or request_info.' },
         { status: 400 }
       )
     }
@@ -156,6 +389,51 @@ export async function POST(
         { error: 'Approval has already been processed' },
         { status: 400 }
       )
+    }
+
+    if (action === 'request_info') {
+      if (approval.entity_type !== 'account_activation') {
+        return NextResponse.json(
+          { error: 'Requesting more information is only available for account activation approvals.' },
+          { status: 400 }
+        )
+      }
+
+      const requestInfoResult = await handleAccountActivationRequestInfo({
+        supabase: serviceSupabase,
+        approval,
+        actorId: user.id,
+        notes,
+        reason: rejection_reason,
+        requestSections: request_sections,
+      })
+
+      if (!requestInfoResult.success) {
+        return NextResponse.json(
+          { success: false, error: requestInfoResult.error },
+          { status: requestInfoResult.status }
+        )
+      }
+
+      await auditLogger.log({
+        actor_user_id: user.id,
+        action: 'approval_more_info_requested',
+        entity: 'approvals',
+        entity_id: id,
+        metadata: {
+          entity_type: approval.entity_type,
+          entity_id: approval.entity_id,
+          notes,
+          rejection_reason,
+          request_sections: parseAccountRequestInfoSections(request_sections),
+        },
+      })
+
+      return NextResponse.json({
+        success: true,
+        message: 'More information requested successfully',
+        notificationData: requestInfoResult.notificationData || null,
+      })
     }
 
     // Start transaction

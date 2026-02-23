@@ -219,6 +219,7 @@ export function PersonalKYCSection({
     memberData.residential_street &&
     memberData.residential_country
   )
+  const isSubmissionInFlight = ['submitted', 'pending_review', 'under_review'].includes(memberData?.kyc_status || '')
 
   // Submit personal KYC for review
   const handleSubmitForReview = async () => {
@@ -339,7 +340,7 @@ export function PersonalKYCSection({
           </Section>
 
           {/* Submit Button */}
-          {!['submitted', 'approved'].includes(memberData.kyc_status || '') && (
+          {!isSubmissionInFlight && (
             <div className="pt-4 border-t">
               {isInfoComplete ? (
                 <Button onClick={handleSubmitForReview} disabled={isSubmitting}>

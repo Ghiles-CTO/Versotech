@@ -29,7 +29,7 @@ export type ApprovalStatus =
 export type ApprovalPriority = 'low' | 'medium' | 'high' | 'critical'
 
 // Approval action types
-export type ApprovalAction = 'approve' | 'reject' | 'revise'
+export type ApprovalAction = 'approve' | 'reject' | 'request_info' | 'revise'
 
 // History action types
 export type ApprovalHistoryAction =
@@ -177,6 +177,7 @@ export interface UpdateApprovalRequest {
 export interface ApproveRejectRequest {
   notes?: string
   rejection_reason?: string // Required for reject
+  request_sections?: string[]
 }
 
 export interface BulkApprovalRequest {

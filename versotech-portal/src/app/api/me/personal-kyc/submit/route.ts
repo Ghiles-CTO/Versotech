@@ -3,6 +3,28 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { checkAndUpdateEntityKYCStatus } from '@/lib/kyc/check-entity-kyc-status'
 import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
 
+const normalizeSnapshotValue = (value: unknown): string | null => {
+  if (value === null || value === undefined) return null
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? trimmed : null
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value)
+  }
+  return JSON.stringify(value)
+}
+
+const snapshotsMatch = (
+  nextSnapshot: Record<string, unknown>,
+  previousSnapshot: Record<string, unknown>
+) =>
+  Object.keys(nextSnapshot).every(
+    (key) =>
+      normalizeSnapshotValue(nextSnapshot[key]) ===
+      normalizeSnapshotValue(previousSnapshot[key])
+  )
+
 // Entity type configurations
 const ENTITY_CONFIGS = {
   investor: {
@@ -243,6 +265,48 @@ export async function POST(request: Request) {
     // Build submission data dynamically based on entity type
     const submissionMemberIdColumn = `${entityType}_member_id`
 
+    const reviewSnapshot: Record<string, unknown> = {
+      first_name: member.first_name,
+      last_name: member.last_name,
+      date_of_birth: member.date_of_birth,
+      nationality: member.nationality,
+      residential_street: member.residential_street,
+      residential_country: member.residential_country,
+      id_type: member.id_type,
+      id_number: member.id_number,
+    }
+
+    const { data: latestSubmission, error: latestSubmissionError } = await serviceSupabase
+      .from('kyc_submissions')
+      .select('metadata')
+      .eq(config.submissionEntityIdColumn, entityId)
+      .eq(submissionMemberIdColumn, member.id)
+      .eq('document_type', 'personal_info')
+      .order('submitted_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (latestSubmissionError) {
+      console.error('Error checking latest personal KYC submission snapshot:', latestSubmissionError)
+      return NextResponse.json(
+        { error: 'Failed to validate latest personal KYC submission' },
+        { status: 500 }
+      )
+    }
+
+    const latestSnapshotRaw = (latestSubmission?.metadata as Record<string, unknown> | undefined)?.review_snapshot
+    if (
+      latestSnapshotRaw &&
+      typeof latestSnapshotRaw === 'object' &&
+      !Array.isArray(latestSnapshotRaw) &&
+      snapshotsMatch(reviewSnapshot, latestSnapshotRaw as Record<string, unknown>)
+    ) {
+      return NextResponse.json(
+        { error: 'No personal information changes to submit' },
+        { status: 400 }
+      )
+    }
+
     // Prevent duplicate queue entries when a personal_info submission is already pending
     const { data: existingPendingSubmission, error: existingPendingError } = await serviceSupabase
       .from('kyc_submissions')
@@ -270,8 +334,7 @@ export async function POST(request: Request) {
       )
     }
 
-    // Idempotency gate: transition member to submitted once.
-    // Concurrent submits for the same member will cause only one request to pass this step.
+    // Keep member status aligned with auto-approved personal_info submissions.
     const previousMemberStatus = member.kyc_status
     const { data: statusTransition, error: statusTransitionError } = await serviceSupabase
       .from(config.memberTable)
@@ -281,7 +344,6 @@ export async function POST(request: Request) {
         updated_at: new Date().toISOString(),
       })
       .eq('id', memberId)
-      .neq('kyc_status', 'approved')
       .select('id')
       .maybeSingle()
 
@@ -294,10 +356,7 @@ export async function POST(request: Request) {
     }
 
     if (!statusTransition) {
-      return NextResponse.json(
-        { error: 'Personal KYC already approved for this member' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Member not found' }, { status: 404 })
     }
 
     const assignedTo = await resolveKycSubmissionAssignee(serviceSupabase)
@@ -315,16 +374,7 @@ export async function POST(request: Request) {
         entity_type: entityType,
         member_name: member.full_name || `${member.first_name} ${member.last_name}`,
         submitted_by_user_id: user.id,
-        review_snapshot: {
-          first_name: member.first_name,
-          last_name: member.last_name,
-          date_of_birth: member.date_of_birth,
-          nationality: member.nationality,
-          residential_street: member.residential_street,
-          residential_country: member.residential_country,
-          id_type: member.id_type,
-          id_number: member.id_number,
-        }
+        review_snapshot: reviewSnapshot,
       }
     }
 
@@ -373,7 +423,7 @@ export async function POST(request: Request) {
 
     const existingAccountStatus = entityStatus?.account_approval_status?.toLowerCase() ?? null
     const shouldUpdateAccountStatus = !existingAccountStatus ||
-      ['pending_onboarding', 'new', 'incomplete'].includes(existingAccountStatus)
+      ['pending_onboarding', 'new', 'incomplete', 'rejected'].includes(existingAccountStatus)
 
     if (shouldUpdateAccountStatus) {
       await serviceSupabase

@@ -141,7 +141,7 @@ export async function PATCH(request: Request) {
     // Fetch investor to determine type (entity vs individual)
     const { data: investor, error: investorError } = await serviceSupabase
       .from('investors')
-      .select('type')
+      .select('type, kyc_status')
       .eq('id', investorId)
       .single()
 
@@ -281,6 +281,14 @@ export async function PATCH(request: Request) {
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
+    }
+
+    const currentKycStatus = typeof investor.kyc_status === 'string'
+      ? investor.kyc_status.toLowerCase()
+      : null
+    const kycStatusInFlight = ['submitted', 'pending_review', 'under_review'].includes(currentKycStatus || '')
+    if (!kycStatusInFlight) {
+      updateData.kyc_status = 'pending'
     }
 
     // Convert empty strings to null for date columns (Postgres rejects "" for date type)
