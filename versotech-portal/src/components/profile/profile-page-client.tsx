@@ -155,8 +155,10 @@ const STATUS_BADGES: Record<string, { label: string; className: string; icon: ty
 const KYC_BADGES: Record<string, { label: string; className: string }> = {
   approved: { label: 'KYC Approved', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
   pending: { label: 'KYC Pending', className: 'bg-amber-100 text-amber-800 border-amber-200' },
+  pending_review: { label: 'KYC Under Review', className: 'bg-blue-100 text-blue-800 border-blue-200' },
+  submitted: { label: 'KYC Submitted', className: 'bg-blue-100 text-blue-800 border-blue-200' },
+  under_review: { label: 'KYC Under Review', className: 'bg-blue-100 text-blue-800 border-blue-200' },
   rejected: { label: 'KYC Rejected', className: 'bg-red-100 text-red-800 border-red-200' },
-  not_started: { label: 'KYC Not Started', className: 'bg-gray-100 text-gray-800 border-gray-200' },
 }
 
 const ACCOUNT_APPROVAL_BADGES: Record<string, { label: string; className: string }> = {
@@ -381,7 +383,7 @@ export function ProfilePageClient({
   // Get status badges for investor
   const statusBadge = STATUS_BADGES[investorInfo?.status || 'pending'] || STATUS_BADGES.pending
   const StatusIcon = statusBadge.icon
-  const kycBadge = KYC_BADGES[investorInfo?.kyc_status || 'not_started'] || KYC_BADGES.not_started
+  const kycBadge = KYC_BADGES[investorInfo?.kyc_status || 'pending'] || KYC_BADGES.pending
   const accountApprovalStatusKey = (investorInfo?.account_approval_status || 'pending_onboarding').toLowerCase()
   const accountApprovalBadge = ACCOUNT_APPROVAL_BADGES[accountApprovalStatusKey] || {
     label: 'Account Pending',
