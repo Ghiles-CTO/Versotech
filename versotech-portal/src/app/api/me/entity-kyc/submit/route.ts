@@ -76,38 +76,6 @@ const resolveFieldValue = (
   return null
 }
 
-const normalizeComparableSnapshotValue = (value: unknown): string | null => {
-  if (value === null || value === undefined) return null
-  if (typeof value === 'string') {
-    const trimmed = value.trim()
-    return trimmed.length > 0 ? trimmed : null
-  }
-  if (typeof value === 'number' || typeof value === 'boolean') {
-    return String(value)
-  }
-  if (Array.isArray(value)) {
-    return value.length > 0 ? JSON.stringify(value) : null
-  }
-  return JSON.stringify(value)
-}
-
-const extractReviewSnapshot = (metadata: unknown): Record<string, unknown> | null => {
-  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) return null
-  const reviewSnapshot = (metadata as Record<string, unknown>).review_snapshot
-  if (!reviewSnapshot || typeof reviewSnapshot !== 'object' || Array.isArray(reviewSnapshot)) return null
-  return reviewSnapshot as Record<string, unknown>
-}
-
-const snapshotsMatch = (
-  nextSnapshot: Record<string, unknown>,
-  previousSnapshot: Record<string, unknown>
-): boolean =>
-  Object.keys(nextSnapshot).every(
-    (key) =>
-      normalizeComparableSnapshotValue(nextSnapshot[key]) ===
-      normalizeComparableSnapshotValue(previousSnapshot[key])
-  )
-
 // Entity type configurations
 const ENTITY_CONFIGS = {
   investor: {
@@ -342,29 +310,6 @@ export async function submitEntityKycForUser(params: {
       }
     }
 
-    // Prevent duplicate submissions while an entity_info record already exists in-flight or approved.
-    const { data: existingPendingSubmission, error: existingPendingError } = await serviceSupabase
-      .from('kyc_submissions')
-      .select('id')
-      .eq(config.submissionEntityIdColumn, entityId)
-      .eq('document_type', 'entity_info')
-      .in('status', ['pending', 'under_review'])
-      .order('submitted_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-
-    if (existingPendingError) {
-      console.error('Error checking existing pending entity KYC submission:', existingPendingError)
-      return {
-        status: 500,
-        payload: { error: 'Failed to validate existing KYC submission status' },
-      }
-    }
-
-    if (existingPendingSubmission) {
-      return { status: 400, payload: { error: 'Entity KYC information already submitted' } }
-    }
-
     // Validate required fields before status transition.
     const missingFields = config.requiredFields.filter(
       (field) => !hasMeaningfulValue(resolveFieldValue(entityRecord, field))
@@ -406,31 +351,6 @@ export async function submitEntityKycForUser(params: {
       ...requiredSnapshot,
       legal_name: normalizedLegalName,
       country: normalizedCountry,
-    }
-
-    const { data: latestEntityInfoSubmission, error: latestEntityInfoError } = await serviceSupabase
-      .from('kyc_submissions')
-      .select('metadata')
-      .eq(config.submissionEntityIdColumn, entityId)
-      .eq('document_type', 'entity_info')
-      .order('submitted_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-
-    if (latestEntityInfoError) {
-      console.error('Error checking latest entity KYC submission snapshot:', latestEntityInfoError)
-      return {
-        status: 500,
-        payload: { error: 'Failed to validate latest submitted entity information' },
-      }
-    }
-
-    const latestReviewSnapshot = extractReviewSnapshot(latestEntityInfoSubmission?.metadata)
-    if (latestReviewSnapshot && snapshotsMatch(nextReviewSnapshot, latestReviewSnapshot)) {
-      return {
-        status: 400,
-        payload: { error: 'No entity information changes to submit' },
-      }
     }
 
     // Idempotency gate: transition to submitted once; if already submitted we still allow

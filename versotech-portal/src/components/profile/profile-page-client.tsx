@@ -799,10 +799,7 @@ export function ProfilePageClient({
                   {canSubmitEntityInfo ? (
                     <Button
                       onClick={handleSubmitEntityKyc}
-                      disabled={
-                        isSubmittingEntityKyc ||
-                        (hasActiveAccountInfoRequest && !requestTouchesEntityInfo)
-                      }
+                      disabled={isSubmittingEntityKyc}
                       size="sm"
                     >
                       <Send className="h-4 w-4 mr-2" />
