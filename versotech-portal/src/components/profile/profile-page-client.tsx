@@ -12,7 +12,6 @@ import { KYCQuestionnaire } from '@/components/kyc/KYCQuestionnaire'
 import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import {
   User,
@@ -32,6 +31,7 @@ import {
   Edit,
   Shield,
   Globe,
+  MapPin,
   Send,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -42,9 +42,6 @@ import { IndividualKycDisplay, EntityKYCEditDialog, EntityOverviewEditDialog } f
 import {
   ProfileOverviewShell,
   OverviewSectionCard,
-  OverviewField,
-  OverviewFieldGrid,
-  OverviewBadgeRow,
 } from '@/components/profile/overview'
 import {
   extractApprovedKycDocumentMetadata,
@@ -570,107 +567,174 @@ export function ProfilePageClient({
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
           <ProfileOverviewShell>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <OverviewSectionCard
-                title="Your Information"
-                description="Your account details within this investor entity"
-                icon={User}
-                contentClassName="space-y-4"
-              >
-                <OverviewField label="Full Name" value={profile.display_name || 'Not set'} />
-                <OverviewField label="Email" value={profile.email || userEmail} icon={Mail} />
-                {hasInvestorEntity && (
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Role</Label>
-                    <OverviewBadgeRow>
-                      <Badge variant="outline" className="capitalize">
-                        {investorUserInfo?.role || 'member'}
-                      </Badge>
-                      {investorUserInfo?.is_primary && (
-                        <Badge variant="secondary">Primary Contact</Badge>
-                      )}
-                      {investorUserInfo?.can_sign && (
-                        <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                          Signatory
-                        </Badge>
-                      )}
-                    </OverviewBadgeRow>
-                  </div>
-                )}
-              </OverviewSectionCard>
-
-              {isEntity && investorInfo && (
-                <OverviewSectionCard
-                  title="Entity Overview"
-                  description="Legal details, contact information, and registered address"
-                  icon={Building2}
-                  contentClassName="space-y-6"
-                  action={(
-                    <Button variant="outline" size="sm" onClick={() => setShowEntityOverviewDialog(true)}>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
-                    </Button>
+            {/* Compact User Summary */}
+            <div className="rounded-lg border bg-card px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <User className="h-5 w-5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold truncate">{profile.display_name || 'Not set'}</p>
+                  <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5">
+                    <Mail className="h-3 w-3" />
+                    {profile.email || userEmail}
+                  </p>
+                </div>
+              </div>
+              {hasInvestorEntity && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="outline" className="capitalize text-xs">
+                    {investorUserInfo?.role || 'member'}
+                  </Badge>
+                  {investorUserInfo?.is_primary && (
+                    <Badge variant="secondary" className="text-xs">Primary Contact</Badge>
                   )}
-                >
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Type</Label>
-                    <OverviewBadgeRow>
-                      <Badge variant="outline" className="capitalize">
-                        {(investorInfo.type || 'entity').replace(/_/g, ' ')}
-                      </Badge>
-                    </OverviewBadgeRow>
+                  {investorUserInfo?.can_sign && (
+                    <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs">
+                      Signatory
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Entity Overview — Full Width */}
+            {isEntity && investorInfo && (
+              <OverviewSectionCard
+                title="Entity Overview"
+                description="Legal details, contact information, and registered address"
+                icon={Building2}
+                contentClassName="space-y-4"
+                action={(
+                  <Button variant="outline" size="sm" onClick={() => setShowEntityOverviewDialog(true)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                )}
+              >
+                {/* Entity Information */}
+                <section className="rounded-lg border border-border/70 bg-muted/20 p-4">
+                  <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    Entity Information
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="rounded-md border border-border/70 bg-background p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Type</p>
+                      <div className="mt-1">
+                        <Badge variant="outline" className="capitalize font-medium">
+                          {(investorInfo.type || 'entity').replace(/_/g, ' ')}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="rounded-md border border-border/70 bg-background p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Display Name</p>
+                      <p className="mt-1 text-sm font-medium">{investorInfo.display_name || '-'}</p>
+                    </div>
+                    <div className="rounded-md border border-border/70 bg-background p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Legal Name</p>
+                      <p className="mt-1 text-sm font-medium">{investorInfo.legal_name || '-'}</p>
+                    </div>
+                    <div className="rounded-md border border-border/70 bg-background p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Country of Incorporation</p>
+                      <p className="mt-1 text-sm font-medium">{investorInfo.country_of_incorporation || '-'}</p>
+                    </div>
                   </div>
+                </section>
 
-                  <OverviewFieldGrid>
-                    <OverviewField label="Display Name" value={investorInfo.display_name || '-'} />
-                    <OverviewField label="Legal Name" value={investorInfo.legal_name || '-'} />
-                    <OverviewField
-                      label="Country of Incorporation"
-                      value={investorInfo.country_of_incorporation || '-'}
-                    />
-                  </OverviewFieldGrid>
-
-                  <div className="border-t pt-4 space-y-4">
-                    <h4 className="text-sm font-medium">Contact Information</h4>
-                    <OverviewFieldGrid>
-                      <OverviewField label="Email" value={investorInfo.email || '-'} icon={Mail} />
-                      <OverviewField label="Phone" value={investorInfo.phone || '-'} icon={Phone} />
-                      <OverviewField label="Mobile" value={investorInfo.phone_mobile || '-'} icon={Phone} />
-                      <OverviewField label="Office Phone" value={investorInfo.phone_office || '-'} icon={Phone} />
-                      <OverviewField
-                        label="Website"
-                        value={
-                          investorInfo.website ? (
-                            <a
-                              href={investorInfo.website}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline"
-                            >
-                              {investorInfo.website}
-                            </a>
-                          ) : (
-                            '-'
-                          )
-                        }
-                        icon={Globe}
-                      />
-                    </OverviewFieldGrid>
+                {/* Contact Information */}
+                <section className="rounded-lg border border-border/70 bg-muted/20 p-4">
+                  <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    Contact Information
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="rounded-md border border-border/70 bg-background p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Email</p>
+                      <p className="mt-1 text-sm font-medium inline-flex items-center gap-2">
+                        <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                        {investorInfo.email || '-'}
+                      </p>
+                    </div>
+                    <div className="rounded-md border border-border/70 bg-background p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Phone</p>
+                      <p className="mt-1 text-sm font-medium inline-flex items-center gap-2">
+                        <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                        {investorInfo.phone || '-'}
+                      </p>
+                    </div>
+                    <div className="rounded-md border border-border/70 bg-background p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Mobile</p>
+                      <p className="mt-1 text-sm font-medium inline-flex items-center gap-2">
+                        <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                        {investorInfo.phone_mobile || '-'}
+                      </p>
+                    </div>
+                    <div className="rounded-md border border-border/70 bg-background p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Office Phone</p>
+                      <p className="mt-1 text-sm font-medium inline-flex items-center gap-2">
+                        <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                        {investorInfo.phone_office || '-'}
+                      </p>
+                    </div>
+                    <div className="rounded-md border border-border/70 bg-background p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Website</p>
+                      <div className="mt-1 text-sm font-medium inline-flex items-center gap-2">
+                        <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+                        {investorInfo.website ? (
+                          <a
+                            href={investorInfo.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            {investorInfo.website}
+                          </a>
+                        ) : (
+                          '-'
+                        )}
+                      </div>
+                    </div>
                   </div>
+                </section>
 
-                  <div className="border-t pt-4 space-y-4">
-                    <h4 className="text-sm font-medium">Registered Address</h4>
-                    <OverviewFieldGrid>
-                      <OverviewField label="Address Line 1" value={investorInfo.registered_address_line_1 || '-'} />
-                      <OverviewField label="Address Line 2" value={investorInfo.registered_address_line_2 || '-'} />
-                      <OverviewField label="City" value={investorInfo.registered_city || '-'} />
-                      <OverviewField label="State / Province" value={investorInfo.registered_state || '-'} />
-                      <OverviewField label="Postal Code" value={investorInfo.registered_postal_code || '-'} />
-                      <OverviewField label="Country" value={investorInfo.registered_country || '-'} />
-                    </OverviewFieldGrid>
+                {/* Registered Address */}
+                <section className="rounded-lg border border-border/70 bg-muted/20 p-4">
+                  <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    Registered Address
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="rounded-md border border-border/70 bg-background p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Address Line 1</p>
+                      <p className="mt-1 text-sm font-medium">{investorInfo.registered_address_line_1 || '-'}</p>
+                    </div>
+                    <div className="rounded-md border border-border/70 bg-background p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Address Line 2</p>
+                      <p className="mt-1 text-sm font-medium">{investorInfo.registered_address_line_2 || '-'}</p>
+                    </div>
+                    <div className="rounded-md border border-border/70 bg-background p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">City</p>
+                      <p className="mt-1 text-sm font-medium">{investorInfo.registered_city || '-'}</p>
+                    </div>
+                    <div className="rounded-md border border-border/70 bg-background p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">State / Province</p>
+                      <p className="mt-1 text-sm font-medium">{investorInfo.registered_state || '-'}</p>
+                    </div>
+                    <div className="rounded-md border border-border/70 bg-background p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Postal Code</p>
+                      <p className="mt-1 text-sm font-medium">{investorInfo.registered_postal_code || '-'}</p>
+                    </div>
+                    <div className="rounded-md border border-border/70 bg-background p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Country</p>
+                      <p className="mt-1 text-sm font-medium">{investorInfo.registered_country || '-'}</p>
+                    </div>
                   </div>
+                </section>
 
-                  <div className="pt-4 border-t">
+                {/* Submit Entity Info */}
+                {!['approved', 'submitted', 'pending_review'].includes(investorInfo.kyc_status || '') && (
+                  <div className="pt-2">
                     {canSubmitEntityInfo ? (
                       <Button
                         onClick={handleSubmitEntityKyc}
@@ -696,9 +760,9 @@ export function ProfilePageClient({
                       </p>
                     )}
                   </div>
-                </OverviewSectionCard>
-              )}
-            </div>
+                )}
+              </OverviewSectionCard>
+            )}
 
           {/* Personal KYC Section for Entity Members */}
           {isEntity && investorInfo && (
