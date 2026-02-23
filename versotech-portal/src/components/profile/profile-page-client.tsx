@@ -311,7 +311,6 @@ export function ProfilePageClient({
       activeRequestSections.includes('personal_info') ||
       activeRequestSections.includes('documents') ||
       activeRequestSections.includes('members')
-  const isEntitySubmitBlocked = !hasActiveAccountInfoRequest && ['pending_review', 'pending', 'under_review'].includes(entityKycStatus)
   const canSubmitEntityInfo = !!(investorUserInfo?.is_primary || investorUserInfo?.role === 'admin')
   const entityHasUnsubmittedChanges = isEntity
     ? hasEntityOverviewChanges(investorInfo, latestEntityInfoSnapshot)
@@ -320,13 +319,10 @@ export function ProfilePageClient({
     ? hasPersonalInfoOverviewChanges(investorInfo, latestPersonalInfoSnapshot)
     : false
   const personalSubmitInFlight = ['submitted', 'pending_review', 'under_review'].includes(entityKycStatus)
-  const entitySubmitButtonLabel = isEntitySubmitBlocked
-    ? 'Entity Info Submitted'
-    : !entityHasUnsubmittedChanges
-      ? 'No Changes to Submit'
-      : entityKycStatus === 'approved' || entityKycStatus === 'submitted'
-        ? 'Submit Updated Entity Info'
-        : 'Submit Entity Info'
+  const entitySubmitButtonLabel =
+    hasActiveAccountInfoRequest && requestTouchesEntityInfo
+      ? 'Resubmit Entity Info'
+      : 'Submit Entity Info'
 
   // Submit entity KYC for review
   const handleSubmitEntityKyc = async () => {
@@ -805,8 +801,6 @@ export function ProfilePageClient({
                       onClick={handleSubmitEntityKyc}
                       disabled={
                         isSubmittingEntityKyc ||
-                        isEntitySubmitBlocked ||
-                        !entityHasUnsubmittedChanges ||
                         (hasActiveAccountInfoRequest && !requestTouchesEntityInfo)
                       }
                       size="sm"
@@ -819,11 +813,6 @@ export function ProfilePageClient({
                       Only primary contacts can submit entity information for review.
                     </p>
                   )}
-                  {canSubmitEntityInfo && isEntitySubmitBlocked && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Submission is already in progress.
-                    </p>
-                  )}
                   {canSubmitEntityInfo && hasActiveAccountInfoRequest && !requestTouchesEntityInfo && (
                     <p className="text-xs text-muted-foreground mt-2">
                       Current request for more information is focused on personal/member details.
@@ -834,9 +823,9 @@ export function ProfilePageClient({
                       More information was requested. Update the fields and submit again.
                     </p>
                   )}
-                  {canSubmitEntityInfo && !isEntitySubmitBlocked && !entityHasUnsubmittedChanges && (
+                  {canSubmitEntityInfo && !hasActiveAccountInfoRequest && !entityHasUnsubmittedChanges && (
                     <p className="text-xs text-muted-foreground mt-2">
-                      No new changes to submit.
+                      No new changes detected. You can still submit if needed.
                     </p>
                   )}
                 </div>
