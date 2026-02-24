@@ -101,7 +101,7 @@ async function checkUserHasInvestments(userId: string): Promise<{
 }
 
 export function PersonaDashboard() {
-  const { activePersona, personas, isCEO } = usePersona()
+  const { activePersona, personas, isCEO, isSwitchingPersona } = usePersona()
   const { theme } = useTheme()
   const [userId, setUserId] = useState<string | null>(null)
   const [loadingUser, setLoadingUser] = useState(true)
@@ -140,12 +140,32 @@ export function PersonaDashboard() {
   // Use actual theme system (user-controlled via toggle in header)
   const isDark = theme === 'staff-dark'
 
+  if (isSwitchingPersona) {
+    return (
+      <div className="p-8 text-center flex flex-col items-center gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        <p className="text-gray-500">Preparing dashboard...</p>
+      </div>
+    )
+  }
+
   // Show loading state while fetching user
   if (loadingUser || !activePersona) {
     return (
       <div className="p-8 text-center flex flex-col items-center gap-3">
         <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         <p className="text-gray-500">Loading dashboard...</p>
+      </div>
+    )
+  }
+
+  // If CEO access is available but this branch rendered with a stale persona cookie,
+  // avoid flashing the mixed fallback dashboard and let router.refresh reconcile.
+  if (isCEO && (activePersona.persona_type === 'ceo' || activePersona.persona_type === 'staff')) {
+    return (
+      <div className="p-8 text-center flex flex-col items-center gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        <p className="text-gray-500">Preparing dashboard...</p>
       </div>
     )
   }

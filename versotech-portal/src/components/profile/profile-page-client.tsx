@@ -144,7 +144,6 @@ interface ProfilePageClientProps {
   memberInfo?: MemberKYCData | null
   latestEntityInfoSnapshot?: Record<string, unknown> | null
   latestPersonalInfoSnapshot?: Record<string, unknown> | null
-  accountRequestInfo?: Record<string, unknown> | null
 }
 
 // Status badge configurations
@@ -280,7 +279,6 @@ export function ProfilePageClient({
   memberInfo,
   latestEntityInfoSnapshot,
   latestPersonalInfoSnapshot,
-  accountRequestInfo,
 }: ProfilePageClientProps) {
   const [profile, setProfile] = useState(initialProfile)
   const [showKycDialog, setShowKycDialog] = useState(false)
@@ -294,24 +292,6 @@ export function ProfilePageClient({
   const isEntity = hasInvestorEntity && investorInfo?.type !== 'individual'
   const isStaff = variant === 'staff'
   const entityKycStatus = (investorInfo?.kyc_status || '').toLowerCase()
-  const activeRequestSections = Array.isArray(accountRequestInfo?.sections)
-    ? accountRequestInfo.sections.filter((section): section is string => typeof section === 'string')
-    : []
-  const hasActiveAccountInfoRequest = !!accountRequestInfo
-  const requestTouchesEntityInfo = !hasActiveAccountInfoRequest
-    ? false
-    : activeRequestSections.length === 0 ||
-      activeRequestSections.includes('general') ||
-      activeRequestSections.includes('entity_info') ||
-      activeRequestSections.includes('documents') ||
-      activeRequestSections.includes('members')
-  const requestTouchesPersonalInfo = !hasActiveAccountInfoRequest
-    ? false
-    : activeRequestSections.length === 0 ||
-      activeRequestSections.includes('general') ||
-      activeRequestSections.includes('personal_info') ||
-      activeRequestSections.includes('documents') ||
-      activeRequestSections.includes('members')
   const canSubmitEntityInfo = !!(investorUserInfo?.is_primary || investorUserInfo?.role === 'admin')
   const entityHasUnsubmittedChanges = isEntity
     ? hasEntityOverviewChanges(investorInfo, latestEntityInfoSnapshot)
@@ -320,10 +300,6 @@ export function ProfilePageClient({
     ? hasPersonalInfoOverviewChanges(investorInfo, latestPersonalInfoSnapshot)
     : false
   const personalSubmitInFlight = ['submitted', 'pending_review', 'under_review'].includes(entityKycStatus)
-  const entitySubmitButtonLabel =
-    hasActiveAccountInfoRequest && requestTouchesEntityInfo
-      ? 'Resubmit Entity Info'
-      : 'Submit Entity Info'
 
   // Submit entity KYC for review
   const handleSubmitEntityKyc = async () => {
@@ -804,24 +780,14 @@ export function ProfilePageClient({
                       size="sm"
                     >
                       <Send className="h-4 w-4 mr-2" />
-                      {isSubmittingEntityKyc ? 'Submitting...' : entitySubmitButtonLabel}
+                      {isSubmittingEntityKyc ? 'Submitting...' : 'Submit Entity Info'}
                     </Button>
                   ) : (
                     <p className="text-sm text-muted-foreground">
                       Only primary contacts can submit entity information for review.
                     </p>
                   )}
-                  {canSubmitEntityInfo && hasActiveAccountInfoRequest && !requestTouchesEntityInfo && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Current request for more information is focused on personal/member details.
-                    </p>
-                  )}
-                  {canSubmitEntityInfo && hasActiveAccountInfoRequest && requestTouchesEntityInfo && entityHasUnsubmittedChanges && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      More information was requested. Update the fields and submit again.
-                    </p>
-                  )}
-                  {canSubmitEntityInfo && !hasActiveAccountInfoRequest && !entityHasUnsubmittedChanges && (
+                  {canSubmitEntityInfo && !entityHasUnsubmittedChanges && (
                     <p className="text-xs text-muted-foreground mt-2">
                       No new changes detected. You can still submit if needed.
                     </p>
@@ -877,7 +843,7 @@ export function ProfilePageClient({
                 title="Personal KYC Information"
               />
 
-              {(personalHasUnsubmittedChanges || personalSubmitInFlight || hasActiveAccountInfoRequest) && (
+              {(personalHasUnsubmittedChanges || personalSubmitInFlight) && (
                 <Card>
                   <CardContent className="pt-6">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -886,11 +852,6 @@ export function ProfilePageClient({
                         <p className="text-sm text-muted-foreground">
                           Required before final KYC completion and account activation.
                         </p>
-                        {hasActiveAccountInfoRequest && requestTouchesPersonalInfo && (
-                          <p className="text-xs text-muted-foreground">
-                            More information was requested on your personal or member details.
-                          </p>
-                        )}
                         {personalSubmitInFlight && (
                           <Badge className="bg-blue-100 text-blue-800 border-blue-200">
                             <Send className="h-3 w-3 mr-1" />
@@ -906,8 +867,7 @@ export function ProfilePageClient({
                         disabled={
                           isSubmittingPersonalKyc ||
                           personalSubmitInFlight ||
-                          !personalHasUnsubmittedChanges ||
-                          (hasActiveAccountInfoRequest && !requestTouchesPersonalInfo)
+                          !personalHasUnsubmittedChanges
                         }
                         size="sm"
                       >

@@ -46,7 +46,7 @@ export default async function AdminPortalLayout({ children }: LayoutProps) {
   }
 
   return (
-    <PersonaProvider initialPersonas={userPersonas}>
+    <PersonaProvider initialPersonas={userPersonas} userId={profile.id}>
       <AdminLayoutContent profile={profile}>
         {children}
       </AdminLayoutContent>

@@ -164,6 +164,25 @@ async function handleAccountActivationRequestInfo(params: {
   const cleanedReason = (reason || '').trim()
   const detailsMessage = details || cleanedReason || 'Please update your submitted information and resubmit.'
 
+  const entitySnapshotColumns =
+    entityTable === 'investors'
+      ? 'account_approval_status, onboarding_status'
+      : 'account_approval_status'
+  const { data: entitySnapshot, error: entitySnapshotError } = await supabase
+    .from(entityTable)
+    .select(entitySnapshotColumns)
+    .eq('id', approval.entity_id)
+    .maybeSingle()
+
+  if (entitySnapshotError) {
+    console.error('[AccountActivation] Failed loading entity status snapshot:', entitySnapshotError)
+    return { success: false, status: 500, error: 'Failed to update approval request' }
+  }
+
+  if (!entitySnapshot) {
+    return { success: false, status: 404, error: 'Account entity not found' }
+  }
+
   const requestInfoPayload = {
     active: true,
     requested_at: nowIso,
@@ -177,24 +196,31 @@ async function handleAccountActivationRequestInfo(params: {
     ? metadata.request_info_history.filter((entry: unknown) => !!entry && typeof entry === 'object')
     : []
 
+  const resolvedRequestInfoPayload = {
+    ...requestInfoPayload,
+    active: false,
+    resolved_at: nowIso,
+  }
+
   const nextMetadata = {
     ...metadata,
-    request_info: requestInfoPayload,
-    last_request_info: requestInfoPayload,
-    request_info_history: [...existingHistory, requestInfoPayload],
+    request_info: resolvedRequestInfoPayload,
+    last_request_info: resolvedRequestInfoPayload,
+    request_info_history: [...existingHistory, resolvedRequestInfoPayload],
   }
 
   const { data: updatedApproval, error: approvalUpdateError, count } = await supabase
     .from('approvals')
     .update(
       {
+        status: 'cancelled',
         entity_metadata: nextMetadata,
         notes: details || approval.notes || null,
+        rejection_reason: cleanedReason || null,
         updated_at: nowIso,
         approved_by: null,
         approved_at: null,
-        resolved_at: null,
-        rejection_reason: null,
+        resolved_at: nowIso,
       },
       { count: 'exact' }
     )
@@ -216,16 +242,70 @@ async function handleAccountActivationRequestInfo(params: {
     }
   }
 
-  const { error: entityUpdateError } = await supabase
+  const { data: updatedEntity, error: entityUpdateError } = await supabase
     .from(entityTable)
     .update({
-      account_approval_status: 'incomplete',
+      account_approval_status: 'pending_onboarding',
       updated_at: nowIso,
     })
     .eq('id', approval.entity_id)
+    .select('id')
+    .maybeSingle()
 
-  if (entityUpdateError) {
-    console.error('[AccountActivation] Failed to set account status to incomplete:', entityUpdateError)
+  if (entityUpdateError || !updatedEntity) {
+    console.error('[AccountActivation] Failed to set account status to pending_onboarding:', entityUpdateError)
+
+    const rollbackTimestamp = new Date().toISOString()
+    const approvalRollbackData: Record<string, unknown> = {
+      status: approval.status || 'pending',
+      entity_metadata: approval.entity_metadata || null,
+      notes: approval.notes || null,
+      rejection_reason: approval.rejection_reason || null,
+      updated_at: rollbackTimestamp,
+      approved_by: approval.approved_by || null,
+      approved_at: approval.approved_at || null,
+      resolved_at: approval.resolved_at || null,
+    }
+
+    const { error: approvalRollbackError } = await supabase
+      .from('approvals')
+      .update(approvalRollbackData)
+      .eq('id', approval.id)
+      .eq('status', 'cancelled')
+
+    if (approvalRollbackError) {
+      console.error('[AccountActivation] Failed rolling back approval after entity update failure:', {
+        approval_id: approval.id,
+        entity_table: entityTable,
+        entity_id: approval.entity_id,
+        error: approvalRollbackError,
+      })
+      return { success: false, status: 500, error: 'Failed to update approval request' }
+    }
+
+    const entityRollbackData: Record<string, unknown> = {
+      account_approval_status: (entitySnapshot as any).account_approval_status ?? null,
+      updated_at: rollbackTimestamp,
+    }
+    if (entityTable === 'investors') {
+      entityRollbackData.onboarding_status = (entitySnapshot as any).onboarding_status ?? null
+    }
+
+    const { error: entityRollbackError } = await supabase
+      .from(entityTable)
+      .update(entityRollbackData)
+      .eq('id', approval.entity_id)
+
+    if (entityRollbackError) {
+      console.error('[AccountActivation] Failed rolling back entity after request-info failure:', {
+        approval_id: approval.id,
+        entity_table: entityTable,
+        entity_id: approval.entity_id,
+        error: entityRollbackError,
+      })
+    }
+
+    return { success: false, status: 500, error: 'Failed to update approval request' }
   }
 
   const recipients = await getAccountActivationRecipients(supabase, entityTable, approval.entity_id)

@@ -256,7 +256,7 @@ export async function POST(
           await serviceSupabase
             .from(entityTable)
             .update({
-              account_approval_status: action === 'reject' ? 'rejected' : 'incomplete',
+              account_approval_status: action === 'reject' ? 'rejected' : 'pending_onboarding',
               updated_at: new Date().toISOString()
             })
             .eq('id', entityId)

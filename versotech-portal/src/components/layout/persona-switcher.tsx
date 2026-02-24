@@ -54,9 +54,8 @@ interface PersonaSwitcherProps {
 
 export function PersonaSwitcher({ className }: PersonaSwitcherProps) {
   const [mounted, setMounted] = useState(false)
-  const { personas, activePersona, switchPersona } = usePersona()
+  const { personas, activePersona, isSwitchingPersona, switchPersona } = usePersona()
   const [open, setOpen] = useState(false)
-  const [switching, setSwitching] = useState(false)
   const { theme } = useTheme()
 
   // Theme based on ACTIVE persona only
@@ -146,7 +145,7 @@ export function PersonaSwitcher({ className }: PersonaSwitcherProps) {
             </span>
           </div>
 
-          {switching ? (
+          {isSwitchingPersona ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <ChevronDown className={cn(
@@ -182,13 +181,11 @@ export function PersonaSwitcher({ className }: PersonaSwitcherProps) {
             <DropdownMenuItem
               key={persona.entity_id}
               onClick={() => {
-                if (isActive || switching) return // Don't switch to current persona or while switching
-                setSwitching(true)
+                if (isActive || isSwitchingPersona) return // Don't switch to current persona or while switching
                 setOpen(false)
-                // Navigate immediately - router.push is fast client-side navigation
                 switchPersona(persona)
               }}
-              disabled={switching}
+              disabled={isSwitchingPersona}
               className={cn(
                 "flex items-center gap-3 py-2 cursor-pointer",
                 isDark

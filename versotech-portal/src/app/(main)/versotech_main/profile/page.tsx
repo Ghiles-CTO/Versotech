@@ -66,7 +66,6 @@ export default async function ProfilePage({
   let investorUserInfo = null
   let latestEntityInfoSnapshot: Record<string, unknown> | null = null
   let latestPersonalInfoSnapshot: Record<string, unknown> | null = null
-  let accountRequestInfo: Record<string, unknown> | null = null
 
   // Check if user is associated with an investor
   const { link: investorUser, error: investorUserError } = await resolvePrimaryInvestorLink(
@@ -322,27 +321,6 @@ export default async function ProfilePage({
         }
       }
 
-      const { data: pendingAccountApproval, error: pendingAccountApprovalError } = await serviceSupabase
-        .from('approvals')
-        .select('entity_metadata')
-        .eq('entity_type', 'account_activation')
-        .eq('entity_id', investor.id)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-
-      if (pendingAccountApprovalError) {
-        console.error('[ProfilePage] Error fetching pending account request-info metadata:', pendingAccountApprovalError)
-      } else {
-        const requestInfo = (pendingAccountApproval?.entity_metadata as Record<string, unknown> | undefined)?.request_info
-        if (requestInfo && typeof requestInfo === 'object' && !Array.isArray(requestInfo)) {
-          const active = (requestInfo as Record<string, unknown>).active === true
-          if (active) {
-            accountRequestInfo = requestInfo as Record<string, unknown>
-          }
-        }
-      }
     }
   }
 
@@ -396,7 +374,6 @@ export default async function ProfilePage({
       memberInfo={memberInfo}
       latestEntityInfoSnapshot={latestEntityInfoSnapshot}
       latestPersonalInfoSnapshot={latestPersonalInfoSnapshot}
-      accountRequestInfo={accountRequestInfo}
     />
   )
 }

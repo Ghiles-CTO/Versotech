@@ -332,7 +332,7 @@ function hasSatisfiedActiveRequestInfo(params: {
   return checks.length > 0 && checks.every(Boolean)
 }
 
-async function clearActiveRequestInfoMarker(params: {
+async function closeResolvedRequestInfoApproval(params: {
   supabase: SupabaseClient
   approvalId: string
   currentEntityMetadata: Record<string, unknown> | null
@@ -354,13 +354,53 @@ async function clearActiveRequestInfoMarker(params: {
   await supabase
     .from('approvals')
     .update({
+      status: 'cancelled',
       entity_metadata: {
         ...metadata,
         request_info: resolvedInfo,
         last_request_info: resolvedInfo,
         request_info_history: [...history, resolvedInfo],
       },
+      notes: 'Auto-cancelled after requested information was resubmitted. A fresh approval will be generated once KYC is complete.',
+      resolved_at: resolvedAt,
       updated_at: resolvedAt,
+    })
+    .eq('id', approvalId)
+    .eq('status', 'pending')
+}
+
+function hasInactiveResolvedRequestInfo(entityMetadata: unknown): boolean {
+  if (!entityMetadata || typeof entityMetadata !== 'object' || Array.isArray(entityMetadata)) {
+    return false
+  }
+
+  const requestInfo = (entityMetadata as Record<string, unknown>).request_info
+  if (!requestInfo || typeof requestInfo !== 'object' || Array.isArray(requestInfo)) {
+    return false
+  }
+
+  const parsed = requestInfo as Record<string, unknown>
+  if (parsed.active !== false) {
+    return false
+  }
+
+  return typeof parsed.resolved_at === 'string' || typeof parsed.requested_at === 'string'
+}
+
+async function closeStalePendingRequestInfoApproval(params: {
+  supabase: SupabaseClient
+  approvalId: string
+}) {
+  const { supabase, approvalId } = params
+  const nowIso = new Date().toISOString()
+
+  await supabase
+    .from('approvals')
+    .update({
+      status: 'cancelled',
+      notes: 'Auto-cancelled stale pending approval after request-info resolution. A fresh approval will be generated when KYC is complete.',
+      resolved_at: nowIso,
+      updated_at: nowIso,
     })
     .eq('id', approvalId)
     .eq('status', 'pending')
@@ -921,6 +961,64 @@ export async function checkAndUpdateEntityKYCStatus(
 
     const currentKycStatus = normalizeStatus(entity.kyc_status)
     const currentAccountStatus = normalizeStatus(entity.account_approval_status)
+    let activationState = await getAccountActivationApprovalState(supabase, entityId)
+
+    // Legacy safety path:
+    // Some older flows left the approval pending with request_info.active=false.
+    // Close those stale tickets so a clean fresh ticket can be generated.
+    if (
+      activationState.pendingApprovalId &&
+      hasInactiveResolvedRequestInfo(activationState.pendingEntityMetadata)
+    ) {
+      await closeStalePendingRequestInfoApproval({
+        supabase,
+        approvalId: activationState.pendingApprovalId,
+      })
+
+      activationState = {
+        ...activationState,
+        hasPending: false,
+        pendingApprovalId: null,
+        pendingEntityMetadata: null,
+        activeRequestInfo: null,
+      }
+    }
+
+    let requestInfoSatisfied = false
+    if (activationState.activeRequestInfo && activationState.pendingApprovalId) {
+      requestInfoSatisfied = hasSatisfiedActiveRequestInfo({
+        requestInfo: activationState.activeRequestInfo,
+        entityType,
+        isIndividual,
+        submissionMemberColumn,
+        relevantMembers,
+        approvedSubmissions,
+      })
+
+      // Legacy safety path:
+      // Older request-info approvals stayed pending. Once the requested
+      // sections are resubmitted, close that stale pending ticket so this
+      // evaluator can generate a fresh approval when KYC is complete.
+      if (requestInfoSatisfied) {
+        await closeResolvedRequestInfoApproval({
+          supabase,
+          approvalId: activationState.pendingApprovalId,
+          currentEntityMetadata: activationState.pendingEntityMetadata,
+          requestInfo: activationState.activeRequestInfo,
+        })
+
+        activationState = {
+          ...activationState,
+          hasPending: false,
+          pendingApprovalId: null,
+          pendingEntityMetadata: null,
+          activeRequestInfo: null,
+        }
+      } else {
+        // Requested information has not been resubmitted yet.
+        return
+      }
+    }
 
     if (!requirementsMet) {
       if (currentKycStatus === 'approved' && currentAccountStatus !== 'approved') {
@@ -959,32 +1057,6 @@ export async function checkAndUpdateEntityKYCStatus(
         .eq('id', entityId)
     }
 
-    const activationState = await getAccountActivationApprovalState(supabase, entityId)
-
-    if (activationState.activeRequestInfo) {
-      const requestInfoSatisfied = hasSatisfiedActiveRequestInfo({
-        requestInfo: activationState.activeRequestInfo,
-        entityType,
-        isIndividual,
-        submissionMemberColumn,
-        relevantMembers,
-        approvedSubmissions,
-      })
-
-      if (!requestInfoSatisfied) {
-        return
-      }
-
-      if (activationState.pendingApprovalId) {
-        await clearActiveRequestInfoMarker({
-          supabase,
-          approvalId: activationState.pendingApprovalId,
-          currentEntityMetadata: activationState.pendingEntityMetadata,
-          requestInfo: activationState.activeRequestInfo,
-        })
-      }
-    }
-
     // Manual lock path:
     // If this entity had a previously approved activation and is no longer approved at account level,
     // do not auto-open a new CEO task. This must be manually re-opened by operations.
@@ -993,7 +1065,7 @@ export async function checkAndUpdateEntityKYCStatus(
         await supabase
           .from(config.entityTable)
           .update({
-            account_approval_status: 'incomplete',
+            account_approval_status: 'pending_onboarding',
             updated_at: new Date().toISOString(),
           })
           .eq('id', entityId)

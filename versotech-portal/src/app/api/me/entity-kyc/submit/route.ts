@@ -465,7 +465,7 @@ export async function submitEntityKycForUser(params: {
       await serviceSupabase
         .from(config.entityTable)
         .update({
-          account_approval_status: 'incomplete',
+          account_approval_status: 'pending_onboarding',
           updated_at: new Date().toISOString(),
         })
         .eq('id', entityId)

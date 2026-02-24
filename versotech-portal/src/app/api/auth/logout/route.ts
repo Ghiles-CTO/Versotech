@@ -19,6 +19,9 @@ export async function POST(request: NextRequest) {
         cookieStore.delete(cookie.name)
       }
     })
+    cookieStore.delete('verso_active_persona_type')
+    cookieStore.delete('verso_active_persona_id')
+    cookieStore.delete('verso_active_tour_persona')
 
     return NextResponse.json({
       success: !signOutError,

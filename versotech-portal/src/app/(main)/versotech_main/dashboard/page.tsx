@@ -1,9 +1,11 @@
 import { getCurrentUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 import { CEODashboard } from './ceo-dashboard'
 import { PersonaDashboard } from './persona-dashboard'
 import { getCachedStaffDashboardData } from '@/lib/staff/dashboard-cache'
+import { resolveActivePersona, type PersonaIdentity } from '@/lib/persona/active-persona'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,9 +16,25 @@ export default async function UnifiedDashboardPage() {
     redirect('/versotech_main/login')
   }
 
-  // Check the active persona from cookie (set by client-side persona switcher)
   const cookieStore = await cookies()
-  const activePersonaType = cookieStore.get('verso_active_persona_type')?.value
+  const cookiePersonaType = cookieStore.get('verso_active_persona_type')?.value
+  const cookiePersonaId = cookieStore.get('verso_active_persona_id')?.value
+
+  const supabase = await createClient()
+  const { data: personas, error: personasError } = await supabase.rpc('get_user_personas', {
+    p_user_id: user.id,
+  })
+
+  if (personasError) {
+    console.warn('[UnifiedDashboardPage] Persona lookup failed:', personasError.message)
+  }
+
+  const resolvedPersona = resolveActivePersona((personas || []) as PersonaIdentity[], {
+    cookiePersonaType,
+    cookiePersonaId,
+  })
+
+  const activePersonaType = resolvedPersona?.persona_type ?? null
 
   // CEO users (ceo or staff_admin) get the full executive dashboard
   // UNLESS they've switched to a different persona via the persona switcher

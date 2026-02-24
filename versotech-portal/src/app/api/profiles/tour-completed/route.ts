@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
+import { resolveActivePersona, type PersonaIdentity } from '@/lib/persona/active-persona'
 
 const ALLOWED_TOUR_PERSONA_KEYS = new Set([
   'investor_entity',
@@ -129,8 +130,11 @@ export async function POST(request: Request) {
     }
 
     const cookieStore = await cookies()
-    const activePersonaType = cookieStore.get('verso_active_persona_type')?.value?.trim()
-    if (activePersonaType && activePersonaType !== requiredPersonaType) {
+    const activePersona = resolveActivePersona((personas || []) as PersonaIdentity[], {
+      cookiePersonaType: cookieStore.get('verso_active_persona_type')?.value?.trim(),
+      cookiePersonaId: cookieStore.get('verso_active_persona_id')?.value?.trim(),
+    })
+    if (activePersona?.persona_type && activePersona.persona_type !== requiredPersonaType) {
       return NextResponse.json(
         { error: 'Persona mismatch with active workspace' },
         { status: 409 }

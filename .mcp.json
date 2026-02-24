@@ -8,7 +8,7 @@
         "--project-ref=ipguxdssecfexudnvtia"
       ],
       "env": {
-        "SUPABASE_ACCESS_TOKEN": "sbp_20bd5d2289cf105338f2452c367375765d3d947a"
+        "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}"
       }
     },
     "supabase": {
@@ -19,7 +19,7 @@
         "--project-ref=kagzryotbbnusdcyvqei"
       ],
       "env": {
-        "SUPABASE_ACCESS_TOKEN": "sbp_20bd5d2289cf105338f2452c367375765d3d947a"
+        "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}"
       }
     },
     "executeautomation-playwright-server": {
@@ -28,6 +28,16 @@
         "-y",
         "@executeautomation/playwright-mcp-server"
       ]
+    },
+    "linear": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-linear"
+      ],
+      "env": {
+        "LINEAR_ACCESS_TOKEN": "${LINEAR_ACCESS_TOKEN}"
+      }
     }
   }
 }

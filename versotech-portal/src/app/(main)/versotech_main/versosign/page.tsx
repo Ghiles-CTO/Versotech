@@ -6,6 +6,7 @@ import type { SignatureGroup, SignatureTask, ExpiredSignature } from '@/app/(sta
 import { PlacementAgreementSigningSection } from './placement-agreement-signing-section'
 import { checkStaffAccess } from '@/lib/auth'
 import { cookies } from 'next/headers'
+import { resolveActivePersona, type PersonaIdentity } from '@/lib/persona/active-persona'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,10 +69,13 @@ export default async function VersoSignPage() {
   const isPartner = personas?.some((p: any) => p.persona_type === 'partner') || false
   const isCommercialPartner = personas?.some((p: any) => p.persona_type === 'commercial_partner') || false
 
-  // Get ACTIVE persona from cookie - filter tasks by active persona only
   const cookieStore = await cookies()
-  const activePersonaType = cookieStore.get('verso_active_persona_type')?.value
-  const activePersonaId = cookieStore.get('verso_active_persona_id')?.value
+  const activePersona = resolveActivePersona((personas || []) as PersonaIdentity[], {
+    cookiePersonaType: cookieStore.get('verso_active_persona_type')?.value,
+    cookiePersonaId: cookieStore.get('verso_active_persona_id')?.value,
+  })
+  const activePersonaType = activePersona?.persona_type
+  const activePersonaId = activePersona?.entity_id
 
   // Determine which persona queries should run based on ACTIVE persona
   const shouldShowStaffTasks = isStaff && (activePersonaType === 'ceo' || activePersonaType === 'staff' || !activePersonaType)

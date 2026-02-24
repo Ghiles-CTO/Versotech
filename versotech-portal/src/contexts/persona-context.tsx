@@ -1,8 +1,16 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
-import { useRouter } from 'next/navigation'
+import { createContext, useContext, useState, useEffect, useCallback, useRef, useTransition, ReactNode } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import {
+  ACTIVE_PERSONA_ID_COOKIE,
+  ACTIVE_PERSONA_STORAGE_PREFIX,
+  ACTIVE_PERSONA_TYPE_COOKIE,
+  getPerUserPersonaStorageKey,
+  readCookieValue,
+  resolveActivePersona,
+} from '@/lib/persona/active-persona'
 
 /**
  * Persona type matching get_user_personas() function return
@@ -25,6 +33,7 @@ interface PersonaContextState {
   personas: Persona[]
   activePersona: Persona | null
   isLoading: boolean
+  isSwitchingPersona: boolean
   error: string | null
   switchPersona: (persona: Persona) => void
   refreshPersonas: () => Promise<void>
@@ -43,57 +52,6 @@ interface PersonaContextState {
 
 const PersonaContext = createContext<PersonaContextState | undefined>(undefined)
 
-const ACTIVE_PERSONA_KEY = 'verso_active_persona'
-const ACTIVE_PERSONA_TYPE_COOKIE = 'verso_active_persona_type'
-const ACTIVE_PERSONA_ID_COOKIE = 'verso_active_persona_id'
-const PERSONA_PRIORITY: Record<Persona['persona_type'], number> = {
-  ceo: 1,
-  staff: 2,
-  arranger: 3,
-  introducer: 4,
-  partner: 5,
-  commercial_partner: 6,
-  lawyer: 7,
-  investor: 8,
-}
-
-function readCookie(name: string): string | null {
-  const prefix = `${name}=`
-  for (const chunk of document.cookie.split('; ')) {
-    if (chunk.startsWith(prefix)) {
-      return decodeURIComponent(chunk.slice(prefix.length))
-    }
-  }
-  return null
-}
-
-function selectPersonaByPriority(allPersonas: Persona[]): Persona | null {
-  if (allPersonas.length === 0) return null
-  return allPersonas.reduce((best, current) => {
-    const bestPriority = PERSONA_PRIORITY[best.persona_type] ?? 99
-    const currentPriority = PERSONA_PRIORITY[current.persona_type] ?? 99
-    return currentPriority < bestPriority ? current : best
-  })
-}
-
-function selectPersonaFromContext(allPersonas: Persona[]): Persona | null {
-  if (allPersonas.length === 0) return null
-
-  const cookiePersonaId = readCookie(ACTIVE_PERSONA_ID_COOKIE)
-  const cookiePersonaType = readCookie(ACTIVE_PERSONA_TYPE_COOKIE)
-  if (cookiePersonaId) {
-    const cookiePersona = allPersonas.find((persona) =>
-      persona.entity_id === cookiePersonaId &&
-      (!cookiePersonaType || persona.persona_type === cookiePersonaType)
-    )
-    if (cookiePersona) {
-      return cookiePersona
-    }
-  }
-
-  return selectPersonaByPriority(allPersonas)
-}
-
 /**
  * Set cookies that the server can read to determine active persona identity.
  */
@@ -106,14 +64,67 @@ function setPersonaCookie(personaType: string, personaId: string) {
 interface PersonaProviderProps {
   children: ReactNode
   initialPersonas?: Persona[]
+  userId: string
 }
 
-export function PersonaProvider({ children, initialPersonas = [] }: PersonaProviderProps) {
+export function PersonaProvider({ children, initialPersonas = [], userId }: PersonaProviderProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const [personas, setPersonas] = useState<Persona[]>(initialPersonas)
   const [activePersona, setActivePersona] = useState<Persona | null>(null)
   const [isLoading, setIsLoading] = useState(!initialPersonas.length)
+  const [isSwitchingPersona, startPersonaSwitchTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const hasRefreshedForPersonaMismatch = useRef(false)
+  const storageKey = getPerUserPersonaStorageKey(userId)
+
+  const readStoredPersonaId = useCallback((): string | null => {
+    const scopedPersonaId = localStorage.getItem(storageKey)
+    if (scopedPersonaId) {
+      return scopedPersonaId
+    }
+
+    // Legacy migration path (global key used before per-user keys).
+    const legacyPersonaId = localStorage.getItem(ACTIVE_PERSONA_STORAGE_PREFIX)
+    if (legacyPersonaId) {
+      localStorage.setItem(storageKey, legacyPersonaId)
+      localStorage.removeItem(ACTIVE_PERSONA_STORAGE_PREFIX)
+      return legacyPersonaId
+    }
+
+    return null
+  }, [storageKey])
+
+  const selectPersonaFromContext = useCallback((allPersonas: Persona[]): Persona | null => {
+    return resolveActivePersona(allPersonas, {
+      cookiePersonaId: readCookieValue(document.cookie, ACTIVE_PERSONA_ID_COOKIE),
+      cookiePersonaType: readCookieValue(document.cookie, ACTIVE_PERSONA_TYPE_COOKIE),
+      storedPersonaId: readStoredPersonaId(),
+    })
+  }, [readStoredPersonaId])
+
+  const syncSelectedPersona = useCallback((selectedPersona: Persona | null) => {
+    if (!selectedPersona) return
+
+    const currentTypeCookie = readCookieValue(document.cookie, ACTIVE_PERSONA_TYPE_COOKIE)
+    const currentIdCookie = readCookieValue(document.cookie, ACTIVE_PERSONA_ID_COOKIE)
+    const cookieWasStale =
+      (currentTypeCookie && currentTypeCookie !== selectedPersona.persona_type) ||
+      (currentIdCookie && currentIdCookie !== selectedPersona.entity_id)
+
+    setPersonaCookie(selectedPersona.persona_type, selectedPersona.entity_id)
+    localStorage.setItem(storageKey, selectedPersona.entity_id)
+
+    // Quiet reconciliation: refresh server components once when dashboard was rendered with stale cookie.
+    if (
+      cookieWasStale &&
+      !hasRefreshedForPersonaMismatch.current &&
+      window.location.pathname.includes('/dashboard')
+    ) {
+      hasRefreshedForPersonaMismatch.current = true
+      router.refresh()
+    }
+  }, [router, storageKey])
 
   // Load personas from database
   const refreshPersonas = useCallback(async () => {
@@ -146,32 +157,7 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
       const selectedPersona = selectPersonaFromContext(fetchedPersonas)
 
       setActivePersona(selectedPersona)
-      // Set cookie for server-side persona detection on initial load
-      if (selectedPersona) {
-        // Check if the current cookies are stale (from a different user/session)
-        const currentTypeCookie = document.cookie
-          .split('; ')
-          .find(row => row.startsWith(ACTIVE_PERSONA_TYPE_COOKIE))
-          ?.split('=')[1]
-        const currentIdCookie = document.cookie
-          .split('; ')
-          .find(row => row.startsWith(ACTIVE_PERSONA_ID_COOKIE))
-          ?.split('=')[1]
-
-        const cookieWasStale =
-          (currentTypeCookie && currentTypeCookie !== selectedPersona.persona_type) ||
-          (currentIdCookie && currentIdCookie !== selectedPersona.entity_id)
-
-        setPersonaCookie(selectedPersona.persona_type, selectedPersona.entity_id)
-        localStorage.setItem(ACTIVE_PERSONA_KEY, selectedPersona.entity_id)
-
-        // If cookie was stale, the server rendered the wrong dashboard
-        // Force a refresh to get the correct server-side render
-        if (cookieWasStale && window.location.pathname.includes('/dashboard')) {
-          window.location.reload()
-          return
-        }
-      }
+      syncSelectedPersona(selectedPersona)
 
     } catch (err) {
       console.error('[persona-context] Unexpected error:', err)
@@ -179,20 +165,27 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [selectPersonaFromContext, syncSelectedPersona])
 
   // Switch active persona
   const switchPersona = useCallback((persona: Persona) => {
     // Update React state immediately for instant UI feedback
     setActivePersona(persona)
     // Persist to localStorage for future sessions
-    localStorage.setItem(ACTIVE_PERSONA_KEY, persona.entity_id)
+    localStorage.setItem(storageKey, persona.entity_id)
     // Set cookie for server-side persona detection
     setPersonaCookie(persona.persona_type, persona.entity_id)
-    // Use client-side navigation - MUCH faster than window.location.href
-    // router.push preserves React context and only re-renders necessary components
-    router.push('/versotech_main/dashboard')
-  }, [router])
+    hasRefreshedForPersonaMismatch.current = true
+
+    startPersonaSwitchTransition(() => {
+      if (pathname.startsWith('/versotech_main/dashboard')) {
+        router.refresh()
+        return
+      }
+
+      router.push('/versotech_main/dashboard')
+    })
+  }, [pathname, router, startPersonaSwitchTransition, storageKey])
 
   // Load personas on mount if not provided
   useEffect(() => {
@@ -202,13 +195,10 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
       const selectedPersona = selectPersonaFromContext(initialPersonas)
 
       setActivePersona(selectedPersona ?? null)
-      if (selectedPersona) {
-        localStorage.setItem(ACTIVE_PERSONA_KEY, selectedPersona.entity_id)
-        setPersonaCookie(selectedPersona.persona_type, selectedPersona.entity_id)
-      }
+      syncSelectedPersona(selectedPersona)
       setIsLoading(false)
     }
-  }, [initialPersonas, refreshPersonas])
+  }, [initialPersonas, refreshPersonas, selectPersonaFromContext, syncSelectedPersona])
 
   // Derived state helpers
   // CEO check: user has a 'ceo' persona (from ceo_users table)
@@ -247,6 +237,7 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
     personas,
     activePersona,
     isLoading,
+    isSwitchingPersona,
     error,
     switchPersona,
     refreshPersonas,

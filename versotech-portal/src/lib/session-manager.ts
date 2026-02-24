@@ -8,7 +8,7 @@
  */
 
 const AUTH_KEY_HINTS = ['supabase', 'sb-', 'auth', 'supabase.auth.token']
-const PERSONA_STORAGE_KEYS = ['verso_active_persona']
+const PERSONA_STORAGE_PREFIX = 'verso_active_persona'
 const PERSONA_COOKIE_NAMES = [
   'verso_active_persona_type',
   'verso_active_persona_id',
@@ -106,10 +106,14 @@ class SessionManager {
       return
     }
 
-    PERSONA_STORAGE_KEYS.forEach((key) => {
-      window.localStorage.removeItem(key)
-      window.sessionStorage.removeItem(key)
-    })
+    const clearScopedPersonaKeys = (storage: Storage) => {
+      Object.keys(storage)
+        .filter((key) => key === PERSONA_STORAGE_PREFIX || key.startsWith(`${PERSONA_STORAGE_PREFIX}:`))
+        .forEach((key) => storage.removeItem(key))
+    }
+
+    clearScopedPersonaKeys(window.localStorage)
+    clearScopedPersonaKeys(window.sessionStorage)
 
     const paths = ['/', '/versoholdings', '/versotech', '/versotech_main']
     const domains = [window.location.hostname, `.${window.location.hostname}`, '']

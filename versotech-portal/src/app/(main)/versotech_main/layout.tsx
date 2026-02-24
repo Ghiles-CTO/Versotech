@@ -9,6 +9,7 @@ import { ProxyModeProvider, ProxyModeBanner } from '@/components/commercial-part
 import { PlatformTour } from '@/components/tour'
 import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
 import { TOUR_VERSION } from '@/config/platform-tour'
+import { resolveActivePersona, type PersonaIdentity } from '@/lib/persona/active-persona'
 
 export const dynamic = 'force-dynamic'
 
@@ -97,36 +98,11 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
     }
   }
 
-  // Determine active persona for tour.
-  // Source of truth order:
-  // 1) Active persona id + type cookie
-  // 2) Priority fallback (matches persona-context)
-  const personaPriority: Record<string, number> = {
-    'ceo': 1,
-    'staff': 2,
-    'arranger': 3,
-    'introducer': 4,
-    'partner': 5,
-    'commercial_partner': 6,
-    'lawyer': 7,
-    'investor': 8,
-  }
-
-  let selectedPersonaForTour: Persona | null = null
-  if (activePersonaIdCookie) {
-    selectedPersonaForTour = userPersonas.find((persona) =>
-      persona.entity_id === activePersonaIdCookie &&
-      (!activePersonaTypeCookie || persona.persona_type === activePersonaTypeCookie)
-    ) || null
-  }
-
-  if (!selectedPersonaForTour && userPersonas.length > 0) {
-    selectedPersonaForTour = userPersonas.reduce((best, current) => {
-      const bestPriority = personaPriority[best.persona_type] ?? 99
-      const currentPriority = personaPriority[current.persona_type] ?? 99
-      return currentPriority < bestPriority ? current : best
-    })
-  }
+  // Determine active persona for tour using the same resolver as the client.
+  const selectedPersonaForTour = resolveActivePersona(userPersonas as PersonaIdentity[], {
+    cookiePersonaType: activePersonaTypeCookie,
+    cookiePersonaId: activePersonaIdCookie,
+  })
 
   // Type as string to allow extended investor types (investor_entity, investor_individual)
   let activePersonaForTour: string = selectedPersonaForTour
@@ -196,7 +172,7 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
   }
 
   return (
-    <PersonaProvider initialPersonas={userPersonas}>
+    <PersonaProvider initialPersonas={userPersonas} userId={profile.id}>
       <ProxyModeProvider>
         <ProxyModeBanner />
         <PlatformTour
