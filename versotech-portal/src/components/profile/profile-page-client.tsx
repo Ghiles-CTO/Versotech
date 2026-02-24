@@ -122,6 +122,32 @@ type InvestorUserInfo = {
   can_sign: boolean
 }
 
+type InvestorKycMissingItem = {
+  scope: 'entity' | 'member'
+  name: string
+  missingItems: string[]
+  memberId?: string | null
+}
+
+type InvestorRequestInfoNotice = {
+  details: string
+  reason: string | null
+  requestedAt: string | null
+}
+
+type InvestorAccountApprovalReadiness = {
+  investorId: string
+  investorName: string
+  investorType: string
+  accountApprovalStatus: string | null
+  isKycApproved: boolean
+  isReady: boolean
+  hasPendingApproval: boolean
+  pendingApprovalId: string | null
+  missingItems: InvestorKycMissingItem[]
+  latestRequestInfo: InvestorRequestInfoNotice | null
+}
+
 interface ProfilePageClientProps {
   userEmail?: string
   profile: {
@@ -145,6 +171,7 @@ interface ProfilePageClientProps {
   latestEntityInfoSnapshot?: Record<string, unknown> | null
   latestPersonalInfoSnapshot?: Record<string, unknown> | null
   latestMemberPersonalInfoSnapshot?: Record<string, unknown> | null
+  investorAccountApprovalReadiness?: InvestorAccountApprovalReadiness | null
 }
 
 // Status badge configurations
@@ -281,12 +308,15 @@ export function ProfilePageClient({
   latestEntityInfoSnapshot,
   latestPersonalInfoSnapshot,
   latestMemberPersonalInfoSnapshot,
+  investorAccountApprovalReadiness,
 }: ProfilePageClientProps) {
   const [profile, setProfile] = useState(initialProfile)
   const [showKycDialog, setShowKycDialog] = useState(false)
   const [showEntityOverviewDialog, setShowEntityOverviewDialog] = useState(false)
   const [isSubmittingEntityKyc, setIsSubmittingEntityKyc] = useState(false)
   const [isSubmittingPersonalKyc, setIsSubmittingPersonalKyc] = useState(false)
+  const [isSubmittingAccountApproval, setIsSubmittingAccountApproval] = useState(false)
+  const [showRequestInfoDetails, setShowRequestInfoDetails] = useState(false)
   const [approvedDocMetadata, setApprovedDocMetadata] = useState<ApprovedKycDocumentMetadata | null>(null)
   // Use server-passed investorInfo instead of client-side fetching
   const hasInvestorEntity = !!investorInfo
@@ -302,6 +332,12 @@ export function ProfilePageClient({
     ? hasPersonalInfoOverviewChanges(investorInfo, latestPersonalInfoSnapshot)
     : false
   const personalSubmitInFlight = ['submitted', 'pending_review', 'under_review'].includes(entityKycStatus)
+  const canSubmitAccountApproval = !!(investorUserInfo?.is_primary || investorUserInfo?.role === 'admin')
+  const readiness = investorAccountApprovalReadiness || null
+  const missingAccountKycItems = readiness?.missingItems || []
+  const hasPendingAccountApproval = readiness?.hasPendingApproval || false
+  const latestAccountRequestInfo = readiness?.latestRequestInfo || null
+  const isAccountApprovalReady = readiness?.isReady || false
 
   // Submit entity KYC for review
   const handleSubmitEntityKyc = async () => {
@@ -356,6 +392,41 @@ export function ProfilePageClient({
       toast.error(error instanceof Error ? error.message : 'Failed to submit personal KYC')
     } finally {
       setIsSubmittingPersonalKyc(false)
+    }
+  }
+
+  const handleSubmitAccountForApproval = async () => {
+    setIsSubmittingAccountApproval(true)
+    try {
+      const response = await fetch('/api/investors/me/submit-account-approval', {
+        method: 'POST',
+      })
+
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        if (Array.isArray(data?.missing) && data.missing.length > 0) {
+          const firstMissing = data.missing[0]
+          const firstLine =
+            firstMissing && typeof firstMissing === 'object'
+              ? `${String((firstMissing as { name?: string }).name || 'KYC')}: ${
+                  Array.isArray((firstMissing as { missingItems?: unknown[] }).missingItems)
+                    ? (firstMissing as { missingItems: string[] }).missingItems.join(', ')
+                    : 'missing information'
+                }`
+              : 'Missing KYC information'
+          throw new Error(firstLine)
+        }
+
+        throw new Error(data?.error || 'Failed to submit account for approval')
+      }
+
+      toast.success('Account submitted for CEO approval')
+      window.location.reload()
+    } catch (error) {
+      console.error('[profile-page] Failed to submit account approval:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to submit account for approval')
+    } finally {
+      setIsSubmittingAccountApproval(false)
     }
   }
 
@@ -428,6 +499,14 @@ export function ProfilePageClient({
     label: 'Account Pending',
     className: 'bg-gray-100 text-gray-800 border-gray-200',
   }
+  const hideAccountApprovalSection =
+    accountApprovalStatusKey === 'approved' || accountApprovalStatusKey === 'rejected'
+  const showRequestInfoBadge = !!latestAccountRequestInfo && !hasPendingAccountApproval && !hideAccountApprovalSection
+  const accountApprovalSubmitDisabled =
+    isSubmittingAccountApproval ||
+    !canSubmitAccountApproval ||
+    hasPendingAccountApproval ||
+    !isAccountApprovalReady
 
   // Staff layout - keep the original grid layout
   if (isStaff) {
@@ -845,42 +924,125 @@ export function ProfilePageClient({
                 title="Personal KYC Information"
               />
 
-              {(personalHasUnsubmittedChanges || personalSubmitInFlight) && (
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="space-y-1">
-                        <p className="font-medium text-foreground">Submit Personal Information for Review</p>
-                        <p className="text-sm text-muted-foreground">
-                          Required before final KYC completion and account activation.
-                        </p>
-                        {personalSubmitInFlight && (
-                          <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                            <Send className="h-3 w-3 mr-1" />
-                            Personal Info Submitted
-                          </Badge>
-                        )}
-                        {!personalSubmitInFlight && !personalHasUnsubmittedChanges && (
-                          <p className="text-xs text-muted-foreground">No personal information changes to submit.</p>
-                        )}
-                      </div>
-                      <Button
-                        onClick={handleSubmitPersonalKyc}
-                        disabled={
-                          isSubmittingPersonalKyc ||
-                          personalSubmitInFlight ||
-                          !personalHasUnsubmittedChanges
-                        }
-                        size="sm"
-                      >
-                        <Send className="h-4 w-4 mr-2" />
-                        {isSubmittingPersonalKyc ? 'Submitting...' : 'Submit Personal Info'}
-                      </Button>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="space-y-1">
+                      <p className="font-medium text-foreground">Save Personal Information</p>
+                      <p className="text-sm text-muted-foreground">
+                        Save personal information updates for KYC processing.
+                      </p>
+                      {personalSubmitInFlight && (
+                        <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                          <Send className="h-3 w-3 mr-1" />
+                          Personal Info Saved
+                        </Badge>
+                      )}
+                      {!personalHasUnsubmittedChanges && (
+                        <p className="text-xs text-muted-foreground">No edits to save.</p>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+                    <Button
+                      onClick={handleSubmitPersonalKyc}
+                      disabled={
+                        isSubmittingPersonalKyc ||
+                        personalSubmitInFlight ||
+                        !personalHasUnsubmittedChanges
+                      }
+                      size="sm"
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      {isSubmittingPersonalKyc ? 'Saving...' : 'Save'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
+          )}
+
+          {hasInvestorEntity && !hideAccountApprovalSection && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Submit Account for Approval</CardTitle>
+                <CardDescription>
+                  Submit your completed account file to the CEO for activation review.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Before submitting, please ensure all authorized signatories are registered as members on the platform, and each member has completed full KYC, including Personal Information, ID Document, and Proof of Address.
+                </p>
+
+                {missingAccountKycItems.length > 0 ? (
+                  <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+                    <p className="text-sm font-medium text-amber-900">Outstanding KYC requirements</p>
+                    <div className="mt-2 space-y-1 text-sm text-amber-800">
+                      {missingAccountKycItems.map((item, index) => (
+                        <p key={`${item.scope}-${item.memberId || item.name}-${index}`}>
+                          <span className="font-medium">{item.name}:</span> {item.missingItems.join(', ')}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    All required KYC items are complete.
+                  </p>
+                )}
+
+                <div className="pt-1">
+                  <div className="relative inline-flex">
+                    <Button
+                      onClick={handleSubmitAccountForApproval}
+                      disabled={accountApprovalSubmitDisabled}
+                      size="sm"
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      {isSubmittingAccountApproval ? 'Submitting...' : 'Submit Account for Approval'}
+                    </Button>
+                    {showRequestInfoBadge && (
+                      <button
+                        type="button"
+                        onClick={() => setShowRequestInfoDetails((prev) => !prev)}
+                        className="absolute -top-2 -right-2 h-5 w-5 rounded-full border border-red-200 bg-red-100 text-red-700 inline-flex items-center justify-center"
+                        aria-label="Show latest request for information"
+                        title="Show latest request for information"
+                      >
+                        <AlertCircle className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {!canSubmitAccountApproval && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Only primary contacts or admins can submit account approval.
+                    </p>
+                  )}
+                  {canSubmitAccountApproval && hasPendingAccountApproval && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Under review by the CEO.
+                    </p>
+                  )}
+                  {canSubmitAccountApproval && !hasPendingAccountApproval && !isAccountApprovalReady && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Complete all required KYC items before submitting for approval.
+                    </p>
+                  )}
+                </div>
+
+                {showRequestInfoDetails && latestAccountRequestInfo && (
+                  <div className="rounded-md border border-red-200 bg-red-50 p-3">
+                    <p className="text-sm font-medium text-red-900">Latest request for information</p>
+                    <p className="mt-1 text-sm text-red-800">{latestAccountRequestInfo.details}</p>
+                    {latestAccountRequestInfo.requestedAt && (
+                      <p className="mt-1 text-xs text-red-700">
+                        Requested on {new Date(latestAccountRequestInfo.requestedAt).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           )}
 
           {/* If no investor entity, show basic profile edit */}

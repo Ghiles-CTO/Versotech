@@ -1077,6 +1077,13 @@ export async function checkAndUpdateEntityKYCStatus(
       return
     }
 
+    // Investor path is now manual:
+    // account-activation approvals are created only when the investor explicitly
+    // clicks "Submit Account for Approval" from the overview page.
+    if (entityType === 'investor') {
+      return
+    }
+
     await setAccountPendingApprovalIfNeeded(
       supabase,
       entityType,

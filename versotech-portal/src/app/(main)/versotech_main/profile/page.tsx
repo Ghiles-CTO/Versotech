@@ -4,6 +4,10 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { ProfilePageClient } from '@/components/profile/profile-page-client'
 import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
 import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
+import {
+  getInvestorAccountApprovalReadiness,
+  type InvestorAccountApprovalReadiness,
+} from '@/lib/kyc/investor-account-approval-readiness'
 import { resolveActivePersona, type PersonaIdentity } from '@/lib/persona/active-persona'
 
 export const dynamic = 'force-dynamic'
@@ -67,6 +71,7 @@ export default async function ProfilePage({
   let latestEntityInfoSnapshot: Record<string, unknown> | null = null
   let latestPersonalInfoSnapshot: Record<string, unknown> | null = null
   let latestMemberPersonalInfoSnapshot: Record<string, unknown> | null = null
+  let investorAccountApprovalReadiness: InvestorAccountApprovalReadiness | null = null
 
   // Check if user is associated with an investor
   const { link: investorUser, error: investorUserError } = await resolvePrimaryInvestorLink(
@@ -341,6 +346,11 @@ export default async function ProfilePage({
         }
       }
 
+      investorAccountApprovalReadiness = await getInvestorAccountApprovalReadiness({
+        supabase: serviceSupabase,
+        investorId: investor.id,
+      })
+
     }
   }
 
@@ -395,6 +405,7 @@ export default async function ProfilePage({
       latestEntityInfoSnapshot={latestEntityInfoSnapshot}
       latestPersonalInfoSnapshot={latestPersonalInfoSnapshot}
       latestMemberPersonalInfoSnapshot={latestMemberPersonalInfoSnapshot}
+      investorAccountApprovalReadiness={investorAccountApprovalReadiness}
     />
   )
 }

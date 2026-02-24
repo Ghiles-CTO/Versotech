@@ -422,7 +422,7 @@ export function UserDetailClient({ user, fullKycData }: UserDetailClientProps) {
                         )}
                         {entity.approvalStatus && (
                           <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${approvalStyle}`}>
-                            CEO Approval: {entity.approvalStatus.charAt(0).toUpperCase() + entity.approvalStatus.slice(1)}
+                            Account Status: {entity.approvalStatus.charAt(0).toUpperCase() + entity.approvalStatus.slice(1)}
                           </Badge>
                         )}
                       </div>
