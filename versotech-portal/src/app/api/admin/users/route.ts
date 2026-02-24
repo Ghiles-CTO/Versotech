@@ -10,6 +10,7 @@ export interface EntityAssociation {
   name: string
   type: 'investor' | 'partner' | 'lawyer' | 'commercial_partner' | 'introducer' | 'arranger'
   role: string
+  memberRole: string | null
   isPrimary: boolean
   canSign: boolean
   approvalStatus: string | null
@@ -182,12 +183,12 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
       introducerUsersResult,
       arrangerUsersResult
     ] = await Promise.all([
-      supabase.from('investor_users').select('user_id, investor_id, role, is_primary, can_sign, ceo_approval_status, investors:investors!investor_users_investor_id_fkey(id, legal_name)'),
-      supabase.from('partner_users').select('user_id, partner_id, role, is_primary, can_sign, ceo_approval_status, partners:partners!partner_users_partner_fk(id, name, legal_name)'),
-      supabase.from('lawyer_users').select('user_id, lawyer_id, role, is_primary, can_sign, ceo_approval_status, lawyers:lawyers!lawyer_users_lawyer_fk(id, firm_name, display_name)'),
-      supabase.from('commercial_partner_users').select('user_id, commercial_partner_id, role, is_primary, can_sign, ceo_approval_status, commercial_partners:commercial_partners!commercial_partner_users_cp_fk(id, name, legal_name)'),
-      supabase.from('introducer_users').select('user_id, introducer_id, role, is_primary, can_sign, ceo_approval_status, introducers:introducers!introducer_users_introducer_fk(id, legal_name)'),
-      supabase.from('arranger_users').select('user_id, arranger_id, role, is_primary, can_sign, ceo_approval_status, arranger_entities:arranger_entities!arranger_users_arranger_fk(id, legal_name)')
+      supabase.from('investor_users').select('user_id, investor_id, role, is_primary, can_sign, investors:investors!investor_users_investor_id_fkey(id, legal_name, account_approval_status)'),
+      supabase.from('partner_users').select('user_id, partner_id, role, is_primary, can_sign, partners:partners!partner_users_partner_fk(id, name, legal_name, account_approval_status)'),
+      supabase.from('lawyer_users').select('user_id, lawyer_id, role, is_primary, can_sign, lawyers:lawyers!lawyer_users_lawyer_fk(id, firm_name, display_name, account_approval_status)'),
+      supabase.from('commercial_partner_users').select('user_id, commercial_partner_id, role, is_primary, can_sign, commercial_partners:commercial_partners!commercial_partner_users_cp_fk(id, name, legal_name, account_approval_status)'),
+      supabase.from('introducer_users').select('user_id, introducer_id, role, is_primary, can_sign, introducers:introducers!introducer_users_introducer_fk(id, legal_name, account_approval_status)'),
+      supabase.from('arranger_users').select('user_id, arranger_id, role, is_primary, can_sign, arranger_entities:arranger_entities!arranger_users_arranger_fk(id, legal_name, account_approval_status)')
     ])
 
     // Build entity association maps by user_id
@@ -199,7 +200,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
     // Process investor associations
     if (investorUsersResult.data) {
       for (const iu of investorUsersResult.data) {
-        const entity = getEntity(iu.investors) as { id: string; legal_name: string | null } | null
+        const entity = getEntity(iu.investors) as { id: string; legal_name: string | null; account_approval_status: string | null } | null
         if (!entity) continue
         const associations = entityMap.get(iu.user_id) || []
         associations.push({
@@ -209,7 +210,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
           role: iu.role || 'member',
           isPrimary: iu.is_primary || false,
           canSign: iu.can_sign || false,
-          approvalStatus: iu.ceo_approval_status
+          memberRole: null,
+          approvalStatus: entity.account_approval_status
         })
         entityMap.set(iu.user_id, associations)
       }
@@ -218,7 +220,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
     // Process partner associations
     if (partnerUsersResult.data) {
       for (const pu of partnerUsersResult.data) {
-        const entity = getEntity(pu.partners) as { id: string; name: string | null; legal_name: string | null } | null
+        const entity = getEntity(pu.partners) as { id: string; name: string | null; legal_name: string | null; account_approval_status: string | null } | null
         if (!entity) continue
         const associations = entityMap.get(pu.user_id) || []
         associations.push({
@@ -228,7 +230,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
           role: pu.role || 'member',
           isPrimary: pu.is_primary || false,
           canSign: pu.can_sign || false,
-          approvalStatus: pu.ceo_approval_status
+          memberRole: null,
+          approvalStatus: entity.account_approval_status
         })
         entityMap.set(pu.user_id, associations)
       }
@@ -237,7 +240,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
     // Process lawyer associations
     if (lawyerUsersResult.data) {
       for (const lu of lawyerUsersResult.data) {
-        const entity = getEntity(lu.lawyers) as { id: string; firm_name: string | null; display_name: string | null } | null
+        const entity = getEntity(lu.lawyers) as { id: string; firm_name: string | null; display_name: string | null; account_approval_status: string | null } | null
         if (!entity) continue
         const associations = entityMap.get(lu.user_id) || []
         associations.push({
@@ -247,7 +250,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
           role: lu.role || 'member',
           isPrimary: lu.is_primary || false,
           canSign: lu.can_sign || false,
-          approvalStatus: lu.ceo_approval_status
+          memberRole: null,
+          approvalStatus: entity.account_approval_status
         })
         entityMap.set(lu.user_id, associations)
       }
@@ -256,7 +260,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
     // Process commercial partner associations
     if (commercialPartnerUsersResult.data) {
       for (const cpu of commercialPartnerUsersResult.data) {
-        const entity = getEntity(cpu.commercial_partners) as { id: string; name: string | null; legal_name: string | null } | null
+        const entity = getEntity(cpu.commercial_partners) as { id: string; name: string | null; legal_name: string | null; account_approval_status: string | null } | null
         if (!entity) continue
         const associations = entityMap.get(cpu.user_id) || []
         associations.push({
@@ -266,7 +270,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
           role: cpu.role || 'member',
           isPrimary: cpu.is_primary || false,
           canSign: cpu.can_sign || false,
-          approvalStatus: cpu.ceo_approval_status
+          memberRole: null,
+          approvalStatus: entity.account_approval_status
         })
         entityMap.set(cpu.user_id, associations)
       }
@@ -275,7 +280,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
     // Process introducer associations
     if (introducerUsersResult.data) {
       for (const iu of introducerUsersResult.data) {
-        const entity = getEntity(iu.introducers) as { id: string; legal_name: string | null } | null
+        const entity = getEntity(iu.introducers) as { id: string; legal_name: string | null; account_approval_status: string | null } | null
         if (!entity) continue
         const associations = entityMap.get(iu.user_id) || []
         associations.push({
@@ -285,7 +290,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
           role: iu.role || 'member',
           isPrimary: iu.is_primary || false,
           canSign: iu.can_sign || false,
-          approvalStatus: iu.ceo_approval_status
+          memberRole: null,
+          approvalStatus: entity.account_approval_status
         })
         entityMap.set(iu.user_id, associations)
       }
@@ -294,7 +300,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
     // Process arranger associations
     if (arrangerUsersResult.data) {
       for (const au of arrangerUsersResult.data) {
-        const entity = getEntity(au.arranger_entities) as { id: string; legal_name: string | null } | null
+        const entity = getEntity(au.arranger_entities) as { id: string; legal_name: string | null; account_approval_status: string | null } | null
         if (!entity) continue
         const associations = entityMap.get(au.user_id) || []
         associations.push({
@@ -304,7 +310,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
           role: au.role || 'member',
           isPrimary: au.is_primary || false,
           canSign: au.can_sign || false,
-          approvalStatus: au.ceo_approval_status
+          memberRole: null,
+          approvalStatus: entity.account_approval_status
         })
         entityMap.set(au.user_id, associations)
       }

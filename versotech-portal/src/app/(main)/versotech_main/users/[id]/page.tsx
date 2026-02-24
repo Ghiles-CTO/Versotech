@@ -101,12 +101,12 @@ export default async function UserDetailPage({
     introducerUsersResult,
     arrangerUsersResult
   ] = await Promise.all([
-    serviceSupabase.from('investor_users').select('user_id, investor_id, role, is_primary, can_sign, ceo_approval_status, investors:investors!investor_users_investor_id_fkey(id, legal_name)').eq('user_id', id),
-    serviceSupabase.from('partner_users').select('user_id, partner_id, role, is_primary, can_sign, ceo_approval_status, partners:partners!partner_users_partner_fk(id, name, legal_name)').eq('user_id', id),
-    serviceSupabase.from('lawyer_users').select('user_id, lawyer_id, role, is_primary, can_sign, ceo_approval_status, lawyers:lawyers!lawyer_users_lawyer_fk(id, firm_name, display_name)').eq('user_id', id),
-    serviceSupabase.from('commercial_partner_users').select('user_id, commercial_partner_id, role, is_primary, can_sign, ceo_approval_status, commercial_partners:commercial_partners!commercial_partner_users_cp_fk(id, name, legal_name)').eq('user_id', id),
-    serviceSupabase.from('introducer_users').select('user_id, introducer_id, role, is_primary, can_sign, ceo_approval_status, introducers:introducers!introducer_users_introducer_fk(id, legal_name)').eq('user_id', id),
-    serviceSupabase.from('arranger_users').select('user_id, arranger_id, role, is_primary, can_sign, ceo_approval_status, arranger_entities:arranger_entities!arranger_users_arranger_fk(id, legal_name)').eq('user_id', id)
+    serviceSupabase.from('investor_users').select('user_id, investor_id, role, is_primary, can_sign, investors:investors!investor_users_investor_id_fkey(id, legal_name, account_approval_status)').eq('user_id', id),
+    serviceSupabase.from('partner_users').select('user_id, partner_id, role, is_primary, can_sign, partners:partners!partner_users_partner_fk(id, name, legal_name, account_approval_status)').eq('user_id', id),
+    serviceSupabase.from('lawyer_users').select('user_id, lawyer_id, role, is_primary, can_sign, lawyers:lawyers!lawyer_users_lawyer_fk(id, firm_name, display_name, account_approval_status)').eq('user_id', id),
+    serviceSupabase.from('commercial_partner_users').select('user_id, commercial_partner_id, role, is_primary, can_sign, commercial_partners:commercial_partners!commercial_partner_users_cp_fk(id, name, legal_name, account_approval_status)').eq('user_id', id),
+    serviceSupabase.from('introducer_users').select('user_id, introducer_id, role, is_primary, can_sign, introducers:introducers!introducer_users_introducer_fk(id, legal_name, account_approval_status)').eq('user_id', id),
+    serviceSupabase.from('arranger_users').select('user_id, arranger_id, role, is_primary, can_sign, arranger_entities:arranger_entities!arranger_users_arranger_fk(id, legal_name, account_approval_status)').eq('user_id', id)
   ])
 
   // Build entity associations
@@ -118,7 +118,7 @@ export default async function UserDetailPage({
   // Process investor associations
   if (investorUsersResult.data) {
     for (const iu of investorUsersResult.data) {
-      const entity = getEntity(iu.investors) as { id: string; legal_name: string | null } | null
+      const entity = getEntity(iu.investors) as { id: string; legal_name: string | null; account_approval_status: string | null } | null
       if (!entity) continue
       entities.push({
         id: entity.id,
@@ -127,7 +127,8 @@ export default async function UserDetailPage({
         role: iu.role || 'member',
         isPrimary: iu.is_primary || false,
         canSign: iu.can_sign || false,
-        approvalStatus: iu.ceo_approval_status
+        memberRole: null,
+        approvalStatus: entity.account_approval_status
       })
     }
   }
@@ -135,7 +136,7 @@ export default async function UserDetailPage({
   // Process partner associations
   if (partnerUsersResult.data) {
     for (const pu of partnerUsersResult.data) {
-      const entity = getEntity(pu.partners) as { id: string; name: string | null; legal_name: string | null } | null
+      const entity = getEntity(pu.partners) as { id: string; name: string | null; legal_name: string | null; account_approval_status: string | null } | null
       if (!entity) continue
       entities.push({
         id: entity.id,
@@ -144,7 +145,8 @@ export default async function UserDetailPage({
         role: pu.role || 'member',
         isPrimary: pu.is_primary || false,
         canSign: pu.can_sign || false,
-        approvalStatus: pu.ceo_approval_status
+        memberRole: null,
+        approvalStatus: entity.account_approval_status
       })
     }
   }
@@ -152,7 +154,7 @@ export default async function UserDetailPage({
   // Process lawyer associations
   if (lawyerUsersResult.data) {
     for (const lu of lawyerUsersResult.data) {
-      const entity = getEntity(lu.lawyers) as { id: string; firm_name: string | null; display_name: string | null } | null
+      const entity = getEntity(lu.lawyers) as { id: string; firm_name: string | null; display_name: string | null; account_approval_status: string | null } | null
       if (!entity) continue
       entities.push({
         id: entity.id,
@@ -161,7 +163,8 @@ export default async function UserDetailPage({
         role: lu.role || 'member',
         isPrimary: lu.is_primary || false,
         canSign: lu.can_sign || false,
-        approvalStatus: lu.ceo_approval_status
+        memberRole: null,
+        approvalStatus: entity.account_approval_status
       })
     }
   }
@@ -169,7 +172,7 @@ export default async function UserDetailPage({
   // Process commercial partner associations
   if (commercialPartnerUsersResult.data) {
     for (const cpu of commercialPartnerUsersResult.data) {
-      const entity = getEntity(cpu.commercial_partners) as { id: string; name: string | null; legal_name: string | null } | null
+      const entity = getEntity(cpu.commercial_partners) as { id: string; name: string | null; legal_name: string | null; account_approval_status: string | null } | null
       if (!entity) continue
       entities.push({
         id: entity.id,
@@ -178,7 +181,8 @@ export default async function UserDetailPage({
         role: cpu.role || 'member',
         isPrimary: cpu.is_primary || false,
         canSign: cpu.can_sign || false,
-        approvalStatus: cpu.ceo_approval_status
+        memberRole: null,
+        approvalStatus: entity.account_approval_status
       })
     }
   }
@@ -186,7 +190,7 @@ export default async function UserDetailPage({
   // Process introducer associations
   if (introducerUsersResult.data) {
     for (const iu of introducerUsersResult.data) {
-      const entity = getEntity(iu.introducers) as { id: string; legal_name: string | null } | null
+      const entity = getEntity(iu.introducers) as { id: string; legal_name: string | null; account_approval_status: string | null } | null
       if (!entity) continue
       entities.push({
         id: entity.id,
@@ -195,7 +199,8 @@ export default async function UserDetailPage({
         role: iu.role || 'member',
         isPrimary: iu.is_primary || false,
         canSign: iu.can_sign || false,
-        approvalStatus: iu.ceo_approval_status
+        memberRole: null,
+        approvalStatus: entity.account_approval_status
       })
     }
   }
@@ -203,7 +208,7 @@ export default async function UserDetailPage({
   // Process arranger associations
   if (arrangerUsersResult.data) {
     for (const au of arrangerUsersResult.data) {
-      const entity = getEntity(au.arranger_entities) as { id: string; legal_name: string | null } | null
+      const entity = getEntity(au.arranger_entities) as { id: string; legal_name: string | null; account_approval_status: string | null } | null
       if (!entity) continue
       entities.push({
         id: entity.id,
@@ -212,8 +217,48 @@ export default async function UserDetailPage({
         role: au.role || 'member',
         isPrimary: au.is_primary || false,
         canSign: au.can_sign || false,
-        approvalStatus: au.ceo_approval_status
+        memberRole: null,
+        approvalStatus: entity.account_approval_status
       })
+    }
+  }
+
+  // Fetch member roles from member tables (matched by email + entity_id)
+  if (profile.email && entities.length > 0) {
+    const memberEntityMap: Record<string, string> = {
+      investor: 'investor_members',
+      partner: 'partner_members',
+      lawyer: 'lawyer_members',
+      commercial_partner: 'commercial_partner_members',
+      introducer: 'introducer_members',
+      arranger: 'arranger_members',
+    }
+    const memberEntityIdCol: Record<string, string> = {
+      investor: 'investor_id',
+      partner: 'partner_id',
+      lawyer: 'lawyer_id',
+      commercial_partner: 'commercial_partner_id',
+      introducer: 'introducer_id',
+      arranger: 'arranger_id',
+    }
+
+    const memberRoleQueries = entities.map(e =>
+      serviceSupabase
+        .from(memberEntityMap[e.type])
+        .select(`${memberEntityIdCol[e.type]}, role`)
+        .eq('email', profile.email!)
+        .eq(memberEntityIdCol[e.type], e.id)
+        .limit(1)
+        .maybeSingle()
+    )
+    const memberRoleResults = await Promise.all(memberRoleQueries)
+
+    for (let i = 0; i < entities.length; i++) {
+      const result = memberRoleResults[i]
+      const data = result.data as { role?: string } | null
+      if (data?.role) {
+        entities[i].memberRole = data.role
+      }
     }
   }
 
