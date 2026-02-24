@@ -94,7 +94,7 @@ const memberKycEditSchema = z.object({
   country_of_birth: z.string().optional().nullable(),
   nationality: z.string().optional().nullable(),
   email: z.string().email('Invalid email').optional().nullable().or(z.literal('')),
-  phone_mobile: z.string().optional().nullable(),
+  phone_mobile: z.string().max(30).optional().nullable(),
   phone_office: z.string().optional().nullable(),
 
   // Residential Address
@@ -124,7 +124,13 @@ const memberKycEditSchema = z.object({
 
   // UBO-specific
   ownership_percentage: z.number().min(0).max(100).optional().nullable(),
-})
+}).refine(
+  (data) => typeof data.phone_mobile === 'string' && data.phone_mobile.trim().length > 0,
+  {
+    path: ['phone_mobile'],
+    message: 'Mobile phone is required',
+  }
+)
 
 type MemberKycEditForm = z.infer<typeof memberKycEditSchema>
 
@@ -584,7 +590,7 @@ export function MemberKYCEditDialog({
                     name="phone_mobile"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Mobile Phone</FormLabel>
+                        <FormLabel>Mobile Phone *</FormLabel>
                         <FormControl>
                           <Input
                             {...field}

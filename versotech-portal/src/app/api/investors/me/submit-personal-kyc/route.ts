@@ -27,6 +27,12 @@ const snapshotsMatch = (
       normalizeSnapshotValue(previousSnapshot[key])
   )
 
+const hasMeaningfulValue = (value: unknown): boolean => {
+  if (value === null || value === undefined) return false
+  if (typeof value === 'string') return value.trim().length > 0
+  return true
+}
+
 /**
  * POST /api/investors/me/submit-personal-kyc
  *
@@ -106,11 +112,12 @@ export async function POST() {
       { field: 'last_name', label: 'Last Name' },
       { field: 'date_of_birth', label: 'Date of Birth' },
       { field: 'nationality', label: 'Nationality' },
+      { field: 'phone_mobile', label: 'Mobile Phone' },
       { field: 'residential_street', label: 'Residential Address' },
       { field: 'residential_country', label: 'Country of Residence' },
     ]
 
-    const missingFields = requiredFields.filter(({ field }) => !investor[field])
+    const missingFields = requiredFields.filter(({ field }) => !hasMeaningfulValue(investor[field]))
     if (missingFields.length > 0) {
       return NextResponse.json(
         {

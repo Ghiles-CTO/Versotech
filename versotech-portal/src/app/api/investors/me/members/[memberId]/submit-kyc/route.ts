@@ -3,6 +3,12 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { checkAndUpdateEntityKYCStatus } from '@/lib/kyc/check-entity-kyc-status'
 import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
 
+const hasMeaningfulValue = (value: unknown): boolean => {
+  if (value === null || value === undefined) return false
+  if (typeof value === 'string') return value.trim().length > 0
+  return true
+}
+
 /**
  * POST /api/investors/me/members/[memberId]/submit-kyc
  *
@@ -32,7 +38,7 @@ export async function POST(
     // Verify the member belongs to this user via linked_user_id
     const { data: member, error: memberError } = await serviceSupabase
       .from('investor_members')
-      .select('id, investor_id, linked_user_id, full_name, kyc_status, first_name, last_name, date_of_birth, nationality, residential_street, residential_country, id_type, id_number')
+      .select('id, investor_id, linked_user_id, full_name, kyc_status, first_name, last_name, date_of_birth, nationality, phone_mobile, residential_street, residential_country, id_type, id_number')
       .eq('id', memberId)
       .eq('linked_user_id', user.id)
       .eq('is_active', true)
@@ -66,12 +72,13 @@ export async function POST(
       { field: 'last_name', label: 'Last Name' },
       { field: 'date_of_birth', label: 'Date of Birth' },
       { field: 'nationality', label: 'Nationality' },
+      { field: 'phone_mobile', label: 'Mobile Phone' },
       { field: 'residential_street', label: 'Residential Address' },
       { field: 'residential_country', label: 'Country of Residence' },
     ]
 
     const missingFields = requiredFields.filter(
-      ({ field }) => !member[field as keyof typeof member]
+      ({ field }) => !hasMeaningfulValue(member[field as keyof typeof member])
     )
 
     if (missingFields.length > 0) {
@@ -153,6 +160,7 @@ export async function POST(
             last_name: member.last_name,
             date_of_birth: member.date_of_birth,
             nationality: member.nationality,
+            phone_mobile: member.phone_mobile,
             residential_street: member.residential_street,
             residential_country: member.residential_country,
             id_type: member.id_type,

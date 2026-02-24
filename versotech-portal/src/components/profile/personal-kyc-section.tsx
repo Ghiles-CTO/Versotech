@@ -397,7 +397,6 @@ export function PersonalKYCSection({
             <Button
               onClick={handleSubmitForReview}
               disabled={isSubmitting || !hasEditsToSave}
-              variant={hasEditsToSave ? 'default' : 'outline'}
             >
               <Send className="h-4 w-4 mr-2" />
               {isSubmitting ? 'Saving...' : 'Save'}

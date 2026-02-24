@@ -27,6 +27,52 @@ async function resolveAccountApprovalAssignee(serviceSupabase: ReturnType<typeof
   return (staffAdmin?.id as string | undefined) ?? null
 }
 
+function parseActiveRequestInfo(entityMetadata: unknown): Record<string, unknown> | null {
+  if (!entityMetadata || typeof entityMetadata !== 'object' || Array.isArray(entityMetadata)) {
+    return null
+  }
+
+  const metadata = entityMetadata as Record<string, unknown>
+  const candidate =
+    (metadata.last_request_info as Record<string, unknown> | undefined) ||
+    (metadata.request_info as Record<string, unknown> | undefined)
+
+  if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
+    return null
+  }
+
+  return candidate.active === true ? candidate : null
+}
+
+async function resolveLatestActiveRequestInfo(params: {
+  serviceSupabase: ReturnType<typeof createServiceClient>
+  investorId: string
+}) {
+  const { serviceSupabase, investorId } = params
+
+  const { data: rows } = await serviceSupabase
+    .from('approvals')
+    .select('id, entity_metadata')
+    .eq('entity_type', 'account_activation')
+    .eq('entity_id', investorId)
+    .eq('status', 'cancelled')
+    .order('updated_at', { ascending: false })
+    .limit(25)
+
+  for (const row of rows || []) {
+    const activeInfo = parseActiveRequestInfo((row as { entity_metadata?: unknown }).entity_metadata)
+    if (activeInfo) {
+      return {
+        approvalId: (row as { id: string }).id,
+        entityMetadata: (row as { entity_metadata?: Record<string, unknown> | null }).entity_metadata || {},
+        requestInfo: activeInfo,
+      }
+    }
+  }
+
+  return null
+}
+
 export async function POST() {
   try {
     const supabase = await createClient()
@@ -91,6 +137,39 @@ export async function POST() {
         },
         { status: 400 }
       )
+    }
+
+    const latestActiveRequestInfo = await resolveLatestActiveRequestInfo({
+      serviceSupabase,
+      investorId: readiness.investorId,
+    })
+
+    if (latestActiveRequestInfo) {
+      const nowIso = new Date().toISOString()
+      const metadata = latestActiveRequestInfo.entityMetadata as Record<string, unknown>
+      const existingHistory = Array.isArray(metadata.request_info_history)
+        ? metadata.request_info_history.filter((entry): entry is Record<string, unknown> => !!entry && typeof entry === 'object')
+        : []
+
+      const resolvedRequestInfo = {
+        ...latestActiveRequestInfo.requestInfo,
+        active: false,
+        resolved_at: nowIso,
+      }
+
+      await serviceSupabase
+        .from('approvals')
+        .update({
+          entity_metadata: {
+            ...metadata,
+            request_info: resolvedRequestInfo,
+            last_request_info: resolvedRequestInfo,
+            request_info_history: [...existingHistory, resolvedRequestInfo],
+          },
+          updated_at: nowIso,
+        })
+        .eq('id', latestActiveRequestInfo.approvalId)
+        .eq('status', 'cancelled')
     }
 
     const nowIso = new Date().toISOString()
@@ -176,4 +255,3 @@ export async function POST() {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-

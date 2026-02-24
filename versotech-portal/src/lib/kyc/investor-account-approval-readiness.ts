@@ -159,6 +159,10 @@ function parseLatestRequestInfo(entityMetadata: unknown): InvestorRequestInfoNot
     return null
   }
 
+  if ((candidate as Record<string, unknown>).active !== true) {
+    return null
+  }
+
   const details = typeof candidate.details === 'string' ? candidate.details.trim() : ''
   const reason = typeof candidate.reason === 'string' ? candidate.reason.trim() : ''
   const message = details || reason
@@ -313,4 +317,3 @@ export async function getInvestorAccountApprovalReadiness(params: {
     latestRequestInfo,
   }
 }
-

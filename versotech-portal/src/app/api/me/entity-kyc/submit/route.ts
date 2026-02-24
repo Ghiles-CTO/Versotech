@@ -88,6 +88,7 @@ const ENTITY_CONFIGS = {
     submissionEntityIdColumn: 'investor_id',
     requiredFields: [
       { key: 'legal_name', label: 'Legal Name', candidates: ['legal_name', 'display_name'] },
+      { key: 'phone_mobile', label: 'Mobile Phone' },
       { key: 'country_of_incorporation', label: 'Country of Incorporation', candidates: ['country_of_incorporation', 'country'] },
       { key: 'registered_address_line_1', label: 'Registered Address', candidates: ['registered_address_line_1', 'registered_address', 'address_line_1', 'street_address'] },
       { key: 'registered_country', label: 'Registered Country', candidates: ['registered_country', 'country'] },
@@ -102,6 +103,7 @@ const ENTITY_CONFIGS = {
     submissionEntityIdColumn: 'partner_id',
     requiredFields: [
       { key: 'legal_name', label: 'Legal Name', candidates: ['legal_name', 'name'] },
+      { key: 'phone_mobile', label: 'Mobile Phone' },
       { key: 'country', label: 'Country' },
     ],
   },
@@ -114,6 +116,7 @@ const ENTITY_CONFIGS = {
     submissionEntityIdColumn: 'introducer_id',
     requiredFields: [
       { key: 'legal_name', label: 'Legal Name', candidates: ['legal_name', 'display_name', 'contact_name'] },
+      { key: 'phone_mobile', label: 'Mobile Phone' },
       { key: 'country', label: 'Country', candidates: ['country', 'country_of_incorporation'] },
     ],
   },
@@ -126,6 +129,7 @@ const ENTITY_CONFIGS = {
     submissionEntityIdColumn: 'lawyer_id',
     requiredFields: [
       { key: 'firm_name', label: 'Firm Name', candidates: ['firm_name', 'display_name'] },
+      { key: 'phone_mobile', label: 'Mobile Phone' },
       { key: 'country', label: 'Country', candidates: ['country', 'country_of_incorporation'] },
     ],
   },
@@ -138,6 +142,7 @@ const ENTITY_CONFIGS = {
     submissionEntityIdColumn: 'commercial_partner_id',
     requiredFields: [
       { key: 'name', label: 'Name', candidates: ['name', 'legal_name'] },
+      { key: 'phone_mobile', label: 'Mobile Phone' },
       { key: 'jurisdiction', label: 'Jurisdiction', candidates: ['jurisdiction', 'country'] },
     ],
   },
@@ -150,6 +155,7 @@ const ENTITY_CONFIGS = {
     submissionEntityIdColumn: 'arranger_entity_id',
     requiredFields: [
       { key: 'legal_name', label: 'Legal Name' },
+      { key: 'phone_mobile', label: 'Mobile Phone' },
       { key: 'registration_number', label: 'Registration Number' },
       { key: 'regulator', label: 'Regulator' },
       { key: 'license_number', label: 'License Number' },

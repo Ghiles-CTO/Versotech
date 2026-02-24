@@ -36,7 +36,13 @@ const entityOverviewSchema = z.object({
   state_province: z.string().max(100).optional().nullable(),
   postal_code: z.string().max(20).optional().nullable(),
   country: z.string().optional().nullable(),
-})
+}).refine(
+  (data) => typeof data.phone_mobile === 'string' && data.phone_mobile.trim().length > 0,
+  {
+    path: ['phone_mobile'],
+    message: 'Mobile phone is required',
+  }
+)
 
 type EntityOverviewForm = z.infer<typeof entityOverviewSchema>
 
@@ -244,7 +250,7 @@ export function EntityOverviewEditDialog({
                   name="phone_mobile"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Mobile Phone</FormLabel>
+                      <FormLabel>Mobile Phone *</FormLabel>
                       <FormControl>
                         <Input {...field} type="tel" value={field.value || ''} placeholder="+1 (555) 000-0000" />
                       </FormControl>

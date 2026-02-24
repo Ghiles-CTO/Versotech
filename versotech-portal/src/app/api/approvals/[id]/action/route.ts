@@ -196,17 +196,11 @@ async function handleAccountActivationRequestInfo(params: {
     ? metadata.request_info_history.filter((entry: unknown) => !!entry && typeof entry === 'object')
     : []
 
-  const resolvedRequestInfoPayload = {
-    ...requestInfoPayload,
-    active: false,
-    resolved_at: nowIso,
-  }
-
   const nextMetadata = {
     ...metadata,
-    request_info: resolvedRequestInfoPayload,
-    last_request_info: resolvedRequestInfoPayload,
-    request_info_history: [...existingHistory, resolvedRequestInfoPayload],
+    request_info: requestInfoPayload,
+    last_request_info: requestInfoPayload,
+    request_info_history: [...existingHistory, requestInfoPayload],
   }
 
   const { data: updatedApproval, error: approvalUpdateError, count } = await supabase

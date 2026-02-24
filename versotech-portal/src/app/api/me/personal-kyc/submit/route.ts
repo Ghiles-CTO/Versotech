@@ -26,6 +26,12 @@ const snapshotsMatch = (
       normalizeSnapshotValue(previousSnapshot[key])
   )
 
+const hasMeaningfulValue = (value: unknown): boolean => {
+  if (value === null || value === undefined) return false
+  if (typeof value === 'string') return value.trim().length > 0
+  return true
+}
+
 // Entity type configurations
 const ENTITY_CONFIGS = {
   investor: {
@@ -249,12 +255,13 @@ export async function POST(request: Request) {
       { field: 'last_name', label: 'Last Name' },
       { field: 'date_of_birth', label: 'Date of Birth' },
       { field: 'nationality', label: 'Nationality' },
+      { field: 'phone_mobile', label: 'Mobile Phone' },
       { field: 'residential_street', label: 'Residential Address' },
       { field: 'residential_country', label: 'Country of Residence' },
     ]
 
     const missingFields = requiredFields.filter(
-      ({ field }) => !member[field as keyof typeof member]
+      ({ field }) => !hasMeaningfulValue(member[field as keyof typeof member])
     )
 
     if (missingFields.length > 0) {

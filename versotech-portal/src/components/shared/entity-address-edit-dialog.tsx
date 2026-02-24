@@ -36,7 +36,13 @@ const entityAddressSchema = z.object({
   phone_mobile: z.string().max(30).optional().nullable(),
   phone_office: z.string().max(30).optional().nullable(),
   website: z.string().url('Invalid URL').optional().nullable().or(z.literal('')),
-})
+}).refine(
+  (data) => typeof data.phone_mobile === 'string' && data.phone_mobile.trim().length > 0,
+  {
+    path: ['phone_mobile'],
+    message: 'Mobile phone is required',
+  }
+)
 
 type EntityAddressForm = z.infer<typeof entityAddressSchema>
 
@@ -276,7 +282,7 @@ export function EntityAddressEditDialog({
                   name="phone_mobile"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Mobile Phone</FormLabel>
+                      <FormLabel>Mobile Phone *</FormLabel>
                       <FormControl>
                         <Input {...field} type="tel" value={field.value || ''} placeholder="+1 (555) 000-0000" />
                       </FormControl>
