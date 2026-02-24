@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
@@ -233,12 +234,11 @@ export function StakeholderModalRefactored({
                   <FormItem>
                     <FormLabel className="text-white">Phone</FormLabel>
                     <FormControl>
-                      <Input
-                        type="tel"
-                        placeholder="+352 123 456"
-                        className="bg-white/5 border-white/10 text-white"
-                        {...field}
+                      <PhoneInput
                         value={field.value || ''}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
                       />
                     </FormControl>
                     <FormMessage />

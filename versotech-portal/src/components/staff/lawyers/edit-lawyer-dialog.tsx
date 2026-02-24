@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -270,11 +271,9 @@ export function EditLawyerDialog({ open, onOpenChange, lawyer }: EditLawyerDialo
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="contactPhone">Phone</Label>
-                <Input
-                  id="contactPhone"
-                  type="tel"
+                <PhoneInput
                   value={primaryContactPhone}
-                  onChange={(e) => setPrimaryContactPhone(e.target.value)}
+                  onChange={(val) => setPrimaryContactPhone(val || '')}
                 />
               </div>
             </div>

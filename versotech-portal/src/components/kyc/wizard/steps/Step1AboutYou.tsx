@@ -12,6 +12,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { useWizard } from '../WizardContext'
 import { step1Schema, Step1Data, getStepDefaults } from '../../schemas/kyc-questionnaire-schema'
 
@@ -173,7 +174,12 @@ export function Step1AboutYou() {
                 <FormItem>
                   <FormLabel>Phone Number</FormLabel>
                   <FormControl>
-                    <Input type="tel" placeholder="+44 20 1234 5678" {...field} />
+                    <PhoneInput
+                      value={field.value || ''}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

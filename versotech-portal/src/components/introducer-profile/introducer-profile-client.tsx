@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -192,12 +193,20 @@ function EditableField({
     return (
       <div className="space-y-1">
         <Label className="text-xs text-muted-foreground">{label}</Label>
-        <Input
-          type={type}
-          value={editValue}
-          onChange={(e) => onEditChange(field, e.target.value)}
-          className="text-sm"
-        />
+        {type === 'tel' ? (
+          <PhoneInput
+            value={editValue}
+            onChange={(val) => onEditChange(field, val || '')}
+            className="text-sm"
+          />
+        ) : (
+          <Input
+            type={type}
+            value={editValue}
+            onChange={(e) => onEditChange(field, e.target.value)}
+            className="text-sm"
+          />
+        )}
       </div>
     )
   }

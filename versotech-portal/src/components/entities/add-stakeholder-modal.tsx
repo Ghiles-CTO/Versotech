@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -171,13 +172,9 @@ export function AddStakeholderModal({ entityId, open, onClose, onSuccess }: AddS
 
               <div className="grid gap-2">
                 <Label htmlFor="phone" className="text-sm font-medium text-white">Phone</Label>
-                <Input
-                  id="phone"
-                  type="tel"
+                <PhoneInput
                   value={formData.phone}
-                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                  placeholder="+352 123 456"
-                  className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
+                  onChange={(val) => setFormData(prev => ({ ...prev, phone: val || '' }))}
                 />
               </div>
             </div>

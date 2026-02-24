@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -171,6 +172,12 @@ function EditableField({
             onChange={(e) => onChange(field, e.target.value)}
             placeholder={`Enter ${label.toLowerCase()}`}
             rows={3}
+            className="mt-1"
+          />
+        ) : type === 'tel' ? (
+          <PhoneInput
+            value={editValue}
+            onChange={(val) => onChange(field, val || '')}
             className="mt-1"
           />
         ) : (

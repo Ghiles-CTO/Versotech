@@ -21,6 +21,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
@@ -552,11 +553,11 @@ export function InvestorInfoForm({ onComplete }: InvestorInfoFormProps) {
                     <FormItem>
                       <FormLabel>Mobile Phone</FormLabel>
                       <FormControl>
-                        <Input
-                          type="tel"
-                          placeholder="+1 (555) 123-4567"
-                          {...field}
+                        <PhoneInput
                           value={field.value || ''}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
                         />
                       </FormControl>
                       <FormDescription>Primary contact number</FormDescription>
@@ -572,11 +573,11 @@ export function InvestorInfoForm({ onComplete }: InvestorInfoFormProps) {
                     <FormItem>
                       <FormLabel>Office Phone</FormLabel>
                       <FormControl>
-                        <Input
-                          type="tel"
-                          placeholder="+1 (555) 987-6543"
-                          {...field}
+                        <PhoneInput
                           value={field.value || ''}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
                         />
                       </FormControl>
                       <FormDescription>Business contact (optional)</FormDescription>

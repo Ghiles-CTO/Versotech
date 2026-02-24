@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -226,12 +227,9 @@ export function AddLawyerDialog({ open, onOpenChange }: AddLawyerDialogProps) {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="contactPhone">Phone</Label>
-                  <Input
-                    id="contactPhone"
-                    type="tel"
+                  <PhoneInput
                     value={primaryContactPhone}
-                    onChange={(e) => setPrimaryContactPhone(e.target.value)}
-                    placeholder="+1 (555) 123-4567"
+                    onChange={(val) => setPrimaryContactPhone(val || '')}
                   />
                 </div>
               </div>

@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -186,11 +187,9 @@ export function EditArrangerDialog({ open, onOpenChange, arranger }: EditArrange
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  type="tel"
+                <PhoneInput
                   value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
+                  onChange={(val) => setPhone(val || '')}
                 />
               </div>
             </div>

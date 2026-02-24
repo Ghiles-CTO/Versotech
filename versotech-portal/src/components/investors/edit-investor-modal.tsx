@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -366,13 +367,9 @@ export function EditInvestorModal({ investor, open, onOpenChange }: EditInvestor
 
               <div className="space-y-2">
                 <Label htmlFor="phone" className="text-white">Phone</Label>
-                <Input
-                  id="phone"
-                  type="tel"
+                <PhoneInput
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="+1 (555) 123-4567"
-                  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
+                  onChange={(val) => setFormData({ ...formData, phone: val || '' })}
                 />
               </div>
             </div>

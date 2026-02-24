@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -257,12 +258,9 @@ export function AddPartnerDialog({ open, onOpenChange }: AddPartnerDialogProps) 
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="contactPhone">Phone</Label>
-                  <Input
-                    id="contactPhone"
-                    type="tel"
+                  <PhoneInput
                     value={contactPhone}
-                    onChange={(e) => setContactPhone(e.target.value)}
-                    placeholder="+1 (555) 123-4567"
+                    onChange={(val) => setContactPhone(val || '')}
                   />
                 </div>
               </div>
