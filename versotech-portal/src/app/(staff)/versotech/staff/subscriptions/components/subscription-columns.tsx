@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { ArrowUpDown, Eye, CheckCircle2, Clock, Loader2, XCircle, Archive } from 'lucide-react'
 import Link from 'next/link'
+import { getCountryName } from '@/components/kyc/country-select'
 
 export type SubscriptionRow = {
   id: string
@@ -200,7 +201,7 @@ export const subscriptionColumns: ColumnDef<SubscriptionRow>[] = [
             <Badge variant="outline" className="text-xs capitalize">
               {investor.type}
             </Badge>
-            <span className="text-xs text-muted-foreground">{investor.country}</span>
+            <span className="text-xs text-muted-foreground">{getCountryName(investor.country)}</span>
           </div>
         </div>
       )

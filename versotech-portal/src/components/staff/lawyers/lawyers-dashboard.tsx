@@ -25,6 +25,7 @@ import {
   Shield,
   ExternalLink,
 } from 'lucide-react'
+import { getCountryName } from '@/components/kyc/country-select'
 import { formatDate } from '@/lib/format'
 import { AddLawyerDialog } from '@/components/staff/lawyers/add-lawyer-dialog'
 
@@ -241,7 +242,7 @@ export function LawyersDashboard({ summary, lawyers }: LawyersDashboardProps) {
                         <div className="font-medium text-foreground">{lawyer.firmName}</div>
                         <div className="text-sm text-muted-foreground">
                           {lawyer.displayName}
-                          {lawyer.country && ` • ${lawyer.country}`}
+                          {lawyer.country && ` • ${getCountryName(lawyer.country)}`}
                         </div>
                         {lawyer.primaryContactEmail && (
                           <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">

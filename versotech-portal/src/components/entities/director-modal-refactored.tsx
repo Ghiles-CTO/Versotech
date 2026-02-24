@@ -23,6 +23,7 @@ import {
   FormMessage
 } from '@/components/ui/form'
 import { Loader2, Search, Plus, User, Edit } from 'lucide-react'
+import { getCountryName } from '@/components/kyc/country-select'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Card } from '@/components/ui/card'
 import {
@@ -372,7 +373,7 @@ export function DirectorModalRefactored({
                       <div className="font-medium text-white">{director.full_name}</div>
                       {director.email && <div className="text-sm text-gray-400">{director.email}</div>}
                       {director.nationality && (
-                        <div className="text-xs text-gray-400 mt-1">{director.nationality}</div>
+                        <div className="text-xs text-gray-400 mt-1">{getCountryName(director.nationality)}</div>
                       )}
                     </Card>
                   ))

@@ -51,6 +51,7 @@ import {
   Loader2,
   Bell,
 } from 'lucide-react'
+import { getCountryName } from '@/components/kyc/country-select'
 import { toast } from 'sonner'
 
 const noticeContactSchema = z.object({
@@ -328,7 +329,7 @@ export function NoticeContactsTab({ apiEndpoint }: NoticeContactsTabProps) {
                         {contact.city && (
                           <div className="flex items-center gap-2">
                             <MapPin className="h-3 w-3 text-muted-foreground" />
-                            {contact.city}{contact.country ? `, ${contact.country}` : ''}
+                            {contact.city}{contact.country ? `, ${getCountryName(contact.country)}` : ''}
                           </div>
                         )}
                       </div>

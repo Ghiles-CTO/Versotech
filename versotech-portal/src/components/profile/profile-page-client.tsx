@@ -144,6 +144,7 @@ interface ProfilePageClientProps {
   memberInfo?: MemberKYCData | null
   latestEntityInfoSnapshot?: Record<string, unknown> | null
   latestPersonalInfoSnapshot?: Record<string, unknown> | null
+  latestMemberPersonalInfoSnapshot?: Record<string, unknown> | null
 }
 
 // Status badge configurations
@@ -279,6 +280,7 @@ export function ProfilePageClient({
   memberInfo,
   latestEntityInfoSnapshot,
   latestPersonalInfoSnapshot,
+  latestMemberPersonalInfoSnapshot,
 }: ProfilePageClientProps) {
   const [profile, setProfile] = useState(initialProfile)
   const [showKycDialog, setShowKycDialog] = useState(false)
@@ -766,31 +768,30 @@ export function ProfilePageClient({
                     </div>
                     <div className="rounded-md border border-border/70 bg-background p-3">
                       <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Country</p>
-                      <p className="mt-1 text-sm font-medium">{investorInfo.registered_country || '-'}</p>
+                      <p className="mt-1 text-sm font-medium">{getCountryName(investorInfo.registered_country) || '-'}</p>
                     </div>
                   </div>
                 </section>
 
-                {/* Submit Entity Info */}
                 <div className="pt-2">
-                  {canSubmitEntityInfo ? (
-                    <Button
-                      onClick={handleSubmitEntityKyc}
-                      disabled={isSubmittingEntityKyc}
-                      size="sm"
-                    >
-                      <Send className="h-4 w-4 mr-2" />
-                      {isSubmittingEntityKyc ? 'Submitting...' : 'Submit Entity Info'}
-                    </Button>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Only primary contacts can submit entity information for review.
-                    </p>
-                  )}
-                  {canSubmitEntityInfo && !entityHasUnsubmittedChanges && (
+                  <Button
+                    onClick={handleSubmitEntityKyc}
+                    disabled={isSubmittingEntityKyc || !entityHasUnsubmittedChanges || !canSubmitEntityInfo}
+                    size="sm"
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    {isSubmittingEntityKyc ? 'Saving...' : 'Save'}
+                  </Button>
+                  {!canSubmitEntityInfo ? (
                     <p className="text-xs text-muted-foreground mt-2">
-                      No new changes detected. You can still submit if needed.
+                      Only primary contacts can save.
                     </p>
+                  ) : (
+                    !entityHasUnsubmittedChanges && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        No edits to save.
+                      </p>
+                    )
                   )}
                 </div>
               </OverviewSectionCard>
@@ -802,6 +803,7 @@ export function ProfilePageClient({
               memberData={memberInfo || null}
               entityType="investor"
               entityId={investorInfo.id}
+              latestReviewSnapshot={latestMemberPersonalInfoSnapshot}
               onRefresh={() => window.location.reload()}
               profileEmail={profile.email}
               profileName={profile.display_name || profile.full_name}

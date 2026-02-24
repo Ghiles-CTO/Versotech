@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { getCountryName } from '@/components/kyc/country-select'
 import {
   Building2,
   Loader2,
@@ -409,7 +410,7 @@ export function CommercialPartnerDetailDrawer({
                       {data.commercial_partner.country && (
                         <div className="flex items-center gap-2 text-sm">
                           <Globe className="h-4 w-4 text-muted-foreground" />
-                          {data.commercial_partner.country}
+                          {getCountryName(data.commercial_partner.country)}
                         </div>
                       )}
                     </CardContent>

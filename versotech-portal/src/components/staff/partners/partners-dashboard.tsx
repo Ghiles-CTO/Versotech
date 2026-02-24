@@ -25,6 +25,7 @@ import {
   Briefcase,
   DollarSign,
 } from 'lucide-react'
+import { getCountryName } from '@/components/kyc/country-select'
 import { formatCurrency } from '@/lib/format'
 import { AddPartnerDialog } from '@/components/staff/partners/add-partner-dialog'
 
@@ -278,7 +279,7 @@ export function PartnersDashboard({ summary, partners }: PartnersDashboardProps)
                         <div className="font-medium text-foreground">{partner.name}</div>
                         <div className="text-sm text-muted-foreground">
                           {typeLabels[partner.partnerType] || partner.partnerType}
-                          {partner.country && ` • ${partner.country}`}
+                          {partner.country && ` • ${getCountryName(partner.country)}`}
                         </div>
                         {partner.contactEmail && (
                           <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">

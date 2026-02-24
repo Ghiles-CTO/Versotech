@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Loader2, Search, Plus, User } from 'lucide-react'
+import { getCountryName } from '@/components/kyc/country-select'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Card } from '@/components/ui/card'
 
@@ -254,7 +255,7 @@ export function AddDirectorModalEnhanced({ entityId, open, onClose, onSuccess }:
                       )}
                       {director.nationality && (
                         <div className="text-xs text-gray-400 mt-1">
-                          {director.nationality}
+                          {getCountryName(director.nationality)}
                         </div>
                       )}
                     </Card>

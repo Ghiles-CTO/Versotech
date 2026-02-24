@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
+import { getCountryName } from '@/components/kyc/country-select'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -128,10 +129,18 @@ const ENTITY_INFO_SECTIONS: SectionDef[] = [
 ]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function formatFieldValue(value: unknown): string {
+const COUNTRY_FIELDS = new Set([
+  'country', 'registered_country', 'residential_country', 'country_of_incorporation',
+  'country_of_birth', 'country_of_tax_residency', 'id_issuing_country', 'nationality',
+])
+
+function formatFieldValue(value: unknown, fieldKey?: string): string {
   if (value === null || value === undefined || value === '') return '\u2014'
   if (typeof value === 'boolean') return value ? 'Yes' : 'No'
   if (typeof value === 'string') {
+    if (fieldKey && COUNTRY_FIELDS.has(fieldKey)) {
+      return getCountryName(value) || value
+    }
     return value
       .replace(/_/g, ' ')
       .replace(/\b\w/g, l => l.toUpperCase())
@@ -287,7 +296,7 @@ export function ProfileSnapshotViewer({
                       {populated.map(field => {
                         const value = snapshot[field]
                         const label = FIELD_LABELS[field] ?? field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-                        const display = formatFieldValue(value)
+                        const display = formatFieldValue(value, field)
 
                         return (
                           <div

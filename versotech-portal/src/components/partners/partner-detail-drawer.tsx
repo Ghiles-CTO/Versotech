@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { getCountryName } from '@/components/kyc/country-select'
 import {
   Building2,
   Mail,
@@ -196,7 +197,7 @@ export function PartnerDetailDrawer({
                     {data.partner.partner_type && (
                       <span className="capitalize">{data.partner.partner_type.replace('_', ' ')}</span>
                     )}
-                    {data.partner.country && ` • ${data.partner.country}`}
+                    {data.partner.country && ` • ${getCountryName(data.partner.country)}`}
                   </SheetDescription>
                 </div>
               </div>
@@ -277,7 +278,7 @@ export function PartnerDetailDrawer({
                     {data.partner.country && (
                       <div className="flex items-center gap-2">
                         <Globe className="h-4 w-4 text-muted-foreground" />
-                        <span>{data.partner.country}</span>
+                        <span>{getCountryName(data.partner.country)}</span>
                       </div>
                     )}
                   </CardContent>

@@ -80,14 +80,33 @@ type MemberRow = {
   email: string | null
   full_name: string | null
   first_name: string | null
+  middle_name?: string | null
+  middle_initial?: string | null
   last_name: string | null
+  name_suffix?: string | null
   kyc_status: string | null
   date_of_birth: string | null
+  country_of_birth?: string | null
   nationality: string | null
+  phone_mobile?: string | null
+  phone_office?: string | null
   residential_street: string | null
+  residential_line_2?: string | null
+  residential_city?: string | null
+  residential_state?: string | null
+  residential_postal_code?: string | null
   residential_country: string | null
+  is_us_citizen?: boolean | null
+  is_us_taxpayer?: boolean | null
+  us_taxpayer_id?: string | null
+  country_of_tax_residency?: string | null
+  tax_id_number?: string | null
   id_type: string | null
   id_number: string | null
+  id_issue_date?: string | null
+  id_expiry_date?: string | null
+  id_issuing_country?: string | null
+  proof_of_address_date?: string | null
   [key: string]: unknown
 }
 
@@ -136,22 +155,7 @@ export async function POST(request: Request) {
     // - user must belong to the same entity via the persona user bridge table
     // - any authorized entity user can submit KYC for any member in that entity
     // - if the member matches the current user by email, auto-link for future ownership clarity
-    const memberSelect = `
-      id,
-      ${config.entityIdColumn},
-      linked_user_id,
-      email,
-      full_name,
-      first_name,
-      last_name,
-      kyc_status,
-      date_of_birth,
-      nationality,
-      residential_street,
-      residential_country,
-      id_type,
-      id_number
-    `
+    const memberSelect = '*'
 
     const { data: rawMemberData, error: rawMemberError } = await serviceSupabase
       .from(config.memberTable)
@@ -268,13 +272,33 @@ export async function POST(request: Request) {
 
     const reviewSnapshot: Record<string, unknown> = {
       first_name: member.first_name,
+      middle_name: member.middle_name,
+      middle_initial: member.middle_initial,
       last_name: member.last_name,
+      name_suffix: member.name_suffix,
       date_of_birth: member.date_of_birth,
+      country_of_birth: member.country_of_birth,
       nationality: member.nationality,
+      email: member.email,
+      phone_mobile: member.phone_mobile,
+      phone_office: member.phone_office,
       residential_street: member.residential_street,
+      residential_line_2: member.residential_line_2,
+      residential_city: member.residential_city,
+      residential_state: member.residential_state,
+      residential_postal_code: member.residential_postal_code,
       residential_country: member.residential_country,
+      is_us_citizen: member.is_us_citizen,
+      is_us_taxpayer: member.is_us_taxpayer,
+      us_taxpayer_id: member.us_taxpayer_id,
+      country_of_tax_residency: member.country_of_tax_residency,
+      tax_id_number: member.tax_id_number,
       id_type: member.id_type,
       id_number: member.id_number,
+      id_issue_date: member.id_issue_date,
+      id_expiry_date: member.id_expiry_date,
+      id_issuing_country: member.id_issuing_country,
+      proof_of_address_date: member.proof_of_address_date,
     }
 
     const { data: latestSubmission, error: latestSubmissionError } = await serviceSupabase

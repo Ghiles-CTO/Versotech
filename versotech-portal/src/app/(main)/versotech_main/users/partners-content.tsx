@@ -39,6 +39,7 @@ import {
   FileText,
   Send
 } from 'lucide-react'
+import { getCountryName } from '@/components/kyc/country-select'
 import { toast } from 'sonner'
 import FeePlanEditModal from '@/components/fees/FeePlanEditModal'
 import { createClient } from '@/lib/supabase/client'
@@ -428,7 +429,7 @@ export default function PartnersContent() {
                           <div className="text-sm text-muted-foreground">{partner.legalName}</div>
                         )}
                         {partner.country && (
-                          <div className="text-xs text-muted-foreground mt-1">{partner.country}</div>
+                          <div className="text-xs text-muted-foreground mt-1">{getCountryName(partner.country)}</div>
                         )}
                       </div>
                     </TableCell>

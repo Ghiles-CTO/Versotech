@@ -15,6 +15,7 @@ import { KYCDocumentsTab } from '@/components/shared/kyc-documents-tab'
 import { BankDetailsTab } from '@/components/shared/bank-details-tab'
 import { IndividualKycDisplay, EntityKYCEditDialog } from '@/components/shared'
 import { StaffEntityMembersTab } from '@/components/staff/shared/staff-entity-members-tab'
+import { getCountryName } from '@/components/kyc/country-select'
 import {
   extractApprovedKycDocumentMetadata,
   type ApprovedKycDocumentMetadata,
@@ -323,7 +324,7 @@ export function InvestorDetailClient({ investor, capitalMetrics, metricsAvailabl
                     <Globe className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <div className="text-sm text-muted-foreground">Country</div>
-                      <div className="text-sm font-medium">{investor.country}</div>
+                      <div className="text-sm font-medium">{getCountryName(investor.country)}</div>
                     </div>
                   </div>
                 )}
@@ -359,7 +360,7 @@ export function InvestorDetailClient({ investor, capitalMetrics, metricsAvailabl
                     <Globe className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <div className="text-sm text-muted-foreground">Country of Incorporation</div>
-                      <div className="text-sm font-medium">{investor.country_of_incorporation}</div>
+                      <div className="text-sm font-medium">{getCountryName(investor.country_of_incorporation)}</div>
                     </div>
                   </div>
                 )}
@@ -368,7 +369,7 @@ export function InvestorDetailClient({ investor, capitalMetrics, metricsAvailabl
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <div className="text-sm text-muted-foreground">Tax Residency</div>
-                      <div className="text-sm font-medium">{investor.tax_residency}</div>
+                      <div className="text-sm font-medium">{getCountryName(investor.tax_residency)}</div>
                     </div>
                   </div>
                 )}

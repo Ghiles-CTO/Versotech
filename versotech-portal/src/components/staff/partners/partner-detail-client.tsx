@@ -26,6 +26,7 @@ import {
   FileCheck,
   User,
 } from 'lucide-react'
+import { getCountryName } from '@/components/kyc/country-select'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { KYCDocumentsTab } from '@/components/shared/kyc-documents-tab'
@@ -274,7 +275,7 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
               </h1>
               <p className="text-sm text-muted-foreground">
                 {typeLabels[partner.partner_type] || partner.partner_type}
-                {partner.country && ` • ${partner.country}`}
+                {partner.country && ` • ${getCountryName(partner.country)}`}
               </p>
             </div>
           </div>

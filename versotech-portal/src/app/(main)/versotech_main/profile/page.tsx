@@ -66,6 +66,7 @@ export default async function ProfilePage({
   let investorUserInfo = null
   let latestEntityInfoSnapshot: Record<string, unknown> | null = null
   let latestPersonalInfoSnapshot: Record<string, unknown> | null = null
+  let latestMemberPersonalInfoSnapshot: Record<string, unknown> | null = null
 
   // Check if user is associated with an investor
   const { link: investorUser, error: investorUserError } = await resolvePrimaryInvestorLink(
@@ -140,6 +141,25 @@ export default async function ProfilePage({
       console.error('[ProfilePage] Error fetching member:', memberError)
     } else if (memberData) {
       memberInfo = memberData
+
+      const { data: latestMemberPersonalSubmission, error: latestMemberPersonalError } = await serviceSupabase
+        .from('kyc_submissions')
+        .select('metadata')
+        .eq('investor_id', investorUser.investor_id)
+        .eq('document_type', 'personal_info')
+        .eq('investor_member_id', memberData.id)
+        .order('submitted_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (latestMemberPersonalError) {
+        console.error('[ProfilePage] Error fetching latest member personal_info snapshot:', latestMemberPersonalError)
+      } else {
+        const reviewSnapshot = (latestMemberPersonalSubmission?.metadata as Record<string, unknown> | undefined)?.review_snapshot
+        if (reviewSnapshot && typeof reviewSnapshot === 'object' && !Array.isArray(reviewSnapshot)) {
+          latestMemberPersonalInfoSnapshot = reviewSnapshot as Record<string, unknown>
+        }
+      }
     }
 
     // Fetch investor entity details including KYC fields
@@ -374,6 +394,7 @@ export default async function ProfilePage({
       memberInfo={memberInfo}
       latestEntityInfoSnapshot={latestEntityInfoSnapshot}
       latestPersonalInfoSnapshot={latestPersonalInfoSnapshot}
+      latestMemberPersonalInfoSnapshot={latestMemberPersonalInfoSnapshot}
     />
   )
 }

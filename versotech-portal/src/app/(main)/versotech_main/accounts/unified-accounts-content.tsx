@@ -50,6 +50,7 @@ import {
   Download,
   Plus
 } from 'lucide-react'
+import { getCountryName } from '@/components/kyc/country-select'
 import type { UnifiedUser, UnifiedUsersResponse } from '@/app/api/admin/unified-users/route'
 import { BatchInviteDialog, type EntityType } from '@/components/users/batch-invite-dialog'
 import { AddAccountModal } from '@/components/users/add-account-modal'
@@ -389,7 +390,7 @@ export default function UnifiedAccountsContent() {
                       </TableCell>
                       <TableCell>
                         <span className={!account.country ? 'text-muted-foreground' : ''}>
-                          {account.country || '-'}
+                          {getCountryName(account.country) || '-'}
                         </span>
                       </TableCell>
                       <TableCell>

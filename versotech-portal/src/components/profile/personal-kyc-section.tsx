@@ -71,9 +71,34 @@ interface PersonalKYCSectionProps {
   memberData: MemberKYCData | null
   entityType: 'investor' | 'partner' | 'introducer' | 'lawyer' | 'commercial_partner' | 'arranger'
   entityId: string
+  latestReviewSnapshot?: Record<string, unknown> | null
   onRefresh?: () => void
   profileEmail?: string | null
   profileName?: string | null
+}
+
+const normalizeComparableValue = (value: unknown): string | null => {
+  if (value === null || value === undefined) return null
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? trimmed : null
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  return JSON.stringify(value)
+}
+
+const pickSnapshotValue = (
+  snapshot: Record<string, unknown> | null | undefined,
+  keys: readonly string[]
+): unknown => {
+  if (!snapshot) return null
+  for (const key of keys) {
+    const value = snapshot[key]
+    if (value !== undefined && value !== null && !(typeof value === 'string' && value.trim() === '')) {
+      return value
+    }
+  }
+  return null
 }
 
 // --- Visual helpers (same style as IndividualKycDisplay) ---
@@ -175,6 +200,7 @@ export function PersonalKYCSection({
   memberData,
   entityType,
   entityId,
+  latestReviewSnapshot,
   onRefresh,
   profileEmail,
   profileName,
@@ -211,16 +237,42 @@ export function PersonalKYCSection({
     return parts.length > 0 ? parts.join(', ') : null
   }
 
-  // Check if personal info is complete enough to submit
-  const isInfoComplete = memberData && (
-    memberData.first_name &&
-    memberData.last_name &&
-    memberData.date_of_birth &&
-    memberData.nationality &&
-    memberData.residential_street &&
-    memberData.residential_country
+  const hasEditsToSave = !!memberData && (
+    !latestReviewSnapshot ||
+    Object.keys(latestReviewSnapshot).length === 0 ||
+    [
+      { current: memberData.first_name, keys: ['first_name'] },
+      { current: memberData.middle_name, keys: ['middle_name'] },
+      { current: memberData.last_name, keys: ['last_name'] },
+      { current: memberData.name_suffix, keys: ['name_suffix'] },
+      { current: memberData.date_of_birth, keys: ['date_of_birth'] },
+      { current: memberData.country_of_birth, keys: ['country_of_birth'] },
+      { current: memberData.nationality, keys: ['nationality'] },
+      { current: memberData.email, keys: ['email'] },
+      { current: memberData.phone_mobile, keys: ['phone_mobile'] },
+      { current: memberData.phone_office, keys: ['phone_office'] },
+      { current: memberData.residential_street, keys: ['residential_street', 'address_line_1'] },
+      { current: memberData.residential_line_2, keys: ['residential_line_2', 'address_line_2'] },
+      { current: memberData.residential_city, keys: ['residential_city', 'city'] },
+      { current: memberData.residential_state, keys: ['residential_state', 'state_province'] },
+      { current: memberData.residential_postal_code, keys: ['residential_postal_code', 'postal_code'] },
+      { current: memberData.residential_country, keys: ['residential_country', 'country'] },
+      { current: memberData.is_us_citizen, keys: ['is_us_citizen'] },
+      { current: memberData.is_us_taxpayer, keys: ['is_us_taxpayer'] },
+      { current: memberData.us_taxpayer_id, keys: ['us_taxpayer_id'] },
+      { current: memberData.country_of_tax_residency, keys: ['country_of_tax_residency', 'tax_residency'] },
+      { current: memberData.tax_id_number, keys: ['tax_id_number'] },
+      { current: memberData.id_type, keys: ['id_type'] },
+      { current: memberData.id_number, keys: ['id_number'] },
+      { current: memberData.id_issue_date, keys: ['id_issue_date'] },
+      { current: memberData.id_expiry_date, keys: ['id_expiry_date'] },
+      { current: memberData.id_issuing_country, keys: ['id_issuing_country'] },
+    ].some(
+      ({ current, keys }) =>
+        normalizeComparableValue(current) !==
+        normalizeComparableValue(pickSnapshotValue(latestReviewSnapshot, keys))
+    )
   )
-  const isSubmissionInFlight = ['submitted', 'pending_review', 'under_review'].includes(memberData?.kyc_status || '')
 
   // Submit personal KYC for review
   const handleSubmitForReview = async () => {
@@ -340,27 +392,22 @@ export function PersonalKYCSection({
             </div>
           </Section>
 
-          {/* Submit Button */}
-          {!isSubmissionInFlight && (
-            <div className="pt-4 border-t">
-              {isInfoComplete ? (
-                <Button onClick={handleSubmitForReview} disabled={isSubmitting}>
-                  <Send className="h-4 w-4 mr-2" />
-                  {isSubmitting ? 'Submitting...' : 'Submit for Review'}
-                </Button>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <Button disabled variant="outline">
-                    <Send className="h-4 w-4 mr-2" />
-                    Submit for Review
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    Please complete all required fields before submitting
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Save Button */}
+          <div className="pt-4 border-t">
+            <Button
+              onClick={handleSubmitForReview}
+              disabled={isSubmitting || !hasEditsToSave}
+              variant={hasEditsToSave ? 'default' : 'outline'}
+            >
+              <Send className="h-4 w-4 mr-2" />
+              {isSubmitting ? 'Saving...' : 'Save'}
+            </Button>
+            {!hasEditsToSave && (
+              <p className="text-sm text-muted-foreground mt-2">
+                No edits to save.
+              </p>
+            )}
+          </div>
 
           {/* KYC Notes (if rejected) */}
           {memberData.kyc_status === 'rejected' && memberData.kyc_notes && (

@@ -256,7 +256,7 @@ export function UserDetailClient({ user, fullKycData }: UserDetailClientProps) {
                       <Badge variant="destructive" className="text-xs">Deactivated</Badge>
                     )}
                   </h1>
-                  <p className="text-sm text-muted-foreground mt-0.5">{user.title || 'No title'}</p>
+                  <p className="text-base text-muted-foreground mt-1">{user.title || 'No title'}</p>
                 </div>
                 {/* Persona Badges + KYC Status */}
                 <div className="flex flex-wrap items-center gap-1.5">
@@ -417,12 +417,12 @@ export function UserDetailClient({ user, fullKycData }: UserDetailClientProps) {
                         {entity.canSign && (
                           <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/30">
                             <PenTool className="h-2.5 w-2.5 mr-0.5" />
-                            Can Sign
+                            Signatory
                           </Badge>
                         )}
                         {entity.approvalStatus && (
                           <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${approvalStyle}`}>
-                            Account Status: {entity.approvalStatus.charAt(0).toUpperCase() + entity.approvalStatus.slice(1)}
+                            CEO Approval: {entity.approvalStatus.charAt(0).toUpperCase() + entity.approvalStatus.slice(1)}
                           </Badge>
                         )}
                       </div>

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Eye, CheckCircle2, Clock, Loader2, XCircle, Archive, Building2, User, DollarSign, Calendar } from 'lucide-react'
 import Link from 'next/link'
+import { getCountryName } from '@/components/kyc/country-select'
 
 type SubscriptionListItem = {
   id: string
@@ -111,7 +112,7 @@ export function SubscriptionListView({ subscriptions }: SubscriptionListViewProp
                               {sub.investor.type}
                             </Badge>
                             {sub.investor.country && (
-                              <span className="text-xs text-muted-foreground">{sub.investor.country}</span>
+                              <span className="text-xs text-muted-foreground">{getCountryName(sub.investor.country)}</span>
                             )}
                           </div>
                         )}

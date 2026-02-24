@@ -36,6 +36,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getCountryName } from '@/components/kyc/country-select'
 import { createClient } from '@/lib/supabase/client'
 import { addCurrencyAmount, type CurrencyTotals, formatCurrencyTotals, mergeCurrencyTotals, sumByCurrency } from '@/lib/currency-totals'
 import Link from 'next/link'
@@ -755,7 +756,7 @@ export default function MyPartnersPage() {
                             {partner.country && (
                               <div className="text-xs text-muted-foreground flex items-center gap-1">
                                 <Globe className="h-3 w-3" />
-                                {partner.country}
+                                {getCountryName(partner.country)}
                               </div>
                             )}
                           </div>

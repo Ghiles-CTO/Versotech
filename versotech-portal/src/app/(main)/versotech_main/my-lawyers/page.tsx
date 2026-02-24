@@ -37,6 +37,7 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getCountryName } from '@/components/kyc/country-select'
 import { createClient } from '@/lib/supabase/client'
 import { addCurrencyAmount, type CurrencyTotals, formatCurrencyTotals, mergeCurrencyTotals } from '@/lib/currency-totals'
 
@@ -489,7 +490,7 @@ export default function MyLawyersPage() {
                           <div>
                             <div className="font-medium">{lawyer.firm_name}</div>
                             {lawyer.display_name !== lawyer.firm_name && <div className="text-xs text-muted-foreground">{lawyer.display_name}</div>}
-                            {lawyer.country && <div className="text-xs text-muted-foreground flex items-center gap-1"><Globe className="h-3 w-3" />{lawyer.country}</div>}
+                            {lawyer.country && <div className="text-xs text-muted-foreground flex items-center gap-1"><Globe className="h-3 w-3" />{getCountryName(lawyer.country)}</div>}
                           </div>
                         </div>
                       </TableCell>

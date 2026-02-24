@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { EntityFormDialog } from './entity-form-dialog'
 import { EntityDetailDialog } from './entity-detail-dialog'
+import { getCountryName } from '@/components/kyc/country-select'
 
 interface CounterpartyEntity {
   id: string
@@ -182,7 +183,7 @@ export function CounterpartyEntitiesTab() {
       address.city,
       address.state,
       address.postal_code,
-      address.country
+      getCountryName(address.country)
     ].filter(Boolean)
     return parts.length > 0 ? parts.join(', ') : null
   }

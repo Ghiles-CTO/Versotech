@@ -39,6 +39,7 @@ import {
   UserPlus,
   Users
 } from 'lucide-react'
+import { getCountryName } from '@/components/kyc/country-select'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
@@ -424,11 +425,11 @@ export default function CommercialPartnersContent() {
                         <div>
                           <div className="text-sm text-foreground">{partner.jurisdiction}</div>
                           {partner.country && partner.country !== partner.jurisdiction && (
-                            <div className="text-xs text-muted-foreground">{partner.country}</div>
+                            <div className="text-xs text-muted-foreground">{getCountryName(partner.country)}</div>
                           )}
                         </div>
                       ) : partner.country ? (
-                        <span className="text-sm text-muted-foreground">{partner.country}</span>
+                        <span className="text-sm text-muted-foreground">{getCountryName(partner.country)}</span>
                       ) : (
                         <span className="text-muted-foreground">-</span>
                       )}

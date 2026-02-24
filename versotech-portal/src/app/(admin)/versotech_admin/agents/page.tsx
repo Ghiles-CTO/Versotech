@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { getCountryName } from '@/components/kyc/country-select'
 import {
   Bot,
   ShieldAlert,
@@ -3783,7 +3784,7 @@ export default async function AgentsPage({
                     <div className="rounded-md border border-muted/60 p-3">
                       <div className="text-xs text-muted-foreground">Country / Location</div>
                       <div className="font-medium text-foreground">
-                        {selectedRiskRow.country || '—'}
+                        {getCountryName(selectedRiskRow.country) || '—'}
                       </div>
                       <div className="text-xs text-muted-foreground mt-2">
                         Country grade: {selectedDealProfile?.country_risk_grade || '—'} •{' '}
@@ -3881,7 +3882,7 @@ export default async function AgentsPage({
                             </a>
                           </td>
                           <td className="px-3 py-3 text-muted-foreground">
-                            {row.country || '—'}
+                            {getCountryName(row.country) || '—'}
                           </td>
                           <td className="px-3 py-3 text-muted-foreground">
                             {row.sector || '—'}

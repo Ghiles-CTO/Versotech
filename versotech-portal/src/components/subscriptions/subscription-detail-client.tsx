@@ -18,6 +18,7 @@ import {
   TrendingUp,
   Minus,
 } from 'lucide-react'
+import { getCountryName } from '@/components/kyc/country-select'
 import Link from 'next/link'
 import { SubscriptionEditDialog } from './subscription-edit-dialog'
 import { CapitalActivityTable } from './capital-activity-table'
@@ -314,7 +315,7 @@ export function SubscriptionDetailClient({
                         <div className="flex-1">
                           <div className="text-sm text-muted-foreground">Country</div>
                           <div className="text-sm font-medium text-foreground">
-                            {subscription.investor.country}
+                            {getCountryName(subscription.investor.country)}
                           </div>
                         </div>
                       </div>
