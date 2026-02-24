@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
 import { checkAndUpdateEntityKYCStatus } from '@/lib/kyc/check-entity-kyc-status'
 import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
+import { notifyCeoPersonalInfoSubmitted } from '@/lib/kyc/submit-notifications'
 
 const normalizeSnapshotValue = (value: unknown): string | null => {
   if (value === null || value === undefined) return null
@@ -252,6 +253,25 @@ export async function POST() {
       'investor',
       investor.id
     )
+
+    const submitterName =
+      `${investor.first_name || ''} ${investor.last_name || ''}`.trim() ||
+      investor.display_name ||
+      investor.legal_name ||
+      null
+
+    try {
+      await notifyCeoPersonalInfoSubmitted({
+        supabase: serviceSupabase,
+        entityType: 'investor',
+        entityId: investor.id,
+        submittedByUserId: user.id,
+        memberName: submitterName,
+        entityName: investor.display_name || investor.legal_name || null,
+      })
+    } catch (notificationError) {
+      console.error('[submit-personal-kyc] Failed to notify CEO users:', notificationError)
+    }
 
     return NextResponse.json({
       success: true,

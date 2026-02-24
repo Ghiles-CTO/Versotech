@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { checkAndUpdateEntityKYCStatus } from '@/lib/kyc/check-entity-kyc-status'
 import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
+import { notifyCeoPersonalInfoSubmitted } from '@/lib/kyc/submit-notifications'
 
 const normalizeSnapshotValue = (value: unknown): string | null => {
   if (value === null || value === undefined) return null
@@ -440,6 +441,25 @@ export async function POST(request: Request) {
       entityType as any,
       entityId
     )
+
+    const memberName =
+      (typeof member.full_name === 'string' && member.full_name.trim()) ||
+      `${member.first_name || ''} ${member.last_name || ''}`.trim() ||
+      (typeof member.email === 'string' && member.email.trim()) ||
+      null
+
+    try {
+      await notifyCeoPersonalInfoSubmitted({
+        supabase: serviceSupabase,
+        entityType,
+        entityId,
+        submittedByUserId: user.id,
+        memberId: member.id,
+        memberName,
+      })
+    } catch (notificationError) {
+      console.error('[personal-kyc-submit] Failed to notify CEO users:', notificationError)
+    }
 
     return NextResponse.json({
       success: true,

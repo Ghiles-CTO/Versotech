@@ -4,6 +4,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
 import { checkAndUpdateEntityKYCStatus } from '@/lib/kyc/check-entity-kyc-status'
 import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
+import { notifyCeoEntityInfoSubmitted } from '@/lib/kyc/submit-notifications'
 
 type FieldSpec = {
   key: string
@@ -408,6 +409,13 @@ export async function submitEntityKycForUser(params: {
       },
     }
 
+    const submittedEntityName =
+      (typeof entity.legal_name === 'string' && entity.legal_name.trim()) ||
+      (typeof entity.name === 'string' && entity.name.trim()) ||
+      (typeof entity.firm_name === 'string' && entity.firm_name.trim()) ||
+      (typeof entity.display_name === 'string' && entity.display_name.trim()) ||
+      null
+
     // Add entity-specific foreign key
     submissionData[config.submissionEntityIdColumn] = entityId
 
@@ -476,6 +484,18 @@ export async function submitEntityKycForUser(params: {
       entityType as any,
       entityId
     )
+
+    try {
+      await notifyCeoEntityInfoSubmitted({
+        supabase: serviceSupabase,
+        entityType,
+        entityId,
+        submittedByUserId: userId,
+        entityName: submittedEntityName,
+      })
+    } catch (notificationError) {
+      console.error('[entity-kyc-submit] Failed to notify CEO users:', notificationError)
+    }
 
     return {
       status: 200,
