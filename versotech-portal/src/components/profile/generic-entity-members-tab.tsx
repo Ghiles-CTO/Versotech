@@ -233,17 +233,19 @@ export function GenericEntityMembersTab({
   }
 
   const isSignatory = (member: EntityMember) =>
-    Boolean(
-      member.is_signatory ||
-      member.can_sign ||
-      member.role === 'signatory' ||
-      member.role === 'authorized_signatory'
-    )
+    Boolean(member.is_signatory || member.can_sign)
 
   const handleSetSignatory = async (member: EntityMember, nextValue: boolean) => {
     if (!canManage) return
 
     setUpdatingSignatoryMemberId(member.id)
+
+    // Optimistically update the local state so the Switch flips immediately
+    setMembers(prev => prev.map(m =>
+      m.id === member.id
+        ? { ...m, is_signatory: nextValue, can_sign: nextValue }
+        : m
+    ))
 
     try {
       const payload: Record<string, unknown> = {
@@ -271,6 +273,8 @@ export function GenericEntityMembersTab({
     } catch (err) {
       console.error('Error updating signatory:', err)
       toast.error(err instanceof Error ? err.message : 'Failed to update signatory')
+      // Revert on error
+      await loadMembers()
     } finally {
       setUpdatingSignatoryMemberId(null)
     }
