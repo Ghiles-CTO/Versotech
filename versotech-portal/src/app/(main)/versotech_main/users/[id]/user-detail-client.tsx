@@ -346,7 +346,7 @@ export function UserDetailClient({ user, fullKycData }: UserDetailClientProps) {
 
           {/* Account Status + Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
-            <StatCard icon={Fingerprint} value={entityPersonas.length} label={entityPersonas.length === 1 ? 'Persona' : 'Personas'} />
+            <StatCard icon={Fingerprint} value={entityPersonas.length} label={entityPersonas.length === 1 ? 'Account Type' : 'Account Types'} />
             <StatCard icon={Building2} value={user.entityCount} label={user.entityCount === 1 ? 'Entity' : 'Entities'} />
             <div className="flex flex-col justify-center gap-2 rounded-lg border border-border/60 bg-muted/30 p-3">
               <StatusIndicator active={user.passwordSet} label={user.passwordSet ? 'Password set' : 'No password'} />
