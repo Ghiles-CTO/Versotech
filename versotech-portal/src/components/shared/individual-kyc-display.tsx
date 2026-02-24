@@ -300,51 +300,51 @@ export function IndividualKycDisplay({
               </Section>
             )}
 
-            {/* Identification Document */}
+            {/* Proof of Identification */}
             {showIdentification && (
-              <Section icon={Shield} title="Identification Document">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <Field
-                    label="Document Type"
-                    value={data.id_type ? (ID_TYPE_LABELS[data.id_type] || data.id_type) : null}
-                  />
-                  <Field label="Document Number" value={data.id_number} />
-                  <Field
-                    icon={Calendar}
-                    label="Issue Date"
-                    value={formatDate(data.id_issue_date)}
-                  />
-                  <Field
-                    icon={Calendar}
-                    label="Expiry Date"
-                    value={formatDate(data.id_expiry_date)}
-                  />
-                  <Field
-                    icon={Globe}
-                    label="Issuing Country"
-                    value={getCountryName(data.id_issuing_country)}
-                  />
-                </div>
-                {(data.proof_of_address_date || data.proof_of_address_expiry) && (
-                  <div className="mt-4">
-                    <h5 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Proof of Address
-                    </h5>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <>
+                <Section icon={Shield} title="Proof of Identification">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <Field
+                      label="Document Type"
+                      value={data.id_type ? (ID_TYPE_LABELS[data.id_type] || data.id_type) : null}
+                    />
+                    <Field label="Document Number" value={data.id_number} />
+                    <Field
+                      icon={Calendar}
+                      label="Issue Date"
+                      value={formatDate(data.id_issue_date)}
+                    />
+                    <Field
+                      icon={Calendar}
+                      label="Expiry Date"
+                      value={formatDate(data.id_expiry_date)}
+                    />
+                    <Field
+                      icon={Globe}
+                      label="Issuing Country"
+                      value={getCountryName(data.id_issuing_country)}
+                    />
+                  </div>
+                </Section>
+
+                <Section icon={MapPin} title="Proof of Address">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <Field
+                      icon={Calendar}
+                      label="Document Date"
+                      value={formatDate(data.proof_of_address_date)}
+                    />
+                    {data.proof_of_address_expiry && (
                       <Field
                         icon={Calendar}
-                        label="Proof of Address Date"
-                        value={formatDate(data.proof_of_address_date)}
-                      />
-                      <Field
-                        icon={Calendar}
-                        label="Proof of Address Expiry"
+                        label="Expiry"
                         value={formatDate(data.proof_of_address_expiry)}
                       />
-                    </div>
+                    )}
                   </div>
-                )}
-              </Section>
+                </Section>
+              </>
             )}
 
           </div>
