@@ -108,41 +108,36 @@ export async function GET(request: NextRequest) {
     if (isEntityInvestor && investorIds.length > 0) {
       const { data: members } = await supabase
         .from('investor_members')
-        .select('id, full_name, role')
+        .select('id, full_name, role, linked_user_id')
         .eq('investor_id', investorIds[0])
         .eq('is_active', true)
         .order('full_name')
 
-      investorMembers = members || []
+      // Return only id, full_name, role to the client (strip linked_user_id)
+      const alreadyLinked = (members || []).some(m => m.linked_user_id === user.id)
+      investorMembers = (members || []).map(({ linked_user_id: _, ...rest }) => rest)
 
-      // Also include the current user if they're a signatory/admin but not already in investor_members
-      const { data: currentUserLink } = await supabase
-        .from('investor_users')
-        .select('role, can_sign, is_primary')
-        .eq('user_id', user.id)
-        .eq('investor_id', investorIds[0])
-        .order('is_primary', { ascending: false })
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle()
+      // Only add pseudo-member if the user has no linked member record
+      if (!alreadyLinked) {
+        const { data: currentUserLink } = await supabase
+          .from('investor_users')
+          .select('role, can_sign, is_primary')
+          .eq('user_id', user.id)
+          .eq('investor_id', investorIds[0])
+          .order('is_primary', { ascending: false })
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle()
 
-      if (currentUserLink && (currentUserLink.can_sign || currentUserLink.role === 'admin' || currentUserLink.is_primary)) {
-        // Get current user's profile info
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('display_name, email')
-          .eq('id', user.id)
-          .single()
+        if (currentUserLink && (currentUserLink.can_sign || currentUserLink.role === 'admin' || currentUserLink.is_primary)) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('display_name, email')
+            .eq('id', user.id)
+            .single()
 
-        const userName = profile?.display_name || profile?.email || 'Current User'
+          const userName = profile?.display_name || profile?.email || 'Current User'
 
-        // Check if user is not already in the members list (by matching name/email)
-        const alreadyInList = investorMembers.some(m =>
-          m.full_name?.toLowerCase() === userName.toLowerCase()
-        )
-
-        if (!alreadyInList) {
-          // Add current user as a pseudo-member with special ID prefix
           investorMembers.unshift({
             id: `self_${user.id}`,
             full_name: `${userName} (You)`,

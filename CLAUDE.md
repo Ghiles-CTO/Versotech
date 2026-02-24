@@ -118,6 +118,9 @@ export async function POST(request: Request) {
 | Use `serviceSupabase` for user queries | Bypasses RLS = security hole |
 | Create fee plans without deal_id | Fee plans are deal-specific agreements, not templates |
 | Expect partial signatures to progress | Multi-signatory requires ALL signatures before proceeding |
+| Modify database records (UPDATE/DELETE) without explicit user approval | You do NOT know what data is intentional. Always ask before touching live data — never assume a record is a "duplicate" or "bug-created". Same email or same linked_user_id does NOT mean same person. |
+| Assume data is wrong or duplicated | Two records that look similar may be intentional. Never guess — ask the user. |
+| Jump to conclusions or make assumptions about user intent | When investigating a problem, present findings and proposed actions. Wait for approval before making ANY changes — code or data. |
 
 ## Workflow Rules
 

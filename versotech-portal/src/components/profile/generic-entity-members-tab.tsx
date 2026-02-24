@@ -122,6 +122,7 @@ export function GenericEntityMembersTab({
   description = 'Manage directors, shareholders, and beneficial owners',
 }: GenericEntityMembersTabProps) {
   const [members, setMembers] = useState<EntityMember[]>([])
+  const [memberSnapshots, setMemberSnapshots] = useState<Record<string, Record<string, unknown>>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -156,9 +157,23 @@ export function GenericEntityMembersTab({
     }
   }, [apiEndpoint])
 
+  // Load snapshots for change detection (separate from members to avoid loops)
+  const loadSnapshots = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/me/member-kyc-snapshots?entityType=${entityType}&entityId=${entityId}`)
+      if (res.ok) {
+        const data = await res.json()
+        setMemberSnapshots(data.snapshots || {})
+      }
+    } catch {
+      // Non-critical — button will stay enabled if snapshots fail to load
+    }
+  }, [entityType, entityId])
+
   useEffect(() => {
     loadMembers()
-  }, [loadMembers])
+    loadSnapshots()
+  }, [loadMembers, loadSnapshots])
 
   const handleAddMember = () => {
     setEditingMember(null)
@@ -203,6 +218,7 @@ export function GenericEntityMembersTab({
 
   const handleDialogSuccess = () => {
     loadMembers()
+    loadSnapshots()
   }
 
   const handleSubmitMemberKyc = async (memberId: string) => {
@@ -219,11 +235,17 @@ export function GenericEntityMembersTab({
 
       if (!response.ok) {
         const data = await response.json()
+        const missing = data.missing as string[] | undefined
+        if (missing && missing.length > 0) {
+          toast.error(`Please complete: ${missing.join(', ')}`)
+          return
+        }
         throw new Error(data.error || 'Failed to submit member KYC')
       }
 
       toast.success('Personal KYC saved')
       await loadMembers()
+      await loadSnapshots()
     } catch (err) {
       console.error('Error submitting member KYC:', err)
       toast.error(err instanceof Error ? err.message : 'Failed to submit member KYC')
@@ -234,6 +256,56 @@ export function GenericEntityMembersTab({
 
   const isSignatory = (member: EntityMember) =>
     Boolean(member.is_signatory || member.can_sign)
+
+  // Compare member's current data against the last saved snapshot (same pattern as overview page)
+  const memberHasUnsavedChanges = (member: EntityMember): boolean => {
+    const snapshot = memberSnapshots[member.id]
+    // No snapshot means never saved — there are changes to save
+    if (!snapshot || Object.keys(snapshot).length === 0) return true
+
+    const normalize = (value: unknown): string | null => {
+      if (value === null || value === undefined) return null
+      if (typeof value === 'string') {
+        const trimmed = value.trim()
+        return trimmed.length > 0 ? trimmed : null
+      }
+      if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+      return JSON.stringify(value)
+    }
+
+    const fields: Array<{ current: unknown; key: string }> = [
+      { current: member.first_name, key: 'first_name' },
+      { current: member.middle_name, key: 'middle_name' },
+      { current: member.last_name, key: 'last_name' },
+      { current: member.name_suffix, key: 'name_suffix' },
+      { current: member.date_of_birth, key: 'date_of_birth' },
+      { current: member.country_of_birth, key: 'country_of_birth' },
+      { current: member.nationality, key: 'nationality' },
+      { current: member.email, key: 'email' },
+      { current: member.phone_mobile, key: 'phone_mobile' },
+      { current: member.phone_office, key: 'phone_office' },
+      { current: member.residential_street, key: 'residential_street' },
+      { current: member.residential_line_2, key: 'residential_line_2' },
+      { current: member.residential_city, key: 'residential_city' },
+      { current: member.residential_state, key: 'residential_state' },
+      { current: member.residential_postal_code, key: 'residential_postal_code' },
+      { current: member.residential_country, key: 'residential_country' },
+      { current: member.is_us_citizen, key: 'is_us_citizen' },
+      { current: member.is_us_taxpayer, key: 'is_us_taxpayer' },
+      { current: member.us_taxpayer_id, key: 'us_taxpayer_id' },
+      { current: member.country_of_tax_residency, key: 'country_of_tax_residency' },
+      { current: member.tax_id_number, key: 'tax_id_number' },
+      { current: member.id_type, key: 'id_type' },
+      { current: member.id_number, key: 'id_number' },
+      { current: member.id_issue_date, key: 'id_issue_date' },
+      { current: member.id_expiry_date, key: 'id_expiry_date' },
+      { current: member.id_issuing_country, key: 'id_issuing_country' },
+    ]
+
+    return fields.some(({ current, key }) =>
+      normalize(current) !== normalize(snapshot[key])
+    )
+  }
 
   const handleSetSignatory = async (member: EntityMember, nextValue: boolean) => {
     if (!canManage) return
@@ -308,17 +380,21 @@ export function GenericEntityMembersTab({
   const getMemberInitialData = (member: EntityMember | null) => {
     if (!member) return undefined
 
+    // Fall back to parsing full_name when first/last name fields are empty
+    let firstName = member.first_name || ''
+    let lastName = member.last_name || ''
+    if (!firstName && !lastName && member.full_name) {
+      const parts = member.full_name.trim().split(/\s+/)
+      firstName = parts[0] || ''
+      lastName = parts.slice(1).join(' ') || ''
+    }
+
     return {
       role: member.role as any,
-      is_signatory: Boolean(
-        member.is_signatory ||
-        member.can_sign ||
-        member.role === 'signatory' ||
-        member.role === 'authorized_signatory'
-      ),
-      first_name: member.first_name || '',
+      is_signatory: Boolean(member.is_signatory || member.can_sign),
+      first_name: firstName,
       middle_name: member.middle_name || '',
-      last_name: member.last_name || '',
+      last_name: lastName,
       name_suffix: member.name_suffix || '',
       date_of_birth: member.date_of_birth || '',
       country_of_birth: member.country_of_birth || '',
@@ -456,7 +532,7 @@ export function GenericEntityMembersTab({
                         <Button
                             size="sm"
                             onClick={() => handleSubmitMemberKyc(member.id)}
-                            disabled={submittingMemberId === member.id || ['submitted', 'pending_review', 'under_review'].includes(member.kyc_status || '')}
+                            disabled={submittingMemberId === member.id || !memberHasUnsavedChanges(member)}
                           >
                             <Send className="w-4 h-4 mr-1.5" />
                             {submittingMemberId === member.id ? 'Saving...' : 'Save'}

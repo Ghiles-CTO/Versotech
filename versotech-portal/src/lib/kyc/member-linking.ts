@@ -58,6 +58,8 @@ export async function fetchMemberWithAutoLink({
 
   const { data: linkedMember, error: linkedError } = await baseQuery()
     .eq('linked_user_id', userId)
+    .order('created_at', { ascending: true })
+    .limit(1)
     .maybeSingle()
 
   if (linkedError) {
