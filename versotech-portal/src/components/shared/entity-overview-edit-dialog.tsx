@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { CountrySelect } from '@/components/kyc/country-select'
 
 const entityOverviewSchema = z.object({
@@ -238,7 +239,12 @@ export function EntityOverviewEditDialog({
                     <FormItem>
                       <FormLabel>Main Phone</FormLabel>
                       <FormControl>
-                        <Input {...field} type="tel" value={field.value || ''} placeholder="+1 (555) 000-0000" />
+                        <PhoneInput
+                          value={field.value || ''}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -250,9 +256,14 @@ export function EntityOverviewEditDialog({
                   name="phone_mobile"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Mobile Phone *</FormLabel>
+                      <FormLabel>Mobile Phone <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
-                        <Input {...field} type="tel" value={field.value || ''} placeholder="+1 (555) 000-0000" />
+                        <PhoneInput
+                          value={field.value || ''}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -266,7 +277,12 @@ export function EntityOverviewEditDialog({
                     <FormItem>
                       <FormLabel>Office Phone</FormLabel>
                       <FormControl>
-                        <Input {...field} type="tel" value={field.value || ''} placeholder="+1 (555) 000-0000" />
+                        <PhoneInput
+                          value={field.value || ''}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

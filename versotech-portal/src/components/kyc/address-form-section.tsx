@@ -47,7 +47,7 @@ export function AddressFormSection<T extends FieldValues>({
         name={fieldName('street')}
         render={({ field }) => (
           <FormItem className="md:col-span-2">
-            <FormLabel>Street Address *</FormLabel>
+            <FormLabel>Street Address <span className="text-destructive">*</span></FormLabel>
             <FormControl>
               <Input
                 {...field}
@@ -90,7 +90,7 @@ export function AddressFormSection<T extends FieldValues>({
           name={fieldName('city')}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>City *</FormLabel>
+              <FormLabel>City <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -131,7 +131,7 @@ export function AddressFormSection<T extends FieldValues>({
           name={fieldName('postal_code')}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Postal / ZIP Code *</FormLabel>
+              <FormLabel>Postal / ZIP Code <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -150,7 +150,7 @@ export function AddressFormSection<T extends FieldValues>({
           name={fieldName('country')}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Country {requireCountry && '*'}</FormLabel>
+              <FormLabel>Country {requireCountry && <span className="text-destructive">*</span>}</FormLabel>
               <FormControl>
                 <CountrySelect
                   value={field.value}

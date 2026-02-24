@@ -114,7 +114,7 @@ export function TaxInfoFormSection<T extends FieldValues>({
             name={fieldName('us_taxpayer_id')}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>US Taxpayer ID (SSN/TIN) *</FormLabel>
+                <FormLabel>US Taxpayer ID (SSN/TIN) <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input
                     {...field}
@@ -141,7 +141,7 @@ export function TaxInfoFormSection<T extends FieldValues>({
           name={fieldName('country_of_tax_residency')}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Country of Tax Residency *</FormLabel>
+              <FormLabel>Country of Tax Residency <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <CountrySelect
                   value={field.value}

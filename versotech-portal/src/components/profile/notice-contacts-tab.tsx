@@ -382,7 +382,7 @@ export function NoticeContactsTab({ apiEndpoint }: NoticeContactsTabProps) {
                   name="contact_type"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Contact Type *</FormLabel>
+                      <FormLabel>Contact Type <span className="text-destructive">*</span></FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -434,7 +434,7 @@ export function NoticeContactsTab({ apiEndpoint }: NoticeContactsTabProps) {
                   name="contact_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Contact Name *</FormLabel>
+                      <FormLabel>Contact Name <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="John Smith" />
                       </FormControl>

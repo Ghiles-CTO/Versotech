@@ -81,7 +81,7 @@ export function EntityInfoEditDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="display_name">Display Name</Label>
+            <Label htmlFor="display_name">Display Name <span className="text-destructive">*</span></Label>
             <Input
               id="display_name"
               value={formData.display_name}
@@ -94,7 +94,7 @@ export function EntityInfoEditDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="legal_name">Legal Name</Label>
+            <Label htmlFor="legal_name">Legal Name <span className="text-destructive">*</span></Label>
             <Input
               id="legal_name"
               value={formData.legal_name}
@@ -107,7 +107,7 @@ export function EntityInfoEditDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="country_of_incorporation">Country of Incorporation</Label>
+            <Label htmlFor="country_of_incorporation">Country of Incorporation <span className="text-destructive">*</span></Label>
             <Input
               id="country_of_incorporation"
               value={formData.country_of_incorporation}

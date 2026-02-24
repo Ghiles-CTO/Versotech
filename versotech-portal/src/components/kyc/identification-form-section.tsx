@@ -96,7 +96,7 @@ export function IdentificationFormSection<T extends FieldValues>({
           name={fieldName('id_type')}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>ID Document Type</FormLabel>
+              <FormLabel>ID Document Type <span className="text-destructive">*</span></FormLabel>
               <Select
                 value={field.value || ''}
                 onValueChange={field.onChange}
@@ -125,7 +125,7 @@ export function IdentificationFormSection<T extends FieldValues>({
           name={fieldName('id_number')}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>ID Number</FormLabel>
+              <FormLabel>ID Number <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -167,7 +167,7 @@ export function IdentificationFormSection<T extends FieldValues>({
           name={fieldName('id_expiry_date')}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Expiry Date *</FormLabel>
+              <FormLabel>Expiry Date <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -191,7 +191,7 @@ export function IdentificationFormSection<T extends FieldValues>({
         name={fieldName('id_issuing_country')}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Issuing Country</FormLabel>
+            <FormLabel>Issuing Country <span className="text-destructive">*</span></FormLabel>
             <FormControl>
               <CountrySelect
                 value={field.value}

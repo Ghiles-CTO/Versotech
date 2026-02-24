@@ -11,6 +11,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { CountrySelect, NationalitySelect } from './country-select'
 
@@ -49,7 +50,7 @@ export function PersonalInfoFormSection<T extends FieldValues>({
           name={fieldName('first_name')}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>First Name *</FormLabel>
+              <FormLabel>First Name <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -69,7 +70,7 @@ export function PersonalInfoFormSection<T extends FieldValues>({
           name={fieldName('last_name')}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Last Name *</FormLabel>
+              <FormLabel>Last Name <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -156,7 +157,7 @@ export function PersonalInfoFormSection<T extends FieldValues>({
           name={fieldName('date_of_birth')}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Date of Birth *</FormLabel>
+              <FormLabel>Date of Birth <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -180,7 +181,7 @@ export function PersonalInfoFormSection<T extends FieldValues>({
           name={fieldName('country_of_birth')}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Country of Birth *</FormLabel>
+              <FormLabel>Country of Birth <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <CountrySelect
                   value={field.value}
@@ -199,7 +200,7 @@ export function PersonalInfoFormSection<T extends FieldValues>({
           name={fieldName('nationality')}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nationality *</FormLabel>
+              <FormLabel>Nationality <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <NationalitySelect
                   value={field.value}
@@ -242,15 +243,14 @@ export function PersonalInfoFormSection<T extends FieldValues>({
           name={fieldName('phone_mobile')}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Mobile Phone *</FormLabel>
+              <FormLabel>Mobile Phone <span className="text-destructive">*</span></FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  type="tel"
+                <PhoneInput
                   value={field.value || ''}
-                  placeholder="+1 (555) 123-4567"
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
                   disabled={disabled}
-                  className="h-10"
+                  name={field.name}
                 />
               </FormControl>
               <FormMessage />
@@ -265,13 +265,12 @@ export function PersonalInfoFormSection<T extends FieldValues>({
             <FormItem>
               <FormLabel>Office Phone</FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  type="tel"
+                <PhoneInput
                   value={field.value || ''}
-                  placeholder="+1 (555) 987-6543"
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
                   disabled={disabled}
-                  className="h-10"
+                  name={field.name}
                 />
               </FormControl>
               <FormMessage />

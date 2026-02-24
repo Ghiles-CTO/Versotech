@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Form,
@@ -280,7 +281,7 @@ export function EntityKYCEditDialog({
                       name="first_name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>First Name *</FormLabel>
+                          <FormLabel>First Name <span className="text-destructive">*</span></FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -298,7 +299,7 @@ export function EntityKYCEditDialog({
                       name="last_name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Last Name *</FormLabel>
+                          <FormLabel>Last Name <span className="text-destructive">*</span></FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -379,7 +380,7 @@ export function EntityKYCEditDialog({
                       name="date_of_birth"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Date of Birth</FormLabel>
+                          <FormLabel>Date of Birth <span className="text-destructive">*</span></FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -401,7 +402,7 @@ export function EntityKYCEditDialog({
                       name="country_of_birth"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Country of Birth</FormLabel>
+                          <FormLabel>Country of Birth <span className="text-destructive">*</span></FormLabel>
                           <FormControl>
                             <CountrySelect
                               value={field.value}
@@ -417,7 +418,7 @@ export function EntityKYCEditDialog({
                       name="nationality"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Nationality</FormLabel>
+                          <FormLabel>Nationality <span className="text-destructive">*</span></FormLabel>
                           <FormControl>
                             <NationalitySelect
                               value={field.value}
@@ -456,14 +457,13 @@ export function EntityKYCEditDialog({
                       name="phone_mobile"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Mobile Phone *</FormLabel>
+                          <FormLabel>Mobile Phone <span className="text-destructive">*</span></FormLabel>
                           <FormControl>
-                            <Input
-                              {...field}
-                              type="tel"
+                            <PhoneInput
                               value={field.value || ''}
-                              placeholder="+1 (555) 123-4567"
-                              className="h-10"
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              name={field.name}
                             />
                           </FormControl>
                           <FormMessage />
@@ -477,12 +477,11 @@ export function EntityKYCEditDialog({
                         <FormItem>
                           <FormLabel>Office Phone</FormLabel>
                           <FormControl>
-                            <Input
-                              {...field}
-                              type="tel"
+                            <PhoneInput
                               value={field.value || ''}
-                              placeholder="+1 (555) 987-6543"
-                              className="h-10"
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              name={field.name}
                             />
                           </FormControl>
                           <FormMessage />
@@ -506,7 +505,7 @@ export function EntityKYCEditDialog({
                     name="residential_street"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Street Address</FormLabel>
+                        <FormLabel>Street Address <span className="text-destructive">*</span></FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -547,7 +546,7 @@ export function EntityKYCEditDialog({
                       name="residential_city"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>City</FormLabel>
+                          <FormLabel>City <span className="text-destructive">*</span></FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -583,7 +582,7 @@ export function EntityKYCEditDialog({
                       name="residential_postal_code"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Postal Code</FormLabel>
+                          <FormLabel>Postal Code <span className="text-destructive">*</span></FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -601,7 +600,7 @@ export function EntityKYCEditDialog({
                       name="residential_country"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Country</FormLabel>
+                          <FormLabel>Country <span className="text-destructive">*</span></FormLabel>
                           <FormControl>
                             <CountrySelect
                               value={field.value}
@@ -681,7 +680,7 @@ export function EntityKYCEditDialog({
                         name="us_taxpayer_id"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>US Taxpayer ID (SSN/ITIN) *</FormLabel>
+                            <FormLabel>US Taxpayer ID (SSN/ITIN) <span className="text-destructive">*</span></FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
@@ -707,7 +706,7 @@ export function EntityKYCEditDialog({
                       name="country_of_tax_residency"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Country of Tax Residency</FormLabel>
+                          <FormLabel>Country of Tax Residency <span className="text-destructive">*</span></FormLabel>
                           <FormControl>
                             <CountrySelect
                               value={field.value}
@@ -757,7 +756,7 @@ export function EntityKYCEditDialog({
                       name="id_type"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Document Type</FormLabel>
+                          <FormLabel>Document Type <span className="text-destructive">*</span></FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             value={field.value || ''}
@@ -784,7 +783,7 @@ export function EntityKYCEditDialog({
                       name="id_number"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Document Number</FormLabel>
+                          <FormLabel>Document Number <span className="text-destructive">*</span></FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -826,7 +825,7 @@ export function EntityKYCEditDialog({
                       name="id_expiry_date"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Expiry Date</FormLabel>
+                          <FormLabel>Expiry Date <span className="text-destructive">*</span></FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -849,7 +848,7 @@ export function EntityKYCEditDialog({
                       name="id_issuing_country"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Issuing Country</FormLabel>
+                          <FormLabel>Issuing Country <span className="text-destructive">*</span></FormLabel>
                           <FormControl>
                             <CountrySelect
                               value={field.value}
