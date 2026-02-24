@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { SignatoryEntityType, syncMemberSignatoryFromUserLink } from '@/lib/kyc/member-signatory-sync'
 
 // Entity table mapping
 const ENTITY_TABLES: Record<string, string> = {
@@ -38,6 +39,15 @@ const ENTITY_ID_COLUMNS: Record<string, string> = {
   ceo: '', // CEO uses singleton pattern
   staff: '' // Staff don't have entity_id - they're internal team
 }
+
+const SIGNATORY_ENTITY_TYPES = new Set<SignatoryEntityType>([
+  'investor',
+  'partner',
+  'introducer',
+  'lawyer',
+  'commercial_partner',
+  'arranger',
+])
 
 /**
  * GET /api/invitations/[token]
@@ -408,6 +418,17 @@ export async function POST(
       if (insertError) {
         console.error('Error creating membership:', insertError)
         return NextResponse.json({ error: 'Failed to accept invitation' }, { status: 500 })
+      }
+
+      if (SIGNATORY_ENTITY_TYPES.has(invitation.entity_type as SignatoryEntityType)) {
+        await syncMemberSignatoryFromUserLink({
+          supabase: serviceSupabase,
+          entityType: invitation.entity_type as SignatoryEntityType,
+          entityId: invitation.entity_id,
+          userId: user.id,
+          canSign: Boolean(invitation.is_signatory),
+          userEmail: profile?.email || invitation.email,
+        })
       }
 
       // Update profile role if needed (for persona switching)

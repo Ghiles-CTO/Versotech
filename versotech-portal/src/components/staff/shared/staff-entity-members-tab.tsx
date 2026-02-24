@@ -12,6 +12,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Users, UserPlus, Edit, Trash2, ShieldCheck, Clock, AlertCircle, FileWarning, CheckCircle, XCircle, Percent } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -148,6 +149,7 @@ export function StaffEntityMembersTab({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deletingMember, setDeletingMember] = useState<EntityMember | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [updatingSignatoryMemberId, setUpdatingSignatoryMemberId] = useState<string | null>(null)
 
   // Build API endpoint for staff
   const apiPath = ENTITY_TYPE_TO_API_PATH[entityType]
@@ -295,6 +297,49 @@ export function StaffEntityMembersTab({
     }
   }
 
+  const isSignatory = (member: EntityMember) =>
+    Boolean(
+      member.is_signatory ||
+      member.can_sign ||
+      member.role === 'signatory' ||
+      member.role === 'authorized_signatory'
+    )
+
+  const handleSetSignatory = async (member: EntityMember, nextValue: boolean) => {
+    setUpdatingSignatoryMemberId(member.id)
+
+    try {
+      const payload: Record<string, unknown> = {
+        entity_id: entityId,
+        member_id: member.id,
+        is_signatory: nextValue,
+      }
+      if (entityType === 'investor') {
+        payload.can_sign = nextValue
+      }
+
+      const response = await fetch(`${apiEndpoint}/${member.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to update signatory')
+      }
+
+      toast.success('Signatory updated')
+      await loadMembers()
+      onDataChange?.()
+    } catch (err) {
+      console.error('Error updating signatory:', err)
+      toast.error(err instanceof Error ? err.message : 'Failed to update signatory')
+    } finally {
+      setUpdatingSignatoryMemberId(null)
+    }
+  }
+
   // Check if ID is expiring soon (within 30 days)
   const isIdExpiringSoon = (member: EntityMember) => {
     if (!member.id_expiry_date) return false
@@ -317,6 +362,12 @@ export function StaffEntityMembersTab({
 
     return {
       role: member.role as 'director' | 'ubo' | 'signatory' | 'authorized_representative' | 'beneficiary',
+      is_signatory: Boolean(
+        member.is_signatory ||
+        member.can_sign ||
+        member.role === 'signatory' ||
+        member.role === 'authorized_signatory'
+      ),
       first_name: member.first_name || '',
       middle_name: member.middle_name || '',
       last_name: member.last_name || '',
@@ -481,6 +532,7 @@ export function StaffEntityMembersTab({
                   <TableHead>Role</TableHead>
                   <TableHead>Ownership</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Signatory</TableHead>
                   <TableHead>KYC Status</TableHead>
                   <TableHead>ID Expiry</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -495,9 +547,6 @@ export function StaffEntityMembersTab({
                         <div className="flex gap-1 mt-1">
                           {(member.is_beneficial_owner || member.role === 'ubo' || member.role === 'beneficial_owner') && (
                             <Badge variant="secondary" className="text-xs">UBO</Badge>
-                          )}
-                          {(member.is_signatory || member.can_sign) && (
-                            <Badge variant="secondary" className="text-xs">Signatory</Badge>
                           )}
                         </div>
                       </div>
@@ -522,6 +571,18 @@ export function StaffEntityMembersTab({
                     </TableCell>
                     <TableCell>
                       {member.email || <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={isSignatory(member)}
+                          onCheckedChange={(checked) => handleSetSignatory(member, checked)}
+                          disabled={updatingSignatoryMemberId === member.id}
+                        />
+                        <span className={`text-xs ${isSignatory(member) ? 'text-emerald-600 font-medium' : 'text-muted-foreground'}`}>
+                          {isSignatory(member) ? 'Yes' : 'No'}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell>{getKYCStatusBadge(member.kyc_status)}</TableCell>
                     <TableCell>

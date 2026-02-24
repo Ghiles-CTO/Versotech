@@ -7,6 +7,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { createMemberSchema, prepareMemberData } from '@/lib/schemas/member-kyc-schema'
+import { syncUserSignatoryFromMember } from '@/lib/kyc/member-signatory-sync'
 
 /**
  * GET /api/partners/me/members
@@ -164,6 +165,15 @@ export async function POST(request: Request) {
     if (insertError) {
       console.error('Error creating partner member:', insertError)
       return NextResponse.json({ error: 'Failed to create member' }, { status: 500 })
+    }
+
+    if (newMember?.id) {
+      await syncUserSignatoryFromMember({
+        supabase: serviceSupabase,
+        entityType: 'partner',
+        entityId: partnerId,
+        memberId: newMember.id,
+      })
     }
 
     return NextResponse.json({ member: newMember }, { status: 201 })

@@ -10,6 +10,9 @@ import type { PostSignatureHandlerParams, SignaturePosition } from './types'
 import { calculateSubscriptionFeeEvents, createFeeEvents } from '../fees/subscription-fee-calculator'
 import { detectAnchors, getPlacementsFromAnchors, getRequiredAnchorsForIntroducerAgreement, validateRequiredAnchors } from './anchor-detector'
 import { buildExecutedDocumentName, formatCounterpartyName } from '../documents/executed-document-name'
+import { resolveIntroducerSignatories } from './introducer-signatories'
+import { sendSignatureRequestEmail } from '@/lib/email/resend-service'
+import { generateSigningUrl } from './token'
 
 /**
  * NDA Post-Signature Handler
@@ -1225,48 +1228,21 @@ export async function handleIntroducerAgreementSignature(
 
     console.log('✅ [INTRODUCER AGREEMENT HANDLER] Status updated to pending_introducer_signature')
 
-    // Create signature requests for introducer signatories
+    // Create signature requests for introducer signatories (member-first, legacy fallback).
     const introducer = agreement.introducer as any
-
-    // Get all introducer users who can sign (multi-signatory support)
-    const { data: introducerSignatories, error: signatoryError } = await supabase
-      .from('introducer_users')
-      .select(`
-        user_id,
-        role,
-        is_primary,
-        can_sign,
-        profiles:user_id (
-          email,
-          display_name
-        )
-      `)
-      .eq('introducer_id', agreement.introducer_id)
-      .eq('can_sign', true)
-      .order('is_primary', { ascending: false }) // Primary signer first
-
-    if (signatoryError) {
-      console.error('❌ [INTRODUCER AGREEMENT HANDLER] Failed to fetch introducer signatories:', signatoryError)
-    }
-
-    // Fall back to legacy user_id if no introducer_users found
-    let signatoriesToNotify = introducerSignatories && introducerSignatories.length > 0
-      ? introducerSignatories
-          .map((s: any) => ({
-            user_id: s.user_id,
-            email: s.profiles?.email || introducer?.email || '',
-            name: s.profiles?.display_name || introducer?.legal_name || '',
-            is_primary: s.is_primary
-          }))
-      : introducer?.user_id
-        ? [{ user_id: introducer.user_id, email: introducer.email || '', name: introducer.legal_name || '', is_primary: true }]
-        : []
-
-    const maxSignatories = 5
-    if (signatoriesToNotify.length > maxSignatories) {
-      console.warn(`⚠️ [INTRODUCER AGREEMENT HANDLER] More than ${maxSignatories} introducer signatories found; only the first ${maxSignatories} will be requested.`)
-      signatoriesToNotify = signatoriesToNotify.slice(0, maxSignatories)
-    }
+    const signatoriesToNotify = await resolveIntroducerSignatories({
+      supabase,
+      introducerId: agreement.introducer_id,
+      introducer: {
+        legal_name: introducer?.legal_name,
+        display_name: introducer?.display_name,
+        first_name: introducer?.first_name,
+        last_name: introducer?.last_name,
+        email: introducer?.email,
+        user_id: introducer?.user_id,
+      },
+      maxSignatories: 5,
+    })
 
     console.log(`📝 [INTRODUCER AGREEMENT HANDLER] Found ${signatoriesToNotify.length} signatory(ies) for introducer`)
 
@@ -1319,7 +1295,7 @@ export async function handleIntroducerAgreementSignature(
             introducer_id: agreement.introducer_id,
             deal_id: agreement.deal_id, // Link to deal for task context
             investor_id: null, // NULL for introducer agreements (no investor involved)
-            signer_user_id: signatory.user_id, // User-level signing verification
+            signer_user_id: signatory.user_id, // User-level signing verification if linked user exists
             signer_email: signatory.email,
             signer_name: signatory.name,
             signer_role: 'introducer',
@@ -1347,37 +1323,65 @@ export async function handleIntroducerAgreementSignature(
           firstSignatureRequestId = introducerSignatureRequest.id
         }
 
-        // Create task for this signatory in their portal
-        // Set BOTH owner_user_id (for direct visibility) AND owner_introducer_id (for entity-level visibility)
-        // This allows ALL users in the introducer entity to see the task, not just the designated signer
-        const signingUrl = `/sign/${signingToken}`
-        const { error: taskError } = await supabase.from('tasks').insert({
-          owner_user_id: signatory.user_id,
-          owner_introducer_id: agreement.introducer_id, // Entity-level visibility for all introducer users
-          kind: 'countersignature', // Must use valid kind from constraint
-          category: 'signatures', // Signature tasks go in 'signatures' category
-          title: `Sign Fee Agreement - ${introducer?.legal_name}`,
-          description: `Review and sign the introducer fee agreement. ${signatoriesToNotify.length > 1 ? `(${signatoriesToNotify.length} signatories required)` : ''}`,
-          status: 'pending',
-          priority: 'high',
-          related_entity_type: 'signature_request',
-          related_entity_id: introducerSignatureRequest.id,
-          related_deal_id: agreement.deal_id,
-          due_at: expiryDate.toISOString(),
-          instructions: {
-            type: 'signature',
-            action_url: signingUrl,
-            signature_request_id: introducerSignatureRequest.id,
-            document_type: 'introducer_agreement',
-            agreement_id: agreementId,
-            introducer_name: introducer?.legal_name,
-          },
+        let signingUrl = `/sign/${signingToken}`
+        try {
+          signingUrl = generateSigningUrl(signingToken)
+        } catch (urlError) {
+          console.warn('⚠️ [INTRODUCER AGREEMENT HANDLER] Falling back to relative signing URL:', urlError)
+        }
+
+        // Send signature email to resolved member signatory email.
+        const emailResult = await sendSignatureRequestEmail({
+          email: signatory.email,
+          signerName: signatory.name,
+          documentType: 'introducer_agreement',
+          signingUrl,
+          expiresAt: expiryDate.toISOString(),
         })
 
-        if (taskError) {
-          console.error(`⚠️ [INTRODUCER AGREEMENT HANDLER] Failed to create task for ${signatory.email}:`, taskError)
+        await supabase
+          .from('signature_requests')
+          .update({
+            email_sent_at: emailResult.success ? new Date().toISOString() : null,
+          })
+          .eq('id', introducerSignatureRequest.id)
+
+        if (!emailResult.success) {
+          console.error(`⚠️ [INTRODUCER AGREEMENT HANDLER] Failed to send signature email to ${signatory.email}:`, emailResult.error)
+        }
+
+        // Create task for this signatory when linked to a platform user.
+        if (signatory.user_id) {
+          const { error: taskError } = await supabase.from('tasks').insert({
+            owner_user_id: signatory.user_id,
+            owner_introducer_id: agreement.introducer_id, // Entity-level visibility for introducer users
+            kind: 'countersignature',
+            category: 'signatures',
+            title: `Sign Fee Agreement - ${introducer?.legal_name}`,
+            description: `Review and sign the introducer fee agreement. ${signatoriesToNotify.length > 1 ? `(${signatoriesToNotify.length} signatories required)` : ''}`,
+            status: 'pending',
+            priority: 'high',
+            related_entity_type: 'signature_request',
+            related_entity_id: introducerSignatureRequest.id,
+            related_deal_id: agreement.deal_id,
+            due_at: expiryDate.toISOString(),
+            instructions: {
+              type: 'signature',
+              action_url: signingUrl,
+              signature_request_id: introducerSignatureRequest.id,
+              document_type: 'introducer_agreement',
+              agreement_id: agreementId,
+              introducer_name: introducer?.legal_name,
+            },
+          })
+
+          if (taskError) {
+            console.error(`⚠️ [INTRODUCER AGREEMENT HANDLER] Failed to create task for ${signatory.email}:`, taskError)
+          } else {
+            console.log(`✅ [INTRODUCER AGREEMENT HANDLER] Task created for ${signatory.email}`)
+          }
         } else {
-          console.log(`✅ [INTRODUCER AGREEMENT HANDLER] Task created for ${signatory.email}`)
+          console.log(`ℹ️ [INTRODUCER AGREEMENT HANDLER] No linked user for ${signatory.email}; email-only signing path will be used`)
         }
 
         // Create notification for this signatory
@@ -1385,16 +1389,18 @@ export async function handleIntroducerAgreementSignature(
           ? `Your fee agreement has been signed by ${arrangerEntity?.legal_name || 'the Arranger'} and is ready for your signature.`
           : 'Your fee agreement has been signed by VERSO and is ready for your signature.'
 
-        await supabase.from('investor_notifications').insert({
-          user_id: signatory.user_id,
-          investor_id: null, // Introducer notification, not investor
-          title: 'Fee Agreement Ready for Signature',
-          message: notificationMessage,
-          link: `/versotech_main/versosign`, // Direct to VERSOSign page
-          type: 'introducer_agreement_pending', // GAP-6 FIX: Add proper notification type
-        })
+        if (signatory.user_id) {
+          await supabase.from('investor_notifications').insert({
+            user_id: signatory.user_id,
+            investor_id: null, // Introducer notification, not investor
+            title: 'Fee Agreement Ready for Signature',
+            message: notificationMessage,
+            link: `/versotech_main/versosign`, // Direct to VERSOSign page
+            type: 'introducer_agreement_pending',
+          })
 
-        console.log(`✅ [INTRODUCER AGREEMENT HANDLER] Notification sent to ${signatory.email}`)
+          console.log(`✅ [INTRODUCER AGREEMENT HANDLER] Notification sent to ${signatory.email}`)
+        }
       }
 
       // Update agreement with first signature request ID

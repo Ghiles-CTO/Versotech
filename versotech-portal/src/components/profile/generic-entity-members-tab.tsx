@@ -11,6 +11,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Users, UserPlus, Edit, Trash2, ShieldCheck, Clock, AlertCircle, Send } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -131,6 +132,7 @@ export function GenericEntityMembersTab({
   const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [submittingMemberId, setSubmittingMemberId] = useState<string | null>(null)
+  const [updatingSignatoryMemberId, setUpdatingSignatoryMemberId] = useState<string | null>(null)
 
   // Load members
   const loadMembers = useCallback(async () => {
@@ -227,6 +229,50 @@ export function GenericEntityMembersTab({
       toast.error(err instanceof Error ? err.message : 'Failed to submit member KYC')
     } finally {
       setSubmittingMemberId(null)
+    }
+  }
+
+  const isSignatory = (member: EntityMember) =>
+    Boolean(
+      member.is_signatory ||
+      member.can_sign ||
+      member.role === 'signatory' ||
+      member.role === 'authorized_signatory'
+    )
+
+  const handleSetSignatory = async (member: EntityMember, nextValue: boolean) => {
+    if (!canManage) return
+
+    setUpdatingSignatoryMemberId(member.id)
+
+    try {
+      const payload: Record<string, unknown> = {
+        entity_id: entityId,
+        member_id: member.id,
+        is_signatory: nextValue,
+      }
+      if (entityType === 'investor') {
+        payload.can_sign = nextValue
+      }
+
+      const response = await fetch(`${apiEndpoint}/${member.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to update signatory')
+      }
+
+      toast.success('Signatory updated')
+      await loadMembers()
+    } catch (err) {
+      console.error('Error updating signatory:', err)
+      toast.error(err instanceof Error ? err.message : 'Failed to update signatory')
+    } finally {
+      setUpdatingSignatoryMemberId(null)
     }
   }
 
@@ -362,6 +408,7 @@ export function GenericEntityMembersTab({
                   <TableHead>Role</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Ownership %</TableHead>
+                  <TableHead>Signatory</TableHead>
                   <TableHead>KYC Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -373,9 +420,6 @@ export function GenericEntityMembersTab({
                       {getDisplayName(member)}
                       {member.is_beneficial_owner && (
                         <Badge variant="secondary" className="ml-2 text-xs">UBO</Badge>
-                      )}
-                      {member.is_signatory && (
-                        <Badge variant="secondary" className="ml-2 text-xs">Signatory</Badge>
                       )}
                     </TableCell>
                     <TableCell>
@@ -389,6 +433,18 @@ export function GenericEntityMembersTab({
                     <TableCell>{member.email || 'N/A'}</TableCell>
                     <TableCell>
                       {member.ownership_percentage != null ? `${member.ownership_percentage}%` : 'N/A'}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={isSignatory(member)}
+                          onCheckedChange={(checked) => handleSetSignatory(member, checked)}
+                          disabled={!canManage || updatingSignatoryMemberId === member.id}
+                        />
+                        <span className={`text-xs ${isSignatory(member) ? 'text-emerald-600 font-medium' : 'text-muted-foreground'}`}>
+                          {isSignatory(member) ? 'Yes' : 'No'}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell>{getKYCStatusBadge(member.kyc_status)}</TableCell>
                     <TableCell className="text-right">
@@ -441,7 +497,6 @@ export function GenericEntityMembersTab({
         apiEndpoint={apiEndpoint}
         onSuccess={handleDialogSuccess}
         mode={editingMember ? 'edit' : 'create'}
-        showSignatoryField
       />
 
       {/* Delete Confirmation Dialog */}

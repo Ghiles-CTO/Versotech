@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
@@ -480,7 +481,7 @@ export function NoticeContactsTab({ apiEndpoint }: NoticeContactsTabProps) {
                     <FormItem>
                       <FormLabel>Phone</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="+1 (555) 123-4567" />
+                        <PhoneInput value={field.value || ''} onChange={field.onChange} onBlur={field.onBlur} name={field.name} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

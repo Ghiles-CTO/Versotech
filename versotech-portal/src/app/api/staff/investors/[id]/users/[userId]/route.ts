@@ -1,5 +1,6 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
+import { syncMemberSignatoryFromUserLink } from '@/lib/kyc/member-signatory-sync'
 import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
@@ -76,6 +77,16 @@ export async function PATCH(
       return NextResponse.json({ error: 'Failed to update user settings', details: updateError.message }, { status: 500 })
     }
 
+    if (typeof validation.data.can_sign === 'boolean') {
+      await syncMemberSignatoryFromUserLink({
+        supabase,
+        entityType: 'investor',
+        entityId: id,
+        userId,
+        canSign: validation.data.can_sign,
+      })
+    }
+
     // Revalidate the detail page
     revalidatePath(`/versotech/staff/investors/${id}`)
 
@@ -137,4 +148,3 @@ export async function DELETE(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-

@@ -1,5 +1,6 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { updateMemberSchema, prepareMemberData } from '@/lib/schemas/member-kyc-schema'
+import { syncUserSignatoryFromMember } from '@/lib/kyc/member-signatory-sync'
 import { NextResponse } from 'next/server'
 
 interface RouteParams {
@@ -152,6 +153,13 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       console.error('Error updating member:', updateError)
       return NextResponse.json({ error: 'Failed to update member' }, { status: 500 })
     }
+
+    await syncUserSignatoryFromMember({
+      supabase: serviceSupabase,
+      entityType: 'investor',
+      entityId: existingMember.investor_id,
+      memberId,
+    })
 
     return NextResponse.json({ member: updatedMember })
   } catch (error) {

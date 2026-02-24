@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { SignatoryEntityType, syncMemberSignatoryFromUserLink } from '@/lib/kyc/member-signatory-sync'
 import { z } from 'zod'
 
 // Valid entity types
@@ -145,6 +146,16 @@ export async function PATCH(
     if (updateError) {
       console.error('Error updating member:', updateError)
       return NextResponse.json({ error: 'Failed to update member' }, { status: 500 })
+    }
+
+    if (can_sign !== undefined) {
+      await syncMemberSignatoryFromUserLink({
+        supabase: serviceSupabase,
+        entityType: entity_type as SignatoryEntityType,
+        entityId: entity_id,
+        userId: memberId,
+        canSign: can_sign,
+      })
     }
 
     return NextResponse.json({

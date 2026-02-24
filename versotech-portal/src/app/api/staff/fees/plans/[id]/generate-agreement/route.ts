@@ -282,37 +282,76 @@ export async function POST(
 
     // Fetch introducer signatories (multi-signatory support)
     const maxSignatories = 5;
-    const { data: introducerUsers, error: introducerUsersError } = await supabase
-      .from('introducer_users')
+    const { data: introducerMembers, error: introducerMembersError } = await supabase
+      .from('introducer_members')
       .select(`
-        user_id,
-        role,
-        is_primary,
-        can_sign,
-        profiles:user_id (
+        id,
+        full_name,
+        first_name,
+        last_name,
+        linked_user_id,
+        profiles:linked_user_id (
           display_name,
           email
         )
       `)
       .eq('introducer_id', feePlan.introducer_id)
-      .eq('can_sign', true)
-      .order('is_primary', { ascending: false });
+      .eq('is_active', true)
+      .eq('is_signatory', true)
+      .order('created_at', { ascending: true });
 
-    if (introducerUsersError) {
-      console.error('Error fetching introducer signatories:', introducerUsersError);
+    if (introducerMembersError) {
+      console.error('Error fetching introducer member signatories:', introducerMembersError);
     }
 
-    const introducerSignatories = (introducerUsers || [])
-      .map((user, index) => {
-        // Handle both array and object cases for profiles join
+    let rawSignatories: Array<{ name: string }> = [];
+
+    if (introducerMembers && introducerMembers.length > 0) {
+      rawSignatories = introducerMembers.map((member, index) => {
+        const profile = Array.isArray(member.profiles) ? member.profiles[0] : member.profiles;
+        const structuredName = [member.first_name, member.last_name].filter(Boolean).join(' ').trim();
+        return {
+          name:
+            member.full_name ||
+            structuredName ||
+            profile?.display_name ||
+            introducer?.contact_name ||
+            introducer?.legal_name ||
+            `Signatory ${index + 1}`,
+        };
+      });
+    } else {
+      // Legacy fallback for older records that still rely on introducer_users.can_sign.
+      const { data: introducerUsers, error: introducerUsersError } = await supabase
+        .from('introducer_users')
+        .select(`
+          user_id,
+          is_primary,
+          can_sign,
+          profiles:user_id (
+            display_name,
+            email
+          )
+        `)
+        .eq('introducer_id', feePlan.introducer_id)
+        .eq('can_sign', true)
+        .order('is_primary', { ascending: false });
+
+      if (introducerUsersError) {
+        console.error('Error fetching introducer fallback signatories:', introducerUsersError);
+      }
+
+      rawSignatories = (introducerUsers || []).map((user, index) => {
         const profile = Array.isArray(user.profiles) ? user.profiles[0] : user.profiles;
         return {
           name: profile?.display_name || introducer?.contact_name || introducer?.legal_name || `Signatory ${index + 1}`,
         };
-      })
-      .slice(0, maxSignatories);
+      });
+    }
 
-    if ((introducerUsers || []).length > maxSignatories) {
+    const introducerSignatories = rawSignatories.slice(0, maxSignatories);
+
+    if (rawSignatories.length > maxSignatories) {
       console.warn(`⚠️ Introducer has more than ${maxSignatories} signatories; extra signers will not be included in the agreement.`);
     }
 

@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
 import { getAppUrl } from '@/lib/signature/token'
 import { sendInvitationEmail } from '@/lib/email/resend-service'
+import { syncMemberSignatoryFromUserLink } from '@/lib/kyc/member-signatory-sync'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 const addInvestorUserSchema = z.object({
@@ -228,18 +229,66 @@ export async function POST(
       return NextResponse.json({ error: 'User resolution failed' }, { status: 500 })
     }
 
+    let targetEmail: string | null = inviteEmail || null
+    if (!targetEmail) {
+      const { data: targetProfile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', targetUserId)
+        .maybeSingle()
+      targetEmail = targetProfile?.email?.toLowerCase() || null
+    }
+
+    let resolvedCanSign = false
+    const { data: linkedMember } = await supabase
+      .from('investor_members')
+      .select('is_signatory, can_sign')
+      .eq('investor_id', id)
+      .eq('is_active', true)
+      .eq('linked_user_id', targetUserId)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+
+    if (linkedMember) {
+      resolvedCanSign = Boolean(linkedMember.is_signatory || linkedMember.can_sign)
+    } else if (targetEmail) {
+      const { data: emailMember } = await supabase
+        .from('investor_members')
+        .select('is_signatory, can_sign')
+        .eq('investor_id', id)
+        .eq('is_active', true)
+        .is('linked_user_id', null)
+        .ilike('email', targetEmail)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+
+      resolvedCanSign = Boolean(emailMember?.is_signatory || emailMember?.can_sign)
+    }
+
     // Create the investor_users link
     const { error: linkError } = await supabase
       .from('investor_users')
       .insert({
         investor_id: id,
-        user_id: targetUserId
+        user_id: targetUserId,
+        can_sign: resolvedCanSign,
       })
 
     if (linkError) {
       console.error('Link user to investor error:', linkError)
       return NextResponse.json({ error: 'Failed to link user to investor' }, { status: 500 })
     }
+
+    await syncMemberSignatoryFromUserLink({
+      supabase,
+      entityType: 'investor',
+      entityId: id,
+      userId: targetUserId,
+      canSign: resolvedCanSign,
+      userEmail: targetEmail,
+    })
 
     // Note: Onboarding tasks are created automatically by database trigger
     // 'investor_users_create_onboarding_tasks' which fires AFTER INSERT on investor_users table

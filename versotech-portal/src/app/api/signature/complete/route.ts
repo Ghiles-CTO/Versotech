@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolveAgentIdForTask } from '@/lib/agents'
 import { buildExecutedDocumentName, formatCounterpartyName } from '@/lib/documents/executed-document-name'
+import { resolveIntroducerSignatories } from '@/lib/signature/introducer-signatories'
+import { sendSignatureRequestEmail } from '@/lib/email/resend-service'
+import { generateSigningUrl } from '@/lib/signature/token'
 import crypto from 'crypto'
 
 function normalizeWebhookSignature(rawSignature: string): string | null {
@@ -1036,22 +1039,44 @@ async function handleIntroducerAgreementCompletion(
       console.log('✅ [INTRODUCER AGREEMENT] CEO/Arranger task marked as completed')
     }
 
-    // Get introducer users for signature request and task creation (include user email as fallback)
-    const { data: introducerUsers } = await supabase
-      .from('introducer_users')
-      .select('user_id, user:user_id(email)')
-      .eq('introducer_id', agreement.introducer_id)
+    const signerLabel = isArrangerSigner ? arrangerName : 'VERSO'
+    const signatoriesToNotify = await resolveIntroducerSignatories({
+      supabase,
+      introducerId: agreement.introducer_id,
+      introducer: {
+        legal_name: (agreement.introducer as any)?.legal_name,
+        display_name: (agreement.introducer as any)?.display_name,
+        first_name: (agreement.introducer as any)?.first_name,
+        last_name: (agreement.introducer as any)?.last_name,
+        email: introducerEmail,
+      },
+      maxSignatories: 5,
+    })
 
-    if (introducerUsers && introducerUsers.length > 0) {
-      const signerLabel = isArrangerSigner ? arrangerName : 'VERSO'
-      const primaryIntroducerUserId = introducerUsers[0].user_id
-      // Use entity email, or fall back to the primary user's email
-      const primaryUserEmail = (introducerUsers[0] as any).user?.email
-      const finalSignerEmail = introducerEmail || primaryUserEmail || 'no-email@placeholder.com'
+    if (signatoriesToNotify.length === 0) {
+      console.warn('⚠️ [INTRODUCER AGREEMENT] No introducer signatories found after member-first resolution')
+      const rollbackStatus = isArrangerSigner ? 'pending_arranger_signature' : 'pending_ceo_signature'
+      await supabase
+        .from('introducer_agreements')
+        .update({
+          status: rollbackStatus,
+          updated_at: now,
+        })
+        .eq('id', agreementId)
+      return
+    }
 
-      // Create signature request for introducer
+    let firstSignatureRequestId: string | null = null
+    const subscriptionFeePercent = agreement.default_commission_bps ? (agreement.default_commission_bps / 100).toFixed(2) : '0'
+    const performanceFeePercent = agreement.performance_fee_bps ? (agreement.performance_fee_bps / 100).toFixed(2) : null
+    const feeDescription = performanceFeePercent
+      ? `${subscriptionFeePercent}% subscription fee, ${performanceFeePercent}% performance fee`
+      : `${subscriptionFeePercent}% subscription fee`
+
+    for (const [index, signatory] of signatoriesToNotify.entries()) {
       const signingToken = crypto.randomUUID()
-      const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 14 days
+      const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+      const signaturePosition = index === 0 ? 'party_b' : `party_b_${index + 1}`
 
       const { data: introducerSignatureRequest, error: sigReqError } = await supabase
         .from('signature_requests')
@@ -1059,15 +1084,14 @@ async function handleIntroducerAgreementCompletion(
           introducer_id: agreement.introducer_id,
           introducer_agreement_id: agreementId,
           deal_id: agreement.deal_id,
-          signer_email: finalSignerEmail,
-          signer_name: introducerName,
+          signer_user_id: signatory.user_id,
+          signer_email: signatory.email,
+          signer_name: signatory.name,
           document_type: 'introducer_agreement',
           signer_role: 'introducer',
-          signature_position: 'party_b',
+          signature_position: signaturePosition,
           signing_token: signingToken,
           token_expires_at: expiresAt.toISOString(),
-          // IMPORTANT: Use CEO-signed PDF as the base for introducer to sign
-          // This ensures the final PDF has both signatures
           unsigned_pdf_path: sigRequest.signed_pdf_path,
           status: 'pending',
         })
@@ -1075,31 +1099,45 @@ async function handleIntroducerAgreementCompletion(
         .single()
 
       if (sigReqError || !introducerSignatureRequest) {
-        console.error('❌ [INTRODUCER AGREEMENT] Failed to create introducer signature request:', sigReqError)
-      } else {
-        console.log('✅ [INTRODUCER AGREEMENT] Introducer signature request created:', introducerSignatureRequest.id)
+        console.error(`❌ [INTRODUCER AGREEMENT] Failed to create introducer signature request for ${signatory.email}:`, sigReqError)
+        continue
+      }
 
-        // Update agreement with introducer signature request ID
-        await supabase
-          .from('introducer_agreements')
-          .update({
-            introducer_signature_request_id: introducerSignatureRequest.id,
-          })
-          .eq('id', agreementId)
+      if (!firstSignatureRequestId) {
+        firstSignatureRequestId = introducerSignatureRequest.id
+      }
 
-        // Build fee description for task
-        const subscriptionFeePercent = agreement.default_commission_bps ? (agreement.default_commission_bps / 100).toFixed(2) : '0'
-        const performanceFeePercent = agreement.performance_fee_bps ? (agreement.performance_fee_bps / 100).toFixed(2) : null
-        const feeDescription = performanceFeePercent
-          ? `${subscriptionFeePercent}% subscription fee, ${performanceFeePercent}% performance fee`
-          : `${subscriptionFeePercent}% subscription fee`
+      let signingUrl = `/sign/${signingToken}`
+      try {
+        signingUrl = generateSigningUrl(signingToken)
+      } catch (urlError) {
+        console.warn('⚠️ [INTRODUCER AGREEMENT] Falling back to relative signing URL:', urlError)
+      }
+      const emailResult = await sendSignatureRequestEmail({
+        email: signatory.email,
+        signerName: signatory.name,
+        documentType: 'introducer_agreement',
+        signingUrl,
+        expiresAt: expiresAt.toISOString(),
+      })
 
-        // Create VERSOSign task for introducer with detailed info
-        const signingUrl = `/sign/${signingToken}`
+      await supabase
+        .from('signature_requests')
+        .update({
+          email_sent_at: emailResult.success ? now : null,
+        })
+        .eq('id', introducerSignatureRequest.id)
+
+      if (!emailResult.success) {
+        console.error(`⚠️ [INTRODUCER AGREEMENT] Failed to send signature email to ${signatory.email}:`, emailResult.error)
+      }
+
+      if (signatory.user_id) {
         const { error: taskError } = await supabase.from('tasks').insert({
-          owner_user_id: primaryIntroducerUserId,
+          owner_user_id: signatory.user_id,
+          owner_introducer_id: agreement.introducer_id,
           kind: 'countersignature',
-          category: 'compliance',
+          category: 'signatures',
           title: `Sign Your Introducer Agreement: ${dealName}`,
           description: `Please review and sign your introducer fee agreement.\n\n` +
             `• Deal: ${dealName}\n` +
@@ -1128,24 +1166,29 @@ async function handleIntroducerAgreementCompletion(
         })
 
         if (taskError) {
-          console.error('⚠️ [INTRODUCER AGREEMENT] Failed to create introducer task:', taskError)
-        } else {
-          console.log('✅ [INTRODUCER AGREEMENT] Introducer task created in VERSOSign')
+          console.error(`⚠️ [INTRODUCER AGREEMENT] Failed to create introducer task for ${signatory.email}:`, taskError)
         }
+
+        await supabase.from('investor_notifications').insert({
+          user_id: signatory.user_id,
+          investor_id: null,
+          title: 'Introducer Agreement Ready for Your Signature',
+          message: `Your introducer agreement for ${dealName} has been signed by ${signerLabel} and is ready for your signature.`,
+          link: `/versotech_main/versosign`,
+          type: 'action_required',
+        })
+      } else {
+        console.log(`ℹ️ [INTRODUCER AGREEMENT] Signatory ${signatory.email} has no linked user. Email-only signing path used.`)
       }
+    }
 
-      // Also send notification
-      const notifications = introducerUsers.map((iu: any) => ({
-        user_id: iu.user_id,
-        investor_id: null,
-        title: 'Introducer Agreement Ready for Your Signature',
-        message: `Your introducer agreement for ${dealName} has been signed by ${signerLabel} and is ready for your signature.`,
-        link: `/versotech_main/versosign`,
-        type: 'action_required'
-      }))
-
-      await supabase.from('investor_notifications').insert(notifications)
-      console.log('✅ [INTRODUCER AGREEMENT] Notified introducer users')
+    if (firstSignatureRequestId) {
+      await supabase
+        .from('introducer_agreements')
+        .update({
+          introducer_signature_request_id: firstSignatureRequestId,
+        })
+        .eq('id', agreementId)
     }
 
   } else if (sigRequest.signer_role === 'introducer') {

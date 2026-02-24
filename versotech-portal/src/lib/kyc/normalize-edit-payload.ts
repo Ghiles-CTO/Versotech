@@ -5,6 +5,7 @@ type VisibilityOptions = {
   showIdentification?: boolean
   showRoleInfo?: boolean
   showOwnershipInfo?: boolean
+  showSignatoryInfo?: boolean
 }
 
 const SECTION_FIELDS = {
@@ -47,6 +48,7 @@ const SECTION_FIELDS = {
   ],
   role: ['role'],
   ownership: ['ownership_percentage'],
+  signatory: ['is_signatory', 'can_sign'],
 } as const
 
 function toNullableTrimmed(value: unknown) {
@@ -83,6 +85,9 @@ export function normalizeKycEditPayload<T extends Record<string, unknown>>(
   if (options.showOwnershipInfo === false) {
     SECTION_FIELDS.ownership.forEach((field) => hiddenFields.add(field))
   }
+  if (options.showSignatoryInfo === false) {
+    SECTION_FIELDS.signatory.forEach((field) => hiddenFields.add(field))
+  }
 
   return Object.fromEntries(
     Object.entries(data)
@@ -90,4 +95,3 @@ export function normalizeKycEditPayload<T extends Record<string, unknown>>(
       .map(([key, value]) => [key, toNullableTrimmed(value)])
   )
 }
-

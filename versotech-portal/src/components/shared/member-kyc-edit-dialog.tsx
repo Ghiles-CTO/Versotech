@@ -60,8 +60,6 @@ type EntityType = 'investor' | 'partner' | 'introducer' | 'lawyer' | 'arranger' 
 const MEMBER_ROLES = [
   { value: 'director', label: 'Director' },
   { value: 'ubo', label: 'Ultimate Beneficial Owner (UBO)' },
-  { value: 'signatory', label: 'Authorized Signatory' },
-  { value: 'authorized_representative', label: 'Authorized Representative' },
   { value: 'beneficiary', label: 'Beneficiary' },
   { value: 'shareholder', label: 'Shareholder' },
   { value: 'officer', label: 'Officer' },
@@ -70,6 +68,12 @@ const MEMBER_ROLES = [
   { value: 'general_partner', label: 'General Partner' },
   { value: 'limited_partner', label: 'Limited Partner' },
 ] as const
+
+const LEGACY_ROLE_LABELS: Record<string, string> = {
+  signatory: 'Legacy Signatory (replace role)',
+  authorized_signatory: 'Legacy Signatory (replace role)',
+  authorized_representative: 'Legacy Authorized Representative (replace role)',
+}
 
 // ID document types
 const ID_TYPES = [
@@ -84,6 +88,7 @@ const ID_TYPES = [
 const memberKycEditSchema = z.object({
   // Member role
   role: z.string().min(1, 'Role is required'),
+  is_signatory: z.boolean().optional(),
 
   // Personal Info
   first_name: z.string().min(1, 'First name is required').max(100),
@@ -147,6 +152,7 @@ interface MemberKYCEditDialogProps {
   onSuccess?: () => void
   mode?: 'create' | 'edit'
   showIdentification?: boolean
+  showSignatoryField?: boolean
 }
 
 // Compact section header
@@ -185,6 +191,7 @@ export function MemberKYCEditDialog({
   onSuccess,
   mode = 'edit',
   showIdentification = false,
+  showSignatoryField = false,
 }: MemberKYCEditDialogProps) {
   const [isSaving, setIsSaving] = useState(false)
 
@@ -192,6 +199,7 @@ export function MemberKYCEditDialog({
     resolver: zodResolver(memberKycEditSchema),
     defaultValues: {
       role: initialData?.role || 'director',
+      is_signatory: initialData?.is_signatory ?? false,
       first_name: initialData?.first_name || '',
       middle_name: initialData?.middle_name || '',
       middle_initial: initialData?.middle_initial || '',
@@ -229,6 +237,7 @@ export function MemberKYCEditDialog({
     if (open) {
       form.reset({
         role: initialData?.role || 'director',
+        is_signatory: initialData?.is_signatory ?? false,
         first_name: initialData?.first_name || '',
         middle_name: initialData?.middle_name || '',
         middle_initial: initialData?.middle_initial || '',
@@ -271,9 +280,18 @@ export function MemberKYCEditDialog({
     try {
       const method = mode === 'create' ? 'POST' : 'PATCH'
       const url = mode === 'create' ? apiEndpoint : `${apiEndpoint}/${memberId}`
-      const normalizedPayload = normalizeKycEditPayload(data, {
+      const payloadWithSignatorySync: MemberKycEditForm & { can_sign?: boolean } = {
+        ...data,
+      }
+
+      if (showSignatoryField && entityType === 'investor') {
+        payloadWithSignatorySync.can_sign = Boolean(data.is_signatory)
+      }
+
+      const normalizedPayload = normalizeKycEditPayload(payloadWithSignatorySync, {
         showIdentification,
         showOwnershipInfo: isUBO,
+        showSignatoryInfo: showSignatoryField,
       })
 
       const response = await fetch(url, {
@@ -327,7 +345,7 @@ export function MemberKYCEditDialog({
           </DialogTitle>
           <DialogDescription>
             {mode === 'create'
-              ? `Add a director, UBO, or authorized signatory to this ${getEntityTypeLabel()}`
+              ? `Add a director or UBO to this ${getEntityTypeLabel()} and mark signatories separately`
               : memberName
                 ? `Update KYC details for ${memberName}`
                 : 'Update member KYC and compliance information'}
@@ -364,12 +382,48 @@ export function MemberKYCEditDialog({
                                 {role.label}
                               </SelectItem>
                             ))}
+                            {!!selectedRole && LEGACY_ROLE_LABELS[selectedRole] && (
+                              <SelectItem value={selectedRole}>
+                                {LEGACY_ROLE_LABELS[selectedRole]}
+                              </SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
+                        {showSignatoryField && (
+                          <FormDescription className="text-xs">
+                            Signatory is set separately using the Signatory checkbox.
+                          </FormDescription>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
+                  {showSignatoryField && (
+                    <FormField
+                      control={form.control}
+                      name="is_signatory"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-4 bg-muted/30">
+                          <FormControl>
+                            <Checkbox
+                              checked={Boolean(field.value)}
+                              onCheckedChange={(checked) => field.onChange(Boolean(checked))}
+                              className="mt-1"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="font-medium">
+                              Signatory
+                            </FormLabel>
+                            <FormDescription className="text-sm text-muted-foreground">
+                              Enable if this member can sign legal documents for this entity.
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  )}
 
                   {isUBO && (
                     <FormField

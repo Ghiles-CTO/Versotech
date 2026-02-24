@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { logBlacklistMatches, screenAgainstBlacklist } from '@/lib/compliance/blacklist'
+import { SignatoryEntityType, syncMemberSignatoryFromUserLink } from '@/lib/kyc/member-signatory-sync'
 import { z } from 'zod'
 
 // User-entity junction table mapping
@@ -28,6 +29,15 @@ const ENTITY_ID_COLUMNS: Record<string, string> = {
   ceo: '', // CEO uses singleton pattern - no entity_id column
   staff: '' // Staff don't have entity_id - they're internal team
 }
+
+const SIGNATORY_ENTITY_TYPES = new Set<SignatoryEntityType>([
+  'investor',
+  'partner',
+  'introducer',
+  'lawyer',
+  'commercial_partner',
+  'arranger',
+])
 
 // Redirect URLs per entity type
 const REDIRECT_URLS: Record<string, string> = {
@@ -310,6 +320,17 @@ export async function POST(
         return NextResponse.json({
           error: 'Failed to link your account to the invited entity. Please ask support to resend your invitation.'
         }, { status: 500 })
+      }
+
+      if (SIGNATORY_ENTITY_TYPES.has(invitation.entity_type as SignatoryEntityType)) {
+        await syncMemberSignatoryFromUserLink({
+          supabase: serviceSupabase,
+          entityType: invitation.entity_type as SignatoryEntityType,
+          entityId: invitation.entity_id,
+          userId: authData.user.id,
+          canSign: Boolean(invitation.is_signatory),
+          userEmail: invitation.email,
+        })
       }
     }
 

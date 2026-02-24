@@ -4,6 +4,7 @@ import { isStaffUser } from '@/lib/api-auth'
 import { z } from 'zod'
 import { getAppUrl } from '@/lib/signature/token'
 import { sendInvitationEmail } from '@/lib/email/resend-service'
+import { SignatoryEntityType, syncMemberSignatoryFromUserLink } from '@/lib/kyc/member-signatory-sync'
 
 // Entity type to junction table mapping
 const JUNCTION_TABLES: Record<string, string> = {
@@ -34,6 +35,15 @@ const ENTITY_ID_COLUMNS: Record<string, string> = {
   partner: 'partner_id',
   commercial_partner: 'commercial_partner_id',
 }
+
+const SIGNATORY_ENTITY_TYPES = new Set<SignatoryEntityType>([
+  'investor',
+  'partner',
+  'introducer',
+  'lawyer',
+  'commercial_partner',
+  'arranger',
+])
 
 // Valid roles per entity type (from database constraints)
 const VALID_ROLES_BY_ENTITY: Record<string, string[]> = {
@@ -168,6 +178,17 @@ export async function POST(request: NextRequest) {
       if (linkError) {
         console.error('Link creation error:', linkError)
         return NextResponse.json({ error: 'Failed to link user to entity' }, { status: 500 })
+      }
+
+      if (SIGNATORY_ENTITY_TYPES.has(entity_type as SignatoryEntityType)) {
+        await syncMemberSignatoryFromUserLink({
+          supabase,
+          entityType: entity_type as SignatoryEntityType,
+          entityId: entity_id,
+          userId: existingProfile.id,
+          canSign: linkCanSign,
+          userEmail: normalizedEmail,
+        })
       }
 
       // Log the action

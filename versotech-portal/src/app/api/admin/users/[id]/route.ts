@@ -82,6 +82,7 @@ export async function GET(
           isPrimary: iu.is_primary || false,
           canSign: iu.can_sign || false,
           memberRole: null,
+          memberKycStatus: null,
           approvalStatus: entity.account_approval_status
         })
       }
@@ -100,6 +101,7 @@ export async function GET(
           isPrimary: pu.is_primary || false,
           canSign: pu.can_sign || false,
           memberRole: null,
+          memberKycStatus: null,
           approvalStatus: entity.account_approval_status
         })
       }
@@ -118,6 +120,7 @@ export async function GET(
           isPrimary: lu.is_primary || false,
           canSign: lu.can_sign || false,
           memberRole: null,
+          memberKycStatus: null,
           approvalStatus: entity.account_approval_status
         })
       }
@@ -136,6 +139,7 @@ export async function GET(
           isPrimary: cpu.is_primary || false,
           canSign: cpu.can_sign || false,
           memberRole: null,
+          memberKycStatus: null,
           approvalStatus: entity.account_approval_status
         })
       }
@@ -154,6 +158,7 @@ export async function GET(
           isPrimary: iu.is_primary || false,
           canSign: iu.can_sign || false,
           memberRole: null,
+          memberKycStatus: null,
           approvalStatus: entity.account_approval_status
         })
       }
@@ -172,6 +177,7 @@ export async function GET(
           isPrimary: au.is_primary || false,
           canSign: au.can_sign || false,
           memberRole: null,
+          memberKycStatus: null,
           approvalStatus: entity.account_approval_status
         })
       }
