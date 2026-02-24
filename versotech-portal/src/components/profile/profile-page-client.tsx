@@ -129,6 +129,7 @@ type InvestorUserInfo = {
 type InvestorKycMissingItem = {
   scope: 'entity' | 'member'
   name: string
+  email?: string | null
   missingItems: string[]
   memberId?: string | null
 }
@@ -365,7 +366,7 @@ export function ProfilePageClient({
         throw new Error(error.error || 'Failed to submit entity KYC')
       }
 
-      toast.success('Entity information submitted')
+      toast.success('Entity KYC saved')
       window.location.reload()
     } catch (error) {
       console.error('Error submitting entity KYC:', error)
@@ -389,7 +390,7 @@ export function ProfilePageClient({
         throw new Error(error.error || 'Failed to submit personal KYC')
       }
 
-      toast.success('Personal information submitted')
+      toast.success('Personal KYC saved')
       window.location.reload()
     } catch (error) {
       console.error('Error submitting personal KYC:', error)
@@ -1007,7 +1008,9 @@ export function ProfilePageClient({
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Before submitting, ensure Entity KYC is fully approved, and all UBOs and authorized signatories are registered as members with complete approved KYC (Personal Information, ID Document, and Proof of Address).
+                  {isEntity
+                    ? 'We require to receive the required Entity KYC information as well as all UBOs and authorized signatories KYC (Personal Information, Proof of Identification and Proof of Address) before submitting your account for approval.'
+                    : 'We require to receive your Personal Information, Proof of Identification and Proof of Address before submitting your account for approval.'}
                 </p>
 
                 {/* Request for Information Alert */}
@@ -1057,7 +1060,10 @@ export function ProfilePageClient({
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium text-foreground leading-tight">{item.name}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{item.missingItems.join(' \u00B7 ')}</p>
+                            {item.scope === 'member' && item.email && (
+                              <p className="text-xs text-muted-foreground">{item.email}</p>
+                            )}
+                            <p className="text-xs text-muted-foreground mt-0.5">Missing: {item.missingItems.join(' \u00B7 ')}</p>
                           </div>
                         </div>
                       ))}

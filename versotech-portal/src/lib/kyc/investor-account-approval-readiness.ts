@@ -33,6 +33,7 @@ type ApprovalRow = {
 export type InvestorKycMissingItem = {
   scope: 'entity' | 'member'
   name: string
+  email?: string | null
   missingItems: string[]
   memberId?: string | null
 }
@@ -241,7 +242,7 @@ export async function getInvestorAccountApprovalReadiness(params: {
       missing.push('Personal Information')
     }
     if (!hasApprovedIdDocument(approvedSubmissions, null)) {
-      missing.push('ID Document')
+      missing.push('Proof of Identification')
     }
     if (!hasApprovedProofOfAddress(approvedSubmissions, null)) {
       missing.push('Proof of Address')
@@ -285,7 +286,7 @@ export async function getInvestorAccountApprovalReadiness(params: {
         missing.push('Personal Information')
       }
       if (!hasApprovedIdDocument(approvedSubmissions, member.id)) {
-        missing.push('ID Document')
+        missing.push('Proof of Identification')
       }
       if (!hasApprovedProofOfAddress(approvedSubmissions, member.id)) {
         missing.push('Proof of Address')
@@ -295,6 +296,7 @@ export async function getInvestorAccountApprovalReadiness(params: {
         missingItems.push({
           scope: 'member',
           name: getMemberName(member, index),
+          email: member.email || null,
           missingItems: missing,
           memberId: member.id,
         })
