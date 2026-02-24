@@ -11,6 +11,7 @@ export interface EntityAssociation {
   type: 'investor' | 'partner' | 'lawyer' | 'commercial_partner' | 'introducer' | 'arranger'
   role: string
   memberRole: string | null
+  memberKycStatus: string | null
   isPrimary: boolean
   canSign: boolean
   approvalStatus: string | null
@@ -211,6 +212,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
           isPrimary: iu.is_primary || false,
           canSign: iu.can_sign || false,
           memberRole: null,
+          memberKycStatus: null,
           approvalStatus: entity.account_approval_status
         })
         entityMap.set(iu.user_id, associations)
@@ -231,6 +233,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
           isPrimary: pu.is_primary || false,
           canSign: pu.can_sign || false,
           memberRole: null,
+          memberKycStatus: null,
           approvalStatus: entity.account_approval_status
         })
         entityMap.set(pu.user_id, associations)
@@ -251,6 +254,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
           isPrimary: lu.is_primary || false,
           canSign: lu.can_sign || false,
           memberRole: null,
+          memberKycStatus: null,
           approvalStatus: entity.account_approval_status
         })
         entityMap.set(lu.user_id, associations)
@@ -271,6 +275,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
           isPrimary: cpu.is_primary || false,
           canSign: cpu.can_sign || false,
           memberRole: null,
+          memberKycStatus: null,
           approvalStatus: entity.account_approval_status
         })
         entityMap.set(cpu.user_id, associations)
@@ -291,6 +296,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
           isPrimary: iu.is_primary || false,
           canSign: iu.can_sign || false,
           memberRole: null,
+          memberKycStatus: null,
           approvalStatus: entity.account_approval_status
         })
         entityMap.set(iu.user_id, associations)
@@ -311,6 +317,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
           isPrimary: au.is_primary || false,
           canSign: au.can_sign || false,
           memberRole: null,
+          memberKycStatus: null,
           approvalStatus: entity.account_approval_status
         })
         entityMap.set(au.user_id, associations)

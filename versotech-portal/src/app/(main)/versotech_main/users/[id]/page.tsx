@@ -128,6 +128,7 @@ export default async function UserDetailPage({
         isPrimary: iu.is_primary || false,
         canSign: iu.can_sign || false,
         memberRole: null,
+        memberKycStatus: null,
         approvalStatus: entity.account_approval_status
       })
     }
@@ -146,6 +147,7 @@ export default async function UserDetailPage({
         isPrimary: pu.is_primary || false,
         canSign: pu.can_sign || false,
         memberRole: null,
+        memberKycStatus: null,
         approvalStatus: entity.account_approval_status
       })
     }
@@ -164,6 +166,7 @@ export default async function UserDetailPage({
         isPrimary: lu.is_primary || false,
         canSign: lu.can_sign || false,
         memberRole: null,
+        memberKycStatus: null,
         approvalStatus: entity.account_approval_status
       })
     }
@@ -182,6 +185,7 @@ export default async function UserDetailPage({
         isPrimary: cpu.is_primary || false,
         canSign: cpu.can_sign || false,
         memberRole: null,
+        memberKycStatus: null,
         approvalStatus: entity.account_approval_status
       })
     }
@@ -200,6 +204,7 @@ export default async function UserDetailPage({
         isPrimary: iu.is_primary || false,
         canSign: iu.can_sign || false,
         memberRole: null,
+        memberKycStatus: null,
         approvalStatus: entity.account_approval_status
       })
     }
@@ -218,6 +223,7 @@ export default async function UserDetailPage({
         isPrimary: au.is_primary || false,
         canSign: au.can_sign || false,
         memberRole: null,
+        memberKycStatus: null,
         approvalStatus: entity.account_approval_status
       })
     }
@@ -245,7 +251,7 @@ export default async function UserDetailPage({
     const memberRoleQueries = entities.map(e =>
       serviceSupabase
         .from(memberEntityMap[e.type])
-        .select(`${memberEntityIdCol[e.type]}, role`)
+        .select(`${memberEntityIdCol[e.type]}, role, kyc_status`)
         .eq('email', profile.email!)
         .eq(memberEntityIdCol[e.type], e.id)
         .limit(1)
@@ -255,9 +261,12 @@ export default async function UserDetailPage({
 
     for (let i = 0; i < entities.length; i++) {
       const result = memberRoleResults[i]
-      const data = result.data as { role?: string } | null
+      const data = result.data as { role?: string; kyc_status?: string } | null
       if (data?.role) {
         entities[i].memberRole = data.role
+      }
+      if (data?.kyc_status) {
+        entities[i].memberKycStatus = data.kyc_status
       }
     }
   }

@@ -288,45 +288,7 @@ export function UserDetailClient({ user, fullKycData }: UserDetailClientProps) {
                       {(ROLE_BADGE_CONFIG[user.systemRole] || { label: user.systemRole }).label}
                     </Badge>
                   )}
-                  {/* KYC Status */}
-                  {user.kyc?.status && (() => {
-                    const kycDisplay = KYC_STATUS_DISPLAY[user.kyc.status]
-                    if (!kycDisplay) return null
-                    const KycIcon = kycDisplay.icon
-                    return (
-                      <Badge variant="outline" className={`text-xs ${kycDisplay.className}`}>
-                        <KycIcon className="h-3 w-3 mr-1" />
-                        Member KYC: {kycDisplay.label}
-                      </Badge>
-                    )
-                  })()}
-                  {!user.kyc?.status && (
-                    <Badge variant="outline" className="text-xs bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-500/10 dark:text-gray-400 dark:border-gray-500/30">
-                      No KYC
-                    </Badge>
-                  )}
                 </div>
-                {/* Member info per entity */}
-                {user.entities.some(e => e.memberRole || e.isPrimary || e.canSign) && (
-                  <div className="mt-2 space-y-2">
-                    {user.entities.filter(e => e.memberRole || e.isPrimary || e.canSign).map(e => (
-                      <div key={`member-${e.type}-${e.id}`} className="text-xs rounded-md border border-border/50 bg-muted/20 px-3 py-2">
-                        <p className="font-medium text-foreground mb-1">{e.name}</p>
-                        <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-muted-foreground">
-                          {e.memberRole && (
-                            <span>Role: <span className="text-foreground">{e.memberRole.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span></span>
-                          )}
-                          {e.isPrimary && (
-                            <span>Primary Contact: <span className="text-foreground">Yes</span></span>
-                          )}
-                          {e.canSign && (
-                            <span>Signatory: <span className="text-foreground">Yes</span></span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
 
@@ -435,11 +397,36 @@ export function UserDetailClient({ user, fullKycData }: UserDetailClientProps) {
                         <Badge variant="outline" className={`text-xs shrink-0 ${config?.className || ''}`}>
                           {config?.label || entity.type}
                         </Badge>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                        <span className="text-xs text-muted-foreground capitalize">{entity.role}</span>
+                        {entity.isPrimary && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/30">
+                            Primary
+                          </Badge>
+                        )}
+                        {entity.canSign && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/30">
+                            <PenTool className="h-2.5 w-2.5 mr-0.5" />
+                            Signatory
+                          </Badge>
+                        )}
                         {entity.approvalStatus && (
                           <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${approvalStyle}`}>
                             {APPROVAL_LABELS[entity.approvalStatus] || entity.approvalStatus.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                           </Badge>
                         )}
+                        {entity.memberKycStatus && (() => {
+                          const kycDisplay = KYC_STATUS_DISPLAY[entity.memberKycStatus]
+                          if (!kycDisplay) return null
+                          const KycIcon = kycDisplay.icon
+                          return (
+                            <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${kycDisplay.className}`}>
+                              <KycIcon className="h-2.5 w-2.5 mr-0.5" />
+                              KYC: {kycDisplay.label}
+                            </Badge>
+                          )
+                        })()}
                       </div>
                     </div>
                     {entityRoute && (
