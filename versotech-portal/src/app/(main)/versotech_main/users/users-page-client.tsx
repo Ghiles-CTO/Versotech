@@ -585,15 +585,38 @@ export default function UsersPageClient() {
         </Button>
       ),
       cell: ({ row }) => {
-        const role = row.original.systemRole
-        const config = ROLE_BADGE_CONFIG[role] || { label: role, className: 'bg-gray-500/20 text-gray-400' }
+        const user = row.original
+        const isStaff = ['ceo', 'staff_admin', 'staff_ops', 'staff_rm'].includes(user.systemRole)
+        const entityTypes = Array.from(new Set(user.entities.map(e => e.type)))
+
+        // If staff role, show that first
+        const badges: { label: string; className: string }[] = []
+        if (isStaff) {
+          const staffConfig = ROLE_BADGE_CONFIG[user.systemRole]
+          if (staffConfig) badges.push(staffConfig)
+        }
+        // Add entity-derived persona badges
+        for (const type of entityTypes) {
+          const config = ENTITY_TYPE_CONFIG[type]
+          if (config) badges.push(config)
+        }
+        // Fallback if no badges at all
+        if (badges.length === 0) {
+          const fallback = ROLE_BADGE_CONFIG[user.systemRole] || { label: user.systemRole, className: 'bg-gray-500/20 text-gray-400' }
+          badges.push(fallback)
+        }
+
         return (
-          <Badge variant="outline" className={config.className}>
-            {config.label}
-          </Badge>
+          <div className="flex flex-wrap gap-1">
+            {badges.map((b, i) => (
+              <Badge key={i} variant="outline" className={`text-xs ${b.className}`}>
+                {b.label}
+              </Badge>
+            ))}
+          </div>
         )
       },
-      size: 140,
+      size: 180,
     },
     {
       id: 'title',

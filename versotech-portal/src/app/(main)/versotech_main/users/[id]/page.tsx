@@ -349,6 +349,15 @@ export default async function UserDetailPage({
     }
   }
 
+  // Fetch real last_sign_in_at from auth.users (profiles.last_login_at is never populated)
+  let lastSignInAt: string | null = profile.last_login_at
+  if (!lastSignInAt) {
+    const { data: authUser } = await serviceSupabase.auth.admin.getUserById(id)
+    if (authUser?.user?.last_sign_in_at) {
+      lastSignInAt = authUser.user.last_sign_in_at
+    }
+  }
+
   // Build user data
   const userData: UserRow = {
     id: profile.id,
@@ -360,7 +369,7 @@ export default async function UserDetailPage({
     officeLocation: profile.office_location,
     avatarUrl: profile.avatar_url,
     createdAt: profile.created_at,
-    lastLoginAt: profile.last_login_at,
+    lastLoginAt: lastSignInAt,
     passwordSet: profile.password_set || false,
     isSuperAdmin: profile.is_super_admin || false,
     hasSignature: !!profile.signature_specimen_url,
