@@ -61,6 +61,7 @@ import {
 } from 'lucide-react'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { getCountryName } from '@/components/kyc/country-select'
 import { toast } from 'sonner'
 import Image from 'next/image'
 import { PasswordChangeForm } from '@/components/profile/password-change-form'
@@ -978,7 +979,7 @@ export function CeoProfileClient({
                 />
                 <EditableField
                   label="Country"
-                  value={ceoEntity.country}
+                  value={getCountryName(ceoEntity.country)}
                   field="country"
                   isEditing={isEditingEntity}
                   editValue={entityForm.country}

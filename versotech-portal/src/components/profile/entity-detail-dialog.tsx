@@ -11,6 +11,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { getCountryName } from '@/components/kyc/country-select'
 import { EntityKYCDocuments } from './entity-kyc-documents'
 import { EntityMembersTab } from './entity-members-tab'
 import { EntityFormDialog } from './entity-form-dialog'
@@ -120,7 +121,7 @@ export function EntityDetailDialog({ open, onClose, entity, onUpdate }: EntityDe
       address.city,
       address.state,
       address.postal_code,
-      address.country
+      getCountryName(address.country)
     ].filter(Boolean)
 
     return parts.length > 0 ? parts.join(', ') : '—'

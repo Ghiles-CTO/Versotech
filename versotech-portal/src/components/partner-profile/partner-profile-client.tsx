@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { getCountryName } from '@/components/kyc/country-select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -337,7 +338,7 @@ export function PartnerProfileClient({
                 <OverviewField label="City" value={partnerInfo.city || '-'} />
                 <OverviewField label="State / Province" value={partnerInfo.state_province || '-'} />
                 <OverviewField label="Postal Code" value={partnerInfo.postal_code || '-'} />
-                <OverviewField label="Country" value={partnerInfo.country || '-'} />
+                <OverviewField label="Country" value={getCountryName(partnerInfo.country) || '-'} />
               </OverviewFieldGrid>
             </OverviewSectionCard>
           </div>

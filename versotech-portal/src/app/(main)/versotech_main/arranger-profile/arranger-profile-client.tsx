@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { getCountryName } from '@/components/kyc/country-select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -1065,7 +1066,7 @@ export function ArrangerProfileClient({
                         )}
                         {(arrangerInfo.city || arrangerInfo.state_province || arrangerInfo.postal_code || arrangerInfo.country) && (
                           <div className="text-muted-foreground">
-                            {[arrangerInfo.city, arrangerInfo.state_province, arrangerInfo.postal_code, arrangerInfo.country]
+                            {[arrangerInfo.city, arrangerInfo.state_province, arrangerInfo.postal_code, getCountryName(arrangerInfo.country)]
                               .filter(Boolean)
                               .join(', ')}
                           </div>

@@ -39,6 +39,7 @@ import { MembersManagementTab } from '@/components/members/members-management-ta
 import { PersonalKYCSection, type MemberKYCData } from '@/components/profile/personal-kyc-section'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { IndividualKycDisplay, EntityKYCEditDialog, EntityOverviewEditDialog } from '@/components/shared'
+import { getCountryName } from '@/components/kyc/country-select'
 import {
   ProfileOverviewShell,
   OverviewSectionCard,
@@ -699,7 +700,7 @@ export function ProfilePageClient({
                     </div>
                     <div className="rounded-md border border-border/70 bg-background p-3">
                       <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Country of Incorporation</p>
-                      <p className="mt-1 text-sm font-medium">{investorInfo.country_of_incorporation || '-'}</p>
+                      <p className="mt-1 text-sm font-medium">{getCountryName(investorInfo.country_of_incorporation) || '-'}</p>
                     </div>
                   </div>
                 </section>

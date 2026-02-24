@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { getCountryName } from '@/components/kyc/country-select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -577,7 +578,7 @@ export function LawyerProfileClient({
               <OverviewField label="City" value={lawyerInfo?.city || '-'} />
               <OverviewField label="State / Province" value={lawyerInfo?.state_province || '-'} />
               <OverviewField label="Postal Code" value={lawyerInfo?.postal_code || '-'} />
-              <OverviewField label="Country" value={lawyerInfo?.country || '-'} />
+              <OverviewField label="Country" value={getCountryName(lawyerInfo?.country) || '-'} />
               <OverviewField
                 label="Phone"
                 value={lawyerInfo?.phone || lawyerInfo?.phone_office || lawyerInfo?.phone_mobile || '-'}

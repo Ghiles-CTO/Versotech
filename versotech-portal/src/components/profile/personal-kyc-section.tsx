@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { MemberKYCEditDialog } from '@/components/shared/member-kyc-edit-dialog'
+import { getCountryName } from '@/components/kyc/country-select'
 
 // Member KYC data structure from database
 export type MemberKYCData = {
@@ -205,7 +206,7 @@ export function PersonalKYCSection({
       memberData.residential_city,
       memberData.residential_state,
       memberData.residential_postal_code,
-      memberData.residential_country,
+      getCountryName(memberData.residential_country),
     ].filter(Boolean)
     return parts.length > 0 ? parts.join(', ') : null
   }
@@ -309,8 +310,8 @@ export function PersonalKYCSection({
                 }
               />
               <Field icon={Calendar} label="Date of Birth" value={formatDate(memberData.date_of_birth)} />
-              <Field icon={Globe} label="Nationality" value={memberData.nationality} />
-              <Field icon={Flag} label="Country of Birth" value={memberData.country_of_birth} />
+              <Field icon={Globe} label="Nationality" value={getCountryName(memberData.nationality)} />
+              <Field icon={Flag} label="Country of Birth" value={getCountryName(memberData.country_of_birth)} />
             </div>
           </Section>
 
@@ -332,7 +333,7 @@ export function PersonalKYCSection({
               {memberData.is_us_taxpayer && (
                 <Field label="US Taxpayer ID" value={memberData.us_taxpayer_id} />
               )}
-              <Field icon={Globe} label="Tax Residency" value={memberData.country_of_tax_residency} />
+              <Field icon={Globe} label="Tax Residency" value={getCountryName(memberData.country_of_tax_residency)} />
               {memberData.tax_id_number && (
                 <Field label="Tax ID Number" value={memberData.tax_id_number} />
               )}

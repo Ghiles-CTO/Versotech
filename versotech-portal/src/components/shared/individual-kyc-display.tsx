@@ -19,6 +19,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
+import { getCountryName } from '@/components/kyc/country-select'
 
 // Individual KYC data structure (matches entity-kyc-edit-dialog)
 export interface IndividualKycData {
@@ -236,8 +237,8 @@ export function IndividualKycDisplay({
                     label="Date of Birth"
                     value={formatDate(data.date_of_birth)}
                   />
-                  <Field icon={Globe} label="Nationality" value={data.nationality} />
-                  <Field icon={Flag} label="Country of Birth" value={data.country_of_birth} />
+                  <Field icon={Globe} label="Nationality" value={getCountryName(data.nationality)} />
+                  <Field icon={Flag} label="Country of Birth" value={getCountryName(data.country_of_birth)} />
                 </div>
               </Section>
             )}
@@ -262,7 +263,7 @@ export function IndividualKycDisplay({
                   <Field label="City" value={data.residential_city} />
                   <Field label="State/Province" value={data.residential_state} />
                   <Field label="Postal Code" value={data.residential_postal_code} />
-                  <Field icon={Globe} label="Country" value={data.residential_country} />
+                  <Field icon={Globe} label="Country" value={getCountryName(data.residential_country)} />
                 </div>
               </Section>
             )}
@@ -279,7 +280,7 @@ export function IndividualKycDisplay({
                   <Field
                     icon={Globe}
                     label="Country of Tax Residency"
-                    value={data.country_of_tax_residency}
+                    value={getCountryName(data.country_of_tax_residency)}
                   />
                   {data.tax_id_number && (
                     <Field label="Tax ID Number" value={data.tax_id_number} />

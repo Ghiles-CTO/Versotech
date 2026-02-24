@@ -45,6 +45,7 @@ import {
 } from 'lucide-react'
 import { Approval } from '@/types/approvals'
 import { format, formatDistanceToNow } from 'date-fns'
+import { getCountryName } from '@/components/kyc/country-select'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -652,7 +653,7 @@ export function ApprovalDetailDrawer({
                           ].filter(Boolean).join(', ')}
                         </p>
                         {approval.entity_metadata.counterparty_entity.registered_address.country && (
-                          <p>{approval.entity_metadata.counterparty_entity.registered_address.country}</p>
+                          <p>{getCountryName(approval.entity_metadata.counterparty_entity.registered_address.country)}</p>
                         )}
                       </div>
                     </div>

@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import Link from 'next/link'
+import { getCountryName } from '@/components/kyc/country-select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -630,7 +631,7 @@ export function IntroducerProfileClient({
               <OverviewField label="City" value={introducerInfo?.city || '-'} />
               <OverviewField label="State / Province" value={introducerInfo?.state_province || '-'} />
               <OverviewField label="Postal Code" value={introducerInfo?.postal_code || '-'} />
-              <OverviewField label="Country" value={introducerInfo?.country || '-'} />
+              <OverviewField label="Country" value={getCountryName(introducerInfo?.country) || '-'} />
               <OverviewField label="Phone" value={introducerInfo?.phone || introducerInfo?.phone_mobile || '-'} />
               <OverviewField
                 label="Website"
