@@ -174,7 +174,7 @@ export function PartnerProfileClient({
         throw new Error(error.error || 'Failed to submit entity KYC')
       }
 
-      toast.success('Entity information submitted and approved')
+      toast.success('Entity information submitted')
       window.location.reload()
     } catch (error) {
       console.error('[partner-profile] Failed to submit entity KYC:', error)

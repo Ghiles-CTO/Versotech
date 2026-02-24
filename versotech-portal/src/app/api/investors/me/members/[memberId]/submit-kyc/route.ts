@@ -202,7 +202,7 @@ export async function POST(
       await serviceSupabase
         .from('investors')
         .update({
-          account_approval_status: 'incomplete',
+          account_approval_status: 'pending_onboarding',
           updated_at: new Date().toISOString()
         })
         .eq('id', member.investor_id)
@@ -217,7 +217,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       submission_id: submission.id,
-      message: 'Personal KYC submitted and approved'
+      message: 'Personal KYC submitted'
     })
 
   } catch (error) {

@@ -242,7 +242,7 @@ export function PersonalKYCSection({
         throw new Error(error.error || 'Failed to submit KYC')
       }
 
-      toast.success('Personal KYC submitted and approved')
+      toast.success('Personal KYC submitted')
       onRefresh?.()
     } catch (error) {
       console.error('Error submitting KYC:', error)

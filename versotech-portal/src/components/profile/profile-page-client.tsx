@@ -371,7 +371,7 @@ export function ProfilePageClient({
         throw new Error(error.error || 'Failed to submit personal KYC')
       }
 
-      toast.success('Personal information submitted and approved')
+      toast.success('Personal information submitted')
       window.location.reload()
     } catch (error) {
       console.error('Error submitting personal KYC:', error)

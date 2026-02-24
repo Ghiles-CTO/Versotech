@@ -239,7 +239,7 @@ export async function POST() {
     }
 
     if (shouldSetIncomplete) {
-      investorUpdateData.account_approval_status = 'incomplete'
+      investorUpdateData.account_approval_status = 'pending_onboarding'
     }
 
     await serviceSupabase
@@ -256,7 +256,7 @@ export async function POST() {
     return NextResponse.json({
       success: true,
       submission_id: submission.id,
-      message: 'Personal KYC submitted and approved',
+      message: 'Personal KYC submitted',
     })
   } catch (error) {
     console.error('[submit-personal-kyc] Internal error:', error)
