@@ -294,7 +294,7 @@ export function PersonalKYCSection({
         throw new Error(error.error || 'Failed to submit KYC')
       }
 
-      toast.success('Personal KYC submitted')
+      toast.success('Personal KYC saved')
       onRefresh?.()
     } catch (error) {
       console.error('Error submitting KYC:', error)
@@ -461,6 +461,7 @@ export function PersonalKYCSection({
           onRefresh?.()
         }}
         mode="edit"
+        showSignatoryField={false}
       />
     </>
   )

@@ -281,7 +281,7 @@ export function LawyerProfileClient({
         throw new Error(error.error || 'Failed to submit entity KYC')
       }
 
-      toast.success('Entity information submitted')
+      toast.success('Entity KYC saved')
       window.location.reload()
     } catch (error) {
       console.error('[lawyer-profile] Failed to submit entity KYC:', error)
@@ -739,7 +739,7 @@ export function LawyerProfileClient({
             <Card>
               <CardContent className="pt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="font-medium text-foreground">Submit Entity Info for Review</p>
+                  <p className="font-medium text-foreground">Save Entity Information</p>
                   <p className="text-sm text-muted-foreground">
                     Required to complete KYC and trigger account activation approval.
                   </p>
@@ -747,7 +747,7 @@ export function LawyerProfileClient({
                 {(lawyerUserInfo.role === 'admin' || lawyerUserInfo.is_primary) ? (
                   <Button onClick={handleSubmitEntityKyc} disabled={isSubmittingEntityKyc} size="sm">
                     <Send className="h-4 w-4 mr-2" />
-                    {isSubmittingEntityKyc ? 'Submitting...' : 'Submit Entity Info'}
+                    {isSubmittingEntityKyc ? 'Saving...' : 'Save'}
                   </Button>
                 ) : (
                   <p className="text-sm text-muted-foreground">

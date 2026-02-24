@@ -73,6 +73,7 @@ interface EntityMember {
   ownership_percentage?: number
   is_beneficial_owner?: boolean
   is_signatory?: boolean
+  can_sign?: boolean
   kyc_status?: string
   is_active?: boolean
   created_at?: string
@@ -219,7 +220,7 @@ export function GenericEntityMembersTab({
         throw new Error(data.error || 'Failed to submit member KYC')
       }
 
-      toast.success('Member personal KYC submitted')
+      toast.success('Personal KYC saved')
       await loadMembers()
     } catch (err) {
       console.error('Error submitting member KYC:', err)
@@ -259,6 +260,12 @@ export function GenericEntityMembersTab({
 
     return {
       role: member.role as any,
+      is_signatory: Boolean(
+        member.is_signatory ||
+        member.can_sign ||
+        member.role === 'signatory' ||
+        member.role === 'authorized_signatory'
+      ),
       first_name: member.first_name || '',
       middle_name: member.middle_name || '',
       last_name: member.last_name || '',
@@ -386,17 +393,14 @@ export function GenericEntityMembersTab({
                     <TableCell>{getKYCStatusBadge(member.kyc_status)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        {!['submitted', 'pending_review', 'under_review'].includes(member.kyc_status || '') && (
-                          <Button
-                            variant="outline"
+                        <Button
                             size="sm"
                             onClick={() => handleSubmitMemberKyc(member.id)}
-                            disabled={submittingMemberId === member.id}
+                            disabled={submittingMemberId === member.id || ['submitted', 'pending_review', 'under_review'].includes(member.kyc_status || '')}
                           >
                             <Send className="w-4 h-4 mr-1.5" />
-                            {submittingMemberId === member.id ? 'Submitting...' : 'Submit KYC'}
+                            {submittingMemberId === member.id ? 'Saving...' : 'Save'}
                           </Button>
-                        )}
                         {canManage && (
                           <>
                           <Button
@@ -437,6 +441,7 @@ export function GenericEntityMembersTab({
         apiEndpoint={apiEndpoint}
         onSuccess={handleDialogSuccess}
         mode={editingMember ? 'edit' : 'create'}
+        showSignatoryField
       />
 
       {/* Delete Confirmation Dialog */}
