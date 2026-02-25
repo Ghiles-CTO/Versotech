@@ -400,6 +400,11 @@ export function UserDetailClient({ user, fullKycData }: UserDetailClientProps) {
                       </div>
                       <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                         <span className="text-xs text-muted-foreground capitalize">{entity.role}</span>
+                        {entity.memberRole && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-violet-50 text-violet-600 border-violet-200 dark:bg-violet-500/10 dark:text-violet-400 dark:border-violet-500/30">
+                            Role: {entity.memberRole.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          </Badge>
+                        )}
                         {entity.isPrimary && (
                           <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/30">
                             Primary
