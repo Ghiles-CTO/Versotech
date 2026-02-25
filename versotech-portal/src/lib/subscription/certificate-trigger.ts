@@ -87,6 +87,17 @@ function normalizeCertificateSegment(value: string | number | null | undefined):
   return normalized
 }
 
+function extractSeriesNumberFromVehicleName(name: string | null | undefined): string {
+  const normalizedName = (name || '').trim()
+  if (!normalizedName) return ''
+
+  // Handles patterns like "Series 600" in vehicle display names.
+  const match = normalizedName.match(/\bseries\s+([a-z0-9-]+)\b/i)
+  if (!match?.[1]) return ''
+
+  return normalizeCertificateSegment(match[1])
+}
+
 class CertificateConfigurationError extends Error {
   constructor(message: string) {
     super(message)
@@ -367,8 +378,13 @@ export async function triggerCertificateGeneration({
     const investorName = investorData
       ? getInvestorDisplayName(investorData)
       : 'Unknown Investor'
+    const resolvedSeriesNumber =
+      normalizeCertificateSegment(vehicleData.series_number) ||
+      extractSeriesNumberFromVehicleName(vehicleData.name) ||
+      '000'
+
     const certificateNumber = buildCertificateNumber(
-      vehicleData.series_number,
+      resolvedSeriesNumber,
       subscription.subscription_number,
       subscriptionId
     )
@@ -391,7 +407,7 @@ export async function triggerCertificateGeneration({
       vehicle_logo_url: !isVersoCapital2 ? (vehicleData.logo_url || '') : '',
 
       // === CERTIFICATE NUMBER (format: VC{series_number}SH{subscription_number}) ===
-      series_number: normalizeCertificateSegment(vehicleData.series_number) || '000',
+      series_number: resolvedSeriesNumber,
       subscription_number:
         normalizeCertificateSegment(subscription.subscription_number) ||
         subscriptionId.replace(/-/g, '').slice(0, 8).toUpperCase(),

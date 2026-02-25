@@ -3,293 +3,302 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Equity Certificate & Statement of Holdings</title>
+  <title>VC{{ $json.body.payload.series_number }}SH{{ $json.body.payload.subscription_number }} - {{ $json.body.payload.investor_name }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;600;800&display=swap');
-
+    @page {
+      size: A4 landscape;
+      margin: 0;
+    }
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-
-    @page {
-      size: A4 landscape;
-      margin: 40px;
-    }
-
-    body {
+    html, body {
       font-family: 'League Spartan', Arial, sans-serif;
       font-size: 11pt;
+      line-height: 1.3;
       color: #000;
       background: #fff;
-      line-height: 1.2;
-    }
-
-    .certificate-page {
       width: 297mm;
       height: 210mm;
-      padding: 40px 40px 25px 40px;
-      margin: 0 auto;
-      background: #fff;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
-
-    /* ==================== HEADER TABLE ==================== */
+    .page {
+      width: 297mm;
+      height: 210mm;
+      min-height: 210mm;
+      max-height: 210mm;
+      padding: 10mm;
+      position: relative;
+      overflow: hidden;
+    }
+    .watermark {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      transform: translateY(-50%);
+      text-align: center;
+      font-family: 'League Spartan', Arial, sans-serif;
+      font-weight: 700;
+      font-size: 102pt;
+      letter-spacing: 12px;
+      color: rgba(200, 200, 200, 0.34);
+      z-index: 0;
+      pointer-events: none;
+      user-select: none;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .certificate-border {
+      width: 100%;
+      height: 100%;
+      border: 2pt solid #000;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+    }
+    .header-section {
+      flex-shrink: 0;
+      border-bottom: 1pt solid #ccc;
+    }
     .header-table {
       width: 100%;
       border-collapse: collapse;
       table-layout: fixed;
     }
-
     .header-table td {
+      width: 25%;
       vertical-align: middle;
       text-align: center;
-      padding: 8px 10px;
-      border: none;
+      padding: 12px 10px;
     }
-
-    .header-table td:nth-child(1) { width: 25%; }
-    .header-table td:nth-child(2) { width: 25%; border-left: 1px solid #000; }
-    .header-table td:nth-child(3) { width: 25%; border-left: 1px solid #000; }
-    .header-table td:nth-child(4) { width: 25%; border-left: 1px solid #000; }
-
-    .vehicle-logo {
-      width: 70px;
-      height: 70px;
-      object-fit: contain;
+    .header-table td:not(:first-child) {
+      border-left: 1.5pt solid #000;
     }
-
-    .header-value {
-      font-family: 'Arial', sans-serif;
-      font-size: 18pt;
+    .logo-cell {
+      text-align: left !important;
+      padding-left: 20px !important;
+    }
+    .logo-text {
+      font-family: 'League Spartan', Arial, sans-serif;
       font-weight: 700;
+      font-size: 28pt;
+      letter-spacing: 0.15em;
     }
-
-    .header-label {
-      font-family: 'League Spartan', sans-serif;
-      font-weight: 600;
-      font-size: 11pt;
-      margin-top: 2px;
+    .cert-number {
+      font-family: Arial, sans-serif;
+      font-size: 14pt;
+      font-weight: bold;
     }
-
-    /* ==================== TITLE SECTION ==================== */
+    .cert-label,
+    .units-label,
+    .date-label {
+      font-family: 'League Spartan', Arial, sans-serif;
+      font-weight: 500;
+      font-size: 9pt;
+      color: #666;
+      margin-top: 4px;
+    }
+    .units-value,
+    .date-value {
+      font-family: Arial, sans-serif;
+      font-size: 14pt;
+      font-weight: bold;
+    }
+    .content-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px 30px 8px 30px;
+    }
     .title-section {
       text-align: center;
-      margin: 50px 0 25px 0;
+      margin-bottom: 24px;
     }
-
-    .main-title {
-      font-family: 'League Spartan', sans-serif;
-      font-size: 28pt;
-      font-weight: 800;
-      letter-spacing: 1px;
-    }
-
+    .main-title,
     .sub-title {
-      font-family: 'League Spartan', sans-serif;
-      font-size: 28pt;
+      font-family: 'League Spartan', Arial, sans-serif;
       font-weight: 800;
-      letter-spacing: 1px;
+      font-size: 36pt;
+      letter-spacing: 3px;
+      line-height: 1.15;
     }
-
-    /* ==================== ISSUER SECTION ==================== */
     .issuer-section {
       text-align: center;
-      margin: 25px 0;
-      font-family: 'League Spartan', sans-serif;
-      font-weight: 600;
-      font-size: 11pt;
-      line-height: 1.6;
+      margin-bottom: 18px;
     }
-
-    /* ==================== CERTIFICATION TEXT ==================== */
+    .issuer-name,
+    .company-number {
+      font-family: 'League Spartan', Arial, sans-serif;
+      font-weight: 500;
+      font-size: 11.5pt;
+    }
+    .issuer-name {
+      margin-bottom: 4px;
+    }
+    .certification-section {
+      text-align: center;
+      max-width: 92%;
+      line-height: 1.55;
+      margin-bottom: 16px;
+    }
     .certification-text {
-      text-align: center;
-      margin: 25px auto;
-      max-width: 95%;
-      font-family: 'League Spartan', sans-serif;
-      font-size: 11pt;
-      line-height: 1.6;
-    }
-
-    .certification-text .small {
-      font-size: 10pt;
-    }
-
-    /* ==================== AUTHORIZED BY ==================== */
-    .authorized-section {
-      text-align: center;
-      margin: 25px 0 15px 0;
-      font-family: 'League Spartan', sans-serif;
+      font-family: 'League Spartan', Arial, sans-serif;
       font-size: 11pt;
     }
-
-    /* ==================== SIGNATURE TABLE ==================== */
+    .highlight {
+      font-weight: 700;
+    }
+    .auth-section {
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    .auth-text {
+      font-family: 'League Spartan', Arial, sans-serif;
+      font-size: 11pt;
+    }
+    .signature-section {
+      margin-top: auto;
+      flex-shrink: 0;
+      padding: 8px 0 8px 0;
+    }
     .signature-table {
       width: 100%;
       border-collapse: collapse;
       table-layout: fixed;
-      margin-top: 10px;
     }
-
     .signature-table td {
+      width: 33.33%;
       vertical-align: top;
-      padding: 8px 12px;
-      font-family: 'League Spartan', sans-serif;
+      padding: 8px 20px;
     }
-
-    .sig-col-left {
-      width: 33.33%;
-      text-align: center;
-      border-right: 1px solid #000;
-    }
-
-    .sig-col-middle {
-      width: 33.33%;
-      text-align: center;
-      vertical-align: middle !important;
-      border-right: 1px solid #000;
-    }
-
-    .sig-col-right {
-      width: 33.34%;
+    .sig-cell-left,
+    .sig-cell-right {
       text-align: center;
     }
-
+    .sig-cell-center {
+      text-align: center;
+      border-left: 1.5pt solid #000;
+      border-right: 1.5pt solid #000;
+      vertical-align: middle;
+      padding: 12px 20px;
+    }
+    .signature-box {
+      height: 136px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      overflow: visible;
+    }
     .signature-img {
-      max-width: 190px;
-      max-height: 110px;
-      width: 100%;
-      height: auto;
+      max-width: 360px;
+      max-height: 210px;
+      width: auto;
+      height: 100%;
       object-fit: contain;
-      margin-bottom: 0;
+      display: block;
+      margin: 0 auto;
     }
-
-    .vehicle-block {
-      font-size: 11pt;
-      line-height: 1.5;
+    .center-info {
+      font-family: 'League Spartan', Arial, sans-serif;
+      font-size: 10pt;
+      line-height: 1.45;
     }
-
-    .vehicle-block .name {
+    .center-vehicle-name {
       font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .center-address {
+      font-size: 9.5pt;
+      margin-bottom: 6px;
+    }
+    .center-series {
+      font-size: 9.5pt;
     }
   </style>
 </head>
 <body>
-  <div class="certificate-page">
-
-    <!--
-      =====================================================================
-      CERTIFICATE TEMPLATE FOR N8N WORKFLOW
-      =====================================================================
-
-      PAYLOAD FIELDS (from certificate-trigger.ts):
-
-      HEADER TABLE:
-        - vehicle_logo_url: string (vehicles.logo_url)
-        - series_number: string (vehicles.series_number)
-        - subscription_number: string (subscriptions.subscription_number)
-        - units: number (subscriptions.units or num_shares)
-        - close_at: string (formatted as "Month Day, Year")
-
-      ISSUER SECTION:
-        - vehicle_name: string (vehicles.name)
-        - company_name: string (deals.company_name)
-        - vehicle_registration_number: string (vehicles.registration_number)
-
-      CERTIFICATION TEXT:
-        - investor_name: string (derived from investor type)
-        - num_shares: number (actual share count)
-        - structure: string (deal_fee_structures.structure, e.g., "Shares of Series B Preferred Stock of X.AI")
-
-      SIGNATURE TABLE:
-        - vehicle_address: string (vehicles.address)
-        - signatory_1_signature_url: string (config/env: CERTIFICATE_SIGNATORY_1_SIGNATURE_URL)
-        - signatory_2_signature_url: string (config/env: CERTIFICATE_SIGNATORY_2_SIGNATURE_URL)
-        - Note: signature images are rendered as full signature cards (name/title embedded in image)
-
-      METADATA (for workflow use):
-        - subscription_id, investor_id, vehicle_id, deal_id
-        - commitment_amount, funded_amount, price_per_share
-        - certificate_date, include_watermark
-      =====================================================================
-    -->
-
-    <!-- ==================== HEADER TABLE ==================== -->
-    <table class="header-table">
-      <tr>
-        <!-- Column 1: Vehicle Logo -->
-        <td>
-          <img src="{{ $json.body.payload.vehicle_logo_url }}" alt="Logo" class="vehicle-logo">
-        </td>
-
-        <!-- Column 2: Certificate Number (format: VC{series_number}SH{subscription_number}) -->
-        <td>
-          <div class="header-value">VC{{ $json.body.payload.series_number }}SH{{ $json.body.payload.subscription_number }}</div>
-          <div class="header-label">(Certificate No)</div>
-        </td>
-
-        <!-- Column 3: Units -->
-        <td>
-          <div class="header-value">{{ $json.body.payload.units }} Units</div>
-          <div class="header-label">(No of Certificates)</div>
-        </td>
-
-        <!-- Column 4: Date -->
-        <td>
-          <div class="header-value">{{ $json.body.payload.close_at }}</div>
-          <div class="header-label">(Date)</div>
-        </td>
-      </tr>
-    </table>
-
-    <!-- ==================== TITLE SECTION ==================== -->
-    <div class="title-section">
-      <div class="main-title">EQUITY CERTIFICATE</div>
-      <div class="sub-title">&amp; STATEMENT OF HOLDINGS</div>
+  <div class="page">
+    <div class="certificate-border">
+      <div class="watermark">V E R S O</div>
+      <div class="header-section">
+        <table class="header-table">
+          <tr>
+            <td class="logo-cell">
+              <div class="logo-text">{{ $json.body.payload.logo_text }}</div>
+            </td>
+            <td>
+              <div class="cert-number">VC{{ $json.body.payload.series_number }}SH{{ $json.body.payload.subscription_number }}</div>
+              <div class="cert-label">(Certificate No)</div>
+            </td>
+            <td>
+              <div class="units-value">{{ $json.body.payload.units }} Units</div>
+              <div class="units-label">(No of Certificates)</div>
+            </td>
+            <td>
+              <div class="date-value">{{ $json.body.payload.close_at }}</div>
+              <div class="date-label">(Date)</div>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div class="content-section">
+        <div class="title-section">
+          <div class="main-title">EQUITY CERTIFICATE</div>
+          <div class="sub-title">&amp; STATEMENT OF HOLDINGS</div>
+        </div>
+        <div class="issuer-section">
+          <div class="issuer-name">{{ $json.body.payload.vehicle_name }}, the Issuer, in the name and on behalf of Series {{ $json.body.payload.series_number }} "{{ $json.body.payload.company_name }}"</div>
+          <div class="company-number">Company Number: {{ $json.body.payload.vehicle_registration_number }}</div>
+        </div>
+        <div class="certification-section">
+          <p class="certification-text">
+            This is to certify that <span class="highlight">{{ $json.body.payload.investor_name }}</span>
+            the registered holder of <span class="highlight">{{ $json.body.payload.num_shares }}</span> Certificates
+            only as issued by the Issuer and ultimately backed by
+            <span class="highlight">{{ $json.body.payload.num_shares }} {{ $json.body.payload.structure }}</span>.
+          </p>
+        </div>
+        <div class="auth-section">
+          <p class="auth-text">This certificate was authorised by:</p>
+        </div>
+      </div>
+      <div class="signature-section">
+        <table class="signature-table">
+          <tr>
+            <td class="sig-cell-left">
+              <div class="signature-box">
+                <img src="{{ $json.body.payload.signatory_1_signature_url }}" alt="Signature 1" class="signature-img">
+              </div>
+            </td>
+            <td class="sig-cell-center">
+              <div class="center-info">
+                <div class="center-vehicle-name">{{ $json.body.payload.vehicle_name }}</div>
+                <div class="center-address">{{ $json.body.payload.vehicle_address }}</div>
+                <div class="center-series">acting in the name and on behalf of its<br>Series {{ $json.body.payload.series_number }}</div>
+              </div>
+            </td>
+            <td class="sig-cell-right">
+              <div class="signature-box">
+                <img src="{{ $json.body.payload.signatory_2_signature_url }}" alt="Signature 2" class="signature-img">
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
     </div>
-
-    <!-- ==================== ISSUER SECTION ==================== -->
-    <div class="issuer-section">
-      <div>{{ $json.body.payload.vehicle_name }}, the Issuer, in the name and on behalf of Series {{ $json.body.payload.series_number }} "{{ $json.body.payload.company_name }}"</div>
-      <div>Company Number: {{ $json.body.payload.vehicle_registration_number }}</div>
-    </div>
-
-    <!-- ==================== CERTIFICATION TEXT ==================== -->
-    <div class="certification-text">
-      This is to certify that {{ $json.body.payload.investor_name }} <span class="small">the registered</span> holder of {{ $json.body.payload.units }} <span class="small">Certificates</span> only as issued by the Issuer and ultimately backed by {{ $json.body.payload.num_shares }} {{ $json.body.payload.structure }}.
-    </div>
-
-    <!-- ==================== AUTHORIZED BY ==================== -->
-    <div class="authorized-section">
-      This certificate was authorised by:
-    </div>
-
-    <!-- ==================== SIGNATURE TABLE ==================== -->
-    <table class="signature-table">
-      <tr>
-        <!-- Left: Signature 1 -->
-        <td class="sig-col-left" rowspan="2" style="vertical-align: bottom;">
-          <img src="{{ $json.body.payload.signatory_1_signature_url }}" alt="Signature" class="signature-img">
-        </td>
-
-        <!-- Middle: Vehicle Info -->
-        <td class="sig-col-middle" rowspan="2">
-          <div class="vehicle-block">
-            <div class="name">{{ $json.body.payload.vehicle_name }}</div>
-            <div>{{ $json.body.payload.vehicle_address }}</div>
-            <div>acting in the name and on behalf of its</div>
-            <div>Series {{ $json.body.payload.series_number }}</div>
-          </div>
-        </td>
-
-        <!-- Right: Signature 2 -->
-        <td class="sig-col-right" rowspan="2" style="vertical-align: bottom;">
-          <img src="{{ $json.body.payload.signatory_2_signature_url }}" alt="Signature" class="signature-img">
-        </td>
-      </tr>
-    </table>
-
   </div>
 </body>
 </html>

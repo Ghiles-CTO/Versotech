@@ -23,23 +23,6 @@
             page-break-after: always;
         }
 
-        .running-verso-logo {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-family: 'League Spartan', Arial, sans-serif;
-            font-weight: 700;
-            font-size: 28pt;
-            line-height: 1;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: #000;
-            z-index: 5;
-            pointer-events: none;
-        }
-
         /* Cover Page */
         .cover-page {
             text-align: center;
@@ -406,8 +389,6 @@
     </style>
 </head>
 <body>
-<div class="running-verso-logo">VERSO</div>
-
 <!-- PAGE 1: COVER PAGE -->
 <div class="cover-page">
     <div class="cover-title">SUBSCRIPTION PACK</div>
@@ -846,7 +827,7 @@
     </tr>
     <tr>
         <td class="bold">"Escrow Agency Fee"</td>
-        <td>means the fee to be paid by the Issuer according to the escrow agency agreement concluded with {{ $json.wire_escrow_agent || 'Elvinger Hoss Prussen' }}, a law firm with the Luxembourg Bar, with main office on {{ $json.wire_law_firm_address || '2 Place Winston Churchill, L-1340 Luxembourg, Grand Duchy of Luxembourg' }}.</td>
+        <td>means the fee to be paid by the Issuer according to the escrow agency agreement concluded with {{ $json.wire_escrow_agent || 'Dupont &amp; Partners' }}, a law firm with the Luxembourg Bar, with main office on {{ $json.wire_law_firm_address || '2 Avenue Charles de Gaulle, L-1653 Luxembourg, Grand Duchy of Luxembourg' }}.</td>
     </tr>
     <tr>
         <td class="bold">"Event of Default"</td>
@@ -950,7 +931,7 @@
     </tr>
     <tr>
         <td class="bold">"Paying Agent"</td>
-        <td>means {{ $json.wire_escrow_agent || 'Elvinger Hoss Prussen' }}, a law firm with the Luxembourg Bar, with main office on {{ $json.wire_law_firm_address || '2 Place Winston Churchill, L-1340 Luxembourg, Grand Duchy of Luxembourg' }}.</td>
+        <td>means {{ $json.wire_escrow_agent || 'Dupont &amp; Partners' }}, a law firm with the Luxembourg Bar, with main office on {{ $json.wire_law_firm_address || '2 Avenue Charles de Gaulle, L-1653 Luxembourg, Grand Duchy of Luxembourg' }}.</td>
     </tr>
     <tr>
         <td class="bold">"Paying Agent Account"</td>
@@ -1073,10 +1054,10 @@
 <p class="clause">2.1.4. The payment of the Certificates Subscription Price and the One-Off Fee(s) shall occur on the Closing Date (the "<strong>Certificates Payment Date</strong>"), under the following bank account on behalf of the Issuer by the Paying Agent (the "<strong>Paying Agent Account</strong>"):</p>
 
 <div class="wire-box">
-    <p><strong>Bank:</strong> {{ $json.wire_bank_name || 'Banque de Luxembourg' }}</p>
-    <p><strong>Holder:</strong> {{ $json.wire_account_holder || 'Elvinger Hoss Prussen - Escrow Account' }}</p>
-    <p><strong>IBAN:</strong> {{ $json.wire_iban || 'LU28 0019 4855 4447 1000' }}</p>
-    <p><strong>BIC:</strong> {{ $json.wire_bic || 'BLUXLULL' }}</p>
+    <p><strong>Bank:</strong> {{ $json.wire_bank_name || 'ING Luxembourg S.A.' }}</p>
+    <p><strong>Holder:</strong> {{ $json.wire_account_holder || 'Dupont Partners' }}</p>
+    <p><strong>IBAN:</strong> {{ $json.wire_iban || 'LU71 0141 8595 5133 3010' }}</p>
+    <p><strong>BIC:</strong> {{ $json.wire_bic || 'CELLLULLXXX' }}</p>
     <p><strong>Reference:</strong> {{ $json.wire_reference_display }}</p>
     <p><strong>Currency:</strong> {{ $json.currency_code }} ({{ $json.currency_long }})</p>
 </div>
@@ -1183,6 +1164,12 @@
 
 <p>Recourse of the Holders shall be limited to the Assets and the Limited Recourse Proceeds thereof, as applied in accordance with these Terms and Conditions. If such Assets and proceeds prove ultimately insufficient (after payment of all claims ranking in priority to amounts due under the Certificates) to pay in full all principal and profits on the Certificates, then the Holders shall have no further recourse against the Issuer or any other person for any shortfall arising or any loss sustained.</p>
 
+<p>Such Assets and Limited Recourse Proceeds shall be deemed to be 'ultimately insufficient' at such time when the Issuer certifies to the Holders that (i) no further Assets are available and no further proceeds can be realised therefrom to satisfy any outstanding claims of the Holders, and that (ii) neither Assets nor Limited Recourse Proceeds thereof will reasonably likely be so available thereafter.</p>
+
+<p>In respect of the Certificates, the Holders shall, once the Assets and Limited Recourse Proceeds thereof are deemed to be ultimately insufficient, have thereafter neither further claims against the Issuer nor have recourse to the Issuer or any other person for the loss sustained and their claims together with the relevant Certificates shall be fully extinguished.</p>
+
+<p>Neither the Issuer nor the managers or officers of the Issuer or its General Partner shall be liable for any shortfall arising and the Holders shall not have any further claims against the Issuer or any of its directors or officers.</p>
+
 <h3>7.4. Calculations</h3>
 
 <p>On each Calculation Date, the Calculation Agent (or the Issuer itself, as the case may be) shall calculate the amounts due and payable on the immediately following Payment Date and the identity of the Holders as at 12:00 pm (UTC) on such date. The person or entity who appears on the Certificates Register at such date and time will be entitled to the relevant payment on the immediately following Payment Date.</p>
@@ -1255,7 +1242,9 @@
 
 <h3>10.1. General</h3>
 
-<p>All payments shall be subject to the condition that if a payment is made to a creditor in breach of these Terms and Conditions, such creditor shall repay the amount so received to the Issuer. The Issuer shall then pay out the moneys so received in the way they were payable in accordance with these Terms and Conditions on the relevant Payment Date...</p>
+<p>All payments shall be subject to the condition that if a payment is made to a creditor in breach of these Terms and Conditions, such creditor shall repay the amount so received to the Issuer. The Issuer shall then pay out the moneys so received in the way they were payable in accordance with these Terms and Conditions on the relevant Payment Date. If such repayment is not enforceable, the Issuer is authorized and obliged to make payments in such a way that any over-payments or under-payments made in breach of these Terms and Conditions are set-off by correspondingly decreased or increased payments on the next following Payment Date.</p>
+
+<p>Neither the Issuer nor any party to this Agreement shall incur any liability whatsoever if the Issuer or this third party is unable to effect the transactions contemplated, after using all reasonable efforts, as a result of any such above-mentioned laws, regulations, directives, official interpretations or agreements.</p>
 
 <h3>10.2. Business Days</h3>
 

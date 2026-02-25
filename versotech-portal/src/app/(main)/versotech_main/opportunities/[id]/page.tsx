@@ -1020,13 +1020,11 @@ export default function OpportunityDetailPage() {
             </Button>
           )}
 
-          {/* Subscription Status Badges */}
-          {opportunity.subscription && !opportunity.subscription.is_active && (
+          {/* Subscription Status Badges - only show pre-funding states */}
+          {opportunity.subscription && !opportunity.subscription.is_active && !opportunity.subscription.is_funded && (
             <Badge className="justify-center py-2" variant="outline">
               <Clock className="w-4 h-4 mr-2" />
-              {opportunity.subscription.is_funded ? 'Awaiting Activation' :
-               opportunity.subscription.is_signed ? 'Awaiting Funding' :
-               'Awaiting Signature'}
+              {opportunity.subscription.is_signed ? 'Awaiting Funding' : 'Awaiting Signature'}
             </Badge>
           )}
           {opportunity.subscription?.is_active && (

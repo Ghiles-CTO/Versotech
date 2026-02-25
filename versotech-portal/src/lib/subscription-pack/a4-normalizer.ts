@@ -102,6 +102,25 @@ export async function ensureSubscriptionPackA4Pdf({
   try {
     const template = await loadSubscriptionPackTemplate()
     const renderedHtml = renderSubscriptionPackHtml(template, payload)
+    const VERSO_HEADER_HTML = `<!DOCTYPE html>
+<html><head>
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@700&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; padding: 0; text-align: center; }
+  .verso-logo {
+    font-family: 'League Spartan', Arial, sans-serif;
+    font-weight: 700;
+    font-size: 28pt;
+    line-height: 1;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #000;
+  }
+</style>
+</head>
+<body><div class="verso-logo">VERSO</div></body>
+</html>`
+
     const conversion = await convertHtmlToPdf(
       renderedHtml,
       'subscription_pack_template.html',
@@ -110,10 +129,11 @@ export async function ensureSubscriptionPackA4Pdf({
         printBackground: true,
         paperWidth: 8.27,
         paperHeight: 11.69,
-        marginTop: 0,
-        marginBottom: 0,
-        marginLeft: 0,
-        marginRight: 0,
+        marginTop: 0.87,
+        marginBottom: 0.47,
+        marginLeft: 0.39,
+        marginRight: 0.39,
+        headerHtml: VERSO_HEADER_HTML,
       }
     )
 

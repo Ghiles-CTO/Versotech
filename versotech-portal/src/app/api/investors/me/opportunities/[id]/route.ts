@@ -560,8 +560,8 @@ export async function GET(request: Request, { params }: RouteParams) {
     // which may be set prematurely in multi-signatory flows
     const subPackComplete = subscriptionDocuments?.subscription_pack.status === 'complete'
     let currentStage = 0
-    if (subscription?.activated_at) currentStage = 10
-    else if (subscription?.funded_at) currentStage = 9
+    if (subscription?.activated_at || subscription?.status === 'active') currentStage = 10
+    else if (subscription?.funded_at || subscription?.status === 'funded') currentStage = 9
     else if (subPackComplete && subscription?.signed_at) currentStage = 8
     else if (subscription?.pack_sent_at) currentStage = 7
     else if (subscription?.pack_generated_at) currentStage = 6
@@ -669,8 +669,8 @@ export async function GET(request: Request, { params }: RouteParams) {
         activated_at: subscription.activated_at,
         created_at: subscription.created_at,
         is_signed: subscriptionDocuments?.subscription_pack.status === 'complete',
-        is_funded: !!subscription.funded_at,
-        is_active: !!subscription.activated_at,
+        is_funded: !!subscription.funded_at || subscription.status === 'funded' || subscription.status === 'active',
+        is_active: !!subscription.activated_at || subscription.status === 'active',
         documents: subscriptionDocuments
       } : null,
       subscription_submission: subscriptionSubmission,

@@ -22,6 +22,7 @@ export interface HtmlToPdfOptions {
   marginRight?: number
   preferCssPageSize?: boolean
   printBackground?: boolean
+  headerHtml?: string
 }
 
 /**
@@ -134,6 +135,11 @@ export async function convertHtmlToPdf(
     if (typeof options.marginRight === 'number') formData.append('marginRight', String(options.marginRight))
     if (typeof options.preferCssPageSize === 'boolean') formData.append('preferCssPageSize', String(options.preferCssPageSize))
     if (typeof options.printBackground === 'boolean') formData.append('printBackground', String(options.printBackground))
+
+    if (options.headerHtml) {
+      const headerBlob = new Blob([options.headerHtml], { type: 'text/html' })
+      formData.append('files', headerBlob, 'header.html')
+    }
 
     const response = await fetch(url, {
       method: 'POST',

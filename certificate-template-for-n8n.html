@@ -40,23 +40,27 @@
     .watermark {
       position: absolute;
       top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+      left: 0;
+      width: 100%;
+      transform: translateY(-50%);
+      text-align: center;
       font-family: 'League Spartan', Arial, sans-serif;
       font-weight: 700;
-      font-size: 130pt;
-      letter-spacing: 34px;
+      font-size: 102pt;
+      letter-spacing: 12px;
       color: rgba(200, 200, 200, 0.34);
       z-index: 0;
       pointer-events: none;
       user-select: none;
       white-space: nowrap;
+      overflow: hidden;
     }
     .certificate-border {
       width: 100%;
       height: 100%;
       border: 2pt solid #000;
       position: relative;
+      overflow: hidden;
       z-index: 1;
       background: transparent;
       display: flex;
@@ -227,8 +231,8 @@
 </head>
 <body>
   <div class="page">
-    <div class="watermark">V E R S O</div>
     <div class="certificate-border">
+      <div class="watermark">V E R S O</div>
       <div class="header-section">
         <table class="header-table">
           <tr>
