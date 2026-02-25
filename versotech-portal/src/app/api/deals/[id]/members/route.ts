@@ -3,7 +3,7 @@ import { auditLogger, AuditActions } from '@/lib/audit'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
-import { createInvestorNotification } from '@/lib/notifications'
+import { sendDealDispatchFanout } from '@/lib/deals/dispatch-fanout'
 
 const addMemberSchema = z.object({
   user_id: z.string().uuid().optional(),
@@ -359,7 +359,7 @@ export async function POST(
       )
     }
 
-    // Send notification if requested
+    // Send notification/email fanout if requested
     if (validatedData.send_notification && resolvedUserId) {
       try {
         // Get deal name for notification
@@ -371,21 +371,21 @@ export async function POST(
 
         const dealName = deal?.name || 'a deal'
 
-        await createInvestorNotification({
-          userId: resolvedUserId,
-          investorId: resolvedInvestorId ?? undefined,
-          title: 'Deal Invitation',
-          message: `You've been invited to view ${dealName}. Review the deal details and data room.`,
-          link: `/versotech_main/opportunities/${dealId}`,
-          type: 'deal_invite',
-          extraMetadata: {
-            deal_id: dealId,
-            role: validatedData.role,
-            invited_by: user.id
-          }
+        const fanout = await sendDealDispatchFanout({
+          supabase,
+          dealId,
+          dealName,
+          seedUserIds: [resolvedUserId],
+          investorIds: [resolvedInvestorId ?? null],
+          initiatedByUserId: user.id,
+          role: validatedData.role,
         })
+
+        if (!fanout.success) {
+          console.warn('[deal-members] Notification/email fanout completed with warnings:', fanout.errors)
+        }
       } catch (notificationError) {
-        console.error('[deal-members] Failed to send notification:', notificationError)
+        console.error('[deal-members] Failed to send notification/email fanout:', notificationError)
       }
     }
 

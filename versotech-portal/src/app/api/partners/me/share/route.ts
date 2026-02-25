@@ -1,6 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import { sendDealDispatchFanout } from '@/lib/deals/dispatch-fanout'
 
 /**
  * POST /api/partners/me/share
@@ -194,26 +195,23 @@ export async function POST(request: Request) {
       .eq('id', partnerId)
       .single()
 
-    // Create notifications for investor users
-    const investorNotifications = investorUsers.map(iu => ({
-      user_id: iu.user_id,
-      investor_id,
-      deal_id,
-      type: 'deal_shared',
-      title: 'New Investment Opportunity',
-      message: `${partnerInfo?.name || 'A partner'} has shared "${deal.name}" with you.`,
-      link: `/versotech_main/opportunities/${deal_id}`,
-      created_at: now
-      // read_at is null by default (unread)
-    }))
+    const partnerName = partnerInfo?.name || 'A partner'
+    const fanout = await sendDealDispatchFanout({
+      supabase: serviceSupabase,
+      dealId: deal_id,
+      dealName: deal.name || 'a deal',
+      seedUserIds: investorUsers.map(iu => iu.user_id).filter((id): id is string => typeof id === 'string' && id.length > 0),
+      investorIds: [investor_id],
+      initiatedByUserId: user.id,
+      role: 'partner_investor',
+      notificationType: 'deal_shared',
+      notificationTitle: 'New Investment Opportunity',
+      notificationMessage: `${partnerName} has shared "${deal.name}" with you.`,
+      notificationLink: `/versotech_main/opportunities/${deal_id}`,
+    })
 
-    const { error: notifError } = await serviceSupabase
-      .from('investor_notifications')
-      .insert(investorNotifications)
-
-    if (notifError) {
-      console.warn('[share] Failed to create investor notifications:', notifError)
-      // Don't fail the request, just log it
+    if (!fanout.success) {
+      console.warn('[share] Dispatch fanout completed with warnings:', fanout.errors)
     }
 
     // Notify staff/arrangers about the share (for tracking)
@@ -223,7 +221,7 @@ export async function POST(request: Request) {
         user_id: null, // Will be picked up by all staff
         type: 'partner_deal_share',
         title: 'Partner Shared Deal',
-        message: `${partnerInfo?.name || 'Partner'} shared "${deal.name}" with ${investor.display_name || investor.legal_name}${introducerName ? ` (co-referred with ${introducerName})` : ''}.`,
+        message: `${partnerName} shared "${deal.name}" with ${investor.display_name || investor.legal_name}${introducerName ? ` (co-referred with ${introducerName})` : ''}.`,
         data: {
           deal_id,
           investor_id,

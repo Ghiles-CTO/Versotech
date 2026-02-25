@@ -1,6 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import { sendDealDispatchFanout } from '@/lib/deals/dispatch-fanout'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -420,8 +421,29 @@ export async function POST(request: Request, { params }: RouteParams) {
         created_at: now
       })
 
-    // TODO: Send notifications to dispatched users
-    // This could trigger an n8n workflow or send emails directly
+    // Send user notifications + member-email fanout
+    try {
+      const dispatchInvestorIds = dispatchUserIds
+        .map(userId => investorIdMap.get(userId))
+        .filter((value): value is string => typeof value === 'string' && value.length > 0)
+
+      const fanout = await sendDealDispatchFanout({
+        supabase: serviceSupabase,
+        dealId,
+        dealName: deal.name || 'a deal',
+        seedUserIds: dispatchUserIds,
+        investorIds: dispatchInvestorIds,
+        initiatedByUserId: user.id,
+        role,
+      })
+
+      if (!fanout.success) {
+        console.warn('[deal-dispatch] Notification/email fanout completed with warnings:', fanout.errors)
+      }
+    } catch (notificationError) {
+      console.error('[deal-dispatch] Failed to send notification/email fanout:', notificationError)
+      // Do not fail dispatch if notifications/emails fail.
+    }
 
     return NextResponse.json({
       success: true,
