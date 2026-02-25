@@ -259,8 +259,8 @@ export function IndividualKycDisplay({
               <Section icon={Phone} title="Contact Information">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <Field label="Email" value={data.email} />
-                  <Field icon={Phone} label="Mobile" value={data.phone_mobile} />
-                  <Field icon={Phone} label="Office" value={data.phone_office} />
+                  <Field icon={Phone} label="Mobile Phone" value={data.phone_mobile} />
+                  <Field icon={Phone} label="Office Phone" value={data.phone_office} />
                 </div>
               </Section>
             )}
@@ -269,10 +269,10 @@ export function IndividualKycDisplay({
             {showAddress && (
               <Section icon={MapPin} title="Residential Address">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field label="Address Line 1" value={data.residential_street} />
-                  <Field label="Address Line 2" value={data.residential_line_2} />
+                  <Field label="Street Address" value={data.residential_street} />
+                  <Field label="Apartment / Suite / Unit" value={data.residential_line_2} />
                   <Field label="City" value={data.residential_city} />
-                  <Field label="State/Province" value={data.residential_state} />
+                  <Field label="State / Province" value={data.residential_state} />
                   <Field label="Postal Code" value={data.residential_postal_code} />
                   <Field icon={Globe} label="Country" value={getCountryName(data.residential_country)} />
                 </div>
@@ -283,10 +283,10 @@ export function IndividualKycDisplay({
             {showTaxInfo && (
               <Section icon={FileText} title="Tax Information">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <BooleanField icon={Flag} label="US Citizen" value={data.is_us_citizen} />
+                  <BooleanField icon={Flag} label="US Citizen / Permanent Resident" value={data.is_us_citizen} />
                   <BooleanField icon={Building2} label="US Taxpayer" value={data.is_us_taxpayer} />
                   {data.is_us_taxpayer && (
-                    <Field label="US Taxpayer ID" value={data.us_taxpayer_id} />
+                    <Field label="US Taxpayer ID (SSN/ITIN)" value={data.us_taxpayer_id} />
                   )}
                   <Field
                     icon={Globe}
@@ -294,7 +294,7 @@ export function IndividualKycDisplay({
                     value={getCountryName(data.country_of_tax_residency)}
                   />
                   {data.tax_id_number && (
-                    <Field label="Tax ID Number" value={data.tax_id_number} />
+                    <Field label="Tax ID Number (TIN)" value={data.tax_id_number} />
                   )}
                 </div>
               </Section>
