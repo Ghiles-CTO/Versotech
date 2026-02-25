@@ -157,20 +157,12 @@
     }
 
     .signature-img {
-      max-width: 160px;
-      height: 45px;
+      max-width: 190px;
+      max-height: 110px;
+      width: 100%;
+      height: auto;
       object-fit: contain;
-      margin-bottom: 5px;
-    }
-
-    .signatory-name {
-      font-weight: 700;
-      font-size: 11pt;
-    }
-
-    .signatory-title {
-      font-weight: 400;
-      font-size: 11pt;
+      margin-bottom: 0;
     }
 
     .vehicle-block {
@@ -212,12 +204,9 @@
 
       SIGNATURE TABLE:
         - vehicle_address: string (vehicles.address)
-        - signatory_1_name: string (static: "Mr Julien Machot")
-        - signatory_1_title: string (static: "Managing Partner")
-        - signatory_1_signature_url: string (env: SIGNATORY_1_SIGNATURE_URL)
-        - signatory_2_name: string (static: "Mr Frederic Dupont")
-        - signatory_2_title: string (static: "General Counsel")
-        - signatory_2_signature_url: string (env: SIGNATORY_2_SIGNATURE_URL)
+        - signatory_1_signature_url: string (config/env: CERTIFICATE_SIGNATORY_1_SIGNATURE_URL)
+        - signatory_2_signature_url: string (config/env: CERTIFICATE_SIGNATORY_2_SIGNATURE_URL)
+        - Note: signature images are rendered as full signature cards (name/title embedded in image)
 
       METADATA (for workflow use):
         - subscription_id, investor_id, vehicle_id, deal_id
@@ -279,11 +268,9 @@
     <!-- ==================== SIGNATURE TABLE ==================== -->
     <table class="signature-table">
       <tr>
-        <!-- Left: Signature 1 (Managing Partner) -->
+        <!-- Left: Signature 1 -->
         <td class="sig-col-left" rowspan="2" style="vertical-align: bottom;">
-          <img src="{{ $json.body.payload.signatory_1_signature_url }}" alt="Signature" class="signature-img"><br>
-          <div class="signatory-name">{{ $json.body.payload.signatory_1_name }}</div>
-          <div class="signatory-title">{{ $json.body.payload.signatory_1_title }}</div>
+          <img src="{{ $json.body.payload.signatory_1_signature_url }}" alt="Signature" class="signature-img">
         </td>
 
         <!-- Middle: Vehicle Info -->
@@ -296,11 +283,9 @@
           </div>
         </td>
 
-        <!-- Right: Signature 2 (General Counsel) -->
+        <!-- Right: Signature 2 -->
         <td class="sig-col-right" rowspan="2" style="vertical-align: bottom;">
-          <img src="{{ $json.body.payload.signatory_2_signature_url }}" alt="Signature" class="signature-img"><br>
-          <div class="signatory-name">{{ $json.body.payload.signatory_2_name }}</div>
-          <div class="signatory-title">{{ $json.body.payload.signatory_2_title }}</div>
+          <img src="{{ $json.body.payload.signatory_2_signature_url }}" alt="Signature" class="signature-img">
         </td>
       </tr>
     </table>

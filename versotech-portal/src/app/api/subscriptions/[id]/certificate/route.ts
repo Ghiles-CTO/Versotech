@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions } from '@/lib/audit'
-import { triggerWorkflow } from '@/lib/trigger-workflow'
+import { triggerCertificateGeneration } from '@/lib/subscription/certificate-trigger'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,6 +41,8 @@ export async function POST(
       .from('subscriptions')
       .select(`
         id,
+        investor_id,
+        vehicle_id,
         commitment,
         funded_amount,
         status,
@@ -84,7 +86,7 @@ export async function POST(
       .eq('subscription_id', subscriptionId)
       .order('created_at', { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
 
     if (existingCert) {
       return NextResponse.json({
@@ -93,85 +95,61 @@ export async function POST(
       })
     }
 
-    // Trigger the certificate generation workflow
-    const workflowResult = await triggerWorkflow({
-      workflowKey: 'generate-investment-certificate',
-      payload: {
-        subscription_id: subscriptionId,
-        investor_id: (subscription.investor as any)?.id,
-        investor_name: (subscription.investor as any)?.legal_name,
-        investor_email: (subscription.investor as any)?.email,
-        vehicle_id: (subscription.vehicle as any)?.id,
-        vehicle_name: (subscription.vehicle as any)?.name,
-        vehicle_type: (subscription.vehicle as any)?.type,
-        vehicle_series: (subscription.vehicle as any)?.series,
-        commitment_amount: subscription.commitment,
-        funded_amount: subscription.funded_amount,
-        shares: subscription.num_shares || subscription.units,
-        price_per_share: subscription.price_per_share,
-        subscription_date: subscription.subscription_date,
-        certificate_date: new Date().toISOString().split('T')[0],
-        include_watermark: true
-      },
-      entityType: 'subscription',
-      entityId: subscriptionId,
-      user: {
+    const investorId = (subscription as any).investor_id as string | null
+    const vehicleId = (subscription as any).vehicle_id as string | null
+
+    if (!investorId || !vehicleId) {
+      return NextResponse.json({
+        error: 'Subscription is missing investor or vehicle linkage required for certificate generation.'
+      }, { status: 400 })
+    }
+
+    const certificatePublished = await triggerCertificateGeneration({
+      supabase: serviceSupabase,
+      subscriptionId,
+      investorId,
+      vehicleId,
+      commitment: Number(subscription.commitment) || 0,
+      fundedAmount: Number(subscription.funded_amount) || 0,
+      shares: subscription.num_shares || subscription.units,
+      pricePerShare: subscription.price_per_share,
+      profile: {
         id: profile.id,
         email: profile.email || user.email || '',
-        displayName: profile.display_name,
+        display_name: profile.display_name,
         role: profile.role,
         title: profile.title
       }
     })
 
-    if (!workflowResult.success) {
-      console.error('Certificate workflow trigger failed:', workflowResult.error)
-
-      // Even if n8n workflow is not set up, log the attempt
-      await auditLogger.log({
-        actor_user_id: profile.id,
-        action: AuditActions.CREATE,
-        entity: 'documents' as any,
-        entity_id: subscriptionId,
-        metadata: {
-          type: 'certificate_generation_requested',
-          subscription_id: subscriptionId,
-          investor_id: (subscription.investor as any)?.id,
-          vehicle_id: (subscription.vehicle as any)?.id,
-          workflow_error: workflowResult.error,
-          status: 'pending_n8n_setup'
-        }
-      })
-
-      return NextResponse.json({
-        success: false,
-        message: 'Certificate generation requested but workflow not fully configured',
-        subscription_id: subscriptionId,
-        investor: (subscription.investor as any)?.legal_name,
-        vehicle: (subscription.vehicle as any)?.name,
-        note: 'The n8n workflow for certificate generation needs to be set up. The request has been logged.'
-      })
-    }
-
-    // Audit log successful trigger
     await auditLogger.log({
       actor_user_id: profile.id,
       action: AuditActions.CREATE,
       entity: 'documents' as any,
       entity_id: subscriptionId,
       metadata: {
-        type: 'certificate_generation_triggered',
+        type: certificatePublished ? 'certificate_published_immediate' : 'certificate_generation_attempted',
         subscription_id: subscriptionId,
         investor_id: (subscription.investor as any)?.id,
         vehicle_id: (subscription.vehicle as any)?.id,
-        workflow_run_id: workflowResult.workflow_run_id
+        published: certificatePublished
       }
     })
 
+    if (!certificatePublished) {
+      return NextResponse.json({
+        success: false,
+        message: 'Certificate generation was triggered but no published certificate was produced.',
+        subscription_id: subscriptionId,
+        investor: (subscription.investor as any)?.legal_name,
+        vehicle: (subscription.vehicle as any)?.name,
+        note: 'Check certificate workflow response and signature image configuration.'
+      }, { status: 502 })
+    }
+
     return NextResponse.json({
       success: true,
-      message: 'Certificate generation workflow triggered',
-      workflow_run_id: workflowResult.workflow_run_id,
+      message: 'Certificate generated and published',
       subscription: {
         id: subscriptionId,
         investor: (subscription.investor as any)?.legal_name,
@@ -182,6 +160,16 @@ export async function POST(
 
   } catch (error) {
     console.error('Certificate generation error:', error)
+    if (
+      error instanceof Error &&
+      error.message.includes('Missing certificate signature image configuration')
+    ) {
+      return NextResponse.json({
+        error: 'Certificate signature images are not configured',
+        details: error.message
+      }, { status: 400 })
+    }
+
     return NextResponse.json({
       error: 'Unexpected error',
       details: error instanceof Error ? error.message : 'Unknown error'

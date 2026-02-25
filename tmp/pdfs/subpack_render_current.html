@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>VERSO Capital 2 SCSP - Complete Subscription Pack</title>
-    <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@700&display=swap" rel="stylesheet">
     <style>
         @page {
             size: A4;
@@ -12,8 +11,8 @@
 
         body {
             font-family: 'Arial', 'Calibri', sans-serif;
-            font-size: 10pt;
-            line-height: 1.4;
+            font-size: 9pt;
+            line-height: 1.32;
             color: #000000;
             margin: 0;
             padding: 0;
@@ -21,23 +20,6 @@
 
         .page-break {
             page-break-after: always;
-        }
-
-        .running-verso-logo {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-family: 'League Spartan', Arial, sans-serif;
-            font-weight: 700;
-            font-size: 28pt;
-            line-height: 1;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: #000;
-            z-index: 5;
-            pointer-events: none;
         }
 
         /* Cover Page */
@@ -191,7 +173,7 @@
         }
 
         p {
-            margin: 0.2cm 0;
+            margin: 0.14cm 0;
             text-align: justify;
         }
 
@@ -230,7 +212,7 @@
 
         .signature-line.wire-line {
             width: 42%;
-            margin-top: 2.1cm;
+            margin-top: 1.25cm;
         }
 
         .signature-line.form-line {
@@ -249,29 +231,29 @@
         }
 
         .summary-page > p {
-            margin: 0.12cm 0;
+            margin: 0.08cm 0;
         }
 
         .summary-page table {
-            margin: 0.18cm 0;
+            margin: 0.12cm 0;
         }
 
         .summary-page table td,
         .summary-page table th {
-            padding: 6px;
+            padding: 4px 5px;
         }
 
         .summary-page .summary-signature-table {
-            margin-top: 0.45cm !important;
+            margin-top: 0.2cm !important;
         }
 
         .summary-page .signature-block-inline {
-            margin-bottom: 0.3cm !important;
+            margin-bottom: 0.1cm !important;
         }
 
         .summary-page .signature-line,
         .summary-page .signature-line.form-line {
-            margin-top: 2.25cm;
+            margin-top: 1.9cm;
         }
 
         .signature-line.main-line {
@@ -326,8 +308,8 @@
         /* Wire instructions box */
         .wire-box {
             border: 2px solid #000;
-            padding: 0.5cm;
-            margin: 0.5cm 0;
+            padding: 0.4cm;
+            margin: 0.3cm 0;
             background-color: #f9f9f9;
             page-break-inside: avoid;
         }
@@ -343,7 +325,7 @@
         }
 
         .wire-signoff {
-            margin-top: 0.3cm;
+            margin-top: 0.1cm;
         }
 
         .signature-meta-table {
@@ -370,9 +352,21 @@
             font-weight: normal;
         }
 
-        /* Section headings */
+        /* Section headings - prevent orphans */
         h1, h2, h3 {
-            page-break-after: auto;
+            page-break-after: avoid;
+            orphans: 3;
+            widows: 3;
+        }
+
+        /* Keep sections together */
+        h2 + p,
+        h2 + ul,
+        h2 + table,
+        h3 + p,
+        h3 + ul,
+        h3 + table {
+            page-break-before: avoid;
         }
 
         /* Print optimizations */
@@ -394,7 +388,7 @@
             }
 
             h1, h2, h3 {
-                page-break-after: auto;
+                page-break-after: avoid;
             }
 
             /* Force page breaks where specified */
@@ -406,22 +400,21 @@
     </style>
 </head>
 <body>
-<div class="running-verso-logo">VERSO</div>
 
 <!-- PAGE 1: COVER PAGE -->
 <div class="cover-page">
     <div class="cover-title">SUBSCRIPTION PACK</div>
     <div class="cover-series">
-        VERSO CAPITAL 2 SCSP SERIES {{ $json.series_number }}<br>
-        {{ $json.series_cover_subtitle }}
+        VERSO CAPITAL 2 SCSP SERIES 600<br>
+        VERSO Capital 2 SCSp Series 600
     </div>
 
-    <img src="{{ $json.investment_logo_url }}" alt="{{ $json.ultimate_investment }}" class="cover-logo">
+    <img src="" alt="" class="cover-logo">
 
     <div class="cover-footer">
-        <strong>VERSO CAPITAL 2 SCSP SERIES {{ $json.series_number }}</strong><br>
+        <strong>VERSO CAPITAL 2 SCSP SERIES 600</strong><br>
         2, Avenue Charles de Gaulle, L1653 Luxembourg<br>
-        {{ $json.issuer_website || 'www.versoholdings.com' }}
+        www.verso.capital
     </div>
 </div>
 
@@ -430,37 +423,37 @@
 <!-- PAGE 2: SUBSCRIPTION SUMMARY -->
 <div class="summary-page">
 <h1>SUBSCRIPTION SUMMARY</h1>
-<h2>{{ $json.series_summary_heading }}</h2>
+<h2>VERSO CAPITAL 2 SCSP SERIES "VERSO Capital 2 SCSp Series 600"</h2>
 
-<p><strong>Find the summary of your subscription in Series {{ $json.series_number }}:</strong></p>
+<p><strong>Find the summary of your subscription in Series 600:</strong></p>
 
 <table class="compact summary-table">
     <tr>
         <td class="label-cell">Subscriber:</td>
-        <td>{{ $json.subscriber_name }}</td>
+        <td>Ghiless Business Ventures LLC</td>
     </tr>
     <tr>
         <td class="label-cell">Date:</td>
-        <td>{{ $json.agreement_date }}</td>
+        <td>February 20, 2026</td>
     </tr>
 </table>
 
 <table class="compact summary-table">
     <tr>
         <td class="label-cell">Total Subscription:</td>
-        <td class="currency-value">{{ $json.currency_code }} {{ $json.subscription_amount_display }}</td>
+        <td class="currency-value">USD 3000000.00</td>
     </tr>
     <tr>
         <td class="label-cell">Total Number of Shares:</td>
-        <td>{{ $json.certificates_count_display }} Equity Certificates</td>
+        <td>15142 Equity Certificates</td>
     </tr>
     <tr>
         <td class="label-cell">Price per Share:</td>
-        <td class="currency-value">{{ $json.currency_code }} {{ $json.price_per_share_display }}{{ $json.price_per_share_marker }}</td>
+        <td class="currency-value">USD 198.12*</td>
     </tr>
     <tr>
         <td class="label-cell"><strong>Total Subscription Amount:</strong></td>
-        <td class="currency-value"><strong>{{ $json.currency_code }} {{ $json.total_subscription_price_display }}</strong></td>
+        <td class="currency-value"><strong>USD 3120000.00</strong></td>
     </tr>
 </table>
 
@@ -468,82 +461,82 @@
     <tr>
         <td class="label-cell">Applicable Terms:</td>
         <td>
-            • <strong>Subscription Fee (one-off):</strong> {{ $json.subscription_fee_text }}<br>
-            • <strong>Management Fee (upfront one-off):</strong> {{ $json.management_fee_text }}<br>
-            • <strong>Performance Fee:</strong> {{ $json.performance_fee_text }}<br>
+            • <strong>Subscription Fee (one-off):</strong> 4.00% upfront subscription fee<br>
+            • <strong>Management Fee (upfront one-off):</strong> 0.00% of net asset value per annum, calculated and payable quarterly<br>
+            • <strong>Performance Fee:</strong> 15.00% performance fee on realized gains<br>
         </td>
     </tr>
     <tr>
         <td class="label-cell">Escrow Agency Fee:</td>
-        <td>{{ $json.escrow_fee_text }}</td>
+        <td>As per escrow agreement</td>
     </tr>
 </table>
 
 <table class="compact summary-signature-table" style="margin-top: 1cm;">
     <tr>
         <td style="width: 50%; text-align: center;">
-            <strong>VERSO Capital 2 SCSP Series {{ $json.series_number }}</strong><br>
+            <strong>VERSO Capital 2 SCSP Series 600</strong><br>
             duly represented by its general partner<br>
             <strong>VERSO Capital 2 GP SARL</strong><br>
             <div class="signature-line form-line"><span class="sig-anchor">SIG_ANCHOR:party_b_form</span></div>
             <div class="issuer-signer-meta">
-                Name: {{ $json.issuer_name || 'Julien Machot' }}<br>
-                Title: {{ $json.issuer_title || 'Authorized Signatory' }}
+                Name: ghiles Moussaoui<br>
+                Title: CTO
             </div>
         </td>
         <td style="width: 50%; vertical-align: top;">
             <strong>The Subscriber</strong>, represented by its<br>
             Authorized Signatory (-ies)<br>
-{{ $json.signatories_form_html }}
+<div class="signature-block-inline" style="position:relative;margin-bottom: 0.5cm;"><div class="signature-line" style="position:relative;"><span style="position:absolute;left:0;top:0;font-size:1px;line-height:1px;color:#ffffff;opacity:0.01;">SIG_ANCHOR:party_a_form</span></div>Name: Sarah Ghiless<br>Title: Managing Director</div><div class="signature-block-inline" style="position:relative;margin-bottom: 0.5cm;"><div class="signature-line" style="position:relative;"><span style="position:absolute;left:0;top:0;font-size:1px;line-height:1px;color:#ffffff;opacity:0.01;">SIG_ANCHOR:party_a_2_form</span></div>Name: Ghiles Moussaoui<br>Title: CEO</div>
         </td>
     </tr>
 </table>
 
-{{ $json.price_per_share_notice_html }}
+<p class="small"><strong>* IMPORTANT NOTICE:</strong> The Price per Share may be amended by the Issuer prior any Capital Call or Funding in order to reflect the exact Price per Share of the recent Qualified Financing.</p>
 </div>
 
 <div class="page-break"></div>
 
 <!-- PAGE 3: WIRE TRANSFER INSTRUCTIONS -->
-<h1>VERSO CAPITAL SERIES {{ $json.series_number }}</h1>
+<h1>VERSO CAPITAL SERIES 600</h1>
 <h1>WIRE TRANSFER INSTRUCTIONS</h1>
 
 <h2>A. GENERAL INFORMATION</h2>
 <ul>
-    <li><strong>SPV / Vehicle:</strong> VERSO Capital 2 SCSP Series {{ $json.series_number }}, Luxembourg</li>
-    <li><strong>Subscriber:</strong> {{ $json.subscriber_name }}</li>
-    <li><strong>Escrow Agent:</strong> {{ $json.wire_escrow_agent || 'Dupont & Partners' }}, Law Firm, Luxembourg</li>
-    <li><strong>Exclusive Arranger:</strong> {{ $json.wire_arranger || 'VERSO Management Ltd' }}, Cat II Reg. Firm, BVI</li>
-    <li><strong>Contact us:</strong> {{ $json.wire_contact_email || 'jmachot@versoholdings.com' }}</li>
+    <li><strong>SPV / Vehicle:</strong> VERSO Capital 2 SCSP Series 600, Luxembourg</li>
+    <li><strong>Subscriber:</strong> Ghiless Business Ventures LLC</li>
+    <li><strong>Escrow Agent:</strong> Dupont & Partners, Law Firm, Luxembourg</li>
+    <li><strong>Exclusive Arranger:</strong> VERSO Management Ltd, Cat II Reg. Firm, BVI</li>
+    <li><strong>Contact us:</strong> jmachot@versoholdings.com</li>
 </ul>
 
 <h2>B. INSTRUCTIONS</h2>
 <ol>
-    <li>Refer to Closing Date in VERSO Capital 2 SCSP Series {{ $json.series_number }} Subscription Agreement</li>
+    <li>Refer to Closing Date in VERSO Capital 2 SCSP Series 600 Subscription Agreement</li>
     <li>Please ensure all banking fees, charges or FX spreads be charged as "OUR" only</li>
     <li>Subscribers are invited to wire the funds to the Escrow Account below:</li>
 </ol>
 
 <div class="wire-section">
     <div class="wire-box">
-        <p><strong>Bank:</strong> {{ $json.wire_bank_name || 'ING Luxembourg S.A.' }}</p>
-        <p><strong>Bank Address:</strong> {{ $json.wire_bank_address || 'ING Luxembourg SA, 52, route d&#39;Esch, L-2965 Luxembourg' }}</p>
-        <p><strong>Holder:</strong> {{ $json.wire_account_holder || 'Dupont Partners' }}</p>
-        <p><strong>Law Firm Address:</strong> {{ $json.wire_law_firm_address || '2 Avenue Charles de Gaulle, L-1653 Luxembourg' }}</p>
-        <p><strong>Description:</strong> {{ $json.wire_description }}</p>
-        <p><strong>IBAN:</strong> {{ $json.wire_iban || 'LU71 0141 8595 5133 3010' }}</p>
-        <p><strong>BIC:</strong> {{ $json.wire_bic || 'CELLLULLXXX' }}</p>
-        <p><strong>Amount:</strong> {{ $json.currency_code }} {{ $json.total_subscription_price_display }} only</p>
-        <p><strong>Currency:</strong> {{ $json.currency_code }} (FYI: {{ $json.currency_long }})</p>
-        <p><strong>Reference:</strong> {{ $json.wire_reference_display }}</p>
+        <p><strong>Bank:</strong> ING Luxembourg S.A.</p>
+        <p><strong>Bank Address:</strong> ING Luxembourg SA, 52, route d'Esch, L-2965 Luxembourg</p>
+        <p><strong>Holder:</strong> Dupont Partners</p>
+        <p><strong>Law Firm Address:</strong> 2 Avenue Charles de Gaulle, L-1653 Luxembourg</p>
+        <p><strong>Description:</strong> Client Account on behalf of VERSO Capital 2 SCSP Series 600</p>
+        <p><strong>IBAN:</strong> LU71 0141 8595 5133 3010</p>
+        <p><strong>BIC:</strong> CELLLULLXXX</p>
+        <p><strong>Amount:</strong> USD 3120000.00 only</p>
+        <p><strong>Currency:</strong> USD (FYI: United States Dollars)</p>
+        <p><strong>Reference:</strong> Agency VERSO Capital 2 SCSP Series 600</p>
     </div>
 
-    <p style="margin-top: 1cm;">Thank you for your consideration,</p>
+    <p style="margin-top: 0.35cm;">Thank you for your consideration,</p>
 
     <div class="signature-block wire-signoff">
         <div class="signature-line wire-line"><span class="sig-anchor">SIG_ANCHOR:party_b_wire</span></div>
-        <p>Name: {{ $json.issuer_name || 'Julien Machot' }}<br>
-        Title: {{ $json.issuer_title || 'Authorized Signatory' }}</p>
+        <p>Name: ghiles Moussaoui<br>
+        Title: CTO</p>
     </div>
 </div>
 
@@ -557,7 +550,7 @@
     <p style="text-align: center;"><strong>VERSO Capital 2 GP SARL</strong></p>
     <p style="text-align: center;">as Issuer</p>
     <p style="text-align: center;">and</p>
-    <p style="text-align: center;"><strong>{{ $json.subscriber_name }}</strong></p>
+    <p style="text-align: center;"><strong>Ghiless Business Ventures LLC</strong></p>
     <p style="text-align: center;">as Subscriber</p>
     <p style="text-align: center;">and</p>
     <p style="text-align: center;"><strong>VERSO Management</strong></p>
@@ -573,19 +566,19 @@
 
 <h1>EQUITY CERTIFICATES SUBSCRIPTION AGREEMENT</h1>
 
-<p><strong>THIS EQUITY CERTIFICATES SUBSCRIPTION AGREEMENT</strong> (the "<strong>Agreement</strong>") is dated {{ $json.agreement_date }} and is made by and between:</p>
+<p><strong>THIS EQUITY CERTIFICATES SUBSCRIPTION AGREEMENT</strong> (the "<strong>Agreement</strong>") is dated February 20, 2026 and is made by and between:</p>
 
-<p class="clause"><strong>A.</strong> {{ $json.subscriber_clause_text }} (the "<strong>Subscriber</strong>");</p>
+<p class="clause"><strong>A.</strong> Ghiless Business Ventures LLC, entity with registered office at 123 Business Park Drive, Suite 100, San Francisco, CA, 94105, United States (the "<strong>Subscriber</strong>");</p>
 
-<p class="clause"><strong>B. VERSO Capital 2 SCSP</strong>, a Luxembourg special limited partnership (<em>société en commandite spéciale</em>) with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, registered with the Luxembourg Register of Commerce and Companies under number {{ $json.issuer_rcc_number_display }} duly represented by its general partner <strong>{{ $json.issuer_gp_name }}</strong>, a private limited liability company (<em>société à responsabilité limitée</em>) established under the laws of the Grand Duchy of Luxembourg, with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, registered with the Luxembourg Register of Trade and Companies under number {{ $json.issuer_gp_rcc_number_display }} (the "<strong>Issuer</strong>");</p>
+<p class="clause"><strong>B. VERSO Capital 2 SCSP</strong>, a Luxembourg special limited partnership (<em>société en commandite spéciale</em>) with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, registered with the Luxembourg Register of Commerce and Companies under number B290857 duly represented by its general partner <strong>VERSO Capital 2 GP SARL</strong>, a private limited liability company (<em>société à responsabilité limitée</em>) established under the laws of the Grand Duchy of Luxembourg, with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, registered with the Luxembourg Register of Trade and Companies under number B290857 (the "<strong>Issuer</strong>");</p>
 
 <p class="clause"><strong>C. VERSO Management Ltd</strong>, a limited liability company with registered office at Trident Chambers, Wickhams Cay, P.O. Box 146, Road Town, Tortola VG1110 British Virgin Islands and registered with the Registrar of Corporate Affairs under number 1901463 and holder of the Category II licensed under the auspice of the FSC Financial Services Commission of the BVI (the "<strong>Arranger</strong>", and together with the Subscriber and the Issuer, the "<strong>Parties</strong>" or individually, a "<strong>Party</strong>").</p>
 
 <h2>RECITALS:</h2>
 
-<p class="clause">(A) The Subscriber approached the Issuer through the Arranger, and after having obtained all relevant information and materials from the Issuer, requested to subscribe to the Issuer's Certificates governed by the master terms and conditions dated {{ $json.agreement_date }} (the "<strong>T&Cs</strong>", a copy of which are annexed hereto as <strong>Schedule 1</strong>), which the Subscriber declares to have full knowledge thereof and expressly accepts to be bound thereby.</p>
+<p class="clause">(A) The Subscriber approached the Issuer through the Arranger, and after having obtained all relevant information and materials from the Issuer, requested to subscribe to the Issuer's Certificates governed by the master terms and conditions dated February 20, 2026 (the "<strong>T&Cs</strong>", a copy of which are annexed hereto as <strong>Schedule 1</strong>), which the Subscriber declares to have full knowledge thereof and expressly accepts to be bound thereby.</p>
 
-<p class="clause">{{ $json.recital_b_html }}</p>
+<p class="clause">(B) The Issuer intends to issue Certificates and the Subscriber intends to subscribe.</p>
 
 <p><strong>NOW THEREFORE</strong>, in consideration of the mutual promises and other good and valuable consideration as set forth herein, and with the understanding that the content of the recitals and Schedules forms an integral part of this Agreement, the Parties hereto agree as follows:</p>
 
@@ -612,17 +605,17 @@
 
 <h2>2. SUBSCRIPTION AND SUBSCRIPTION PRICE</h2>
 
-<p>The Subscriber hereby agrees to subscribe for <strong>{{ $json.certificates_count_display }}</strong> Certificates with a par value of <strong>{{ $json.currency_code }} {{ $json.price_per_share_display }}</strong> each, (the "<strong>Subscribed ECs</strong>") for a total amount of <strong>{{ $json.currency_code }} {{ $json.subscription_amount_display }}</strong> only (the "<strong>Certificates Subscription Price</strong>"), by way of wire transfer of clear available funds (taking into consideration any bank fees which shall be borne by the Subscriber) to the Paying Agent's Account within two (2) days of the date of the present Agreement or no later than {{ $json.payment_deadline_date }} Close of Business Luxembourg 5:00pm (including sharing a SWIFT copy with the Issuer).</p>
+<p>The Subscriber hereby agrees to subscribe for <strong>15142</strong> Certificates with a par value of <strong>USD 198.12</strong> each, (the "<strong>Subscribed ECs</strong>") for a total amount of <strong>USD 3000000.00</strong> only (the "<strong>Certificates Subscription Price</strong>"), by way of wire transfer of clear available funds (taking into consideration any bank fees which shall be borne by the Subscriber) to the Paying Agent's Account within two (2) days of the date of the present Agreement or no later than February 22, 2026 Close of Business Luxembourg 5:00pm (including sharing a SWIFT copy with the Issuer).</p>
 
-<p>The total amount payable by the Subscriber upon Subscription, consisting of the Certificates Subscription Price, Management Fee and the one-off Subscription Fee at {{ $json.subscription_fee_rate }} shall amount to <strong>{{ $json.currency_code }} {{ $json.total_subscription_price_display }}</strong> only (the "<strong>Total Subscription Price</strong>", the date of receipt of which shall be referred to as the "<strong>Closing Date</strong>").</p>
+<p>The total amount payable by the Subscriber upon Subscription, consisting of the Certificates Subscription Price, Management Fee and the one-off Subscription Fee at 4.00% shall amount to <strong>USD 3120000.00</strong> only (the "<strong>Total Subscription Price</strong>", the date of receipt of which shall be referred to as the "<strong>Closing Date</strong>").</p>
 
 <h2>3. MANAGEMENT FEE</h2>
 
-<p>The Parties agree that {{ $json.management_fee_clause }}</p>
+<p>The Parties agree that the Management Fee shall be zero for this subscription.</p>
 
 <h2>4. PERFORMANCE FEE/CARRIED INTEREST</h2>
 
-<p>The Parties agree that {{ $json.performance_fee_clause }}</p>
+<p>The Parties agree that the Performance Fee shall be 15.00% of realized gains.</p>
 
 <h2>5. COMPLETION</h2>
 
@@ -743,11 +736,11 @@
 <h2 style="text-align: center;">Signature page to the Equity Certificates Subscription Agreement</h2>
 
 <!-- Subscriber Signatories (supports multiple authorized signatories) -->
-{{ $json.signatories_signature_html }}
+<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;"><p><strong>The Subscriber</strong>, represented by Authorized Signatory 1</p><div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="position:absolute;left:0;top:0;font-size:1px;line-height:1px;color:#ffffff;opacity:0.01;">SIG_ANCHOR:party_a</span></div><p style="margin-top: 0.3cm;">Name: Sarah Ghiless<br>Title: Managing Director</p></div><div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;"><p><strong>The Subscriber</strong>, represented by Authorized Signatory 2</p><div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="position:absolute;left:0;top:0;font-size:1px;line-height:1px;color:#ffffff;opacity:0.01;">SIG_ANCHOR:party_a_2</span></div><p style="margin-top: 0.3cm;">Name: Ghiles Moussaoui<br>Title: CEO</p></div>
 
-{{ $json.issuer_signature_html }}
+<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;"><p><strong>The Issuer, VERSO Capital 2 SCSP</strong>, duly represented by its general partner <strong>VERSO Capital 2 GP SARL</strong></p><div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="position:absolute;left:0;top:0;font-size:1px;line-height:1px;color:#ffffff;opacity:0.01;">SIG_ANCHOR:party_b</span></div><p style="margin-top: 0.3cm;">Name: ghiles Moussaoui<br>Title: CTO</p></div>
 
-{{ $json.arranger_signature_html }}
+<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;"><p><strong>The Attorney, Verso Management Ltd.</strong>, for the purpose of the powers granted under Clause 6</p><div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="position:absolute;left:0;top:0;font-size:1px;line-height:1px;color:#ffffff;opacity:0.01;">SIG_ANCHOR:party_c</span></div><p style="margin-top: 0.3cm;">Name: Julien Machot<br>Title: Director</p></div>
 
 <div class="page-break"></div>
 
@@ -755,7 +748,7 @@
 
 <h1>SCHEDULE 1</h1>
 <h1>TERMS & CONDITIONS</h1>
-<h2>EQUITY CERTIFICATES OF VERSO CAPITAL 2 SCSP SERIES {{ $json.series_number }}</h2>
+<h2>EQUITY CERTIFICATES OF VERSO CAPITAL 2 SCSP SERIES 600</h2>
 
 <h2>1. DEFINITIONS</h2>
 
@@ -846,7 +839,7 @@
     </tr>
     <tr>
         <td class="bold">"Escrow Agency Fee"</td>
-        <td>means the fee to be paid by the Issuer according to the escrow agency agreement concluded with {{ $json.wire_escrow_agent || 'Elvinger Hoss Prussen' }}, a law firm with the Luxembourg Bar, with main office on {{ $json.wire_law_firm_address || '2 Place Winston Churchill, L-1340 Luxembourg, Grand Duchy of Luxembourg' }}.</td>
+        <td>means the fee to be paid by the Issuer according to the escrow agency agreement concluded with Dupont & Partners, a law firm with the Luxembourg Bar, with main office on 2 Avenue Charles de Gaulle, L-1653 Luxembourg.</td>
     </tr>
     <tr>
         <td class="bold">"Event of Default"</td>
@@ -874,7 +867,7 @@
     </tr>
     <tr>
         <td class="bold">"General Partner"</td>
-        <td>means {{ $json.issuer_gp_name }}, a private limited liability company (société à responsabilité limitée) established under the laws of the Grand Duchy of Luxembourg, with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, registered with the Luxembourg Register of Trade and Companies under number {{ $json.issuer_gp_rcc_number_display }}</td>
+        <td>means VERSO Capital 2 GP SARL, a private limited liability company (société à responsabilité limitée) established under the laws of the Grand Duchy of Luxembourg, with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, registered with the Luxembourg Register of Trade and Companies under number B290857</td>
     </tr>
     <tr>
         <td class="bold">"Holder"</td>
@@ -910,7 +903,7 @@
     </tr>
     <tr>
         <td class="bold">"LPA"</td>
-        <td>the limited partnership agreement of the Issuer dated {{ $json.lpa_date }}</td>
+        <td>the limited partnership agreement of the Issuer dated </td>
     </tr>
     <tr>
         <td class="bold">"Management Fee"</td>
@@ -950,7 +943,7 @@
     </tr>
     <tr>
         <td class="bold">"Paying Agent"</td>
-        <td>means {{ $json.wire_escrow_agent || 'Elvinger Hoss Prussen' }}, a law firm with the Luxembourg Bar, with main office on {{ $json.wire_law_firm_address || '2 Place Winston Churchill, L-1340 Luxembourg, Grand Duchy of Luxembourg' }}.</td>
+        <td>means Dupont & Partners, a law firm with the Luxembourg Bar, with main office on 2 Avenue Charles de Gaulle, L-1653 Luxembourg.</td>
     </tr>
     <tr>
         <td class="bold">"Paying Agent Account"</td>
@@ -1073,17 +1066,17 @@
 <p class="clause">2.1.4. The payment of the Certificates Subscription Price and the One-Off Fee(s) shall occur on the Closing Date (the "<strong>Certificates Payment Date</strong>"), under the following bank account on behalf of the Issuer by the Paying Agent (the "<strong>Paying Agent Account</strong>"):</p>
 
 <div class="wire-box">
-    <p><strong>Bank:</strong> {{ $json.wire_bank_name || 'Banque de Luxembourg' }}</p>
-    <p><strong>Holder:</strong> {{ $json.wire_account_holder || 'Elvinger Hoss Prussen - Escrow Account' }}</p>
-    <p><strong>IBAN:</strong> {{ $json.wire_iban || 'LU28 0019 4855 4447 1000' }}</p>
-    <p><strong>BIC:</strong> {{ $json.wire_bic || 'BLUXLULL' }}</p>
-    <p><strong>Reference:</strong> {{ $json.wire_reference_display }}</p>
-    <p><strong>Currency:</strong> {{ $json.currency_code }} ({{ $json.currency_long }})</p>
+    <p><strong>Bank:</strong> ING Luxembourg S.A.</p>
+    <p><strong>Holder:</strong> Dupont Partners</p>
+    <p><strong>IBAN:</strong> LU71 0141 8595 5133 3010</p>
+    <p><strong>BIC:</strong> CELLLULLXXX</p>
+    <p><strong>Reference:</strong> Agency VERSO Capital 2 SCSP Series 600</p>
+    <p><strong>Currency:</strong> USD (United States Dollars)</p>
 </div>
 
 <h3>2.2. Currency and Denomination of the Certificates</h3>
 
-<p class="clause">2.2.1. The Certificates are issued for a maximum aggregate amount of {{ $json.currency_code }} {{ $json.max_aggregate_amount }}.</p>
+<p class="clause">2.2.1. The Certificates are issued for a maximum aggregate amount of USD 100,000,000.</p>
 
 <p class="clause">2.2.2. The Certificates shall not be divided and there should only be one Holder of each of the Certificates.</p>
 
@@ -1409,7 +1402,7 @@ L-1653 Luxembourg Grand Duchy of Luxembourg</p>
 <strong>VERSO Management Ltd, as Agent</strong><br>
 Trident Chambers, Wickhams Cay, P.O. Box 146, Road Town,<br>
 Tortola VG1110 British Virgin Islands<br>
-c/o {{ $json.arranger_name || 'Julien Machot' }}, {{ $json.arranger_title || 'Director' }}</p>
+c/o Julien Machot, Director</p>
 
 <div class="page-break"></div>
 
@@ -1511,15 +1504,15 @@ c/o {{ $json.arranger_name || 'Julien Machot' }}, {{ $json.arranger_title || 'Di
 <div class="signature-block" style="text-align: left;">
     <p><strong>VERSO Capital 2 SCSP</strong> duly represented by its general partner <strong>VERSO Capital 2 GP SARL</strong>, as Issuer</p>
     <div class="signature-line tcs-line"><span class="sig-anchor">SIG_ANCHOR:party_b_tcs</span></div>
-    <p class="tcs-signer-meta">Name: {{ $json.issuer_name || 'Julien Machot' }}<br>
-    Title: {{ $json.issuer_title || 'Authorized Signatory' }}</p>
+    <p class="tcs-signer-meta">Name: ghiles Moussaoui<br>
+    Title: CTO</p>
 </div>
 
 <div class="signature-block" style="text-align: left;">
     <p><strong>Verso Management Ltd.</strong>, for the purposes of acknowledging and accepting the powers and responsibilities attributed to it under these Terms and Conditions</p>
     <div class="signature-line tcs-line"><span class="sig-anchor">SIG_ANCHOR:party_c_tcs</span></div>
-    <p class="tcs-signer-meta">Name: {{ $json.arranger_name || 'Julien Machot' }}<br>
-    Title: {{ $json.arranger_title || 'Director' }}</p>
+    <p class="tcs-signer-meta">Name: Julien Machot<br>
+    Title: Director</p>
 </div>
 
 <div class="page-break"></div>

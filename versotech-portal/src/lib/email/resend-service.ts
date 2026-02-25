@@ -466,6 +466,7 @@ export async function sendDocumentSignedEmail(params: {
   const documentTypeLabels: Record<string, string> = {
     nda: 'Non-Disclosure Agreement',
     subscription: 'Subscription Pack',
+    certificate: 'Share Certificate',
     amendment: 'Amendment',
     other: 'Document'
   }
@@ -591,6 +592,7 @@ export async function sendSignatureRequestEmail(params: {
   const documentTypeLabels: Record<string, string> = {
     nda: 'Non-Disclosure Agreement',
     subscription: 'Subscription Pack',
+    certificate: 'Share Certificate',
     amendment: 'Amendment',
     other: 'Document'
   }

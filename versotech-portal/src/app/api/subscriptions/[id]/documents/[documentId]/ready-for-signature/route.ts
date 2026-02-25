@@ -149,6 +149,13 @@ export async function POST(
     return NextResponse.json({ error: 'Document not found' }, { status: 404 })
   }
 
+  if (document.type === 'certificate') {
+    return NextResponse.json({
+      error: 'Certificates cannot be sent for signature',
+      details: 'Certificates are generated and published directly with embedded signatures.'
+    }, { status: 400 })
+  }
+
   // Check if document is DOCX - if so, convert to PDF first
   // If already PDF, use directly (no conversion needed!)
   const isDocx = document.mime_type?.includes('wordprocessingml') ||

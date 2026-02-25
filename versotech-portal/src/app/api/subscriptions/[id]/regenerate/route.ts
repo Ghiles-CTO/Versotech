@@ -5,6 +5,7 @@ import { triggerWorkflow } from '@/lib/trigger-workflow'
 import { convertDocxToPdf } from '@/lib/gotenberg/convert'
 import { getCeoSigner } from '@/lib/staff/ceo-signer'
 import { buildSubscriptionPackPayload } from '@/lib/subscription-pack/payload-builder'
+import { ensureSubscriptionPackA4Pdf } from '@/lib/subscription-pack/a4-normalizer'
 import { applySubscriptionPackPageNumbers } from '@/lib/subscription/page-numbering'
 
 const STAFF_ROLES = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo']
@@ -552,6 +553,19 @@ export async function POST(
         console.log('📄 Final document:', { format: outputFormat, fileName, size: fileBuffer.length })
 
         if (outputFormat === 'pdf') {
+          const a4Result = await ensureSubscriptionPackA4Pdf({
+            pdfBuffer: fileBuffer,
+            payload: subscriptionPayload,
+            context: 'regenerate',
+          })
+          fileBuffer = a4Result.pdfBuffer
+          if (a4Result.wasNormalized) {
+            console.log('✅ Rebuilt regenerated subscription pack as A4 before numbering:', {
+              original_size: a4Result.originalSize,
+              final_size: a4Result.finalSize,
+            })
+          }
+
           const numberingResult = await applySubscriptionPackPageNumbers(fileBuffer)
           fileBuffer = numberingResult.pdfBuffer
           console.log('✅ Applied centered page numbers to regenerated subscription pack:', {

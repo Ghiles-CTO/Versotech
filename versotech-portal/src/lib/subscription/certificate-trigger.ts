@@ -8,8 +8,11 @@
 
 import { triggerWorkflow } from '@/lib/trigger-workflow'
 import { convertHtmlToPdf } from '@/lib/gotenberg/convert'
+import { createInvestorNotification } from '@/lib/notifications'
+import { getCeoSigner } from '@/lib/staff/ceo-signer'
 import { SupabaseClient } from '@supabase/supabase-js'
-import crypto from 'crypto'
+import { existsSync, readFileSync } from 'fs'
+import path from 'path'
 
 interface TriggerCertificateParams {
   supabase: SupabaseClient
@@ -61,11 +64,149 @@ function getInvestorDisplayName(investor: {
   return investor.legal_name || 'Unknown Investor'
 }
 
+function buildCertificateNumber(
+  seriesNumber: string | null | undefined,
+  subscriptionNumber: string | number | null | undefined,
+  subscriptionId: string
+): string {
+  const normalizedSeriesNumber = normalizeCertificateSegment(seriesNumber) || '000'
+  const normalizedSubscriptionNumber =
+    normalizeCertificateSegment(subscriptionNumber) ||
+    subscriptionId.replace(/-/g, '').slice(0, 8).toUpperCase()
+
+  return `VC${normalizedSeriesNumber}SH${normalizedSubscriptionNumber}`
+}
+
+function normalizeCertificateSegment(value: string | number | null | undefined): string {
+  const normalized = value == null ? '' : String(value).trim()
+  if (!normalized) return ''
+
+  const lower = normalized.toLowerCase()
+  if (lower === 'null' || lower === 'undefined' || lower === 'nan') return ''
+
+  return normalized
+}
+
+class CertificateConfigurationError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'CertificateConfigurationError'
+  }
+}
+
+interface CertificateSignatoryConfig {
+  signatory1Name: string
+  signatory1Title: string
+  signatory1SignatureUrl: string
+  signatory2Name: string
+  signatory2Title: string
+  signatory2SignatureUrl: string
+}
+
+function normalizeConfigValue(value: string | undefined): string {
+  const normalized = (value || '').trim()
+  if (!normalized) return ''
+  const lower = normalized.toLowerCase()
+  if (lower === 'null' || lower === 'undefined' || lower === 'nan') return ''
+  return normalized
+}
+
+function getImageMimeType(filePath: string): string {
+  const extension = path.extname(filePath).toLowerCase()
+  if (extension === '.png') return 'image/png'
+  if (extension === '.jpg' || extension === '.jpeg') return 'image/jpeg'
+  if (extension === '.webp') return 'image/webp'
+  if (extension === '.svg') return 'image/svg+xml'
+  return 'application/octet-stream'
+}
+
+function asDataUriFromFile(filePath: string): string | null {
+  if (!filePath || !existsSync(filePath)) return null
+  try {
+    const fileBytes = readFileSync(filePath)
+    const mimeType = getImageMimeType(filePath)
+    return `data:${mimeType};base64,${fileBytes.toString('base64')}`
+  } catch (error) {
+    console.error(`❌ Failed to read signature image file at ${filePath}:`, error)
+    return null
+  }
+}
+
+function resolveSignatureSource(params: {
+  primaryUrl?: string
+  secondaryUrl?: string
+  filePathEnv?: string
+  fallbackRelativePath: string
+}): string {
+  const primaryUrl = normalizeConfigValue(params.primaryUrl)
+  if (primaryUrl) return primaryUrl
+
+  const secondaryUrl = normalizeConfigValue(params.secondaryUrl)
+  if (secondaryUrl) return secondaryUrl
+
+  const configuredFilePath = normalizeConfigValue(params.filePathEnv)
+  if (configuredFilePath) {
+    const absoluteConfiguredFilePath = path.isAbsolute(configuredFilePath)
+      ? configuredFilePath
+      : path.resolve(process.cwd(), configuredFilePath)
+    const configuredDataUri = asDataUriFromFile(absoluteConfiguredFilePath)
+    if (configuredDataUri) return configuredDataUri
+  }
+
+  const defaultFilePath = path.resolve(process.cwd(), params.fallbackRelativePath)
+  const defaultDataUri = asDataUriFromFile(defaultFilePath)
+  if (defaultDataUri) return defaultDataUri
+
+  return ''
+}
+
+function getCertificateSignatoryConfig(): CertificateSignatoryConfig {
+  const signatory1Name =
+    normalizeConfigValue(process.env.CERTIFICATE_SIGNATORY_1_NAME) || 'Mr Julien Machot'
+  const signatory1Title =
+    normalizeConfigValue(process.env.CERTIFICATE_SIGNATORY_1_TITLE) || 'Managing Partner'
+  const signatory1SignatureUrl = resolveSignatureSource({
+    primaryUrl: process.env.CERTIFICATE_SIGNATORY_1_SIGNATURE_URL,
+    secondaryUrl: process.env.SIGNATORY_1_SIGNATURE_URL,
+    filePathEnv: process.env.CERTIFICATE_SIGNATORY_1_SIGNATURE_FILE,
+    fallbackRelativePath: '../assets/julienSignature.png',
+  })
+
+  const signatory2Name =
+    normalizeConfigValue(process.env.CERTIFICATE_SIGNATORY_2_NAME) || 'Legal Counsel'
+  const signatory2Title =
+    normalizeConfigValue(process.env.CERTIFICATE_SIGNATORY_2_TITLE) || 'Authorized Signatory'
+  const signatory2SignatureUrl = resolveSignatureSource({
+    primaryUrl: process.env.CERTIFICATE_SIGNATORY_2_SIGNATURE_URL,
+    secondaryUrl: process.env.SIGNATORY_2_SIGNATURE_URL,
+    filePathEnv: process.env.CERTIFICATE_SIGNATORY_2_SIGNATURE_FILE,
+    fallbackRelativePath: '../assets/DupontSignature.png',
+  })
+
+  const missing: string[] = []
+  if (!signatory1SignatureUrl) missing.push('CERTIFICATE_SIGNATORY_1_SIGNATURE_URL or CERTIFICATE_SIGNATORY_1_SIGNATURE_FILE')
+  if (!signatory2SignatureUrl) missing.push('CERTIFICATE_SIGNATORY_2_SIGNATURE_URL or CERTIFICATE_SIGNATORY_2_SIGNATURE_FILE')
+
+  if (missing.length > 0) {
+    throw new CertificateConfigurationError(
+      `Missing certificate signature image configuration: ${missing.join(', ')}`
+    )
+  }
+
+  return {
+    signatory1Name,
+    signatory1Title,
+    signatory1SignatureUrl,
+    signatory2Name,
+    signatory2Title,
+    signatory2SignatureUrl,
+  }
+}
+
 /**
  * Triggers certificate generation for a newly activated subscription
- * This is a fire-and-forget operation - failures are logged but don't block the caller
- *
- * IDEMPOTENCY: Will skip if subscription already has activated_at set
+ * Returns true when a certificate document is successfully published.
+ * Returns false when generation is skipped or fails non-critically.
  */
 export async function triggerCertificateGeneration({
   supabase,
@@ -77,7 +218,9 @@ export async function triggerCertificateGeneration({
   shares,
   pricePerShare,
   profile
-}: TriggerCertificateParams): Promise<void> {
+}: TriggerCertificateParams): Promise<boolean> {
+  let certificatePublished = false
+
   try {
     // IDEMPOTENCY CHECK: Fetch subscription with all related data needed for certificate
     const { data: subscription, error: fetchError } = await supabase
@@ -118,7 +261,7 @@ export async function triggerCertificateGeneration({
 
     if (fetchError || !subscription) {
       console.error(`❌ Subscription ${subscriptionId} not found:`, fetchError)
-      return
+      return false
     }
 
     // IDEMPOTENCY: Check if certificate already exists for this subscription
@@ -133,13 +276,13 @@ export async function triggerCertificateGeneration({
 
     if (existingCert) {
       console.log(`ℹ️ Certificate already exists for subscription ${subscriptionId} (doc: ${existingCert.id}), skipping`)
-      return
+      return false
     }
 
     // Verify subscription status is 'active' or 'funded' (funded when called during activation)
     if (!['active', 'funded'].includes(subscription.status)) {
       console.warn(`⚠️ Cannot trigger certificate for subscription ${subscriptionId} - status is '${subscription.status}', expected 'active' or 'funded'`)
-      return
+      return false
     }
 
     // Get vehicle data - prefer subscription.vehicle, fall back to deal.vehicle
@@ -158,7 +301,7 @@ export async function triggerCertificateGeneration({
 
     if (!vehicleData) {
       console.error(`❌ No vehicle found for subscription ${subscriptionId}`)
-      return
+      return false
     }
 
     // Fetch deal fee structure for product description (the "structure" field)
@@ -224,6 +367,12 @@ export async function triggerCertificateGeneration({
     const investorName = investorData
       ? getInvestorDisplayName(investorData)
       : 'Unknown Investor'
+    const certificateNumber = buildCertificateNumber(
+      vehicleData.series_number,
+      subscription.subscription_number,
+      subscriptionId
+    )
+    const signatoryConfig = getCertificateSignatoryConfig()
 
     // Get certificate date: prefer termsheet completion_date, fall back to deal close_at, then today
     const certificateDate = termsheetCompletionDate
@@ -242,8 +391,10 @@ export async function triggerCertificateGeneration({
       vehicle_logo_url: !isVersoCapital2 ? (vehicleData.logo_url || '') : '',
 
       // === CERTIFICATE NUMBER (format: VC{series_number}SH{subscription_number}) ===
-      series_number: vehicleData.series_number || '',
-      subscription_number: subscription.subscription_number || '',
+      series_number: normalizeCertificateSegment(vehicleData.series_number) || '000',
+      subscription_number:
+        normalizeCertificateSegment(subscription.subscription_number) ||
+        subscriptionId.replace(/-/g, '').slice(0, 8).toUpperCase(),
 
       // === UNITS/CERTIFICATES ===
       units: subscription.units || subscription.num_shares || shares || 0,
@@ -261,19 +412,18 @@ export async function triggerCertificateGeneration({
       num_shares: subscription.num_shares || shares || 0,
       structure: productDescription, // e.g., "Shares of Series B Preferred Stock of X.AI"
 
-      // === SIGNATURE TABLE DATA (NO SIGNATURE IMAGES - handled via VERSOSign) ===
+      // === SIGNATURE TABLE DATA (embedded static signature images) ===
       vehicle_address: vehicleData.address || '',
 
-      // Signatory names/titles for the signature blocks (images added later via VERSOSign)
-      // Signatory 1 (LEFT) = CEO, signs first
-      signatory_1_name: 'Mr Julien Machot',
-      signatory_1_title: 'Managing Partner',
-      signatory_1_signature_url: '', // EMPTY - signatures added via VERSOSign
+      // Signatory 1 (LEFT) = Managing partner / CEO
+      signatory_1_name: signatoryConfig.signatory1Name,
+      signatory_1_title: signatoryConfig.signatory1Title,
+      signatory_1_signature_url: signatoryConfig.signatory1SignatureUrl,
 
-      // Signatory 2 (RIGHT) = Second authorized signatory, signs after CEO
-      signatory_2_name: 'G.A. Giles', // For testing - will be lawyer in production
-      signatory_2_title: 'Authorized Signatory',
-      signatory_2_signature_url: '', // EMPTY - signatures added via VERSOSign
+      // Signatory 2 (RIGHT) = Generic legal counsel label (no individual identity)
+      signatory_2_name: signatoryConfig.signatory2Name,
+      signatory_2_title: signatoryConfig.signatory2Title,
+      signatory_2_signature_url: signatoryConfig.signatory2SignatureUrl,
 
       // === METADATA (useful for n8n workflow) ===
       subscription_id: subscriptionId,
@@ -290,7 +440,7 @@ export async function triggerCertificateGeneration({
     console.log('📜 Triggering Certificate Generation:', {
       subscription_id: subscriptionId,
       investor: investorName,
-      certificate_number: `VC${vehicleData.series_number}SH${subscription.subscription_number}`,
+      certificate_number: certificateNumber,
       units: certificatePayload.units,
       logo_type: certificatePayload.logo_type,
       close_at: certificatePayload.close_at,
@@ -395,7 +545,6 @@ export async function triggerCertificateGeneration({
             const safeInvestorName = formattedInvestorName
               .replace(/[^a-zA-Z0-9 ]/g, '')
               .substring(0, 50)
-            const certificateNumber = `VC${vehicleData.series_number}SH${subscription.subscription_number}`
             const fileName = `${certificateNumber} - ${safeInvestorName}.pdf`
 
             // === STORAGE: subscriptions/{id}/certificates/{filename}.pdf ===
@@ -425,7 +574,7 @@ export async function triggerCertificateGeneration({
                 subscriptionFolderId = subFolder?.id || null
               }
 
-              // Create document record with status 'pending_signature'
+              // Create document record as published (certificate already has embedded signatures)
               const { data: document, error: docError } = await supabase
                 .from('documents')
                 .insert({
@@ -438,9 +587,11 @@ export async function triggerCertificateGeneration({
                   file_key: fileKey,
                   mime_type: 'application/pdf',
                   file_size_bytes: pdfBuffer.length,
-                  status: 'pending_signature', // Hidden from investor until signed
+                  status: 'published',
                   current_version: 1,
-                  ready_for_signature: true,
+                  ready_for_signature: false,
+                  is_published: true,
+                  published_at: new Date().toISOString(),
                   created_by: profile.id
                 })
                 .select('id')
@@ -467,214 +618,84 @@ export async function triggerCertificateGeneration({
                   .update({ certificate_pdf_path: fileKey })
                   .eq('id', subscriptionId)
 
-                // === CREATE SIGNATURE WORKFLOW ===
-                // Signature order: CEO signs FIRST (party_a, left), Second signatory signs SECOND (party_b, right)
+                await supabase.from('audit_logs').insert({
+                  event_type: 'certificate',
+                  action: 'certificate_published',
+                  entity_type: 'document',
+                  entity_id: document.id,
+                  action_details: {
+                    subscription_id: subscriptionId,
+                    investor_id: investorId,
+                    generation_mode: 'embedded_signatures',
+                    signed_positions: ['embedded_signatory_1', 'embedded_signatory_2'],
+                    published_file_key: fileKey
+                  },
+                  timestamp: new Date().toISOString()
+                })
 
-                // Get CEO signer (signs FIRST - party_a, left position on certificate)
-                const { data: ceoProfile } = await supabase
-                  .from('profiles')
-                  .select('id, email, display_name')
-                  .eq('role', 'ceo')
-                  .limit(1)
-                  .single()
-
-                const ceoSigner = ceoProfile ? {
-                  user_id: ceoProfile.id,
-                  email: ceoProfile.email || '',
-                  name: ceoProfile.display_name || 'CEO'
-                } : null
-
-                // Get second signatory (signs SECOND - party_b, right position on certificate)
-                // For now, use a designated staff member. Later this can be the assigned lawyer.
-                let secondSigner: { user_id: string; email: string; name: string } | null = null
-
-                // First try to get assigned lawyer for this deal
-                if (subscription.deal_id) {
-                  const { data: lawyerAssignment } = await supabase
-                    .from('deal_lawyer_assignments')
-                    .select(`
-                      lawyer:lawyers!deal_lawyer_assignments_lawyer_id_fkey (
-                        id,
-                        legal_name,
-                        email,
-                        user_id
-                      )
-                    `)
-                    .eq('deal_id', subscription.deal_id)
-                    .limit(1)
-                    .maybeSingle()
-
-                  if (lawyerAssignment?.lawyer) {
-                    const lawyer = lawyerAssignment.lawyer as unknown as { id: string; legal_name: string; email: string; user_id: string }
-                    secondSigner = {
-                      user_id: lawyer.user_id,
-                      email: lawyer.email,
-                      name: lawyer.legal_name
-                    }
-                  }
-                }
-
-                // Fallback: If no lawyer assigned, use G.A. Giles (CTO) as second signatory for testing
-                if (!secondSigner) {
-                  const { data: fallbackSigner } = await supabase
-                    .from('profiles')
-                    .select('id, email, display_name')
-                    .eq('email', 'cto@versoholdings.com')
-                    .single()
-
-                  if (fallbackSigner) {
-                    secondSigner = {
-                      user_id: fallbackSigner.id,
-                      email: fallbackSigner.email || '',
-                      name: 'G.A. Giles' // Display name for certificate
-                    }
-                  }
-                }
-
-                // Create signature requests for both signers
-                const tokenExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-
-                // CEO signature (party_a) - signs FIRST (left position on certificate)
-                if (ceoSigner) {
-                  const ceoToken = crypto.randomBytes(32).toString('hex')
-                  const { data: ceoSigRequest, error: ceoSigError } = await supabase
-                    .from('signature_requests')
-                    .insert({
-                      investor_id: investorId,
-                      document_id: document.id,
-                      subscription_id: subscriptionId,
-                      deal_id: subscription.deal_id,
-                      document_type: 'certificate',
-                      signer_email: ceoSigner.email,
-                      signer_name: ceoSigner.name,
-                      signer_role: 'ceo',
-                      signature_position: 'party_a',
-                      signing_token: ceoToken,
-                      token_expires_at: tokenExpiry.toISOString(),
-                      unsigned_pdf_path: fileKey,
-                      unsigned_pdf_size: pdfBuffer.length,
-                      status: 'pending',
-                      created_by: profile.id
+                // Notify CEO that the certificate has been generated
+                const ceoSigner = await getCeoSigner(supabase as any)
+                if (ceoSigner?.id) {
+                  try {
+                    await createInvestorNotification({
+                      userId: ceoSigner.id,
+                      type: 'certificate_issued',
+                      title: 'Certificate Generated',
+                      message: `Certificate ${fileName} has been generated for ${investorName}.`,
+                      link: '/versotech_main/documents',
+                      sendEmailNotification: true,
+                      dealId: subscription.deal_id ?? undefined,
+                      extraMetadata: {
+                        subscription_id: subscriptionId,
+                        investor_id: investorId,
+                        document_id: document.id,
+                        certificate_file_name: fileName,
+                      },
                     })
-                    .select('id')
-                    .single()
-
-                  if (ceoSigError) {
-                    console.error('❌ Failed to create CEO signature request:', ceoSigError)
-                  } else {
-                    console.log('✅ CEO signature request created (party_a, signs first)')
-
-                    // Create task for CEO in VERSOSign
-                    const signingUrl = `${process.env.NEXT_PUBLIC_APP_URL}/versotech_main/versosign?token=${ceoToken}`
-                    const { error: ceoTaskError } = await supabase.from('tasks').insert({
-                      owner_user_id: ceoSigner.user_id,
-                      kind: 'countersignature',
-                      category: 'compliance',
-                      title: `Sign Certificate: ${investorName}`,
-                      description: `Sign equity certificate for ${investorName} - ${dealData?.company_name || 'Investment'}`,
-                      status: 'pending',
-                      priority: 'high',
-                      related_entity_type: 'signature_request',
-                      related_entity_id: ceoSigRequest.id,
-                      related_deal_id: subscription.deal_id,
-                      due_at: tokenExpiry.toISOString(),
-                      instructions: {
-                        type: 'signature',
-                        action_url: signingUrl,
-                        signature_request_id: ceoSigRequest.id,
-                        document_type: 'certificate',
-                        investor_name: investorName,
-                        signer_name: ceoSigner.name,
-                        signer_role: 'ceo',
-                        signature_position: 'party_a',
-                        signing_order: 1
-                      }
-                    })
-
-                    if (ceoTaskError) {
-                      console.error('⚠️ Failed to create CEO task:', ceoTaskError)
-                    } else {
-                      console.log('✅ CEO VERSOSign task created')
-                    }
+                    console.log(`✅ Notified CEO about generated certificate: ${document.id}`)
+                  } catch (ceoNotificationError) {
+                    console.error('⚠️ Failed to notify CEO about certificate generation:', ceoNotificationError)
                   }
                 } else {
-                  console.error('❌ No CEO found in system - this should never happen!')
+                  console.warn('⚠️ No CEO signer configured - skipping certificate generated CEO notification')
                 }
 
-                // Second signatory (party_b) - signs SECOND (right position on certificate)
-                if (secondSigner) {
-                  const secondToken = crypto.randomBytes(32).toString('hex')
-                  // Allowed signer_role values: investor, admin, lawyer, ceo
-                  const signerRole = secondSigner.email.includes('lawyer') || secondSigner.name.toLowerCase().includes('lawyer') ? 'lawyer' : 'admin'
-                  const { data: secondSigRequest, error: secondSigError } = await supabase
-                    .from('signature_requests')
-                    .insert({
-                      investor_id: investorId,
-                      document_id: document.id,
-                      subscription_id: subscriptionId,
-                      deal_id: subscription.deal_id,
-                      document_type: 'certificate',
-                      signer_email: secondSigner.email,
-                      signer_name: secondSigner.name,
-                      signer_role: signerRole,
-                      signature_position: 'party_b',
-                      signing_token: secondToken,
-                      token_expires_at: tokenExpiry.toISOString(),
-                      unsigned_pdf_path: fileKey,
-                      unsigned_pdf_size: pdfBuffer.length,
-                      status: 'pending',
-                      created_by: profile.id
-                    })
-                    .select('id')
-                    .single()
+                // Notify investor that certificate + statement are ready
+                const { data: certInvestorUsers, error: certUsersError } = await supabase
+                  .from('investor_users')
+                  .select('user_id')
+                  .eq('investor_id', investorId)
 
-                  if (secondSigError) {
-                    console.error('❌ Failed to create second signatory request:', secondSigError)
-                  } else {
-                    console.log(`✅ Second signatory request created (party_b, ${secondSigner.name})`)
-
-                    // Create task for second signatory in VERSOSign
-                    const signingUrl = `${process.env.NEXT_PUBLIC_APP_URL}/versotech_main/versosign?token=${secondToken}`
-                    const { error: secondTaskError } = await supabase.from('tasks').insert({
-                      owner_user_id: secondSigner.user_id,
-                      kind: 'countersignature',
-                      category: 'compliance',
-                      title: `Sign Certificate: ${investorName}`,
-                      description: `Sign equity certificate for ${investorName} - ${dealData?.company_name || 'Investment'}. Awaiting CEO signature first.`,
-                      status: 'pending',
-                      priority: 'high',
-                      related_entity_type: 'signature_request',
-                      related_entity_id: secondSigRequest.id,
-                      related_deal_id: subscription.deal_id,
-                      due_at: tokenExpiry.toISOString(),
-                      instructions: {
-                        type: 'signature',
-                        action_url: signingUrl,
-                        signature_request_id: secondSigRequest.id,
-                        document_type: 'certificate',
-                        investor_name: investorName,
-                        signer_name: secondSigner.name,
-                        signer_role: signerRole,
-                        signature_position: 'party_b',
-                        signing_order: 2,
-                        requires_prior_signature: 'party_a'
-                      }
-                    })
-
-                    if (secondTaskError) {
-                      console.error('⚠️ Failed to create second signatory task:', secondTaskError)
-                    } else {
-                      console.log(`✅ Second signatory VERSOSign task created for ${secondSigner.name}`)
+                if (certUsersError) {
+                  console.error(`❌ Failed to fetch investor users for certificate_issued:`, certUsersError)
+                } else if (!certInvestorUsers || certInvestorUsers.length === 0) {
+                  console.warn(`⚠️ No investor_users found for investor ${investorId} - cannot create certificate_issued`)
+                } else {
+                  let certNotifiedCount = 0
+                  for (const iu of certInvestorUsers) {
+                    try {
+                      await createInvestorNotification({
+                        userId: iu.user_id,
+                        investorId,
+                        type: 'certificate_issued',
+                        title: 'Certificate and Statement Available',
+                        message: 'Your share certificate and statement of holdings are now available in your portfolio documents.',
+                        link: '/versotech_main/documents',
+                        sendEmailNotification: true,
+                        dealId: subscription.deal_id ?? undefined,
+                      })
+                      certNotifiedCount++
+                    } catch (notificationError) {
+                      console.error(`⚠️ Failed to create certificate_issued notification for user ${iu.user_id}:`, notificationError)
                     }
                   }
-                } else {
-                  console.warn('⚠️ No second signatory found - certificate will have only CEO signature')
+                  console.log(`✅ Created ${certNotifiedCount} certificate issued notification(s) for investor ${investorId}`)
                 }
 
-                console.log(`📜 Certificate workflow initiated: ${fileName}`)
+                certificatePublished = true
+                console.log(`📜 Certificate published immediately with embedded signatures: ${fileName}`)
                 console.log(`   - Document ID: ${document.id}`)
-                console.log(`   - Status: pending_signature (hidden from investor)`)
-                console.log(`   - Awaiting: CEO (party_a) → Second Signatory (party_b) signatures`)
+                console.log(`   - Status: published`)
               }
             }
           } else {
@@ -698,91 +719,35 @@ export async function triggerCertificateGeneration({
     } else if (!investorUsers || investorUsers.length === 0) {
       console.warn(`⚠️ No investor_users found for investor ${investorId} - cannot create notification`)
     } else {
-      // Create notifications for all users linked to this investor
-      const notifications = investorUsers.map(iu => ({
-        user_id: iu.user_id,
-        investor_id: investorId,
-        type: 'investment_activated',
-        title: 'Investment Activated',
-        message: 'Your investment is now active. Your equity certificate will be available shortly.',
-        link: '/versotech_main/portfolio'
-      }))
-
-      const { error: notifError } = await supabase
-        .from('investor_notifications')
-        .insert(notifications)
-
-      if (notifError) {
-        console.error(`❌ Failed to create investor notifications:`, notifError)
-      } else {
-        console.log(`✅ Created ${notifications.length} notification(s) for investor ${investorId}`)
-      }
-    }
-
-    // NOTIFY ASSIGNED LAWYERS about certificate issuance
-    // First, get the deal_id from the subscription
-    const { data: subWithDeal, error: subDealError } = await supabase
-      .from('subscriptions')
-      .select('deal_id')
-      .eq('id', subscriptionId)
-      .single()
-
-    if (subDealError || !subWithDeal?.deal_id) {
-      console.warn(`⚠️ Could not get deal_id for lawyer notification:`, subDealError)
-    } else {
-      // Get lawyers assigned to this deal
-      const { data: lawyerAssignments, error: assignError } = await supabase
-        .from('deal_lawyer_assignments')
-        .select('lawyer_id')
-        .eq('deal_id', subWithDeal.deal_id)
-
-      if (assignError) {
-        console.error(`❌ Failed to fetch lawyer assignments:`, assignError)
-      } else if (lawyerAssignments && lawyerAssignments.length > 0) {
-        const lawyerIds = lawyerAssignments.map((a: any) => a.lawyer_id)
-
-        // Get lawyer users
-        const { data: lawyerUsers, error: lawyerUsersError } = await supabase
-          .from('lawyer_users')
-          .select('user_id, lawyer_id')
-          .in('lawyer_id', lawyerIds)
-
-        if (lawyerUsersError) {
-          console.error(`❌ Failed to fetch lawyer users:`, lawyerUsersError)
-        } else if (lawyerUsers && lawyerUsers.length > 0) {
-          // Get investor name for notification
-          const { data: investorForNotif } = await supabase
-            .from('investors')
-            .select('display_name, legal_name')
-            .eq('id', investorId)
-            .single()
-
-          const investorNameForNotif = investorForNotif?.display_name || investorForNotif?.legal_name || 'An investor'
-
-          // Create notifications for lawyers
-          const lawyerNotifications = lawyerUsers.map((lu: any) => ({
-            user_id: lu.user_id,
-            investor_id: null,
-            type: 'certificate_issued',
-            title: 'Certificate Issued',
-            message: `Investment certificate issued for ${investorNameForNotif}. The subscription is now fully active.`,
-            link: '/versotech_main/subscription-packs'
-          }))
-
-          const { error: lawyerNotifError } = await supabase
-            .from('investor_notifications')
-            .insert(lawyerNotifications)
-
-          if (lawyerNotifError) {
-            console.error(`❌ Failed to create lawyer notifications:`, lawyerNotifError)
-          } else {
-            console.log(`✅ Created ${lawyerNotifications.length} lawyer notification(s) for certificate issuance`)
-          }
+      let createdCount = 0
+      for (const iu of investorUsers) {
+        try {
+          await createInvestorNotification({
+            userId: iu.user_id,
+            investorId,
+            type: 'investment_activated',
+            title: 'Investment Is Active',
+            message: 'Your investment is now active and your position has been created.',
+            link: '/versotech_main/portfolio',
+            sendEmailNotification: true,
+            dealId: subscription.deal_id ?? undefined,
+          })
+          createdCount++
+        } catch (notificationError) {
+          console.error(`⚠️ Failed to create investment_activated notification for user ${iu.user_id}:`, notificationError)
         }
       }
+      console.log(`✅ Created ${createdCount} investment activation notification(s) for investor ${investorId}`)
     }
+    return certificatePublished
   } catch (error) {
+    if (error instanceof CertificateConfigurationError) {
+      console.error(`❌ Certificate generation blocked by configuration for subscription ${subscriptionId}:`, error.message)
+      throw error
+    }
+
     console.error(`❌ Certificate trigger failed for subscription ${subscriptionId}:`, error)
-    // Don't throw - this is a non-critical operation
+    // Don't throw for transient/non-config failures.
+    return false
   }
 }

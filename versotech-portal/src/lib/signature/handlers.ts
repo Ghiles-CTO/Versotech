@@ -1959,165 +1959,19 @@ export async function handleGenericSignature(
 }
 
 /**
- * Certificate Post-Signature Handler
+ * Certificate signature flow has been deprecated.
+ * Certificates are now generated and published directly with embedded signature images.
  *
- * Certificate signing workflow:
- * 1. Lawyer signs first (party_a) - updates signed PDF path for CEO
- * 2. CEO signs second (party_b) - checks if both signed, then publishes document
- *
- * Only after BOTH signatures is the document status changed to 'published'
- * so the investor can see their certificate.
+ * Keep this exported function as a compatibility no-op in case legacy links/callbacks
+ * still attempt to route certificate signatures.
  */
 export async function handleCertificateSignature(
   params: PostSignatureHandlerParams
 ): Promise<void> {
-  const { signatureRequest, signedPdfPath, signedPdfBytes, supabase } = params
-
-  console.log('📜 [CERTIFICATE HANDLER] Processing certificate signature:', {
-    signer_role: signatureRequest.signer_role,
-    signature_position: signatureRequest.signature_position,
-    document_id: signatureRequest.document_id,
-    subscription_id: signatureRequest.subscription_id
-  })
-
-  const documentId = signatureRequest.document_id
-  const subscriptionId = signatureRequest.subscription_id
-
-  if (!documentId) {
-    console.error('❌ [CERTIFICATE HANDLER] No document_id in signature request')
-    return
-  }
-
-  if (signatureRequest.signature_position === 'party_a') {
-    // === LAWYER SIGNED (party_a) ===
-    console.log('✅ [CERTIFICATE HANDLER] Lawyer signed certificate')
-
-    // Update the CEO's signature request to use the lawyer-signed PDF
-    const { error: updateError } = await supabase
-      .from('signature_requests')
-      .update({
-        unsigned_pdf_path: signedPdfPath,
-        unsigned_pdf_size: signedPdfBytes.length
-      })
-      .eq('document_id', documentId)
-      .eq('signature_position', 'party_b')
-      .eq('status', 'pending')
-
-    if (updateError) {
-      console.error('❌ [CERTIFICATE HANDLER] Failed to update CEO signature request:', updateError)
-    } else {
-      console.log('✅ [CERTIFICATE HANDLER] Updated CEO signature request with lawyer-signed PDF')
-    }
-
-    // Notify CEO that certificate is ready for their signature
-    const { data: ceoSigRequest } = await supabase
-      .from('signature_requests')
-      .select('signer_email, signer_name')
-      .eq('document_id', documentId)
-      .eq('signature_position', 'party_b')
-      .single()
-
-    if (ceoSigRequest) {
-      const { data: ceoProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', ceoSigRequest.signer_email)
-        .single()
-
-      if (ceoProfile) {
-        await supabase.from('investor_notifications').insert({
-          user_id: ceoProfile.id,
-          investor_id: null,
-          type: 'certificate_ready_for_signature',
-          title: 'Certificate Ready for Signature',
-          message: 'An equity certificate has been signed by the lawyer and is ready for your signature.',
-          link: '/versotech_main/versosign'
-        })
-        console.log('✅ [CERTIFICATE HANDLER] Notified CEO about pending signature')
-      }
-    }
-
-  } else if (signatureRequest.signature_position === 'party_b') {
-    // === CEO SIGNED (party_b) ===
-    console.log('✅ [CERTIFICATE HANDLER] CEO signed certificate')
-
-    // Check if lawyer has also signed
-    const { data: lawyerSig } = await supabase
-      .from('signature_requests')
-      .select('status')
-      .eq('document_id', documentId)
-      .eq('signature_position', 'party_a')
-      .single()
-
-    if (lawyerSig?.status === 'signed') {
-      // Both signatures complete - PUBLISH the document!
-      console.log('✅ [CERTIFICATE HANDLER] Both signatures complete - publishing certificate')
-
-      // Update document status to 'published' so investor can see it
-      const { error: docUpdateError } = await supabase
-        .from('documents')
-        .update({
-          status: 'published',
-          file_key: signedPdfPath,
-          is_published: true,
-          published_at: new Date().toISOString()
-        })
-        .eq('id', documentId)
-
-      if (docUpdateError) {
-        console.error('❌ [CERTIFICATE HANDLER] Failed to publish document:', docUpdateError)
-      } else {
-        console.log('✅ [CERTIFICATE HANDLER] Certificate published and visible to investor')
-      }
-
-      // Update subscription with final signed certificate path
-      if (subscriptionId) {
-        await supabase
-          .from('subscriptions')
-          .update({ certificate_pdf_path: signedPdfPath })
-          .eq('id', subscriptionId)
-      }
-
-      // Notify investor that their certificate is ready
-      if (signatureRequest.investor_id) {
-        const { data: investorUsers } = await supabase
-          .from('investor_users')
-          .select('user_id')
-          .eq('investor_id', signatureRequest.investor_id)
-
-        if (investorUsers && investorUsers.length > 0) {
-          const notifications = investorUsers.map((iu: { user_id: string }) => ({
-            user_id: iu.user_id,
-            investor_id: signatureRequest.investor_id,
-            type: 'certificate_issued',
-            title: 'Certificate Issued',
-            message: 'Your equity certificate has been signed and is now available in your portfolio.',
-            link: '/versotech_main/portfolio'
-          }))
-
-          await supabase.from('investor_notifications').insert(notifications)
-          console.log(`✅ [CERTIFICATE HANDLER] Notified ${notifications.length} investor user(s)`)
-        }
-      }
-
-      // Create audit log
-      await supabase.from('audit_logs').insert({
-        event_type: 'certificate',
-        action: 'certificate_published',
-        entity_type: 'document',
-        entity_id: documentId,
-        action_details: {
-          subscription_id: subscriptionId,
-          investor_id: signatureRequest.investor_id,
-          signed_by: ['lawyer', 'ceo'],
-          signed_pdf_path: signedPdfPath
-        },
-        timestamp: new Date().toISOString()
-      })
-    } else {
-      console.warn('⚠️ [CERTIFICATE HANDLER] CEO signed but lawyer signature not found/complete')
-    }
-  }
+  console.log(
+    'ℹ️ [CERTIFICATE HANDLER] Certificate signature workflow is disabled; using no-op handler.'
+  )
+  return handleGenericSignature(params)
 }
 
 /**
@@ -2140,7 +1994,8 @@ export async function routeSignatureHandler(
     case 'amendment':
       return handleAmendmentSignature(params)
     case 'certificate':
-      return handleCertificateSignature(params)
+      console.log('ℹ️ [SIGNATURE ROUTER] Certificate signatures are deprecated; skipping certificate-specific handler')
+      return handleGenericSignature(params)
     case 'other':
       return handleGenericSignature(params)
     default:

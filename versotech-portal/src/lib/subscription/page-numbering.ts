@@ -5,8 +5,8 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 const FOOTER_FONT_SIZE = 9
 const FOOTER_Y_FROM_BOTTOM = 16
 const FOOTER_ERASE_Y_FROM_BOTTOM = 0
-const FOOTER_ERASE_WIDTH = 220
-const FOOTER_ERASE_HEIGHT = 132
+const FOOTER_ERASE_WIDTH = 90
+const FOOTER_ERASE_HEIGHT = 24
 
 function ensurePdfjsPolyfills() {
   const g = globalThis as any
@@ -133,7 +133,8 @@ export async function applySubscriptionPackPageNumbers(
 
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
 
-  for (const page of pages) {
+  for (let i = 0; i < numberedPages; i++) {
+    const page = pages[i]
     page.drawRectangle({
       x: (page.getWidth() - FOOTER_ERASE_WIDTH) / 2,
       y: FOOTER_ERASE_Y_FROM_BOTTOM,

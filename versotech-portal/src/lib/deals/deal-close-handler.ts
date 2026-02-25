@@ -516,7 +516,7 @@ export async function handleDealClose(
           }
 
           // Step 1d: Trigger certificate generation
-          await triggerCertificateGeneration({
+          const certificatePublished = await triggerCertificateGeneration({
             supabase,
             subscriptionId: sub.id,
             investorId: sub.investor_id,
@@ -527,7 +527,9 @@ export async function handleDealClose(
             pricePerShare: sub.price_per_share,
             profile: triggerProfile,
           })
-          result.certificatesTriggered++
+          if (certificatePublished) {
+            result.certificatesTriggered++
+          }
         } catch (subError) {
           const msg = subError instanceof Error ? subError.message : 'Unknown error'
           result.errors.push(`Processing failed for subscription ${sub.id}: ${msg}`)
@@ -1118,7 +1120,7 @@ export async function handleTermsheetClose(
           }
 
           // Step 1d: Trigger certificate generation
-          await triggerCertificateGeneration({
+          const certificatePublished = await triggerCertificateGeneration({
             supabase,
             subscriptionId: sub.id,
             investorId: sub.investor_id,
@@ -1129,7 +1131,9 @@ export async function handleTermsheetClose(
             pricePerShare: sub.price_per_share,
             profile: triggerProfile,
           })
-          result.certificatesTriggered++
+          if (certificatePublished) {
+            result.certificatesTriggered++
+          }
         } catch (subError) {
           const msg = subError instanceof Error ? subError.message : 'Unknown error'
           result.errors.push(`Processing failed for subscription ${sub.id}: ${msg}`)

@@ -106,6 +106,10 @@ const statusClasses: Record<string, string> = {
   archived: 'bg-muted text-muted-foreground'
 }
 
+function isTermSheetClosed(termSheet: TermSheet) {
+  return Boolean(termSheet?.closed_processed_at)
+}
+
 /** Fee plan status styling */
 const feePlanStatusClasses: Record<string, string> = {
   draft: 'bg-muted text-muted-foreground border-border',
@@ -769,18 +773,33 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
           </h3>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             {publishedTermSheets.map((published) => (
-              <Card key={published.id} className="border border-emerald-400/30 bg-emerald-500/10">
+              <Card
+                key={published.id}
+                className={
+                  isTermSheetClosed(published)
+                    ? 'border border-blue-400/30 bg-blue-500/10'
+                    : 'border border-emerald-400/30 bg-emerald-500/10'
+                }
+              >
                 <CardHeader className="flex flex-row items-start justify-between space-y-0">
                   <div>
                     <CardTitle className="text-foreground">Version {published.version}</CardTitle>
                     <CardDescription>
                       Published{' '}
                       {published.published_at ? format(new Date(published.published_at), 'dd MMM yyyy') : '—'}
+                      {published.closed_processed_at && (
+                        <span className="ml-2">• Closed: {format(new Date(published.closed_processed_at), 'dd MMM yyyy')}</span>
+                      )}
                       {published.term_sheet_date && <span className="ml-2">• Dated: {formatUTC(published.term_sheet_date, 'dd MMM yyyy')}</span>}
                       {published.vehicle && <span className="ml-2">• {published.vehicle}</span>}
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
+                    {isTermSheetClosed(published) && (
+                      <Badge className="bg-blue-500/20 text-blue-100 border border-blue-400/30">
+                        Closed
+                      </Badge>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -824,7 +843,11 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                           disabled={requestingCloseId === published.id || !!published.closed_processed_at}
                         >
                           <SendHorizontal className="h-4 w-4 mr-2" />
-                          {requestingCloseId === published.id ? 'Requesting...' : 'Request Close'}
+                          {published.closed_processed_at
+                            ? 'Closed'
+                            : requestingCloseId === published.id
+                              ? 'Requesting...'
+                              : 'Request Close'}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

@@ -8,8 +8,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    @page { size: A4 landscape; margin: 0; }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    @page {
+      size: A4 landscape;
+      margin: 0;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     html, body {
       font-family: 'League Spartan', Arial, sans-serif;
       font-size: 11pt;
@@ -24,20 +31,22 @@
     .page {
       width: 297mm;
       height: 210mm;
-      padding: 20mm;
+      min-height: 210mm;
+      max-height: 210mm;
+      padding: 10mm;
       position: relative;
+      overflow: hidden;
     }
-    /* VERSO WATERMARK - centered, behind content */
     .watermark {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-family: 'League Spartan', sans-serif;
-      font-weight: 800;
-      font-size: 90pt;
-      letter-spacing: 25px;
-      color: rgba(192, 192, 192, 0.5);
+      font-family: 'League Spartan', Arial, sans-serif;
+      font-weight: 700;
+      font-size: 130pt;
+      letter-spacing: 34px;
+      color: rgba(200, 200, 200, 0.34);
       z-index: 0;
       pointer-events: none;
       user-select: none;
@@ -46,130 +55,245 @@
     .certificate-border {
       width: 100%;
       height: 100%;
-      border: 1.5pt solid #000;
-      padding: 12px 18px;
+      border: 2pt solid #000;
       position: relative;
       z-index: 1;
       background: transparent;
+      display: flex;
+      flex-direction: column;
+    }
+    .header-section {
+      flex-shrink: 0;
+      border-bottom: 1pt solid #ccc;
     }
     .header-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 6px;
       table-layout: fixed;
     }
     .header-table td {
       width: 25%;
       vertical-align: middle;
       text-align: center;
-      padding: 6px 8px;
+      padding: 12px 10px;
     }
-    .header-table td:not(:first-child) { border-left: 1pt solid #000; }
+    .header-table td:not(:first-child) {
+      border-left: 1.5pt solid #000;
+    }
+    .logo-cell {
+      text-align: left !important;
+      padding-left: 20px !important;
+    }
     .logo-text {
-      font-family: 'League Spartan', sans-serif;
-      font-weight: 800;
-      font-size: 32pt;
-      letter-spacing: 3px;
-    }
-    .cert-number { font-family: Arial, sans-serif; font-size: 14pt; font-weight: bold; }
-    .cert-label { font-family: 'League Spartan', sans-serif; font-weight: 600; font-size: 9pt; color: #333; margin-top: 2px; }
-    .units-value { font-family: Arial, sans-serif; font-size: 14pt; font-weight: bold; }
-    .units-label { font-family: 'League Spartan', sans-serif; font-weight: 600; font-size: 9pt; color: #333; margin-top: 2px; }
-    .date-value { font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; }
-    .date-label { font-family: 'League Spartan', sans-serif; font-weight: 600; font-size: 9pt; color: #333; margin-top: 2px; }
-    .title-section { text-align: center; margin: 10px 0 8px 0; }
-    .main-title, .sub-title {
-      font-family: 'League Spartan', sans-serif;
-      font-weight: 800;
+      font-family: 'League Spartan', Arial, sans-serif;
+      font-weight: 700;
       font-size: 28pt;
-      letter-spacing: 1px;
-      line-height: 1.1;
+      letter-spacing: 0.15em;
     }
-    .issuer-section { text-align: center; margin: 8px 0; }
-    .issuer-name { font-family: 'League Spartan', sans-serif; font-weight: 600; font-size: 11pt; margin-bottom: 2px; }
-    .company-number { font-family: 'League Spartan', sans-serif; font-weight: 600; font-size: 11pt; }
-    .certification-section { text-align: center; margin: 6px auto; max-width: 95%; line-height: 1.4; }
-    .certification-text { font-family: 'League Spartan', sans-serif; font-size: 10pt; }
-    .highlight { font-weight: 600; }
-    .auth-section { text-align: center; margin: 8px 0 4px 0; }
-    .auth-text { font-family: 'League Spartan', sans-serif; font-size: 10pt; }
-    .signature-table { width: 100%; border-collapse: collapse; margin-top: 4px; table-layout: fixed; }
-    .signature-table td { width: 33.33%; vertical-align: top; padding: 4px 10px; }
-    .sig-cell-left, .sig-cell-right { text-align: center; }
-    .sig-cell-center { text-align: center; border-left: 1pt solid #000; border-right: 1pt solid #000; vertical-align: middle; }
-    .signature-box { height: 35px; margin-bottom: 3px; }
-    .signature-line { border-top: 1pt solid #000; margin: 3px auto; width: 80%; }
-    .signatory-name { font-family: 'League Spartan', sans-serif; font-weight: 600; font-size: 9pt; }
-    .signatory-title { font-family: 'League Spartan', sans-serif; font-size: 8pt; color: #555; }
-    .center-info { font-family: 'League Spartan', sans-serif; font-size: 9pt; line-height: 1.3; }
-    .center-vehicle-name { font-weight: 600; margin-bottom: 2px; }
-    .center-address { font-size: 8pt; margin-bottom: 3px; }
-    .center-series { font-size: 8pt; }
+    .cert-number {
+      font-family: Arial, sans-serif;
+      font-size: 14pt;
+      font-weight: bold;
+    }
+    .cert-label,
+    .units-label,
+    .date-label {
+      font-family: 'League Spartan', Arial, sans-serif;
+      font-weight: 500;
+      font-size: 9pt;
+      color: #666;
+      margin-top: 4px;
+    }
+    .units-value,
+    .date-value {
+      font-family: Arial, sans-serif;
+      font-size: 14pt;
+      font-weight: bold;
+    }
+    .content-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px 30px 8px 30px;
+    }
+    .title-section {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .main-title,
+    .sub-title {
+      font-family: 'League Spartan', Arial, sans-serif;
+      font-weight: 800;
+      font-size: 36pt;
+      letter-spacing: 3px;
+      line-height: 1.15;
+    }
+    .issuer-section {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    .issuer-name,
+    .company-number {
+      font-family: 'League Spartan', Arial, sans-serif;
+      font-weight: 500;
+      font-size: 11.5pt;
+    }
+    .issuer-name {
+      margin-bottom: 4px;
+    }
+    .certification-section {
+      text-align: center;
+      max-width: 92%;
+      line-height: 1.55;
+      margin-bottom: 16px;
+    }
+    .certification-text {
+      font-family: 'League Spartan', Arial, sans-serif;
+      font-size: 11pt;
+    }
+    .highlight {
+      font-weight: 700;
+    }
+    .auth-section {
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    .auth-text {
+      font-family: 'League Spartan', Arial, sans-serif;
+      font-size: 11pt;
+    }
+    .signature-section {
+      margin-top: auto;
+      flex-shrink: 0;
+      padding: 8px 0 8px 0;
+    }
+    .signature-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    .signature-table td {
+      width: 33.33%;
+      vertical-align: top;
+      padding: 8px 20px;
+    }
+    .sig-cell-left,
+    .sig-cell-right {
+      text-align: center;
+    }
+    .sig-cell-center {
+      text-align: center;
+      border-left: 1.5pt solid #000;
+      border-right: 1.5pt solid #000;
+      vertical-align: middle;
+      padding: 12px 20px;
+    }
+    .signature-box {
+      height: 136px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      overflow: visible;
+    }
+    .signature-img {
+      max-width: 360px;
+      max-height: 210px;
+      width: auto;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+    }
+    .center-info {
+      font-family: 'League Spartan', Arial, sans-serif;
+      font-size: 10pt;
+      line-height: 1.45;
+    }
+    .center-vehicle-name {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .center-address {
+      font-size: 9.5pt;
+      margin-bottom: 6px;
+    }
+    .center-series {
+      font-size: 9.5pt;
+    }
   </style>
 </head>
 <body>
   <div class="page">
     <div class="watermark">V E R S O</div>
     <div class="certificate-border">
-      <table class="header-table">
-        <tr>
-          <td><div class="logo-text">{{ $json.logo_text }}</div></td>
-          <td>
-            <div class="cert-number">VC{{ $json.series_number }}SH{{ $json.subscription_number }}</div>
-            <div class="cert-label">(Certificate No)</div>
-          </td>
-          <td>
-            <div class="units-value">{{ $json.units }} Units</div>
-            <div class="units-label">(No of Certificates)</div>
-          </td>
-          <td>
-            <div class="date-value">{{ $json.close_at }}</div>
-            <div class="date-label">(Date)</div>
-          </td>
-        </tr>
-      </table>
-      <div class="title-section">
-        <div class="main-title">EQUITY CERTIFICATE</div>
-        <div class="sub-title">&amp; STATEMENT OF HOLDINGS</div>
+      <div class="header-section">
+        <table class="header-table">
+          <tr>
+            <td class="logo-cell">
+              <div class="logo-text">{{ $json.logo_text }}</div>
+            </td>
+            <td>
+              <div class="cert-number">VC{{ $json.series_number }}SH{{ $json.subscription_number }}</div>
+              <div class="cert-label">(Certificate No)</div>
+            </td>
+            <td>
+              <div class="units-value">{{ $json.units }} Units</div>
+              <div class="units-label">(No of Certificates)</div>
+            </td>
+            <td>
+              <div class="date-value">{{ $json.close_at }}</div>
+              <div class="date-label">(Date)</div>
+            </td>
+          </tr>
+        </table>
       </div>
-      <div class="issuer-section">
-        <div class="issuer-name">{{ $json.vehicle_name }}, the Issuer, in the name and on behalf of Series {{ $json.series_number }} "{{ $json.company_name }}"</div>
-        <div class="company-number">Company Number: {{ $json.vehicle_registration_number }}</div>
+      <div class="content-section">
+        <div class="title-section">
+          <div class="main-title">EQUITY CERTIFICATE</div>
+          <div class="sub-title">&amp; STATEMENT OF HOLDINGS</div>
+        </div>
+        <div class="issuer-section">
+          <div class="issuer-name">{{ $json.vehicle_name }}, the Issuer, in the name and on behalf of Series {{ $json.series_number }} "{{ $json.company_name }}"</div>
+          <div class="company-number">Company Number: {{ $json.vehicle_registration_number }}</div>
+        </div>
+        <div class="certification-section">
+          <p class="certification-text">
+            This is to certify that <span class="highlight">{{ $json.investor_name }}</span>
+            the registered holder of <span class="highlight">{{ $json.num_shares }}</span> Certificates
+            only as issued by the Issuer and ultimately backed by
+            <span class="highlight">{{ $json.num_shares }} {{ $json.structure }}</span>.
+          </p>
+        </div>
+        <div class="auth-section">
+          <p class="auth-text">This certificate was authorised by:</p>
+        </div>
       </div>
-      <div class="certification-section">
-        <p class="certification-text">
-          This is to certify that <span class="highlight">{{ $json.investor_name }}</span>
-          the registered holder of <span class="highlight">{{ $json.num_shares }}</span> Certificates
-          only as issued by the Issuer and ultimately backed by
-          <span class="highlight">{{ $json.num_shares }} {{ $json.structure }}</span>.
-        </p>
+      <div class="signature-section">
+        <table class="signature-table">
+          <tr>
+            <td class="sig-cell-left">
+              <div class="signature-box">
+                <img src="{{ $json.signatory_1_signature_url }}" alt="Signature 1" class="signature-img">
+              </div>
+            </td>
+            <td class="sig-cell-center">
+              <div class="center-info">
+                <div class="center-vehicle-name">{{ $json.vehicle_name }}</div>
+                <div class="center-address">{{ $json.vehicle_address }}</div>
+                <div class="center-series">acting in the name and on behalf of its<br>Series {{ $json.series_number }}</div>
+              </div>
+            </td>
+            <td class="sig-cell-right">
+              <div class="signature-box">
+                <img src="{{ $json.signatory_2_signature_url }}" alt="Signature 2" class="signature-img">
+              </div>
+            </td>
+          </tr>
+        </table>
       </div>
-      <div class="auth-section">
-        <p class="auth-text">This certificate was authorised by:</p>
-      </div>
-      <table class="signature-table">
-        <tr>
-          <td class="sig-cell-left">
-            <div class="signature-box"></div>
-            <div class="signature-line"></div>
-            <div class="signatory-name">{{ $json.signatory_1_name }}</div>
-            <div class="signatory-title">{{ $json.signatory_1_title }}</div>
-          </td>
-          <td class="sig-cell-center">
-            <div class="center-info">
-              <div class="center-vehicle-name">{{ $json.vehicle_name }}</div>
-              <div class="center-address">{{ $json.vehicle_address }}</div>
-              <div class="center-series">acting in the name and on behalf of its<br>Series {{ $json.series_number }}</div>
-            </div>
-          </td>
-          <td class="sig-cell-right">
-            <div class="signature-box"></div>
-            <div class="signature-line"></div>
-            <div class="signatory-name">{{ $json.signatory_2_name }}</div>
-            <div class="signatory-title">{{ $json.signatory_2_title }}</div>
-          </td>
-        </tr>
-      </table>
     </div>
   </div>
 </body>

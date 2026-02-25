@@ -112,6 +112,14 @@ export async function createSignatureRequest(
       }
     }
 
+    if (document_type === 'certificate') {
+      console.log('⛔ [SIGNATURE] Certificate signature requests are disabled')
+      return {
+        success: false,
+        error: 'Certificate signatures are deprecated. Certificates are published directly with embedded signatures.'
+      }
+    }
+
     console.log('✅ [SIGNATURE] Validation passed')
 
     // Validate app URL is configured BEFORE creating any database records
@@ -727,7 +735,7 @@ export async function createSignatureRequest(
             member_id: params.member_id || null,
             created_at: new Date().toISOString(),
             steps: [
-              'Click "Start Task" to open the signature page',
+              'Click "Start" to open the document',
               'Review the document carefully',
               'Draw or upload your signature',
               'Click "Submit Signature" to complete'

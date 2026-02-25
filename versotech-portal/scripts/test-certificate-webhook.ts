@@ -29,10 +29,10 @@ const CERTIFICATE_DATA = {
   vehicle_address: '2, Avenue Charles de Gaulle, L-1653 Luxembourg',
   signatory_1_name: 'Mr Julien Machot',
   signatory_1_title: 'Managing Partner',
-  signatory_1_signature_url: '',
-  signatory_2_name: 'Mr Frederic Dupont',
-  signatory_2_title: 'General Counsel',
-  signatory_2_signature_url: '',
+  signatory_1_signature_url: 'https://example.com/signature-1.png',
+  signatory_2_name: 'Legal Counsel',
+  signatory_2_title: 'Authorized Signatory',
+  signatory_2_signature_url: 'https://example.com/signature-2.png',
 
   // === METADATA ===
   subscription_id: 'b524e205-e546-4219-b416-1a73a5053a33',

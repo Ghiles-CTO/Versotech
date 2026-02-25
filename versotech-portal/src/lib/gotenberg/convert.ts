@@ -13,6 +13,17 @@ export interface ConversionResult {
   error?: string
 }
 
+export interface HtmlToPdfOptions {
+  paperWidth?: number
+  paperHeight?: number
+  marginTop?: number
+  marginBottom?: number
+  marginLeft?: number
+  marginRight?: number
+  preferCssPageSize?: boolean
+  printBackground?: boolean
+}
+
 /**
  * Convert a DOCX file to PDF using Gotenberg's LibreOffice endpoint
  *
@@ -105,7 +116,8 @@ export async function checkGotenbergHealth(): Promise<boolean> {
  */
 export async function convertHtmlToPdf(
   htmlContent: string,
-  filename: string = 'document.html'
+  filename: string = 'document.html',
+  options: HtmlToPdfOptions = {}
 ): Promise<ConversionResult> {
   try {
     const url = `${GOTENBERG_URL}/forms/chromium/convert/html`
@@ -113,6 +125,15 @@ export async function convertHtmlToPdf(
     const formData = new FormData()
     const blob = new Blob([htmlContent], { type: 'text/html' })
     formData.append('files', blob, filename)
+
+    if (typeof options.paperWidth === 'number') formData.append('paperWidth', String(options.paperWidth))
+    if (typeof options.paperHeight === 'number') formData.append('paperHeight', String(options.paperHeight))
+    if (typeof options.marginTop === 'number') formData.append('marginTop', String(options.marginTop))
+    if (typeof options.marginBottom === 'number') formData.append('marginBottom', String(options.marginBottom))
+    if (typeof options.marginLeft === 'number') formData.append('marginLeft', String(options.marginLeft))
+    if (typeof options.marginRight === 'number') formData.append('marginRight', String(options.marginRight))
+    if (typeof options.preferCssPageSize === 'boolean') formData.append('preferCssPageSize', String(options.preferCssPageSize))
+    if (typeof options.printBackground === 'boolean') formData.append('printBackground', String(options.printBackground))
 
     const response = await fetch(url, {
       method: 'POST',

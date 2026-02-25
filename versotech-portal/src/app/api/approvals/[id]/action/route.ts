@@ -9,6 +9,7 @@ import { sendAccountStatusEmail, sendInvitationEmail } from '@/lib/email/resend-
 import { getAppUrl } from '@/lib/signature/token'
 import { handleDealClose, handleTermsheetClose } from '@/lib/deals/deal-close-handler'
 import { buildSubscriptionPackPayload } from '@/lib/subscription-pack/payload-builder'
+import { ensureSubscriptionPackA4Pdf } from '@/lib/subscription-pack/a4-normalizer'
 import { applySubscriptionPackPageNumbers } from '@/lib/subscription/page-numbering'
 
 const ACCOUNT_ACTIVATION_ENTITY_TABLES = [
@@ -2023,6 +2024,19 @@ async function handleEntityApproval(
                       }
 
                       if (mimeType === 'application/pdf') {
+                        const a4Result = await ensureSubscriptionPackA4Pdf({
+                          pdfBuffer: fileBuffer,
+                          payload: subscriptionPayload,
+                          context: 'approval',
+                        })
+                        fileBuffer = a4Result.pdfBuffer
+                        if (a4Result.wasNormalized) {
+                          console.log('✅ Rebuilt approval-generated subscription pack as A4 before numbering:', {
+                            original_size: a4Result.originalSize,
+                            final_size: a4Result.finalSize,
+                          })
+                        }
+
                         const numberingResult = await applySubscriptionPackPageNumbers(fileBuffer)
                         fileBuffer = numberingResult.pdfBuffer
                         console.log('✅ Applied centered page numbers to approval-generated subscription pack:', {

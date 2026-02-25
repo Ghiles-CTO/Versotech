@@ -15,6 +15,7 @@ export type NotificationType =
   | 'approval'
   | 'subscription'
   | 'nda_complete'
+  | 'investment_activated'
   | 'certificate_issued'
   | 'escrow_confirmed'
   | 'system'
@@ -90,6 +91,7 @@ const DEFAULT_AGENT_TASK_BY_TYPE: Partial<Record<NotificationType, string>> = {
 const EMAIL_NOTIFICATION_TYPES: NotificationType[] = [
   'certificate_issued',
   'subscription',
+  'investment_activated',
   'capital_call',
   'escrow_confirmed',
   'deal_invite',

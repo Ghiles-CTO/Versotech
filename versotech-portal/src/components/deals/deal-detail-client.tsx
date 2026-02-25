@@ -181,6 +181,7 @@ export function DealDetailClient({
   }
 
   const publishedTermSheet = termSheets?.find((sheet: any) => sheet.status === 'published')
+  const publishedTermSheetClosedAt = publishedTermSheet?.closed_processed_at
   const pendingInterests = interests?.filter((interest: any) => interest.status === 'pending_review') ?? []
   const approvedInterests = interests?.filter((interest: any) => interest.status === 'approved') ?? []
   const activeAccess = dataRoomAccess?.filter((record: any) => !record.revoked_at) ?? []
@@ -301,7 +302,9 @@ export function DealDetailClient({
             </div>
             <p className="text-xs text-muted-foreground">
               {publishedTermSheet
-                ? `Published ${publishedTermSheet.published_at ? new Date(publishedTermSheet.published_at).toLocaleDateString() : ''}`
+                ? publishedTermSheetClosedAt
+                  ? `Closed ${new Date(publishedTermSheetClosedAt).toLocaleDateString()}`
+                  : `Published ${publishedTermSheet.published_at ? new Date(publishedTermSheet.published_at).toLocaleDateString() : ''}`
                 : 'No published version'}
             </p>
           </CardContent>

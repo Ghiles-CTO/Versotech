@@ -223,19 +223,23 @@ export async function embedSignatureMultipleLocations(
     const targetPage = pages[pageIndex]
     const { width, height } = targetPage.getSize()
 
-    // Calculate actual X coordinate (percentage of page width, centered on signature)
-    const signatureX = width * placement.x - sigConfig.width / 2
-
-    // Y coordinate is already in points from bottom
-    const signatureY = placement.y
-
-    // COMPACT LAYOUT DETECTION: Page 3 (wire_instructions) has Name:/Title: fields
-    // immediately below the signature line. Use smaller font and tighter spacing
-    // to prevent metadata from overflowing into those fields.
-    const isCompactLayout = placement.label === 'wire_instructions'
+    // COMPACT LAYOUT DETECTION:
+    // - wire_instructions: Name/Title fields sit close below the line
+    // - subscription_form: signature cell has tight vertical budget on page 2
+    const isCompactLayout =
+      placement.label === 'wire_instructions' || placement.label === 'subscription_form'
     const metaFontSize = isCompactLayout ? 5 : metaConfig.timestampFontSize  // 5pt vs 7pt
     const timestampOffset = isCompactLayout ? 8 : metaConfig.timestampOffsetY  // 8pt vs 12pt
     const signerOffset = isCompactLayout ? 14 : metaConfig.signerNameOffsetY   // 14pt vs 22pt
+
+    const signatureWidth = placement.label === 'subscription_form' ? 140 : sigConfig.width
+    const signatureHeight = placement.label === 'subscription_form' ? 40 : sigConfig.height
+
+    // Calculate actual X coordinate (percentage of page width, centered on signature)
+    const signatureX = width * placement.x - signatureWidth / 2
+
+    // Y coordinate is already in points from bottom
+    const signatureY = placement.y
 
     console.log(`📍 [MULTI-SIGN] Embedding on page ${placement.page} (${placement.label}):`, {
       x: `${(placement.x * 100).toFixed(1)}%`,
@@ -248,8 +252,8 @@ export async function embedSignatureMultipleLocations(
     targetPage.drawImage(signatureImage, {
       x: signatureX,
       y: signatureY,
-      width: sigConfig.width,
-      height: sigConfig.height
+      width: signatureWidth,
+      height: signatureHeight
     })
 
     // Add signature timestamp text below signature
