@@ -37,6 +37,81 @@ const ACCOUNT_ACTIVATION_USER_TABLES: Record<string, { userTable: string; entity
   arranger_entities: { userTable: 'arranger_users', entityIdColumn: 'arranger_id' },
 }
 
+type NormalizedAddressValue = {
+  street: string
+  line2: string
+  city: string
+  state: string
+  postalCode: string
+  country: string
+  full: string
+}
+
+function readTrimmedString(value: unknown): string {
+  if (typeof value !== 'string') return ''
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : ''
+}
+
+function pickFirstNonEmpty(...values: unknown[]): string {
+  for (const value of values) {
+    const normalized = readTrimmedString(value)
+    if (normalized) return normalized
+  }
+  return ''
+}
+
+function composeStreetAddress(line1: string, line2: string, postalCode: string): string {
+  return [line1, line2, postalCode].filter(Boolean).join(', ')
+}
+
+function normalizeAddressValue(value: unknown): NormalizedAddressValue {
+  if (typeof value === 'string') {
+    const full = readTrimmedString(value)
+    return {
+      street: full,
+      line2: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: '',
+      full,
+    }
+  }
+
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return {
+      street: '',
+      line2: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: '',
+      full: '',
+    }
+  }
+
+  const obj = value as Record<string, unknown>
+  const street = pickFirstNonEmpty(obj.street, obj.address, obj.address_line_1, obj.line1)
+  const line2 = pickFirstNonEmpty(obj.address_line_2, obj.line2, obj.suite, obj.unit)
+  const city = pickFirstNonEmpty(obj.city, obj.town)
+  const state = pickFirstNonEmpty(obj.state, obj.state_province, obj.province, obj.region)
+  const postalCode = pickFirstNonEmpty(obj.postal_code, obj.zip_code, obj.zip)
+  const country = pickFirstNonEmpty(obj.country, obj.country_code)
+  const cityStatePostal = [city, state, postalCode].filter(Boolean).join(', ')
+  const full = [street, line2, cityStatePostal, country].filter(Boolean).join(', ')
+
+  return {
+    street,
+    line2,
+    city,
+    state,
+    postalCode,
+    country,
+    full,
+  }
+}
+
 function resolveAccountActivationEntityTable(metadata: any): string | null {
   const entityTable = metadata?.entity_table
   if (!entityTable) {
@@ -1041,21 +1116,50 @@ async function handleEntityApproval(
               ? (investorData.legal_name || investorData.display_name)
               : (requestedByProfile?.display_name || investorData.legal_name || investorData.display_name)
 
-            const residentialStreet = investorData.residential_street?.trim()
-            const residentialLine2 = investorData.residential_line_2?.trim()
-            const residentialPostal = investorData.residential_postal_code?.trim()
-            const residentialAddress = [residentialStreet, residentialLine2, residentialPostal].filter(Boolean).join(', ')
+            const normalizedRegisteredAddress = normalizeAddressValue(investorData.registered_address)
+            const registeredStreet = pickFirstNonEmpty(
+              normalizedRegisteredAddress.street,
+              investorData.registered_address_line_1,
+              investorData.address_line_1
+            )
+            const registeredLine2 = pickFirstNonEmpty(
+              normalizedRegisteredAddress.line2,
+              investorData.registered_address_line_2,
+              investorData.address_line_2
+            )
+            const registeredPostal = pickFirstNonEmpty(
+              normalizedRegisteredAddress.postalCode,
+              investorData.registered_postal_code,
+              investorData.postal_code
+            )
+            const registeredAddress = composeStreetAddress(registeredStreet, registeredLine2, registeredPostal)
+
+            const residentialStreet = pickFirstNonEmpty(investorData.residential_street)
+            const residentialLine2 = pickFirstNonEmpty(investorData.residential_line_2)
+            const residentialPostal = pickFirstNonEmpty(investorData.residential_postal_code)
+            const residentialAddress = composeStreetAddress(residentialStreet, residentialLine2, residentialPostal)
 
             const partyARegisteredAddress = isEntityInvestor
-              ? investorData.registered_address?.trim()
-              : (residentialAddress || investorData.registered_address?.trim())
+              ? pickFirstNonEmpty(registeredAddress, normalizedRegisteredAddress.full, residentialAddress)
+              : pickFirstNonEmpty(residentialAddress, registeredAddress, normalizedRegisteredAddress.full)
 
+            const registeredCity = pickFirstNonEmpty(
+              normalizedRegisteredAddress.city,
+              investorData.registered_city,
+              investorData.city
+            )
+            const registeredCountry = pickFirstNonEmpty(
+              normalizedRegisteredAddress.country,
+              investorData.registered_country,
+              investorData.country,
+              investorData.country_of_incorporation
+            )
             const partyACity = isEntityInvestor
-              ? investorData.city?.trim()
-              : (investorData.residential_city?.trim() || investorData.city?.trim())
+              ? pickFirstNonEmpty(registeredCity, investorData.residential_city)
+              : pickFirstNonEmpty(investorData.residential_city, registeredCity)
             const partyACountry = isEntityInvestor
-              ? investorData.country?.trim()
-              : (investorData.residential_country?.trim() || investorData.country?.trim())
+              ? pickFirstNonEmpty(registeredCountry, investorData.residential_country)
+              : pickFirstNonEmpty(investorData.residential_country, registeredCountry)
             const partyACityCountry = [partyACity, partyACountry].filter(Boolean).join(' / ')
 
             const vehicleAddress = vehicle?.address || '2, Avenue Charles de Gaulle – L-1653'
@@ -1587,9 +1691,29 @@ async function handleEntityApproval(
               // Fetch all required data for subscription pack
               const { data: investorData } = await supabase
                 .from('investors')
-                .select('legal_name, display_name, type, registered_address, entity_identifier, id_number, id_type, residential_street, residential_line_2, residential_city, residential_state, residential_postal_code, residential_country')
+                .select('*')
                 .eq('id', submission.investor_id)
                 .single()
+
+              const normalizedSubscriptionInvestor = investorData
+                ? {
+                    ...investorData,
+                    registered_address: pickFirstNonEmpty(
+                      normalizeAddressValue(investorData.registered_address).full,
+                      composeStreetAddress(
+                        pickFirstNonEmpty(investorData.registered_address_line_1, investorData.address_line_1),
+                        pickFirstNonEmpty(investorData.registered_address_line_2, investorData.address_line_2),
+                        pickFirstNonEmpty(investorData.registered_postal_code, investorData.postal_code)
+                      )
+                    ),
+                    residential_country: pickFirstNonEmpty(
+                      investorData.residential_country,
+                      investorData.registered_country,
+                      investorData.country,
+                      investorData.country_of_incorporation
+                    ) || null,
+                  }
+                : null
 
               // Fetch counterparty entity if this is an entity subscription
               let counterpartyEntity = null
@@ -1607,8 +1731,8 @@ async function handleEntityApproval(
               let signatories: { name: string; title: string; number: number }[] = []
               // Check BOTH: submission type OR investor's actual type (entity/institutional)
               const isEntityInvestor = submission.subscription_type === 'entity' ||
-                                       investorData?.type === 'entity' ||
-                                       investorData?.type === 'institutional'
+                                       normalizedSubscriptionInvestor?.type === 'entity' ||
+                                       normalizedSubscriptionInvestor?.type === 'institutional'
               if (isEntityInvestor && submission.investor_id) {
                 // For entity investors: get authorized signatories from investor_members
                 const { data: members } = await supabase
@@ -1628,7 +1752,7 @@ async function handleEntityApproval(
                 } else {
                   // Fallback: use entity representative if no signatories marked
                   signatories = [{
-                    name: counterpartyEntity?.representative_name || investorData?.legal_name || '',
+                    name: counterpartyEntity?.representative_name || normalizedSubscriptionInvestor?.legal_name || '',
                     title: counterpartyEntity?.representative_title || 'Authorized Representative',
                     number: 1
                   }]
@@ -1637,7 +1761,7 @@ async function handleEntityApproval(
 	              } else {
 	                // For individual investors: single signatory
 	                signatories = [{
-	                  name: investorData?.legal_name || '',
+	                  name: normalizedSubscriptionInvestor?.legal_name || '',
 	                  title: '',
 	                  number: 1
 	                }]
@@ -1704,7 +1828,7 @@ async function handleEntityApproval(
                 .limit(1)
                 .single()
 
-              if (investorData && vehicleData && feeStructure && user) {
+              if (normalizedSubscriptionInvestor && vehicleData && feeStructure && user) {
                 // Get CEO signer dynamically (instead of hardcoded fallback)
                 const ceoSigner = await getCeoSigner(supabase)
                 const issuerName = ceoSigner?.displayName || feeStructure.issuer_signatory_name || 'Julien Machot'
@@ -1743,8 +1867,8 @@ async function handleEntityApproval(
                       missing: [!addr?.street && 'street', !addr?.country && 'country'].filter(Boolean)
                     })
                   }
-                } else if (!investorData.registered_address) {
-                  console.warn('⚠️ [SUBSCRIPTION PACK] Investor missing registered_address:', investorData.legal_name)
+                } else if (!normalizedSubscriptionInvestor.registered_address) {
+                  console.warn('⚠️ [SUBSCRIPTION PACK] Investor missing registered_address:', normalizedSubscriptionInvestor.legal_name)
                 }
                 const { data: formalSubscription, error: formalSubscriptionError } = await supabase
                   .from('subscriptions')
@@ -1760,7 +1884,7 @@ async function handleEntityApproval(
                 const built = buildSubscriptionPackPayload({
                   outputFormat: 'pdf',
                   subscription: formalSubscription,
-                  investor: investorData,
+                  investor: normalizedSubscriptionInvestor,
                   deal: submission.deal,
                   vehicle: vehicleData,
                   feeStructure,
@@ -1780,7 +1904,7 @@ async function handleEntityApproval(
                 const subscriptionPayload = built.payload
 
                 console.log('🔔 Triggering Subscription Pack workflow:', {
-                  investor: investorData.legal_name,
+                  investor: normalizedSubscriptionInvestor.legal_name,
                   deal: submission.deal.name,
                   series: vehicleData.series_number,
                   amount: amount

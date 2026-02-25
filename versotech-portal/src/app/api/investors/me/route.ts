@@ -253,7 +253,26 @@ export async function PATCH(request: Request) {
 
     if (hasAddressFields) {
       if (isEntity) {
-        // Map to registered_* columns for entities
+        // Map to canonical + legacy registered address columns for entities.
+        // Canonical fields are consumed by NDA/subscription payload builders.
+        const addressLine1 = dialogAddressFields.address_line_1?.trim() || ''
+        const addressLine2 = dialogAddressFields.address_line_2?.trim() || ''
+        const registeredAddress = [addressLine1, addressLine2].filter(Boolean).join(', ')
+
+        if (dialogAddressFields.address_line_1 !== undefined || dialogAddressFields.address_line_2 !== undefined) {
+          updateData.registered_address = registeredAddress || null
+        }
+        if (dialogAddressFields.city !== undefined) {
+          updateData.city = dialogAddressFields.city
+        }
+        if (dialogAddressFields.postal_code !== undefined) {
+          updateData.postal_code = dialogAddressFields.postal_code
+        }
+        if (dialogAddressFields.country !== undefined) {
+          updateData.country = dialogAddressFields.country
+        }
+
+        // Legacy compatibility fields still used in parts of the portal.
         if (dialogAddressFields.address_line_1 !== undefined) {
           updateData.registered_address_line_1 = dialogAddressFields.address_line_1
         }
