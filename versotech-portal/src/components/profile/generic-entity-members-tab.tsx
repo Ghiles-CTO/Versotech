@@ -76,6 +76,7 @@ interface EntityMember {
   is_signatory?: boolean
   can_sign?: boolean
   kyc_status?: string
+  kyc_overall_status?: string
   is_active?: boolean
   created_at?: string
 }
@@ -526,7 +527,7 @@ export function GenericEntityMembersTab({
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell>{getKYCStatusBadge(member.kyc_status)}</TableCell>
+                    <TableCell>{getKYCStatusBadge(member.kyc_overall_status ?? member.kyc_status)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button

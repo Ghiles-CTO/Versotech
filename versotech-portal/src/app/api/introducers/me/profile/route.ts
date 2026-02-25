@@ -8,6 +8,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 
 // Schema for introducer self-service profile updates
 // Note: Commission rates, caps, and payment terms are managed by arrangers (read-only for introducers)
@@ -228,6 +229,28 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updateData = validation.data
+
+    const { data: currentIntroducer, error: currentIntroducerError } = await serviceSupabase
+      .from('introducers')
+      .select('phone_mobile')
+      .eq('id', introducerUser.introducer_id)
+      .single()
+
+    if (currentIntroducerError || !currentIntroducer) {
+      return NextResponse.json({ error: 'Introducer entity not found' }, { status: 404 })
+    }
+
+    const effectivePhoneMobile =
+      updateData.phone_mobile !== undefined
+        ? updateData.phone_mobile
+        : currentIntroducer.phone_mobile
+    const mobilePhoneError = getMobilePhoneValidationError(effectivePhoneMobile, true)
+    if (mobilePhoneError) {
+      return NextResponse.json(
+        { error: mobilePhoneError, details: { fieldErrors: { phone_mobile: [mobilePhoneError] } } },
+        { status: 400 }
+      )
+    }
 
     // Filter out empty/undefined values and build update object
     const updateFields: Record<string, string | boolean | null> = {}

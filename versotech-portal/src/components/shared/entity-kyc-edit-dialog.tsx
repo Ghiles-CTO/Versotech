@@ -36,6 +36,7 @@ import { toast } from 'sonner'
 import { Loader2, User, MapPin, FileText, IdCard, LucideIcon } from 'lucide-react'
 import { CountrySelect, NationalitySelect } from '@/components/kyc/country-select'
 import { normalizeKycEditPayload } from '@/lib/kyc/normalize-edit-payload'
+import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 
 // Clamp date input year to 4 digits max
 function clampDateYear(e: React.FormEvent<HTMLInputElement>) {
@@ -87,13 +88,16 @@ const individualKycEditSchema = z.object({
 
   // Proof of Address Document Dates
   proof_of_address_date: z.string().optional().nullable(),
-}).refine(
-  (data) => typeof data.phone_mobile === 'string' && data.phone_mobile.trim().length > 0,
-  {
-    path: ['phone_mobile'],
-    message: 'Mobile phone is required',
+}).superRefine((data, ctx) => {
+  const mobileError = getMobilePhoneValidationError(data.phone_mobile, true)
+  if (mobileError) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['phone_mobile'],
+      message: mobileError,
+    })
   }
-)
+})
 
 type IndividualKycEditForm = z.infer<typeof individualKycEditSchema>
 

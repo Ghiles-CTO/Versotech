@@ -44,6 +44,7 @@ import {
 } from 'lucide-react'
 import { CountrySelect, NationalitySelect } from '@/components/kyc/country-select'
 import { normalizeKycEditPayload } from '@/lib/kyc/normalize-edit-payload'
+import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 
 // Clamp date input year to 4 digits max
 function clampDateYear(e: React.FormEvent<HTMLInputElement>) {
@@ -130,13 +131,16 @@ const memberKycEditSchema = z.object({
 
   // UBO-specific
   ownership_percentage: z.number().min(0).max(100).optional().nullable(),
-}).refine(
-  (data) => typeof data.phone_mobile === 'string' && data.phone_mobile.trim().length > 0,
-  {
-    path: ['phone_mobile'],
-    message: 'Mobile phone is required',
+}).superRefine((data, ctx) => {
+  const mobileError = getMobilePhoneValidationError(data.phone_mobile, true)
+  if (mobileError) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['phone_mobile'],
+      message: mobileError,
+    })
   }
-)
+})
 
 type MemberKycEditForm = z.infer<typeof memberKycEditSchema>
 

@@ -19,6 +19,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input'
 import { PhoneInput } from '@/components/ui/phone-input'
 import { CountrySelect } from '@/components/kyc/country-select'
+import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 
 const entityOverviewSchema = z.object({
   display_name: z.string().max(200).optional().nullable(),
@@ -37,13 +38,16 @@ const entityOverviewSchema = z.object({
   state_province: z.string().max(100).optional().nullable(),
   postal_code: z.string().max(20).optional().nullable(),
   country: z.string().optional().nullable(),
-}).refine(
-  (data) => typeof data.phone_mobile === 'string' && data.phone_mobile.trim().length > 0,
-  {
-    path: ['phone_mobile'],
-    message: 'Mobile phone is required',
+}).superRefine((data, ctx) => {
+  const mobileError = getMobilePhoneValidationError(data.phone_mobile, true)
+  if (mobileError) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['phone_mobile'],
+      message: mobileError,
+    })
   }
-)
+})
 
 type EntityOverviewForm = z.infer<typeof entityOverviewSchema>
 

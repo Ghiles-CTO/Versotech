@@ -1063,7 +1063,7 @@ export function ProfilePageClient({
                             {item.scope === 'member' && item.email && (
                               <p className="text-xs text-muted-foreground">{item.email}</p>
                             )}
-                            <p className="text-xs text-muted-foreground mt-0.5">Missing: {item.missingItems.join(' \u00B7 ')}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">Outstanding: {item.missingItems.join(' \u00B7 ')}</p>
                           </div>
                         </div>
                       ))}

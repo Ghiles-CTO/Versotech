@@ -4,6 +4,8 @@ interface RouteParams {
   params: Promise<{ id: string }>
 }
 
+const MEMBER_SIGNATORY_FILTER = 'is_signatory.eq.true,role.eq.authorized_signatory'
+
 /**
  * GET /api/investors/me/opportunities/:id
  * Fetch a single opportunity with full details, journey stages, and data room access
@@ -376,8 +378,8 @@ export async function GET(request: Request, { params }: RouteParams) {
       .from('investor_members')
       .select('id')
       .eq('investor_id', effectiveInvestorId)
-      .eq('role', 'authorized_signatory')
       .eq('is_active', true)
+      .or(MEMBER_SIGNATORY_FILTER)
 
     // Check if ALL signatories have signed NDA for this deal (entity-level check)
     // Per Fred's requirement: ALL signatories must sign before ANY entity user gets data room access
@@ -514,10 +516,10 @@ export async function GET(request: Request, { params }: RouteParams) {
     // Get investor's authorized signatories
     const { data: signatories } = await serviceSupabase
       .from('investor_members')
-      .select('id, full_name, email, role')
+      .select('id, full_name, email, role, is_signatory')
       .eq('investor_id', effectiveInvestorId)
-      .eq('role', 'authorized_signatory')
       .eq('is_active', true)
+      .or(MEMBER_SIGNATORY_FILTER)
 
     // Get NDA signing link for the current user (if they are a signatory)
     let ndaSigningUrl: string | null = null
@@ -527,8 +529,8 @@ export async function GET(request: Request, { params }: RouteParams) {
         .select('id')
         .eq('investor_id', effectiveInvestorId)
         .eq('linked_user_id', user.id)
-        .eq('role', 'authorized_signatory')
         .eq('is_active', true)
+        .or(MEMBER_SIGNATORY_FILTER)
         .maybeSingle()
 
       if (linkedMember?.id) {

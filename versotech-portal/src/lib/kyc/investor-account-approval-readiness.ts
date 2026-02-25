@@ -11,9 +11,12 @@ type InvestorRow = {
 }
 
 type SubmissionRow = {
+  id?: string
   document_type: string
   status: string
   investor_member_id?: string | null
+  submitted_at?: string | null
+  reviewed_at?: string | null
 }
 
 type MemberRow = {
@@ -101,49 +104,104 @@ function getMemberName(member: MemberRow, index: number): string {
   return `Member ${index + 1}`
 }
 
-function hasApprovedSubmissionForType(
+function isSubmissionForMember(
+  submission: SubmissionRow,
+  memberId?: string | null
+): boolean {
+  if (memberId === undefined) return true
+  if (memberId === null) return !submission.investor_member_id
+  return submission.investor_member_id === memberId
+}
+
+function getSubmissionSortTimestamp(submission: SubmissionRow): number {
+  const submittedAt = submission.submitted_at ? Date.parse(submission.submitted_at) : Number.NaN
+  const reviewedAt = submission.reviewed_at ? Date.parse(submission.reviewed_at) : Number.NaN
+  const resolved =
+    Number.isFinite(reviewedAt) ? reviewedAt :
+    Number.isFinite(submittedAt) ? submittedAt :
+    0
+  return resolved
+}
+
+function getLatestSubmission(
+  submissions: SubmissionRow[],
+  predicate: (submission: SubmissionRow) => boolean
+): SubmissionRow | null {
+  const candidates = submissions.filter(predicate)
+  if (candidates.length === 0) return null
+  candidates.sort((a, b) => getSubmissionSortTimestamp(b) - getSubmissionSortTimestamp(a))
+  return candidates[0] || null
+}
+
+function getLatestSubmissionForType(
   submissions: SubmissionRow[],
   documentType: string,
   memberId?: string | null
-): boolean {
-  return submissions.some((submission) => {
-    if (normalizeStatus(submission.status) !== 'approved') return false
-    if (submission.document_type !== documentType) return false
-
-    if (memberId === undefined) return true
-    if (memberId === null) return !submission.investor_member_id
-    return submission.investor_member_id === memberId
-  })
+): SubmissionRow | null {
+  return getLatestSubmission(
+    submissions,
+    (submission) =>
+      submission.document_type === documentType &&
+      isSubmissionForMember(submission, memberId)
+  )
 }
 
-function hasApprovedIdDocument(submissions: SubmissionRow[], memberId?: string | null): boolean {
-  return submissions.some((submission) => {
-    if (normalizeStatus(submission.status) !== 'approved') return false
-    if (!isIdDocument(submission.document_type)) return false
-
-    if (memberId === undefined) return true
-    if (memberId === null) return !submission.investor_member_id
-    return submission.investor_member_id === memberId
-  })
+function getLatestIdDocumentSubmission(
+  submissions: SubmissionRow[],
+  memberId?: string | null
+): SubmissionRow | null {
+  return getLatestSubmission(
+    submissions,
+    (submission) =>
+      isIdDocument(submission.document_type) &&
+      isSubmissionForMember(submission, memberId)
+  )
 }
 
-function hasApprovedProofOfAddress(submissions: SubmissionRow[], memberId?: string | null): boolean {
-  return submissions.some((submission) => {
-    if (normalizeStatus(submission.status) !== 'approved') return false
-    if (!isProofOfAddress(submission.document_type)) return false
-
-    if (memberId === undefined) return true
-    if (memberId === null) return !submission.investor_member_id
-    return submission.investor_member_id === memberId
-  })
+function getLatestProofOfAddressSubmission(
+  submissions: SubmissionRow[],
+  memberId?: string | null
+): SubmissionRow | null {
+  return getLatestSubmission(
+    submissions,
+    (submission) =>
+      isProofOfAddress(submission.document_type) &&
+      isSubmissionForMember(submission, memberId)
+  )
 }
 
-function hasApprovedEntityDocument(submissions: SubmissionRow[], documentType: string): boolean {
+function getLatestEntityDocumentSubmission(
+  submissions: SubmissionRow[],
+  documentType: string
+): SubmissionRow | null {
   const acceptedTypes = [documentType, ...(ENTITY_DOCUMENT_ALIASES[documentType] || [])]
 
-  return acceptedTypes.some((type) =>
-    hasApprovedSubmissionForType(submissions, type, null)
+  return getLatestSubmission(
+    submissions,
+    (submission) =>
+      acceptedTypes.includes(submission.document_type) &&
+      isSubmissionForMember(submission, null)
   )
+}
+
+function toOutstandingRequirementLabel(
+  label: string,
+  latestSubmission: SubmissionRow | null
+): string | null {
+  if (!latestSubmission) {
+    return `${label} (missing)`
+  }
+
+  const status = normalizeStatus(latestSubmission.status)
+  if (status === 'approved') {
+    return null
+  }
+
+  if (status.includes('reject')) {
+    return `${label} (rejected)`
+  }
+
+  return `${label} (not yet approved)`
 }
 
 function parseLatestRequestInfo(entityMetadata: unknown): InvestorRequestInfoNotice | null {
@@ -198,9 +256,9 @@ export async function getInvestorAccountApprovalReadiness(params: {
   const [submissionsResult, membersResult, approvalsResult] = await Promise.all([
     supabase
       .from('kyc_submissions')
-      .select('document_type, status, investor_member_id')
+      .select('id, document_type, status, investor_member_id, submitted_at, reviewed_at')
       .eq('investor_id', investorId)
-      .eq('status', 'approved'),
+      .in('status', ['approved', 'pending', 'under_review', 'rejected']),
     supabase
       .from('investor_members')
       .select('id, full_name, first_name, last_name, email')
@@ -216,7 +274,7 @@ export async function getInvestorAccountApprovalReadiness(params: {
       .limit(25),
   ])
 
-  const approvedSubmissions = (submissionsResult.data || []) as SubmissionRow[]
+  const submissions = (submissionsResult.data || []) as SubmissionRow[]
   const activeMembers = (membersResult.data || []) as MemberRow[]
   const approvalRows = (approvalsResult.data || []) as ApprovalRow[]
 
@@ -238,15 +296,24 @@ export async function getInvestorAccountApprovalReadiness(params: {
 
   if (isIndividual) {
     const missing: string[] = []
-    if (!hasApprovedSubmissionForType(approvedSubmissions, 'personal_info', null)) {
-      missing.push('Personal Information')
-    }
-    if (!hasApprovedIdDocument(approvedSubmissions, null)) {
-      missing.push('Proof of Identification')
-    }
-    if (!hasApprovedProofOfAddress(approvedSubmissions, null)) {
-      missing.push('Proof of Address')
-    }
+    const personalIssue = toOutstandingRequirementLabel(
+      'Personal Information',
+      getLatestSubmissionForType(submissions, 'personal_info', null)
+    )
+    if (personalIssue) missing.push(personalIssue)
+
+    const idIssue = toOutstandingRequirementLabel(
+      'Proof of Identification',
+      getLatestIdDocumentSubmission(submissions, null)
+    )
+    if (idIssue) missing.push(idIssue)
+
+    const addressIssue = toOutstandingRequirementLabel(
+      'Proof of Address',
+      getLatestProofOfAddressSubmission(submissions, null)
+    )
+    if (addressIssue) missing.push(addressIssue)
+
     if (missing.length > 0) {
       missingItems.push({
         scope: 'entity',
@@ -257,14 +324,18 @@ export async function getInvestorAccountApprovalReadiness(params: {
   } else {
     const entityMissing: string[] = []
 
-    if (!hasApprovedSubmissionForType(approvedSubmissions, 'entity_info', null)) {
-      entityMissing.push('Entity Information')
-    }
+    const entityInfoIssue = toOutstandingRequirementLabel(
+      'Entity Information',
+      getLatestSubmissionForType(submissions, 'entity_info', null)
+    )
+    if (entityInfoIssue) entityMissing.push(entityInfoIssue)
 
     for (const requiredType of REQUIRED_ENTITY_DOCUMENTS) {
-      if (!hasApprovedEntityDocument(approvedSubmissions, requiredType)) {
-        entityMissing.push(ENTITY_DOCUMENT_LABELS[requiredType])
-      }
+      const entityDocIssue = toOutstandingRequirementLabel(
+        ENTITY_DOCUMENT_LABELS[requiredType],
+        getLatestEntityDocumentSubmission(submissions, requiredType)
+      )
+      if (entityDocIssue) entityMissing.push(entityDocIssue)
     }
 
     if (activeMembers.length === 0) {
@@ -282,15 +353,23 @@ export async function getInvestorAccountApprovalReadiness(params: {
     activeMembers.forEach((member, index) => {
       const missing: string[] = []
 
-      if (!hasApprovedSubmissionForType(approvedSubmissions, 'personal_info', member.id)) {
-        missing.push('Personal Information')
-      }
-      if (!hasApprovedIdDocument(approvedSubmissions, member.id)) {
-        missing.push('Proof of Identification')
-      }
-      if (!hasApprovedProofOfAddress(approvedSubmissions, member.id)) {
-        missing.push('Proof of Address')
-      }
+      const personalIssue = toOutstandingRequirementLabel(
+        'Personal Information',
+        getLatestSubmissionForType(submissions, 'personal_info', member.id)
+      )
+      if (personalIssue) missing.push(personalIssue)
+
+      const idIssue = toOutstandingRequirementLabel(
+        'Proof of Identification',
+        getLatestIdDocumentSubmission(submissions, member.id)
+      )
+      if (idIssue) missing.push(idIssue)
+
+      const addressIssue = toOutstandingRequirementLabel(
+        'Proof of Address',
+        getLatestProofOfAddressSubmission(submissions, member.id)
+      )
+      if (addressIssue) missing.push(addressIssue)
 
       if (missing.length > 0) {
         missingItems.push({

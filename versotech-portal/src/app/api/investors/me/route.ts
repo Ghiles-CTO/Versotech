@@ -2,6 +2,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
+import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 
 /**
  * GET /api/investors/me
@@ -141,7 +142,7 @@ export async function PATCH(request: Request) {
     // Fetch investor to determine type (entity vs individual)
     const { data: investor, error: investorError } = await serviceSupabase
       .from('investors')
-      .select('type, kyc_status')
+      .select('type, kyc_status, phone_mobile')
       .eq('id', investorId)
       .single()
 
@@ -158,6 +159,21 @@ export async function PATCH(request: Request) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: 'Invalid request body', details: parsed.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const effectivePhoneMobile =
+      parsed.data.phone_mobile !== undefined
+        ? parsed.data.phone_mobile
+        : investor.phone_mobile
+    const mobilePhoneError = getMobilePhoneValidationError(effectivePhoneMobile, true)
+    if (mobilePhoneError) {
+      return NextResponse.json(
+        {
+          error: mobilePhoneError,
+          details: { fieldErrors: { phone_mobile: [mobilePhoneError] } },
+        },
         { status: 400 }
       )
     }

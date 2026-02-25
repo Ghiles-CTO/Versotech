@@ -6,6 +6,7 @@
  */
 
 import { z } from 'zod'
+import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 
 export type MemberEntityType =
   | 'investor'
@@ -185,6 +186,15 @@ export const memberKycSchema = z.object({
   // KYC Status (admin-managed, but included for completeness)
   kyc_status: z.enum(['pending', 'submitted', 'approved', 'rejected', 'expired']).optional(),
   kyc_expiry_date: z.string().optional().nullable(),
+}).superRefine((data, ctx) => {
+  const mobilePhoneError = getMobilePhoneValidationError(data.phone_mobile, false)
+  if (mobilePhoneError) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['phone_mobile'],
+      message: mobilePhoneError,
+    })
+  }
 })
 
 export type MemberKycData = z.infer<typeof memberKycSchema>
@@ -192,7 +202,7 @@ export type MemberKycData = z.infer<typeof memberKycSchema>
 /**
  * Schema for creating a new member (required fields)
  */
-export const createMemberSchema = memberKycSchema.extend({
+export const createMemberSchema = memberKycSchema.safeExtend({
   role: z.enum([
     'director',
     'shareholder',

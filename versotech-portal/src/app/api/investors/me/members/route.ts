@@ -1,6 +1,8 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { createMemberSchema, prepareMemberData } from '@/lib/schemas/member-kyc-schema'
 import { syncUserSignatoryFromMember } from '@/lib/kyc/member-signatory-sync'
+import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
+import { getMemberOverallKycStatusMap } from '@/lib/kyc/member-kyc-overall-status'
 import { NextResponse } from 'next/server'
 
 /**
@@ -62,8 +64,38 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Failed to fetch members' }, { status: 500 })
     }
 
+    const memberList = members || []
+    const memberCurrentStatuses: Record<string, string | null> = Object.fromEntries(
+      memberList.map((member) => [member.id, member.kyc_status ?? null])
+    )
+    const overallStatusMap: Record<string, string> = {}
+
+    for (const investorId of entityInvestorIds) {
+      const memberIds = memberList
+        .filter((member) => member.investor_id === investorId)
+        .map((member) => member.id)
+        .filter(Boolean)
+
+      if (memberIds.length === 0) continue
+
+      const investorStatusMap = await getMemberOverallKycStatusMap({
+        supabase: serviceSupabase,
+        entityType: 'investor',
+        entityId: investorId,
+        memberIds,
+        memberCurrentStatuses,
+      })
+
+      Object.assign(overallStatusMap, investorStatusMap)
+    }
+
+    const membersWithOverallStatus = memberList.map((member) => ({
+      ...member,
+      kyc_overall_status: overallStatusMap[member.id] || 'not_submitted',
+    }))
+
     return NextResponse.json({
-      members: members || [],
+      members: membersWithOverallStatus,
       investors: investors
     })
   } catch (error) {
@@ -134,6 +166,17 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: 'Invalid request body', details: parsed.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const mobilePhoneError = getMobilePhoneValidationError(parsed.data.phone_mobile, true)
+    if (mobilePhoneError) {
+      return NextResponse.json(
+        {
+          error: mobilePhoneError,
+          details: { fieldErrors: { phone_mobile: [mobilePhoneError] } },
+        },
         { status: 400 }
       )
     }

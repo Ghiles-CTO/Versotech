@@ -5,6 +5,7 @@ import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
 import { checkAndUpdateEntityKYCStatus } from '@/lib/kyc/check-entity-kyc-status'
 import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
 import { notifyCeoEntityInfoSubmitted } from '@/lib/kyc/submit-notifications'
+import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 
 type FieldSpec = {
   key: string
@@ -329,6 +330,21 @@ export async function submitEntityKycForUser(params: {
           error: 'Please complete all required entity fields before submitting',
           missing: missingFields.map((f) => f.label),
         },
+      }
+    }
+
+    const mobilePhoneField = config.requiredFields.find((field) => field.key === 'phone_mobile')
+    if (mobilePhoneField) {
+      const mobilePhoneValue = resolveFieldValue(entityRecord, mobilePhoneField)
+      const mobilePhoneError = getMobilePhoneValidationError(mobilePhoneValue, true)
+      if (mobilePhoneError) {
+        return {
+          status: 400,
+          payload: {
+            error: mobilePhoneError,
+            invalid: [mobilePhoneField.label],
+          },
+        }
       }
     }
 

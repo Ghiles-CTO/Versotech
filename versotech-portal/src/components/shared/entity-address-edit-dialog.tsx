@@ -19,6 +19,7 @@ import { PhoneInput } from '@/components/ui/phone-input'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import { CountrySelect } from '@/components/kyc/country-select'
+import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 
 // Entity address schema
 const entityAddressSchema = z.object({
@@ -37,13 +38,16 @@ const entityAddressSchema = z.object({
   phone_mobile: z.string().max(30).optional().nullable(),
   phone_office: z.string().max(30).optional().nullable(),
   website: z.string().url('Invalid URL').optional().nullable().or(z.literal('')),
-}).refine(
-  (data) => typeof data.phone_mobile === 'string' && data.phone_mobile.trim().length > 0,
-  {
-    path: ['phone_mobile'],
-    message: 'Mobile phone is required',
+}).superRefine((data, ctx) => {
+  const mobileError = getMobilePhoneValidationError(data.phone_mobile, true)
+  if (mobileError) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['phone_mobile'],
+      message: mobileError,
+    })
   }
-)
+})
 
 type EntityAddressForm = z.infer<typeof entityAddressSchema>
 

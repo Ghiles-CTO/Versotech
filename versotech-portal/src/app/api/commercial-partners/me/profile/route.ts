@@ -8,6 +8,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 
 const profileUpdateSchema = z.object({
   // Identity / entity fields
@@ -176,6 +177,29 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updateData = validation.data
+
+    const { data: currentCommercialPartner, error: currentCommercialPartnerError } = await serviceSupabase
+      .from('commercial_partners')
+      .select('phone_mobile')
+      .eq('id', cpUser.commercial_partner_id)
+      .single()
+
+    if (currentCommercialPartnerError || !currentCommercialPartner) {
+      return NextResponse.json({ error: 'Commercial partner entity not found' }, { status: 404 })
+    }
+
+    const effectivePhoneMobile =
+      updateData.phone_mobile !== undefined
+        ? updateData.phone_mobile
+        : currentCommercialPartner.phone_mobile
+    const mobilePhoneError = getMobilePhoneValidationError(effectivePhoneMobile, true)
+    if (mobilePhoneError) {
+      return NextResponse.json(
+        { error: mobilePhoneError, details: { fieldErrors: { phone_mobile: [mobilePhoneError] } } },
+        { status: 400 }
+      )
+    }
+
     const updateFields: Record<string, unknown> = {}
 
     for (const [key, value] of Object.entries(updateData)) {

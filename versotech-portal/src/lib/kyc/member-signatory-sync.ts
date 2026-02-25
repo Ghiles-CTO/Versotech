@@ -122,6 +122,8 @@ async function resolveMemberForUser(params: {
     .eq(config.entityIdColumn, entityId)
     .eq('linked_user_id', userId)
     .eq('is_active', true)
+    .order('created_at', { ascending: true })
+    .limit(1)
     .maybeSingle()
 
   if (linkedMemberError) {
@@ -177,6 +179,8 @@ async function resolveMemberForUser(params: {
     .eq(config.entityIdColumn, entityId)
     .eq('linked_user_id', userId)
     .eq('is_active', true)
+    .order('created_at', { ascending: true })
+    .limit(1)
     .maybeSingle()
 
   if (racedMemberError) {

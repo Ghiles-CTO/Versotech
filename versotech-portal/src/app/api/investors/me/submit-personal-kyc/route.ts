@@ -4,6 +4,7 @@ import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
 import { checkAndUpdateEntityKYCStatus } from '@/lib/kyc/check-entity-kyc-status'
 import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
 import { notifyCeoPersonalInfoSubmitted } from '@/lib/kyc/submit-notifications'
+import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 
 const normalizeSnapshotValue = (value: unknown): string | null => {
   if (value === null || value === undefined) return null
@@ -123,6 +124,17 @@ export async function POST() {
         {
           error: 'Please complete all required personal fields before submitting',
           missing: missingFields.map(field => field.label),
+        },
+        { status: 400 }
+      )
+    }
+
+    const mobilePhoneError = getMobilePhoneValidationError(investor.phone_mobile, true)
+    if (mobilePhoneError) {
+      return NextResponse.json(
+        {
+          error: mobilePhoneError,
+          missing: ['Mobile Phone'],
         },
         { status: 400 }
       )

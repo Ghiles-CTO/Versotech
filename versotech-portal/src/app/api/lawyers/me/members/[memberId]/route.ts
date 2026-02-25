@@ -8,6 +8,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { updateMemberSchema, prepareMemberData } from '@/lib/schemas/member-kyc-schema'
+import { MEMBER_KYC_PROFILE_FIELDS } from '@/lib/kyc/member-kyc-fields'
 import { syncUserSignatoryFromMember } from '@/lib/kyc/member-signatory-sync'
 
 interface RouteParams {
@@ -107,12 +108,17 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       )
     }
 
+    const hasKycProfileFieldEdit = MEMBER_KYC_PROFILE_FIELDS.some((field) =>
+      Object.prototype.hasOwnProperty.call(body, field)
+    )
+
     const updateData = prepareMemberData(parsed.data, {
       computeFullName: true,
       entityType: 'lawyer',
     })
 
-    const kycReset = (existingMember.kyc_status === 'approved' || existingMember.kyc_status === 'submitted')
+    const kycReset = hasKycProfileFieldEdit &&
+      (existingMember.kyc_status === 'approved' || existingMember.kyc_status === 'submitted')
       ? { kyc_status: 'pending' as const, kyc_approved_at: null }
       : {}
 

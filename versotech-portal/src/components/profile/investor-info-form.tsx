@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
+import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 
 const investorInfoSchema = z.object({
   // Personal Info (for individuals)
@@ -73,6 +74,15 @@ const investorInfoSchema = z.object({
   // Representative info (for entity-type investors)
   representative_name: z.string().optional().nullable(),
   representative_title: z.string().optional().nullable(),
+}).superRefine((data, ctx) => {
+  const mobileError = getMobilePhoneValidationError(data.phone_mobile, true)
+  if (mobileError) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['phone_mobile'],
+      message: mobileError,
+    })
+  }
 })
 
 type InvestorInfoValues = z.infer<typeof investorInfoSchema>

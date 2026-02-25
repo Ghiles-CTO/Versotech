@@ -8,6 +8,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 
 // Schema allows all editable fields
 const profileUpdateSchema = z.object({
@@ -172,6 +173,28 @@ export async function PUT(request: NextRequest) {
     }
 
     const updateData = validation.data
+
+    const { data: currentArranger, error: currentArrangerError } = await serviceSupabase
+      .from('arranger_entities')
+      .select('phone_mobile')
+      .eq('id', arrangerUser.arranger_id)
+      .single()
+
+    if (currentArrangerError || !currentArranger) {
+      return NextResponse.json({ error: 'Arranger entity not found' }, { status: 404 })
+    }
+
+    const effectivePhoneMobile =
+      updateData.phone_mobile !== undefined
+        ? updateData.phone_mobile
+        : currentArranger.phone_mobile
+    const mobilePhoneError = getMobilePhoneValidationError(effectivePhoneMobile, true)
+    if (mobilePhoneError) {
+      return NextResponse.json(
+        { error: mobilePhoneError, details: { fieldErrors: { phone_mobile: [mobilePhoneError] } } },
+        { status: 400 }
+      )
+    }
 
     // Filter out empty/undefined values and build update object
     const updateFields: Record<string, unknown> = {}

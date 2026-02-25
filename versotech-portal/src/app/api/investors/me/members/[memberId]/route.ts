@@ -1,6 +1,8 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { updateMemberSchema, prepareMemberData } from '@/lib/schemas/member-kyc-schema'
 import { syncUserSignatoryFromMember } from '@/lib/kyc/member-signatory-sync'
+import { MEMBER_KYC_PROFILE_FIELDS } from '@/lib/kyc/member-kyc-fields'
+import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 import { NextResponse } from 'next/server'
 
 interface RouteParams {
@@ -92,7 +94,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     // Verify member belongs to user's investor
     const { data: existingMember } = await serviceSupabase
       .from('investor_members')
-      .select('id, investor_id, email, kyc_status')
+      .select('id, investor_id, email, kyc_status, phone_mobile')
       .eq('id', memberId)
       .in('investor_id', investorIds)
       .single()
@@ -127,8 +129,31 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       )
     }
 
-    // If KYC was approved/submitted, reset to pending so staff re-reviews
-    const kycReset = (existingMember.kyc_status === 'approved' || existingMember.kyc_status === 'submitted')
+    const hasKycProfileFieldEdit = MEMBER_KYC_PROFILE_FIELDS.some((field) =>
+      Object.prototype.hasOwnProperty.call(body, field)
+    )
+
+    if (hasKycProfileFieldEdit) {
+      const effectivePhoneMobile =
+        parsed.data.phone_mobile !== undefined
+          ? parsed.data.phone_mobile
+          : existingMember.phone_mobile
+      const mobilePhoneError = getMobilePhoneValidationError(effectivePhoneMobile, true)
+      if (mobilePhoneError) {
+        return NextResponse.json(
+          {
+            error: mobilePhoneError,
+            details: { fieldErrors: { phone_mobile: [mobilePhoneError] } },
+          },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Only KYC-profile edits should reset KYC status.
+    // Signatory/user-link updates are operational changes and must not invalidate KYC.
+    const kycReset = hasKycProfileFieldEdit &&
+      (existingMember.kyc_status === 'approved' || existingMember.kyc_status === 'submitted')
       ? { kyc_status: 'pending' as const, kyc_approved_at: null }
       : {}
 

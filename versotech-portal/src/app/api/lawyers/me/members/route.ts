@@ -10,6 +10,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { createMemberSchema, prepareMemberData } from '@/lib/schemas/member-kyc-schema'
 import { syncUserSignatoryFromMember } from '@/lib/kyc/member-signatory-sync'
+import { getMemberOverallKycStatusMap } from '@/lib/kyc/member-kyc-overall-status'
 
 /**
  * GET /api/lawyers/me/members
@@ -58,8 +59,26 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch members' }, { status: 500 })
     }
 
+    const memberList = members || []
+    const memberCurrentStatuses: Record<string, string | null> = Object.fromEntries(
+      memberList.map((member) => [member.id, member.kyc_status ?? null])
+    )
+    const memberIds = memberList.map((member) => member.id).filter(Boolean)
+    const overallStatusMap = await getMemberOverallKycStatusMap({
+      supabase: serviceSupabase,
+      entityType: 'lawyer',
+      entityId: lawyerId,
+      memberIds,
+      memberCurrentStatuses,
+    })
+
+    const membersWithOverallStatus = memberList.map((member) => ({
+      ...member,
+      kyc_overall_status: overallStatusMap[member.id] || 'not_submitted',
+    }))
+
     return NextResponse.json({
-      members: members || [],
+      members: membersWithOverallStatus,
       lawyer: {
         id: lawyer.id,
         firm_name: lawyer.firm_name,

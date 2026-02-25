@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { checkAndUpdateEntityKYCStatus } from '@/lib/kyc/check-entity-kyc-status'
 import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
 import { notifyCeoPersonalInfoSubmitted } from '@/lib/kyc/submit-notifications'
+import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 
 const normalizeSnapshotValue = (value: unknown): string | null => {
   if (value === null || value === undefined) return null
@@ -269,6 +270,17 @@ export async function POST(request: Request) {
         {
           error: 'Please complete all required fields before submitting',
           missing: missingFields.map(f => f.label)
+        },
+        { status: 400 }
+      )
+    }
+
+    const mobilePhoneError = getMobilePhoneValidationError(member.phone_mobile, true)
+    if (mobilePhoneError) {
+      return NextResponse.json(
+        {
+          error: mobilePhoneError,
+          missing: ['Mobile Phone'],
         },
         { status: 400 }
       )

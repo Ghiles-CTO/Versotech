@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { checkAndUpdateEntityKYCStatus } from '@/lib/kyc/check-entity-kyc-status'
 import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
+import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 
 const hasMeaningfulValue = (value: unknown): boolean => {
   if (value === null || value === undefined) return false
@@ -86,6 +87,17 @@ export async function POST(
         {
           error: 'Please complete all required fields before submitting',
           missing: missingFields.map(f => f.label)
+        },
+        { status: 400 }
+      )
+    }
+
+    const mobilePhoneError = getMobilePhoneValidationError(member.phone_mobile, true)
+    if (mobilePhoneError) {
+      return NextResponse.json(
+        {
+          error: mobilePhoneError,
+          details: { fieldErrors: { phone_mobile: [mobilePhoneError] } },
         },
         { status: 400 }
       )

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { createClient } from '@/lib/supabase/server'
+import { checkAndUpdateEntityKYCStatus } from '@/lib/kyc/check-entity-kyc-status'
 import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
 import {
   buildUploadDocumentMetadata,
@@ -434,6 +435,16 @@ export async function POST(request: NextRequest) {
         } else {
           taskCompleted = true
         }
+      }
+    }
+
+    // Immediately refresh investor KYC status so UI does not lag behind right after upload.
+    // Skip this for counterparty entity uploads (entityId provided).
+    if (!entityId) {
+      try {
+        await checkAndUpdateEntityKYCStatus(serviceSupabase, 'investor', investorId)
+      } catch (statusRefreshError) {
+        console.error('[investors/me/documents/upload] KYC status refresh failed:', statusRefreshError)
       }
     }
 
