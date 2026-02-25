@@ -367,7 +367,7 @@ export function TasksPageClient({
             className="ml-3 bg-blue-600 hover:bg-blue-700 text-white"
             disabled={task.status === 'blocked'}
           >
-            Mark Done
+            {task.category === 'signatures' ? 'Start' : 'Mark Done'}
             <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
         )}
@@ -792,7 +792,7 @@ export function TasksPageClient({
               <div className="bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
                 <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Ready to Sign</h4>
                 <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
-                  Click below to open the signature page and complete your signature.
+                  Click below to open the document and complete your signature.
                 </p>
                 <a
                   href={selectedTask.instructions.action_url}
@@ -800,14 +800,14 @@ export function TasksPageClient({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
                 >
-                  Open Signature Page
+                  Open Document
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </div>
             )}
 
             {/* Action Buttons */}
-            {selectedTask && selectedTask.status !== 'completed' && selectedTask.status !== 'waived' && (
+            {selectedTask && selectedTask.status !== 'completed' && selectedTask.status !== 'waived' && selectedTask.category !== 'signatures' && (
               <div className="flex items-center gap-3 pt-4 border-t border-gray-200 dark:border-zinc-700">
                 {selectedTask.action_url && (
                   <Button
