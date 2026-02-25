@@ -35,7 +35,8 @@ const profileUpdateSchema = z.object({
   website: z.string().url().max(255).optional().nullable().or(z.literal('')),
 
   // Address fields (structured - replacing single 'address' field)
-  address: z.string().max(500).optional().nullable(), // Legacy field
+  address: z.string().max(500).optional().nullable(),
+  address_2: z.string().max(255).optional().nullable(),
   address_line_1: z.string().max(255).optional().nullable(),
   address_line_2: z.string().max(255).optional().nullable(),
   city: z.string().max(100).optional().nullable(),
@@ -173,6 +174,10 @@ export async function PUT(request: NextRequest) {
     }
 
     const updateData = validation.data
+    const normalizedAddressLine1 =
+      updateData.address !== undefined ? updateData.address : updateData.address_line_1
+    const normalizedAddressLine2 =
+      updateData.address_2 !== undefined ? updateData.address_2 : updateData.address_line_2
 
     const { data: currentArranger, error: currentArrangerError } = await serviceSupabase
       .from('arranger_entities')
@@ -199,10 +204,21 @@ export async function PUT(request: NextRequest) {
     // Filter out empty/undefined values and build update object
     const updateFields: Record<string, unknown> = {}
     for (const [key, value] of Object.entries(updateData)) {
+      if (['address_2', 'address_line_1', 'address_line_2'].includes(key)) {
+        continue
+      }
       if (value !== undefined) {
         // Convert empty strings to null for optional fields
         updateFields[key] = value === '' ? null : value
       }
+    }
+    if (normalizedAddressLine1 !== undefined) {
+      const mainAddressValue = normalizedAddressLine1 === '' ? null : normalizedAddressLine1
+      updateFields.address = mainAddressValue
+      updateFields.address_line_1 = mainAddressValue
+    }
+    if (normalizedAddressLine2 !== undefined) {
+      updateFields.address_line_2 = normalizedAddressLine2 === '' ? null : normalizedAddressLine2
     }
 
     // Check there's something to update

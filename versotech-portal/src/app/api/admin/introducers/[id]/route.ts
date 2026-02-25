@@ -11,6 +11,8 @@ const updateIntroducerSchema = z.object({
   contact_email: z.string().email().nullable().optional().or(z.literal('')),
   contact_phone: z.string().nullable().optional(),
   website: z.string().url().nullable().optional().or(z.literal('')),
+  address: z.string().nullable().optional(),
+  address_2: z.string().nullable().optional(),
   address_line_1: z.string().nullable().optional(),
   address_line_2: z.string().nullable().optional(),
   city: z.string().nullable().optional(),
@@ -154,6 +156,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     // Parse and validate request body
     const body = await request.json()
     const validatedData = updateIntroducerSchema.parse(body)
+    const normalizedAddressLine1 =
+      validatedData.address !== undefined ? validatedData.address : validatedData.address_line_1
+    const normalizedAddressLine2 =
+      validatedData.address_2 !== undefined ? validatedData.address_2 : validatedData.address_line_2
 
     // Clean up empty strings
     const cleanedData = Object.fromEntries(
@@ -162,6 +168,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         value === '' ? null : value
       ])
     ) as Record<string, unknown>
+    delete cleanedData.address
+    delete cleanedData.address_2
+    cleanedData.address_line_1 = normalizedAddressLine1 === '' ? null : normalizedAddressLine1
+    cleanedData.address_line_2 = normalizedAddressLine2 === '' ? null : normalizedAddressLine2
 
     // Handle KYC status changes
     if (cleanedData.kyc_status && cleanedData.kyc_status !== existingIntroducer.kyc_status) {

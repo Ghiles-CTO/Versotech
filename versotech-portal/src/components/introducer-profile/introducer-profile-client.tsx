@@ -635,8 +635,8 @@ export function IntroducerProfileClient({
             }
           >
             <OverviewFieldGrid>
-              <OverviewField label="Address Line 1" value={introducerInfo?.address_line_1 || '-'} />
-              <OverviewField label="Address Line 2" value={introducerInfo?.address_line_2 || '-'} />
+              <OverviewField label="Address" value={introducerInfo?.address_line_1 || '-'} />
+              <OverviewField label="Address (Optional)" value={introducerInfo?.address_line_2 || '-'} />
               <OverviewField label="City" value={introducerInfo?.city || '-'} />
               <OverviewField label="State / Province" value={introducerInfo?.state_province || '-'} />
               <OverviewField label="Postal Code" value={introducerInfo?.postal_code || '-'} />
@@ -900,8 +900,8 @@ export function IntroducerProfileClient({
         entityType="introducer"
         entityName={introducerInfo?.legal_name || introducerInfo?.contact_name || undefined}
         initialData={{
-          address_line_1: introducerInfo?.address_line_1 ?? undefined,
-          address_line_2: introducerInfo?.address_line_2 ?? undefined,
+          address: introducerInfo?.address_line_1 ?? undefined,
+          address_2: introducerInfo?.address_line_2 ?? undefined,
           city: introducerInfo?.city ?? undefined,
           state_province: introducerInfo?.state_province ?? undefined,
           postal_code: introducerInfo?.postal_code ?? undefined,

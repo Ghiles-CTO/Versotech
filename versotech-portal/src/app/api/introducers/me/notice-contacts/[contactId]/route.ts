@@ -8,6 +8,8 @@ const updateNoticeContactSchema = z.object({
   contact_title: z.string().optional().nullable(),
   email: z.string().email().optional().nullable().or(z.literal('')),
   phone: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  address_2: z.string().optional().nullable(),
   address_line_1: z.string().optional().nullable(),
   address_line_2: z.string().optional().nullable(),
   city: z.string().optional().nullable(),
@@ -61,10 +63,27 @@ export async function PATCH(
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid request body', details: parsed.error.flatten() }, { status: 400 })
     }
+    const normalizedAddressLine1 =
+      parsed.data.address !== undefined ? parsed.data.address : parsed.data.address_line_1
+    const normalizedAddressLine2 =
+      parsed.data.address_2 !== undefined ? parsed.data.address_2 : parsed.data.address_line_2
+    const updatePayload: Record<string, unknown> = {
+      ...parsed.data,
+      email: parsed.data.email || null,
+      updated_at: new Date().toISOString(),
+    }
+    delete updatePayload.address
+    delete updatePayload.address_2
+    if (normalizedAddressLine1 !== undefined) {
+      updatePayload.address_line_1 = normalizedAddressLine1 === '' ? null : normalizedAddressLine1
+    }
+    if (normalizedAddressLine2 !== undefined) {
+      updatePayload.address_line_2 = normalizedAddressLine2 === '' ? null : normalizedAddressLine2
+    }
 
     const { data: updatedContact, error: updateError } = await serviceSupabase
       .from('entity_notice_contacts')
-      .update({ ...parsed.data, email: parsed.data.email || null, updated_at: new Date().toISOString() })
+      .update(updatePayload)
       .eq('id', contactId)
       .select()
       .single()

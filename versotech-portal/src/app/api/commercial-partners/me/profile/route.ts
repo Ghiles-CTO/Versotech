@@ -29,6 +29,8 @@ const profileUpdateSchema = z.object({
   website: z.string().url().max(255).optional().nullable().or(z.literal('')),
 
   // Address fields
+  address: z.string().max(255).optional().nullable(),
+  address_2: z.string().max(255).optional().nullable(),
   address_line_1: z.string().max(255).optional().nullable(),
   address_line_2: z.string().max(255).optional().nullable(),
   city: z.string().max(100).optional().nullable(),
@@ -177,6 +179,10 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updateData = validation.data
+    const normalizedAddressLine1 =
+      updateData.address !== undefined ? updateData.address : updateData.address_line_1
+    const normalizedAddressLine2 =
+      updateData.address_2 !== undefined ? updateData.address_2 : updateData.address_line_2
 
     const { data: currentCommercialPartner, error: currentCommercialPartnerError } = await serviceSupabase
       .from('commercial_partners')
@@ -204,12 +210,19 @@ export async function PATCH(request: NextRequest) {
 
     for (const [key, value] of Object.entries(updateData)) {
       if (key === 'entity_id') continue
+      if (['address', 'address_2', 'address_line_1', 'address_line_2'].includes(key)) continue
       if (value === undefined) continue
       if (typeof value === 'string') {
         updateFields[key] = value === '' ? null : value
       } else {
         updateFields[key] = value
       }
+    }
+    if (normalizedAddressLine1 !== undefined) {
+      updateFields.address_line_1 = normalizedAddressLine1 === '' ? null : normalizedAddressLine1
+    }
+    if (normalizedAddressLine2 !== undefined) {
+      updateFields.address_line_2 = normalizedAddressLine2 === '' ? null : normalizedAddressLine2
     }
 
     if (Object.keys(updateFields).length === 0) {

@@ -75,6 +75,8 @@ const updateInvestorSchema = z.object({
   residential_country: z.string().optional().nullable(),
 
   // Registered Address (for entities) - from EntityAddressEditDialog
+  address: z.string().max(200).optional().nullable(),
+  address_2: z.string().max(200).optional().nullable(),
   address_line_1: z.string().max(200).optional().nullable(),
   address_line_2: z.string().max(200).optional().nullable(),
   city: z.string().max(100).optional().nullable(),
@@ -240,8 +242,8 @@ export async function PATCH(request: Request) {
     // Handle address fields from EntityAddressEditDialog
     // These need to be mapped to correct DB columns based on investor type
     const dialogAddressFields = {
-      address_line_1: parsed.data.address_line_1,
-      address_line_2: parsed.data.address_line_2,
+      address: parsed.data.address !== undefined ? parsed.data.address : parsed.data.address_line_1,
+      address_2: parsed.data.address_2 !== undefined ? parsed.data.address_2 : parsed.data.address_line_2,
       city: parsed.data.city,
       state_province: parsed.data.state_province,
       postal_code: parsed.data.postal_code,
@@ -255,11 +257,11 @@ export async function PATCH(request: Request) {
       if (isEntity) {
         // Map to canonical + legacy registered address columns for entities.
         // Canonical fields are consumed by NDA/subscription payload builders.
-        const addressLine1 = dialogAddressFields.address_line_1?.trim() || ''
-        const addressLine2 = dialogAddressFields.address_line_2?.trim() || ''
+        const addressLine1 = dialogAddressFields.address?.trim() || ''
+        const addressLine2 = dialogAddressFields.address_2?.trim() || ''
         const registeredAddress = [addressLine1, addressLine2].filter(Boolean).join(', ')
 
-        if (dialogAddressFields.address_line_1 !== undefined || dialogAddressFields.address_line_2 !== undefined) {
+        if (dialogAddressFields.address !== undefined || dialogAddressFields.address_2 !== undefined) {
           updateData.registered_address = registeredAddress || null
         }
         if (dialogAddressFields.city !== undefined) {
@@ -273,11 +275,11 @@ export async function PATCH(request: Request) {
         }
 
         // Legacy compatibility fields still used in parts of the portal.
-        if (dialogAddressFields.address_line_1 !== undefined) {
-          updateData.registered_address_line_1 = dialogAddressFields.address_line_1
+        if (dialogAddressFields.address !== undefined) {
+          updateData.registered_address_line_1 = dialogAddressFields.address
         }
-        if (dialogAddressFields.address_line_2 !== undefined) {
-          updateData.registered_address_line_2 = dialogAddressFields.address_line_2
+        if (dialogAddressFields.address_2 !== undefined) {
+          updateData.registered_address_line_2 = dialogAddressFields.address_2
         }
         if (dialogAddressFields.city !== undefined) {
           updateData.registered_city = dialogAddressFields.city
@@ -293,11 +295,11 @@ export async function PATCH(request: Request) {
         }
       } else {
         // Map to residential_* columns for individuals
-        if (dialogAddressFields.address_line_1 !== undefined) {
-          updateData.residential_street = dialogAddressFields.address_line_1
+        if (dialogAddressFields.address !== undefined) {
+          updateData.residential_street = dialogAddressFields.address
         }
-        if (dialogAddressFields.address_line_2 !== undefined) {
-          updateData.residential_line_2 = dialogAddressFields.address_line_2
+        if (dialogAddressFields.address_2 !== undefined) {
+          updateData.residential_line_2 = dialogAddressFields.address_2
         }
         if (dialogAddressFields.city !== undefined) {
           updateData.residential_city = dialogAddressFields.city

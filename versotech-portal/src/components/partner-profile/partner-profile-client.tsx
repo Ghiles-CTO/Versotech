@@ -333,8 +333,8 @@ export function PartnerProfileClient({
 
             <OverviewSectionCard title="Registered Address" description="Official entity address" icon={MapPin}>
               <OverviewFieldGrid>
-                <OverviewField label="Address Line 1" value={partnerInfo.address_line_1 || '-'} />
-                <OverviewField label="Address Line 2" value={partnerInfo.address_line_2 || '-'} />
+                <OverviewField label="Address" value={partnerInfo.address_line_1 || '-'} />
+                <OverviewField label="Address (Optional)" value={partnerInfo.address_line_2 || '-'} />
                 <OverviewField label="City" value={partnerInfo.city || '-'} />
                 <OverviewField label="State / Province" value={partnerInfo.state_province || '-'} />
                 <OverviewField label="Postal Code" value={partnerInfo.postal_code || '-'} />
@@ -541,8 +541,8 @@ export function PartnerProfileClient({
         entityType="partner"
         entityName={partnerInfo.name}
         initialData={{
-          address_line_1: partnerInfo.address_line_1 ?? undefined,
-          address_line_2: partnerInfo.address_line_2 ?? undefined,
+          address: partnerInfo.address_line_1 ?? undefined,
+          address_2: partnerInfo.address_line_2 ?? undefined,
           city: partnerInfo.city ?? undefined,
           state_province: partnerInfo.state_province ?? undefined,
           postal_code: partnerInfo.postal_code ?? undefined,

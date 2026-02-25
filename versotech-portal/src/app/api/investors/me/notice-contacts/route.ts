@@ -8,6 +8,8 @@ const noticeContactSchema = z.object({
   contact_title: z.string().optional().nullable(),
   email: z.string().email().optional().nullable().or(z.literal('')),
   phone: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  address_2: z.string().optional().nullable(),
   address_line_1: z.string().optional().nullable(),
   address_line_2: z.string().optional().nullable(),
   city: z.string().optional().nullable(),
@@ -58,7 +60,13 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch notice contacts' }, { status: 500 })
     }
 
-    return NextResponse.json({ contacts: contacts || [] })
+    const normalizedContacts = (contacts || []).map(contact => ({
+      ...contact,
+      address: contact.address_line_1,
+      address_2: contact.address_line_2,
+    }))
+
+    return NextResponse.json({ contacts: normalizedContacts })
   } catch (error) {
     console.error('Unexpected error in GET /api/investors/me/notice-contacts:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -115,8 +123,8 @@ export async function POST(request: Request) {
         contact_title: contactData.contact_title,
         email: contactData.email || null,
         phone: contactData.phone,
-        address_line_1: contactData.address_line_1,
-        address_line_2: contactData.address_line_2,
+        address_line_1: contactData.address ?? contactData.address_line_1 ?? null,
+        address_line_2: contactData.address_2 ?? contactData.address_line_2 ?? null,
         city: contactData.city,
         state_province: contactData.state_province,
         postal_code: contactData.postal_code,

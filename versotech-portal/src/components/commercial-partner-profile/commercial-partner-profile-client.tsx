@@ -63,6 +63,13 @@ type CommercialPartnerInfo = {
   contact_name: string | null
   contact_email: string | null
   contact_phone: string | null
+  address?: string | null
+  address_line_1?: string | null
+  address_line_2?: string | null
+  city?: string | null
+  state_province?: string | null
+  postal_code?: string | null
+  country?: string | null
   website: string | null
   payment_terms: string | null
   contract_start_date: string | null
@@ -636,6 +643,8 @@ export function CommercialPartnerProfileClient({
               ) : undefined}
             >
               <OverviewFieldGrid>
+                <OverviewField label="Address" value={cpInfo.address_line_1 || cpInfo.address || '-'} />
+                <OverviewField label="Address (Optional)" value={cpInfo.address_line_2 || '-'} />
                 <OverviewField label="Jurisdiction" value={cpInfo.jurisdiction || '-'} />
                 <OverviewField label="Phone" value={cpInfo.contact_phone || cpInfo.phone_mobile || cpInfo.phone_office || '-'} />
                 <OverviewField label="Email" value={cpInfo.contact_email || cpInfo.email || '-'} />
@@ -873,6 +882,12 @@ export function CommercialPartnerProfileClient({
           entityType="commercial_partner"
           entityName={cpInfo.name || cpInfo.legal_name || 'Commercial Partner'}
           initialData={{
+            address: cpInfo.address_line_1 ?? cpInfo.address ?? '',
+            address_2: cpInfo.address_line_2 ?? '',
+            city: cpInfo.city ?? '',
+            state_province: cpInfo.state_province ?? '',
+            postal_code: cpInfo.postal_code ?? '',
+            country: cpInfo.country ?? '',
             email: cpInfo.contact_email ?? '',
             phone: cpInfo.contact_phone ?? '',
             phone_mobile: cpInfo.phone_mobile ?? '',

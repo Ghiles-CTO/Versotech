@@ -171,8 +171,8 @@ export function EditPartnerDialog({ open, onOpenChange, partner }: EditPartnerDi
             contact_email: contactEmail.trim() || null,
             contact_phone: contactPhone.trim() || null,
             website: website.trim() || null,
-            address_line_1: addressLine1.trim() || null,
-            address_line_2: addressLine2.trim() || null,
+            address: addressLine1.trim() || null,
+            address_2: addressLine2.trim() || null,
             city: city.trim() || null,
             postal_code: postalCode.trim() || null,
             country: country.trim() || null,
@@ -328,7 +328,7 @@ export function EditPartnerDialog({ open, onOpenChange, partner }: EditPartnerDi
           <div className="space-y-4">
             <h4 className="text-sm font-medium border-b pb-2">Address</h4>
             <div className="grid gap-2">
-              <Label htmlFor="addressLine1">Address Line 1</Label>
+              <Label htmlFor="addressLine1">Address</Label>
               <Input
                 id="addressLine1"
                 value={addressLine1}
@@ -336,7 +336,7 @@ export function EditPartnerDialog({ open, onOpenChange, partner }: EditPartnerDi
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="addressLine2">Address Line 2</Label>
+              <Label htmlFor="addressLine2">Address (Optional)</Label>
               <Input
                 id="addressLine2"
                 value={addressLine2}

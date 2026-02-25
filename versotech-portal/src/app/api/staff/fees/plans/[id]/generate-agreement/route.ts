@@ -304,7 +304,7 @@ export async function POST(
       console.error('Error fetching introducer member signatories:', introducerMembersError);
     }
 
-    let rawSignatories: Array<{ name: string }> = [];
+    let rawSignatories: Array<{ name: string; email?: string | null }> = [];
 
     if (introducerMembers && introducerMembers.length > 0) {
       rawSignatories = introducerMembers.map((member, index) => {
@@ -318,6 +318,7 @@ export async function POST(
             introducer?.contact_name ||
             introducer?.legal_name ||
             `Signatory ${index + 1}`,
+          email: profile?.email || null,
         };
       });
     } else {
@@ -345,6 +346,7 @@ export async function POST(
         const profile = Array.isArray(user.profiles) ? user.profiles[0] : user.profiles;
         return {
           name: profile?.display_name || introducer?.contact_name || introducer?.legal_name || `Signatory ${index + 1}`,
+          email: profile?.email || null,
         };
       });
     }
@@ -358,8 +360,15 @@ export async function POST(
     if (introducerSignatories.length === 0) {
       introducerSignatories.push({
         name: introducer?.contact_name || introducer?.legal_name || 'Introducer',
+        email: introducer?.email || null,
       });
     }
+    const primaryIntroducerSignatory = introducerSignatories[0]
+    const primaryIntroducerEmail =
+      introducerSignatories.find((signatory) => signatory.email)?.email || introducer?.email || ''
+    const introducerSignatoryEmails = introducerSignatories
+      .map((signatory) => signatory.email)
+      .filter((email): email is string => !!email)
 
     const getIntroducerAnchorId = (number: number): string => {
       return number === 1 ? 'party_b' : `party_b_${number}`;
@@ -462,6 +471,7 @@ export async function POST(
 
     // Build introducer address from components
     const addressParts = [
+      introducer?.address,
       introducer?.address_line_1,
       introducer?.address_line_2,
       introducer?.city,
@@ -579,8 +589,9 @@ export async function POST(
         // === INTRODUCER FIELDS (Party 3) ===
         introducer_name: introducer?.legal_name || '',
         introducer_address: introducerAddress,
-        introducer_signatory_name: introducer?.contact_name || '',
-        introducer_email: introducer?.email || '',
+        introducer_signatory_name: primaryIntroducerSignatory?.name || introducer?.contact_name || '',
+        introducer_email: primaryIntroducerEmail,
+        introducer_signatory_emails: introducerSignatoryEmails.join(', '),
         introducer_type: introducerType,
 
         // Company/Deal
@@ -875,7 +886,7 @@ export async function POST(
                         document_type: 'introducer_agreement',
                         introducer_id: feePlan.introducer_id,
                         introducer_name: introducerName,
-                        introducer_email: introducer?.email,
+                        introducer_email: primaryIntroducerEmail,
                         deal_name: dealName,
                         agreement_id: agreement.id,
                         reference_number: referenceNumber,

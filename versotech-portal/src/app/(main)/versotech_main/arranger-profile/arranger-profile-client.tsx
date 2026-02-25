@@ -1252,8 +1252,8 @@ export function ArrangerProfileClient({
           entityType="arranger"
           entityName={arrangerInfo.legal_name}
           initialData={{
-            address_line_1: arrangerInfo.address_line_1 ?? arrangerInfo.address ?? '',
-            address_line_2: arrangerInfo.address_line_2 ?? '',
+            address: arrangerInfo.address_line_1 ?? arrangerInfo.address ?? '',
+            address_2: arrangerInfo.address_line_2 ?? '',
             city: arrangerInfo.city ?? '',
             state_province: arrangerInfo.state_province ?? '',
             postal_code: arrangerInfo.postal_code ?? '',

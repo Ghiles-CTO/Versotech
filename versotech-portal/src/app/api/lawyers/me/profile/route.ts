@@ -20,6 +20,8 @@ const profileUpdateSchema = z.object({
   primary_contact_phone: z.string().max(50).optional().nullable(),
 
   // Address fields
+  address: z.string().max(255).optional().nullable(),
+  address_2: z.string().max(255).optional().nullable(),
   address_line_1: z.string().max(255).optional().nullable(),
   address_line_2: z.string().max(255).optional().nullable(),
   city: z.string().max(100).optional().nullable(),
@@ -192,6 +194,10 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updateData = validation.data
+    const normalizedAddressLine1 =
+      updateData.address !== undefined ? updateData.address : updateData.address_line_1
+    const normalizedAddressLine2 =
+      updateData.address_2 !== undefined ? updateData.address_2 : updateData.address_line_2
 
     const { data: currentLawyer, error: currentLawyerError } = await serviceSupabase
       .from('lawyers')
@@ -218,6 +224,9 @@ export async function PATCH(request: NextRequest) {
     // Filter out empty/undefined values and build update object
     const updateFields: Record<string, string | boolean | null> = {}
     for (const [key, value] of Object.entries(updateData)) {
+      if (['address', 'address_2', 'address_line_1', 'address_line_2'].includes(key)) {
+        continue
+      }
       if (value !== undefined) {
         // Convert empty strings to null for optional string fields
         if (typeof value === 'string') {
@@ -226,6 +235,12 @@ export async function PATCH(request: NextRequest) {
           updateFields[key] = value
         }
       }
+    }
+    if (normalizedAddressLine1 !== undefined) {
+      updateFields.address_line_1 = normalizedAddressLine1 === '' ? null : normalizedAddressLine1
+    }
+    if (normalizedAddressLine2 !== undefined) {
+      updateFields.address_line_2 = normalizedAddressLine2 === '' ? null : normalizedAddressLine2
     }
 
     // Check there's something to update

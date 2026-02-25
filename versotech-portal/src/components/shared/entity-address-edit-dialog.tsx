@@ -24,8 +24,8 @@ import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 // Entity address schema
 const entityAddressSchema = z.object({
   // Registered/Business Address
-  address_line_1: z.string().max(200).optional().nullable(),
-  address_line_2: z.string().max(200).optional().nullable(),
+  address: z.string().max(200).optional().nullable(),
+  address_2: z.string().max(200).optional().nullable(),
   city: z.string().max(100).optional().nullable(),
   state_province: z.string().max(100).optional().nullable(),
   postal_code: z.string().max(20).optional().nullable(),
@@ -56,7 +56,10 @@ interface EntityAddressEditDialogProps {
   onOpenChange: (open: boolean) => void
   entityType: string
   entityName?: string
-  initialData?: Partial<EntityAddressForm>
+  initialData?: Partial<EntityAddressForm> & {
+    address_line_1?: string | null
+    address_line_2?: string | null
+  }
   apiEndpoint: string
   onSuccess?: () => void
   title?: string
@@ -83,8 +86,8 @@ export function EntityAddressEditDialog({
   const form = useForm<EntityAddressForm>({
     resolver: zodResolver(entityAddressSchema),
     defaultValues: {
-      address_line_1: initialData?.address_line_1 || '',
-      address_line_2: initialData?.address_line_2 || '',
+      address: initialData?.address || initialData?.address_line_1 || '',
+      address_2: initialData?.address_2 || initialData?.address_line_2 || '',
       city: initialData?.city || '',
       state_province: initialData?.state_province || '',
       postal_code: initialData?.postal_code || '',
@@ -141,10 +144,10 @@ export function EntityAddressEditDialog({
 
               <FormField
                 control={form.control}
-                name="address_line_1"
+                name="address"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Street Address</FormLabel>
+                    <FormLabel>Address</FormLabel>
                     <FormControl>
                       <Input {...field} value={field.value || ''} placeholder="123 Main Street" />
                     </FormControl>
@@ -155,10 +158,10 @@ export function EntityAddressEditDialog({
 
               <FormField
                 control={form.control}
-                name="address_line_2"
+                name="address_2"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Address Line 2</FormLabel>
+                    <FormLabel>Address (Optional)</FormLabel>
                     <FormControl>
                       <Input {...field} value={field.value || ''} placeholder="Suite 100" />
                     </FormControl>

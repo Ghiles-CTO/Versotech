@@ -15,6 +15,8 @@ const createCommercialPartnerSchema = z.object({
   contact_email: z.string().email().optional().or(z.literal('')),
   contact_phone: z.string().optional(),
   website: z.string().url().optional().or(z.literal('')),
+  address: z.string().optional(),
+  address_2: z.string().optional(),
   address_line_1: z.string().optional(),
   address_line_2: z.string().optional(),
   city: z.string().optional(),
@@ -51,6 +53,10 @@ export async function POST(request: NextRequest) {
     // Parse and validate request body
     const body = await request.json()
     const validatedData = createCommercialPartnerSchema.parse(body)
+    const normalizedAddressLine1 =
+      validatedData.address !== undefined ? validatedData.address : validatedData.address_line_1
+    const normalizedAddressLine2 =
+      validatedData.address_2 !== undefined ? validatedData.address_2 : validatedData.address_line_2
 
     // Clean up empty strings
     const cleanedData = Object.fromEntries(
@@ -58,7 +64,11 @@ export async function POST(request: NextRequest) {
         key,
         value === '' ? null : value
       ])
-    )
+    ) as Record<string, unknown>
+    delete cleanedData.address
+    delete cleanedData.address_2
+    cleanedData.address_line_1 = normalizedAddressLine1 === '' ? null : normalizedAddressLine1
+    cleanedData.address_line_2 = normalizedAddressLine2 === '' ? null : normalizedAddressLine2
 
     // Create the commercial partner
     const { data: partner, error: partnerError } = await supabase

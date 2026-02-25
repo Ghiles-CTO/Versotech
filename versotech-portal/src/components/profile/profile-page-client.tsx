@@ -248,9 +248,9 @@ const hasEntityOverviewChanges = (
     { current: investorInfo.website, keys: ['website'] },
     {
       current: investorInfo.registered_address_line_1,
-      keys: ['registered_address_line_1', 'address_line_1', 'registered_address'],
+      keys: ['registered_address', 'registered_address_line_1', 'address', 'address_line_1'],
     },
-    { current: investorInfo.registered_address_line_2, keys: ['registered_address_line_2', 'address_line_2'] },
+    { current: investorInfo.registered_address_line_2, keys: ['registered_address_2', 'registered_address_line_2', 'address_2', 'address_line_2'] },
     { current: investorInfo.registered_city, keys: ['registered_city', 'city'] },
     { current: investorInfo.registered_state, keys: ['registered_state', 'state_province'] },
     { current: investorInfo.registered_postal_code, keys: ['registered_postal_code', 'postal_code'] },
@@ -282,8 +282,8 @@ const hasPersonalInfoOverviewChanges = (
     { current: investorInfo.email, keys: ['email'] },
     { current: investorInfo.phone_mobile, keys: ['phone_mobile'] },
     { current: investorInfo.phone_office, keys: ['phone_office'] },
-    { current: investorInfo.residential_street, keys: ['residential_street', 'address_line_1'] },
-    { current: investorInfo.residential_line_2, keys: ['residential_line_2', 'address_line_2'] },
+    { current: investorInfo.residential_street, keys: ['residential_street', 'address', 'address_line_1'] },
+    { current: investorInfo.residential_line_2, keys: ['residential_line_2', 'address_2', 'address_line_2'] },
     { current: investorInfo.residential_city, keys: ['residential_city', 'city'] },
     { current: investorInfo.residential_state, keys: ['residential_state', 'state_province'] },
     { current: investorInfo.residential_postal_code, keys: ['residential_postal_code', 'postal_code'] },
@@ -831,11 +831,11 @@ export function ProfilePageClient({
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     <div className="rounded-md border border-border/70 bg-background p-3">
-                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Address Line 1</p>
-                      <p className="mt-1 text-sm font-medium">{investorInfo.registered_address_line_1 || '-'}</p>
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Address</p>
+                      <p className="mt-1 text-sm font-medium">{investorInfo.registered_address || investorInfo.registered_address_line_1 || '-'}</p>
                     </div>
                     <div className="rounded-md border border-border/70 bg-background p-3">
-                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Address Line 2</p>
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Address (Optional)</p>
                       <p className="mt-1 text-sm font-medium">{investorInfo.registered_address_line_2 || '-'}</p>
                     </div>
                     <div className="rounded-md border border-border/70 bg-background p-3">
@@ -1272,8 +1272,8 @@ export function ProfilePageClient({
             phone_mobile: investorInfo.phone_mobile,
             phone_office: investorInfo.phone_office,
             website: investorInfo.website,
-            address_line_1: investorInfo.registered_address_line_1,
-            address_line_2: investorInfo.registered_address_line_2,
+            address: investorInfo.registered_address || investorInfo.registered_address_line_1,
+            address_2: investorInfo.registered_address_line_2,
             city: investorInfo.registered_city,
             state_province: investorInfo.registered_state,
             postal_code: investorInfo.registered_postal_code,

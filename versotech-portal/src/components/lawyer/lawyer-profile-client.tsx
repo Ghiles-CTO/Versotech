@@ -582,8 +582,8 @@ export function LawyerProfileClient({
             }
           >
             <OverviewFieldGrid columns={3}>
-              <OverviewField label="Address Line 1" value={lawyerInfo?.address_line_1 || '-'} />
-              <OverviewField label="Address Line 2" value={lawyerInfo?.address_line_2 || '-'} />
+              <OverviewField label="Address" value={lawyerInfo?.address_line_1 || '-'} />
+              <OverviewField label="Address (Optional)" value={lawyerInfo?.address_line_2 || '-'} />
               <OverviewField label="City" value={lawyerInfo?.city || '-'} />
               <OverviewField label="State / Province" value={lawyerInfo?.state_province || '-'} />
               <OverviewField label="Postal Code" value={lawyerInfo?.postal_code || '-'} />
@@ -802,8 +802,8 @@ export function LawyerProfileClient({
           entityType="lawyer"
           entityName={lawyerInfo.firm_name || lawyerInfo.display_name}
           initialData={{
-            address_line_1: lawyerInfo.address_line_1,
-            address_line_2: lawyerInfo.address_line_2,
+            address: lawyerInfo.address_line_1,
+            address_2: lawyerInfo.address_line_2,
             city: lawyerInfo.city,
             state_province: lawyerInfo.state_province,
             postal_code: lawyerInfo.postal_code,

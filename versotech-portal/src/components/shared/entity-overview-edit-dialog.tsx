@@ -32,8 +32,8 @@ const entityOverviewSchema = z.object({
   phone_office: z.string().max(30).optional().nullable(),
   website: z.string().url('Invalid URL').optional().nullable().or(z.literal('')),
 
-  address_line_1: z.string().max(200).optional().nullable(),
-  address_line_2: z.string().max(200).optional().nullable(),
+  address: z.string().max(200).optional().nullable(),
+  address_2: z.string().max(200).optional().nullable(),
   city: z.string().max(100).optional().nullable(),
   state_province: z.string().max(100).optional().nullable(),
   postal_code: z.string().max(20).optional().nullable(),
@@ -55,7 +55,10 @@ interface EntityOverviewEditDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   entityName?: string
-  initialData?: Partial<EntityOverviewForm>
+  initialData?: Partial<EntityOverviewForm> & {
+    address_line_1?: string | null
+    address_line_2?: string | null
+  }
   apiEndpoint: string
   onSuccess?: () => void
 }
@@ -87,8 +90,8 @@ export function EntityOverviewEditDialog({
       phone_mobile: initialData?.phone_mobile || '',
       phone_office: initialData?.phone_office || '',
       website: initialData?.website || '',
-      address_line_1: initialData?.address_line_1 || '',
-      address_line_2: initialData?.address_line_2 || '',
+      address: initialData?.address || initialData?.address_line_1 || '',
+      address_2: initialData?.address_2 || initialData?.address_line_2 || '',
       city: initialData?.city || '',
       state_province: initialData?.state_province || '',
       postal_code: initialData?.postal_code || '',
@@ -107,8 +110,8 @@ export function EntityOverviewEditDialog({
       phone_mobile: initialData?.phone_mobile || '',
       phone_office: initialData?.phone_office || '',
       website: initialData?.website || '',
-      address_line_1: initialData?.address_line_1 || '',
-      address_line_2: initialData?.address_line_2 || '',
+      address: initialData?.address || initialData?.address_line_1 || '',
+      address_2: initialData?.address_2 || initialData?.address_line_2 || '',
       city: initialData?.city || '',
       state_province: initialData?.state_province || '',
       postal_code: initialData?.postal_code || '',
@@ -128,8 +131,8 @@ export function EntityOverviewEditDialog({
         phone_mobile: toNullable(data.phone_mobile),
         phone_office: toNullable(data.phone_office),
         website: toNullable(data.website),
-        address_line_1: toNullable(data.address_line_1),
-        address_line_2: toNullable(data.address_line_2),
+        address: toNullable(data.address),
+        address_2: toNullable(data.address_2),
         city: toNullable(data.city),
         state_province: toNullable(data.state_province),
         postal_code: toNullable(data.postal_code),
@@ -313,10 +316,10 @@ export function EntityOverviewEditDialog({
               <h3 className="text-sm font-medium text-foreground">Registered Address</h3>
               <FormField
                 control={form.control}
-                name="address_line_1"
+                name="address"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Address Line 1</FormLabel>
+                    <FormLabel>Address</FormLabel>
                     <FormControl>
                       <Input {...field} value={field.value || ''} placeholder="123 Main Street" />
                     </FormControl>
@@ -327,10 +330,10 @@ export function EntityOverviewEditDialog({
 
               <FormField
                 control={form.control}
-                name="address_line_2"
+                name="address_2"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Address Line 2</FormLabel>
+                    <FormLabel>Address (Optional)</FormLabel>
                     <FormControl>
                       <Input {...field} value={field.value || ''} placeholder="Suite, Floor, Unit" />
                     </FormControl>

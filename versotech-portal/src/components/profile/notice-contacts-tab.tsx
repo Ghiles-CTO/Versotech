@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -61,8 +61,8 @@ const noticeContactSchema = z.object({
   contact_title: z.string().optional(),
   email: z.string().email('Invalid email').optional().or(z.literal('')),
   phone: z.string().optional(),
-  address_line_1: z.string().optional(),
-  address_line_2: z.string().optional(),
+  address: z.string().optional(),
+  address_2: z.string().optional(),
   city: z.string().optional(),
   state_province: z.string().optional(),
   postal_code: z.string().optional(),
@@ -76,6 +76,8 @@ type NoticeContactFormData = z.infer<typeof noticeContactSchema>
 type NoticeContact = NoticeContactFormData & {
   id: string
   created_at: string
+  address_line_1?: string | null
+  address_line_2?: string | null
 }
 
 const CONTACT_TYPES = [
@@ -113,8 +115,8 @@ export function NoticeContactsTab({ apiEndpoint }: NoticeContactsTabProps) {
       contact_title: '',
       email: '',
       phone: '',
-      address_line_1: '',
-      address_line_2: '',
+      address: '',
+      address_2: '',
       city: '',
       state_province: '',
       postal_code: '',
@@ -124,7 +126,7 @@ export function NoticeContactsTab({ apiEndpoint }: NoticeContactsTabProps) {
     },
   })
 
-  const fetchContacts = async () => {
+  const fetchContacts = useCallback(async () => {
     try {
       setIsLoading(true)
       const response = await fetch(apiEndpoint)
@@ -137,11 +139,11 @@ export function NoticeContactsTab({ apiEndpoint }: NoticeContactsTabProps) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [apiEndpoint])
 
   useEffect(() => {
     fetchContacts()
-  }, [apiEndpoint])
+  }, [fetchContacts])
 
   const openAddDialog = () => {
     setEditingContact(null)
@@ -151,8 +153,8 @@ export function NoticeContactsTab({ apiEndpoint }: NoticeContactsTabProps) {
       contact_title: '',
       email: '',
       phone: '',
-      address_line_1: '',
-      address_line_2: '',
+      address: '',
+      address_2: '',
       city: '',
       state_province: '',
       postal_code: '',
@@ -171,8 +173,8 @@ export function NoticeContactsTab({ apiEndpoint }: NoticeContactsTabProps) {
       contact_title: contact.contact_title || '',
       email: contact.email || '',
       phone: contact.phone || '',
-      address_line_1: contact.address_line_1 || '',
-      address_line_2: contact.address_line_2 || '',
+      address: contact.address || contact.address_line_1 || '',
+      address_2: contact.address_2 || contact.address_line_2 || '',
       city: contact.city || '',
       state_province: contact.state_province || '',
       postal_code: contact.postal_code || '',
@@ -491,10 +493,10 @@ export function NoticeContactsTab({ apiEndpoint }: NoticeContactsTabProps) {
 
               <FormField
                 control={form.control}
-                name="address_line_1"
+                name="address"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Address Line 1</FormLabel>
+                    <FormLabel>Address</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="123 Main Street" />
                     </FormControl>
@@ -505,10 +507,10 @@ export function NoticeContactsTab({ apiEndpoint }: NoticeContactsTabProps) {
 
               <FormField
                 control={form.control}
-                name="address_line_2"
+                name="address_2"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Address Line 2</FormLabel>
+                    <FormLabel>Address (Optional)</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="Suite 100" />
                     </FormControl>
