@@ -2756,6 +2756,7 @@ export type Database = {
           cost_per_share: number | null
           published_at: string | null
           purchaser: string | null
+          product_description: string | null
           recital_b_html: string | null
           seller: string | null
           share_certificates_note: string | null
@@ -2818,6 +2819,7 @@ export type Database = {
           cost_per_share?: number | null
           published_at?: string | null
           purchaser?: string | null
+          product_description?: string | null
           recital_b_html?: string | null
           seller?: string | null
           share_certificates_note?: string | null
@@ -2880,6 +2882,7 @@ export type Database = {
           cost_per_share?: number | null
           published_at?: string | null
           purchaser?: string | null
+          product_description?: string | null
           recital_b_html?: string | null
           seller?: string | null
           share_certificates_note?: string | null

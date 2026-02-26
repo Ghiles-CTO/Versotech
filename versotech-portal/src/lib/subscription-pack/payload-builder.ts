@@ -438,6 +438,7 @@ export function buildSubscriptionPackPayload(
       ? `${subscriberName}${individualIdentityNumber ? `, ${individualIdentityLabel} ${individualIdentityNumber}` : ''}, with registered address at ${subscriberAddress}`
       : subscriberBlock
   const maxAggregateAmount = normalizeWhitespace(String(feeStructure.max_aggregate_amount || ''))
+    || '100,000,000'
   const issueWithinBusinessDaysRaw = toNullableNumber(feeStructure.issue_within_business_days)
   const issueWithinBusinessDays = issueWithinBusinessDaysRaw !== null && issueWithinBusinessDaysRaw > 0
     ? issueWithinBusinessDaysRaw
@@ -466,7 +467,7 @@ export function buildSubscriptionPackPayload(
   const wireContactEmail = normalizeWhitespace(String(feeStructure.wire_contact_email || 'jmachot@versoholdings.com'))
   const issuerGpName = normalizeWhitespace(String(vehicle.issuer_gp_name || 'VERSO Capital 2 GP SARL'))
   const issuerGpRccNumberDisplay = normalizeWhitespace(String(vehicle.issuer_gp_rcc_number || ''))
-  const issuerRccNumberDisplay = normalizeWhitespace(String(vehicle.issuer_rcc_number || ''))
+  const issuerRccNumberDisplay = normalizeWhitespace(String(vehicle.issuer_rcc_number || issuerGpRccNumberDisplay || ''))
   const issuerWebsite = normalizeWhitespace(String(vehicle.issuer_website || 'www.versoholdings.com'))
   const issuerNameClean = normalizeWhitespace(String(issuerName || 'Julien Machot'))
   const issuerTitleClean = normalizeWhitespace(String(issuerTitle || 'Authorized Signatory'))

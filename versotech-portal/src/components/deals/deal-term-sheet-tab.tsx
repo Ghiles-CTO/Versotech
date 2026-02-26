@@ -153,6 +153,7 @@ const emptyForm = {
   purchaser: '',
   seller: '',
   structure: '',
+  product_description: '',
   allocation_up_to: '',
   price_per_share: '',
   cost_per_share: '',
@@ -194,6 +195,7 @@ function mapTermSheetToForm(termSheet?: TermSheet): FormState {
     purchaser: termSheet.purchaser ?? '',
     seller: termSheet.seller ?? '',
     structure: termSheet.structure ?? '',
+    product_description: termSheet.product_description ?? '',
     allocation_up_to: termSheet.allocation_up_to ?? '',
     price_per_share: termSheet.price_per_share != null
       ? String(termSheet.price_per_share)
@@ -271,6 +273,7 @@ function buildPayload(values: FormState) {
     purchaser: values.purchaser || null,
     seller: values.seller || null,
     structure: values.structure || null,
+    product_description: values.product_description || null,
     allocation_up_to: toNumber(values.allocation_up_to),
     price_per_share: pricePerShare,
     cost_per_share: toNumber(values.cost_per_share),
@@ -879,6 +882,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                     <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
                       <FieldValue label="Transaction Type" value={published.transaction_type} />
                       <FieldValue label="Structure" value={published.structure} />
+                      <FieldValue label="Product Description" value={published.product_description} />
                       <FieldValue label="Issuer" value={published.issuer} />
                       <FieldValue label="Vehicle" value={published.vehicle} />
                       <FieldValue label="Exclusive Arranger" value={published.exclusive_arranger} />
@@ -1061,6 +1065,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                 <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
                   <FieldValue label="Transaction Type" value={termSheet.transaction_type} />
                   <FieldValue label="Structure" value={termSheet.structure} />
+                  <FieldValue label="Product Description" value={termSheet.product_description} />
                   <FieldValue label="Issuer" value={termSheet.issuer} />
                   <FieldValue label="Vehicle" value={termSheet.vehicle} />
                   <FieldValue label="Arranger" value={termSheet.exclusive_arranger} />
@@ -1266,6 +1271,14 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   id="structure"
                   value={formValues.structure}
                   onChange={event => setFormValues(prev => ({ ...prev, structure: event.target.value }))}
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="product_description">Product Description (Certificate)</Label>
+                <Input
+                  id="product_description"
+                  value={formValues.product_description}
+                  onChange={event => setFormValues(prev => ({ ...prev, product_description: event.target.value }))}
                 />
               </div>
               <div className="space-y-2">

@@ -30,8 +30,8 @@ const CERTIFICATE_DATA = {
   signatory_1_name: 'Mr Julien Machot',
   signatory_1_title: 'Managing Partner',
   signatory_1_signature_url: 'https://example.com/signature-1.png',
-  signatory_2_name: 'Legal Counsel',
-  signatory_2_title: 'Authorized Signatory',
+  signatory_2_name: 'Mr Frederic Dupont',
+  signatory_2_title: 'General Counsel',
   signatory_2_signature_url: 'https://example.com/signature-2.png',
 
   // === METADATA ===

@@ -18,6 +18,7 @@ const termSheetFieldsSchema = z.object({
   purchaser: z.string().optional().nullable(),
   seller: z.string().optional().nullable(),
   structure: z.string().optional().nullable(),
+  product_description: z.string().optional().nullable(),
   allocation_up_to: z.number().nullable().optional(),
   price_per_share_text: z.string().optional().nullable(),
   price_per_share: z.number().nullable().optional(),

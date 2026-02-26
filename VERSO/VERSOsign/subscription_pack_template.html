@@ -7,7 +7,7 @@
     <style>
         @page {
             size: A4;
-            margin: 1cm 1cm 1.2cm 1cm;
+            margin: 1.05cm 1.9cm 1.2cm 1.9cm;
         }
 
         body {
@@ -87,11 +87,20 @@
         .cover-logo {
             width: 200px;
             margin: 2cm 0;
+            object-fit: contain;
         }
 
         .cover-footer {
             margin-top: 3cm;
             font-size: 10pt;
+        }
+
+        .agreement-logo {
+            display: block;
+            margin: 1cm auto 0.8cm auto;
+            max-width: 180px;
+            max-height: 110px;
+            object-fit: contain;
         }
 
         /* Headers */
@@ -115,7 +124,7 @@
             font-weight: bold;
             margin-top: 0.3cm;
             margin-bottom: 0.2cm;
-            margin-left: 0.22cm;
+            margin-left: 0;
         }
 
         h3.inline-number {
@@ -127,7 +136,7 @@
         h3.inline-number + p {
             display: inline;
             margin: 0;
-            text-align: left;
+            text-align: justify;
         }
 
         h3.inline-number + p::after {
@@ -159,6 +168,11 @@
         /* Keep individual rows together */
         table tr {
             page-break-inside: avoid;
+            page-break-after: auto;
+        }
+
+        table.no-border tr {
+            page-break-inside: auto;
             page-break-after: auto;
         }
 
@@ -219,19 +233,32 @@
 
         p {
             margin: 0.2cm 0;
-            text-align: left;
+            text-align: justify;
+            orphans: 2;
+            widows: 2;
         }
 
         .clause {
             margin: 0 0 0.3cm 0;
-            padding-left: 1.3cm;
-            text-indent: -0.8cm;
+            padding-left: 1.0cm;
+            text-indent: -1.0cm;
         }
 
         .sub-clause {
             margin: 0 0 0.2cm 0;
-            padding-left: 1.75cm;
-            text-indent: -0.8cm;
+            padding-left: 1.5cm;
+            text-indent: -1.0cm;
+        }
+
+        ul, ol {
+            margin: 0.22cm 0 0.22cm 0.65cm;
+            padding-left: 0.5cm;
+        }
+
+        li {
+            margin: 0.08cm 0;
+            orphans: 2;
+            widows: 2;
         }
 
         /* Signature blocks */
@@ -253,12 +280,12 @@
         .signature-line {
             position: relative;
             border-top: 1px solid #000;
-            width: 60%;
+            width: 48%;
             margin: 3cm 0 0.2cm 0;
         }
 
         .signature-line.wire-line {
-            width: 42%;
+            width: 38%;
             margin-top: 2.1cm;
         }
 
@@ -301,14 +328,17 @@
         .summary-page .signature-line,
         .summary-page .signature-line.form-line {
             margin-top: 2.25cm;
+            width: 42%;
         }
 
         .signature-line.main-line {
-            width: 50%;
+            width: 44%;
         }
 
         .signature-line.tcs-line {
+            width: 44%;
             margin-left: 0;
+            margin-top: 2.2cm;
         }
 
         .tcs-signer-meta {
@@ -354,15 +384,25 @@
 
         /* Wire instructions box */
         .wire-box {
-            border: 2px solid #000;
+            border: 1px solid #d9d9d9;
             padding: 0.5cm;
             margin: 0.5cm 0;
-            background-color: #f9f9f9;
+            background-color: #f2f2f2;
             page-break-inside: avoid;
         }
 
         .wire-box p {
             margin: 0.08cm 0;
+        }
+
+        .tcs-wire-details {
+            margin: 0.15cm 0 0.2cm 0;
+            page-break-inside: avoid;
+            break-inside: avoid-page;
+        }
+
+        .tcs-wire-details p {
+            margin: 0.06cm 0;
         }
 
         .wire-section {
@@ -401,7 +441,8 @@
 
         /* Section headings */
         h1, h2, h3 {
-            page-break-after: auto;
+            page-break-after: avoid;
+            break-after: avoid-page;
         }
 
         /* Print optimizations */
@@ -423,7 +464,8 @@
             }
 
             h1, h2, h3 {
-                page-break-after: auto;
+                page-break-after: avoid;
+                break-after: avoid-page;
             }
 
             /* Force page breaks where specified */
@@ -452,7 +494,7 @@
         {{ $json.series_cover_subtitle }}
     </div>
 
-    <img src="{{ $json.investment_logo_url }}" alt="{{ $json.ultimate_investment }}" class="cover-logo">
+    <img src="{{ $json.investment_logo_url }}" alt="{{ $json.ultimate_investment }}" class="cover-logo" onerror="this.style.display='none'">
 
     <div class="cover-footer">
         <strong>VERSO CAPITAL 2 SCSP SERIES {{ $json.series_number }}</strong><br>
@@ -504,9 +546,9 @@
     <tr>
         <td class="label-cell">Applicable Terms:</td>
         <td>
-            • <strong>Subscription Fee (one-off):</strong> {{ $json.subscription_fee_text }}<br>
-            • <strong>Management Fee (upfront one-off):</strong> {{ $json.management_fee_text }}<br>
-            • <strong>Performance Fee:</strong> {{ $json.performance_fee_text }}<br>
+            • {{ $json.subscription_fee_text }}<br>
+            • {{ $json.management_fee_text }}<br>
+            • {{ $json.performance_fee_text }}<br>
         </td>
     </tr>
     <tr>
@@ -517,7 +559,7 @@
 
 <table class="compact summary-signature-table" style="margin-top: 1cm;">
     <tr>
-        <td style="width: 50%; text-align: center;">
+        <td style="width: 50%; text-align: left;">
             <strong>VERSO Capital 2 SCSP Series {{ $json.series_number }}</strong><br>
             duly represented by its general partner<br>
             <strong>VERSO Capital 2 GP SARL</strong><br>
@@ -599,7 +641,7 @@
     <p style="text-align: center;">and</p>
     <p style="text-align: center;"><strong>VERSO Management</strong></p>
     <p style="text-align: center;">as Arranger</p>
-    <img src="{{ $json.investment_logo_url }}" alt="{{ $json.ultimate_investment }}" style="display: block; margin: 1cm auto 0.8cm auto; max-width: 180px; max-height: 110px;">
+    <img src="{{ $json.investment_logo_url }}" alt="{{ $json.ultimate_investment }}" class="agreement-logo" onerror="this.style.display='none'">
 
     <h2>EQUITY CERTIFICATES SUBSCRIPTION AGREEMENT</h2>
     <p style="text-align: center;"><strong>STRICTLY PRIVATE AND CONFIDENTIAL</strong></p>
@@ -1129,7 +1171,7 @@
 
 <p class="clause">2.1.4. The payment of the Certificates Subscription Price and the One-Off Fee(s) shall occur on the Closing Date (the "<strong>Certificates Payment Date</strong>"), under the following bank account on behalf of the Issuer by the Paying Agent (the "<strong>Paying Agent Account</strong>"):</p>
 
-<div class="wire-box">
+<div class="tcs-wire-details">
     <p><strong>Bank:</strong> {{ $json.wire_bank_name || 'ING Luxembourg S.A.' }}</p>
     <p><strong>Holder:</strong> {{ $json.wire_account_holder || 'Dupont Partners' }}</p>
     <p><strong>IBAN:</strong> {{ $json.wire_iban || 'LU71 0141 8595 5133 3010' }}</p>
@@ -1477,8 +1519,6 @@ Trident Chambers, Wickhams Cay, P.O. Box 146, Road Town,<br>
 Tortola VG1110 British Virgin Islands<br>
 c/o {{ $json.arranger_name || 'Julien Machot' }}, {{ $json.arranger_title || 'Director' }}</p>
 
-<div class="page-break"></div>
-
 <h2>16. HOLDERS' MEETINGS</h2>
 
 <p>The provisions of Article 470-13 item 1*, 470-13 second paragraph and Article 470-15 of the Luxembourg law of 10 August 1915 relating to commercial companies, as amended (the "<strong>Company Law</strong>") do not apply.</p>
@@ -1498,8 +1538,6 @@ c/o {{ $json.arranger_name || 'Julien Machot' }}, {{ $json.arranger_title || 'Di
 <p>Each Holder shall have the right, during the fifteen (15) days prior to a Meeting, to consult or take copies, or cause an agent to do so on its behalf, of the text of the proposed resolutions and the reports to be presented to the Meeting, at the registered office of the Issuer and, as the case may be, at any other place specified in the convening notice.</p>
 
 <p>The Issuer undertakes to make physical or virtual premises available, provided each Holder may be duly identified and may effectively participate at the Meeting, to the Holders for their Meetings. Should a Meeting be convened all expenses relating thereto shall be borne by the Issuer.</p>
-
-<div class="page-break"></div>
 
 <h2>17. SUBSTITUTION OF ISSUER</h2>
 
@@ -1532,8 +1570,6 @@ c/o {{ $json.arranger_name || 'Julien Machot' }}, {{ $json.arranger_title || 'Di
 
 <h3 class="inline-number">18.3.</h3>
 <p>The Certificates described in these Terms and Conditions, have not been, and will not be, registered under the United States Securities Act of 1933 as amended, or the securities laws of any state of the United States or other relevant jurisdiction. and it has not been registered under the United States Investment Company Act of 1940, as amended. The Certificates may not be offered, sold, pledged or otherwise transferred within the United States except (1) to a ''qualified institutional buyer'' within the meaning of rule 144a under the Securities Act, and (2) to a person that is not a ''U.S. Person'' as defined in rule 902 of regulations under the Securities Act. Failure to comply with this directive may result in a violation of the Securities Act or the applicable laws of other jurisdictions.</p>
-
-<div class="page-break"></div>
 
 <h2>19. EXCLUSIVITY</h2>
 
@@ -1572,40 +1608,20 @@ c/o {{ $json.arranger_name || 'Julien Machot' }}, {{ $json.arranger_title || 'Di
 
 <!-- SIGNATURE PAGE FOR T&Cs -->
 
-<div class="signature-block" style="text-align: left;">
+<p style="text-align: center; font-size: 12pt; font-weight: bold; margin-top: 2cm;">SIGNATURE PAGE TO SCHEDULE 1</p>
+
+<div class="signature-block">
     <p><strong>VERSO Capital 2 SCSP</strong> duly represented by its general partner <strong>VERSO Capital 2 GP SARL</strong>, as Issuer</p>
-    <table class="signature-meta-table">
-        <tr class="signature-row">
-            <td class="signature-meta-label">Signature:</td>
-            <td><div class="signature-line tcs-line"><span class="sig-anchor">SIG_ANCHOR:party_b_tcs</span></div></td>
-        </tr>
-        <tr>
-            <td class="signature-meta-label">Name:</td>
-            <td>{{ $json.issuer_name || 'Julien Machot' }}</td>
-        </tr>
-        <tr>
-            <td class="signature-meta-label">Title:</td>
-            <td>{{ $json.issuer_title || 'Manager and authorized representative' }}</td>
-        </tr>
-    </table>
+    <div class="signature-line tcs-line"><span class="sig-anchor">SIG_ANCHOR:party_b_tcs</span></div>
+    <p class="tcs-signer-meta">Name: {{ $json.issuer_name || 'Julien Machot' }}<br>
+    Title: {{ $json.issuer_title || 'Manager and authorized representative' }}</p>
 </div>
 
-<div class="signature-block" style="text-align: left;">
+<div class="signature-block">
     <p><strong>Verso Management Ltd.</strong>, for the purposes of acknowledging and accepting the powers and responsibilities attributed to it under these Terms and Conditions</p>
-    <table class="signature-meta-table">
-        <tr class="signature-row">
-            <td class="signature-meta-label">Signature:</td>
-            <td><div class="signature-line tcs-line"><span class="sig-anchor">SIG_ANCHOR:party_c_tcs</span></div></td>
-        </tr>
-        <tr>
-            <td class="signature-meta-label">Name:</td>
-            <td>{{ $json.arranger_name || 'Julien Machot' }}</td>
-        </tr>
-        <tr>
-            <td class="signature-meta-label">Title:</td>
-            <td>{{ $json.arranger_title || 'Director' }}</td>
-        </tr>
-    </table>
+    <div class="signature-line tcs-line"><span class="sig-anchor">SIG_ANCHOR:party_c_tcs</span></div>
+    <p class="tcs-signer-meta">Name: {{ $json.arranger_name || 'Julien Machot' }}<br>
+    Title: {{ $json.arranger_title || 'Director' }}</p>
 </div>
 
 <div class="page-break"></div>

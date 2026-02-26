@@ -44,6 +44,16 @@ function formatCertificateDate(date: Date): string {
   })
 }
 
+function formatCertificateUnits(value: number | string | null | undefined): string {
+  const numericValue =
+    typeof value === 'string'
+      ? Number(value.replace(/,/g, '').trim())
+      : Number(value ?? 0)
+
+  if (!Number.isFinite(numericValue)) return '0'
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.trunc(numericValue))
+}
+
 /**
  * Derive investor display name based on type
  * - Entity: use legal_name
@@ -121,7 +131,7 @@ interface CertificateSignatoryConfig {
   signatory2SignatureUrl: string
 }
 
-function normalizeConfigValue(value: string | undefined): string {
+function normalizeSignatureReference(value: string | null | undefined): string {
   const normalized = (value || '').trim()
   if (!normalized) return ''
   const lower = normalized.toLowerCase()
@@ -129,95 +139,242 @@ function normalizeConfigValue(value: string | undefined): string {
   return normalized
 }
 
-function getImageMimeType(filePath: string): string {
-  const extension = path.extname(filePath).toLowerCase()
+function isDataUri(value: string): boolean {
+  return value.startsWith('data:')
+}
+
+function isHttpUrl(value: string): boolean {
+  return value.startsWith('http://') || value.startsWith('https://')
+}
+
+function inferImageMimeType(reference: string): string {
+  const extension = path.extname(reference.split('?')[0]).toLowerCase()
   if (extension === '.png') return 'image/png'
   if (extension === '.jpg' || extension === '.jpeg') return 'image/jpeg'
   if (extension === '.webp') return 'image/webp'
   if (extension === '.svg') return 'image/svg+xml'
-  return 'application/octet-stream'
+  return 'image/png'
 }
 
-function asDataUriFromFile(filePath: string): string | null {
-  if (!filePath || !existsSync(filePath)) return null
+function toDataUri(buffer: Buffer, mimeType: string): string {
+  return `data:${mimeType};base64,${buffer.toString('base64')}`
+}
+
+function readPublicAssetAsDataUri(publicPath: string): string | null {
+  const normalizedPath = publicPath.replace(/^\/+/, '')
+  if (!normalizedPath) return null
+
+  const absolutePath = path.resolve(process.cwd(), 'public', normalizedPath)
+  if (!existsSync(absolutePath)) return null
+
   try {
-    const fileBytes = readFileSync(filePath)
-    const mimeType = getImageMimeType(filePath)
-    return `data:${mimeType};base64,${fileBytes.toString('base64')}`
+    const buffer = readFileSync(absolutePath)
+    return toDataUri(buffer, inferImageMimeType(absolutePath))
   } catch (error) {
-    console.error(`❌ Failed to read signature image file at ${filePath}:`, error)
+    console.error(`❌ Failed to read public signature asset (${absolutePath}):`, error)
     return null
   }
 }
 
-function resolveSignatureSource(params: {
-  primaryUrl?: string
-  secondaryUrl?: string
-  filePathEnv?: string
-  fallbackRelativePath: string
-}): string {
-  const primaryUrl = normalizeConfigValue(params.primaryUrl)
-  if (primaryUrl) return primaryUrl
+async function readStoragePathAsDataUri(
+  supabase: SupabaseClient,
+  storagePath: string,
+  preferredBucket?: string | null
+): Promise<string | null> {
+  const buckets = [
+    ...(preferredBucket ? [preferredBucket] : []),
+    'signatures',
+    'documents',
+    'public-assets',
+  ]
+  const uniqueBuckets = Array.from(new Set(buckets.filter(Boolean)))
 
-  const secondaryUrl = normalizeConfigValue(params.secondaryUrl)
-  if (secondaryUrl) return secondaryUrl
+  for (const bucket of uniqueBuckets) {
+    const { data, error } = await supabase.storage.from(bucket).download(storagePath)
+    if (error || !data) continue
 
-  const configuredFilePath = normalizeConfigValue(params.filePathEnv)
-  if (configuredFilePath) {
-    const absoluteConfiguredFilePath = path.isAbsolute(configuredFilePath)
-      ? configuredFilePath
-      : path.resolve(process.cwd(), configuredFilePath)
-    const configuredDataUri = asDataUriFromFile(absoluteConfiguredFilePath)
-    if (configuredDataUri) return configuredDataUri
+    try {
+      const buffer = Buffer.from(await data.arrayBuffer())
+      const mimeType = data.type || inferImageMimeType(storagePath)
+      return toDataUri(buffer, mimeType)
+    } catch (downloadError) {
+      console.error(`❌ Failed to convert storage image ${bucket}/${storagePath} to data URI:`, downloadError)
+    }
   }
 
-  const defaultFilePath = path.resolve(process.cwd(), params.fallbackRelativePath)
-  const defaultDataUri = asDataUriFromFile(defaultFilePath)
-  if (defaultDataUri) return defaultDataUri
-
-  return ''
+  return null
 }
 
-function getCertificateSignatoryConfig(): CertificateSignatoryConfig {
-  const signatory1Name =
-    normalizeConfigValue(process.env.CERTIFICATE_SIGNATORY_1_NAME) || 'Mr Julien Machot'
-  const signatory1Title =
-    normalizeConfigValue(process.env.CERTIFICATE_SIGNATORY_1_TITLE) || 'Managing Partner'
-  const signatory1SignatureUrl = resolveSignatureSource({
-    primaryUrl: process.env.CERTIFICATE_SIGNATORY_1_SIGNATURE_URL,
-    secondaryUrl: process.env.SIGNATORY_1_SIGNATURE_URL,
-    filePathEnv: process.env.CERTIFICATE_SIGNATORY_1_SIGNATURE_FILE,
-    fallbackRelativePath: '../assets/julienSignature.png',
-  })
+function parseSupabaseStorageUrl(url: string): { bucket: string; path: string } | null {
+  try {
+    const parsed = new URL(url)
+    const match = parsed.pathname.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/]+)\/(.+)/)
+    if (!match?.[1] || !match?.[2]) return null
+    return { bucket: decodeURIComponent(match[1]), path: decodeURIComponent(match[2]) }
+  } catch {
+    return null
+  }
+}
 
-  const signatory2Name =
-    normalizeConfigValue(process.env.CERTIFICATE_SIGNATORY_2_NAME) || 'Legal Counsel'
-  const signatory2Title =
-    normalizeConfigValue(process.env.CERTIFICATE_SIGNATORY_2_TITLE) || 'Authorized Signatory'
-  const signatory2SignatureUrl = resolveSignatureSource({
-    primaryUrl: process.env.CERTIFICATE_SIGNATORY_2_SIGNATURE_URL,
-    secondaryUrl: process.env.SIGNATORY_2_SIGNATURE_URL,
-    filePathEnv: process.env.CERTIFICATE_SIGNATORY_2_SIGNATURE_FILE,
-    fallbackRelativePath: '../assets/DupontSignature.png',
-  })
+async function convertSignatureReferenceToDataUri(
+  supabase: SupabaseClient,
+  reference: string | null | undefined
+): Promise<string | null> {
+  const normalized = normalizeSignatureReference(reference)
+  if (!normalized) return null
+
+  if (isDataUri(normalized)) return normalized
+
+  if (normalized.startsWith('/')) {
+    const publicAssetDataUri = readPublicAssetAsDataUri(normalized)
+    if (publicAssetDataUri) return publicAssetDataUri
+  }
+
+  if (isHttpUrl(normalized)) {
+    try {
+      const response = await fetch(normalized)
+      if (response.ok) {
+        const buffer = Buffer.from(await response.arrayBuffer())
+        const mimeType = response.headers.get('content-type') || inferImageMimeType(normalized)
+        return toDataUri(buffer, mimeType)
+      }
+    } catch (error) {
+      console.warn(`⚠️ Failed to fetch signature URL (${normalized}), trying storage fallback:`, error)
+    }
+
+    const parsedStorage = parseSupabaseStorageUrl(normalized)
+    if (parsedStorage) {
+      return readStoragePathAsDataUri(supabase, parsedStorage.path, parsedStorage.bucket)
+    }
+
+    return null
+  }
+
+  return readStoragePathAsDataUri(supabase, normalized)
+}
+
+async function getPrimaryCeoSignatureReference(supabase: SupabaseClient): Promise<string> {
+  const { data: ceoUser, error: ceoError } = await supabase
+    .from('ceo_users')
+    .select('user_id, can_sign, is_primary')
+    .eq('can_sign', true)
+    .order('is_primary', { ascending: false })
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  if (ceoError || !ceoUser?.user_id) {
+    return ''
+  }
+
+  const { data: ceoProfile, error: profileError } = await supabase
+    .from('profiles')
+    .select('signature_specimen_url')
+    .eq('id', ceoUser.user_id)
+    .maybeSingle()
+
+  if (profileError) return ''
+  return normalizeSignatureReference(ceoProfile?.signature_specimen_url)
+}
+
+async function getLegalSignatureReference(
+  supabase: SupabaseClient,
+  dealId: string | null
+): Promise<string> {
+  if (dealId) {
+    const { data: assignments } = await supabase
+      .from('deal_lawyer_assignments')
+      .select('lawyer_id')
+      .eq('deal_id', dealId)
+
+    const assignedLawyerIds = (assignments || []).map((a) => a.lawyer_id).filter(Boolean)
+
+    if (assignedLawyerIds.length > 0) {
+      const { data: assignedLawyerUsers } = await supabase
+        .from('lawyer_users')
+        .select('signature_specimen_url, can_sign, is_primary')
+        .in('lawyer_id', assignedLawyerIds)
+        .eq('can_sign', true)
+        .order('is_primary', { ascending: false })
+        .order('created_at', { ascending: true })
+
+      const assignedSignature = assignedLawyerUsers
+        ?.map((row) => normalizeSignatureReference(row.signature_specimen_url))
+        .find(Boolean)
+      if (assignedSignature) return assignedSignature
+    }
+  }
+
+  const { data: globalLawyerUsers } = await supabase
+    .from('lawyer_users')
+    .select('signature_specimen_url, can_sign, is_primary')
+    .eq('can_sign', true)
+    .order('is_primary', { ascending: false })
+    .order('created_at', { ascending: true })
+
+  const globalLawyerSignature = globalLawyerUsers
+    ?.map((row) => normalizeSignatureReference(row.signature_specimen_url))
+    .find(Boolean)
+  if (globalLawyerSignature) return globalLawyerSignature
+
+  // Final DB fallback: any non-primary CEO profile signature.
+  const { data: secondaryCeoUsers } = await supabase
+    .from('ceo_users')
+    .select('user_id, is_primary')
+    .eq('is_primary', false)
+    .order('created_at', { ascending: true })
+
+  const secondaryCeoIds = (secondaryCeoUsers || []).map((u) => u.user_id).filter(Boolean)
+  if (secondaryCeoIds.length === 0) return ''
+
+  const { data: secondaryProfiles } = await supabase
+    .from('profiles')
+    .select('id, signature_specimen_url')
+    .in('id', secondaryCeoIds)
+
+  return secondaryProfiles
+    ?.map((row) => normalizeSignatureReference(row.signature_specimen_url))
+    .find(Boolean) || ''
+}
+
+async function getCertificateSignatoryConfig(
+  supabase: SupabaseClient,
+  dealId: string | null
+): Promise<CertificateSignatoryConfig> {
+  const signatory1Name = 'Mr Julien Machot'
+  const signatory1Title = 'Managing Partner'
+  const signatory1SignatureRef = await getPrimaryCeoSignatureReference(supabase)
+  const signatory1SignatureUrl = await convertSignatureReferenceToDataUri(supabase, signatory1SignatureRef)
+
+  const signatory2Name = 'Mr Frederic Dupont'
+  const signatory2Title = 'General Counsel'
+  const signatory2SignatureRef = await getLegalSignatureReference(supabase, dealId)
+  const signatory2SignatureUrl = await convertSignatureReferenceToDataUri(supabase, signatory2SignatureRef)
 
   const missing: string[] = []
-  if (!signatory1SignatureUrl) missing.push('CERTIFICATE_SIGNATORY_1_SIGNATURE_URL or CERTIFICATE_SIGNATORY_1_SIGNATURE_FILE')
-  if (!signatory2SignatureUrl) missing.push('CERTIFICATE_SIGNATORY_2_SIGNATURE_URL or CERTIFICATE_SIGNATORY_2_SIGNATURE_FILE')
+  if (!signatory1SignatureUrl) {
+    missing.push('CEO signature in DB (ceo_users + profiles.signature_specimen_url)')
+  }
+  if (!signatory2SignatureUrl) {
+    missing.push('legal signer signature in DB (deal_lawyer_assignments/lawyer_users or secondary CEO profile signature)')
+  }
 
   if (missing.length > 0) {
     throw new CertificateConfigurationError(
-      `Missing certificate signature image configuration: ${missing.join(', ')}`
+      `Missing certificate signature image data in database: ${missing.join(', ')}`
     )
   }
+
+  const resolvedSignatory1SignatureUrl = signatory1SignatureUrl as string
+  const resolvedSignatory2SignatureUrl = signatory2SignatureUrl as string
 
   return {
     signatory1Name,
     signatory1Title,
-    signatory1SignatureUrl,
+    signatory1SignatureUrl: resolvedSignatory1SignatureUrl,
     signatory2Name,
     signatory2Title,
-    signatory2SignatureUrl,
+    signatory2SignatureUrl: resolvedSignatory2SignatureUrl,
   }
 }
 
@@ -323,7 +480,7 @@ export async function triggerCertificateGeneration({
       return false
     }
 
-    // Fetch deal fee structure for product description (the "structure" field)
+    // Fetch deal fee structure for product description
     // Also fetch termsheet completion_date for the certificate date
     let productDescription = ''
     let termsheetCompletionDate: Date | null = null
@@ -338,15 +495,17 @@ export async function triggerCertificateGeneration({
         .maybeSingle()
 
       if (membership?.term_sheet_id) {
-        // Get the termsheet's completion_date and structure
+        // Get the termsheet completion date and product description
         const { data: termsheet } = await supabase
           .from('deal_fee_structures')
-          .select('structure, completion_date')
+          .select('product_description, structure, completion_date')
           .eq('id', membership.term_sheet_id)
           .single()
 
         if (termsheet) {
-          if (termsheet.structure) {
+          if (termsheet.product_description) {
+            productDescription = termsheet.product_description
+          } else if (termsheet.structure) {
             productDescription = termsheet.structure
           }
           if (termsheet.completion_date) {
@@ -359,14 +518,16 @@ export async function triggerCertificateGeneration({
       if (!productDescription) {
         const { data: feeStructure } = await supabase
           .from('deal_fee_structures')
-          .select('structure, completion_date')
+          .select('product_description, structure, completion_date')
           .eq('deal_id', subscription.deal_id)
           .eq('status', 'published')
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle()
 
-        if (feeStructure?.structure) {
+        if (feeStructure?.product_description) {
+          productDescription = feeStructure.product_description
+        } else if (feeStructure?.structure) {
           productDescription = feeStructure.structure
         }
         if (!termsheetCompletionDate && feeStructure?.completion_date) {
@@ -396,7 +557,7 @@ export async function triggerCertificateGeneration({
       subscription.subscription_number,
       subscriptionId
     )
-    const signatoryConfig = getCertificateSignatoryConfig()
+    const signatoryConfig = await getCertificateSignatoryConfig(supabase, subscription.deal_id || null)
 
     // Get certificate date:
     // - manual close: explicit override date from approval timestamp
@@ -408,6 +569,8 @@ export async function triggerCertificateGeneration({
 
     // Determine logo type: VERSO Capital 2 uses text "VERSO" in League Spartan font
     const isVersoCapital2 = vehicleData.name?.toLowerCase().includes('verso capital 2') || false
+    const unitsValue = subscription.units || subscription.num_shares || shares || 0
+    const numSharesValue = subscription.num_shares || shares || 0
 
     // Build comprehensive certificate payload
     const certificatePayload = {
@@ -425,7 +588,8 @@ export async function triggerCertificateGeneration({
         subscriptionId.replace(/-/g, '').slice(0, 8).toUpperCase(),
 
       // === UNITS/CERTIFICATES ===
-      units: subscription.units || subscription.num_shares || shares || 0,
+      units: unitsValue,
+      units_display: formatCertificateUnits(unitsValue),
 
       // === DATE (TERMSHEET COMPLETION DATE - formatted as "Month Day, Year") ===
       close_at: formatCertificateDate(certificateDate),
@@ -437,7 +601,8 @@ export async function triggerCertificateGeneration({
 
       // === CERTIFICATION TEXT DATA ===
       investor_name: investorName,
-      num_shares: subscription.num_shares || shares || 0,
+      num_shares: numSharesValue,
+      num_shares_display: formatCertificateUnits(numSharesValue),
       structure: productDescription, // e.g., "Shares of Series B Preferred Stock of X.AI"
 
       // === SIGNATURE TABLE DATA (embedded static signature images) ===
@@ -706,8 +871,8 @@ export async function triggerCertificateGeneration({
                         userId: iu.user_id,
                         investorId,
                         type: 'certificate_issued',
-                        title: 'Certificate and Statement Available',
-                        message: 'Your share certificate and statement of holdings are now available in your portfolio documents.',
+                        title: 'Share Certificate and Statement of Holdings',
+                        message: 'Your share certificate and statement of holdings is now available in your portfolio documents.',
                         link: '/versotech_main/documents',
                         sendEmailNotification: true,
                         dealId: subscription.deal_id ?? undefined,
@@ -754,8 +919,8 @@ export async function triggerCertificateGeneration({
             userId: iu.user_id,
             investorId,
             type: 'investment_activated',
-            title: 'Investment Is Active',
-            message: 'Your investment is now active and your position has been created.',
+            title: 'Investment Is Confirmed',
+            message: 'Your investment is now fully confirmed and can be reviewed under portfolio.',
             link: '/versotech_main/portfolio',
             sendEmailNotification: true,
             dealId: subscription.deal_id ?? undefined,
