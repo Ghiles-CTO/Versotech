@@ -46,8 +46,20 @@ export function SubscriptionDetailClient({
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: subscription.currency || 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount)
+  }
+
+  const formatPreciseCurrency = (amount: number) => {
+    const str = amount.toString()
+    const decimalIndex = str.indexOf('.')
+    const decimals = decimalIndex === -1 ? 0 : str.length - decimalIndex - 1
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: subscription.currency || 'USD',
+      minimumFractionDigits: Math.max(2, decimals),
+      maximumFractionDigits: Math.max(2, decimals),
     }).format(amount)
   }
 
@@ -498,7 +510,7 @@ export function SubscriptionDetailClient({
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-muted-foreground">Price Per Share</span>
                         <span className="text-sm font-semibold text-foreground">
-                          {formatCurrency(subscription.price_per_share)}
+                          {formatPreciseCurrency(subscription.price_per_share)}
                         </span>
                       </div>
                       <Separator className="bg-muted" />
@@ -510,7 +522,7 @@ export function SubscriptionDetailClient({
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-muted-foreground">Cost Per Share</span>
                         <span className="text-sm font-semibold text-foreground">
-                          {formatCurrency(subscription.cost_per_share)}
+                          {formatPreciseCurrency(subscription.cost_per_share)}
                         </span>
                       </div>
                       <Separator className="bg-muted" />
@@ -522,7 +534,7 @@ export function SubscriptionDetailClient({
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-muted-foreground">Spread Per Share</span>
                         <span className="text-sm font-semibold text-green-400">
-                          {formatCurrency(subscription.spread_per_share)}
+                          {formatPreciseCurrency(subscription.spread_per_share)}
                         </span>
                       </div>
                       <Separator className="bg-muted" />
@@ -533,7 +545,7 @@ export function SubscriptionDetailClient({
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Spread Fee Amount</span>
                       <span className="text-sm font-semibold text-foreground">
-                        {formatCurrency(subscription.spread_fee_amount)}
+                        {formatPreciseCurrency(subscription.spread_fee_amount)}
                       </span>
                     </div>
                   )}

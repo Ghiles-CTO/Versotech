@@ -178,6 +178,16 @@ function formatMoneyDisplay(value: number): string {
   })
 }
 
+function formatPriceDisplay(value: number): string {
+  const str = value.toString()
+  const decimalIndex = str.indexOf('.')
+  const decimals = decimalIndex === -1 ? 0 : str.length - decimalIndex - 1
+  return value.toLocaleString('en-US', {
+    minimumFractionDigits: Math.max(2, decimals),
+    maximumFractionDigits: Math.max(2, decimals),
+  })
+}
+
 function formatIntegerDisplay(value: number): string {
   return Math.floor(value).toLocaleString('en-US', { maximumFractionDigits: 0 })
 }
@@ -376,7 +386,7 @@ export function buildSubscriptionPackPayload(
     || normalizeWhitespace(String(deal.company_name || deal.name || ''))
   const certificatesCountDisplay = formatIntegerDisplay(numShares)
   const subscriptionAmountDisplay = formatMoneyDisplay(amount)
-  const pricePerShareDisplay = formatMoneyDisplay(resolvedPricePerShare)
+  const pricePerShareDisplay = formatPriceDisplay(resolvedPricePerShare)
   const totalSubscriptionPriceDisplay = formatMoneyDisplay(totalSubscriptionPrice)
   const hasExplicitPrice = subscriptionPricePerShare !== null || feeStructurePricePerShare !== null
   const feeTextHintsVariablePrice = typeof feeStructure.price_per_share_text === 'string'
@@ -496,7 +506,7 @@ export function buildSubscriptionPackPayload(
 
     certificates_count: numShares.toString(),
     certificates_count_display: certificatesCountDisplay,
-    price_per_share: resolvedPricePerShare.toFixed(2),
+    price_per_share: resolvedPricePerShare.toString(),
     price_per_share_display: pricePerShareDisplay,
     price_per_share_marker: pricePerShareMarker,
     subscription_amount: amount.toFixed(2),
