@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>VERSO Capital 2 SCSP - Complete Subscription Pack</title>
+    <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@700&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: A4;
+            margin: 1cm 1cm 1.2cm 1cm;
+        }
+
+        body {
+            font-family: 'Arial', 'Calibri', sans-serif;
+            font-size: 10pt;
+            line-height: 1.4;
+            color: #000000;
+            margin: 0;
+            padding: 0;
+        }
+
+        .page-break {
+            page-break-after: always;
+        }
+
+        .verso-page-header {
+            text-align: center;
+            font-family: 'League Spartan', Arial, sans-serif;
+            font-weight: 700;
+            font-size: 28pt;
+            line-height: 1;
+            letter-spacing: 0.15em;
+            color: #000;
+            text-transform: uppercase;
+            margin: 0 0 0.38cm 0;
+        }
+
+        table.print-frame {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+        table.print-frame thead {
+            display: table-header-group;
+        }
+
+        table.print-frame tr {
+            page-break-inside: auto !important;
+            break-inside: auto !important;
+        }
+
+        table.print-frame tfoot {
+            display: table-footer-group;
+        }
+
+        table.print-frame > thead > tr > td,
+        table.print-frame > thead > tr > th,
+        table.print-frame > tbody > tr > td,
+        table.print-frame > tbody > tr > th,
+        table.print-frame > tfoot > tr > td,
+        table.print-frame > tfoot > tr > th {
+            border: none !important;
+            padding: 0 !important;
+            vertical-align: top;
+        }
+
+        /* Cover Page */
+        .cover-page {
+            text-align: center;
+            padding-top: 5cm;
+        }
+
+        .cover-title {
+            font-size: 14pt;
+            font-weight: bold;
+            margin: 1cm 0;
+            text-transform: uppercase;
+        }
+
+        .cover-series {
+            font-size: 12pt;
+            font-weight: bold;
+            margin: 0.5cm 0;
+        }
+
+        .cover-logo {
+            width: 200px;
+            margin: 2cm 0;
+        }
+
+        .cover-footer {
+            margin-top: 3cm;
+            font-size: 10pt;
+        }
+
+        /* Headers */
+        h1 {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-top: 0.5cm;
+            margin-bottom: 0.4cm;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 0.4cm;
+            margin-bottom: 0.3cm;
+        }
+
+        h3 {
+            font-size: 11pt;
+            font-weight: bold;
+            margin-top: 0.3cm;
+            margin-bottom: 0.2cm;
+        }
+
+        h3.inline-number {
+            display: inline;
+            margin: 0 0.2cm 0 0;
+        }
+
+        h3.inline-number + p {
+            display: inline;
+            margin: 0;
+            text-align: left;
+        }
+
+        h3.inline-number + p::after {
+            content: "";
+            display: block;
+            margin-bottom: 0.2cm;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.3cm 0;
+            page-break-inside: auto;
+        }
+
+        table td, table th {
+            padding: 8px;
+            border: 1px solid #000;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+
+        /* Keep individual rows together */
+        table tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+
+        /* Small tables should stay together */
+        table.compact {
+            page-break-inside: avoid;
+        }
+
+        /* Borderless tables (e.g., definitions in Schedule 1) */
+        table.no-border td,
+        table.no-border th {
+            border: none;
+        }
+
+        table.summary-table td,
+        table.summary-table th,
+        table.summary-signature-table td,
+        table.summary-signature-table th {
+            border: 1px solid #000;
+            background: #ffffff;
+            padding: 8px;
+        }
+
+        table.summary-signature-table td {
+            padding-right: 8px;
+        }
+
+        .issuer-signer-meta {
+            text-align: left;
+            margin-top: 0.2cm;
+        }
+
+        .label-cell {
+            font-weight: bold;
+            width: 40%;
+        }
+
+        /* Text formatting */
+        .bold {
+            font-weight: bold;
+        }
+
+        .italic {
+            font-style: italic;
+        }
+
+        .underline {
+            text-decoration: underline;
+        }
+
+        .small {
+            font-size: 9pt;
+        }
+
+        .currency-value {
+            white-space: nowrap;
+        }
+
+        p {
+            margin: 0.2cm 0;
+            text-align: left;
+        }
+
+        .clause {
+            margin-left: 1cm;
+            margin-bottom: 0.3cm;
+        }
+
+        .sub-clause {
+            margin-left: 1.5cm;
+            margin-bottom: 0.2cm;
+        }
+
+        /* Signature blocks */
+        .signature-block {
+            margin-top: 1.5cm;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .signature-block-inline {
+            page-break-inside: avoid;
+            break-inside: avoid;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .signature-line {
+            position: relative;
+            border-top: 1px solid #000;
+            width: 60%;
+            margin: 3cm 0 0.2cm 0;
+        }
+
+        .signature-line.wire-line {
+            width: 42%;
+            margin-top: 2.1cm;
+        }
+
+        .signature-line.form-line {
+            margin-top: 3cm;
+        }
+
+        /* Page 2 only: tighten layout so summary tables + signature table stay on one page */
+        .summary-page h1 {
+            margin-top: 0;
+            margin-bottom: 0.25cm;
+        }
+
+        .summary-page h2 {
+            margin-top: 0.2cm;
+            margin-bottom: 0.2cm;
+        }
+
+        .summary-page > p {
+            margin: 0.12cm 0;
+        }
+
+        .summary-page table {
+            margin: 0.18cm 0;
+        }
+
+        .summary-page table td,
+        .summary-page table th {
+            padding: 6px;
+        }
+
+        .summary-page .summary-signature-table {
+            margin-top: 0.45cm !important;
+        }
+
+        .summary-page .signature-block-inline {
+            margin-bottom: 0.3cm !important;
+        }
+
+        .summary-page .signature-line,
+        .summary-page .signature-line.form-line {
+            margin-top: 2.25cm;
+        }
+
+        .signature-line.main-line {
+            width: 50%;
+        }
+
+        .signature-line.tcs-line {
+            margin-left: 0;
+        }
+
+        .tcs-signer-meta {
+            margin-left: 0;
+            width: 60%;
+            text-align: left;
+        }
+
+        .signature-line.appendix-line {
+            width: 65%;
+            margin-top: 0.6cm;
+        }
+
+        .signature-inline-row {
+            text-align: left;
+            margin-top: 1.1cm;
+            margin-bottom: 0.2cm;
+        }
+
+        .signature-inline-row.tight {
+            margin-top: 0.9cm;
+        }
+
+        .signature-inline-line {
+            display: inline-block;
+            width: 46%;
+            border-top: 1px solid #000;
+            position: relative;
+            vertical-align: middle;
+            margin-left: 0.45cm;
+            transform: translateY(-1px);
+        }
+
+        .sig-anchor {
+            position: absolute;
+            left: 0;
+            top: 0;
+            font-size: 1px;
+            line-height: 1px;
+            color: #ffffff;
+            opacity: 0.01;
+        }
+
+        /* Wire instructions box */
+        .wire-box {
+            border: none;
+            padding: 0;
+            margin: 0.5cm 0;
+            background-color: transparent;
+            page-break-inside: avoid;
+        }
+
+        .wire-box p {
+            margin: 0.08cm 0;
+        }
+
+        .wire-section {
+            page-break-inside: avoid;
+            break-inside: avoid;
+            display: block;
+        }
+
+        .wire-signoff {
+            margin-top: 0.3cm;
+        }
+
+        .signature-meta-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.25cm 0 0 0;
+        }
+
+        .signature-meta-table td {
+            border: none;
+            padding: 2px 0;
+            vertical-align: middle;
+        }
+
+        .signature-meta-table tr.signature-row td {
+            padding-bottom: 0.7cm;
+            vertical-align: bottom;
+        }
+
+
+        .signature-meta-label {
+            width: 22%;
+            white-space: nowrap;
+            font-weight: normal;
+        }
+
+        /* Section headings */
+        h1, h2, h3 {
+            page-break-after: auto;
+        }
+
+        /* Print optimizations */
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            table {
+                page-break-inside: auto;
+            }
+
+            .signature-block,
+            .signature-block-inline,
+            .wire-box,
+            .wire-section {
+                page-break-inside: avoid;
+            }
+
+            h1, h2, h3 {
+                page-break-after: auto;
+            }
+
+            /* Force page breaks where specified */
+            .page-break {
+                page-break-after: always;
+                page-break-inside: avoid;
+            }
+        }
+</style>
+</head>
+<body>
+<table class="print-frame">
+    <thead>
+        <tr>
+            <td><div class="verso-page-header">VERSO</div></td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+<!-- PAGE 1: COVER PAGE -->
+<div class="cover-page">
+    <div class="cover-title">SUBSCRIPTION PACK</div>
+    <div class="cover-series">
+        VERSO CAPITAL 2 SCSP SERIES 215<br>
+        ANTHROPIC AI - PREFERED STOCK
+    </div>
+
+    <img src="https://dummyimage.com/300x120/ffffff/000000.png&text=ANTHROPIC" alt="ANTHROPIC" class="cover-logo">
+
+    <div class="cover-footer">
+        <strong>VERSO CAPITAL 2 SCSP SERIES 215</strong><br>
+        2, Avenue Charles de Gaulle, L1653 Luxembourg<br>
+        www.versoholdings.com
+    </div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- PAGE 2: SUBSCRIPTION SUMMARY -->
+<div class="summary-page">
+<h1>SUBSCRIPTION SUMMARY</h1>
+<h2>VERSO CAPITAL 2 SCSP SERIES "VERSO Capital 2 SCSp Series 600"</h2>
+
+<p><strong>Find the summary of your subscription in Series 215:</strong></p>
+
+<table class="compact summary-table">
+    <tr>
+        <td class="label-cell">Subscriber:</td>
+        <td>RAJAGOPALAN MADHUSUDAN</td>
+    </tr>
+    <tr>
+        <td class="label-cell">Date:</td>
+        <td>September 9, 2025</td>
+    </tr>
+</table>
+
+<table class="compact summary-table">
+    <tr>
+        <td class="label-cell">Total Subscription:</td>
+        <td class="currency-value">USD 23000.00</td>
+    </tr>
+    <tr>
+        <td class="label-cell">Total Number of Shares:</td>
+        <td>163 Equity Certificates</td>
+    </tr>
+    <tr>
+        <td class="label-cell">Price per Share:</td>
+        <td class="currency-value">USD 141.00*</td>
+    </tr>
+    <tr>
+        <td class="label-cell"><strong>Total Subscription Amount:</strong></td>
+        <td class="currency-value"><strong>USD 25875.00</strong></td>
+    </tr>
+</table>
+
+<table class="compact summary-table">
+    <tr>
+        <td class="label-cell">Applicable Terms:</td>
+        <td>
+            • <strong>Subscription Fee (one-off):</strong> (one-off): 2.50%<br>
+            • <strong>Management Fee (upfront one-off):</strong> (upfront one-off): 10.00% (instead of 2.00% no cap 20.00% over SPV lifetime)<br>
+            • <strong>Performance Fee:</strong> : 20.00%<br>
+        </td>
+    </tr>
+    <tr>
+        <td class="label-cell">Escrow Agency Fee:</td>
+        <td>None (cost covered by VERSO Capital 2 SCSP)</td>
+    </tr>
+</table>
+
+<table class="compact summary-signature-table" style="margin-top: 1cm;">
+    <tr>
+        <td style="width: 50%; text-align: center;">
+            <strong>VERSO Capital 2 SCSP Series 215</strong><br>
+            duly represented by its general partner<br>
+            <strong>VERSO Capital 2 GP SARL</strong><br>
+            <div class="signature-line form-line"><span class="sig-anchor">SIG_ANCHOR:party_b_form</span></div>
+            <div class="issuer-signer-meta">
+                Name: Julien Machot<br>
+                Title: Manager and authorized representative
+            </div>
+        </td>
+        <td style="width: 50%; vertical-align: top;">
+            <strong>The Subscriber</strong>, represented by its<br>
+            Authorized Signatory (-ies)<br>
+<div class="signature-block-inline" style="position:relative;margin-bottom: 0.5cm;"><div class="signature-line" style="position:relative;"><span style="position:absolute;left:0;top:0;font-size:1px;line-height:1px;color:#ffffff;opacity:0.01;">SIG_ANCHOR:party_a_form</span></div>Name: RAJAGOPALAN MADHUSUDAN<br>Title: Authorized Signatory</div>
+        </td>
+    </tr>
+</table>
+
+
+</div>
+
+<div class="page-break"></div>
+
+<!-- PAGE 3: WIRE TRANSFER INSTRUCTIONS -->
+<h1>VERSO CAPITAL SERIES 215</h1>
+<h1>WIRE TRANSFER INSTRUCTIONS</h1>
+
+<h2>A. GENERAL INFORMATION</h2>
+<ul>
+    <li><strong>SPV / Vehicle:</strong> VERSO Capital 2 SCSP Series 215, Luxembourg</li>
+    <li><strong>Subscriber:</strong> RAJAGOPALAN MADHUSUDAN</li>
+    <li><strong>Escrow Agent:</strong> Dupont & Partners, Law Firm, Luxembourg</li>
+    <li><strong>Exclusive Arranger:</strong> VERSO Management Ltd, Cat II Reg. Firm, BVI</li>
+    <li><strong>Contact us:</strong> jmachot@versoholdings.com</li>
+</ul>
+
+<h2>B. INSTRUCTIONS</h2>
+<ol>
+    <li>Refer to Closing Date in VERSO Capital 2 SCSP Series 215 Subscription Agreement</li>
+    <li>Please ensure all banking fees, charges or FX spreads be charged as "OUR" only</li>
+    <li>Subscribers are invited to wire the funds to the Escrow Account below:</li>
+</ol>
+
+<div class="wire-section">
+    <div class="wire-box">
+        <p><strong>Bank:</strong> ING Luxembourg S.A.</p>
+        <p><strong>Bank Address:</strong> ING Luxembourg SA, 52, route d&#39;Esch, L-2965 Luxembourg</p>
+        <p><strong>Holder:</strong> Dupont Partners</p>
+        <p><strong>Law Firm Address:</strong> 2 Avenue Charles de Gaulle, L-1653 Luxembourg</p>
+        <p><strong>Description:</strong> Escrow account for VERSO Capital 2 SCSP Series 215</p>
+        <p><strong>IBAN:</strong> LU71 0141 8595 5133 3010</p>
+        <p><strong>BIC:</strong> CELLLULLXXX</p>
+        <p>(FYI: some banks require the additional XXX at the end of BIC Codes)</p>
+        <p><strong>Amount:</strong> USD 25875.00 only</p>
+        <p><strong>Currency:</strong> USD (FYI: United States, Dollars)</p>
+        <p><strong>Reference:</strong> Agency VERSO Capital 2 SCSP Series 215</p>
+    </div>
+
+    <p style="margin-top: 1cm;">Thank you for your consideration,</p>
+
+    <div class="signature-block wire-signoff">
+        <div class="signature-line wire-line"><span class="sig-anchor">SIG_ANCHOR:party_b_wire</span></div>
+        <p>Name: Julien Machot<br>
+        Title: Manager and authorized representative</p>
+    </div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- PAGE 4: SUBSCRIPTION AGREEMENT TITLE PAGE -->
+
+<div style="text-align: center; padding-top: 5cm;">
+    <h1>VERSO CAPITAL 2 SCSP</h1>
+    <p style="text-align: center;">duly represented by its general partner</p>
+    <p style="text-align: center;"><strong>VERSO Capital 2 GP SARL</strong></p>
+    <p style="text-align: center;">as Issuer</p>
+    <p style="text-align: center;">and</p>
+    <p style="text-align: center;"><strong>RAJAGOPALAN MADHUSUDAN</strong></p>
+    <p style="text-align: center;">as Subscriber</p>
+    <p style="text-align: center;">and</p>
+    <p style="text-align: center;"><strong>VERSO Management</strong></p>
+    <p style="text-align: center;">as Arranger</p>
+    <img src="https://dummyimage.com/300x120/ffffff/000000.png&text=ANTHROPIC" alt="ANTHROPIC" style="display: block; margin: 1cm auto 0.8cm auto; max-width: 180px; max-height: 110px;">
+
+    <h2>EQUITY CERTIFICATES SUBSCRIPTION AGREEMENT</h2>
+    <p style="text-align: center;"><strong>STRICTLY PRIVATE AND CONFIDENTIAL</strong></p>
+</div>
+
+<div class="page-break"></div>
+
+<!-- PAGES 5-11: SUBSCRIPTION AGREEMENT -->
+
+<h1>EQUITY CERTIFICATES SUBSCRIPTION AGREEMENT</h1>
+
+<p><strong>THIS EQUITY CERTIFICATES SUBSCRIPTION AGREEMENT</strong> (the "<strong>Agreement</strong>") is dated September 9, 2025 and is made by and between:</p>
+
+<p class="clause"><strong>A.</strong> RAJAGOPALAN MADHUSUDAN (the "<strong>Subscriber</strong>");</p>
+
+<p class="clause"><strong>B. VERSO Capital 2 SCSP</strong>, a Luxembourg special limited partnership (<em>société en commandite spéciale</em>) with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, registered with the Luxembourg Register of Commerce and Companies under number B290857 duly represented by its general partner <strong>VERSO Capital 2 GP SARL</strong>, a private limited liability company (<em>société à responsabilité limitée</em>) established under the laws of the Grand Duchy of Luxembourg, with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, registered with the Luxembourg Register of Trade and Companies under number B290857 (the "<strong>Issuer</strong>");</p>
+
+<p class="clause"><strong>C. VERSO Management Ltd</strong>, a limited liability company with registered office at Trident Chambers, Wickhams Cay, P.O. Box 146, Road Town, Tortola VG1110 British Virgin Islands and registered with the Registrar of Corporate Affairs under number 1901463 and holder of the Category II licensed under the auspice of the FSC Financial Services Commission of the BVI (the "<strong>Arranger</strong>", and together with the Subscriber and the Issuer, the "<strong>Parties</strong>" or individually, a "<strong>Party</strong>").</p>
+
+<h2>RECITALS:</h2>
+
+<p class="clause">(A) The Subscriber approached the Issuer through the Arranger, and after having obtained all relevant information and materials from the Issuer, requested to subscribe to the Issuer's Certificates governed by the master terms and conditions dated September 9, 2025 (the "<strong>T&Cs</strong>", a copy of which are annexed hereto as <strong>Schedule 1</strong>), which the Subscriber declares to have full knowledge thereof and expressly accepts to be bound thereby.</p>
+
+<p class="clause"></p>
+
+<p><strong>NOW THEREFORE</strong>, in consideration of the mutual promises and other good and valuable consideration as set forth herein, and with the understanding that the content of the recitals and Schedules forms an integral part of this Agreement, the Parties hereto agree as follows:</p>
+
+<h2>1. DEFINITIONS AND INTERPRETATION</h2>
+
+<h3>1.1. RECITALS</h3>
+<p class="clause">Recitals (A) to and including (B) above are an integral part of this Agreement.</p>
+
+<h3>1.2. DEFINITIONS</h3>
+<p class="clause">Except as otherwise defined herein or where the context shall otherwise require, all capitalised but undefined words below shall have the meaning ascribed to them in the T&Cs</p>
+
+<h3>1.3. In this Agreement:</h3>
+<p class="sub-clause">1.3.1. Clause headings are inserted for convenience only and shall not affect the construction of this Agreement and unless otherwise specified, all references to Clauses refer to Clauses of this Agreement and all references to Conditions refer to Conditions of the T&Cs.</p>
+
+<p class="sub-clause">1.3.2. Unless the context otherwise requires, words denoting the singular number shall include the plural and vice versa and words denoting any gender shall include all genders.</p>
+
+<p class="sub-clause">1.3.3. References to a person include any body of persons corporate or unincorporate and include its successors in title and permitted transferees and assigns whether direct or indirect.</p>
+
+<p class="sub-clause">1.3.4. References to any agreement or document are to be construed as references to such agreement or document as amended, replaced, novated or supplemented from time to time.</p>
+
+<p class="sub-clause">1.3.5. References to any statute or other legislative provision shall include any statutory or legislative modification or re-enactment thereof, or any substitution therefore.</p>
+
+<p class="sub-clause">1.3.6. Where a French term has been inserted in quotation marks and/or italics, such term alone (and not the English term to which it relates) shall be authoritative for interpreting the respective provision.</p>
+
+<h2>2. SUBSCRIPTION AND SUBSCRIPTION PRICE</h2>
+
+<p>The Subscriber hereby agrees to subscribe for <strong>163</strong> Certificates with a par value of <strong>USD 141.00</strong> each, (the "<strong>Subscribed ECs</strong>") for a total amount of <strong>USD 23000.00</strong> only (the "<strong>Certificates Subscription Price</strong>"), by way of wire transfer of clear available funds (taking into consideration any bank fees which shall be borne by the Subscriber) to the Paying Agent's Account within two (2) days of the date of the present Agreement or no later than  Close of Business Luxembourg 5:00pm (including sharing a SWIFT copy with the Issuer).</p>
+
+<p>The total amount payable by the Subscriber upon Subscription, consisting of the Certificates Subscription Price, Management Fee and the one-off Subscription Fee at  shall amount to <strong>USD 25875.00</strong> only (the "<strong>Total Subscription Price</strong>", the date of receipt of which shall be referred to as the "<strong>Closing Date</strong>").</p>
+
+<h2>3. MANAGEMENT FEE</h2>
+
+<p>The Parties agree that </p>
+
+<h2>4. PERFORMANCE FEE/CARRIED INTEREST</h2>
+
+<p>The Parties agree that </p>
+
+<h2>5. COMPLETION</h2>
+
+<p>The Issuer hereby accepts such subscription and the full payment of the Total Subscription Price by the Subscriber for the Subscribed ECs and undertakes to proceed to the issuance of the Subscribed ECs within five (5) Business Days of the Closing Date (such issuance date shall be treated as the Issue Date for purposes of the T&Cs) and to update the Certificate Register accordingly.</p>
+
+<h2>6. POWER OF ATTORNEY</h2>
+
+<p>The Subscriber hereby grants an, unconditional and irrevocable, power of attorney to <strong>VERSO Management Ltd</strong> (the <strong>Attorney</strong>) to represent the Subscriber at any Meeting (as per condition 16 of the T&Cs) and authorizes the Attorney to waive convening notice formalities, approve/vote in favour of any item on the agenda of the Meeting and, with the express approval of the Undersigned, add any item to the agenda and, in addition, gives full power to the Attorney to sign all documents and do all acts necessary or useful in connection with or in respect of the performance of this power of attorney, even though not specifically indicated, undertaking to ratify and confirm such acts and signatures, if the need should arise.</p>
+
+<p>The Undersigned undertakes to fully indemnify the Attorney against all claims, losses, costs, expenses, damages or liability which the Attorney sustains or incurs as a result of any action taken by him/her in good faith pursuant to this power of attorney, including any costs incurred in enforcing this power of attorney.</p>
+
+<h2>7. REPRESENTATIONS AND WARRANTIES BY THE ISSUER AND THE SUBSCRIBER</h2>
+
+<p>On the date of this Agreement, the Issuer and the Subscriber make the following representations and warranties to each other regarding itself:</p>
+
+<p class="clause">(a) it (i) has the corporate power to enter into this Agreement; (ii) has taken all corporate actions necessary to authorise the entry into and performance of this Agreement, and (iii) has duly executed this Agreement;</p>
+
+<p class="clause">(b) it is entitled to hold directly or indirectly the Assets or Underlying Shares, as the case may be</p>
+
+<p class="clause">(c) this Agreement constitutes it's legal, valid, binding and enforceable obligations;</p>
+
+<p class="clause">(d) the entry into and performance of, and the transactions contemplated by, this Agreement do not and will not:</p>
+
+<p class="sub-clause">(i) result in a breach, violation or acceleration of, or a default under, any other agreement or instrument to which it is a party or by which it is bound; or</p>
+
+<p class="sub-clause">(ii) result in a breach of any law or regulation, of any judgment by any court, of any decision of a governmental authority or any arbitration award by which it is bound;</p>
+
+<h2>8. ACKNOWLEDGMENTS, REPRESENTATIONS AND WARRANTIES BY THE SUBSCRIBER</h2>
+
+<p>On the date of this Agreement, the Subscriber make the following acknowledging statements, representations and warranties to the Issuer with respect to itself and its investment in the Certificates which shall remain in force as long as the Certificates are outstanding:</p>
+
+<p class="clause">(a) it has received, carefully read and fully understands the terms of his investment in accordance with the present Agreement and the T&Cs and agrees with the terms thereof including for the avoidance of any doubt, but not limited to, the nomination of the Arranger as its Agent for purposes of any acts to be carried by the Subscriber as Holder in accordance with the T&Cs;</p>
+
+<p class="clause">(b) it recognizes and agrees that its indirect investment in the Assets through the subscription of the Certificates involves certain degree of risk and is fully cognizant of, and understands, all of the risk factors related to the subscription of Certificates in connection with the underlying Assets;</p>
+
+<p class="clause">(c) it acknowledges the limited recourse clause of Condition 7.3 of the T&Cs and agrees to bear the economic risk of its investment for a definite period of time and is able to withstand a total loss of its investment;</p>
+
+<p class="clause">(d) it acknowledges and agrees that its investments may be in Assets issued by Underlying Companies which may not be regulated and/or which do not have access to financial markets or other source of liquidity (illiquidity may generally result from the absence of an established market for the investments, and potentially from legal or contractual restrictions on their resale of the Assets) and therefore carry a general liquidity risk and there can be no assurance that the Issuer will be able to realise such investments in a timely manner; and</p>
+
+<p class="clause">(e) It acknowledges that certain information with respect to its investment may not be available and that the Issuer's monitoring obligation is on a best effort basis and further agrees to receive on a quarterly semi-annual or annual basis, as the case may be, via a secured virtual reporting date room and under strict confidentiality.</p>
+
+<h2>9. CONFIDENTIALITY</h2>
+
+<h3>9.1 Confidential Information</h3>
+
+<p>The Subscriber undertakes to, and shall procure that each of its directors, officers or representatives (the "<strong>Representatives</strong>"), as the case may be, keep confidential and not disclose or make available to any third party, the following information:</p>
+
+<p class="clause">(i) the existence or contents of this Agreement and any ancillary documents including the T&Cs or the limited partnership agreement of the Issuer;</p>
+
+<p class="clause">(ii) the subject matter or process of negotiations or any disputes between the Parties in connection with this Agreement; and</p>
+
+<p class="clause">(iii) any information of a secret, commercially sensitive or confidential nature received by it which relates to the Issuer, the Underlying Company, the Arranger or their respective businesses, including as may be available in the virtual reporting data room,</p>
+
+<p>(together the "<strong>Confidential Information</strong>");</p>
+
+<p>unless and to the extent the Confidential Information is lawfully in or lawfully comes into the public domain other than as a result of a breach of any undertaking or duty of confidentiality by a Party, in which case such information shall no longer be deemed to form part of the Confidential Information.</p>
+
+<h3>9.2 Permitted disclosures of Confidential Information</h3>
+
+<p>The Subscriber may disclose Confidential Information only:</p>
+
+<p class="clause">(i) with the prior written approval of the Issuer (which shall not be unreasonably withheld, delayed or made conditional);</p>
+
+<p class="clause">(ii) to the extent required by law (including, but not limited, tax law) or pursuant to a request of a governmental entity (including but not limited to the request of a tax authority in connection with the tax affairs of a Party or its Affiliates) provided that if required by law or pursuant to an order of a governmental entity to disclose any Confidential Information, it shall promptly and if reasonably possible and lawful before disclosure occurs notify the Issuer. The Party required to disclose Confidential Information shall, if reasonably possible and lawful, co-operate with the Issuer with regard to the timing and content of such disclosure, or any action which the Issuer may reasonably elect to challenge such requirement;</p>
+
+<p class="clause">(iii) to the extent required for the purpose of fulfilling its obligations under this Agreement;</p>
+
+<p class="clause">(iv) to the extent reasonably required to conduct the defense of a claim or to enforce any rights or to exercise any remedies under this Agreement;</p>
+
+<p class="clause">(v) to a potential Acceding Holder in the event of a sale of the certificates in accordance with Condition 12 of the T&Cs, but only with respect to the terms of this Agreement, the contents of the T&Cs and the limited partnership agreement of the Issuer (i.e. excluding any other Confidential Information set out above) and provided that before any such disclosure is made, the person to whom such disclosure will be made is informed of the terms of this Clause and instructed to adhere to those terms as if such person were bound by them; and</p>
+
+<p class="clause">(vi) to any of a Party's financiers to the extent required for the financing of the transactions referred to in this Agreement, provided that before any such disclosure is made, such financiers are informed of the terms of this Clause and instructed to adhere to those terms as if they were bound by them.</p>
+
+<h2>10. PENALTY CLAUSE</h2>
+
+<p>In the event the Subscriber does not fulfil its payment obligations with respect to the Total Subscription Amount within the timeframes provided for under this Agreement, the Subscriber undertakes to pay to the Issuer, as penalty fees, an amount corresponding to 3.00% of the Certificates Subscription Price and after 30 calendar days of delay, an additional 0.50% of the Certificates Subscription Price per month of subsequent delay (the "<strong>Default Penalty Fee</strong>").</p>
+
+<p>The Parties agree that to the extent the present penalty clause is found to be manifestly excessive by a competent court, the Parties agree that shall be reduced to any amount as the court shall deem reasonable.</p>
+
+<h2>11. REMEDIES</h2>
+
+<p>The rights and remedies conferred on any party by, or pursuant to this Agreement, are cumulative and except as expressly provided in this Agreement, are in addition to, and not exclusive of, any other rights and remedies available to such Party at law or in equity.</p>
+
+<h2>12. SPECIFIC PERFORMANCE</h2>
+
+<p>Each Party agrees that monetary damages may not be a sufficient remedy for any breach or threatened breach of this Agreement, and that the other Parties shall be entitled to seek equitable relief, including injunction and specific performance, in the event of any such breach or threatened breach without the necessity of posting any bond or other security or proving that monetary damages would be difficult to calculate or be an inadequate remedy.</p>
+
+<h2>13. SEVERABILITY</h2>
+
+<p>If any provision of this Agreement is held to be invalid or unenforceable by any judicial or other competent authority, (i) all other provisions of this Agreement will remain in full force and effect and will not in any way be impaired, and (ii) if such provisions of this Agreement would be valid or enforceable if part of the provisions were deleted or amended, the provision in question will apply with the minimum modifications necessary to make it valid and enforceable provided that such modification achieves the original commercial intention of the Parties.</p>
+
+<h2>14. ENTIRE AGREEMENT</h2>
+
+<p>This Agreement constitutes the whole agreement between the parties in relation to the subject matter of this Agreement to the exclusion of any terms implied by law that may be excluded by contract. This Agreement supersedes and extinguishes any and all prior discussions, correspondence, negotiations, drafts, arrangements, understandings or agreements in relation to the subject matter of this Agreement.</p>
+
+<h2>15. AMENDMENTS AND MODIFICATIONS</h2>
+
+<p>Any amendments and modifications to this Agreement are subject to the prior written approval of the Parties.</p>
+
+<h2>16. ONE ORIGINAL AND ELECTRONIC SIGNATURE</h2>
+
+<p>The Parties have expressly agreed to sign this Agreement by electronic signatures, within the meaning of the provisions of articles 1322-1 et seq. of the Luxembourg civil code, through DocuSign services.</p>
+
+<p>The Parties therefore acknowledge and agree that the electronic version of this agreement constitutes an original document and is perfectly valid and enforceable between them. The Parties declare that this agreement and/or its electronic form constitutes literal proof within the meaning of article 1322-2 of the Luxembourg civil code and has the same evidential value as a written documents on paper and may be validly invoked against them.</p>
+
+<p>Each of the Parties acknowledges and agrees that the storage of the original of this agreement signed by means of the DocuSign services satisfies the requirements of durability within the meaning of article 1322-2 of the Luxembourg civil code.</p>
+
+<p>Each of the Parties acknowledges and agrees that the electronic signature solution offered by DocuSign and agreed upon by the parties corresponds to a sufficient degree of reliability to identify the signatories and to guarantee the link between each signature and this agreement.</p>
+
+<p>The Parties therefore agree not to contest the admissibility, enforceability or evidentiary value of the signatures of this agreement.</p>
+
+<h2>17. GOVERNING LAW AND JURISDICTION</h2>
+
+<p>This Agreement and for the avoidance of any doubt, the power of attorney contained herein, are governed by and shall be construed in accordance with the laws of the Grand Duchy of Luxembourg.</p>
+
+<p>The courts of the district of the city of Luxembourg shall have exclusive jurisdiction to hear any dispute or controversy arising out of, or in connection with, this power of attorney.</p>
+
+<p style="text-align: center; margin-top: 2cm;"><em>The remainder of this page is left intentionally blank<br>- signature page follows.</em></p>
+
+<div class="page-break"></div>
+
+<!-- SIGNATURE PAGE FOR SUBSCRIPTION AGREEMENT -->
+
+<h2 style="text-align: center;">Signature page to the Equity Certificates Subscription Agreement</h2>
+
+<!-- Subscriber Signatories (supports multiple authorized signatories) -->
+<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;"><p><strong>The Subscriber</strong>, represented by Authorized Signatory 1</p><div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="position:absolute;left:0;top:0;font-size:1px;line-height:1px;color:#ffffff;opacity:0.01;">SIG_ANCHOR:party_a</span></div><p style="margin-top: 0.3cm;">Name: RAJAGOPALAN MADHUSUDAN<br>Title: Authorized Signatory</p></div>
+
+<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;"><p><strong>The Issuer, VERSO Capital 2 SCSP</strong>, duly represented by its general partner <strong>VERSO Capital 2 GP SARL</strong></p><div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="position:absolute;left:0;top:0;font-size:1px;line-height:1px;color:#ffffff;opacity:0.01;">SIG_ANCHOR:party_b</span></div><p style="margin-top: 0.3cm;">Name: Julien MACHOT<br>Title: Manager and authorized representative</p></div>
+
+<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;"><p><strong>The Attorney, Verso Management Ltd.</strong>, for the purpose of the powers granted under Clause 6</p><div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="position:absolute;left:0;top:0;font-size:1px;line-height:1px;color:#ffffff;opacity:0.01;">SIG_ANCHOR:party_c</span></div><p style="margin-top: 0.3cm;">Name: Julien MACHOT<br>Title: Director and authorized representative</p></div>
+
+<div class="page-break"></div>
+
+<!-- SCHEDULE 1: TERMS & CONDITIONS (PAGES 12-34) -->
+
+<h1>SCHEDULE 1</h1>
+<h1>TERMS & CONDITIONS</h1>
+<h2>EQUITY CERTIFICATES OF VERSO CAPITAL 2 SCSP SERIES 215</h2>
+
+<h2>1. DEFINITIONS</h2>
+
+<table class="no-border">
+    <tr>
+        <td style="width: 35%;" class="bold">"Acceding Holder"</td>
+        <td>has the meaning ascribed to such term in Appendix.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Acceptation"</td>
+        <td>has the meaning ascribed to such term in Condition 12 ("Sale of the Certificates").</td>
+    </tr>
+    <tr>
+        <td class="bold">"Accession Undertaking"</td>
+        <td>has the meaning ascribed to such term in Appendix.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Administrative Charges"</td>
+        <td>means all properly incurred costs, fees and expenses and any other amounts due and payable (including by way of indemnity) together with any value added tax thereon due and payable by the Issuer due to any services provided or pursuant to or as contemplated by this Agreement, to the extent such amounts are not otherwise provided for and shall include among others (i) the Legal Fees, (ii) the audit fees, (iii) the accounting expenses, (iv) the administration and (v) any other servicing expenses of the Issuer, including but not limited to any costs linked to the issuance of the Certificates in ISIN form.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Agent" or "Arranger"</td>
+        <td>means VERSO Management Ltd, a limited liability company with registered office at Trident Chambers, Wickhams Cay, P.O. Box 146, Road Town, Tortola VG1110 British Virgin Islands and registered with the Registrar of Corporate Affairs under number 1901463 and holder of the Category II licensed under the auspice of the FSC Financial Services Commission of the BVI.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Assets or the Underlying Shares"</td>
+        <td>shares or any other instruments issued by the Underlying Company, as further defined in the Subscription Agreement.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Brokerage Fee"</td>
+        <td>means the fee as set out in the Subscription Agreement.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Business Day"</td>
+        <td>means any day other than a Saturday or Sunday on which banks are open for general business in the Grand Duchy of Luxembourg.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Calculation Agent"</td>
+        <td>means the Arranger.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Calculation Date"</td>
+        <td>means a date no later than three (3) Business Days prior to a Payment Date.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Certificates"</td>
+        <td>has the meaning ascribed to such term in Condition 2.1 ("Issuance and Payment of the Certificates").</td>
+    </tr>
+    <tr>
+        <td class="bold">"Certificates Payment Date"</td>
+        <td>has the meaning ascribed to such term in Condition 2.1 ("Issuance and Payment of the Certificates").</td>
+    </tr>
+    <tr>
+        <td class="bold">"Certificates Register"</td>
+        <td>means the register and transfer book maintained by the Issuer for the Certificates.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Certificates Sale or Transfer Offering"</td>
+        <td>has the meaning ascribed to such term in Condition 12 ("Sale of the Certificates").</td>
+    </tr>
+    <tr>
+        <td class="bold">"Certificates Sale or Transfer Price"</td>
+        <td>has the meaning ascribed to such term in Condition 12 ("Sale of the Certificates").</td>
+    </tr>
+    <tr>
+        <td class="bold">"Certificates Subscription Price"</td>
+        <td>has the meaning ascribed to such term in the Subscription Agreement.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Closing Date"</td>
+        <td>means a date as indicated by the issuer in the Subscription Agreement.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Company Law"</td>
+        <td>means the law of 10 August 1915 on commercial companies, as amended from time to time.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Condition"</td>
+        <td>means a condition under these Terms and Conditions.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Equity Return"</td>
+        <td>the Certificates do not provide for an interest, but are repurchased at the fair market value of the Underlying Shares, less costs, as described in Condition 5 ("Equity Return and Costs").</td>
+    </tr>
+    <tr>
+        <td class="bold">"Equity Return Payment Date"</td>
+        <td>has the meaning ascribed to such term in Condition 6 ("Equity Return Calculation").</td>
+    </tr>
+    <tr>
+        <td class="bold">"Escrow Agency Fee"</td>
+        <td>means the fee to be paid by the Issuer according to the escrow agency agreement concluded with Dupont &amp; Partners, a law firm with the Luxembourg Bar, with main office on 2 Avenue Charles de Gaulle, L-1653 Luxembourg, Grand Duchy of Luxembourg.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Event of Default"</td>
+        <td>means each of the events or circumstances set out in Condition 14 ("Event of Default").</td>
+    </tr>
+    <tr>
+        <td class="bold">"Exclusivity Period"</td>
+        <td>has the meaning ascribed to such term in Condition 20 ("Exclusivity").</td>
+    </tr>
+    <tr>
+        <td class="bold">"Fair Market Value"</td>
+        <td>means the value as agreed between the Parties based on (i) the financial statements of the Underlying Company dated less than 3 months provided that no major transaction impacting the value of the Underlying Company occurred in the meantime and (ii) the business plan of the Underlying Company including financial projections; in case of disagreement between the Parties, the value shall be determined by a Luxembourg independent approved statutory auditor (réviseur d'entreprise agréé indépendent).</td>
+    </tr>
+    <tr>
+        <td class="bold">"FATCA"</td>
+        <td>means sections 1471 through 1474 of the U.S. Internal Revenue Code of 1986 and U.S. Treasury regulations promulgated thereunder that took effect on 28 January 2013, as amended from time to time.</td>
+    </tr>
+    <tr>
+        <td class="bold">"FATCA Withholding"</td>
+        <td>means any withholding or deduction required pursuant to FATCA or to an agreement described in Section 1471(b) of the United States Internal Revenue Code of 1986 or otherwise imposed pursuant to Sections 1471 through 1474 of the United States Internal Revenue Code of 1986, any regulations or agreements thereunder, any official interpretations thereof, or any law implementing an intergovernmental approach thereto.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Final Redemption Date"</td>
+        <td>means the redemption in full of the Certificates, at the occasion of one or multiple Redemption Date(s), as applicable.</td>
+    </tr>
+    <tr>
+        <td class="bold">"General Partner"</td>
+        <td>means VERSO Capital 2 GP SARL, a private limited liability company (société à responsabilité limitée) established under the laws of the Grand Duchy of Luxembourg, with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, registered with the Luxembourg Register of Trade and Companies under number B290857</td>
+    </tr>
+    <tr>
+        <td class="bold">"Holder"</td>
+        <td>means any holder of the Certificates.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Insolvency Proceedings"</td>
+        <td>means with respect to any person, the winding-up, liquidation, dissolution, bankruptcy, receivership, insolvency or administration of such person or any equivalent or analogous proceedings under the law of the jurisdiction in which such person is incorporated (or, if not a company or corporation, domiciled) or of any jurisdiction in which such person carries on business or has any assets including the seeking of an arrangement, adjustment, protection or relief of creditors.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Insolvent"</td>
+        <td>means any person in respect of whom Insolvency Proceedings are initiated or opened, as applicable.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Investment"</td>
+        <td>means the shares or any other instruments tracked by the Assets, as further defined in the Subscription Agreement.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Issue Date"</td>
+        <td>means each date on which the Certificates are issued, including the Closing Date, as the case may be.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Issuer Costs"</td>
+        <td>means, to the extent applicable in accordance with the provisions of the Subscription Agreement, any other costs than (i) the Subscription Fee, if any, (i) the Brokerage Fee, if any, and (iii) the Escrow Agency Fee, if any, that the Issuer has to pay until and including the Issue Date in view of such issuance, such as e.g., the Legal Fees – which may be waived, on a case by case basis, by management decision.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Legal Fees"</td>
+        <td>shall include any and all lawyers, attorney', paralegal and law clerk fees and disbursements, including, but not limited to, fees and disbursements in relation to corporate, tax and / or regulatory advices.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Legal Reservations"</td>
+        <td>means (a) the principle that equitable remedies may be granted or refused at the discretion of a court and the limitation of enforcement by laws relating to insolvency, reorganization and other laws generally affecting the rights of creditors, (b) the time barring of claims under any statute of limitations and defenses of set-off or counterclaim, (c) similar principles, rights and defenses under the laws of any relevant jurisdiction and (d) any other matters which are set out as qualifications or reservations as to matters of law of general application in any legal opinion delivered to in connection with this Agreement.</td>
+    </tr>
+    <tr>
+        <td class="bold">"LPA"</td>
+        <td>the limited partnership agreement of the Issuer dated September 9, 2025</td>
+    </tr>
+    <tr>
+        <td class="bold">"Management Fee"</td>
+        <td>means the fee as specified in the Subscription Agreement and to be paid by the Issuer to the General Partner at Final Redemption Date unless waived by the General Partner and if applicable.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Material Adverse Effect"</td>
+        <td>means a material adverse effect on the ability of the Issuer to perform its obligations under this Agreement.</td>
+    </tr>
+    <tr>
+        <td class="bold">"MiFID II"</td>
+        <td>means Directive 2014/65/UE of the European Parliament and of the Council of 15 May 2014 on markets in financial instruments, as amended and/or complemented from time to time.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Meeting"</td>
+        <td>has the meaning ascribed to such term in Condition 16 ("Holders' Meetings").</td>
+    </tr>
+    <tr>
+        <td class="bold">"Mix of Redemption in Kind and of Redemption in Cash"</td>
+        <td>means the redemption of the Certificates by the Issuer to the Holder through a mixt of Redemption in Cash and of Redemption in Kind in accordance with these Terms and Conditions.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Net Sale Price"</td>
+        <td>means the sale price of the Assets as received by the Issuer, i.e., after deduction, for example, of transaction costs if any, withholding taxes levied in the jurisdiction of the Underlying Company if applicable, etc., being understood that the Issuer shall undertake its best effort to obtain the best price for the Assets upon the IPO of the Underlying Shares or upon the sale or transfer of the Underlying Shares, as applicable.</td>
+    </tr>
+    <tr>
+        <td class="bold">"New Buyer Proposition"</td>
+        <td>has the meaning ascribed to such term in Condition 12 ("Sale of the Certificates").</td>
+    </tr>
+    <tr>
+        <td class="bold">"New Issuer"</td>
+        <td>has the meaning ascribed to such term in Condition 17 ("Substitution of Issuer").</td>
+    </tr>
+    <tr>
+        <td class="bold">"One-Off Fee(s)"</td>
+        <td>means the one-off fee(s) as described in the Subscription Agreement to be paid upon Subscription together with the Certificates Subscription Price.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Paying Agent"</td>
+        <td>means Dupont &amp; Partners, a law firm with the Luxembourg Bar, with main office on 2 Avenue Charles de Gaulle, L-1653 Luxembourg, Grand Duchy of Luxembourg.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Paying Agent Account"</td>
+        <td>has the meaning ascribed to such term in Condition 2.1 ("Issuance and Payment of the Certificates").</td>
+    </tr>
+    <tr>
+        <td class="bold">"Payment Date"</td>
+        <td>shall mean any date on which a payment is due under these Terms and Conditions.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Performance Fee or Carry Interest"</td>
+        <td>means a variable remuneration due by the Issuer to either (i) the Arranger as shall be invoiced without VAT prior to the Redemption in Kind or in Cash of the Certificates and prior to the payment of the Equity Return (the "Performance Fee") or, to the extent not invoiced by the Arranger (ii) the Carry LP (as defined in the LPA) as shall be distributed in accordance with the LPA (the "Carry Interest"), corresponding to a percentage of the net profits of the Issuer as further determined in the Subscription Agreement, being (i) all income, gains received or realised by the Issuer, less (ii) all tax withheld at source and not credited at Issuer level, (iii) costs and expenses, including transactional fees of the Issuer (the "Net Profit").</td>
+    </tr>
+    <tr>
+        <td class="bold">"Pre-emption"</td>
+        <td>has the meaning ascribed to such term in Condition 12 ("Sale of the Certificates").</td>
+    </tr>
+    <tr>
+        <td class="bold">"Priority of Payments"</td>
+        <td>has the meaning ascribed to such term in Condition 10.5 ("Equity Return - Priority of Payment").</td>
+    </tr>
+    <tr>
+        <td class="bold">"Prospectus Regulation"</td>
+        <td>has the meaning ascribed to such term in Condition 19 ("Restrictions On Sale")</td>
+    </tr>
+    <tr>
+        <td class="bold">"Qualified Investor"</td>
+        <td>means persons or entities that are listed in points (1) to (4) of Section I of Annex II to Directive 2014/65/EU, and persons or entities who are, on request, treated as professional clients in accordance with Section II of that Annex, or recognised as eligible counterparties in accordance with Article 30 of Directive 2014/65/EU unless they have entered into an agreement to be treated as non-professional clients in accordance with the fourth paragraph of Section I of that Annex. For the purposes of applying the first sentence of this definition, investment firms and credit institutions shall, upon request from the issuer, communicate the classification of their clients to the issuer subject to compliance with the relevant laws on data protection.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Redemption"</td>
+        <td>means either a (i) Redemption in Kind, (ii) Redemption in Cash or (iii) Mix of Redemption in Kind and of Redemption in Cash.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Redemption Amount"</td>
+        <td>means the proceeds received as a result of the Redemption.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Redemption Date"</td>
+        <td>means the date on which a Redemption occurs.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Redemption Event"</td>
+        <td>means (i) the receipt by the Issuer of any proceeds in cash or in kind, with respect to the sale, exchange, redemption, assignment, transfer, repayment, repurchase or other disposition of all or any portion of the Investment tracked by the Assets which can be distributed to the Issuer pursuant to the operating agreement of the Underlying Company and shall include the receipt of a liquidating dividend, distribution upon a sale of all or substantially all of the assets of the Investment tracked by the Assets or other like distribution, in cash or in kind, which can be distributed to the Issuer pursuant the operating agreement of the Underlying Company, net of all expenses and liabilities and reserves (including, without limitation, reserves for expenses and liabilities of the Underlying Company) (ii) the sale and / or repurchase and cancellation of part or all the Underlying Shares in cash or in kind, or (ii) a sale or transfer of the Underlying Shares by the Issuer at the discretion of the Issuer.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Redemption in Cash"</td>
+        <td>means the redemption of the Certificates by the Issuer to the Holder through a payment in cash by the Issuer to the Holder in accordance with these Terms and Conditions.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Redemption in Kind"</td>
+        <td>means the redemption of the Certificates by the Issuer to the Holder in kind through the distribution by the Issuer to the Holder of the Underlying Shares. For the avoidance of doubt, one (1) Certificate repaid in kind by the Issuer to the Holder shall give the Holder the right to the distribution of one (1) Underlying Share by the Issuer.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Refusal"</td>
+        <td>has the meaning ascribed to such term in Condition 12 ("Sale of the Certificates").</td>
+    </tr>
+    <tr>
+        <td class="bold">"Representative(s)"</td>
+        <td>has the meaning ascribed to such term in Condition 16 ("Holders' Meetings").</td>
+    </tr>
+    <tr>
+        <td class="bold">"Sale and Transfer Fee"</td>
+        <td>has the meaning ascribed to such term in Condition 12 ("Sale of the Certificates").</td>
+    </tr>
+    <tr>
+        <td class="bold">"Subscription"</td>
+        <td>means the subscription of the Certificates according to these Terms and Conditions and the Subscription Agreement.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Subscription Agreement"</td>
+        <td>means the Luxembourg law governed subscription agreement to be entered into between the Issuer and the Holder with respect to the Subscription of Certificates.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Subscription Fee"</td>
+        <td>means the subscription fee(s) as described in the Subscription Agreement to be paid upon Subscription together with the Certificates Subscription Price.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Taxes"</td>
+        <td>means all tax withheld at source and due by the Issuer in the Grand Duchy of Luxembourg, after inclusion of any tax credits of the Issuer hereto.</td>
+    </tr>
+    <tr>
+        <td class="bold">"Transfer Notice"</td>
+        <td>has the meaning ascribed to such term in Condition 12 ("Sale of the Certificates").</td>
+    </tr>
+    <tr>
+        <td class="bold">"Transfer Reply Notice"</td>
+        <td>has the meaning ascribed to such term in Condition 12 ("Sale of the Certificates").</td>
+    </tr>
+    <tr>
+        <td class="bold">"Transfer Reply Period"</td>
+        <td>has the meaning ascribed to such term in Condition 12 ("Sale of the Certificates").</td>
+    </tr>
+    <tr>
+        <td class="bold">"Underlying Company"</td>
+        <td>shall have the meaning ascribed to it in the Subscription Agreement</td>
+    </tr>
+    <tr>
+        <td class="bold">"USD"</td>
+        <td>means the lawful currency of United States of America as of the date of these Terms and Conditions.</td>
+    </tr>
+    <tr>
+        <td class="bold">"US FINRA regulated Broker Dealer"</td>
+        <td>means the person nominated as such by the Arranger</td>
+    </tr>
+</table>
+
+<h3 class="inline-number">1.1.</h3>
+<p>Words importing the singular shall include the plural and vice versa.</p>
+
+<h3 class="inline-number">1.2.</h3>
+<p>Section headings are for ease of reference only.</p>
+
+<h3 class="inline-number">1.3.</h3>
+<p>In this Agreement, unless the contrary intention appears or the context otherwise requires, a reference to the recital, a section or a condition is a reference to the recital, a section or a condition of this Agreement. The recital forms an integral part of this Agreement.</p>
+
+<h3 class="inline-number">1.4.</h3>
+<p>In these Terms and Conditions, reference to any agreement, instrument or other document (howsoever named) is to such agreement, instrument or other document as it may be amended, restated or extended from time to time, whether before or after the date hereof.</p>
+
+<h3 class="inline-number">1.5.</h3>
+<p>Any reference to any person shall be construed to include such person's successors and assigns.</p>
+
+<h2>2. THE CERTIFICATES</h2>
+
+<h3>2.1. Issuance and Payment of the Certificates</h3>
+
+<p class="clause">2.1.1. The Certificates are equity certificates, issued and backed by the Assets. Each Certificate corresponds to one Underlying Share.</p>
+
+<p class="clause">2.1.2. On the Issue Date, the Issuer shall issue the Certificates under the conditions of the Subscription Agreement, which shall be subscribed against the payment by the Subscriber of the Certificates Subscription Price to the Paying Agent as per the Subscription Agreement.</p>
+
+<p class="clause">2.1.3. The Paying Agent shall receive a copy of the Subscription Agreement duly executed, duly confirmed with the Issuer's counsel, and the Subscriber shall cause the payment of the Certificates Subscription Price and the One-Off Fee(s).</p>
+
+<p class="clause">2.1.4. The payment of the Certificates Subscription Price and the One-Off Fee(s) shall occur on the Closing Date (the "<strong>Certificates Payment Date</strong>"), under the following bank account on behalf of the Issuer by the Paying Agent (the "<strong>Paying Agent Account</strong>"):</p>
+
+<div class="wire-box">
+    <p><strong>Bank:</strong> ING Luxembourg S.A.</p>
+    <p><strong>Holder:</strong> Dupont Partners</p>
+    <p><strong>IBAN:</strong> LU71 0141 8595 5133 3010</p>
+    <p><strong>BIC:</strong> CELLLULLXXX</p>
+    <p>(FYI: some banks require the additional XXX at the end of BIC Codes)</p>
+    <p><strong>Reference:</strong> Agency VERSO Capital 2 SCSP Series 215</p>
+    <p><strong>Currency:</strong> USD (United States, Dollars)</p>
+</div>
+
+<h3>2.2. Currency and Denomination of the Certificates</h3>
+
+<p class="clause">2.2.1. The Certificates are issued for a maximum aggregate amount of USD .</p>
+
+<p class="clause">2.2.2. The Certificates shall not be divided and there should only be one Holder of each of the Certificates.</p>
+
+<h3>2.3. Form and Title of the Certificates</h3>
+
+<p>All Certificates shall be issued only in registered form, and the name and address of the Holder of each Certificate shall be entered into the Certificates Register by the Issuer. There should only be one (1) owner per Certificate. Except as expressly required by law, the person in whose name the Certificate stand in the Certificates Register shall be deemed to be the full and undivided owner and record Holder thereof for all purposes.</p>
+
+<h3>2.4. Cancellation</h3>
+
+<p>All Certificates which are redeemed will be cancelled and may not be reissued or sold.</p>
+
+<h3>2.5. No Purchase by Issuer</h3>
+
+<p>The Issuer may not purchase any of the Certificates other than by way of a Redemption and immediate cancellation.</p>
+
+<h3>2.6. No Rating</h3>
+
+<p>The Certificates will not be rated.</p>
+
+<h2>3. USE OF PROCEEDS</h2>
+
+<p>The Issuer will apply the proceeds of Certificates solely to purchase the Assets. In the case the purchase of the Assets is not executed, the Certificates shall be immediately redeemed by the Issuer, which shall not bear any penalty.</p>
+
+<h2>4. THE AGENT</h2>
+
+<h3 class="inline-number">4.1.</h3>
+<p>By signing the Subscription Agreement, each Holder expressly and irrevocably authorises the Agent (acting as Holder's Agent) to act on its behalf as its agent in relation to this Agreement and irrevocably authorises (i) the Agent to receive the subscription proceeds (or as the case may be to instruct the Paying Agent to receive the subscription proceeds), and (ii) on its behalf to supply all information concerning itself, its financial condition and otherwise to the relevant persons contemplated under this Agreement, and (iii) any party to this Agreement to give any notice, demand or other communication to be given to or served on such Holder pursuant to this Agreement to the Agent on its behalf, and, in each such case, such Holder will be bound thereby as though such Holder itself had given such notice and instructions, executed such agreement or received any such notice, demand or other communications.</p>
+
+<h3 class="inline-number">4.2.</h3>
+<p>Every act, omission, agreement, undertaking, settlement, waiver, notice or other communication given or made by the Holders' Agent under these Terms and Conditions, or in connection with these Terms and Conditions (whether or not known to any other Holder and whether occurring before or after such other Holder became an Holder under these Terms and Conditions) shall be binding for all purposes on all other Holders as if the other Holders had expressly made, given or concurred with the same. In the event of any conflict between any notices or other communications of the Holders' Agent and any other Holder, those of the Holders' Agent shall prevail.</p>
+
+<div class="page-break"></div>
+
+<h2>5. EQUITY RETURN AND COSTS</h2>
+
+<h3 class="inline-number">5.1.</h3>
+<p>Each Certificate will constitute a zero coupon security, due and payable at Final Redemption Date, and are to be computed at the level of the Issuer.</p>
+
+<h3 class="inline-number">5.2.</h3>
+<p>The Equity Return under all the Certificates represents:</p>
+
+<p style="text-align: center; font-weight: bold; margin: 0.5cm 0;">
+(N x V) – ((N x CSP) + (Administrative Charges + PERF + MF)) = P
+</p>
+
+<p>Where:</p>
+<ul>
+    <li>N = number of Underlying Shares / Certificates</li>
+    <li>V = (i) Net Sale Price in case of Redemption in Cash or (ii) Fair Market Value of the Underlying Shares in case of Redemption in Kind</li>
+    <li>CSP = the Certificate Subscription Price</li>
+    <li>PERF = Performance Fee or Carry</li>
+    <li>MF = Management Fee, if applicable</li>
+    <li>P = profit</li>
+</ul>
+
+<p>P being the "<strong>Equity Return</strong>".</p>
+
+<h2>6. EQUITY RETURN CALCULATION</h2>
+
+<h3 class="inline-number">6.1.</h3>
+<p>The Equity Return is calculated as defined above; for the avoidance of doubt, it shall be paid in cash in case of Redemption in Cash and in kind in case of Redemption in Kind.</p>
+
+<h3 class="inline-number">6.2.</h3>
+<p>In case of payment of the Equity Return in kind, the payment shall be carried out by transferring the number of Underlying Shares to the Subscriber corresponding to the value of the Equity Return to be paid to the Subscriber according to Condition 5 ("Equity Return and Costs").</p>
+
+<h3 class="inline-number">6.3.</h3>
+<p>The Equity Return shall be made to the Holders on each Redemption Date (the "<strong>Equity Return Payment Date</strong>").</p>
+
+<h3 class="inline-number">6.4.</h3>
+<p>The last Equity Return Payment Date shall be the Final Redemption Date.</p>
+
+<h3 class="inline-number">6.5.</h3>
+<p>If the Issuer fails to pay any amount payable by it under these Terms and Conditions on its due date, interest shall accrue on the overdue Equity Return amount from the due date up to the date of actual payment at the Luxembourg statutory interest rate (<em>taux d'intérêt légal</em>) for commercial transactions. Any interest accruing shall be immediately payable but will not be compounded.</p>
+
+<div class="page-break"></div>
+
+<h2>7. RIGHTS AND OBLIGATIONS UNDER THE CERTIFICATES</h2>
+
+<h3>7.1. Status of the Certificates</h3>
+
+<p>The Certificates constitute direct, general, unconditional, unsubordinated and unsecured obligations of the Issuer and shall at all times rank:</p>
+
+<p class="clause">a) without any preference among them, and</p>
+<p class="clause">b) at least <em>pari passu</em> with the eligible direct obligations of the Issuer, unconditional, unsubordinated to the present Agreement, except those obligations which are mandatorily preferred by law.</p>
+
+<h3>7.2. Obligations under the Certificates</h3>
+
+<p>The Certificates are obligations solely of the Issuer. The Certificates do not represent an interest in, or constitute a liability or other obligation of any kind of any service providers under this Agreement of the Issuer or any of their respective affiliates or any other third person or entity. The Certificates are not, and will not be insured or guaranteed by any service providers under this Agreement or any of their affiliates or any other third person or entity and none of the foregoing assumes or will assume any liability or obligation to the Holders of the Certificates if the Issuer fails to make any payment due in respect of the Certificates.</p>
+
+<h3>7.3. Limited Recourse</h3>
+
+<p>The Certificates are direct and limited recourse obligations of the Issuer, to any proceeds received in relation to the Assets minus 10% of the capital invested by the Issuer in the Underlying Company (the <strong>Limited Recourse Proceeds</strong>).</p>
+
+<p>The Issuer's ability to satisfy its payment obligations under the Certificates and these Terms and Conditions will be wholly dependent upon receipt by it, in full, of payments of amounts payable by the Underlying Company in accordance with the terms thereof.</p>
+
+<p>Other than the Assets tracked by the Certificates and the Limited Recourse Proceeds thereof, the Issuer will have no other funds available to meet its obligations under the Certificates. The Assets and the Limited Recourse Proceeds thereof are the only remedy available to the Holders for the purpose of recovering amounts payable in respect of the Certificates.</p>
+
+<p>Recourse of the Holders shall be limited to the Assets and the Limited Recourse Proceeds thereof, as applied in accordance with these Terms and Conditions. If such Assets and proceeds prove ultimately insufficient (after payment of all claims ranking in priority to amounts due under the Certificates) to pay in full all principal and profits on the Certificates, then the Holders shall have no further recourse against the Issuer or any other person for any shortfall arising or any loss sustained.</p>
+
+<p>Such Assets and Limited Recourse Proceeds shall be deemed to be 'ultimately insufficient' at such time when the Issuer certifies to the Holders that (i) no further Assets are available and no further proceeds can be realised therefrom to satisfy any outstanding claims of the Holders, and that (ii) neither Assets nor Limited Recourse Proceeds thereof will reasonably likely be so available thereafter.</p>
+
+<p>In respect of the Certificates, the Holders shall, once the Assets and Limited Recourse Proceeds thereof are deemed to be ultimately insufficient, have thereafter neither further claims against the Issuer nor have recourse to the Issuer or any other person for the loss sustained and their claims together with the relevant Certificates shall be fully extinguished.</p>
+
+<p>Neither the Issuer nor the managers or officers of the Issuer or its General Partner shall be liable for any shortfall arising and the Holders shall not have any further claims against the Issuer or any of its directors or officers.</p>
+
+<h3>7.4. Calculations</h3>
+
+<p>On each Calculation Date, the Calculation Agent (or the Issuer itself, as the case may be) shall calculate the amounts due and payable on the immediately following Payment Date and the identity of the Holders as at 12:00 pm (UTC) on such date. The person or entity who appears on the Certificates Register at such date and time will be entitled to the relevant payment on the immediately following Payment Date.</p>
+
+<h2>8. REPRESENTATIONS AND WARRANTIES OF THE ISSUER</h2>
+
+<p>The Issuer hereby represents and warrants that:</p>
+
+<p class="clause">a) it is a special limited partnership (<em>société en commandite spéciale</em>) duly and validly existing under the laws of the Grand Duchy of Luxembourg;</p>
+
+<p class="clause">b) for the purposes of Regulation (EU) 2015/848 of 20 May 2015 on insolvency proceedings (recast) (the "<strong>Regulation</strong>"), its centre of main interest (as that term is used in Article 3(1) of the Regulation) is situated in the Grand Duchy of Luxembourg;</p>
+
+<p class="clause">c) it has the power, authority and legal right to purchase the Assets;</p>
+
+<p class="clause">d) it has full capacity, power, authority, legal right and lawful authority to perform all its obligations under these Terms and Conditions;</p>
+
+<p class="clause">e) it has obtained all authorisations required to enable it to enter into and exercise its rights and comply with its obligations under these Terms and Conditions;</p>
+
+<p class="clause">f) the obligations expressed to be assumed by it in this Agreement are, subject to the Legal Reservations, legal, valid, binding and enforceable obligations;</p>
+
+<p class="clause">g) subject to the Legal Reservations, the choice of Luxembourg law as the governing law of these Terms and Conditions will be recognised and enforced in the Grand Duchy of Luxembourg;</p>
+
+<p class="clause">h) it is not subject to any bankruptcy proceedings (<em>faillite</em>) or suspension of payments (<em>sursis de paiement</em>) or any foreign law proceedings having similar effects;</p>
+
+<p class="clause">i) it has not traded or carried on any business since the date of its incorporation; and</p>
+
+<p class="clause">j) no Event of Default has occurred or is continuing.</p>
+
+<div class="page-break"></div>
+
+<h2>9. COVENANTS OF THE ISSUER</h2>
+
+<h3 class="inline-number">9.1.</h3>
+<p>The Issuer hereby covenants that, so long as any of the Certificates remains outstanding, it will:</p>
+
+<p class="clause">a) at all times keep such books of account as may be necessary to comply with all applicable laws so as to enable the financial statements of the Issuer to be prepared and allow free access to the same at all reasonable times during normal business hours at the registered office in accordance with article 470-2 and 461-6 of the Company Law;</p>
+
+<p class="clause">b) monitor, on a best effort basis and subject to availability of such information, its investment in the underlying Assets and report on a quarterly semi-annual or annual basis, as the case may be, to the Holders via a secured virtual date room and under strict confidentiality;</p>
+
+<p class="clause">c) provide the Holders with such information as they may reasonably request from time to time to the extent available and entitled to such information under these Terms and Conditions or the Company Law;</p>
+
+<p class="clause">d) at all times comply with and perform all its obligations under this Agreement including all of its obligations under, and in respect of, the Certificates and use all reasonable endeavours to procure that the other parties hereto comply with and perform all their respective obligations thereunder;</p>
+
+<p class="clause">e) comply in all respects with all laws to which it may be subject, if failure so to comply has or is reasonably likely to have a Material Adverse Effect;</p>
+
+<p class="clause">f) promptly give notice to the Holders if it is required by law to withhold or account for tax in respect of any payment due in respect of the Certificates or if it becomes liable to tax in respect of its income;</p>
+
+<p class="clause">g) notify the Arranger of any Event of Default (and the steps, if any, being taken to remedy it) promptly upon becoming aware of its occurrence (unless it is aware that a notification has already been provided by the Underlying Company), and</p>
+
+<p class="clause">h) promptly upon a request by the Arranger, it shall supply to the Arranger a certificate signed by two of its managers on its behalf certifying that no Event of Default is continuing (or if an Event of Default is continuing, specifying the Event of Default and the steps, if any, being taken to remedy it).</p>
+
+<h3 class="inline-number">9.2.</h3>
+<p>The Issuer agrees that unless specifically provided otherwise in the present Terms and Conditions it will not, without the prior written consent of the Holders given at a Holder's Meeting:</p>
+
+<p class="clause">(a) engage in any activity which is not reasonably incidental to any of the activities which these Terms and Conditions provide or envisage;</p>
+
+<p class="clause">(b) incur or permit to subsist any indebtedness in respect of borrowed money whatsoever or give any indemnity or assume any liability whatsoever, except as permitted pursuant to these Terms and Conditions;</p>
+
+<p class="clause">(c) dispose of any of its assets, except as permitted pursuant to these Terms and Conditions;</p>
+
+<p class="clause">(d) create or permit to subsist any security (unless arising by operation of law) or charge upon, or sell, transfer, assign, exchange or otherwise dispose of, the whole or any part of, its assets, present or future (including any uncalled capital) or its undertaking other than pursuant to these Terms and Conditions;</p>
+
+<p class="clause">(e) consolidate or merge with any other person or convey or transfer its properties or assets substantially as an entirety to any other person unless in both cases, all rights of the Holders are fully preserved; or</p>
+
+<p class="clause">(f) permit the validity or effectiveness of these Terms and Conditions to be impaired or permit these Terms and Conditions to be amended, hypothecated, subordinated, terminated or discharged, or permit any person to be released from any covenants or obligations with respect to these Terms and Conditions.</p>
+
+<div class="page-break"></div>
+
+<h2>10. PAYMENTS</h2>
+
+<h3>10.1. General</h3>
+
+<p>All payments shall be subject to the condition that if a payment is made to a creditor in breach of these Terms and Conditions, such creditor shall repay the amount so received to the Issuer. The Issuer shall then pay out the moneys so received in the way they were payable in accordance with these Terms and Conditions on the relevant Payment Date. If such repayment is not enforceable, the Issuer is authorized and obliged to make payments in such a way that any over-payments or under-payments made in breach of these Terms and Conditions are set-off by correspondingly decreased or increased payments on the next following Payment Date.</p>
+
+<p>Neither the Issuer nor any party to this Agreement shall incur any liability whatsoever if the Issuer or this third party is unable to effect the transactions contemplated, after using all reasonable efforts, as a result of any such above-mentioned laws, regulations, directives, official interpretations or agreements.</p>
+
+<h3>10.2. Business Days</h3>
+
+<p>If the date for any payment in respect of any Certificate is not a Business Day, such payment shall be made on the following Business Day and shall not bear any interest due to such delay.</p>
+
+<h3>10.3. Proceeds from the Assets</h3>
+
+<p>Amounts received in connection with the Assets shall be credited to the Paying Agent Account of the Issuer as determined by the Issuer in accordance with the terms of this Agreement and be applied by the Issuer on the relevant Payment Date in accordance with this Agreement and in the order set forth in this Agreement.</p>
+
+<h3>10.4. No Interest on Late Payments</h3>
+
+<p>Any amount of principal or Equity Return not paid by the Issuer on a Payment Date shall not bear interest.</p>
+
+<h3>10.5. Equity Return - Priority of Payment</h3>
+
+<p>Equity Return payments under the Certificates shall be made in the following order of priority (the "<strong>Priority of Payments</strong>"), subject however to the provisions of Condition 7.3 (Limited Recourse) and only to the extent that there are funds available for the purpose and all payments or provisions of a higher priority that fall due to be paid or provided for on such day have been made in full:</p>
+
+<p>On any Equity Return Payment Date, in each case of due and payable Equity Return under the Certificates,</p>
+
+<p class="clause">(i) <strong>first</strong>, in or towards payment of the Administrative Expenses, Taxes, any other taxes, duties and/or any other fees, costs and expenses due by the Issuer;</p>
+
+<p class="clause">(ii) <strong>second</strong>, in or towards payment of the Performance Fee, if any, due and payable by the Issuer in accordance with this Agreement; and</p>
+
+<p class="clause">(iii) <strong>third</strong>, on a pro rata basis, in or towards payment of all amounts then due and payable by the Issuer in respect of Equity Return of the Certificates.</p>
+
+<h2>11. REDEMPTION OF THE CERTIFICATES</h2>
+
+<h3>11.1. Full Redemption in Kind</h3>
+
+<p>A Redemption in Kind may be exercised at the discretion of the Issuer upon a Redemption Event by way of written notice to the Subscriber in the event that no IPO, sale or transfer of the Underlying Shares has occurred by then, whereupon the Issuer shall procure, on a best effort basis and subject to any transfer formalities (contractual and/or statutory as the case may be) applicable to the Underlying Shares by the underlying Company or the jurisdiction governing such Underlying Shares, that the Underlying Shares attributable to the Subscriber are transferred to the Subscriber and registered in the name of the Subscriber by the Underlying Company within ten (10) Business Days from the date of such written notice.</p>
+
+<p>For the avoidance of doubt, a Redemption in Kind is subject to Condition 7.3 (Limited Recourse).</p>
+
+<h3>11.2. Full Redemption in Cash</h3>
+
+<p>A Redemption in Cash may be exercised, at the discretion of the Issuer upon a Redemption Event, for an amount equal to the sum of:</p>
+
+<p class="clause">a) 100 percent (100%) of the Certificates Subscription Price of the redeemed Certificates; and</p>
+<p class="clause">b) an amount equal to the Equity Return.</p>
+
+<p>For the avoidance of doubt, a Redemption in Cash is subject to Condition 7.3 (Limited Recourse).</p>
+
+<h3>11.3. Mix of Redemption in Kind and of Redemption in Cash</h3>
+
+<p>A Mix of Redemption in Kind and of Redemption in Cash may be exercised, at the discretion of the Issuer, upon a Redemption Event, as follows:</p>
+
+<p class="clause">a) 100 percent (100%) of the Certificates Subscription Price of the number of Certificates to be redeemed in cash, corresponding to the number of the Underlying Shares subject to the IPO, sold or transferred, shall be redeemed in cash;</p>
+
+<p class="clause">b) an amount equal to the Equity Return shall be paid in cash based on the number of Certificates to be redeemed in cash as per a) above; and</p>
+
+<p class="clause">c) the Certificates not to be redeemed in cash as per a) above shall be redeemed in kind as per Condition 11.1. (Full Redemption in Kind).</p>
+
+<p>For the avoidance of doubt, a Mix of Redemption in Kind and of Redemption in Cash is subject to Condition 7.3 (Limited Recourse).</p>
+
+<h3>11.4. Parallel transactions</h3>
+
+<p>Any repayment, cancellation, redemption or default of or under the Assets shall trigger the same operation under the Certificates (by notice to the Holders) and the Issuer shall ensure parallel transactions with regards to the Assets and the Certificates (in proportion of the Certificates owned by each Holder computed on the total Certificate outstanding amount).</p>
+
+<h3>11.5. No Redemption at the Option of the Holders</h3>
+
+<p>No Holder shall have any right, or privilege to demand, sue for or otherwise bring claims against the Issuer for the purpose of acceleration or redemption of the Certificates or any part thereof.</p>
+
+<div class="page-break"></div>
+
+<h2>12. SALE OF THE CERTIFICATES</h2>
+
+<h3>12.1. Notification to the Issuer</h3>
+
+<p>The Holder contemplating to sale or transfer the Certificates, either a part or all, to a third party, shall first notify the Issuer and the Arranger in accordance with the provisions of Condition 15 ("Notices").</p>
+
+<p>The following information shall be addressed to the Issuer in the notice (the "<strong>Transfer Notice</strong>"):</p>
+<ul>
+    <li>The number of Certificates to be sold or transferred ("<strong>Certificates Sale or Transfer Offering</strong>");</li>
+    <li>The sale or transfer price of each Certificates to be sold or transferred (the "<strong>Certificates Sale or Transfer Price</strong>");</li>
+    <li>The identity and the location of the contemplated buyer or transferee.</li>
+</ul>
+
+<p>For the avoidance of doubt, any sale or transfer of Certificates performed without having been notified to the Issuer in accordance with this Condition 12 shall be void and without any effect towards the Issuer.</p>
+
+<h3>12.2. Rights and Obligations of the Issuer upon the Receipt of the Transfer Notice</h3>
+
+<p>The Issuer and the Arranger, upon receipt of the Transfer Notice, have, at their discretion, within 30 Business Days ("<strong>Transfer Reply Period</strong>"):</p>
+
+<ul>
+    <li>the right to refuse the contemplated Certificates Sale or Transfer Offering ("<strong>Refusal</strong>");</li>
+    <li>the right to purchase the Certificates subject to the Certificates Sale or Transfer Offering at the Certificates Sale or Transfer Price ("<strong>Pre-emption</strong>");</li>
+    <li>the right to propose a new buyer or transferee, which for the avoidance of doubt could be another entity of the group to which the Issuer belongs, to purchase the Certificates subject to the Certificates Sale or Transfer Offering at the Certificates Sale or Transfer Price ("<strong>New Buyer Proposition</strong>"); or</li>
+    <li>the right to accept the contemplated Certificates Sale or Transfer Offering at the Certificates Sale or Transfer Price (the "<strong>Acceptation</strong>").</li>
+</ul>
+
+<p>The Pre-emption, the New Buyer Proposition or the Acceptation shall be notified in accordance with the provisions of Condition 15 ("Notices") (the "<strong>Transfer Reply Notice</strong>").</p>
+
+<p>For the avoidance of doubt, in case of Refusal, the Issuer does not have the obligation to propose a new buyer.</p>
+
+<p>For the avoidance of doubt, in the absence of answer within the Transfer Reply Period, it shall be deemed to be a Refusal.</p>
+
+<h3>12.3. Rights and Obligations of the Holder upon Acceptation</h3>
+
+<p>The Holder, upon receipt of the Transfer Reply Notice notifying an Acceptation, shall notify the Issuer with the Accession Undertaking duly executed in accordance with the provisions of Condition 15 ("Notices").</p>
+
+<p>For the avoidance of doubt, the notification to the Issuer of the Accession Undertaking duly executed shall be considered as a condition precedent of the contemplated sale or transfer. The contemplated sale or transfer shall have no effect, whatsoever, towards the Issuer, as long as the Accession Undertaking duly executed has not been notified to the Issuer in accordance with the provisions of Condition 15 ("Notices").</p>
+
+<h3>12.4. Sale and Transfer Fee</h3>
+
+<p>For the avoidance of doubt, the Arranger reserves the right to apply a one-off sale and transfer fee amounting to minimum 0.05% of the Certificates Sale or Transfer Price to be paid by the contemplated buyer or transferee to the Paying Agent Account as shall be indicated on the Transfer Reply Notice.</p>
+
+<p>For the avoidance of doubt, the payment of the Sale and Transfer Fee shall be considered as a condition precedent of the contemplated sale or transfer. The contemplated sale or transfer shall have no effect, whatsoever, towards the Issuer, as long as the Sale and Transfer Fee has not been paid to the Paying Agent Account.</p>
+
+<div class="page-break"></div>
+
+<h2>13. TAXATION</h2>
+
+<p>All payments and/or deliveries in respect of the Certificates made by or on behalf of the Issuer shall be made free and clear of and without any withholding or deduction for any taxes, duties, assessments or governmental charges of whatever nature which may be required to be withheld or deducted.</p>
+
+<p>In that event, the Issuer shall pay such additional amounts as will result in the receipt by the Holders of such amounts as would have been received by them if no such withholding or deduction had been required, except that no such additional amounts shall be payable in respect of any Certificate presented for payment by a Holder which is liable to such taxes, duties, assessments or governmental charges in respect of such Certificate by reason of its having some connection with the Grand Duchy of Luxembourg other than the mere holding of such Certificate.</p>
+
+<p>Notwithstanding any other provision contained herein, any amounts to be paid by the Issuer on the Certificates will be paid net of any deduction or withholding imposed or required pursuant to FATCA, and the Issuer will not be required to pay additional amounts on account of any FATCA Withholding.</p>
+
+<h2>14. EVENT OF DEFAULT</h2>
+
+<h3 class="inline-number">14.1.</h3>
+<p>Each of the events or circumstances set out below is an Event of Default:</p>
+
+<ul>
+    <li>the Issuer or the Underlying Company becomes Insolvent;</li>
+    <li>a receiver, manager or other similar officer is appointed in relation to, the whole or a substantial part of the undertaking, assets and revenues of the Issuer or the Underlying Company;</li>
+    <li>the Issuer fails to pay, within twenty-one (21) Business Days of a defined Payment Date, any amount payable under these Terms and Conditions;</li>
+    <li>the Issuer doesn't notify the Agent of any Event of Default promptly upon becoming aware of its occurrence (unless it is aware that a notification has already been provided by the Underlying Company); or</li>
+    <li>any representation or warranties statement made by the Issuer in this Agreement is or proves to have been incorrect or misleading in any material respect when made or deemed to be made;</li>
+</ul>
+
+<p>unless the default is capable of remedy and is remedied by the Issuer or the Underlying Company within ten (10) Business Days of the Issuer or the Underlying Company becoming aware of the failure to comply.</p>
+
+<h3 class="inline-number">14.2.</h3>
+<p>Upon the occurrence of an Event of Default which is continuing, the Issuer may declare the outstanding Certificates and all other amounts accrued or outstanding immediately due and payable by notice in accordance with the provisions of Condition 15 ("Notices").</p>
+
+<h3 class="inline-number">14.3.</h3>
+<p>If an Event of Default has occurred and is continuing, the Issuer shall redeem all Certificates at the price set out in the Redemption Event and the Issuer shall, if instructed in writing by the Meeting, subject to the quiet enjoyment rights of the Underlying Shares, exercise any right remedies deemed appropriate.</p>
+
+<h2>15. NOTICES</h2>
+
+<p>All notices regarding the Certificates shall be delivered to</p>
+
+<p><strong>For the Issuer:</strong><br>
+<strong>VERSO Capital 2 SCSP</strong><br>
+c/o VERSO Capital 2 GP SARL<br>
+2, avenue Charles de Gaulle,<br>
+L-1653 Luxembourg Grand Duchy of Luxembourg</p>
+
+<p><strong>For the Holders:</strong><br>
+<strong>VERSO Management Ltd, as Agent</strong><br>
+Trident Chambers, Wickhams Cay, P.O. Box 146, Road Town,<br>
+Tortola VG1110 British Virgin Islands<br>
+c/o Julien Machot, Director</p>
+
+<div class="page-break"></div>
+
+<h2>16. HOLDERS' MEETINGS</h2>
+
+<p>The provisions of Article 470-13 item 1*, 470-13 second paragraph and Article 470-15 of the Luxembourg law of 10 August 1915 relating to commercial companies, as amended (the "<strong>Company Law</strong>") do not apply.</p>
+
+<p>The Holders may constitute a meeting representing together the entire body of Holders (the "<strong>Meeting</strong>"), created <em>inter alia</em> for the purposes of representation of the common interests of the Holders in accordance with the provisions of the Company Law (save as otherwise stated above).</p>
+
+<p>The Issuer hereby appoints the Agent as representative of the Holders in accordance with the provisions of article 470-4(1) of the Company Law who shall have all the powers provided by artilce 470-5. of the Company Law (the "<strong>Representative(s)</strong>") and the Holders shall not be able to individually exercise the rights attached to their Certificates against the Issuer.</p>
+
+<p>A Meeting may be convened at any time by the Representative(s) or by the General Partner to resolve on the matters required by article 470-13 of the Company Law unless provided otherwise herein. The General Partner must convene a Meeting if Holders representing 5% or more of the total amount of outstanding Certificates so request. Any Meeting will be held in the Grand Duchy of Luxembourg at the venue specified in the convening notice.</p>
+
+<p>Every Holder will have the right to attend and vote at a Meeting in person or by proxy. The voting rights attached to the Certificates are proportional to the portion of the issue they each represent, and carrying at least one vote. A Meeting shall be convened to resolve on the matters required by article 470-13 of the Company Law unless provided otherwise herein.</p>
+
+<p>A Meeting may validly decide on the approval of any protective measures taken in the general interests of the Holders, by a simple majority of the votes cast by the Holders present or represented at the Meeting, provided that, upon first convening a quorum of at least 75% of the total amount of the Certificates outstanding at that time is met. No quorum is required at a reconvened Meeting.</p>
+
+<p>In respect of any other decision, the Meeting may validly decide upon first convening only if the Holders present or represented hold at least 50% of the total amount of the Certificates outstanding at that time. No quorum is required at a reconvened Meeting. The decisions at such Meetings will be passed by a majority consisting of not less than two-thirds of the votes cast by Holders present or represented.</p>
+
+<p>Each Holder shall have the right, during the fifteen (15) days prior to a Meeting, to consult or take copies, or cause an agent to do so on its behalf, of the text of the proposed resolutions and the reports to be presented to the Meeting, at the registered office of the Issuer and, as the case may be, at any other place specified in the convening notice.</p>
+
+<p>The Issuer undertakes to make physical or virtual premises available, provided each Holder may be duly identified and may effectively participate at the Meeting, to the Holders for their Meetings. Should a Meeting be convened all expenses relating thereto shall be borne by the Issuer.</p>
+
+<div class="page-break"></div>
+
+<h2>17. SUBSTITUTION OF ISSUER</h2>
+
+<h3>17.1. General</h3>
+
+<p>The Issuer may, at its sole discretion, transfer and assign all obligations (including by operation of law and universal transfer of assets) under these terms and conditions to a new entity who shall agree to assume all such obligations and as a result fully substitute itself in place of the Issuer as debtor in respect of all obligations arising under these Terms and Conditions or in connection with the Certificates (the "<strong>New Issuer</strong>") and without novation of these Terms and Conditions, provided that:</p>
+
+<p class="clause">a) the New Issuer assumes all rights and duties of the Issuer in respect of the Certificates;</p>
+<p class="clause">b) the New Issuer has obtained all necessary authorisations and governmental approvals in the country in which it has its registered office and is in a position to fulfil all its obligations in respect of the Certificates without discrimination against the Holders in their entirety;</p>
+<p class="clause">c) the New Issuer is permitted to pay in the currency required hereunder and without being obliged to deduct or withhold any taxes or other duties of whatever nature levied by the country in which the New Issuer has its domicile or tax residence from any payments due under the Certificates and the substitution shall not result in any withholding or deduction of taxes on the amounts payable under the Certificates which would not arise if there was no such substitution; and</p>
+<p class="clause">d) the Issuer and the New Issuer enter into such agreements and execute such documents as considered necessary for the effectiveness of the substitution.</p>
+
+<p>Upon fulfilment of the above conditions, the New Issuer shall in every respect substitute for the Issuer and the Issuer shall be released from all its obligations to the Holders as issuer of the Certificates except for the obligations assumed with respect to the substitution.</p>
+
+<h3>17.2. Notice to Holders</h3>
+
+<p>The New Issuer shall give notice of the substitution to the Holders pursuant to Condition 15 ("Notices").</p>
+
+<h3>17.3. Effect of Substitution</h3>
+
+<p>Upon the substitution, each reference to the Issuer in the Terms and Conditions shall from on the effective date of the substitution be deemed to be a reference to the New Issuer and any reference to the country in which the Issuer has its registered office, domicile or residency for tax purposes, as relevant, shall from then on be deemed to be a reference to the country in which the New Issuer has its registered office, domicile or residency for tax purposes, as relevant. The original Issuer shall, effective as of the date of substitution, be fully released of any obligations under these Terms and Conditions and the related Subscription Agreements.</p>
+
+<h2>18. RESTRICTIONS ON ISSUANCE AND SALE</h2>
+
+<h3 class="inline-number">18.1.</h3>
+<p>Certificates will not be offered or sold to the public in the Grand Duchy of Luxembourg and are offered in circumstances that do not require the approval of a prospectus by the CSSF and the publication of such prospectus in accordance with the law of 16 July 2019 on prospectuses for securities, as amended and the Regulation (EU) 2017/1129, as amended (the "<strong>Prospectus Regulation</strong>"). The Certificates are offered to a limited number of non qualified Investors, in all cases under circumstances designed to preclude a public issuance. This document may not be reproduced or used for any purpose, or furnished to any person other than as provided under these Terms and Conditions and the Subscription Agreements. Each Holder confirms by signing the Subscription Agreement, that he is a Qualified INVESTOR entitled to hold directly or indirectly the Underlying Shares.</p>
+
+<h3 class="inline-number">18.2.</h3>
+<p>The Certificates are not intended to be offered, sold or otherwise made available to and should not be offered, sold or otherwise made available at any time to any retail INVESTOR in the European Economic Area ("<strong>EEA</strong>"). For these purposes, a retail INVESTOR means a person who is one (or more) of: (i) a retail client as defined in point (11) of Article 4(1) of MiFID II; (ii) a customer within the meaning of Directive 2002/92/EC, where that customer would not qualify as a professional client as defined in point (10) of Article 4(1) of MiFID II; or (iii) not a qualified INVESTOR as defined in the Prospectus Regulation. Consequently, no key information document required by Regulation (EU) No 1286/2014 (the "<strong>PRIIPs Regulation</strong>") for offering or selling the Certificates or otherwise making them available to retail Investors in the EEA has been prepared and therefore offering or selling the Certificates or otherwise making them available to any retail INVESTOR in the EEA may be unlawful under the PRIIPS Regulation.</p>
+
+<h3 class="inline-number">18.3.</h3>
+<p>The Certificates described in these Terms and Conditions, have not been, and will not be, registered under the United States Securities Act of 1933 as amended, or the securities laws of any state of the United States or other relevant jurisdiction. and it has not been registered under the United States Investment Company Act of 1940, as amended. The Certificates may not be offered, sold, pledged or otherwise transferred within the United States except (1) to a ''qualified institutional buyer'' within the meaning of rule 144a under the Securities Act, and (2) to a person that is not a ''U.S. Person'' as defined in rule 902 of regulations under the Securities Act. Failure to comply with this directive may result in a violation of the Securities Act or the applicable laws of other jurisdictions.</p>
+
+<div class="page-break"></div>
+
+<h2>19. EXCLUSIVITY</h2>
+
+<p>The Subscriber grants to the Arranger the exclusive and non-transferable rights in relation to any financing, negotiation, investment or transaction of any kind with the Underlying Company (the "<strong>Exclusivity</strong>"). For the avoidance of doubt, during the Exclusivity Period (as defined hereafter), the Subscriber shall not circumvent in any form the Arranger, either directly or through any one of its affiliate, joint venture partners or similar, as to the Underlying Company, for any kind of agreement with and / or in relation to the Underlying Company. Unless otherwise agreed between the Parties, this exclusivity shall be effective as from the date of signature of this Agreement until and including the date that is one (1) year after the Final Redemption Date (the "<strong>Exclusivity Period</strong>").</p>
+
+<p>Any breach of the Exclusivity due by the Subscriber or any of its affiliates, joint venture partners or similar shall be compensated by the payment of a fee that would have been due by the Subscriber or any of its affiliates, joint venture partners or similar, due to the Arranger.</p>
+
+<h2>20. MISCELLANEOUS</h2>
+
+<h3>20.1. Place of Performance</h3>
+<p>Place of performance of the Certificates shall be the Grand Duchy of Luxembourg.</p>
+
+<h3>20.2. Partial Invalidity</h3>
+<p>Without prejudice to any other provision hereof, if one or more provisions hereof is or becomes invalid, illegal or unenforceable in any respect in any jurisdiction or with respect to any person or entity, or if the Issuer becomes aware of any omission hereto of any terms which were intended to be included herein, such invalidity, illegality, unenforceability in such jurisdiction or with respect to such person or entity or such omission shall not, to the fullest extent permitted by applicable law, render invalid, illegal or unenforceable such provision or provisions in any other jurisdiction or with respect to any other person or entity hereto. Such invalid, illegal or unenforceable provision or such omission shall be replaced by the Issuer, without the consent of the Holders, with a provision which comes as close as reasonably possible to the commercial intentions of the invalid, illegal, unenforceable or omitted provision.</p>
+
+<h3>20.3. Non-Petition</h3>
+<p>Each of the Holders acknowledges and agrees that until the expiry of two (2) years and one (1) day after the last outstanding Certificate will have been redeemed, none of the Holders nor any party on its behalf shall initiate or join any person in initiating any Insolvency Proceedings in relation to the Issuer, provided that this Condition shall not prevent any Holder from taking any steps against the Issuer which do not amount to the initiation or the threat of initiation of any Insolvency Proceedings in relation to the Issuer or the initiation or threat of initiation of legal proceedings.</p>
+
+<h3>20.4. Prescription</h3>
+<p>Any claims against the Issuer under the Certificates, whether in respect of principal, Equity Return or otherwise, shall become barred by limitation (<em>prescrits</em>) on the tenth anniversary of the Final Redemption Date.</p>
+
+<h3>20.5. Liability clause</h3>
+<p>The strategy manager, as appointed by the Issuer, is responsible for the strategy. No party, including the paying agent, is therefore liable to any party for any loss in connection with the investment, nor for the performance of the strategy. A Holder's entitlement is limited at all times to the Redemption Amount. In a worst-case scenario, the Redemption Amount may be zero. Holders should be aware that positive performance of the strategy cannot be guaranteed.</p>
+
+<h2>21. GOVERNING LAW</h2>
+
+<p>The form and content of the Certificates and all of the rights and obligations of the Holders and the Issuer under the Certificates, as well as all other matters arising from or connected with the Certificates shall be governed in all respects by and shall be construed in accordance with the laws of the Grand Duchy of Luxembourg. Articles 470-3 through 470-20 of the Company Law shall apply, except as otherwise set out herein, notably under Condition 16 (<em>Holders' Meetings</em>).</p>
+
+<h2>22. JURISDICTION</h2>
+
+<p>The exclusive place of jurisdiction for any action or other legal proceedings arising out of or in connection with the Certificates shall be the courts of the Grand Duchy of Luxembourg. The Issuer and the Holders hereby submit to the jurisdiction of such courts.</p>
+
+<p style="text-align: center; margin-top: 2cm;"><em>[Remainder of page intentionally left blank – Signature page to follow]</em></p>
+
+<div class="page-break"></div>
+
+<!-- SIGNATURE PAGE FOR T&Cs -->
+
+<p style="text-align: center; font-size: 12pt; font-weight: bold; margin-top: 2cm;">SIGNATURE PAGE TO SCHEDULE 1</p>
+
+<div class="signature-block" style="text-align: left;">
+    <p><strong>VERSO Capital 2 SCSP</strong> duly represented by its general partner <strong>VERSO Capital 2 GP SARL</strong>, as Issuer</p>
+    <div class="signature-line tcs-line"><span class="sig-anchor">SIG_ANCHOR:party_b_tcs</span></div>
+    <p class="tcs-signer-meta">Name: Julien Machot<br>
+    Title: Manager and authorized representative</p>
+</div>
+
+<div class="signature-block" style="text-align: left;">
+    <p><strong>Verso Management Ltd.</strong>, for the purposes of acknowledging and accepting the powers and responsibilities attributed to it under these Terms and Conditions</p>
+    <div class="signature-line tcs-line"><span class="sig-anchor">SIG_ANCHOR:party_c_tcs</span></div>
+    <p class="tcs-signer-meta">Name: Julien Machot<br>
+    Title: Director</p>
+</div>
+
+<div class="page-break"></div>
+
+<!-- APPENDIX -->
+
+<h1 style="text-align: center;">APPENDIX</h1>
+<h2 style="text-align: center;">FORM OF ACCESSION UNDERTAKING</h2>
+
+<p><strong>To:</strong> VERSO Capital 2 SCSP, duly represented by VERSO Capital 2 GP SARL (the "<strong>Issuer</strong>")</p>
+
+<p><strong>From:</strong> [**] (the "<strong>Subscriber</strong>")</p>
+
+<p><strong>THIS ACCESSION UNDERTAKING</strong> is made on [**] by the Subscriber (the "<strong>Acceding Holder</strong>") in relation to the equity certificates subscription agreement (the "<strong>Agreement</strong>") between, <strong>VERSO Capital 2 SCSP</strong>, a Luxembourg special limited partnership (<em>société en commandite spéciale</em>) with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, in the process of registration with the Luxembourg Register of Commerce and Companies duly represented by its general partner <strong>VERSO Capital 2 GP SARL</strong>, a private limited liability company (<em>société à responsabilité limitée</em>) established under the laws of the Grand Duchy of Luxembourg, with registered office at 2, avenue Charles de Gaulle, L 1653 Luxembourg, Grand Duchy of Luxembourg, registered with the Luxembourg Register of Trade and Companies under number B290857 and [Selling Subscriber]. Terms defined in the Agreement shall, unless otherwise defined in this Accession Undertaking, bear the same meanings when used in this Accession Undertaking.</p>
+
+<p>In consideration of the Acceding Holder being accepted as a Holder for the purposes of the Agreement, the Acceding Holder confirms that, as from the date of the present Agreement, it</p>
+
+<p>- intends to be party to the Agreement as a Holder, and</p>
+<p>- undertakes to perform all the obligations expressed in the Agreement to be assumed by a Holder, and</p>
+<p>- agrees that it shall be bound by all the provisions of the Agreement, as if it had been an original party to the Agreement.</p>
+
+<p>This Accession Undertaking and any non-contractual obligations arising out of or in connection with it are governed by the laws of the Grand Duchy of Luxembourg. This Accession Undertaking has been entered into on the date stated above and is delivered on the date stated above.</p>
+
+<p style="margin-top: 1.4cm;">[**]</p>
+<div class="signature-block">
+    <table class="signature-meta-table">
+        <tr class="signature-row">
+            <td class="signature-meta-label">Signature:</td>
+            <td><div class="signature-line appendix-line"></div></td>
+        </tr>
+        <tr>
+            <td class="signature-meta-label">Name:</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td class="signature-meta-label">Title:</td>
+            <td></td>
+        </tr>
+    </table>
+</div>
+
+            </td>
+        </tr>
+    </tbody>
+</table>
+</body>
+</html>

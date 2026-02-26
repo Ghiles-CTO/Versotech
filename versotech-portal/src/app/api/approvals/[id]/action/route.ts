@@ -7,9 +7,9 @@ import { createSignatureRequest } from '@/lib/signature/client'
 import { getCeoSigner } from '@/lib/staff/ceo-signer'
 import { sendAccountStatusEmail, sendInvitationEmail } from '@/lib/email/resend-service'
 import { getAppUrl } from '@/lib/signature/token'
-import { handleDealClose, handleTermsheetClose } from '@/lib/deals/deal-close-handler'
+import { handleDealClose, handleTermsheetClose, type TermsheetCloseMode } from '@/lib/deals/deal-close-handler'
 import { buildSubscriptionPackPayload } from '@/lib/subscription-pack/payload-builder'
-import { ensureSubscriptionPackA4Pdf } from '@/lib/subscription-pack/a4-normalizer'
+import { assertSubscriptionPackPdfIsA4 } from '@/lib/subscription-pack/pdf-format-guard'
 import { applySubscriptionPackPageNumbers } from '@/lib/subscription/page-numbering'
 
 const ACCOUNT_ACTIVATION_ENTITY_TABLES = [
@@ -134,6 +134,23 @@ function getApprovalEntityLabel(entityType: string): string {
   }
 
   return labels[entityType] || entityType.replace(/_/g, ' ')
+}
+
+function resolveTermsheetCloseMode(approval: any): TermsheetCloseMode {
+  const metadataModeRaw = String(
+    approval?.entity_metadata?.close_mode
+      || approval?.entity_metadata?.triggered_by
+      || ''
+  ).toLowerCase()
+
+  if (metadataModeRaw === 'manual') return 'manual'
+  if (metadataModeRaw === 'automatic' || metadataModeRaw === 'cron') return 'automatic'
+
+  const reason = String(approval?.request_reason || '').toLowerCase()
+  if (reason.includes('manual close request')) return 'manual'
+  if (reason.includes('completion date reached')) return 'automatic'
+
+  return 'unknown'
 }
 
 function parseAccountRequestInfoSections(rawSections: unknown): string[] {
@@ -681,7 +698,8 @@ export async function POST(
         approval,
         user.id,
         request,
-        user
+        user,
+        now
       )
 
       if (!result.success) {
@@ -837,7 +855,8 @@ async function handleEntityApproval(
   approval: any,
   actorId: string,
   request?: Request,
-  user?: any
+  user?: any,
+  decisionTimestamp?: string
 ): Promise<{ success: boolean; error?: string; notificationData?: any }> {
   try {
     const entityType = approval.entity_type
@@ -987,7 +1006,11 @@ async function handleEntityApproval(
       case 'termsheet_close': {
         // entity_id is the termsheet ID (deal_fee_structures.id)
         // This processes only subscriptions linked to this specific termsheet
-        const termsheetCloseResult = await handleTermsheetClose(supabase, entityId)
+        const closeMode = resolveTermsheetCloseMode(approval)
+        const termsheetCloseResult = await handleTermsheetClose(supabase, entityId, {
+          processedAt: decisionTimestamp,
+          closeMode,
+        })
 
         if (!termsheetCloseResult.success) {
           const message = termsheetCloseResult.errors.length > 0
@@ -2024,18 +2047,8 @@ async function handleEntityApproval(
                       }
 
                       if (mimeType === 'application/pdf') {
-                        const a4Result = await ensureSubscriptionPackA4Pdf({
-                          pdfBuffer: fileBuffer,
-                          payload: subscriptionPayload,
-                          context: 'approval',
-                        })
-                        fileBuffer = a4Result.pdfBuffer
-                        if (a4Result.wasNormalized) {
-                          console.log('✅ Rebuilt approval-generated subscription pack as A4 before numbering:', {
-                            original_size: a4Result.originalSize,
-                            final_size: a4Result.finalSize,
-                          })
-                        }
+                        const pageSize = await assertSubscriptionPackPdfIsA4(fileBuffer, 'approval')
+                        console.log('✅ Approval-generated subscription pack is A4:', pageSize)
 
                         const numberingResult = await applySubscriptionPackPageNumbers(fileBuffer)
                         fileBuffer = numberingResult.pdfBuffer

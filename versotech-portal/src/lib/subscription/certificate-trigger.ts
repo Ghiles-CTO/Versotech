@@ -30,6 +30,7 @@ interface TriggerCertificateParams {
     role?: string | null
     title?: string | null
   }
+  certificateDateOverride?: string | Date | null
 }
 
 /**
@@ -62,6 +63,12 @@ function getInvestorDisplayName(investor: {
     }
   }
   return investor.legal_name || 'Unknown Investor'
+}
+
+function parseValidDate(input: string | Date | null | undefined): Date | null {
+  if (!input) return null
+  const date = input instanceof Date ? input : new Date(input)
+  return Number.isNaN(date.getTime()) ? null : date
 }
 
 function buildCertificateNumber(
@@ -228,7 +235,8 @@ export async function triggerCertificateGeneration({
   fundedAmount,
   shares,
   pricePerShare,
-  profile
+  profile,
+  certificateDateOverride
 }: TriggerCertificateParams): Promise<boolean> {
   let certificatePublished = false
 
@@ -390,8 +398,12 @@ export async function triggerCertificateGeneration({
     )
     const signatoryConfig = getCertificateSignatoryConfig()
 
-    // Get certificate date: prefer termsheet completion_date, fall back to deal close_at, then today
-    const certificateDate = termsheetCompletionDate
+    // Get certificate date:
+    // - manual close: explicit override date from approval timestamp
+    // - automatic close: termsheet completion_date
+    // - fallback: deal close_at, then today
+    const certificateDate = parseValidDate(certificateDateOverride)
+      || termsheetCompletionDate
       || (dealData?.close_at ? new Date(dealData.close_at) : new Date())
 
     // Determine logo type: VERSO Capital 2 uses text "VERSO" in League Spartan font

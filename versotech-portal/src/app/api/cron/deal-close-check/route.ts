@@ -252,7 +252,11 @@ export async function GET(request: NextRequest) {
           assigned_to: ceoSigner?.id || null,
           related_deal_id: termsheet.deal_id,
           request_reason: `Termsheet completion date reached (${deal?.name} v${termsheet.version}); CEO approval required.`,
-          entity_metadata: metadata
+          entity_metadata: {
+            ...metadata,
+            close_mode: 'automatic',
+            close_requested_at: now.toISOString(),
+          }
         })
         .select('id')
         .single()

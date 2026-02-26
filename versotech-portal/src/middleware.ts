@@ -578,11 +578,43 @@ export async function middleware(request: NextRequest) {
       // and KYC submission endpoints.
       // =========================================================================
       if (Array.isArray(personas) && personas.length > 0) {
-        // Check if ANY persona has a pending or rejected status
-        const hasNewAccount = personas.some((p: any) =>
-          p.account_approval_status === 'pending_onboarding' ||
-          p.account_approval_status === 'new'
+        // Multi-persona safety:
+        // If at least one persona is approved/active, do not hard-lock user to profile.
+        // Also auto-heal stale active persona cookies that still point to a pending entity.
+        const activePersonaType = request.cookies.get('verso_active_persona_type')?.value
+        const activePersonaId = request.cookies.get('verso_active_persona_id')?.value
+        const isPendingPersona = (p: any) =>
+          ['pending_onboarding', 'new'].includes((p?.account_approval_status || '').toLowerCase())
+
+        const approvedPersonas = personas.filter((p: any) => !isPendingPersona(p))
+
+        const personaFromCookie = personas.find((p: any) =>
+          p?.entity_id === activePersonaId &&
+          (!activePersonaType || p?.persona_type === activePersonaType)
         )
+
+        let personaForAccess =
+          personaFromCookie ||
+          approvedPersonas[0] ||
+          personas[0]
+
+        if (isPendingPersona(personaForAccess) && approvedPersonas.length > 0) {
+          const fallbackPersona = approvedPersonas[0]
+          personaForAccess = fallbackPersona
+
+          supabaseResponse.cookies.set('verso_active_persona_type', String(fallbackPersona.persona_type), {
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 365,
+          })
+          supabaseResponse.cookies.set('verso_active_persona_id', String(fallbackPersona.entity_id), {
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 365,
+          })
+        }
+
+        const hasNewAccount = approvedPersonas.length === 0 && isPendingPersona(personaForAccess)
 
         // Note: Rejected accounts can browse freely - transaction blocking is handled at API level
         // (see /api/deals/[id]/interests and /api/deals/[id]/subscriptions routes)
@@ -612,7 +644,11 @@ export async function middleware(request: NextRequest) {
         ) || pathname === '/logout' || pathname.startsWith('/api/auth')
 
         if (hasNewAccount && !isCEO && !hasPersona('staff') && !isAllowedForPending) {
-          console.log(`[auth] Account pending approval, redirecting to profile: ${user.email}`)
+          console.log(`[auth] Active persona pending approval, redirecting to profile: ${user.email}`, {
+            persona_type: personaForAccess?.persona_type,
+            entity_id: personaForAccess?.entity_id,
+            account_approval_status: personaForAccess?.account_approval_status,
+          })
           return NextResponse.redirect(new URL('/versotech_main/profile', request.url))
         }
       }

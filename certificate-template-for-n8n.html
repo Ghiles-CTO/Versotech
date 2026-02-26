@@ -46,8 +46,9 @@
       text-align: center;
       font-family: 'League Spartan', Arial, sans-serif;
       font-weight: 700;
-      font-size: 102pt;
-      letter-spacing: 12px;
+      font-size: 108pt;
+      letter-spacing: 8px;
+      line-height: 1;
       color: rgba(200, 200, 200, 0.34);
       z-index: 0;
       pointer-events: none;
@@ -85,14 +86,17 @@
       border-left: 1.5pt solid #000;
     }
     .logo-cell {
-      text-align: left !important;
-      padding-left: 20px !important;
+      text-align: center !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
     }
     .logo-text {
       font-family: 'League Spartan', Arial, sans-serif;
       font-weight: 700;
-      font-size: 28pt;
-      letter-spacing: 0.15em;
+      font-size: 23pt;
+      letter-spacing: 0.23em;
+      line-height: 1;
+      display: inline-block;
     }
     .cert-number {
       font-family: Arial, sans-serif;
@@ -171,7 +175,7 @@
     .signature-section {
       margin-top: auto;
       flex-shrink: 0;
-      padding: 8px 0 8px 0;
+      padding: 6px 0 8px 0;
     }
     .signature-table {
       width: 100%;
@@ -180,7 +184,7 @@
     }
     .signature-table td {
       width: 33.33%;
-      vertical-align: top;
+      vertical-align: bottom;
       padding: 8px 20px;
     }
     .sig-cell-left,
@@ -191,23 +195,24 @@
       text-align: center;
       border-left: 1.5pt solid #000;
       border-right: 1.5pt solid #000;
-      vertical-align: middle;
-      padding: 12px 20px;
+      vertical-align: bottom;
+      padding: 12px 20px 10px 20px;
     }
     .signature-box {
-      height: 136px;
-      margin-bottom: 6px;
+      height: 168px;
+      margin-bottom: 0;
       display: flex;
-      align-items: flex-end;
+      align-items: center;
       justify-content: center;
       overflow: visible;
     }
     .signature-img {
-      max-width: 360px;
-      max-height: 210px;
       width: auto;
-      height: 100%;
+      max-width: 430px;
+      max-height: 240px;
+      height: 125%;
       object-fit: contain;
+      object-position: center center;
       display: block;
       margin: 0 auto;
     }

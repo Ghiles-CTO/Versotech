@@ -1941,10 +1941,7 @@ export function InvestorDealsListClient({
                       {investorSignatories.length} Signatory(ies) Required
                     </p>
                     <p className="text-blue-700 dark:text-blue-300 mt-1">
-                      Both NDA and Subscription Pack will be sent to all authorized signatories.
-                    </p>
-                    <p className="text-amber-600 dark:text-amber-400 mt-2 text-xs">
-                      Note: This request does not include data room access.
+                      The Subscription Pack will be sent to all authorized signatories.
                     </p>
                   </div>
                 </div>

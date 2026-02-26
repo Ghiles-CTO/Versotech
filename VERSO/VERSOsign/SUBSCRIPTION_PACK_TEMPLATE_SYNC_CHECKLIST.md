@@ -7,6 +7,15 @@ Use this checklist whenever `VERSO/VERSOsign/subscription_pack_template.html` ch
 - Target: the `generate-subscription-pack` live n8n HTML template node.
 - Verify no escaping/auto-format step removed hidden anchor spans.
 
+## 1.1) Render PDF node must force A4 from n8n
+- Node: `Render PDF` (HTTP request to Gotenberg Chromium convert endpoint)
+- Keep multipart `files` field (`indexHtml`) and add:
+- `preferCssPageSize=true`
+- `printBackground=true`
+- `paperWidth=8.27`
+- `paperHeight=11.69`
+- Do not inject a separate synthetic header/footer layer for Subscription Pack rendering.
+
 ## 2) Required anchor IDs (must exist in generated PDF text layer)
 - Subscriber anchors (for each signatory):
 - `party_a_form`, `party_a`

@@ -729,6 +729,13 @@ export interface TermsheetCloseResult {
   errors: string[]
 }
 
+export type TermsheetCloseMode = 'manual' | 'automatic' | 'unknown'
+
+interface TermsheetCloseOptions {
+  processedAt?: string
+  closeMode?: TermsheetCloseMode
+}
+
 /**
  * Process a TERMSHEET that has reached its completion date.
  *
@@ -749,7 +756,8 @@ export interface TermsheetCloseResult {
  */
 export async function handleTermsheetClose(
   supabase: SupabaseClient,
-  termsheetId: string
+  termsheetId: string,
+  options: TermsheetCloseOptions = {}
 ): Promise<TermsheetCloseResult> {
   const result: TermsheetCloseResult = {
     success: false,
@@ -766,6 +774,9 @@ export async function handleTermsheetClose(
   }
 
   try {
+    const processedAt = options.processedAt || new Date().toISOString()
+    const closeMode: TermsheetCloseMode = options.closeMode || 'unknown'
+
     // Fetch termsheet with deal info
     const { data: termsheet, error: termsheetError } = await supabase
       .from('deal_fee_structures')
@@ -1130,6 +1141,7 @@ export async function handleTermsheetClose(
             shares: sub.num_shares || sub.units,
             pricePerShare: sub.price_per_share,
             profile: triggerProfile,
+            certificateDateOverride: closeMode === 'manual' ? processedAt : null,
           })
           if (certificatePublished) {
             result.certificatesTriggered++
@@ -1144,12 +1156,11 @@ export async function handleTermsheetClose(
     }
 
     // Step 2: Enable invoice_requests on fee_plans linked to THIS termsheet
-    const now = new Date().toISOString()
     const { data: feePlans, error: feePlanError } = await supabase
       .from('fee_plans')
       .update({
         invoice_requests_enabled: true,
-        invoice_requests_enabled_at: now,
+        invoice_requests_enabled_at: processedAt,
       })
       .eq('deal_id', termsheet.deal_id)
       .eq('term_sheet_id', termsheetId)
@@ -1178,7 +1189,7 @@ export async function handleTermsheetClose(
     // Step 4: Mark TERMSHEET as processed (idempotency)
     const { error: updateError } = await supabase
       .from('deal_fee_structures')
-      .update({ closed_processed_at: now })
+      .update({ closed_processed_at: processedAt })
       .eq('id', termsheetId)
 
     if (updateError) {

@@ -7,7 +7,7 @@
     <style>
         @page {
             size: A4;
-            margin: 1.2cm 1cm 1.2cm 1cm;
+            margin: 1cm 1cm 1.2cm 1cm;
         }
 
         body {
@@ -21,6 +21,48 @@
 
         .page-break {
             page-break-after: always;
+        }
+
+        .verso-page-header {
+            text-align: center;
+            font-family: 'League Spartan', Arial, sans-serif;
+            font-weight: 700;
+            font-size: 28pt;
+            line-height: 1;
+            letter-spacing: 0.15em;
+            color: #000;
+            text-transform: uppercase;
+            margin: 0 0 0.38cm 0;
+        }
+
+        table.print-frame {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+        table.print-frame thead {
+            display: table-header-group;
+        }
+
+        table.print-frame tr {
+            page-break-inside: auto !important;
+            break-inside: auto !important;
+        }
+
+        table.print-frame tfoot {
+            display: table-footer-group;
+        }
+
+        table.print-frame > thead > tr > td,
+        table.print-frame > thead > tr > th,
+        table.print-frame > tbody > tr > td,
+        table.print-frame > tbody > tr > th,
+        table.print-frame > tfoot > tr > td,
+        table.print-frame > tfoot > tr > th {
+            border: none !important;
+            padding: 0 !important;
+            vertical-align: top;
         }
 
         /* Cover Page */
@@ -73,17 +115,19 @@
             font-weight: bold;
             margin-top: 0.3cm;
             margin-bottom: 0.2cm;
+            margin-left: 0.22cm;
         }
 
         h3.inline-number {
             display: inline;
             margin: 0 0.2cm 0 0;
+            margin-left: 0;
         }
 
         h3.inline-number + p {
             display: inline;
             margin: 0;
-            text-align: justify;
+            text-align: left;
         }
 
         h3.inline-number + p::after {
@@ -175,17 +219,19 @@
 
         p {
             margin: 0.2cm 0;
-            text-align: justify;
+            text-align: left;
         }
 
         .clause {
-            margin-left: 1cm;
-            margin-bottom: 0.3cm;
+            margin: 0 0 0.3cm 0;
+            padding-left: 1.3cm;
+            text-indent: -0.8cm;
         }
 
         .sub-clause {
-            margin-left: 1.5cm;
-            margin-bottom: 0.2cm;
+            margin: 0 0 0.2cm 0;
+            padding-left: 1.75cm;
+            text-indent: -0.8cm;
         }
 
         /* Signature blocks */
@@ -366,7 +412,7 @@
             }
 
             table {
-                page-break-inside: avoid;
+                page-break-inside: auto;
             }
 
             .signature-block,
@@ -386,9 +432,18 @@
                 page-break-inside: avoid;
             }
         }
-    </style>
+</style>
 </head>
 <body>
+<table class="print-frame">
+    <thead>
+        <tr>
+            <td><div class="verso-page-header">VERSO</div></td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
 <!-- PAGE 1: COVER PAGE -->
 <div class="cover-page">
     <div class="cover-title">SUBSCRIPTION PACK</div>
@@ -469,7 +524,7 @@
             <div class="signature-line form-line"><span class="sig-anchor">SIG_ANCHOR:party_b_form</span></div>
             <div class="issuer-signer-meta">
                 Name: {{ $json.issuer_name || 'Julien Machot' }}<br>
-                Title: {{ $json.issuer_title || 'Authorized Signatory' }}
+                Title: {{ $json.issuer_title || 'Manager and authorized representative' }}
             </div>
         </td>
         <td style="width: 50%; vertical-align: top;">
@@ -514,6 +569,7 @@
         <p><strong>Description:</strong> {{ $json.wire_description }}</p>
         <p><strong>IBAN:</strong> {{ $json.wire_iban || 'LU71 0141 8595 5133 3010' }}</p>
         <p><strong>BIC:</strong> {{ $json.wire_bic || 'CELLLULLXXX' }}</p>
+        <p>(FYI: some banks require the additional XXX at the end of BIC Codes)</p>
         <p><strong>Amount:</strong> {{ $json.currency_code }} {{ $json.total_subscription_price_display }} only</p>
         <p><strong>Currency:</strong> {{ $json.currency_code }} (FYI: {{ $json.currency_long }})</p>
         <p><strong>Reference:</strong> {{ $json.wire_reference_display }}</p>
@@ -524,7 +580,7 @@
     <div class="signature-block wire-signoff">
         <div class="signature-line wire-line"><span class="sig-anchor">SIG_ANCHOR:party_b_wire</span></div>
         <p>Name: {{ $json.issuer_name || 'Julien Machot' }}<br>
-        Title: {{ $json.issuer_title || 'Authorized Signatory' }}</p>
+        Title: {{ $json.issuer_title || 'Manager and authorized representative' }}</p>
     </div>
 </div>
 
@@ -543,6 +599,7 @@
     <p style="text-align: center;">and</p>
     <p style="text-align: center;"><strong>VERSO Management</strong></p>
     <p style="text-align: center;">as Arranger</p>
+    <img src="{{ $json.investment_logo_url }}" alt="{{ $json.ultimate_investment }}" style="display: block; margin: 1cm auto 0.8cm auto; max-width: 180px; max-height: 110px;">
 
     <h2>EQUITY CERTIFICATES SUBSCRIPTION AGREEMENT</h2>
     <p style="text-align: center;"><strong>STRICTLY PRIVATE AND CONFIDENTIAL</strong></p>
@@ -667,15 +724,15 @@
 
 <p class="clause">(i) with the prior written approval of the Issuer (which shall not be unreasonably withheld, delayed or made conditional);</p>
 
-<p class="clause">(ii) to the extent required by law (including, but not limited, tax law) or pursuant to a request of a governmental entity...</p>
+<p class="clause">(ii) to the extent required by law (including, but not limited, tax law) or pursuant to a request of a governmental entity (including but not limited to the request of a tax authority in connection with the tax affairs of a Party or its Affiliates) provided that if required by law or pursuant to an order of a governmental entity to disclose any Confidential Information, it shall promptly and if reasonably possible and lawful before disclosure occurs notify the Issuer. The Party required to disclose Confidential Information shall, if reasonably possible and lawful, co-operate with the Issuer with regard to the timing and content of such disclosure, or any action which the Issuer may reasonably elect to challenge such requirement;</p>
 
 <p class="clause">(iii) to the extent required for the purpose of fulfilling its obligations under this Agreement;</p>
 
 <p class="clause">(iv) to the extent reasonably required to conduct the defense of a claim or to enforce any rights or to exercise any remedies under this Agreement;</p>
 
-<p class="clause">(v) to a potential Acceding Holder in the event of a sale of the certificates in accordance with Condition 12 of the T&Cs...</p>
+<p class="clause">(v) to a potential Acceding Holder in the event of a sale of the certificates in accordance with Condition 12 of the T&Cs, but only with respect to the terms of this Agreement, the contents of the T&Cs and the limited partnership agreement of the Issuer (i.e. excluding any other Confidential Information set out above) and provided that before any such disclosure is made, the person to whom such disclosure will be made is informed of the terms of this Clause and instructed to adhere to those terms as if such person were bound by them; and</p>
 
-<p class="clause">(vi) to any of a Party's financiers to the extent required for the financing of the transactions referred to in this Agreement...</p>
+<p class="clause">(vi) to any of a Party's financiers to the extent required for the financing of the transactions referred to in this Agreement, provided that before any such disclosure is made, such financiers are informed of the terms of this Clause and instructed to adhere to those terms as if they were bound by them.</p>
 
 <h2>10. PENALTY CLAUSE</h2>
 
@@ -707,7 +764,13 @@
 
 <p>The Parties have expressly agreed to sign this Agreement by electronic signatures, within the meaning of the provisions of articles 1322-1 et seq. of the Luxembourg civil code, through DocuSign services.</p>
 
-<p>The Parties therefore acknowledge and agree that the electronic version of this agreement constitutes an original document and is perfectly valid and enforceable between them...</p>
+<p>The Parties therefore acknowledge and agree that the electronic version of this agreement constitutes an original document and is perfectly valid and enforceable between them. The Parties declare that this agreement and/or its electronic form constitutes literal proof within the meaning of article 1322-2 of the Luxembourg civil code and has the same evidential value as a written documents on paper and may be validly invoked against them.</p>
+
+<p>Each of the Parties acknowledges and agrees that the storage of the original of this agreement signed by means of the DocuSign services satisfies the requirements of durability within the meaning of article 1322-2 of the Luxembourg civil code.</p>
+
+<p>Each of the Parties acknowledges and agrees that the electronic signature solution offered by DocuSign and agreed upon by the parties corresponds to a sufficient degree of reliability to identify the signatories and to guarantee the link between each signature and this agreement.</p>
+
+<p>The Parties therefore agree not to contest the admissibility, enforceability or evidentiary value of the signatures of this agreement.</p>
 
 <h2>17. GOVERNING LAW AND JURISDICTION</h2>
 
@@ -1039,7 +1102,20 @@
     </tr>
 </table>
 
-<div class="page-break"></div>
+<h3 class="inline-number">1.1.</h3>
+<p>Words importing the singular shall include the plural and vice versa.</p>
+
+<h3 class="inline-number">1.2.</h3>
+<p>Section headings are for ease of reference only.</p>
+
+<h3 class="inline-number">1.3.</h3>
+<p>In this Agreement, unless the contrary intention appears or the context otherwise requires, a reference to the recital, a section or a condition is a reference to the recital, a section or a condition of this Agreement. The recital forms an integral part of this Agreement.</p>
+
+<h3 class="inline-number">1.4.</h3>
+<p>In these Terms and Conditions, reference to any agreement, instrument or other document (howsoever named) is to such agreement, instrument or other document as it may be amended, restated or extended from time to time, whether before or after the date hereof.</p>
+
+<h3 class="inline-number">1.5.</h3>
+<p>Any reference to any person shall be construed to include such person's successors and assigns.</p>
 
 <h2>2. THE CERTIFICATES</h2>
 
@@ -1058,6 +1134,7 @@
     <p><strong>Holder:</strong> {{ $json.wire_account_holder || 'Dupont Partners' }}</p>
     <p><strong>IBAN:</strong> {{ $json.wire_iban || 'LU71 0141 8595 5133 3010' }}</p>
     <p><strong>BIC:</strong> {{ $json.wire_bic || 'CELLLULLXXX' }}</p>
+    <p>(FYI: some banks require the additional XXX at the end of BIC Codes)</p>
     <p><strong>Reference:</strong> {{ $json.wire_reference_display }}</p>
     <p><strong>Currency:</strong> {{ $json.currency_code }} ({{ $json.currency_long }})</p>
 </div>
@@ -1091,10 +1168,10 @@
 <h2>4. THE AGENT</h2>
 
 <h3 class="inline-number">4.1.</h3>
-<p>By signing the Subscription Agreement, each Holder expressly and irrevocably authorises the Agent (acting as Holder's Agent) to act on its behalf as its agent in relation to this Agreement and irrevocably authorises (i) the Agent to receive the subscription proceeds (or as the case may be to instruct the Paying Agent to receive the subscription proceeds), and (ii) on its behalf to supply all information concerning itself, its financial condition and otherwise to the relevant persons contemplated under this Agreement, and (iii) any party to this Agreement to give any notice, demand or other communication to be given to or served on such Holder pursuant to this Agreement to the Agent on its behalf...</p>
+<p>By signing the Subscription Agreement, each Holder expressly and irrevocably authorises the Agent (acting as Holder's Agent) to act on its behalf as its agent in relation to this Agreement and irrevocably authorises (i) the Agent to receive the subscription proceeds (or as the case may be to instruct the Paying Agent to receive the subscription proceeds), and (ii) on its behalf to supply all information concerning itself, its financial condition and otherwise to the relevant persons contemplated under this Agreement, and (iii) any party to this Agreement to give any notice, demand or other communication to be given to or served on such Holder pursuant to this Agreement to the Agent on its behalf, and, in each such case, such Holder will be bound thereby as though such Holder itself had given such notice and instructions, executed such agreement or received any such notice, demand or other communications.</p>
 
 <h3 class="inline-number">4.2.</h3>
-<p>Every act, omission, agreement, undertaking, settlement, waiver, notice or other communication given or made by the Holders' Agent under these Terms and Conditions, or in connection with these Terms and Conditions (whether or not known to any other Holder and whether occurring before or after such other Holder became an Holder under these Terms and Conditions) shall be binding for all purposes on all other Holders...</p>
+<p>Every act, omission, agreement, undertaking, settlement, waiver, notice or other communication given or made by the Holders' Agent under these Terms and Conditions, or in connection with these Terms and Conditions (whether or not known to any other Holder and whether occurring before or after such other Holder became an Holder under these Terms and Conditions) shall be binding for all purposes on all other Holders as if the other Holders had expressly made, given or concurred with the same. In the event of any conflict between any notices or other communications of the Holders' Agent and any other Holder, those of the Holders' Agent shall prevail.</p>
 
 <div class="page-break"></div>
 
@@ -1495,20 +1572,40 @@ c/o {{ $json.arranger_name || 'Julien Machot' }}, {{ $json.arranger_title || 'Di
 
 <!-- SIGNATURE PAGE FOR T&Cs -->
 
-<p style="text-align: center; font-size: 12pt; font-weight: bold; margin-top: 2cm;">SIGNATURE PAGE TO SCHEDULE 1</p>
-
 <div class="signature-block" style="text-align: left;">
     <p><strong>VERSO Capital 2 SCSP</strong> duly represented by its general partner <strong>VERSO Capital 2 GP SARL</strong>, as Issuer</p>
-    <div class="signature-line tcs-line"><span class="sig-anchor">SIG_ANCHOR:party_b_tcs</span></div>
-    <p class="tcs-signer-meta">Name: {{ $json.issuer_name || 'Julien Machot' }}<br>
-    Title: {{ $json.issuer_title || 'Authorized Signatory' }}</p>
+    <table class="signature-meta-table">
+        <tr class="signature-row">
+            <td class="signature-meta-label">Signature:</td>
+            <td><div class="signature-line tcs-line"><span class="sig-anchor">SIG_ANCHOR:party_b_tcs</span></div></td>
+        </tr>
+        <tr>
+            <td class="signature-meta-label">Name:</td>
+            <td>{{ $json.issuer_name || 'Julien Machot' }}</td>
+        </tr>
+        <tr>
+            <td class="signature-meta-label">Title:</td>
+            <td>{{ $json.issuer_title || 'Manager and authorized representative' }}</td>
+        </tr>
+    </table>
 </div>
 
 <div class="signature-block" style="text-align: left;">
     <p><strong>Verso Management Ltd.</strong>, for the purposes of acknowledging and accepting the powers and responsibilities attributed to it under these Terms and Conditions</p>
-    <div class="signature-line tcs-line"><span class="sig-anchor">SIG_ANCHOR:party_c_tcs</span></div>
-    <p class="tcs-signer-meta">Name: {{ $json.arranger_name || 'Julien Machot' }}<br>
-    Title: {{ $json.arranger_title || 'Director' }}</p>
+    <table class="signature-meta-table">
+        <tr class="signature-row">
+            <td class="signature-meta-label">Signature:</td>
+            <td><div class="signature-line tcs-line"><span class="sig-anchor">SIG_ANCHOR:party_c_tcs</span></div></td>
+        </tr>
+        <tr>
+            <td class="signature-meta-label">Name:</td>
+            <td>{{ $json.arranger_name || 'Julien Machot' }}</td>
+        </tr>
+        <tr>
+            <td class="signature-meta-label">Title:</td>
+            <td>{{ $json.arranger_title || 'Director' }}</td>
+        </tr>
+    </table>
 </div>
 
 <div class="page-break"></div>
@@ -1550,5 +1647,9 @@ c/o {{ $json.arranger_name || 'Julien Machot' }}, {{ $json.arranger_title || 'Di
     </table>
 </div>
 
+            </td>
+        </tr>
+    </tbody>
+</table>
 </body>
 </html>

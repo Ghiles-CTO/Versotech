@@ -134,7 +134,11 @@ export async function POST(
       assigned_to: ceoSigner?.id || null,
       related_deal_id: dealId,
       request_reason: `Manual close request for ${deal.name} v${termsheet.version}; CEO approval required.`,
-      entity_metadata: metadata
+      entity_metadata: {
+        ...metadata,
+        close_mode: 'manual',
+        close_requested_at: new Date().toISOString(),
+      }
     })
     .select('id')
     .single()
