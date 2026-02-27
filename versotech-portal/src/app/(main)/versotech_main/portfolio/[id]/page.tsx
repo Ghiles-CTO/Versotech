@@ -323,7 +323,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
             </Link>
             <div>
               <div className="flex items-center gap-4">
-                <div className="w-20 h-20 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center shadow-sm overflow-hidden">
+                <div className="w-20 h-20 bg-white dark:bg-zinc-800 border-2 border-gray-200 dark:border-zinc-700 rounded-lg flex items-center justify-center shadow-sm overflow-hidden">
                   {vehicle.logo_url ? (
                     <Image
                       src={vehicle.logo_url}
@@ -337,9 +337,9 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                   )}
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">{vehicle.name}</h1>
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{vehicle.name}</h1>
                   {vehicle.investment_name && (
-                    <p className="text-lg text-gray-600 mt-1 font-medium">
+                    <p className="text-lg text-gray-600 dark:text-gray-400 mt-1 font-medium">
                       {vehicle.investment_name}
                     </p>
                   )}
@@ -347,10 +347,10 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                     <Badge variant="outline" className="capitalize font-medium px-3 py-1">
                       {vehicle.type}
                     </Badge>
-                    <span className="text-gray-400">•</span>
-                    <span className="text-gray-600 font-medium">{vehicle.domicile}</span>
-                    <span className="text-gray-400">•</span>
-                    <span className="text-gray-600 font-medium">{vehicle.currency}</span>
+                    <span className="text-gray-400 dark:text-gray-500">•</span>
+                    <span className="text-gray-600 dark:text-gray-400 font-medium">{vehicle.domicile}</span>
+                    <span className="text-gray-400 dark:text-gray-500">•</span>
+                    <span className="text-gray-600 dark:text-gray-400 font-medium">{vehicle.currency}</span>
                   </div>
                 </div>
               </div>
@@ -364,18 +364,18 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card className="border-0 shadow-md">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-2">
                   <DollarSign className="h-4 w-4" />
                   Current Value
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-gray-900">
+                <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                   {formatAmount(positionData.currentValue)}
                 </div>
                 {positionData.unrealizedGainPct !== undefined && (
                   <div className={`flex items-center gap-1 text-sm mt-2 ${positionData.unrealizedGainPct > 0 ? 'text-green-600' :
-                    positionData.unrealizedGainPct < 0 ? 'text-red-600' : 'text-gray-500'
+                    positionData.unrealizedGainPct < 0 ? 'text-red-600' : 'text-gray-500 dark:text-gray-400'
                     }`}>
                     {positionData.unrealizedGainPct > 0 ? (
                       <TrendingUp className="h-4 w-4" />
@@ -390,49 +390,49 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
             <Card className="border-0 shadow-md">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-2">
                   <Layers className="h-4 w-4" />
                   Units Held
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-gray-900">
+                <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                   {formatUnits(positionData.units)}
                 </div>
-                <div className="text-sm text-gray-500 mt-2">Total shares/units</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">Total shares/units</div>
               </CardContent>
             </Card>
 
             <Card className="border-0 shadow-md">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-2">
                   <Target className="h-4 w-4" />
                   Subscription Amount
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-gray-900">
+                <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                   {formatAmount(positionData.costBasis)}
                 </div>
-                <div className="text-sm text-gray-500 mt-2">Amount from subscription pack</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">Amount from subscription pack</div>
               </CardContent>
             </Card>
 
             <Card className="border-0 shadow-md">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-2">
                   <BarChart3 className="h-4 w-4" />
                   Gross Unrealized Gains
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className={`text-3xl font-bold ${positionData.unrealizedGain > 0 ? 'text-green-600' :
-                  positionData.unrealizedGain < 0 ? 'text-red-600' : 'text-gray-900'
+                  positionData.unrealizedGain < 0 ? 'text-red-600' : 'text-gray-900 dark:text-gray-100'
                   }`}>
                   {positionData.unrealizedGain > 0 ? '+' : ''}
                   {formatAmount(positionData.unrealizedGain)}
                 </div>
-                <div className="text-sm text-gray-500 mt-2">
+                <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                   Net Unrealized Gains: {positionData.netUnrealizedGain > 0 ? '+' : ''}{formatAmount(positionData.netUnrealizedGain)}
                 </div>
               </CardContent>
@@ -467,28 +467,28 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Total Commitment</span>
-                      <span className="font-semibold text-lg">
+                      <span className="text-gray-600 dark:text-gray-400">Total Commitment</span>
+                      <span className="font-semibold text-lg text-gray-900 dark:text-gray-100">
                         {formatAmount(subscriptionData.commitment)}
                       </span>
                     </div>
                     {cashflowData && (
                       <>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Total Contributions</span>
+                          <span className="text-gray-600 dark:text-gray-400">Total Contributions</span>
                           <span className="font-semibold">
                             {formatAmount(cashflowData.totalContributions)}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Total Distributions</span>
+                          <span className="text-gray-600 dark:text-gray-400">Total Distributions</span>
                           <span className="font-semibold">
                             {formatAmount(cashflowData.totalDistributions)}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Unfunded Commitment</span>
-                          <span className="font-semibold text-blue-600">
+                          <span className="text-gray-600 dark:text-gray-400">Unfunded Commitment</span>
+                          <span className="font-semibold text-blue-600 dark:text-blue-400">
                             {formatAmount(cashflowData.unfundedCommitment)}
                           </span>
                         </div>
@@ -498,15 +498,15 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
                   <div className="pt-4 border-t">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Subscription Status</span>
-                      <Badge className={`${subscriptionData.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      <span className="text-gray-600 dark:text-gray-400">Subscription Status</span>
+                      <Badge className={`${subscriptionData.status === 'active' ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300' : 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300'
                         }`}>
                         {subscriptionData.status}
                       </Badge>
                     </div>
                     <div className="flex justify-between items-center mt-2">
-                      <span className="text-gray-600">Signed Date</span>
-                      <span className="text-sm text-gray-500">
+                      <span className="text-gray-600 dark:text-gray-400">Signed Date</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
                         {new Date(subscriptionData.signedDate).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                       </span>
                     </div>
@@ -529,13 +529,13 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                   {cashflowData && cashflowData.history && cashflowData.history.length > 0 ? (
                     <div className="space-y-4">
                       {cashflowData.history.slice(0, 5).map((flow, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-zinc-800 rounded-lg">
                           <div className="flex items-center gap-3">
                             <div className={`w-3 h-3 rounded-full ${flow.type === 'call' ? 'bg-red-500' : 'bg-green-500'
                               }`} />
                             <div>
-                              <div className="font-medium capitalize">{flow.type}</div>
-                              <div className="text-sm text-gray-500">
+                              <div className="font-medium capitalize text-gray-900 dark:text-gray-100">{flow.type}</div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">
                                 {new Date(flow.date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                               </div>
                             </div>
@@ -549,8 +549,8 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <Calendar className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      <Calendar className="h-8 w-8 mx-auto mb-2 text-gray-400 dark:text-gray-500" />
                       <p>No cash flow history available</p>
                     </div>
                   )}
@@ -571,23 +571,23 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="text-gray-600">Subscription Fee</span>
-                    <span className="font-semibold">{formatPercent(feeStructure.subscriptionFeePercent)}</span>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-zinc-700">
+                    <span className="text-gray-600 dark:text-gray-400">Subscription Fee</span>
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">{formatPercent(feeStructure.subscriptionFeePercent)}</span>
                   </div>
 
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="text-gray-600">Management Fee</span>
-                    <span className="font-semibold">{formatPercent(feeStructure.managementFeePercent)}</span>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-zinc-700">
+                    <span className="text-gray-600 dark:text-gray-400">Management Fee</span>
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">{formatPercent(feeStructure.managementFeePercent)}</span>
                   </div>
 
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="text-gray-600">Performance Fee (Carry)</span>
-                    <span className="font-semibold">{formatPercent(feeStructure.performanceFeePercent)}</span>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-zinc-700">
+                    <span className="text-gray-600 dark:text-gray-400">Performance Fee (Carry)</span>
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">{formatPercent(feeStructure.performanceFeePercent)}</span>
                   </div>
 
                   {getPerformanceScheduleText() && (
-                    <p className="text-xs text-gray-500">{getPerformanceScheduleText()}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{getPerformanceScheduleText()}</p>
                   )}
                 </div>
               </CardContent>
@@ -610,30 +610,30 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                 {positionData ? (
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="text-center p-4 bg-blue-50 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">{formatUnits(positionData.units)}</div>
-                        <div className="text-sm text-gray-600">Total Units</div>
+                      <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{formatUnits(positionData.units)}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">Total Units</div>
                       </div>
-                      <div className="text-center p-4 bg-green-50 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">
+                      <div className="text-center p-4 bg-green-50 dark:bg-green-950/50 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                           {formatCurrencyPrecise(valuations?.[0]?.nav_per_unit, 3)}
                         </div>
-                        <div className="text-sm text-gray-600">NAV per Unit</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">NAV per Unit</div>
                       </div>
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                        <div className="text-2xl font-bold text-gray-600">
+                      <div className="text-center p-4 bg-gray-50 dark:bg-zinc-800 rounded-lg">
+                        <div className="text-2xl font-bold text-gray-600 dark:text-gray-300">
                           {positionData.units > 0 ? formatCurrencyPrecise(positionData.costBasis / positionData.units, 3) : 'N/A'}
                         </div>
-                        <div className="text-sm text-gray-600">Cost per Unit</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">Cost per Unit</div>
                       </div>
                     </div>
 
                     <div className="border-t pt-4">
-                      <h4 className="font-semibold mb-3">Valuation Methodology</h4>
-                      <div className="bg-blue-50 p-4 rounded-lg">
+                      <h4 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Valuation Methodology</h4>
+                      <div className="bg-blue-50 dark:bg-blue-950/50 p-4 rounded-lg">
                         <div className="flex items-start gap-2">
-                          <Info className="h-5 w-5 text-blue-600 mt-0.5" />
-                          <div className="text-sm text-blue-800">
+                          <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                          <div className="text-sm text-blue-800 dark:text-blue-200">
                             <p><strong>Valuation Source:</strong> Latest NAV reported by the fund administrator</p>
                             <p className="mt-1"><strong>Frequency:</strong> Monthly/Quarterly basis</p>
                             <p className="mt-1"><strong>Last Updated:</strong> {positionData.lastUpdated ? new Date(positionData.lastUpdated).toLocaleDateString(undefined, { timeZone: 'UTC' }) : 'N/A'}</p>
@@ -643,7 +643,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     No position data available
                   </div>
                 )}
@@ -667,15 +667,15 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                 {cashflowData && cashflowData.history && cashflowData.history.length > 0 ? (
                   <div className="space-y-3">
                     {cashflowData.history.map((flow, index) => (
-                      <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                      <div key={index} className="flex items-center justify-between p-4 border dark:border-zinc-700 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800">
                         <div className="flex items-center gap-4">
                           <div className={`w-4 h-4 rounded-full ${flow.type === 'call' ? 'bg-red-500' : 'bg-green-500'
                             }`} />
                           <div>
-                            <div className="font-medium">
+                            <div className="font-medium text-gray-900 dark:text-gray-100">
                               {flow.type === 'call' ? 'Capital Call' : 'Distribution'}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
                               {new Date(flow.date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                             </div>
                           </div>
@@ -687,7 +687,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                             {formatAmount(Math.abs(flow.amount))}
                           </div>
                           {flow.reference && (
-                            <div className="text-xs text-gray-400">
+                            <div className="text-xs text-gray-400 dark:text-gray-500">
                               Ref: {flow.reference}
                             </div>
                           )}
@@ -696,8 +696,8 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <DollarSign className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <DollarSign className="h-8 w-8 mx-auto mb-2 text-gray-400 dark:text-gray-500" />
                     <p>No cash flow history available</p>
                   </div>
                 )}
@@ -721,22 +721,22 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                 {valuations && valuations.length > 0 ? (
                   <div className="space-y-4">
                     {valuations.slice(0, 10).map((valuation, index) => (
-                      <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div key={index} className="flex items-center justify-between p-4 border dark:border-zinc-700 rounded-lg">
                         <div className="flex items-center gap-3">
-                          <Calendar className="h-5 w-5 text-gray-400" />
+                          <Calendar className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                           <div>
-                            <div className="font-medium">
+                            <div className="font-medium text-gray-900 dark:text-gray-100">
                               {new Date(valuation.as_of_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                             </div>
-                            <div className="text-sm text-gray-500">Valuation Date</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">Valuation Date</div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-semibold text-lg">
+                          <div className="font-semibold text-lg text-gray-900 dark:text-gray-100">
                             {formatCurrencyPrecise(valuation.nav_per_unit, 3)} per unit
                           </div>
                           {valuation.nav_total && (
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
                               Total NAV: {formatAmount(valuation.nav_total)}
                             </div>
                           )}
@@ -745,8 +745,8 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <BarChart3 className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <BarChart3 className="h-8 w-8 mx-auto mb-2 text-gray-400 dark:text-gray-500" />
                     <p>No performance history available</p>
                   </div>
                 )}
