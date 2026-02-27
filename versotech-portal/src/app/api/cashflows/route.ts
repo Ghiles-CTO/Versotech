@@ -41,25 +41,33 @@ export async function GET(request: Request) {
       )
     }
 
-    // Determine investor IDs based on role
+    const staffRoles = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo']
+    const isStaff = staffRoles.includes(profile.role)
+
+    // Determine investor IDs based on actual memberships first.
+    const { data: investorLinks } = await supabase
+      .from('investor_users')
+      .select('investor_id')
+      .eq('user_id', user.id)
+
+    const linkedInvestorIds = investorLinks?.map(link => link.investor_id) || []
+
+    // Determine investor IDs based on role + memberships
     let investorIds: string[] = []
 
-    if (profile.role === 'investor') {
-      // Get investor entities linked to this user
-      const { data: investorLinks } = await supabase
-        .from('investor_users')
-        .select('investor_id')
-        .eq('user_id', user.id)
+    if (isStaff) {
+      // Staff can view any investor via query params.
+      const requestedInvestorId = searchParams.get('investor_id')
 
-      investorIds = investorLinks?.map(link => link.investor_id) || []
-    } else if (['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(profile.role)) {
-      // Staff can view cashflows for a specific investor or vehicle via query params
-      const investorId = searchParams.get('investor_id')
-
-      if (investorId) {
-        investorIds = [investorId]
+      if (requestedInvestorId) {
+        investorIds = [requestedInvestorId]
+      } else if (linkedInvestorIds.length > 0) {
+        // Multi-persona staff+investor users can still access their own investor view.
+        investorIds = linkedInvestorIds
       }
-      // If no investor_id specified, staff will get empty results (intentional)
+      // Pure staff with no investor_id still get empty results (intentional).
+    } else if (linkedInvestorIds.length > 0) {
+      investorIds = linkedInvestorIds
     } else {
       return NextResponse.json(
         { error: 'Access denied' },

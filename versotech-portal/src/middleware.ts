@@ -528,6 +528,55 @@ export async function middleware(request: NextRequest) {
       }
 
       if (personaTypes.size === 0) {
+        if (effectiveProfile.role === 'multi_persona') {
+          // Legacy compatibility: recover persona types directly from membership tables
+          // when get_user_personas() is unavailable.
+          try {
+            const [
+              { data: ceoMemberships },
+              { data: investorMemberships },
+              { data: arrangerMemberships },
+              { data: introducerMemberships },
+              { data: partnerMemberships },
+              { data: commercialPartnerMemberships },
+              { data: lawyerMemberships },
+            ] = await Promise.all([
+              supabase.from('ceo_users').select('user_id').eq('user_id', user.id).limit(1),
+              supabase.from('investor_users').select('user_id').eq('user_id', user.id).limit(1),
+              supabase.from('arranger_users').select('user_id').eq('user_id', user.id).limit(1),
+              supabase.from('introducer_users').select('user_id').eq('user_id', user.id).limit(1),
+              supabase.from('partner_users').select('user_id').eq('user_id', user.id).limit(1),
+              supabase.from('commercial_partner_users').select('user_id').eq('user_id', user.id).limit(1),
+              supabase.from('lawyer_users').select('user_id').eq('user_id', user.id).limit(1),
+            ])
+
+            if (Array.isArray(ceoMemberships) && ceoMemberships.length > 0) {
+              personaTypes.add('ceo')
+              isCEO = true
+            }
+            if (Array.isArray(investorMemberships) && investorMemberships.length > 0) {
+              personaTypes.add('investor')
+            }
+            if (Array.isArray(arrangerMemberships) && arrangerMemberships.length > 0) {
+              personaTypes.add('arranger')
+            }
+            if (Array.isArray(introducerMemberships) && introducerMemberships.length > 0) {
+              personaTypes.add('introducer')
+            }
+            if (Array.isArray(partnerMemberships) && partnerMemberships.length > 0) {
+              personaTypes.add('partner')
+            }
+            if (Array.isArray(commercialPartnerMemberships) && commercialPartnerMemberships.length > 0) {
+              personaTypes.add('commercial_partner')
+            }
+            if (Array.isArray(lawyerMemberships) && lawyerMemberships.length > 0) {
+              personaTypes.add('lawyer')
+            }
+          } catch (membershipFallbackError) {
+            console.warn('[middleware] Membership-based persona fallback failed:', membershipFallbackError)
+          }
+        }
+
         const roleToPersona: Record<string, string> = {
           investor: 'investor',
           arranger: 'arranger',

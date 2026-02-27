@@ -63,6 +63,140 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
 
   let userPersonas: Persona[] = (personas || []) as Persona[]
 
+  const recoverPersonasFromMemberships = async (): Promise<Persona[]> => {
+    try {
+      const recovered: Persona[] = []
+
+      const [
+        { data: ceoRows },
+        { data: investorRows },
+        { data: arrangerRows },
+        { data: introducerRows },
+        { data: partnerRows },
+        { data: commercialPartnerRows },
+        { data: lawyerRows },
+      ] = await Promise.all([
+        supabase.from('ceo_users').select('role, is_primary, can_sign').eq('user_id', profile.id),
+        supabase.from('investor_users').select('investor_id, role, is_primary, can_sign').eq('user_id', profile.id),
+        supabase.from('arranger_users').select('arranger_id, role, is_primary').eq('user_id', profile.id),
+        supabase.from('introducer_users').select('introducer_id, role, is_primary, can_sign').eq('user_id', profile.id),
+        supabase.from('partner_users').select('partner_id, role, is_primary, can_sign').eq('user_id', profile.id),
+        supabase.from('commercial_partner_users').select('commercial_partner_id, role, is_primary, can_sign, can_execute_for_clients').eq('user_id', profile.id),
+        supabase.from('lawyer_users').select('lawyer_id, role, is_primary').eq('user_id', profile.id),
+      ])
+
+      if (Array.isArray(ceoRows)) {
+        recovered.push(
+          ...ceoRows.map((row: any): Persona => ({
+            persona_type: 'ceo',
+            entity_id: 'internal',
+            entity_name: 'VERSO Capital',
+            entity_logo_url: null,
+            role_in_entity: row.role || 'member',
+            is_primary: row.is_primary ?? true,
+            can_sign: Boolean(row.can_sign),
+            can_execute_for_clients: false,
+          }))
+        )
+      }
+
+      if (Array.isArray(investorRows)) {
+        recovered.push(
+          ...investorRows.map((row: any): Persona => ({
+            persona_type: 'investor',
+            entity_id: row.investor_id,
+            entity_name: 'Investor',
+            entity_logo_url: null,
+            role_in_entity: row.role || 'member',
+            is_primary: Boolean(row.is_primary),
+            can_sign: Boolean(row.can_sign),
+            can_execute_for_clients: false,
+          }))
+        )
+      }
+
+      if (Array.isArray(arrangerRows)) {
+        recovered.push(
+          ...arrangerRows.map((row: any): Persona => ({
+            persona_type: 'arranger',
+            entity_id: row.arranger_id,
+            entity_name: 'Arranger',
+            entity_logo_url: null,
+            role_in_entity: row.role || 'member',
+            is_primary: Boolean(row.is_primary),
+            can_sign: false,
+            can_execute_for_clients: false,
+          }))
+        )
+      }
+
+      if (Array.isArray(introducerRows)) {
+        recovered.push(
+          ...introducerRows.map((row: any): Persona => ({
+            persona_type: 'introducer',
+            entity_id: row.introducer_id,
+            entity_name: 'Introducer',
+            entity_logo_url: null,
+            role_in_entity: row.role || 'member',
+            is_primary: Boolean(row.is_primary),
+            can_sign: Boolean(row.can_sign),
+            can_execute_for_clients: false,
+          }))
+        )
+      }
+
+      if (Array.isArray(partnerRows)) {
+        recovered.push(
+          ...partnerRows.map((row: any): Persona => ({
+            persona_type: 'partner',
+            entity_id: row.partner_id,
+            entity_name: 'Partner',
+            entity_logo_url: null,
+            role_in_entity: row.role || 'member',
+            is_primary: Boolean(row.is_primary),
+            can_sign: Boolean(row.can_sign),
+            can_execute_for_clients: false,
+          }))
+        )
+      }
+
+      if (Array.isArray(commercialPartnerRows)) {
+        recovered.push(
+          ...commercialPartnerRows.map((row: any): Persona => ({
+            persona_type: 'commercial_partner',
+            entity_id: row.commercial_partner_id,
+            entity_name: 'Commercial Partner',
+            entity_logo_url: null,
+            role_in_entity: row.role || 'member',
+            is_primary: Boolean(row.is_primary),
+            can_sign: Boolean(row.can_sign),
+            can_execute_for_clients: Boolean(row.can_execute_for_clients),
+          }))
+        )
+      }
+
+      if (Array.isArray(lawyerRows)) {
+        recovered.push(
+          ...lawyerRows.map((row: any): Persona => ({
+            persona_type: 'lawyer',
+            entity_id: row.lawyer_id,
+            entity_name: 'Lawyer',
+            entity_logo_url: null,
+            role_in_entity: row.role || 'member',
+            is_primary: Boolean(row.is_primary),
+            can_sign: false,
+            can_execute_for_clients: false,
+          }))
+        )
+      }
+
+      return recovered
+    } catch (error) {
+      console.error('[UnifiedPortalLayout] Membership-based persona recovery failed:', error)
+      return []
+    }
+  }
+
   // Fetch tour completion status
   const { data: tourStatus } = await supabase
     .from('profiles')
@@ -70,31 +204,36 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
     .eq('id', profile.id)
     .single()
 
-  // Staff roles don't have traditional persona entries - create synthetic persona
-  // This matches the fallback logic in middleware.ts
+  // Fallback path for legacy users when persona RPC returns nothing.
   if (userPersonas.length === 0) {
-    const staffRoles = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo']
-    if (staffRoles.includes(profile.role)) {
-      // staff_admin and ceo get 'ceo' persona for full access (all pages)
-      // staff_ops and staff_rm get 'staff' persona for limited access
-      const personaType = (profile.role === 'ceo' || profile.role === 'staff_admin') ? 'ceo' : 'staff'
-
-      // Create synthetic persona for internal team members
-      userPersonas = [{
-        persona_type: personaType,
-        entity_id: 'internal',
-        entity_name: 'VERSO Staff',
-        entity_logo_url: null,
-        role_in_entity: profile.role,
-        is_primary: true,
-        can_sign: profile.role === 'ceo' || profile.role === 'staff_admin',
-        can_execute_for_clients: false,
-      }]
-      console.log('[UnifiedPortalLayout] Created synthetic persona for:', profile.email, profile.role, '→', personaType)
+    const recoveredPersonas = await recoverPersonasFromMemberships()
+    if (recoveredPersonas.length > 0) {
+      userPersonas = recoveredPersonas
+      console.log('[UnifiedPortalLayout] Recovered personas from memberships for:', profile.email, profile.role)
     } else {
-      // Non-staff user with no personas - redirect to login
-      console.warn('[UnifiedPortalLayout] User has no personas:', profile.email)
-      redirect('/versotech_main/login?error=no_personas')
+      const staffRoles = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo']
+      if (staffRoles.includes(profile.role)) {
+        // staff_admin and ceo get 'ceo' persona for full access (all pages)
+        // staff_ops and staff_rm get 'staff' persona for limited access
+        const personaType = (profile.role === 'ceo' || profile.role === 'staff_admin') ? 'ceo' : 'staff'
+
+        // Create synthetic persona for internal team members
+        userPersonas = [{
+          persona_type: personaType,
+          entity_id: 'internal',
+          entity_name: 'VERSO Staff',
+          entity_logo_url: null,
+          role_in_entity: profile.role,
+          is_primary: true,
+          can_sign: profile.role === 'ceo' || profile.role === 'staff_admin',
+          can_execute_for_clients: false,
+        }]
+        console.log('[UnifiedPortalLayout] Created synthetic persona for:', profile.email, profile.role, '→', personaType)
+      } else {
+        // Non-staff user with no personas - redirect to login
+        console.warn('[UnifiedPortalLayout] User has no personas:', profile.email)
+        redirect('/versotech_main/login?error=no_personas')
+      }
     }
   }
 

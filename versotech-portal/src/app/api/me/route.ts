@@ -31,25 +31,24 @@ export async function GET() {
       )
     }
 
-    // If investor, get their linked investor entities
+    // Load investor links based on actual memberships (not only profile.role).
+    // This keeps multi-persona users consistent.
     let investorLinks = null
-    if (profile.role === 'investor') {
-      const { data: links, error: linksError } = await supabase
-        .from('investor_users')
-        .select(`
-          investor_id,
-          investors:investor_id (
-            id,
-            legal_name,
-            kyc_status,
-            country
-          )
-        `)
-        .eq('user_id', user.id)
+    const { data: links, error: linksError } = await supabase
+      .from('investor_users')
+      .select(`
+        investor_id,
+        investors:investor_id (
+          id,
+          legal_name,
+          kyc_status,
+          country
+        )
+      `)
+      .eq('user_id', user.id)
 
-      if (!linksError) {
-        investorLinks = links
-      }
+    if (!linksError) {
+      investorLinks = links
     }
 
     // Log profile access for audit

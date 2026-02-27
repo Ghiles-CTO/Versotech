@@ -154,33 +154,32 @@ export async function GET(
         .order('created_at', { ascending: false })
     ])
 
-    // For investors, check if they have access to this entity
-    let hasAccess = false
-    let investorIds: string[] = []
+    // Access must be derived from real memberships, not only profile.role.
+    const hasStaffAccess = await isStaffUser(supabase, user)
 
-    if (profile.role === 'investor') {
-      const { data: investorLinks } = await supabase
-        .from('investor_users')
-        .select('investor_id')
-        .eq('user_id', user.id)
+    const { data: investorLinks } = await supabase
+      .from('investor_users')
+      .select('investor_id')
+      .eq('user_id', user.id)
 
-      if (investorLinks) {
-        investorIds = investorLinks.map(link => link.investor_id)
+    const investorIds: string[] = investorLinks?.map(link => link.investor_id) || []
 
-        // Check if investor has subscription to this entity
-        const { data: subscription } = await supabase
-          .from('subscriptions')
-          .select('id')
-          .eq('vehicle_id', entityId)
-          .in('investor_id', investorIds)
-          .single()
+    let hasInvestorAccess = false
+    if (investorIds.length > 0) {
+      // Check if the user has at least one subscription in this entity.
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('id')
+        .eq('vehicle_id', entityId)
+        .in('investor_id', investorIds)
+        .limit(1)
+        .maybeSingle()
 
-        hasAccess = !!subscription
-      }
-    } else {
-      // Staff have access to all entities
-      hasAccess = true
+      hasInvestorAccess = !!subscription
     }
+
+    const hasAccess = hasStaffAccess || hasInvestorAccess
+    const useInvestorScopedData = !hasStaffAccess && hasInvestorAccess
 
     if (!hasAccess) {
       return NextResponse.json(
@@ -216,7 +215,7 @@ export async function GET(
       .select('id, type, created_at, created_by')
       .eq('vehicle_id', entityId)
 
-    if (profile.role === 'investor') {
+    if (useInvestorScopedData) {
       // Investors can only see their own documents or entity-level documents
       if (investorIds.length > 0) {
         const investorList = investorIds.join(',')
@@ -232,7 +231,7 @@ export async function GET(
     let subscriptionData = null
     let cashflowData = null
 
-    if (profile.role === 'investor') {
+    if (useInvestorScopedData) {
       // Get investor's position in this entity
       const { data: position } = await supabase
         .from('positions')
