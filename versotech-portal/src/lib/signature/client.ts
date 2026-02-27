@@ -18,6 +18,7 @@ import { embedSignatureInPDF, embedSignatureMultipleLocations } from './pdf-proc
 import { routeSignatureHandler } from './handlers'
 import { detectAnchors, getPlacementsFromAnchors } from './anchor-detector'
 import { calculateSubscriptionFeeEvents, createFeeEvents } from '../fees/subscription-fee-calculator'
+import { createServiceClient } from '@/lib/supabase/server'
 import type { SignaturePlacementRecord } from './types'
 import { sendSignatureRequestEmail } from '@/lib/email/resend-service'
 import type {
@@ -1464,21 +1465,53 @@ export async function submitSignature(
       .eq('related_entity_id', signatureRequest.id)
       .neq('status', 'completed')
 
+    if (tasksError) {
+      console.error('⚠️ [SIGNATURE] Failed to query related tasks:', tasksError)
+    }
+
     if (relatedTasks && relatedTasks.length > 0) {
       console.log(`✅ [SIGNATURE] Found ${relatedTasks.length} task(s) to complete`)
 
-      const { error: completeError } = await supabase
+      const completionTime = new Date().toISOString()
+      const updates = {
+        status: 'completed',
+        completed_at: completionTime,
+        completed_by: currentUserId || null,
+        updated_at: completionTime
+      }
+      const taskIds = relatedTasks.map(task => task.id)
+
+      const { data: completedWithUserClient, error: completeError } = await supabase
         .from('tasks')
-        .update({
-          status: 'completed',
-          completed_at: new Date().toISOString()
-        })
-        .eq('related_entity_type', 'signature_request')
-        .eq('related_entity_id', signatureRequest.id)
-        .neq('status', 'completed')
+        .update(updates)
+        .in('id', taskIds)
+        .in('status', ['pending', 'in_progress', 'overdue', 'blocked'])
+        .select('id')
+
+      const completedCount = completedWithUserClient?.length || 0
 
       if (completeError) {
-        console.error('⚠️ [SIGNATURE] Failed to auto-complete tasks:', completeError)
+        console.warn('⚠️ [SIGNATURE] User client failed to auto-complete tasks, retrying with service client:', completeError)
+      }
+
+      if (completeError || completedCount === 0) {
+        try {
+          const serviceClient = createServiceClient()
+          const { data: completedWithServiceClient, error: serviceCompleteError } = await serviceClient
+            .from('tasks')
+            .update(updates)
+            .in('id', taskIds)
+            .in('status', ['pending', 'in_progress', 'overdue', 'blocked'])
+            .select('id')
+
+          if (serviceCompleteError) {
+            console.error('⚠️ [SIGNATURE] Service client failed to auto-complete tasks:', serviceCompleteError)
+          } else {
+            console.log('✅ [SIGNATURE] Tasks auto-completed with service client:', completedWithServiceClient?.map(t => t.id) || [])
+          }
+        } catch (serviceError) {
+          console.error('⚠️ [SIGNATURE] Service client auto-complete error:', serviceError)
+        }
       } else {
         console.log('✅ [SIGNATURE] Tasks auto-completed:', relatedTasks.map(t => t.title))
       }

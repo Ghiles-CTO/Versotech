@@ -32,7 +32,7 @@
             letter-spacing: 0.15em;
             color: #000;
             text-transform: uppercase;
-            margin: 0 0 0.38cm 0;
+            margin: 0 0 0.53cm 0;
         }
 
         table.print-frame {
@@ -348,9 +348,9 @@
         }
 
         .signature-line.tcs-line {
-            width: 34%;
+            width: 36%;
             margin-left: 0;
-            margin-top: 3.6cm;
+            margin-top: 3.1cm;
         }
 
         .tcs-signer-meta {
@@ -425,6 +425,10 @@
 
         .wire-signoff {
             margin-top: 0.3cm;
+        }
+
+        .wire-page {
+            padding-top: 0.38cm;
         }
 
         .signature-meta-table {
@@ -597,6 +601,7 @@
 <div class="page-break"></div>
 
 <!-- PAGE 3: WIRE TRANSFER INSTRUCTIONS -->
+<div class="wire-page">
 <h1>VERSO CAPITAL SERIES {{ $json.series_number }}</h1>
 <h1>WIRE TRANSFER INSTRUCTIONS</h1>
 
@@ -638,6 +643,7 @@
         <p>Name: {{ $json.issuer_name || 'Julien Machot' }}<br>
         Title: {{ $json.issuer_title || 'Manager and authorized representative' }}</p>
     </div>
+</div>
 </div>
 
 <div class="page-break"></div>

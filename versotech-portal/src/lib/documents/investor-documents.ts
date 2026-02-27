@@ -150,6 +150,9 @@ export async function loadInvestorDocuments(
       .from('documents')
       .select(BASE_DOCUMENT_SELECT)
       .in('vehicle_id', vehicleIds)
+      // Critical: only include shared vehicle docs here.
+      // Investor-specific docs are loaded via owner_investor_id above.
+      .is('owner_investor_id', null)
       .eq('is_published', true)
       .order('created_at', { ascending: false })
 

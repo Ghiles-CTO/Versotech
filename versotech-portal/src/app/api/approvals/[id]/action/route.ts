@@ -1821,9 +1821,9 @@ async function handleEntityApproval(
               // Increased spacing: min-height 4cm, margin-top 3cm for ~85pt signature space
               // Parent div needs position:relative for anchor's position:absolute to work
               const signatoriesSignatureHtml = signatories.map(s => `
-	<div class="signature-block" style="position:relative;margin-bottom: 1.6cm; min-height: 4.6cm;">
+	<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
 	    <p><strong>The Subscriber</strong>, represented by Authorized Signatory ${s.number}</p>
-	    <div class="signature-line main-line" style="margin-top: 3.4cm; position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number)}</span></div>
+	    <div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number)}</span></div>
 	    <p style="margin-top: 0.3cm;">Name: ${s.name}${s.title ? `<br>Title: ${s.title}` : ''}</p>
 	</div>`).join('')
 
@@ -1864,9 +1864,9 @@ async function handleEntityApproval(
                 // Increased spacing: min-height 4cm, margin-top 3cm for ~85pt signature space
                 // Parent div needs position:relative for anchor's position:absolute to work
                 const issuerSignatureHtml = `
-<div class="signature-block" style="position:relative;margin-bottom: 1.6cm; min-height: 4.6cm;">
+<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
     <p><strong>The Issuer, VERSO Capital 2 SCSP</strong>, duly represented by its general partner <strong>VERSO Capital 2 GP SARL</strong></p>
-    <div class="signature-line main-line" style="margin-top: 3.4cm; position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:party_b</span></div>
+    <div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:party_b</span></div>
     <p style="margin-top: 0.3cm;">Name: ${issuerName}<br>
     Title: ${issuerTitle}</p>
 </div>`
@@ -1875,9 +1875,9 @@ async function handleEntityApproval(
                 // Increased spacing: min-height 4cm, margin-top 3cm for ~85pt signature space
                 // Parent div needs position:relative for anchor's position:absolute to work
                 const arrangerSignatureHtml = `
-<div class="signature-block" style="position:relative;margin-bottom: 1.6cm; min-height: 4.6cm;">
+<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
     <p><strong>The Attorney, Verso Management Ltd.</strong>, for the purpose of the powers granted under Clause 6</p>
-    <div class="signature-line main-line" style="margin-top: 3.4cm; position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:party_c</span></div>
+    <div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:party_c</span></div>
     <p style="margin-top: 0.3cm;">Name: ${feeStructure.arranger_person_name || 'Julien Machot'}<br>
     Title: ${feeStructure.arranger_person_title || 'Director'}</p>
 </div>`

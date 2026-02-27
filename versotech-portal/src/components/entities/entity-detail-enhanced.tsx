@@ -2782,8 +2782,8 @@ export function EntityDetailEnhanced({
         entity={entity}
         open={editEntityModalOpen}
         onClose={() => setEditEntityModalOpen(false)}
-        onSuccess={(updated) => {
-          setEntity(updated as Entity)
+        onSuccess={() => {
+          refreshEntityData()
           setEditEntityModalOpen(false)
         }}
       />

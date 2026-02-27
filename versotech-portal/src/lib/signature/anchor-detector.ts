@@ -303,23 +303,41 @@ function getAnchorPatternsForPosition(
 function getSignatureXPosition(
   signaturePosition: string,
   label: string,
-  documentType: DocumentType = 'subscription'
+  documentType: DocumentType = 'subscription',
+  anchor?: DetectedAnchor
 ): number {
+  // For left-side signature lines, align from the detected anchor line start
+  // instead of fixed percentages. This prevents "outside the line" drift.
+  if (anchor && label !== 'subscription_form') {
+    const signatureWidth = 150
+    const leftInset = 2 // keep slightly inside the line
+    const centerX = anchor.rawX + leftInset + signatureWidth / 2
+    return Math.max(0.02, Math.min(0.98, centerX / anchor.pageWidth))
+  }
+
+  // Page 2 left form cell (party_b) uses the smaller form signature size.
+  if (anchor && label === 'subscription_form' && signaturePosition === 'party_b') {
+    const signatureWidth = 140
+    const leftInset = 2
+    const centerX = anchor.rawX + leftInset + signatureWidth / 2
+    return Math.max(0.02, Math.min(0.98, centerX / anchor.pageWidth))
+  }
+
   // Party A (Subscribers): Right column on page 2 form, left signature lines elsewhere.
   if (signaturePosition.startsWith('party_a')) {
     if (label === 'subscription_form') return 0.63
-    return 0.20
+    return 0.22
   }
 
   // Party B (Issuer): Keep all left-column signatures aligned to the left-side line region.
   if (signaturePosition === 'party_b') {
-    if (label === 'subscription_form') return 0.18
-    return 0.19
+    if (label === 'subscription_form') return 0.20
+    return 0.22
   }
 
   // Party C (Arranger): Left-side signature lines on main + T&Cs signature pages.
   if (signaturePosition === 'party_c') {
-    return 0.19
+    return 0.22
   }
 
   return 0.22
@@ -373,10 +391,9 @@ function getSignatureYFromAnchor(
  * Anchors are placed directly on the signature line, so anchor.yFromBottom is the
  * line position. We then offset upward so the signature image sits above the line.
  *
- * X POSITIONING (left-weighted line anchoring):
- * - Party A (Subscribers): 63% on page 2 form, 20% on main agreement
- * - Party B (Issuer): 18% on page 2 form, 19% on wire/main/T&Cs
- * - Party C (Arranger): 19% on main/T&Cs
+ * X POSITIONING:
+ * - Page 2 subscriber form: fixed right-column placement
+ * - Left-side lines (main/wire/T&Cs + issuer form): anchor-based line-start alignment
  *
  * @param anchors - All detected anchors from PDF
  * @param signaturePosition - The signer's position (e.g., 'party_a', 'party_b')
@@ -398,7 +415,7 @@ export function getPlacementsFromAnchors(
     if (anchor) {
       const fixedX = documentType === 'introducer_agreement'
         ? anchor.xPercent
-        : getSignatureXPosition(signaturePosition, pattern.label, documentType)
+        : getSignatureXPosition(signaturePosition, pattern.label, documentType, anchor)
 
       // Get signature Y position based on anchor line + offset
       const signatureY = getSignatureYFromAnchor(anchor, pattern.label, documentType)
