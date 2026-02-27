@@ -305,28 +305,24 @@ function getSignatureXPosition(
   label: string,
   documentType: DocumentType = 'subscription'
 ): number {
-  // Party A (Subscribers): Right column on form page, stacked-left on main agreement
+  // Party A (Subscribers): Right column on page 2 form, left signature lines elsewhere.
   if (signaturePosition.startsWith('party_a')) {
-    if (label === 'subscription_form') return 0.63  // Right column (form table)
-    return 0.29  // Stacked left (main agreement)
+    if (label === 'subscription_form') return 0.63
+    return 0.20
   }
 
-  // Party B (Issuer): Left on form/wire/main, left-aligned on T&Cs signature page
+  // Party B (Issuer): Keep all left-column signatures aligned to the left-side line region.
   if (signaturePosition === 'party_b') {
-    if (label === 'tcs') return 0.30
-    if (label === 'main_agreement') return 0.29
-    // Page 2/3 form signature line sits inside the left table cell.
-    if (label === 'subscription_form') return 0.26
-    return 0.25
+    if (label === 'subscription_form') return 0.18
+    return 0.19
   }
 
-  // Party C (Arranger): Stacked left on main, left-aligned on T&Cs signature page
+  // Party C (Arranger): Left-side signature lines on main + T&Cs signature pages.
   if (signaturePosition === 'party_c') {
-    if (label === 'tcs') return 0.30
-    return 0.29
+    return 0.19
   }
 
-  return 0.29  // Default to stacked-left alignment
+  return 0.22
 }
 
 /**
@@ -377,10 +373,10 @@ function getSignatureYFromAnchor(
  * Anchors are placed directly on the signature line, so anchor.yFromBottom is the
  * line position. We then offset upward so the signature image sits above the line.
  *
- * X POSITIONING (VC215-aligned):
- * - Party A (Subscribers): 63% on form, 29% on main agreement
- * - Party B (Issuer): 26% on form, 25% on wire, 29% on main, 30% on T&Cs
- * - Party C (Arranger): 29% on main, 30% on T&Cs
+ * X POSITIONING (left-weighted line anchoring):
+ * - Party A (Subscribers): 63% on page 2 form, 20% on main agreement
+ * - Party B (Issuer): 18% on page 2 form, 19% on wire/main/T&Cs
+ * - Party C (Arranger): 19% on main/T&Cs
  *
  * @param anchors - All detected anchors from PDF
  * @param signaturePosition - The signer's position (e.g., 'party_a', 'party_b')

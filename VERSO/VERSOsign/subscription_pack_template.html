@@ -205,6 +205,18 @@
             margin-top: 0.2cm;
         }
 
+        .summary-issuer-identity {
+            text-align: left !important;
+            margin: 0;
+            padding: 0;
+        }
+
+        .summary-issuer-identity > div {
+            text-align: left !important;
+            margin: 0;
+            padding: 0;
+        }
+
         .label-cell {
             font-weight: bold;
             width: 40%;
@@ -336,9 +348,9 @@
         }
 
         .signature-line.tcs-line {
-            width: 44%;
+            width: 34%;
             margin-left: 0;
-            margin-top: 2.2cm;
+            margin-top: 3.6cm;
         }
 
         .tcs-signer-meta {
@@ -560,9 +572,11 @@
 <table class="compact summary-signature-table" style="margin-top: 1cm;">
     <tr>
         <td style="width: 50%; text-align: left;">
-            <strong>VERSO Capital 2 SCSP Series {{ $json.series_number }}</strong><br>
-            duly represented by its general partner<br>
-            <strong>VERSO Capital 2 GP SARL</strong><br>
+            <div class="summary-issuer-identity">
+                <div><strong>VERSO Capital 2 SCSP Series {{ $json.series_number }}</strong></div>
+                <div>duly represented by its general partner</div>
+                <div><strong>VERSO Capital 2 GP SARL</strong></div>
+            </div>
             <div class="signature-line form-line"><span class="sig-anchor">SIG_ANCHOR:party_b_form</span></div>
             <div class="issuer-signer-meta">
                 Name: {{ $json.issuer_name || 'Julien Machot' }}<br>
@@ -1471,8 +1485,6 @@
 <p>For the avoidance of doubt, the Arranger reserves the right to apply a one-off sale and transfer fee amounting to minimum 0.05% of the Certificates Sale or Transfer Price to be paid by the contemplated buyer or transferee to the Paying Agent Account as shall be indicated on the Transfer Reply Notice.</p>
 
 <p>For the avoidance of doubt, the payment of the Sale and Transfer Fee shall be considered as a condition precedent of the contemplated sale or transfer. The contemplated sale or transfer shall have no effect, whatsoever, towards the Issuer, as long as the Sale and Transfer Fee has not been paid to the Paying Agent Account.</p>
-
-<div class="page-break"></div>
 
 <h2>13. TAXATION</h2>
 
