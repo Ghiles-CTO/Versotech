@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
         id: profile.id,
         email: profile.email || '',
         displayName: profile.display_name || undefined,
-        role: profile.role || 'multi_persona',
+        role: profile.role || 'investor',
         title: profile.title || undefined,
       }
     })

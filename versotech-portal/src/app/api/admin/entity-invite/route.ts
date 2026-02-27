@@ -64,6 +64,15 @@ const DEFAULT_ROLE_BY_ENTITY: Record<string, string> = {
   commercial_partner: 'contact',
 }
 
+const PROFILE_ROLE_BY_ENTITY: Record<string, string> = {
+  investor: 'investor',
+  arranger: 'arranger',
+  lawyer: 'lawyer',
+  introducer: 'introducer',
+  partner: 'partner',
+  commercial_partner: 'commercial_partner',
+}
+
 // Entity name columns vary by table
 const ENTITY_NAME_COLUMNS: Record<string, { select: string; primary: string; fallback?: string }> = {
   investor: { select: 'legal_name', primary: 'legal_name' },
@@ -138,11 +147,28 @@ export async function POST(request: NextRequest) {
     // Check if email already exists in profiles
     const { data: existingProfile } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, role')
       .eq('email', normalizedEmail)
-      .single()
+      .maybeSingle()
 
     if (existingProfile) {
+      const normalizedProfileRole = PROFILE_ROLE_BY_ENTITY[entity_type]
+      const currentProfileRole = (existingProfile as { role?: string | null }).role ?? null
+      if (normalizedProfileRole && (!currentProfileRole || currentProfileRole === 'multi_persona')) {
+        const { error: roleUpdateError } = await supabase
+          .from('profiles')
+          .update({
+            role: normalizedProfileRole,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existingProfile.id)
+
+        if (roleUpdateError) {
+          console.error('Role normalization error:', roleUpdateError)
+          return NextResponse.json({ error: 'Failed to normalize user role' }, { status: 500 })
+        }
+      }
+
       // User exists - check if already linked to this entity
       const junctionTable = JUNCTION_TABLES[entity_type]
       const entityIdColumn = ENTITY_ID_COLUMNS[entity_type]
@@ -263,6 +289,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Create invitation record (user account will be created when they accept)
+    const invitationMetadata: Record<string, unknown> = {
+      display_name,
+      is_primary,
+      can_sign: linkCanSign,
+    }
+
+    if (typeof title === 'string' && title.trim().length > 0) {
+      invitationMetadata.title = title.trim()
+    }
+
     const { data: invitation, error: invitationError } = await supabase
       .from('member_invitations')
       .insert({
@@ -279,12 +315,7 @@ export async function POST(request: NextRequest) {
         sent_at: new Date().toISOString(),
         reminder_count: 0,
         last_reminded_at: null,
-        metadata: {
-          display_name,
-          title: title || null,
-          is_primary,
-          can_sign: linkCanSign,
-        }
+        metadata: invitationMetadata
       })
       .select()
       .single()

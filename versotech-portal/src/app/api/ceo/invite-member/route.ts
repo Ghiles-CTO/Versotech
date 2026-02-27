@@ -10,6 +10,8 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
+const STAFF_PROFILE_ROLES = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo'] as const
+
 const inviteSchema = z.object({
   email: z.string().email(),
   role: z.enum(['admin', 'member', 'viewer']).default('member'),
@@ -59,7 +61,7 @@ export async function POST(request: NextRequest) {
     // Check if user already exists in profiles
     const { data: existingProfile, error: profileError } = await serviceSupabase
       .from('profiles')
-      .select('id, email, display_name')
+      .select('id, email, display_name, role')
       .ilike('email', email)
       .maybeSingle()
 
@@ -84,22 +86,48 @@ export async function POST(request: NextRequest) {
       }
 
       // Add user directly to ceo_users
+      const ceoMemberInsert: Record<string, unknown> = {
+        user_id: existingProfile.id,
+        role,
+        can_sign,
+        is_primary: false,
+        created_by: user.id,
+      }
+
+      if (typeof title === 'string' && title.trim().length > 0) {
+        ceoMemberInsert.title = title.trim()
+      }
+
       const { data: newMember, error: insertError } = await serviceSupabase
         .from('ceo_users')
-        .insert({
-          user_id: existingProfile.id,
-          role,
-          title: title || null,
-          can_sign,
-          is_primary: false,
-          created_by: user.id,
-        })
+        .insert(ceoMemberInsert)
         .select()
         .single()
 
       if (insertError) {
         console.error('[ceo/invite-member] Error adding member:', insertError)
         return NextResponse.json({ error: 'Failed to add member' }, { status: 500 })
+      }
+
+      const currentProfileRole = (existingProfile as { role?: string | null }).role ?? null
+      const isStaffProfileRole = STAFF_PROFILE_ROLES.includes((currentProfileRole || '') as (typeof STAFF_PROFILE_ROLES)[number])
+      if (!isStaffProfileRole) {
+        const { error: roleUpdateError } = await serviceSupabase
+          .from('profiles')
+          .update({
+            role: 'ceo',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existingProfile.id)
+
+        if (roleUpdateError) {
+          console.error('[ceo/invite-member] Error normalizing profile role:', roleUpdateError)
+          await serviceSupabase
+            .from('ceo_users')
+            .delete()
+            .eq('user_id', existingProfile.id)
+          return NextResponse.json({ error: 'Failed to normalize user role' }, { status: 500 })
+        }
       }
 
       return NextResponse.json({

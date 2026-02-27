@@ -51,6 +51,24 @@ const REDIRECT_URLS: Record<string, string> = {
   staff: '/versotech_main/dashboard' // Staff go to main dashboard
 }
 
+const PROFILE_ROLE_BY_ENTITY: Record<string, string> = {
+  partner: 'partner',
+  investor: 'investor',
+  introducer: 'introducer',
+  commercial_partner: 'commercial_partner',
+  lawyer: 'lawyer',
+  arranger: 'arranger',
+  ceo: 'ceo',
+}
+
+function resolveProfileRoleFromInvitation(entityType: string, invitationRole: string | null | undefined): string | null {
+  if (entityType === 'staff') {
+    return typeof invitationRole === 'string' && invitationRole.length > 0 ? invitationRole : null
+  }
+
+  return PROFILE_ROLE_BY_ENTITY[entityType] ?? null
+}
+
 // Validation schema
 const acceptNewUserSchema = z.object({
   display_name: z.string().min(2, 'Display name must be at least 2 characters'),
@@ -115,6 +133,11 @@ export async function POST(
       }, { status: 400 })
     }
 
+    const invitedProfileRole = resolveProfileRoleFromInvitation(invitation.entity_type, invitation.role)
+    if (!invitedProfileRole) {
+      return NextResponse.json({ error: 'Invalid invitation role configuration' }, { status: 400 })
+    }
+
     // Check if email already has an account
     const { data: existingProfile } = await serviceSupabase
       .from('profiles')
@@ -136,7 +159,7 @@ export async function POST(
       email_confirm: true, // Auto-confirm since they clicked invitation link
       user_metadata: {
         display_name: display_name,
-        role: 'multi_persona'
+        role: invitedProfileRole
       }
     })
 
@@ -162,7 +185,7 @@ export async function POST(
         id: authData.user.id,
         email: invitation.email.toLowerCase(),
         display_name: display_name,
-        role: 'multi_persona',
+        role: invitedProfileRole,
         password_set: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -193,7 +216,7 @@ export async function POST(
 
       // Build update object - only include is_super_admin if explicitly set in metadata
       const profileUpdate: Record<string, any> = {
-        role: invitation.role, // staff_admin, staff_ops, staff_rm, ceo
+        role: invitedProfileRole, // staff_admin, staff_ops, staff_rm, ceo
         title: metadata.title || invitation.role,
         updated_at: new Date().toISOString()
       }

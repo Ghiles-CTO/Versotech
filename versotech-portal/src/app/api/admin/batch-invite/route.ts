@@ -53,6 +53,15 @@ const DEFAULT_ROLE_BY_ENTITY: Record<string, string> = {
   commercial_partner: 'contact',
 }
 
+const PROFILE_ROLE_BY_ENTITY: Record<string, string> = {
+  investor: 'investor',
+  arranger: 'arranger',
+  lawyer: 'lawyer',
+  introducer: 'introducer',
+  partner: 'partner',
+  commercial_partner: 'commercial_partner',
+}
+
 // Single invite schema
 const inviteSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -209,11 +218,32 @@ export async function POST(request: NextRequest) {
         // Check if user already exists
         const { data: existingProfile } = await supabase
           .from('profiles')
-          .select('id, email')
+          .select('id, email, role')
           .eq('email', invite.email)
-          .single()
+          .maybeSingle()
 
         if (existingProfile) {
+          const normalizedProfileRole = PROFILE_ROLE_BY_ENTITY[entity_type]
+          const currentProfileRole = (existingProfile as { role?: string | null }).role ?? null
+          if (normalizedProfileRole && (!currentProfileRole || currentProfileRole === 'multi_persona')) {
+            const { error: roleUpdateError } = await supabase
+              .from('profiles')
+              .update({
+                role: normalizedProfileRole,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', existingProfile.id)
+
+            if (roleUpdateError) {
+              results.push({
+                email: invite.email,
+                success: false,
+                error: `Failed to normalize user role: ${roleUpdateError.message}`,
+              })
+              continue
+            }
+          }
+
           // Link existing user to entity
           const junctionTable = JUNCTION_TABLES[entity_type]
           const entityIdColumn = ENTITY_ID_COLUMNS[entity_type]
@@ -377,4 +407,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-

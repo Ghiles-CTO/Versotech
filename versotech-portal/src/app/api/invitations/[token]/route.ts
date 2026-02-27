@@ -49,6 +49,26 @@ const SIGNATORY_ENTITY_TYPES = new Set<SignatoryEntityType>([
   'arranger',
 ])
 
+const PROFILE_ROLE_BY_ENTITY: Record<string, string> = {
+  partner: 'partner',
+  investor: 'investor',
+  introducer: 'introducer',
+  commercial_partner: 'commercial_partner',
+  lawyer: 'lawyer',
+  arranger: 'arranger',
+  ceo: 'ceo',
+}
+
+const STAFF_PROFILE_ROLES = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo'] as const
+
+function resolveProfileRoleFromInvitation(entityType: string, invitationRole: string | null | undefined): string | null {
+  if (entityType === 'staff') {
+    return typeof invitationRole === 'string' && invitationRole.length > 0 ? invitationRole : null
+  }
+
+  return PROFILE_ROLE_BY_ENTITY[entityType] ?? null
+}
+
 /**
  * GET /api/invitations/[token]
  * Get invitation details (for the accept page)
@@ -197,6 +217,11 @@ export async function POST(
       }, { status: 400 })
     }
 
+    const invitedProfileRole = resolveProfileRoleFromInvitation(invitation.entity_type, invitation.role)
+    if (!invitedProfileRole) {
+      return NextResponse.json({ error: 'Invalid invitation role configuration' }, { status: 400 })
+    }
+
     // Enforce that the signed-in account matches the invited email.
     const { data: profile } = await serviceSupabase
       .from('profiles')
@@ -300,7 +325,7 @@ export async function POST(
 
       // Build update object - only include is_super_admin if explicitly set in metadata
       const profileUpdate: Record<string, any> = {
-        role: invitation.role, // staff_admin, staff_ops, staff_rm, ceo
+        role: invitedProfileRole, // staff_admin, staff_ops, staff_rm, ceo
         title: metadata.title || invitation.role,
         updated_at: new Date().toISOString()
       }
@@ -431,20 +456,39 @@ export async function POST(
         })
       }
 
-      // Update profile role if needed (for persona switching)
-      // Check if user already has multiple personas
-      const { data: existingProfile } = await serviceSupabase
+      // Normalize legacy role label only when safe:
+      // - Remove stale multi_persona
+      // - Fill missing role
+      // - Promote CEO invitees to ceo when they are not already staff
+      const { data: existingProfile, error: existingProfileError } = await serviceSupabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
 
-      // If user is just 'investor', upgrade to 'multi_persona'
-      if (existingProfile?.role === 'investor') {
-        await serviceSupabase
+      if (existingProfileError || !existingProfile) {
+        console.error('Error reading profile role after invitation acceptance:', existingProfileError)
+        return NextResponse.json({ error: 'Failed to verify profile state' }, { status: 500 })
+      }
+
+      const currentRole = existingProfile.role as string | null
+      const isStaffProfileRole = STAFF_PROFILE_ROLES.includes((currentRole || '') as (typeof STAFF_PROFILE_ROLES)[number])
+      const shouldNormalizeLegacyRole = !currentRole || currentRole === 'multi_persona'
+      const shouldPromoteToCeoRole = invitation.entity_type === 'ceo' && !isStaffProfileRole
+
+      if (shouldNormalizeLegacyRole || shouldPromoteToCeoRole) {
+        const { error: normalizeRoleError } = await serviceSupabase
           .from('profiles')
-          .update({ role: 'multi_persona' })
+          .update({
+            role: invitedProfileRole,
+            updated_at: new Date().toISOString()
+          })
           .eq('id', user.id)
+
+        if (normalizeRoleError) {
+          console.error('Error normalizing profile role after invitation acceptance:', normalizeRoleError)
+          return NextResponse.json({ error: 'Failed to normalize profile role' }, { status: 500 })
+        }
       }
     }
 
