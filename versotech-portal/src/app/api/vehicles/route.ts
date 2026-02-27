@@ -1,6 +1,12 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { logBlacklistMatches, screenAgainstBlacklist } from '@/lib/compliance/blacklist'
 import { NextRequest, NextResponse } from 'next/server'
+import {
+  computePositionMetrics,
+  resolveCurrentPricePerShare,
+  summarizeSubscriptions,
+  toNumber
+} from '@/lib/portfolio/investor-metrics'
 
 /**
  * POST /api/vehicles
@@ -188,7 +194,11 @@ export async function GET(request: Request) {
           funding_due_at,
           units,
           funded_amount,
-          current_nav
+          current_nav,
+          performance_fee_tier1_percent,
+          price_per_share,
+          committed_at,
+          created_at
         ),
         valuations!left (
           id,
@@ -223,50 +233,62 @@ export async function GET(request: Request) {
       )
       const latestValuation = sortedValuations[0] || null
 
-      // Get primary position and subscription
+      // Get primary position and summarized subscriptions
       const position = investorPositions[0] || null
-      const subscription = investorSubscriptions[0] || null
+      const subscriptionSummary = summarizeSubscriptions(investorSubscriptions, vehicle.currency)
+
+      let subscriptionData = null
+      if (subscriptionSummary.subscriptionCount > 0) {
+        subscriptionData = {
+          id: subscriptionSummary.primaryId, // Used by sell flow
+          ids: subscriptionSummary.ids,
+          commitment: subscriptionSummary.commitmentTotal,
+          currency: subscriptionSummary.currency || vehicle.currency,
+          status: subscriptionSummary.status || 'pending',
+          effective_date: subscriptionSummary.effectiveDate,
+          funding_due_at: subscriptionSummary.fundingDueAt,
+          units: null,
+          funded_amount: subscriptionSummary.fundedTotal,
+          current_nav: null,
+          performance_fee_rate: subscriptionSummary.performanceFeeRate
+        }
+      }
 
       // Calculate derived values
       let positionData = null
       if (position) {
-        const units = parseFloat(position.units || 0)
-        const costBasis = parseFloat(position.cost_basis || 0)
+        const units = toNumber(position.units) ?? 0
+        const fallbackCostBasis = toNumber(position.cost_basis) ?? 0
+        const subscriptionAmount =
+          subscriptionSummary.commitmentTotal > 0
+            ? subscriptionSummary.commitmentTotal
+            : fallbackCostBasis
 
-        // PRIORITY: position.last_nav FIRST (even if 0), then valuations
-        const posLastNav = position.last_nav !== null && position.last_nav !== undefined
-          ? parseFloat(position.last_nav) : null
-        const valNav = latestValuation?.nav_per_unit ? parseFloat(latestValuation.nav_per_unit) : null
-        const navPerUnit = posLastNav !== null ? posLastNav : (valNav ?? 0)
+        const currentPricePerShare = resolveCurrentPricePerShare({
+          latestValuationNav: latestValuation?.nav_per_unit,
+          subscriptionPricePerShare: subscriptionSummary.pricePerShare,
+          subscriptionAmount,
+          units,
+          positionLastNav: position.last_nav
+        })
 
-        // Calculate - use NAV if available, else cost basis
-        const hasNav = posLastNav !== null || valNav !== null
-        const currentValue = hasNav ? units * navPerUnit : costBasis
-        const unrealizedGain = currentValue - costBasis
-        const unrealizedGainPct = costBasis > 0 ? (unrealizedGain / costBasis) * 100 : 0
+        const metrics = computePositionMetrics({
+          units,
+          subscriptionAmount,
+          currentPricePerShare,
+          performanceFeeRate: subscriptionSummary.performanceFeeRate
+        })
 
         positionData = {
-          units,
-          costBasis,
-          currentValue,
-          unrealizedGain,
-          unrealizedGainPct,
+          units: metrics.units,
+          costBasis: metrics.subscriptionAmount,
+          currentValue: metrics.currentValue,
+          unrealizedGain: metrics.unrealizedGain,
+          unrealizedGainPct: metrics.unrealizedGainPct,
+          netUnrealizedGain: metrics.netUnrealizedGain,
+          performanceFeeRate: metrics.performanceFeeRate,
+          currentPricePerShare: metrics.currentPricePerShare,
           lastUpdated: position.as_of_date || latestValuation?.as_of_date || null
-        }
-      }
-
-      let subscriptionData = null
-      if (subscription) {
-        subscriptionData = {
-          id: subscription.id,  // Include subscription ID for sell requests
-          commitment: subscription.commitment ? parseFloat(subscription.commitment) : null,
-          currency: subscription.currency || vehicle.currency,
-          status: subscription.status || 'pending',
-          effective_date: subscription.effective_date || null,
-          funding_due_at: subscription.funding_due_at || null,
-          units: subscription.units ? parseFloat(subscription.units) : null,
-          funded_amount: subscription.funded_amount ? parseFloat(subscription.funded_amount) : null,
-          current_nav: subscription.current_nav ? parseFloat(subscription.current_nav) : null
         }
       }
 
@@ -307,37 +329,52 @@ export async function GET(request: Request) {
     // Fetch documents for each holding (NDA, Subscription Pack, Certificate)
     // Documents are linked via subscription_id OR (owner_investor_id + vehicle_id)
     const vehicleIds = filteredVehicles.map((v: any) => v.id)
-    const subscriptionIds = filteredVehicles
-      .filter((v: any) => v.subscription)
-      .map((v: any) => {
-        // Get the subscription ID from the original vehicle data
-        const vehicle = vehicles?.find((veh: any) => veh.id === v.id)
-        const investorSubs = (vehicle?.subscriptions || []).filter((s: any) =>
-          investorIds.includes(s.investor_id)
-        )
-        return investorSubs[0]?.id
-      })
-      .filter(Boolean)
+    const vehicleSubscriptionIds = new Map<string, string[]>()
+    filteredVehicles.forEach((vehicle: any) => {
+      const ids = Array.isArray(vehicle.subscription?.ids)
+        ? vehicle.subscription.ids.filter(Boolean)
+        : []
+      vehicleSubscriptionIds.set(vehicle.id, ids)
+    })
+
+    const subscriptionIds = Array.from(
+      new Set(
+        filteredVehicles
+          .flatMap((vehicle: any) => vehicleSubscriptionIds.get(vehicle.id) || [])
+          .filter(Boolean)
+      )
+    )
 
     // Fetch documents
-    const { data: documents } = await serviceSupabase
-      .from('documents')
-      .select('id, name, type, file_key, subscription_id, owner_investor_id, vehicle_id, created_at')
-      .or(`subscription_id.in.(${subscriptionIds.join(',')}),and(owner_investor_id.in.(${investorIds.join(',')}),vehicle_id.in.(${vehicleIds.join(',')}))`)
-      .in('type', ['nda', 'subscription_pack', 'subscription_draft', 'certificate'])
-      .order('created_at', { ascending: false })
+    let documents: any[] = []
+    if (vehicleIds.length > 0) {
+      const documentFilters = []
+      if (subscriptionIds.length > 0) {
+        documentFilters.push(`subscription_id.in.(${subscriptionIds.join(',')})`)
+      }
+      if (investorIds.length > 0 && vehicleIds.length > 0) {
+        documentFilters.push(`and(owner_investor_id.in.(${investorIds.join(',')}),vehicle_id.in.(${vehicleIds.join(',')}))`)
+      }
+
+      if (documentFilters.length > 0) {
+        const { data: docs } = await serviceSupabase
+          .from('documents')
+          .select('id, name, type, file_key, subscription_id, owner_investor_id, vehicle_id, created_at')
+          .or(documentFilters.join(','))
+          .in('type', ['nda', 'subscription_pack', 'subscription_draft', 'certificate'])
+          .order('created_at', { ascending: false })
+        documents = docs || []
+      }
+    }
 
     // Map documents to vehicles
     const vehiclesWithDocs = filteredVehicles.map((v: any) => {
       // Find documents for this vehicle
+      const scopedSubscriptionIds = new Set(vehicleSubscriptionIds.get(v.id) || [])
       const vehicleDocs = (documents || []).filter((doc: any) => {
         // Match by subscription_id
-        if (doc.subscription_id && subscriptionIds.includes(doc.subscription_id)) {
-          const vehicle = vehicles?.find((veh: any) => veh.id === v.id)
-          const investorSubs = (vehicle?.subscriptions || []).filter((s: any) =>
-            investorIds.includes(s.investor_id)
-          )
-          return investorSubs.some((s: any) => s.id === doc.subscription_id)
+        if (doc.subscription_id) {
+          return scopedSubscriptionIds.has(doc.subscription_id)
         }
         // Match by owner_investor_id + vehicle_id (for NDAs)
         if (doc.owner_investor_id && doc.vehicle_id === v.id) {

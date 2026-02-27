@@ -233,7 +233,7 @@ export function VehicleHoldingCard({ holding }: VehicleHoldingCardProps) {
             )}
             {holding.position.unrealizedGain !== 0 && (
               <div className="flex justify-between items-center text-sm border-t pt-2 mt-2">
-                <span className="text-muted-foreground font-medium">Unrealized P&L</span>
+                <span className="text-muted-foreground font-medium">Gross Unrealized Gains</span>
                 <span className={cn(
                   "font-semibold",
                   holding.position.unrealizedGain > 0 ? "text-green-600" : "text-red-600"

@@ -1,6 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { NextResponse } from 'next/server'
+import {
+  computePositionMetrics,
+  resolveCurrentPricePerShare,
+  summarizeSubscriptions,
+  toNumber
+} from '@/lib/portfolio/investor-metrics'
 
 // Type definitions for KPI details response
 interface KPIDetail {
@@ -76,46 +82,15 @@ export async function GET(request: Request) {
 
     switch (kpiType) {
       case 'nav_breakdown':
-        // Try enhanced function first, fallback to manual query
-        let vehicleBreakdown: any
-        const { data, error: vehicleError } = await supabase
-          .rpc('get_investor_vehicle_breakdown', {
-            investor_ids: investorIds
-          })
-        vehicleBreakdown = data
-
-        console.log(`Vehicle breakdown query result: ${vehicleBreakdown?.length || 0} vehicles, error:`, vehicleError)
-
-        if (vehicleError) {
-          console.warn('Enhanced vehicle breakdown failed, using fallback:', vehicleError)
-          
-          // Fallback: Manual query combining positions, vehicles, and valuations
-          console.log('Using manual fallback query for vehicle breakdown...')
-          
-          const { data: fallbackData, error: fallbackError } = await supabase
+        {
+          const { data: positions, error: positionsError } = await supabase
             .from('positions')
-            .select(`
-              id,
-              units,
-              cost_basis,
-              last_nav,
-              as_of_date,
-              vehicle_id,
-              vehicles!inner (
-                id,
-                name,
-                type,
-                currency,
-                domicile
-              )
-            `)
+            .select('investor_id, vehicle_id, units, cost_basis, last_nav, as_of_date')
             .in('investor_id', investorIds)
             .gt('units', 0)
 
-          console.log(`Fallback query result: ${fallbackData?.length || 0} positions, error:`, fallbackError)
-
-          if (fallbackError) {
-            console.error('Fallback query also failed:', fallbackError)
+          if (positionsError) {
+            console.error('Failed to fetch positions for nav breakdown:', positionsError)
             return NextResponse.json({
               items: [],
               total: 0,
@@ -125,96 +100,165 @@ export async function GET(request: Request) {
             })
           }
 
-          if (fallbackData) {
-            console.log(`Fallback positions data: ${fallbackData.length} positions found`)
-            
-            // Get latest valuations for these vehicles
-            const vehicleIds = fallbackData.map(p => p.vehicle_id).filter(Boolean)
-            console.log(`Looking up valuations for ${vehicleIds.length} vehicles:`, vehicleIds)
-            
-            const [valuationsResponse, subscriptionsResponse] = await Promise.allSettled([
-              supabase
-                .from('valuations')
-                .select('vehicle_id, nav_per_unit, as_of_date')
-                .in('vehicle_id', vehicleIds)
-                .order('as_of_date', { ascending: false }),
-              supabase
-                .from('subscriptions')
-                .select('vehicle_id, commitment, status, created_at')
-                .in('vehicle_id', vehicleIds)
-                .in('investor_id', investorIds)
-            ])
-
-            const latestValuations = valuationsResponse.status === 'fulfilled' ? valuationsResponse.value.data : []
-            const subscriptions = subscriptionsResponse.status === 'fulfilled' ? subscriptionsResponse.value.data : []
-
-            console.log(`Valuations query result: ${latestValuations?.length || 0} valuations`)
-            console.log(`Subscriptions query result: ${subscriptions?.length || 0} subscriptions`)
-
-            const valuationMap = latestValuations?.reduce((acc, val) => {
-              if (!acc[val.vehicle_id]) {
-                acc[val.vehicle_id] = val
-              }
-              return acc
-            }, {} as any) || {}
-
-            const subscriptionMap = subscriptions?.reduce((acc, sub) => {
-              acc[sub.vehicle_id] = sub
-              return acc
-            }, {} as any) || {}
-
-            vehicleBreakdown = fallbackData.map((position: any) => {
-              const vehicle = position.vehicles
-              const subscription = subscriptionMap[position.vehicle_id]
-              const latestVal = valuationMap[position.vehicle_id]
-              const navPerUnit = latestVal?.nav_per_unit || position.last_nav || 100 // Default to $100 if no NAV
-              const currentValue = position.units * navPerUnit
-
-              console.log(`Processing vehicle ${vehicle.name}: ${position.units} units @ $${navPerUnit} = $${currentValue}`)
-
-      return {
-                vehicle_id: position.vehicle_id,
-                vehicle_name: vehicle.name,
-                vehicle_type: vehicle.type,
-                current_value: currentValue,
-                cost_basis: position.cost_basis || 0,
-                units: position.units,
-                unrealized_gain: currentValue - (position.cost_basis || 0),
-                unrealized_gain_pct: position.cost_basis > 0 ? ((currentValue - position.cost_basis) / position.cost_basis) * 100 : 0,
-                commitment: subscription?.commitment || 0,
-                nav_per_unit: navPerUnit,
-                last_valuation_date: latestVal?.as_of_date || position.as_of_date
-              }
-            })
-            
-            console.log(`✅ Processed ${vehicleBreakdown.length} vehicle breakdowns successfully`)
-          } else {
-            console.error('❌ Fallback query returned no data - this is a serious data issue')
-            vehicleBreakdown = []
+          if (!positions || positions.length === 0) {
+            break
           }
-        }
 
-        if (vehicleBreakdown && vehicleBreakdown.length > 0) {
-          items = vehicleBreakdown.map((vehicle: any) => ({
-            id: vehicle.vehicle_id,
-            name: vehicle.vehicle_name,
-            type: vehicle.vehicle_type || 'fund',
-            value: parseFloat(vehicle.current_value) || 0,
-            percentage: 0, // Will be calculated below
+          const vehicleIds = Array.from(new Set(positions.map((position) => position.vehicle_id).filter(Boolean)))
+
+          const [vehiclesResponse, valuationsResponse, subscriptionsResponse] = await Promise.all([
+            supabase
+              .from('vehicles')
+              .select('id, name, type, currency')
+              .in('id', vehicleIds),
+            supabase
+              .from('valuations')
+              .select('vehicle_id, nav_per_unit, as_of_date')
+              .in('vehicle_id', vehicleIds)
+              .order('as_of_date', { ascending: false }),
+            supabase
+              .from('subscriptions')
+              .select('id, investor_id, vehicle_id, commitment, funded_amount, currency, status, performance_fee_tier1_percent, price_per_share, effective_date, funding_due_at, committed_at, created_at')
+              .in('investor_id', investorIds)
+              .in('vehicle_id', vehicleIds)
+          ])
+
+          const vehicles = vehiclesResponse.data || []
+          const valuations = valuationsResponse.data || []
+          const subscriptions = subscriptionsResponse.data || []
+
+          const vehicleMap = new Map<string, any>()
+          vehicles.forEach((vehicle) => {
+            if (vehicle.id) vehicleMap.set(vehicle.id, vehicle)
+          })
+
+          const latestValuation = new Map<string, { navPerUnit: number; asOfDate: string | null }>()
+          valuations.forEach((valuation) => {
+            const navPerUnit = toNumber(valuation.nav_per_unit)
+            if (!valuation.vehicle_id || latestValuation.has(valuation.vehicle_id) || navPerUnit === null || navPerUnit <= 0) {
+              return
+            }
+            latestValuation.set(valuation.vehicle_id, {
+              navPerUnit,
+              asOfDate: valuation.as_of_date || null
+            })
+          })
+
+          const pairToSubscriptions = new Map<string, any[]>()
+          subscriptions.forEach((subscription) => {
+            if (!subscription.vehicle_id || !subscription.investor_id) return
+            const key = `${subscription.investor_id}:${subscription.vehicle_id}`
+            const existing = pairToSubscriptions.get(key)
+            if (existing) {
+              existing.push(subscription)
+            } else {
+              pairToSubscriptions.set(key, [subscription])
+            }
+          })
+
+          const vehicleTotals = new Map<string, {
+            value: number
+            units: number
+            costBasis: number
+            commitment: number
+            weightedPriceSum: number
+            weightedUnits: number
+            fallbackDate: string | null
+          }>()
+
+          const ensureVehicle = (vehicleId: string) => {
+            if (!vehicleTotals.has(vehicleId)) {
+              vehicleTotals.set(vehicleId, {
+                value: 0,
+                units: 0,
+                costBasis: 0,
+                commitment: 0,
+                weightedPriceSum: 0,
+                weightedUnits: 0,
+                fallbackDate: null
+              })
+            }
+            return vehicleTotals.get(vehicleId)!
+          }
+
+          positions.forEach((position) => {
+            if (!position.vehicle_id || !position.investor_id) return
+
+            const pairKey = `${position.investor_id}:${position.vehicle_id}`
+            const summary = summarizeSubscriptions(
+              pairToSubscriptions.get(pairKey) || [],
+              vehicleMap.get(position.vehicle_id)?.currency || 'USD'
+            )
+
+            const units = toNumber(position.units) ?? 0
+            if (units <= 0) return
+
+            const fallbackCostBasis = toNumber(position.cost_basis) ?? 0
+            const subscriptionAmount = summary.commitmentTotal > 0 ? summary.commitmentTotal : fallbackCostBasis
+            const currentPricePerShare = resolveCurrentPricePerShare({
+              latestValuationNav: latestValuation.get(position.vehicle_id)?.navPerUnit ?? null,
+              subscriptionPricePerShare: summary.pricePerShare,
+              subscriptionAmount,
+              units,
+              positionLastNav: position.last_nav
+            })
+            const metrics = computePositionMetrics({
+              units,
+              subscriptionAmount,
+              currentPricePerShare,
+              performanceFeeRate: summary.performanceFeeRate
+            })
+
+            const entry = ensureVehicle(position.vehicle_id)
+            entry.value += metrics.currentValue
+            entry.units += metrics.units
+            entry.costBasis += metrics.subscriptionAmount
+            entry.commitment += summary.commitmentTotal
+            entry.weightedPriceSum += metrics.currentPricePerShare * metrics.units
+            entry.weightedUnits += metrics.units
+            if (!entry.fallbackDate && position.as_of_date) {
+              entry.fallbackDate = position.as_of_date
+            }
+          })
+
+          const breakdownRows = Array.from(vehicleTotals.entries()).map(([vehicleId, entry]) => {
+            const vehicle = vehicleMap.get(vehicleId)
+            const valuation = latestValuation.get(vehicleId)
+            const navPerUnit = valuation?.navPerUnit
+              ?? (entry.weightedUnits > 0 ? entry.weightedPriceSum / entry.weightedUnits : 0)
+
+            return {
+              id: vehicleId,
+              name: vehicle?.name || 'Unknown Vehicle',
+              type: vehicle?.type || 'fund',
+              value: entry.value,
+              units: entry.units,
+              costBasis: entry.costBasis,
+              commitment: entry.commitment,
+              navPerUnit,
+              lastValuationDate: valuation?.asOfDate || entry.fallbackDate || null,
+              currency: vehicle?.currency || 'USD'
+            }
+          })
+
+          items = breakdownRows.map((row) => ({
+            id: row.id,
+            name: row.name,
+            type: row.type,
+            value: row.value,
+            percentage: 0,
             metadata: {
-              units: parseFloat(vehicle.units) || 0,
-              nav_per_unit: parseFloat(vehicle.nav_per_unit) || 0,
-              cost_basis: parseFloat(vehicle.cost_basis) || 0,
-              last_valuation_date: vehicle.last_valuation_date,
-              commitment: parseFloat(vehicle.commitment) || 0,
-              currency: 'USD'
+              units: row.units,
+              nav_per_unit: row.navPerUnit,
+              cost_basis: row.costBasis,
+              last_valuation_date: row.lastValuationDate || undefined,
+              commitment: row.commitment,
+              currency: row.currency
             }
           }))
-          
+
           total = items.reduce((sum, item) => sum + item.value, 0)
-          
-          // Calculate percentages
-          items = items.map(item => ({
+          items = items.map((item) => ({
             ...item,
             percentage: total > 0 ? (item.value / total) * 100 : 0
           }))

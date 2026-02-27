@@ -43,6 +43,9 @@ interface EnhancedHolding {
     currentValue: number
     unrealizedGain: number
     unrealizedGainPct: number
+    netUnrealizedGain?: number
+    performanceFeeRate?: number
+    currentPricePerShare?: number
     lastUpdated?: string
   } | null
   subscription: {
@@ -582,9 +585,10 @@ export function HoldingsPage({
       'Status',
       'Currency',
       'Current Value',
-      'Cost Basis',
-      'Unrealized Gain',
-      'Unrealized Gain %',
+      'Subscription Amount',
+      'Gross Unrealized Gains',
+      'Net Unrealized Gains',
+      'Gross Unrealized Gain %',
       'Units',
       'Commitment',
       'Created Date'
@@ -600,6 +604,7 @@ export function HoldingsPage({
       h.position?.currentValue?.toFixed(2) || '0',
       h.position?.costBasis?.toFixed(2) || '0',
       h.position?.unrealizedGain?.toFixed(2) || '0',
+      h.position?.netUnrealizedGain?.toFixed(2) || '0',
       h.position?.unrealizedGainPct?.toFixed(2) || '0',
       h.position?.units?.toString() || '0',
       h.subscription?.commitment?.toFixed(2) || '0',

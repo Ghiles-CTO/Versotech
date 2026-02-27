@@ -82,6 +82,12 @@ export default async function InvestorHoldings() {
 
       if (kpiData?.[0]) {
         const kpiResult = kpiData[0]
+        const currentNAV = Math.round(parseFloat(kpiResult.current_nav) || 0)
+        const totalCommitment = Math.round(parseFloat(kpiResult.total_commitment) || 0)
+        const fallbackCostBasis = Math.round(parseFloat(kpiResult.total_cost_basis) || 0)
+        const subscriptionAmount = totalCommitment > 0 ? totalCommitment : fallbackCostBasis
+        const unrealizedGain = currentNAV - subscriptionAmount
+        const unrealizedGainPct = subscriptionAmount > 0 ? (unrealizedGain / subscriptionAmount) * 100 : 0
 
         // Process trends data
         const trendsData = trendsResponse.status === 'fulfilled' && !trendsResponse.value.error 
@@ -117,14 +123,14 @@ export default async function InvestorHoldings() {
         // Prepare initial data for client component
         initialData = {
           kpis: {
-            currentNAV: Math.round(parseFloat(kpiResult.current_nav) || 0),
+            currentNAV,
             totalContributed: Math.round(parseFloat(kpiResult.total_contributed) || 0),
             totalDistributions: Math.round(parseFloat(kpiResult.total_distributions) || 0),
             unfundedCommitment: Math.round(parseFloat(kpiResult.unfunded_commitment) || 0),
-            totalCommitment: Math.round(parseFloat(kpiResult.total_commitment) || 0),
-            totalCostBasis: Math.round(parseFloat(kpiResult.total_cost_basis) || 0),
-            unrealizedGain: Math.round(parseFloat(kpiResult.unrealized_gain) || 0),
-            unrealizedGainPct: Math.round((parseFloat(kpiResult.unrealized_gain_pct) || 0) * 100) / 100,
+            totalCommitment,
+            totalCostBasis: subscriptionAmount,
+            unrealizedGain: Math.round(unrealizedGain),
+            unrealizedGainPct: Math.round(unrealizedGainPct * 100) / 100,
             dpi: Math.round((parseFloat(kpiResult.dpi) || 0) * 10000) / 10000,
             tvpi: Math.round((parseFloat(kpiResult.tvpi) || 0) * 10000) / 10000,
             irr: Math.round((parseFloat(kpiResult.irr_estimate) || 0) * 100) / 100

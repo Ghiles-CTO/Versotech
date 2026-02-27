@@ -279,7 +279,7 @@ export function PortfolioDashboard({
           icon={TrendingUp}
         />
         <CleanKPICard
-          title="Unrealized"
+          title="Gross Unrealized Gains"
           value={formatCurrency(activeKpis.unrealizedGain, activeCurrency)}
           subtitle={`${(activeKpis.unrealizedGainPct ?? 0).toFixed(1)}% return`}
           change={activeKpis.unrealizedGainPct}

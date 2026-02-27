@@ -249,11 +249,13 @@ export async function handleDealClose(
 
           // Step 1b: Create position for this subscription
           const fundedAmount = Number(sub.funded_amount) || 0
-          let positionUnits = sub.num_shares || sub.units
-          if (!positionUnits && sub.price_per_share) {
-            positionUnits = fundedAmount / Number(sub.price_per_share)
-          } else if (!positionUnits && sub.cost_per_share) {
-            positionUnits = fundedAmount / Number(sub.cost_per_share)
+          const pricePerShareForUnits = Number(sub.price_per_share) || Number(sub.cost_per_share) || 0
+          let positionUnits = sub.units ? Number(sub.units) : null
+          if ((!positionUnits || positionUnits <= 0) && fundedAmount > 0 && pricePerShareForUnits > 0) {
+            positionUnits = fundedAmount / pricePerShareForUnits
+          }
+          if ((!positionUnits || positionUnits <= 0) && sub.num_shares) {
+            positionUnits = Number(sub.num_shares)
           }
 
           const initialNav = sub.price_per_share || sub.cost_per_share
@@ -940,11 +942,13 @@ export async function handleTermsheetClose(
 
           // Step 1b: Create position for this subscription
           const fundedAmount = Number(sub.funded_amount) || 0
-          let positionUnits = sub.num_shares || sub.units
-          if (!positionUnits && sub.price_per_share) {
-            positionUnits = fundedAmount / Number(sub.price_per_share)
-          } else if (!positionUnits && sub.cost_per_share) {
-            positionUnits = fundedAmount / Number(sub.cost_per_share)
+          const pricePerShareForUnits = Number(sub.price_per_share) || Number(sub.cost_per_share) || 0
+          let positionUnits = sub.units ? Number(sub.units) : null
+          if ((!positionUnits || positionUnits <= 0) && fundedAmount > 0 && pricePerShareForUnits > 0) {
+            positionUnits = fundedAmount / pricePerShareForUnits
+          }
+          if ((!positionUnits || positionUnits <= 0) && sub.num_shares) {
+            positionUnits = Number(sub.num_shares)
           }
 
           if (positionUnits && positionUnits > 0) {

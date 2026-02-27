@@ -56,6 +56,9 @@ interface EnhancedHolding {
     currentValue: number
     unrealizedGain: number
     unrealizedGainPct: number
+    netUnrealizedGain?: number
+    performanceFeeRate?: number
+    currentPricePerShare?: number
     lastUpdated?: string
   } | null
   subscription: {
@@ -118,7 +121,8 @@ export function VehicleCard({
   const showPositionData = hasPosition
 
   const canSell = hasPosition && holding.subscription?.id
-  const isPositive = holding.position?.unrealizedGainPct ? holding.position.unrealizedGainPct >= 0 : false
+  const gainPct = holding.position?.unrealizedGainPct ?? 0
+  const isPositive = gainPct >= 0
   const rawStatus =
     holding.status ||
     holding.allocation_status ||
@@ -230,7 +234,7 @@ export function VehicleCard({
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Unrealized Gain</span>
+                  <span className="text-sm text-muted-foreground">Gross Unrealized Gains</span>
                   <div className="flex items-center gap-2">
                     <span className={cn(
                       "text-sm font-medium",
@@ -261,7 +265,7 @@ export function VehicleCard({
                     <p className="font-medium">{holding.position!.units.toLocaleString()}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Cost Basis</p>
+                    <p className="text-muted-foreground">Subscription Amount</p>
                     <p className="font-medium">
                       {new Intl.NumberFormat('en-US', {
                         style: 'currency',
@@ -273,6 +277,23 @@ export function VehicleCard({
                   </div>
                 </div>
               </div>
+
+              {holding.position?.netUnrealizedGain !== undefined && (
+                <div className="pt-3 border-t mt-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">Net Unrealized Gains</span>
+                    <span className="font-medium">
+                      {new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: holding.currency,
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                        signDisplay: 'always'
+                      }).format(holding.position.netUnrealizedGain)}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {holding.valuation && (
                 <div className="pt-3 border-t mt-3">

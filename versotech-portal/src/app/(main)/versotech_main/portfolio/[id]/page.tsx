@@ -8,6 +8,12 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
+  computePositionMetrics,
+  resolveCurrentPricePerShare,
+  summarizeSubscriptions,
+  toNumber
+} from '@/lib/portfolio/investor-metrics'
+import {
   ArrowLeft,
   Building,
   TrendingUp,
@@ -30,6 +36,9 @@ interface Position {
   currentValue: number
   unrealizedGain: number
   unrealizedGainPct: number
+  netUnrealizedGain: number
+  performanceFeeRate: number
+  currentPricePerShare: number
   lastUpdated?: string
 }
 
@@ -108,22 +117,26 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
   const investorIds = investorLinks.map(link => link.investor_id)
 
   // Check if investor has access to this vehicle
-  const { data: subscription, error: subscriptionError } = await supabase
+  const { data: subscriptions, error: subscriptionError } = await supabase
     .from('subscriptions')
     .select('*')
     .eq('vehicle_id', vehicleId)
     .in('investor_id', investorIds)
-    .maybeSingle()
+    .order('created_at', { ascending: false })
 
   if (subscriptionError) {
     console.error('[VehicleDetailPage] Subscription query error:', subscriptionError)
     redirect('/versotech_main/portfolio')
   }
 
-  if (!subscription) {
+  if (!subscriptions || subscriptions.length === 0) {
     console.warn('[VehicleDetailPage] No subscription found for vehicle:', vehicleId, 'investorIds:', investorIds)
     redirect('/versotech_main/portfolio')
   }
+
+  const subscriptionSummary = summarizeSubscriptions(subscriptions || [], vehicle.currency)
+  const primarySubscription = (subscriptions || []).find((sub: any) => sub.id === subscriptionSummary.primaryId)
+    ?? (subscriptions || [])[0]
 
   // Get additional data
   const [
@@ -146,16 +159,37 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
   let positionData: Position | null = null
   if (position) {
     const latestValuation = valuations?.[0]
-    const currentValue = position.units * (latestValuation?.nav_per_unit || position.last_nav || 0)
-    const unrealizedGain = currentValue - (position.cost_basis || 0)
-    const unrealizedGainPct = position.cost_basis > 0 ? (unrealizedGain / position.cost_basis) * 100 : 0
+    const units = toNumber(position.units) ?? 0
+    const fallbackCostBasis = toNumber(position.cost_basis) ?? 0
+    const subscriptionAmount =
+      subscriptionSummary.commitmentTotal > 0
+        ? subscriptionSummary.commitmentTotal
+        : fallbackCostBasis
+
+    const currentPricePerShare = resolveCurrentPricePerShare({
+      latestValuationNav: latestValuation?.nav_per_unit,
+      subscriptionPricePerShare: subscriptionSummary.pricePerShare,
+      subscriptionAmount,
+      units,
+      positionLastNav: position.last_nav
+    })
+
+    const metrics = computePositionMetrics({
+      units,
+      subscriptionAmount,
+      currentPricePerShare,
+      performanceFeeRate: subscriptionSummary.performanceFeeRate
+    })
 
     positionData = {
-      units: position.units,
-      costBasis: position.cost_basis,
-      currentValue: Math.round(currentValue),
-      unrealizedGain: Math.round(unrealizedGain),
-      unrealizedGainPct: Math.round(unrealizedGainPct * 100) / 100,
+      units: metrics.units,
+      costBasis: metrics.subscriptionAmount,
+      currentValue: Math.round(metrics.currentValue),
+      unrealizedGain: Math.round(metrics.unrealizedGain),
+      unrealizedGainPct: Math.round(metrics.unrealizedGainPct * 100) / 100,
+      netUnrealizedGain: Math.round(metrics.netUnrealizedGain),
+      performanceFeeRate: metrics.performanceFeeRate,
+      currentPricePerShare: metrics.currentPricePerShare,
       lastUpdated: position.as_of_date
     }
   }
@@ -166,36 +200,36 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
   // Process subscription data
   const subscriptionData: Subscription = {
-    commitment: subscription.commitment,
-    currency: subscription.currency ? String(subscription.currency).toUpperCase() : null,
-    status: subscription.status,
-    signedDate: subscription.created_at
+    commitment: subscriptionSummary.commitmentTotal,
+    currency: subscriptionSummary.currency ? String(subscriptionSummary.currency).toUpperCase() : null,
+    status: subscriptionSummary.status,
+    signedDate: primarySubscription?.created_at || new Date().toISOString()
   }
 
   // Process fee structure data
   // Use percent if set, otherwise use flat amount (never both)
-  const subscriptionFee = subscription.subscription_fee_percent && subscription.commitment
-    ? (subscription.subscription_fee_percent / 100) * subscription.commitment
-    : (subscription.subscription_fee_amount || 0)
+  const subscriptionFee = primarySubscription?.subscription_fee_percent && subscriptionData.commitment
+    ? (primarySubscription.subscription_fee_percent / 100) * subscriptionData.commitment
+    : (primarySubscription?.subscription_fee_amount || 0)
 
   const totalUpfrontFees =
     subscriptionFee +
-    (subscription.spread_fee_amount || 0) +
-    (subscription.bd_fee_amount || 0) +
-    (subscription.finra_fee_amount || 0)
+    (primarySubscription?.spread_fee_amount || 0) +
+    (primarySubscription?.bd_fee_amount || 0) +
+    (primarySubscription?.finra_fee_amount || 0)
 
   const feeStructure: FeeStructure = {
-    subscriptionFeePercent: subscription.subscription_fee_percent,
-    subscriptionFeeAmount: subscription.subscription_fee_amount,
-    spreadFeeAmount: subscription.spread_fee_amount,
-    bdFeePercent: subscription.bd_fee_percent,
-    bdFeeAmount: subscription.bd_fee_amount,
-    finraFeeAmount: subscription.finra_fee_amount,
-    managementFeePercent: subscription.management_fee_percent,
-    managementFeeAmount: subscription.management_fee_amount,
-    managementFeeFrequency: subscription.management_fee_frequency,
-    performanceFeePercent: subscription.performance_fee_tier1_percent,
-    performanceFeeThreshold: subscription.performance_fee_tier1_threshold,
+    subscriptionFeePercent: primarySubscription?.subscription_fee_percent ?? null,
+    subscriptionFeeAmount: primarySubscription?.subscription_fee_amount ?? null,
+    spreadFeeAmount: primarySubscription?.spread_fee_amount ?? null,
+    bdFeePercent: primarySubscription?.bd_fee_percent ?? null,
+    bdFeeAmount: primarySubscription?.bd_fee_amount ?? null,
+    finraFeeAmount: primarySubscription?.finra_fee_amount ?? null,
+    managementFeePercent: primarySubscription?.management_fee_percent ?? null,
+    managementFeeAmount: primarySubscription?.management_fee_amount ?? null,
+    managementFeeFrequency: primarySubscription?.management_fee_frequency ?? null,
+    performanceFeePercent: primarySubscription?.performance_fee_tier1_percent ?? null,
+    performanceFeeThreshold: primarySubscription?.performance_fee_tier1_threshold ?? null,
     totalUpfrontFees: Math.round(totalUpfrontFees)
   }
 
@@ -361,14 +395,14 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
                   <Target className="h-4 w-4" />
-                  Cost Basis
+                  Subscription Amount
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-gray-900">
                   {formatAmount(positionData.costBasis)}
                 </div>
-                <div className="text-sm text-gray-500 mt-2">Total invested</div>
+                <div className="text-sm text-gray-500 mt-2">Amount from subscription pack</div>
               </CardContent>
             </Card>
 
@@ -376,7 +410,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
                   <BarChart3 className="h-4 w-4" />
-                  Unrealized P&L
+                  Gross Unrealized Gains
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -386,7 +420,9 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                   {positionData.unrealizedGain > 0 ? '+' : ''}
                   {formatAmount(positionData.unrealizedGain)}
                 </div>
-                <div className="text-sm text-gray-500 mt-2">Mark-to-market</div>
+                <div className="text-sm text-gray-500 mt-2">
+                  Net Unrealized Gains: {positionData.netUnrealizedGain > 0 ? '+' : ''}{formatAmount(positionData.netUnrealizedGain)}
+                </div>
               </CardContent>
             </Card>
           </div>
