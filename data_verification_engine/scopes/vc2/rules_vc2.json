@@ -300,6 +300,7 @@
     "performance_fee_tier1",
     "performance_fee_tier2"
   ],
+  "commission_include_zero_amount_rows_for_row_checks": true,
   "commission_totals_exclude_vehicle_codes": [
     "VCL001",
     "VCL002"

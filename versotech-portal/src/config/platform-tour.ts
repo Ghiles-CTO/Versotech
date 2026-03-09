@@ -21,6 +21,21 @@ export interface TourStep {
   navigateTo?: string // Route to navigate to before highlighting
   placement?: 'top' | 'bottom' | 'left' | 'right'
   highlightPadding?: number // Custom padding around highlighted element
+  personaLabel?: string // Which persona this step belongs to (for multi-persona tours)
+}
+
+/** Display labels for persona types */
+export const PERSONA_DISPLAY_LABELS: Record<string, string> = {
+  ceo: 'CEO',
+  staff: 'Staff',
+  investor: 'Investor',
+  investor_entity: 'Investor',
+  investor_individual: 'Investor',
+  arranger: 'Arranger',
+  introducer: 'Introducer',
+  partner: 'Partner',
+  commercial_partner: 'Commercial Partner',
+  lawyer: 'Lawyer',
 }
 
 export const TOUR_VERSION = '3.0.0'
@@ -1190,3 +1205,4 @@ export function getWelcomeMessage(persona: string): { title: string; description
 
   return messages[persona] || messages.investor
 }
+

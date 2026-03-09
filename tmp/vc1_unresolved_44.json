@@ -1,0 +1,354 @@
+[
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Aatif N. HASSAN",
+    "db_investor": "Aatif HASSAN",
+    "sub_id": "373e8d77-d242-4453-ad81-15874839fdbc",
+    "row_ref": "VC6:141"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Adil Arshed KHAWAJA",
+    "db_investor": "Adil KHAWAJA",
+    "sub_id": "b117ad58-bb16-4606-983f-1c7b632cb4e8",
+    "row_ref": "VC6:121"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Anke Skoludek RICE",
+    "db_investor": "Anke RICE",
+    "sub_id": "1e6057a5-fe6b-4a27-9505-09b2946c8a53",
+    "row_ref": "VC6:146"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Barnaby John MOORE",
+    "db_investor": "Barnaby MOORE",
+    "sub_id": "b36a0d0b-feee-449d-a4f4-f3c0e21241b7",
+    "row_ref": "VC6:76"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Bernard Henri DUFAURE",
+    "db_investor": "Bernard DUFAURE",
+    "sub_id": "71a6730d-297c-4483-bbd4-81a5070957b7",
+    "row_ref": "VC6:181"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Bharat Kumar JATANIA",
+    "db_investor": "Bharat JATANIA",
+    "sub_id": "918b3d4d-320c-4116-b788-4c08c80f7b01",
+    "row_ref": "VC6:122"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Bhikhu C. K. PATEL",
+    "db_investor": "Bhikhu PATEL",
+    "sub_id": "38053f95-00e0-4d94-9a4f-dcf23f1bfafe",
+    "row_ref": "VC6:138"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Chang Yong NGAN",
+    "db_investor": "Chang NGAN",
+    "sub_id": "55e193e5-611f-4092-8edc-e0ebd36b1d19",
+    "row_ref": "VC6:8"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Daphne Marie CHANDRA",
+    "db_investor": "Daphne CHANDRA",
+    "sub_id": "18a62e22-eba0-4e6a-928d-e02bae74fcf1",
+    "row_ref": "VC6:14"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Daryl PAK YONGJIE",
+    "db_investor": "Daryl YONGJIE",
+    "sub_id": "bfca0c0d-88f8-43a4-a71a-b103df2711f9",
+    "row_ref": "VC6:15"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "David Jean ROSSIER",
+    "db_investor": "David ROSSIER",
+    "sub_id": "b4572a9a-a02c-45eb-8c16-18136b8c3a5f",
+    "row_ref": "VC6:179"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Georges Sylvain CYTRON",
+    "db_investor": "Georges CYTRON",
+    "sub_id": "641d487d-bb4a-4cce-8e76-c22ca4d755cf",
+    "row_ref": "VC6:175"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "James A. HARTSHORN",
+    "db_investor": "James HARTSHORN",
+    "sub_id": "81781c2f-4496-47f6-9efa-e490790e3f3d",
+    "row_ref": "VC6:149"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Johann Markus AKERMANN",
+    "db_investor": "Johann AKERMANN",
+    "sub_id": "c916379f-b94b-4ab8-a490-38e0066658c6",
+    "row_ref": "VC6:24"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Kian Mohammad Hakimi JAVID",
+    "db_investor": "Kian JAVID",
+    "sub_id": "173e4213-f138-4e3d-8abc-bbf3faeb4ec0",
+    "row_ref": "VC6:191"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Lesli Ann SCHUTTE",
+    "db_investor": "Lesli SCHUTTE",
+    "sub_id": "871f02ed-b66d-4717-bcef-898ba088b599",
+    "row_ref": "VC6:79"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Lubna M. A. QUNASH",
+    "db_investor": "Lubna QUNASH",
+    "sub_id": "1cd65fca-826b-43ef-85e0-efa4fe819b1c",
+    "row_ref": "VC6:123"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Manraj Singh SEKHON",
+    "db_investor": "Manraj SEKHON",
+    "sub_id": "9e78a743-3d0a-4b77-a1bc-ed054d345272",
+    "row_ref": "VC6:80"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Matteo Massimo MARTINI",
+    "db_investor": "Matteo MARTINI",
+    "sub_id": "b08d9c78-a53a-414c-bada-03229c121169",
+    "row_ref": "VC6:19"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Mayuriben Chetan Kumar JOGANI",
+    "db_investor": "Mayuriben JOGANI",
+    "sub_id": "e1f47d87-7f86-4377-b32c-78534b41bd0f",
+    "row_ref": "VC6:109"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Michel Louis GUERIN",
+    "db_investor": "Michel GUERIN",
+    "sub_id": "f5c1690a-bf76-46e8-b8a1-15b1647cbe2b",
+    "row_ref": "VC6:134"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Mohamad Ismail BIN MOHAMED",
+    "db_investor": "Mohamad BIN MOHAMED",
+    "sub_id": "c41fba0a-d819-4d13-9784-5355fa2c350d",
+    "row_ref": "VC6:48"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Mohammed Abdulaziz AL ABBASI",
+    "db_investor": "Mohammed AL ABBASI",
+    "sub_id": "c5feeba0-e9f2-4597-a4ae-e8d0e89c202d",
+    "row_ref": "VC6:61"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Salman Raza HUSSAIN",
+    "db_investor": "Salman HUSSAIN",
+    "sub_id": "71956d1d-0e5f-4e54-8cdd-2c910e07e21a",
+    "row_ref": "VC6:192"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Steve J MANNING",
+    "db_investor": "Steve MANNING",
+    "sub_id": "c5086865-9c60-4d55-ac4b-205644cbc787",
+    "row_ref": "VC6:70"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Tan Sor GEOK",
+    "db_investor": "Tan GEOK",
+    "sub_id": "86d84bf5-f760-45c7-8d02-e59727807acc",
+    "row_ref": "VC6:17"
+  },
+  {
+    "vehicle": "VC106",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Vijaykumar C. K. PATEL",
+    "db_investor": "Vijaykumar PATEL",
+    "sub_id": "fffcb0d5-c719-4439-94ad-6e8767a28c30",
+    "row_ref": "VC6:139"
+  },
+  {
+    "vehicle": "VC111",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Alberto Attilio RAVANO",
+    "db_investor": "Alberto RAVANO",
+    "sub_id": "186d2159-0653-4c3b-8728-0717d88a9a7a",
+    "row_ref": "VC11:21"
+  },
+  {
+    "vehicle": "VC111",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Antonio Bruno PERONACE",
+    "db_investor": "Antonio PERONACE",
+    "sub_id": "0d8fd4f0-f048-4306-b0fd-cbc2c4ba35fb",
+    "row_ref": "VC11:25"
+  },
+  {
+    "vehicle": "VC111",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Johann Markus AKERMANN",
+    "db_investor": "Johann AKERMANN",
+    "sub_id": "1dab1ec6-554b-46fd-9888-132c269da20b",
+    "row_ref": "VC11:19"
+  },
+  {
+    "vehicle": "VC112",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Giovanni Antonio Alberto ALBERTINI",
+    "db_investor": "Giovanni ALBERTINI",
+    "sub_id": "a3ac1c10-012e-43da-92d6-3266e03ab8f4",
+    "row_ref": "VC12:21"
+  },
+  {
+    "vehicle": "VC112",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Robert Jan DETTMEIJER",
+    "db_investor": "Robert DETTMEIJER",
+    "sub_id": "162089a4-0b2d-4f58-8b18-0fdc32c9701c",
+    "row_ref": "VC12:14"
+  },
+  {
+    "vehicle": "VC113",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Abhie Shreyas SHAH",
+    "db_investor": "Abhie SHAH",
+    "sub_id": "fbb833f6-d07e-42fa-939b-036936f6f362",
+    "row_ref": "VC13:74"
+  },
+  {
+    "vehicle": "VC113",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Gielke Jan BURGMANS",
+    "db_investor": "Gielke BURGMANS",
+    "sub_id": "48ec1752-e7c2-4a81-bac1-a3fd174410ec",
+    "row_ref": "VC13:42"
+  },
+  {
+    "vehicle": "VC113",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Hong Bao NGOC LE",
+    "db_investor": "Hong NGOC LE",
+    "sub_id": "c75af4c1-52ae-4d56-a94d-64091f6cc022",
+    "row_ref": "VC13:47"
+  },
+  {
+    "vehicle": "VC113",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Mayuriben Chetan K. JOGANI",
+    "db_investor": "Mayuriben JOGANI",
+    "sub_id": "1b1c39af-8403-4040-9cbf-e3fd6146902d",
+    "row_ref": "VC13:35"
+  },
+  {
+    "vehicle": "VC113",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Robert Jan DETTMEIJER",
+    "db_investor": "Robert DETTMEIJER",
+    "sub_id": "c24a6861-6e3e-4b7f-8bfc-a3470b7a86fb",
+    "row_ref": "VC13:55"
+  },
+  {
+    "vehicle": "VC113",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Scott Ikott TOMMEY",
+    "db_investor": "Scott TOMMEY",
+    "sub_id": "7977046b-cf27-438f-a1e6-7b7ca9a7a781",
+    "row_ref": "VC13:18"
+  },
+  {
+    "vehicle": "VC114",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Manraj Singh SEKHON",
+    "db_investor": "Manraj SEKHON",
+    "sub_id": "b426a4cb-d56a-42e6-a757-2bd5afa1e21b",
+    "row_ref": "VC14:6"
+  },
+  {
+    "vehicle": "VC122",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Anke Skoludek RICE",
+    "db_investor": "Anke RICE",
+    "sub_id": "32cbe26f-4e2e-4dab-bb6f-82ad06d3549b",
+    "row_ref": "VC22:7"
+  },
+  {
+    "vehicle": "VC133",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Keir Richard BENBOW",
+    "db_investor": "Keir BENBOW",
+    "sub_id": "89d7dd08-8609-4fa5-8fb3-37ea765bcf2e",
+    "row_ref": "VC33:8"
+  },
+  {
+    "vehicle": "VC133",
+    "mode": "fallback_loose_name_amounts",
+    "dash_investor": "Sahejman Singh KAHLON",
+    "db_investor": "Sahejman KAHLON",
+    "sub_id": "e68eb992-e931-441e-a32c-185479cebb52",
+    "row_ref": "VC33:6"
+  },
+  {
+    "vehicle": "VC113",
+    "mode": "fallback_amounts_date",
+    "dash_investor": "OEP Ltd",
+    "db_investor": "OEP LIMITED",
+    "sub_id": "88817172-c22c-49c4-931a-1b8821bc1908",
+    "row_ref": "VC13:62"
+  },
+  {
+    "vehicle": "VC126",
+    "mode": "fallback_amounts_date",
+    "dash_investor": "Julien MACHOT",
+    "db_investor": "OEP LIMITED",
+    "sub_id": "4b1cffb6-f499-4db4-892f-df76470a6b1c",
+    "row_ref": "VC26:36"
+  }
+]

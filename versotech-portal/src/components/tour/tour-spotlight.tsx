@@ -48,24 +48,39 @@ export function TourSpotlight({ targetSelector, isVisible, padding = 8 }: TourSp
       return
     }
 
+    const measureRect = () => {
+      const element = document.querySelector(targetSelector)
+      if (element) {
+        setTargetRect(element.getBoundingClientRect())
+      }
+    }
+
     const updateRect = () => {
       const element = document.querySelector(targetSelector)
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' })
-        setTimeout(() => {
-          setTargetRect(element.getBoundingClientRect())
-        }, 100)
+        element.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+        // Wait for smooth scroll animation to settle
+        setTimeout(measureRect, 350)
       }
     }
 
     const timeoutId = setTimeout(updateRect, 50)
-    window.addEventListener('resize', updateRect)
-    window.addEventListener('scroll', updateRect, { passive: true })
+    window.addEventListener('resize', measureRect)
+    window.addEventListener('scroll', measureRect, { passive: true })
+
+    // Also listen for sidebar scroll container
+    const scrollParent = document.querySelector(targetSelector)?.closest('.overflow-y-auto')
+    if (scrollParent) {
+      scrollParent.addEventListener('scroll', measureRect, { passive: true })
+    }
 
     return () => {
       clearTimeout(timeoutId)
-      window.removeEventListener('resize', updateRect)
-      window.removeEventListener('scroll', updateRect)
+      window.removeEventListener('resize', measureRect)
+      window.removeEventListener('scroll', measureRect)
+      if (scrollParent) {
+        scrollParent.removeEventListener('scroll', measureRect)
+      }
     }
   }, [targetSelector, isVisible, mounted])
 

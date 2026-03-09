@@ -411,6 +411,7 @@ class Auditor:
         dict[str, dict[str, float]],
         list[DashCommission],
         set[tuple[str, str, str]],
+        dict[tuple[str, str], dict[str, Any]],
     ]:
         dash_path = ROOT / self.rules["dashboard_files"]["main"]
         scope_sheets = set(self.rules["scope_dashboard_sheets"])
@@ -431,6 +432,9 @@ class Auditor:
         default_name_cols = tuple(comm_name_cols.get("default", [43, 53]))
         name_by_sheet = comm_name_cols.get("by_sheet", {})
         combined_intro_policy = str(self.rules.get("combined_introducer_name_policy", "fail")).strip().lower()
+        include_zero_commission_rows = bool(
+            self.rules.get("commission_include_zero_amount_rows_for_row_checks", False)
+        )
         dynamic_slots_enabled = bool(self.rules.get("dashboard_dynamic_commission_slots", False))
         dynamic_name_headers = {
             normalize_text(x)
@@ -449,6 +453,7 @@ class Auditor:
         zero: list[DashRow] = []
         dash_commissions: list[DashCommission] = []
         combined_commission_skip_keys: set[tuple[str, str, str]] = set()
+        dash_intro_signal_by_investor_vehicle: dict[tuple[str, str], dict[str, Any]] = {}
         totals = defaultdict(lambda: defaultdict(float))
         intro_totals_all_rows = defaultdict(lambda: defaultdict(float))
         header_mismatch_is_failure = bool(
@@ -734,6 +739,14 @@ class Auditor:
 
                     invested_amount = to_float(row_vals[iidx - 1] if (iidx and iidx <= len(row_vals)) else None)
                     spread_amount = to_float(row_vals[sidx - 1] if (sidx and sidx <= len(row_vals)) else None)
+                    if rec.investor_key and (abs(invested_amount) > 0.01 or abs(spread_amount) > 0.01):
+                        sig = dash_intro_signal_by_investor_vehicle.setdefault(
+                            (rec.vehicle, rec.investor_key),
+                            {"has_amount": False, "sample_rows": []},
+                        )
+                        sig["has_amount"] = True
+                        if f"{sheet}:{r_idx}" not in sig["sample_rows"]:
+                            sig["sample_rows"].append(f"{sheet}:{r_idx}")
                     intro_name = carried_intro_name_by_col.get(nidx, "")
                     if not intro_name or intro_name in {"-", "—", "–"}:
                         if abs(invested_amount) > 0.01 or abs(spread_amount) > 0.01:
@@ -767,7 +780,7 @@ class Auditor:
                             elif combined_intro_policy == "fail":
                                 self.add_failure("dashboard_combined_introducer_name", rec.vehicle, msg, f"{sheet}:{r_idx}")
                             # Keep unresolved combined rows in deterministic checks at investor+basis total level.
-                            if abs(invested_amount) > 0.01:
+                            if abs(invested_amount) > 0.01 or include_zero_commission_rows:
                                 dash_commissions.append(
                                     DashCommission(
                                         vehicle=rec.vehicle,
@@ -781,7 +794,7 @@ class Auditor:
                                         amount=invested_amount,
                                     )
                                 )
-                            if abs(spread_amount) > 0.01:
+                            if abs(spread_amount) > 0.01 or include_zero_commission_rows:
                                 dash_commissions.append(
                                     DashCommission(
                                         vehicle=rec.vehicle,
@@ -816,7 +829,7 @@ class Auditor:
                         if abs(spread_pct) > 1e-9:
                             spread_rate_bps = percent_to_bps(spread_pct)
 
-                    if abs(invested_amount) > 0.01:
+                    if abs(invested_amount) > 0.01 or include_zero_commission_rows:
                         dash_commissions.append(
                             DashCommission(
                                 vehicle=rec.vehicle,
@@ -831,7 +844,7 @@ class Auditor:
                                 rate_bps=invested_rate_bps,
                             )
                         )
-                    if abs(spread_amount) > 0.01:
+                    if abs(spread_amount) > 0.01 or include_zero_commission_rows:
                         dash_commissions.append(
                             DashCommission(
                                 vehicle=rec.vehicle,
@@ -876,7 +889,15 @@ class Auditor:
                                 rate_bps=perf2_rate_bps,
                             )
                         )
-        return active, zero, totals, intro_totals_all_rows, dash_commissions, combined_commission_skip_keys
+        return (
+            active,
+            zero,
+            totals,
+            intro_totals_all_rows,
+            dash_commissions,
+            combined_commission_skip_keys,
+            dash_intro_signal_by_investor_vehicle,
+        )
 
     def load_db_data(self) -> dict[str, Any]:
         env = load_env(ENV_PATH)
@@ -1140,7 +1161,15 @@ class Auditor:
         }
 
     def run_checks(self):
-        dash_active, dash_zero, dash_totals, dash_intro_totals, dash_commissions, combined_commission_skip_keys = self.load_dashboard_rows()
+        (
+            dash_active,
+            dash_zero,
+            dash_totals,
+            dash_intro_totals,
+            dash_commissions,
+            combined_commission_skip_keys,
+            dash_intro_signal_by_investor_vehicle,
+        ) = self.load_dashboard_rows()
         db = self.load_db_data()
 
         scope_codes = self.rules["scope_vehicle_codes"]
@@ -1195,6 +1224,30 @@ class Auditor:
                 self.add_failure("investor_identity_duplicate", "", f"investor_key={ik} ids={detail}")
 
         if bool(self.rules["checks"].get("introduction_integrity_check", True)):
+            intro_requires_dash_signal = bool(
+                self.rules.get("checks", {}).get("introduction_requires_dashboard_signal_check", True)
+            )
+            orphan_intro_check = bool(
+                self.rules.get("checks", {}).get("orphan_introduction_without_subscription_check", True)
+            )
+            orphan_intro_as_failure = bool(
+                self.rules.get("checks", {}).get("orphan_introduction_without_subscription_as_failure", False)
+            )
+            dash_presence_by_investor_vehicle = {
+                (r.vehicle, r.investor_key) for r in (dash_active + dash_zero) if r.investor_key
+            }
+            allowed_intro_without_dashboard_signal: set[tuple[str, str]] = set()
+            for rule in self.rules.get("allowed_db_introduction_without_dashboard_signal", []):
+                if not isinstance(rule, dict):
+                    continue
+                vc = str(rule.get("vehicle") or "").strip()
+                inv_name = str(rule.get("investor") or "")
+                if not vc or not inv_name:
+                    continue
+                inv_key = name_key(inv_name, self.aliases)
+                if inv_key:
+                    allowed_intro_without_dashboard_signal.add((vc, inv_key))
+
             allowed_intro_dups = {
                 (
                     str(x.get("introducer_id") or ""),
@@ -1265,6 +1318,41 @@ class Auditor:
                             vc,
                             f"introduction_id={i.get('id')} introduced_at={introduced_at} subscription_dates={sorted(sub_dates)}",
                         )
+                if intro_requires_dash_signal:
+                    inv_id = i.get("prospect_investor_id")
+                    inv_name = db.get("iid_to_name", {}).get(inv_id, "")
+                    sub_key = (i.get("deal_id"), inv_id)
+                    has_subscription = bool(db.get("sub_contract_dates_by_deal_investor", {}).get(sub_key, set()))
+                    if not has_subscription:
+                        if orphan_intro_check:
+                            msg = (
+                                f"introduction_id={i.get('id')} investor={inv_name or '<blank>'} "
+                                f"deal_id={i.get('deal_id')} introduced_at={i.get('introduced_at')} "
+                                f"reason=no_subscription_for_deal_investor"
+                            )
+                            if orphan_intro_as_failure:
+                                self.add_failure("orphan_introduction_without_subscription", vc, msg)
+                            else:
+                                self.add_warning("orphan_introduction_without_subscription", vc, msg)
+                        continue
+
+                    inv_key = name_key(inv_name, self.aliases) if inv_name and vc else ""
+                    pair = (vc, inv_key) if vc and inv_key else None
+                    if pair and pair in dash_presence_by_investor_vehicle:
+                        if pair not in allowed_intro_without_dashboard_signal:
+                            sig = dash_intro_signal_by_investor_vehicle.get(pair, {})
+                            has_amount = bool(sig.get("has_amount"))
+                            if not has_amount:
+                                sample_rows = ",".join(sig.get("sample_rows", [])[:3]) if isinstance(sig, dict) else ""
+                                self.add_failure(
+                                    "introduction_in_db_without_dashboard_signal",
+                                    vc,
+                                    (
+                                        f"introduction_id={i.get('id')} investor={inv_name or '<blank>'} "
+                                        f"deal_id={i.get('deal_id')} introduced_at={i.get('introduced_at')} "
+                                        f"dashboard_rows={sample_rows or '<none>'}"
+                                    ),
+                                )
 
         # Row-level parity by investor identity (exact first, then relaxed fallback)
         def relaxed_key_dash(r: DashRow) -> tuple[str, str, float, float]:
@@ -1701,6 +1789,9 @@ class Auditor:
         }
         warnings_only_keys = {name_key(x, self.aliases) for x in self.rules.get("warnings_only_introducers", [])}
         comm_skip_vcs = set(self.rules.get("commission_totals_exclude_vehicle_codes", []))
+        include_zero_commission_rows = bool(
+            self.rules.get("commission_include_zero_amount_rows_for_row_checks", False)
+        )
         mapped_combined_commission_skip_keys: set[tuple[str, str, str]] = set(combined_commission_skip_keys)
         specific_expected_by_key: dict[tuple[str, str, str, str], dict[str, Any]] = {}
         for rule in self.rules.get("specific_commission_expectations", []):
@@ -1732,6 +1823,7 @@ class Auditor:
             return False
 
         dash_comm_agg = defaultdict(float)
+        dash_comm_rows_by_key: dict[tuple[str, str, str, str], list[float]] = defaultdict(list)
         dash_combined_agg = defaultdict(float)
         dash_combined_meta: dict[tuple[str, str, str], dict[str, str]] = {}
         dash_rate_sets: dict[tuple[str, str, str, str], set[int]] = defaultdict(set)
@@ -1753,12 +1845,14 @@ class Auditor:
                 continue
             k = (d.vehicle, d.investor_key, d.introducer_key, d.basis_type)
             dash_comm_agg[k] += d.amount
+            dash_comm_rows_by_key[k].append(d.amount)
             if d.rate_bps is not None:
                 dash_rate_sets[k].add(int(d.rate_bps))
             if k not in dash_meta:
                 dash_meta[k] = {"investor": d.investor_name, "introducer": d.introducer_name, "row_ref": f"{d.sheet}:{d.row_num}"}
 
         db_comm_agg = defaultdict(float)
+        db_comm_rows_by_key: dict[tuple[str, str, str, str], list[float]] = defaultdict(list)
         db_rate_sets: dict[tuple[str, str, str, str], set[int]] = defaultdict(set)
         db_meta: dict[tuple[str, str, str, str], dict[str, str]] = {}
         for c in db["db_commission_rows"]:
@@ -1768,6 +1862,8 @@ class Auditor:
                 continue
             k = (c.vehicle, c.investor_key, c.introducer_key, c.basis_type)
             db_comm_agg[k] += c.amount
+            if include_zero_commission_rows or abs(c.amount) > 0.01:
+                db_comm_rows_by_key[k].append(c.amount)
             if c.rate_bps is not None:
                 db_rate_sets[k].add(int(c.rate_bps))
             if k not in db_meta:
@@ -1786,6 +1882,8 @@ class Auditor:
             investor = meta.get("investor", inv_key)
             intro_label = meta.get("introducer", "combined")
             row_ref = meta.get("row_ref", "")
+            if include_zero_commission_rows and abs(dash_amt) <= 0.01:
+                continue
             if abs(dash_amt - db_amt) > 0.01:
                 detail = (
                     f"investor={investor} introducer_label={intro_label} basis={basis} "
@@ -1905,6 +2003,28 @@ class Auditor:
                     f"investor={investor} introducer={introducer} basis={basis} dashboard={round(dv,2)} db={round(bv,2)} delta={round(bv-dv,2)}",
                     row_ref,
                 )
+
+            d_rows = sorted([round(x, 6) for x in dash_comm_rows_by_key.get(k, []) if abs(x) > 0.01])
+            b_rows = sorted([round(x, 6) for x in db_comm_rows_by_key.get(k, []) if abs(x) > 0.01])
+            if include_zero_commission_rows and abs(dv) <= 0.01 and abs(bv) <= 0.01:
+                continue
+            row_check_applicable = abs(dv) > 0.01 and abs(bv) > 0.01 and d_rows and b_rows
+            if row_check_applicable:
+                if len(d_rows) != len(b_rows):
+                    self.add_failure(
+                        "commission_row_count_mismatch",
+                        vc,
+                        f"investor={investor} introducer={introducer} basis={basis} dashboard_rows={len(d_rows)} db_rows={len(b_rows)}",
+                        row_ref,
+                    )
+                elif len(d_rows) > 1:
+                    if any(abs(b_rows[i] - d_rows[i]) > 0.01 for i in range(len(d_rows))):
+                        self.add_failure(
+                            "commission_row_split_mismatch",
+                            vc,
+                            f"investor={investor} introducer={introducer} basis={basis} dashboard_split={d_rows} db_split={b_rows}",
+                            row_ref,
+                        )
 
             # If rates are present in the dashboard for this basis, enforce them too.
             # Spread uses "Spread PPS" on the dashboard and is not a direct rate_bps mapping.

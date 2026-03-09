@@ -1,0 +1,525 @@
+[
+  {
+    "scope": "VC1",
+    "vehicle": "VC106",
+    "introduction_id": "076fd345-6b20-42c5-9726-95339744d9a4",
+    "investor": "VERSO GROUP",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+    "introduced_at": "2021-05-17",
+    "db_subscriptions": 0,
+    "mapped_dashboard_rows": [],
+    "mapped_dashboard_intro_amount_sum": 0,
+    "classification": "orphan_intro_no_subscription"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC106",
+    "introduction_id": "291bc29e-0ceb-40f3-a23f-7ca2b5a15801",
+    "investor": "Dimitri CHANDRIS",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+    "introduced_at": "2021-06-10",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC6:165"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC111",
+    "introduction_id": "2c9f4246-e680-44e5-907a-91a073c6533d",
+    "investor": "Daniel BAUMSLAG",
+    "deal_id": "9a8c133e-fad0-4e5a-8118-24225a0bef68",
+    "introduced_at": "2021-09-16",
+    "db_subscriptions": 2,
+    "mapped_dashboard_rows": [
+      "VC11:12",
+      "VC11:4"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC106",
+    "introduction_id": "3102736b-36c8-470e-ad27-87b02a798be8",
+    "investor": "Samuel GRANDCHAMP",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+    "introduced_at": "2021-11-02",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC6:214"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC106",
+    "introduction_id": "3fe840a7-1c80-4045-92c0-46757ac4e872",
+    "investor": "IQEQ (Switzerland) Limited As Trustee of the Raycat Investment Trust",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+    "introduced_at": "2021-03-04",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC6:81"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC106",
+    "introduction_id": "467f1832-93d7-46b9-9f80-35082eaa8373",
+    "investor": "Anke RICE",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+    "introduced_at": "2021-05-13",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC6:146"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC126",
+    "introduction_id": "49abf853-23c5-4c30-af37-cb337fce91c2",
+    "investor": "Desmond CARBERY",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "introduced_at": "2024-01-23",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC26:27"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC106",
+    "introduction_id": "5151ecef-722c-4734-81cb-98574f570923",
+    "investor": "Denis MATTHEY",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+    "introduced_at": "2021-06-22",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC6:172"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC113",
+    "introduction_id": "5156a007-c0e4-463a-96b9-177aeab67cef",
+    "investor": "Majid MOHAMMED",
+    "deal_id": "1e4061bd-6e36-4298-8e98-9fd55ab6a448",
+    "introduced_at": "2021-11-17",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC13:59"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC106",
+    "introduction_id": "5584b0ad-f615-47aa-95d2-919aa13cafc6",
+    "investor": "Maria Christina CHANDRIS",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+    "introduced_at": "2021-06-10",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC6:164"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC106",
+    "introduction_id": "58182ef6-7794-4dbc-a977-2eb0c006df4f",
+    "investor": "Serge RICHARD",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+    "introduced_at": "2021-03-05",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC6:82"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC126",
+    "introduction_id": "63a7d251-37d9-4d91-95fa-3bdd14484aed",
+    "investor": "ALPHA GAIA CAPITAL FZE",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12",
+    "introduced_at": "2024-01-23",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC26:26"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC106",
+    "introduction_id": "660850ed-551e-474a-a7b7-052c530a3c1b",
+    "investor": "Nicki ASQUITH",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+    "introduced_at": "2021-06-10",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC6:166"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC106",
+    "introduction_id": "a7d68410-72c2-4fb3-888b-590c61566548",
+    "investor": "Talal CHAMSI PASHA",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+    "introduced_at": "2021-05-21",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC6:102"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC106",
+    "introduction_id": "a93f05e1-75b2-45e5-838d-7bbf754b6521",
+    "investor": "Martin AVETISYAN",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+    "introduced_at": "2021-06-16",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC6:168"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC106",
+    "introduction_id": "b683f64b-395b-4bd1-837b-9f79a71e8e09",
+    "investor": "Isabella CHANDRIS",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+    "introduced_at": "2021-06-10",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC6:167"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC106",
+    "introduction_id": "bfad23f8-d4ee-403a-af24-9a612af02217",
+    "investor": "Charles DE BAVIER",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+    "introduced_at": "2021-07-12",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC6:185"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC106",
+    "introduction_id": "c52361b6-e74a-4f44-bfdf-4f9852788ab7",
+    "investor": "STABLETON (ALTERNATIVE ISSUANCE)",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+    "introduced_at": "2021-01-06",
+    "db_subscriptions": 0,
+    "mapped_dashboard_rows": [],
+    "mapped_dashboard_intro_amount_sum": 0,
+    "classification": "orphan_intro_no_subscription"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC106",
+    "introduction_id": "cb947343-56ea-46ef-b36e-61ab1d42f85d",
+    "investor": "REVERY CAPITAL Limited",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+    "introduced_at": "2021-05-31",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC6:162"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC113",
+    "introduction_id": "cf792369-0d90-4996-b69f-dfd008580fff",
+    "investor": "Julien MACHOT",
+    "deal_id": "1e4061bd-6e36-4298-8e98-9fd55ab6a448",
+    "introduced_at": "2021-07-06",
+    "db_subscriptions": 8,
+    "mapped_dashboard_rows": [
+      "VC13:3",
+      "VC13:50",
+      "VC13:52",
+      "VC13:53",
+      "VC13:60",
+      "VC13:62",
+      "VC13:68",
+      "VC13:77"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC106",
+    "introduction_id": "e6026600-f90f-40d9-ad22-a0148e82cb87",
+    "investor": "Jeremie CYROT",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+    "introduced_at": "2021-08-31",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC6:187"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC113",
+    "introduction_id": "eb0d5078-0302-4550-a19d-273cdb54107b",
+    "investor": "PETRATECH",
+    "deal_id": "1e4061bd-6e36-4298-8e98-9fd55ab6a448",
+    "introduced_at": "2026-01-20",
+    "db_subscriptions": 0,
+    "mapped_dashboard_rows": [],
+    "mapped_dashboard_intro_amount_sum": 0,
+    "classification": "orphan_intro_no_subscription"
+  },
+  {
+    "scope": "VC1",
+    "vehicle": "VC106",
+    "introduction_id": "ff155fe9-7f23-424c-a2f9-f6e5885858bc",
+    "investor": "Charles RIVA",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1",
+    "introduced_at": "2021-08-31",
+    "db_subscriptions": 0,
+    "mapped_dashboard_rows": [],
+    "mapped_dashboard_intro_amount_sum": 0,
+    "classification": "orphan_intro_no_subscription"
+  },
+  {
+    "scope": "VC2",
+    "vehicle": "VC209",
+    "introduction_id": "0b172289-ec26-4e10-8583-9e03515952cc",
+    "investor": "Prabhakar Somana KONGANDA",
+    "deal_id": "b1ff280a-1a0e-4024-b25d-de6160816cb1",
+    "introduced_at": "2025-12-16",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC209:24"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC2",
+    "vehicle": "VC209",
+    "introduction_id": "0bff1d54-5daf-4d0b-a53c-23cf7c2d942e",
+    "investor": "MRS ANISHA BANSAL AND MR RAHUL KARKUN",
+    "deal_id": "b1ff280a-1a0e-4024-b25d-de6160816cb1",
+    "introduced_at": "2025-09-30",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC209:18"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC2",
+    "vehicle": "VC209",
+    "introduction_id": "133f1b19-5294-475a-bc46-f5b3674cf2fc",
+    "investor": "Mohan SASANAPURI",
+    "deal_id": "b1ff280a-1a0e-4024-b25d-de6160816cb1",
+    "introduced_at": "2025-11-12",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC209:22"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC2",
+    "vehicle": "VC209",
+    "introduction_id": "284861c1-1227-42cf-b144-ec4de5e9d6c2",
+    "investor": "Julien MACHOT",
+    "deal_id": "b1ff280a-1a0e-4024-b25d-de6160816cb1",
+    "introduced_at": "2025-03-12",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC209:25"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC2",
+    "vehicle": "VC209",
+    "introduction_id": "3430bcc2-8347-4e91-b68c-812af8eb0c59",
+    "investor": "FRONTIERX VIII, LP",
+    "deal_id": "b1ff280a-1a0e-4024-b25d-de6160816cb1",
+    "introduced_at": "2025-12-29",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC209:27"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC2",
+    "vehicle": "VC206",
+    "introduction_id": "38a89cc9-bd1a-4fce-8cac-69df4ca9df2c",
+    "investor": "ALTA ASSET FUND 3, A SUB-FUND OF ALTA ASSET FUND VCC",
+    "deal_id": "15beca51-460e-4ad4-8269-45fb98382624",
+    "introduced_at": "2025-06-08",
+    "db_subscriptions": 3,
+    "mapped_dashboard_rows": [
+      "VC206:14",
+      "VC206:17",
+      "VC206:18"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC2",
+    "vehicle": "VC203",
+    "introduction_id": "3fe499f3-93de-4b59-8091-5ceaa93e7a8e",
+    "investor": "Robert VOGT IV",
+    "deal_id": "83ce0a28-e538-4f44-a430-b83394d17b9d",
+    "introduced_at": "2025-04-15",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC203:21"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC2",
+    "vehicle": "VC203",
+    "introduction_id": "57180e53-cdae-498e-8195-20f64a78a66d",
+    "investor": "Julien MACHOT",
+    "deal_id": "83ce0a28-e538-4f44-a430-b83394d17b9d",
+    "introduced_at": "2025-03-25",
+    "db_subscriptions": 2,
+    "mapped_dashboard_rows": [
+      "VC203:14",
+      "VC203:6"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC2",
+    "vehicle": "VC209",
+    "introduction_id": "6752ff1c-b155-4121-9563-1a285c09d62d",
+    "investor": "Kartik Kumar ATTULURI",
+    "deal_id": "b1ff280a-1a0e-4024-b25d-de6160816cb1",
+    "introduced_at": "2025-11-12",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC209:23"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC2",
+    "vehicle": "VC209",
+    "introduction_id": "6f3c9f08-a017-4976-9745-5eaa9119fb15",
+    "investor": "SPACEFARING VENTURES FUND 9, LLC",
+    "deal_id": "b1ff280a-1a0e-4024-b25d-de6160816cb1",
+    "introduced_at": "2025-11-13",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC209:19"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC2",
+    "vehicle": "VC209",
+    "introduction_id": "7a522c8a-aa1c-487c-af05-30e4f5df2cae",
+    "investor": "MADISON TRUST COMPANY (on behalf of Edward Bendickson)",
+    "deal_id": "b1ff280a-1a0e-4024-b25d-de6160816cb1",
+    "introduced_at": "2025-12-19",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC209:26"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC2",
+    "vehicle": "VC206",
+    "introduction_id": "834cec89-bc82-4fa8-b28b-cb3881a7b330",
+    "investor": "AEON INC",
+    "deal_id": "15beca51-460e-4ad4-8269-45fb98382624",
+    "introduced_at": "2025-07-22",
+    "db_subscriptions": 1,
+    "mapped_dashboard_rows": [
+      "VC206:10"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC2",
+    "vehicle": "VC207",
+    "introduction_id": "9e6647a3-c386-4443-9f08-82e1218c5bea",
+    "investor": "Julien MACHOT",
+    "deal_id": "b77e95ee-4649-4644-933e-ed10a2118b03",
+    "introduced_at": "2025-09-06",
+    "db_subscriptions": 2,
+    "mapped_dashboard_rows": [
+      "VC207:14",
+      "VC207:23"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  },
+  {
+    "scope": "VC2",
+    "vehicle": "VC209",
+    "introduction_id": "b5dd4f4b-9791-4bea-b1dd-a04cf5879b30",
+    "investor": "U.S. HMC SERIES FUND LP - SERIES II",
+    "deal_id": "b1ff280a-1a0e-4024-b25d-de6160816cb1",
+    "introduced_at": "2025-06-11",
+    "db_subscriptions": 2,
+    "mapped_dashboard_rows": [
+      "VC209:17",
+      "VC209:8"
+    ],
+    "mapped_dashboard_intro_amount_sum": 0.0,
+    "classification": "real_intro_without_dashboard_signal"
+  }
+]

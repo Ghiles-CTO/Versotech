@@ -1,0 +1,996 @@
+{
+  "summary": {
+    "rules_version": "2026-02-14.3",
+    "scope_vehicle_codes": [
+      "VC102",
+      "VC106",
+      "VC111",
+      "VC112",
+      "VC113",
+      "VC114",
+      "VC118",
+      "VC121",
+      "VC122",
+      "VC123",
+      "VC124",
+      "VC125",
+      "VC126",
+      "VC128",
+      "VC130",
+      "VC131",
+      "VC132",
+      "VC133",
+      "VC138",
+      "VC140",
+      "VC141",
+      "VC143"
+    ],
+    "dashboard_active_rows": 466,
+    "dashboard_zero_rows": 56,
+    "db_subscriptions": 466,
+    "db_positions": 385,
+    "db_introductions": 479,
+    "db_commissions": 1000,
+    "contacts_checked_rows": 0,
+    "contacts_red_rows_excluded": [
+      10,
+      13
+    ],
+    "fail_count": 4,
+    "warning_count": 120,
+    "fail_by_check": {
+      "row_mapping_unresolved": 2,
+      "commission_row_missing_in_db": 1,
+      "name_mapping_unresolved_total": 1
+    },
+    "warn_by_check": {
+      "strikethrough_commission_row_reinstated_ruled": 6,
+      "introduction_tuple_repeat_ruled": 3,
+      "orphan_introduction_without_subscription": 85,
+      "introduction_missing_date_ruled": 1,
+      "commission_rate_amount_formula_ruled": 1,
+      "commission_base_amount_vs_funded_amount_ruled": 4,
+      "commission_totals_ruled_diff_spread": 4,
+      "commission_row_ruled_dashboard_override": 16
+    },
+    "mapping_coverage": {
+      "unmapped_dashboard_rows": 0,
+      "unmapped_db_rows": 0,
+      "unmapped_commission_rows_dashboard_to_db": 1,
+      "unmapped_commission_rows_db_to_dashboard": 0,
+      "name_mapping_applied_count": 25,
+      "name_mapping_unresolved_count": 2,
+      "fallback_match_warning_count": 0,
+      "row_match_modes": {
+        "exact_date": 406,
+        "relaxed": 35,
+        "fallback_amounts_date": 24,
+        "fallback_amounts_no_date": 1
+      },
+      "fallback_matches_by_mode": {
+        "fallback_amounts_date": 24,
+        "fallback_amounts_no_date": 1
+      },
+      "fallback_matches_ruled_count": 23,
+      "fallback_matches_safe_count": 0,
+      "fallback_matches_unruled_fail_count": 2
+    },
+    "rule_enforcement_summary": {
+      "introduction_integrity_check": true,
+      "subscription_formula_cross_field_check": true,
+      "commission_rate_integrity_check": true,
+      "commission_base_amount_matches_funded_check": true,
+      "strikethrough_commission_delete_check": true,
+      "dual_role_introducer_check": true,
+      "deprecated_introducer_references_check": true
+    },
+    "strikethrough_source_rows": 29,
+    "strikethrough_resolved_rows": 29,
+    "strikethrough_unresolved_rows": 0,
+    "strikethrough_rows_present_in_db": 6
+  },
+  "failures": [
+    {
+      "severity": "fail",
+      "check": "row_mapping_unresolved",
+      "vehicle": "VC113",
+      "row_ref": "VC13:62",
+      "details": "mode=fallback_amounts_date dash_investor=OEP Ltd db_investor=OEP LIMITED commitment=100000.0 shares=14615.0 dash_date=2021-11-17 db_date=2021-11-17 sub_id=88817172-c22c-49c4-931a-1b8821bc1908"
+    },
+    {
+      "severity": "fail",
+      "check": "row_mapping_unresolved",
+      "vehicle": "VC126",
+      "row_ref": "VC26:36",
+      "details": "mode=fallback_amounts_date dash_investor=Julien MACHOT db_investor=OEP LIMITED commitment=50000.0 shares=77.0 dash_date=2024-12-31 db_date=2024-12-31 sub_id=4b1cffb6-f499-4db4-892f-df76470a6b1c"
+    },
+    {
+      "severity": "fail",
+      "check": "commission_row_missing_in_db",
+      "vehicle": "VC133",
+      "row_ref": "VC33:6",
+      "details": "investor=Sahejman Singh KAHLON introducer=Elevation basis=spread dashboard=825.0 db=0.0"
+    },
+    {
+      "severity": "fail",
+      "check": "name_mapping_unresolved_total",
+      "vehicle": "",
+      "row_ref": "",
+      "details": "count=2"
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:489",
+      "details": "source_row=489 investor=DALINGA HOLDING AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=499.87 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:490",
+      "details": "source_row=490 investor=DALINGA HOLDING AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=99.27 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:494",
+      "details": "source_row=494 investor=MA GROUP AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=358.0 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:496",
+      "details": "source_row=496 investor=DALINGA HOLDING AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=499.87 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:497",
+      "details": "source_row=497 investor=DALINGA HOLDING AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=99.27 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "strikethrough_commission_row_reinstated_ruled",
+      "vehicle": "VC125",
+      "row_ref": "strike:500",
+      "details": "source_row=500 investor=MA GROUP AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=358.0 db_rows=1"
+    },
+    {
+      "severity": "warn",
+      "check": "introduction_tuple_repeat_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 count=2"
+    },
+    {
+      "severity": "warn",
+      "check": "introduction_tuple_repeat_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f investor_id=996ec13d-5df9-4b46-8581-29bf3880c052 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 count=2"
+    },
+    {
+      "severity": "warn",
+      "check": "introduction_tuple_repeat_ruled",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 count=2"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=02c9c133-1301-4130-a6a9-440a1d2a4429 investor=Vladimir GUSEV deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=0308805b-92d6-4e9a-b7b3-29bd4bfa7620 investor=MONFIN LTD deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introduction_id=044e430d-66a0-4e9a-8c35-9e424f1bb659 investor=GREENLEAF deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-09-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introduction_id=076fd345-6b20-42c5-9726-95339744d9a4 investor=VERSO GROUP deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-05-17 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=07bdf1e6-32bf-46c0-94e1-a356767bfcc4 investor=VOLF Trust deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=09710f38-1fbf-49bb-b6e3-bb08a141d4bf investor=DRussell Goman RD LLC deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introduction_id=0da66e92-0df6-4e60-95d1-a3203bfac3a3 investor=Global Custody & Clearing Limited deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-02-27 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=0e1e3211-d31c-40e9-bc7c-d122a42b23af investor=Tartrifuge SA deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=0ec1b9cd-e7f7-41bf-b607-54b32ff7ab2d investor=MONFIN LTD deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=108c8008-898b-4813-82ed-50abc1b44f32 investor=JIMENEZ TRADING INC deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=114c5266-c67d-45f6-b1b6-856f5c499d65 investor=Grouperia Inc deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "introduction_missing_date_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introduction_id=11673e9c-1afc-4586-a5ae-83b52b7c5e29 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=132a765c-baeb-4b53-8bc0-47d6cd24ec18 investor=ODIN (ANIM X II LP) deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=165c8617-b8b9-414e-a9bf-5b73ed10746a investor=Bright Phoenix Holdings LTD deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=16ca5555-4a94-4d13-8c4c-8e2a66a58135 investor=James BURCH deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introduction_id=1fac59b1-0f2e-4fd4-b8de-0adae37b0027 investor=GORILLA PE Inc deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-04-14 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=21873dd1-4d2a-4a1a-8751-00676fc35c6a investor=The Investment Trust of Trustees of the Wills of Ross R. Hall deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=2241f875-cada-4f05-8c04-ac0b9d4bd7bb investor=Mark MATTHEWS deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=262e0eb9-0fd4-40ab-9ddb-a561956b1fb2 investor=TERRA Financial & Management Services SA deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=268f9aeb-5769-4ca2-a500-482dd3e86b15 investor=GREENLEAF deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=26e62985-689d-4760-bafc-4c764c0a7221 investor=Zandera (Holdco) Limited deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=2819842a-916f-430d-8601-5eb2727b4d74 investor=Erich GRAF deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC133",
+      "row_ref": "",
+      "details": "introduction_id=2a96c83d-c2fd-4496-acf6-c215ce463644 investor=778 WALNUT LLC deal_id=750e0559-a10a-48eb-9593-106329bf9f53 introduced_at=2026-01-25 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=3512ca75-26eb-4934-a5a2-d062c9720fc5 investor=Beatrice and Marcel KNOPF deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=3a1888dc-2596-48d0-9745-8c3255497b20 investor=DALINGA HOLDING AG deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=4105a626-4a3f-4bb6-9c4d-96e6d1210966 investor=HASSBRO Investments Limited deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=42787da8-928d-4ab3-82cd-7b2440f5651b investor=Gorilla PE LP deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=457d13cc-3720-419c-b84b-8fc09c3c6dc3 investor=BenSkyla AG deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=464f8cf5-c7bf-4156-b3ae-e22b0ef8fea6 investor=Vladimir GUSEV deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=469d0eab-88fb-4675-83c8-c81885f05dfc investor=Zandera (Holdco) Limited deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=4ce1ce4e-886d-418a-85c0-6704a3edcadd investor=Peter HOGLAND deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=51d812e7-71ba-44f7-b6f2-94c6740ff7c8 investor=Mark MATTHEWS deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=53abdf58-a23d-4cb8-acf4-0e463aa9ac31 investor=Bruce HAWKINS deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=597f2443-c0ba-42d3-bd41-ef2339ff2daa investor=Bruce HAWKINS deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=5a6f22c0-cef1-42f5-952c-6113e94cf519 investor=Zandera (Holdco) Limited deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=6a7d0d85-2b3b-4e0d-ba59-d28be5dee53f investor=Wymo Finance Limited deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=70fa5966-70a9-4cf3-b490-6113b2c076a1 investor=STRUCTURED ISSUANCE Ltd deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=71625a10-61f3-4c5a-8846-61e32c2aafda investor=John BARROWMAN deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introduction_id=7707c221-1c2b-4e2b-aec4-32ec1023819e investor=JIMENEZ TRADING INC deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-02-14 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=78b4f7e5-f4bd-4bff-8a0f-372b98b1bc2e investor=FINALMA SUISSE SA deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=7b743c34-aebd-406c-b15a-e2e4b8997bc2 investor=VOLF Trust deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=82228118-03c3-4f8d-a375-55f937ceadea investor=Zandera (Holdco) Limited deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=9224f67b-d455-4506-8adc-e2510c561bbb investor=TERRA Financial & Management Services SA deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introduction_id=93535a96-bf7e-4bf0-87c3-ac8ce894ca79 investor=Global Custody & Clearing Limited deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-02-27 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=98534f33-7d0f-46b5-91d3-344562a323aa investor=Bright Phoenix Holdings LTD deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=99d27889-4724-42cb-aff0-1de45f38c532 investor=ROSEN INVEST HOLDINGS Inc deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=99d5430a-57c9-4149-b5d9-f527e35925e5 investor=Global Custody & Clearing Limited deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=9d05568b-9a19-4307-ad9c-8baf0b7cd9d6 investor=FINALMA SUISSE SA deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=9d593850-fd45-4838-8116-79c358ca256f investor=Serge AURIER deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=a23c394e-7fee-44ae-9726-73ab3fdeadb3 investor=Sandra KOHLER CABIAN deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introduction_id=a347eaa0-dc0f-45ad-bd5b-160d47ab56e0 investor=JIMENEZ TRADING INC deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-02-14 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=a71009c8-871f-4fcf-b0a8-4e913cc6798b investor=DALINGA HOLDING AG deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=a7a47938-9243-4b31-a519-3b50ffa12167 investor=Scott FLETCHER deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=a92a7c39-ee9c-449a-b670-7b87ff5e8428 investor=James BURCH deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=ab5842d9-bc2c-40e4-b486-9e756ee36bb7 investor=David HOLDEN deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=ac188f02-b869-4c35-ab0f-75ae435b8a85 investor=STRUCTURED ISSUANCE Ltd deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=aef24760-8171-4671-be9a-04776899ef29 investor=Anisha Bansal and Rahul KARKUN deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=b1b00e80-820d-48b5-b08c-627933d54b26 investor=SAFE deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=b235be1a-93cd-4acd-a28d-8720090349aa investor=Stephane DAHAN deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=ba1a18c0-d7af-44ee-b2af-90c0192ed33d investor=BRAHMA FINANCE deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=bfaed53f-d7a5-481f-9b2c-1ed5a19c3959 investor=Peter HOGLAND deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=c3558143-f5ba-43e2-bc69-00649a2fd312 investor=Stephane DAHAN deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introduction_id=c52361b6-e74a-4f44-bfdf-4f9852788ab7 investor=STABLETON (ALTERNATIVE ISSUANCE) deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-01-06 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introduction_id=cc4fb8cb-3d31-410b-94f5-cb02456bc5c6 investor=GORILLA PE Inc deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-04-14 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC122",
+      "row_ref": "",
+      "details": "introduction_id=cf66cbb0-6191-4705-9165-7c6fe3ef01c8 investor=LF GROUP SARL deal_id=06653c86-b191-438a-9f32-d0a3224854b1 introduced_at=2026-01-25 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introduction_id=cff91985-9d95-4c69-88d8-984dbca8f92c investor=GREENLEAF deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-09-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=d27aa6a6-5aeb-47e7-8210-609811d8402b investor=TAG Capital Management deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=d391d0b5-f722-42de-92cf-10535318c8e3 investor=JIMENEZ TRADING INC deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=d7cb5980-65d6-46b6-a9de-ec85d8878001 investor=Erich GRAF deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=d8fc1b9a-24d4-4ed4-bf73-40fd6e23f319 investor=The Investment Trust of Trustees of the Wills deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=da05fc12-da5f-4ca5-81fe-824034c8ddaf investor=Julien MACHOT deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2024-12-31 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=de756846-0c58-4a9d-8906-83e373647501 investor=Gorilla PE (Bermuda) Reinsurance Co Ltd deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=e1f13519-2fea-4a13-9743-2fac0ff62b57 investor=HASSBRO Investments Limited deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=e5d30834-acf1-48d7-b79a-175ea095442e investor=LF GROUP SARL deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=e5d5f86c-c205-49cd-8b99-242ed67650b0 investor=The Investment Trust of Trustees of the Wills of Richard R. Hall deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "introduction_id=eb0d5078-0302-4550-a19d-273cdb54107b investor=PETRATECH deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=ec100c25-55d6-462b-b10b-dc232b63b3ad investor=ODIN (ANIM X II LP) deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=eed76674-94f1-45d7-96e8-a4b1160ab67c investor=Beatrice and Marcel KNOPF deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=f22227d4-de71-472e-bb19-f60f36b84757 investor=ROSEN INVEST HOLDINGS Inc deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=f2712a6d-c0ae-4edd-8717-bb30d7856446 investor=Scott FLETCHER deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=f5876e92-b259-4803-85e6-e778c439fda3 investor=David HOLDEN deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=f6fce0e8-b7c5-4c90-97d7-6e7fbc54a9b3 investor=Tartrifuge SA deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC126",
+      "row_ref": "",
+      "details": "introduction_id=f7ec4dac-212d-4102-a40a-3d88d773fc5d investor=Julien MACHOT deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2024-12-31 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=f9beaf1b-36fd-494b-ba67-c20e51e4f6fe investor=BenSkyla AG deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC111",
+      "row_ref": "",
+      "details": "introduction_id=fa76bc82-0d6f-4040-a384-495c7d655264 investor=Wymo Finance Limited deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "orphan_introduction_without_subscription",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "introduction_id=ff155fe9-7f23-424c-a2f9-f6e5885858bc investor=Charles RIVA deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-08-31 reason=no_subscription_for_deal_investor"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_rate_amount_formula_ruled",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=02e7a81c-d5bf-4839-9776-f89ae320b586 rate_bps=200 amount_sum=40000.0 expected_row_sum=20000.0 expected_split_sum=20000.0 tolerance=200.0 sample_commission_id=9390646c-b70a-451b-8b6e-16a11a397833 reason=VC113 Zandera two invested_amount rows with one NULL base created for dedup in DB_CHANGES_CHECKPOINT_2026-02-11.md Section 21"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_base_amount_vs_funded_amount_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=24c96f5a-0b23-4e40-b562-c0570df12fd8 commission_base_sum=200000.0 funded_sum=150000.0 unique_base_values=[100000.0] reason=VC106 split-commission legacy base allocation documented in DB_CHANGES_CHECKPOINT_2026-02-11.md Section 21"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_base_amount_vs_funded_amount_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=996ec13d-5df9-4b46-8581-29bf3880c052 commission_base_sum=50000.0 funded_sum=100000.0 unique_base_values=[50000.0] reason=VC106 split-commission legacy base allocation documented in DB_CHANGES_CHECKPOINT_2026-02-11.md Section 16/21"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_base_amount_vs_funded_amount_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=e78f40f3-7e17-44cd-af46-a01a2f195f3e commission_base_sum=400000.0 funded_sum=200000.0 unique_base_values=[100000.0] reason=VC106 LE SEIGNEUR two spread rows with one NULL base documented in DB_CHANGES_CHECKPOINT_2026-02-11.md Section 21"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_base_amount_vs_funded_amount_ruled",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 commission_base_sum=1424873.0 funded_sum=2350372.0 unique_base_values=[2240.0, 70902.0, 82917.0, 234607.0, 250000.0, 349344.0, 434863.0] reason=VC106 MACHOT multiple split commission rows; base sum intentionally diverges from funded sum per historical migration"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC106",
+      "row_ref": "",
+      "details": "dashboard=6326296.752 db=6326296.81 delta=0.058 expected=0.058"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC113",
+      "row_ref": "",
+      "details": "dashboard=963887.6075 db=963887.62 delta=0.0125 expected=0.0125"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC114",
+      "row_ref": "",
+      "details": "dashboard=0.4 db=0.0 delta=-0.4 expected=-0.4"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_totals_ruled_diff_spread",
+      "vehicle": "VC133",
+      "row_ref": "",
+      "details": "dashboard=222892.5 db=217680.0 delta=-5212.5 expected=-5212.5"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:7",
+      "details": "investor=777 WALNUT LLC introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=825.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "d04fcd07-6af9-41a6-9530-06dbe8588b63",
+      "details": "investor=778 WALNUT LLC introducer=Set Cap basis=spread expected_amount=2805.0 expected_rate=n/a dashboard_amount=0.0 db_amount=2805.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:11",
+      "details": "investor=Band Capital Limited introducer=Elevation basis=spread expected_amount=53700.0 expected_rate=n/a dashboard_amount=8950.0 db_amount=53700.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:11",
+      "details": "investor=Band Capital Limited introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=12530.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:3",
+      "details": "investor=Charles DE BAVIER introducer=Elevation basis=spread expected_amount=9900.0 expected_rate=n/a dashboard_amount=1650.0 db_amount=9900.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:3",
+      "details": "investor=Charles DE BAVIER introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=5610.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:8",
+      "details": "investor=Keir Richard BENBOW introducer=Elevation basis=spread expected_amount=5250.0 expected_rate=n/a dashboard_amount=1750.0 db_amount=5250.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:5",
+      "details": "investor=CARTA INVESTMENTS LLC introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=1650.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:13",
+      "details": "investor=Tuygan GOKER introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=10525.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:13",
+      "details": "investor=Tuygan GOKER introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=12915.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:10",
+      "details": "investor=ZANDERA (Holdco) Ltd introducer=Elevation+Rick basis=spread expected_amount=96750.0 expected_rate=n/a dashboard_amount=112875.0 db_amount=96750.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:10",
+      "details": "investor=ZANDERA (Holdco) Ltd introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=24187.5 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:4",
+      "details": "investor=JASSQ HOLDING LIMITED introducer=Elevation basis=spread expected_amount=30000.0 expected_rate=n/a dashboard_amount=5000.0 db_amount=30000.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:4",
+      "details": "investor=JASSQ HOLDING LIMITED introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=7000.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:12",
+      "details": "investor=Jeremy LOWY introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=825.0 db_amount=0.0"
+    },
+    {
+      "severity": "warn",
+      "check": "commission_row_ruled_dashboard_override",
+      "vehicle": "VC133",
+      "row_ref": "VC33:9",
+      "details": "investor=Marco JERRENTRUP introducer=Elevation basis=spread expected_amount=5250.0 expected_rate=n/a dashboard_amount=1750.0 db_amount=5250.0"
+    }
+  ],
+  "mapping_coverage": {
+    "unmapped_dashboard_rows": 0,
+    "unmapped_db_rows": 0,
+    "unmapped_commission_rows_dashboard_to_db": 1,
+    "unmapped_commission_rows_db_to_dashboard": 0,
+    "name_mapping_applied_count": 25,
+    "name_mapping_unresolved_count": 2,
+    "fallback_match_warning_count": 0,
+    "row_match_modes": {
+      "exact_date": 406,
+      "relaxed": 35,
+      "fallback_amounts_date": 24,
+      "fallback_amounts_no_date": 1
+    },
+    "fallback_matches_by_mode": {
+      "fallback_amounts_date": 24,
+      "fallback_amounts_no_date": 1
+    },
+    "fallback_matches_ruled_count": 23,
+    "fallback_matches_safe_count": 0,
+    "fallback_matches_unruled_fail_count": 2
+  },
+  "rule_enforcement_summary": {
+    "introduction_integrity_check": true,
+    "subscription_formula_cross_field_check": true,
+    "commission_rate_integrity_check": true,
+    "commission_base_amount_matches_funded_check": true,
+    "strikethrough_commission_delete_check": true,
+    "dual_role_introducer_check": true,
+    "deprecated_introducer_references_check": true
+  },
+  "warning_governance_status": "PENDING_TRUST_PACK"
+}

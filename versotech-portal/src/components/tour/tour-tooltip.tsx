@@ -23,68 +23,13 @@ interface Position {
   arrowSide: ArrowSide
 }
 
-// Persona-specific color theming for header
-const personaColors: Record<string, { bg: string; border: string; text: string; gradient: string }> = {
-  ceo: {
-    bg: 'bg-purple-50 dark:bg-purple-500/10',
-    border: 'border-purple-100 dark:border-purple-500/20',
-    text: 'text-purple-600 dark:text-purple-400',
-    gradient: 'from-purple-500 to-purple-600'
-  },
-  staff: {
-    bg: 'bg-rose-50 dark:bg-rose-500/10',
-    border: 'border-rose-100 dark:border-rose-500/20',
-    text: 'text-rose-600 dark:text-rose-400',
-    gradient: 'from-rose-500 to-rose-600'
-  },
-  arranger: {
-    bg: 'bg-blue-50 dark:bg-blue-500/10',
-    border: 'border-blue-100 dark:border-blue-500/20',
-    text: 'text-blue-600 dark:text-blue-400',
-    gradient: 'from-blue-500 to-blue-600'
-  },
-  investor: {
-    bg: 'bg-emerald-50 dark:bg-emerald-500/10',
-    border: 'border-emerald-100 dark:border-emerald-500/20',
-    text: 'text-emerald-600 dark:text-emerald-400',
-    gradient: 'from-emerald-500 to-emerald-600'
-  },
-  investor_entity: {
-    bg: 'bg-emerald-50 dark:bg-emerald-500/10',
-    border: 'border-emerald-100 dark:border-emerald-500/20',
-    text: 'text-emerald-600 dark:text-emerald-400',
-    gradient: 'from-emerald-500 to-emerald-600'
-  },
-  investor_individual: {
-    bg: 'bg-teal-50 dark:bg-teal-500/10',
-    border: 'border-teal-100 dark:border-teal-500/20',
-    text: 'text-teal-600 dark:text-teal-400',
-    gradient: 'from-teal-500 to-teal-600'
-  },
-  introducer: {
-    bg: 'bg-amber-50 dark:bg-amber-500/10',
-    border: 'border-amber-100 dark:border-amber-500/20',
-    text: 'text-amber-600 dark:text-amber-400',
-    gradient: 'from-amber-500 to-amber-600'
-  },
-  partner: {
-    bg: 'bg-cyan-50 dark:bg-cyan-500/10',
-    border: 'border-cyan-100 dark:border-cyan-500/20',
-    text: 'text-cyan-600 dark:text-cyan-400',
-    gradient: 'from-cyan-500 to-cyan-600'
-  },
-  commercial_partner: {
-    bg: 'bg-indigo-50 dark:bg-indigo-500/10',
-    border: 'border-indigo-100 dark:border-indigo-500/20',
-    text: 'text-indigo-600 dark:text-indigo-400',
-    gradient: 'from-indigo-500 to-indigo-600'
-  },
-  lawyer: {
-    bg: 'bg-slate-50 dark:bg-slate-500/10',
-    border: 'border-slate-100 dark:border-slate-500/20',
-    text: 'text-slate-600 dark:text-slate-400',
-    gradient: 'from-slate-500 to-slate-600'
-  },
+// Unified color scheme for tour (white+blue light, black+white dark)
+const tourColors = {
+  bg: 'bg-blue-50 dark:bg-white/5',
+  border: 'border-blue-100 dark:border-white/10',
+  text: 'text-blue-600 dark:text-white',
+  gradient: 'from-blue-500 to-blue-600',
+  gradientDark: 'dark:from-white dark:to-gray-200',
 }
 
 // SVG Arrow component - cleaner than rotated CSS divs
@@ -128,8 +73,7 @@ export function TourTooltip({ step, stepNumber, persona = 'investor' }: TourTool
   const [targetMissing, setTargetMissing] = useState(false)
   const tooltipRef = useRef<HTMLDivElement>(null)
 
-  // Get persona colors or default to blue
-  const colors = personaColors[persona] || personaColors.arranger
+  const colors = tourColors
 
   // Handle client-side mounting for createPortal
   useEffect(() => {
@@ -247,15 +191,24 @@ export function TourTooltip({ step, stepNumber, persona = 'investor' }: TourTool
     }
 
     // Small delay to let spotlight position first and DOM settle
-    const timer = setTimeout(updatePosition, 200)
+    const timer = setTimeout(updatePosition, 400)
 
     window.addEventListener('resize', updatePosition)
     window.addEventListener('scroll', updatePosition, { passive: true })
+
+    // Also listen for sidebar scroll container
+    const scrollableParent = document.querySelector('.overflow-y-auto')
+    if (scrollableParent) {
+      scrollableParent.addEventListener('scroll', updatePosition, { passive: true })
+    }
 
     return () => {
       clearTimeout(timer)
       window.removeEventListener('resize', updatePosition)
       window.removeEventListener('scroll', updatePosition)
+      if (scrollableParent) {
+        scrollableParent.removeEventListener('scroll', updatePosition)
+      }
     }
   }, [step, isActive, mounted, showDetails, isMobile])
 
@@ -290,9 +243,16 @@ export function TourTooltip({ step, stepNumber, persona = 'investor' }: TourTool
               {/* Header */}
               <div className={`${colors.bg} ${colors.border} border-b -mx-4 px-4 py-3 mb-4`}>
                 <div className="flex items-center justify-between">
-                  <span className={`text-xs font-semibold ${colors.text} uppercase tracking-wider`}>
-                    Step {stepNumber + 1} of {totalSteps}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-semibold ${colors.text} uppercase tracking-wider`}>
+                      Step {stepNumber + 1} of {totalSteps}
+                    </span>
+                    {step.personaLabel && (
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/60 dark:bg-white/10 text-muted-foreground">
+                        {step.personaLabel}
+                      </span>
+                    )}
+                  </div>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -308,7 +268,7 @@ export function TourTooltip({ step, stepNumber, persona = 'investor' }: TourTool
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 0.5, ease: 'easeOut' }}
-                    className={`h-full bg-gradient-to-r ${colors.gradient} rounded-full`}
+                    className={`h-full bg-gradient-to-r ${colors.gradient} ${colors.gradientDark} rounded-full`}
                   />
                 </div>
               </div>
@@ -398,7 +358,7 @@ export function TourTooltip({ step, stepNumber, persona = 'investor' }: TourTool
                   <Button
                     size="lg"
                     onClick={nextStep}
-                    className={`bg-gradient-to-r ${colors.gradient} hover:opacity-90 text-white h-12 px-6`}
+                    className={`bg-gradient-to-r ${colors.gradient} ${colors.gradientDark} hover:opacity-90 text-white dark:text-zinc-900 h-12 px-6`}
                   >
                     {stepNumber === totalSteps - 1 ? 'Done' : 'Next'}
                     {stepNumber < totalSteps - 1 && <ArrowRight className="h-5 w-5 ml-1" />}
@@ -435,12 +395,19 @@ export function TourTooltip({ step, stepNumber, persona = 'investor' }: TourTool
 
           {/* Glass Morphism Tooltip Card */}
           <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xl ring-1 ring-black/5 dark:ring-white/5 overflow-hidden">
-            {/* Header with persona-specific coloring */}
+            {/* Header */}
             <div className={`${colors.bg} ${colors.border} border-b px-5 py-4`}>
               <div className="flex items-center justify-between">
-                <span className={`text-xs font-semibold ${colors.text} uppercase tracking-wider`}>
-                  Step {stepNumber + 1} of {totalSteps}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-semibold ${colors.text} uppercase tracking-wider`}>
+                    Step {stepNumber + 1} of {totalSteps}
+                  </span>
+                  {step.personaLabel && (
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/60 dark:bg-white/10 text-muted-foreground">
+                      {step.personaLabel}
+                    </span>
+                  )}
+                </div>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -456,7 +423,7 @@ export function TourTooltip({ step, stepNumber, persona = 'investor' }: TourTool
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.5, ease: 'easeOut' }}
-                  className={`h-full bg-gradient-to-r ${colors.gradient} rounded-full`}
+                  className={`h-full bg-gradient-to-r ${colors.gradient} ${colors.gradientDark} rounded-full`}
                 />
               </div>
             </div>
@@ -566,7 +533,7 @@ export function TourTooltip({ step, stepNumber, persona = 'investor' }: TourTool
                   <Button
                     size="sm"
                     onClick={nextStep}
-                    className={`bg-gradient-to-r ${colors.gradient} hover:opacity-90 text-white`}
+                    className={`bg-gradient-to-r ${colors.gradient} ${colors.gradientDark} hover:opacity-90 text-white dark:text-zinc-900`}
                   >
                     {stepNumber === totalSteps - 1 ? 'Finish tour' : 'Continue'}
                     {stepNumber < totalSteps - 1 && <ArrowRight className="h-4 w-4 ml-1" />}

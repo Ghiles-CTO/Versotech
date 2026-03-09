@@ -276,6 +276,8 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
     rawTourState && typeof rawTourState === 'object' && !Array.isArray(rawTourState)
       ? (rawTourState as PlatformTourState)
       : {}
+
+  // Check completion for the active persona only
   const activeTourState = platformTourState[activePersonaForTour]
   const hasCompletedTour = Boolean(
     activeTourState?.completed && activeTourState?.version === TOUR_VERSION

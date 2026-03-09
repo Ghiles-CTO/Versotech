@@ -74,28 +74,22 @@ function getPersonaIcon(persona: string) {
   }
 }
 
-// Persona-specific gradient colors for the icon
-const personaGradients: Record<string, { from: string; to: string }> = {
-  ceo: { from: 'from-purple-500', to: 'to-purple-600' },
-  staff: { from: 'from-rose-500', to: 'to-rose-600' },
-  arranger: { from: 'from-blue-500', to: 'to-indigo-600' },
-  investor: { from: 'from-emerald-500', to: 'to-emerald-600' },
-  investor_entity: { from: 'from-emerald-500', to: 'to-emerald-600' },
-  investor_individual: { from: 'from-teal-500', to: 'to-teal-600' },
-  introducer: { from: 'from-amber-500', to: 'to-amber-600' },
-  partner: { from: 'from-cyan-500', to: 'to-cyan-600' },
-  commercial_partner: { from: 'from-indigo-500', to: 'to-indigo-600' },
-  lawyer: { from: 'from-slate-500', to: 'to-slate-600' },
-}
+// Unified gradient for tour icon (blue light, white dark)
+const tourGradient = { from: 'from-blue-500', to: 'to-blue-600', fromDark: 'dark:from-white', toDark: 'dark:to-gray-200' }
 
 export function TourWelcomeModal({ open, onClose, onSkip, persona = 'investor' }: TourWelcomeModalProps) {
   const { startTour } = useTour()
 
-  // Get persona-specific welcome message
-  const welcomeMessage = useMemo(() => getWelcomeMessage(persona), [persona])
-  const steps = useMemo(() => getTourSteps(persona), [persona])
+  const welcomeMessage = useMemo(
+    () => getWelcomeMessage(persona),
+    [persona]
+  )
+  const steps = useMemo(
+    () => getTourSteps(persona),
+    [persona]
+  )
   const PersonaIcon = useMemo(() => getPersonaIcon(persona), [persona])
-  const gradient = personaGradients[persona] || personaGradients.arranger
+  const gradient = tourGradient
 
   // Calculate estimated time (roughly 30 seconds per step)
   const estimatedMinutes = Math.max(1, Math.ceil(steps.length * 0.5))
@@ -115,7 +109,7 @@ export function TourWelcomeModal({ open, onClose, onSkip, persona = 'investor' }
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[540px] p-0 overflow-hidden" showCloseButton={false}>
         {/* Gradient header background with decorative pattern */}
-        <div className="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/50 dark:via-indigo-950/50 dark:to-purple-950/50 px-6 pt-8 pb-6">
+        <div className="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-zinc-900/50 dark:via-zinc-900/50 dark:to-zinc-900/50 px-6 pt-8 pb-6">
           {/* Decorative pattern overlay */}
           <div
             className="absolute inset-0 opacity-[0.03]"
@@ -137,7 +131,7 @@ export function TourWelcomeModal({ open, onClose, onSkip, persona = 'investor' }
               }}
               className="mx-auto mb-5"
             >
-              <div className={`h-20 w-20 rounded-2xl bg-gradient-to-br ${gradient.from} ${gradient.to} shadow-lg flex items-center justify-center`}>
+              <div className={`h-20 w-20 rounded-2xl bg-gradient-to-br ${gradient.from} ${gradient.to} ${gradient.fromDark} ${gradient.toDark} shadow-lg flex items-center justify-center`}>
                 <motion.div
                   animate={{
                     rotateY: [0, 10, 0, -10, 0],
@@ -148,7 +142,7 @@ export function TourWelcomeModal({ open, onClose, onSkip, persona = 'investor' }
                     ease: 'easeInOut'
                   }}
                 >
-                  <PersonaIcon className="h-10 w-10 text-white" />
+                  <PersonaIcon className="h-10 w-10 text-white dark:text-zinc-900" />
                 </motion.div>
               </div>
             </motion.div>
@@ -167,20 +161,20 @@ export function TourWelcomeModal({ open, onClose, onSkip, persona = 'investor' }
           {/* Tour overview stats */}
           <div className="flex items-center justify-center gap-6 mb-6">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
-                <ListChecks className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <div className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-white/5 flex items-center justify-center">
+                <ListChecks className="h-4 w-4 text-blue-600 dark:text-white" />
               </div>
               <span className="font-medium">{steps.length} Steps</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="h-8 w-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
-                <Clock className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <div className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-white/5 flex items-center justify-center">
+                <Clock className="h-4 w-4 text-blue-600 dark:text-white" />
               </div>
               <span className="font-medium">~{estimatedMinutes} min</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="h-8 w-8 rounded-lg bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center">
-                <Keyboard className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              <div className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-white/5 flex items-center justify-center">
+                <Keyboard className="h-4 w-4 text-blue-600 dark:text-white" />
               </div>
               <span className="font-medium">Keyboard</span>
             </div>
@@ -213,7 +207,7 @@ export function TourWelcomeModal({ open, onClose, onSkip, persona = 'investor' }
           {/* Gradient CTA button */}
           <Button
             onClick={handleStartTour}
-            className={`w-full h-12 bg-gradient-to-r ${gradient.from} ${gradient.to} hover:opacity-90 text-white font-medium text-base shadow-lg shadow-blue-500/20`}
+            className={`w-full h-12 bg-gradient-to-r ${gradient.from} ${gradient.to} ${gradient.fromDark} ${gradient.toDark} hover:opacity-90 text-white dark:text-zinc-900 font-medium text-base shadow-lg shadow-blue-500/20 dark:shadow-white/10`}
           >
             <Sparkles className="h-5 w-5 mr-2" />
             Start Tour

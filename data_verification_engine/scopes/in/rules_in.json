@@ -326,6 +326,7 @@
     "performance_fee_tier1",
     "performance_fee_tier2"
   ],
+  "commission_include_zero_amount_rows_for_row_checks": true,
   "row_compare_skip_metrics": [
     "ownership"
   ],

@@ -235,7 +235,7 @@ export function PlatformTour({
     >
       {children}
 
-      {/* Welcome modal for first-time users - now with persona-specific messaging */}
+      {/* Welcome modal for first-time users */}
       {!isCompleted && (
         <TourWelcomeModal
           open={showWelcome}

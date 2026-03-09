@@ -100,7 +100,7 @@
     "zero_ownership_must_not_be_loaded": true,
     "status_must_be_funded": true,
     "funded_amount_equals_commitment": true,
-    "fallback_match_is_failure": false,
+    "fallback_match_is_failure": true,
     "warn_safe_fallback_matches": false,
     "warn_ruled_fallback_matches": false,
     "position_mapping_coverage": true,
@@ -198,7 +198,12 @@
     "Rick + Andrew": "Altras Capital Financing Broker",
     "Rick+Andrew": "Altras Capital Financing Broker",
     "Stableton+Terra": "Terra Financial & Management Services SA",
-    "Anand+Dan": "Set Cap"
+    "Anand+Dan": "Set Cap",
+    "Keir BENBOW": "Keir Richard BENBOW",
+    "Mayuriben Chetan K. JOGANI": "Mayuriben Chetan Kumar JOGANI",
+    "Mayuriben Chetan K JOGANI": "Mayuriben Chetan Kumar JOGANI",
+    "Mayuriben Chetan K. Jogani": "Mayuriben Chetan Kumar JOGANI",
+    "Sahejman Singh KAHLON": "Sahejman KAHLON"
   },
   "run_broker_checks": true,
   "brokers_table_expected": [
@@ -403,6 +408,7 @@
     "invested_amount",
     "spread"
   ],
+  "commission_include_zero_amount_rows_for_row_checks": true,
   "row_compare_skip_metrics": [
     "ownership"
   ],
@@ -479,6 +485,9 @@
     },
     "VC113": {
       "Zandera (Finco) Limited": "Zandera (Holdco) Limited"
+    },
+    "VC126": {
+      "Julien MACHOT": "OEP LIMITED"
     }
   },
   "fallback_ruled_name_pairs": [
@@ -550,7 +559,7 @@
     {
       "vehicle": "VC113",
       "dash_investor": "OEP Ltd",
-      "db_investor": "Julien MACHOT"
+      "db_investor": "OEP LIMITED"
     },
     {
       "vehicle": "VC124",
@@ -565,12 +574,17 @@
     {
       "vehicle": "VC126",
       "dash_investor": "OEP Ltd",
-      "db_investor": "Julien MACHOT"
+      "db_investor": "OEP LIMITED"
     },
     {
       "vehicle": "VC128",
       "dash_investor": "OEP Ltd",
       "db_investor": "Julien MACHOT"
+    },
+    {
+      "vehicle": "VC126",
+      "dash_investor": "Julien MACHOT",
+      "db_investor": "OEP LIMITED"
     },
     {
       "vehicle": "VC133",

@@ -512,6 +512,7 @@ class Auditor:
         dict[str, dict[str, float]],
         list[DashCommission],
         set[tuple[str, str, str]],
+        dict[tuple[str, str], dict[str, Any]],
     ]:
         dash_path = ROOT / self.rules["dashboard_files"]["main"]
         scope_sheets = set(self.rules["scope_dashboard_sheets"])
@@ -524,6 +525,9 @@ class Auditor:
         blank_ownership_active_by_sheet = set(self.rules.get("dashboard_blank_ownership_as_active_by_sheet", []))
         optional_numeric_fields = set(self.rules.get("dashboard_optional_numeric_fields", []))
         combined_intro_policy = str(self.rules.get("combined_introducer_name_policy", "fail")).strip().lower()
+        include_zero_commission_rows = bool(
+            self.rules.get("commission_include_zero_amount_rows_for_row_checks", False)
+        )
         comm_cols = self.rules.get("dashboard_commission_columns", {})
         comm_default = comm_cols.get("default", {})
         comm_by_sheet = comm_cols.get("by_sheet", {})
@@ -553,6 +557,9 @@ class Auditor:
         zero: list[DashRow] = []
         dash_commissions: list[DashCommission] = []
         combined_commission_skip_keys: set[tuple[str, str, int, str]] = set()
+        # Tracks whether dashboard explicitly signals introducer linkage for each investor+vehicle.
+        # This is used to detect DB introductions that are not represented in dashboard rows.
+        dash_intro_signal_by_investor_vehicle: dict[tuple[str, str], dict[str, Any]] = {}
         totals = defaultdict(lambda: defaultdict(float))
         intro_totals_all_rows = defaultdict(lambda: defaultdict(float))
         header_mismatch_is_failure = bool(
@@ -895,6 +902,14 @@ class Auditor:
 
                     invested_amount = to_float(row_vals[iidx - 1] if (iidx and iidx <= len(row_vals)) else None)
                     spread_amount = to_float(row_vals[sidx - 1] if (sidx and sidx <= len(row_vals)) else None)
+                    if rec.investor_key and (abs(invested_amount) > 0.01 or abs(spread_amount) > 0.01):
+                        sig = dash_intro_signal_by_investor_vehicle.setdefault(
+                            (rec.vehicle, rec.investor_key),
+                            {"has_amount": False, "sample_rows": []},
+                        )
+                        sig["has_amount"] = True
+                        if f"{sheet}:{r_idx}" not in sig["sample_rows"]:
+                            sig["sample_rows"].append(f"{sheet}:{r_idx}")
                     intro_name = carried_intro_name_by_col.get(nidx, "")
                     if not intro_name or intro_name in {"-", "—", "–"}:
                         if abs(invested_amount) > 0.01 or abs(spread_amount) > 0.01:
@@ -934,7 +949,7 @@ class Auditor:
                                 else:
                                     self.add_failure("dashboard_combined_introducer_name", rec.vehicle, msg, f"{sheet}:{r_idx}")
                             continue
-                    if abs(invested_amount) > 0.01:
+                    if abs(invested_amount) > 0.01 or include_zero_commission_rows:
                         dash_commissions.append(
                             DashCommission(
                                 vehicle=rec.vehicle,
@@ -948,7 +963,7 @@ class Auditor:
                                 amount=invested_amount,
                             )
                         )
-                    if abs(spread_amount) > 0.01:
+                    if abs(spread_amount) > 0.01 or include_zero_commission_rows:
                         dash_commissions.append(
                             DashCommission(
                                 vehicle=rec.vehicle,
@@ -962,7 +977,15 @@ class Auditor:
                                 amount=spread_amount,
                             )
                         )
-        return active, zero, totals, intro_totals_all_rows, dash_commissions, combined_commission_skip_keys
+        return (
+            active,
+            zero,
+            totals,
+            intro_totals_all_rows,
+            dash_commissions,
+            combined_commission_skip_keys,
+            dash_intro_signal_by_investor_vehicle,
+        )
 
     def load_db_data(self) -> dict[str, Any]:
         env = load_env(ENV_PATH)
@@ -1385,7 +1408,15 @@ class Auditor:
         return rows, {"source_rows": source_rows, "resolved_rows": resolved_rows, "unresolved_rows": unresolved_rows}
 
     def run_checks(self):
-        dash_active, dash_zero, dash_totals, dash_intro_totals, dash_commissions, combined_commission_skip_keys = self.load_dashboard_rows()
+        (
+            dash_active,
+            dash_zero,
+            dash_totals,
+            dash_intro_totals,
+            dash_commissions,
+            combined_commission_skip_keys,
+            dash_intro_signal_by_investor_vehicle,
+        ) = self.load_dashboard_rows()
         db = self.load_db_data()
         tolerance_overrides = self.rules.get("metric_tolerance_overrides", {}) or {}
         percent_compare_rules = self.rules.get("percent_compare_rules", {}) or {}
@@ -1412,6 +1443,9 @@ class Auditor:
             dash_active = [r for r in dash_active if r.vehicle in scope_set]
             dash_zero = [r for r in dash_zero if r.vehicle in scope_set]
             dash_commissions = [r for r in dash_commissions if r.vehicle in scope_set]
+            dash_intro_signal_by_investor_vehicle = {
+                k: v for k, v in dash_intro_signal_by_investor_vehicle.items() if k[0] in scope_set
+            }
         else:
             scope_codes = configured_scope_codes
             scope_set = set(scope_codes)
@@ -1677,6 +1711,14 @@ class Auditor:
                 f"investor={b.investor_name} commitment={b.commitment} shares={b.shares} date={b.contract_date} sub_id={b.id}",
             )
 
+        # Bridge DB investor ids to the dashboard investor keys they matched to.
+        # This keeps downstream integrity checks aligned with resolved row matching
+        # even when raw names differ (e.g. Daniel vs Dan / entity variants).
+        db_investor_vehicle_to_dash_keys: dict[tuple[str, str], set[str]] = defaultdict(set)
+        for d, b, _ in matched_pairs:
+            if b.investor_id and d.investor_key:
+                db_investor_vehicle_to_dash_keys[(b.vehicle, b.investor_id)].add(d.investor_key)
+
         name_mapping_applied_count = sum(1 for d, b, _ in matched_pairs if d.investor_key != b.investor_key)
         row_match_mode_counts = Counter(mode for _, _, mode in matched_pairs)
 
@@ -1932,6 +1974,30 @@ class Auditor:
                         )
 
         if bool(self.rules["checks"].get("introduction_integrity_check", True)):
+            intro_requires_dash_signal = bool(
+                self.rules.get("checks", {}).get("introduction_requires_dashboard_signal_check", True)
+            )
+            orphan_intro_check = bool(
+                self.rules.get("checks", {}).get("orphan_introduction_without_subscription_check", True)
+            )
+            orphan_intro_as_failure = bool(
+                self.rules.get("checks", {}).get("orphan_introduction_without_subscription_as_failure", False)
+            )
+            dash_presence_by_investor_vehicle = {
+                (r.vehicle, r.investor_key) for r in (dash_active + dash_zero) if r.investor_key
+            }
+            allowed_intro_without_dashboard_signal: set[tuple[str, str]] = set()
+            for rule in self.rules.get("allowed_db_introduction_without_dashboard_signal", []):
+                if not isinstance(rule, dict):
+                    continue
+                vc = str(rule.get("vehicle") or "").strip()
+                inv_name = str(rule.get("investor") or "")
+                if not vc or not inv_name:
+                    continue
+                inv_key = self.investor_key_for_vehicle(vc, inv_name)
+                if inv_key:
+                    allowed_intro_without_dashboard_signal.add((vc, inv_key))
+
             allowed_intro_dups = {
                 (
                     str(x.get("introducer_id") or ""),
@@ -2002,6 +2068,57 @@ class Auditor:
                             vc,
                             f"introduction_id={i.get('id')} introduced_at={introduced_at} subscription_dates={sorted(sub_dates)}",
                         )
+                if intro_requires_dash_signal:
+                    inv_id = i.get("prospect_investor_id")
+                    inv_name = db.get("iid_to_name", {}).get(inv_id, "")
+                    sub_key = (i.get("deal_id"), inv_id)
+                    has_subscription = bool(db.get("sub_contract_dates_by_deal_investor", {}).get(sub_key, set()))
+                    if not has_subscription:
+                        if orphan_intro_check:
+                            msg = (
+                                f"introduction_id={i.get('id')} investor={inv_name or '<blank>'} "
+                                f"deal_id={i.get('deal_id')} introduced_at={i.get('introduced_at')} "
+                                f"reason=no_subscription_for_deal_investor"
+                            )
+                            if orphan_intro_as_failure:
+                                self.add_failure("orphan_introduction_without_subscription", vc, msg)
+                            else:
+                                self.add_warning("orphan_introduction_without_subscription", vc, msg)
+                        continue
+
+                    inv_key = self.investor_key_for_vehicle(vc, inv_name) if inv_name and vc else ""
+                    candidate_dash_keys = set()
+                    if vc and inv_id:
+                        candidate_dash_keys.update(db_investor_vehicle_to_dash_keys.get((vc, inv_id), set()))
+                    if inv_key:
+                        candidate_dash_keys.add(inv_key)
+
+                    relevant_pairs = [
+                        (vc, dk) for dk in sorted(candidate_dash_keys) if (vc, dk) in dash_presence_by_investor_vehicle
+                    ]
+                    if relevant_pairs:
+                        if any(pair in allowed_intro_without_dashboard_signal for pair in relevant_pairs):
+                            continue
+                        has_signal = False
+                        sample_rows_all: list[str] = []
+                        for pair in relevant_pairs:
+                            sig = dash_intro_signal_by_investor_vehicle.get(pair, {})
+                            if bool(sig.get("has_amount")):
+                                has_signal = True
+                                break
+                            if isinstance(sig, dict):
+                                sample_rows_all.extend(sig.get("sample_rows", []))
+                        if not has_signal:
+                            sample_rows = ",".join(sorted(set(sample_rows_all))[:3])
+                            self.add_failure(
+                                "introduction_in_db_without_dashboard_signal",
+                                vc,
+                                (
+                                    f"introduction_id={i.get('id')} investor={inv_name or '<blank>'} "
+                                    f"deal_id={i.get('deal_id')} introduced_at={i.get('introduced_at')} "
+                                    f"dashboard_rows={sample_rows or '<none>'}"
+                                ),
+                            )
 
         if bool(self.rules["checks"].get("subscription_formula_cross_field_check", True)):
             formula_tol = float(self.rules.get("subscription_formula_amount_tolerance", 1.0))
@@ -2288,6 +2405,9 @@ class Auditor:
         warnings_only_keys = {name_key(x, self.aliases) for x in self.rules.get("warnings_only_introducers", [])}
         comm_skip_vcs = set(self.rules.get("commission_totals_exclude_vehicle_codes", []))
         comm_row_skip_vcs = set(self.rules.get("commission_row_exclude_vehicle_codes", []))
+        include_zero_commission_rows = bool(
+            self.rules.get("commission_include_zero_amount_rows_for_row_checks", False)
+        )
         mapped_combined_commission_skip_keys: set[tuple[str, str, str]] = set()
         for vc, sheet, row_num, basis in combined_commission_skip_keys:
             mapped_inv = row_investor_map.get((vc, sheet, row_num), "")
@@ -2349,7 +2469,7 @@ class Auditor:
             # Count/split parity should compare only economically meaningful rows.
             # Historical zero-amount rows are common in DB and should not create
             # synthetic row-count mismatches against dashboard rows.
-            if abs(c.amount) > 0.01:
+            if include_zero_commission_rows or abs(c.amount) > 0.01:
                 db_comm_rows_by_key[k].append(c.amount)
             if k not in db_meta:
                 db_meta[k] = {"investor": c.investor_name, "introducer": c.introducer_name, "row_ref": c.id}
@@ -2433,9 +2553,12 @@ class Auditor:
 
             # Multiplicity/split parity: same key should have the same row count and split profile.
             # Aggregate totals can match while per-row split is wrong; this catches that.
-            d_rows = sorted([round(x, 6) for x in dash_comm_rows_by_key.get(k, [])])
-            b_rows = sorted([round(x, 6) for x in db_comm_rows_by_key.get(k, [])])
-            if abs(dv) > 0.01 and abs(bv) > 0.01 and d_rows and b_rows:
+            d_rows = sorted([round(x, 6) for x in dash_comm_rows_by_key.get(k, []) if abs(x) > 0.01])
+            b_rows = sorted([round(x, 6) for x in db_comm_rows_by_key.get(k, []) if abs(x) > 0.01])
+            if include_zero_commission_rows and abs(dv) <= 0.01 and abs(bv) <= 0.01:
+                continue
+            row_check_applicable = abs(dv) > 0.01 and abs(bv) > 0.01 and d_rows and b_rows
+            if row_check_applicable:
                 if len(d_rows) != len(b_rows):
                     self.add_failure(
                         "commission_row_count_mismatch",

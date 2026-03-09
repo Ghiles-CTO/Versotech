@@ -1,0 +1,998 @@
+severity,check,vehicle,row_ref,details
+fail,commission_row_count_mismatch,VC102,VC2:9,investor=KRISTINA & CHENG-LIN SUTKAITYTE & HSU introducer=Pierre Paumier basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC102,VC2:9,investor=KRISTINA & CHENG-LIN SUTKAITYTE & HSU introducer=Pierre Paumier basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC102,VC2:7,investor=LF GROUP SARL introducer=Pierre Paumier basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC102,VC2:8,investor=Pierre PAUMIER introducer=Pierre Paumier basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC102,VC2:8,investor=Pierre PAUMIER introducer=Pierre Paumier basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:73,investor=Innovatech 1 introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:73,investor=Innovatech 1 introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:42,investor=TRUE INVESTMENTS 4 LLC introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:42,investor=TRUE INVESTMENTS 4 LLC introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:56,investor=Hedgebay Securities LLC introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:56,investor=Hedgebay Securities LLC introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:61,investor=Mohammed Abdulaziz AL ABBASI introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:61,investor=Mohammed Abdulaziz AL ABBASI introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:69,investor=John ACKERLEY introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:29,investor=Adam Smith Singapore Pte Ltd introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:20,investor=AS ADVISORY DWC-LLC introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:13,investor=Rajiv AGARWALA introducer=Manna Capital basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:124,investor=Bank SYZ AG introducer=VERSO BI basis=invested_amount dashboard_rows=8 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:124,investor=Bank SYZ AG introducer=VERSO BI basis=spread dashboard_rows=8 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:124,investor=Bank SYZ AG introducer=VERSO PARTNER basis=invested_amount dashboard_rows=8 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:18,investor=DALINGA HOLDING AG introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:22,investor=MA GROUP AG introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:22,investor=MA GROUP AG introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:149,investor=James A. HARTSHORN introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:149,investor=James A. HARTSHORN introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:24,investor=Johann Markus AKERMANN introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:11,investor=Sheikh Yousef AL SABAH introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:11,investor=Sheikh Yousef AL SABAH introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:219,investor=STABLETON (ALTERNATIVE ISSUANCE) introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:219,investor=STABLETON (ALTERNATIVE ISSUANCE) introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:40,investor=Mrs and Mr KARKUN introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:40,investor=Mrs and Mr KARKUN introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:146,investor=Anke Skoludek RICE introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:146,investor=Anke Skoludek RICE introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:146,investor=Anke Skoludek RICE introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:146,investor=Anke Skoludek RICE introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:79,investor=Lesli Ann SCHUTTE introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:112,investor=Mrs Nalini Yoga & Mr Aran James WILLETTS introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:81,investor=IQEQ (Switzerland) Limited As Trustee of the Raycat Investment Trust introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:81,investor=IQEQ (Switzerland) Limited As Trustee of the Raycat Investment Trust introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:81,investor=IQEQ (Switzerland) Limited As Trustee of the Raycat Investment Trust introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:81,investor=IQEQ (Switzerland) Limited As Trustee of the Raycat Investment Trust introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:166,investor=Nicki ASQUITH introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:166,investor=Nicki ASQUITH introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:166,investor=Nicki ASQUITH introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:166,investor=Nicki ASQUITH introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:46,investor=LEE RAND GROUP introducer=Anand Sethia basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:46,investor=LEE RAND GROUP introducer=Anand Sethia basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:46,investor=LEE RAND GROUP introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:168,investor=Martin AVETISYAN introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:168,investor=Martin AVETISYAN introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:168,investor=Martin AVETISYAN introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:168,investor=Martin AVETISYAN introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:117,investor=Ayman JOMAA introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:101,investor=David BACHELIER introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:101,investor=David BACHELIER introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:101,investor=David BACHELIER introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:36,investor=Bahama Global Towers Limited introducer=Anand Sethia basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:36,investor=Bahama Global Towers Limited introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:38,investor=Heinz & Barbara WINZ introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:38,investor=Heinz & Barbara WINZ introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:76,investor=Barnaby John MOORE introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:76,investor=Barnaby John MOORE introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:76,investor=Barnaby John MOORE introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:185,investor=Charles DE BAVIER introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:185,investor=Charles DE BAVIER introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:185,investor=Charles DE BAVIER introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:185,investor=Charles DE BAVIER introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:34,investor=Mrs and Mr Beatrice & Marcel KNOPF introducer=TERRA Financial basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:116,investor=Ivan BELGA introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:48,investor=Mohamad Ismail BIN MOHAMED introducer=Anand Sethia basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:48,investor=Mohamad Ismail BIN MOHAMED introducer=Anand Sethia basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:48,investor=Mohamad Ismail BIN MOHAMED introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:4,investor=Blaine ROLLINS introducer=Manna Capital basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:66,investor=Emile VAN DEN BOL introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:148,investor=Brahma Finance (BVI) Ltd introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:148,investor=Brahma Finance (BVI) Ltd introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:133,investor=Bright Phoenix Holdings Limited introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:133,investor=Bright Phoenix Holdings Limited introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:72,investor=Gregory BROOKS introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:41,investor=Craig BROWN introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:41,investor=Craig BROWN introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:25,investor=Sandra KOHLER CABIAN introducer=VERSO BI basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:25,investor=Sandra KOHLER CABIAN introducer=VERSO BI basis=spread dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC106,VC6:25,investor=Sandra KOHLER CABIAN introducer=VERSO PARTNER basis=invested_amount dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC106,VC6:162,investor=REVERY CAPITAL Limited introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:162,investor=REVERY CAPITAL Limited introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:162,investor=REVERY CAPITAL Limited introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:162,investor=REVERY CAPITAL Limited introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:78,investor=Sudon Carlop Holdings Limited introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:37,investor=CAUSE FIRST Holdings Ltd introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:37,investor=CAUSE FIRST Holdings Ltd introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:102,investor=Talal Chamsi PASHA introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:102,investor=Talal Chamsi PASHA introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:102,investor=Talal Chamsi PASHA introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:102,investor=Talal Chamsi PASHA introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:164,investor=Maria Christina CHANDRIS introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:164,investor=Maria Christina CHANDRIS introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:164,investor=Maria Christina CHANDRIS introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:164,investor=Maria Christina CHANDRIS introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:165,investor=Dimitri CHANDRIS introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:165,investor=Dimitri CHANDRIS introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:165,investor=Dimitri CHANDRIS introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:165,investor=Dimitri CHANDRIS introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:167,investor=Isabella CHANDRIS introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:167,investor=Isabella CHANDRIS introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:167,investor=Isabella CHANDRIS introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:167,investor=Isabella CHANDRIS introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:6,investor=Laurence CHANG introducer=Manna Capital basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:8,investor=Chang Yong NGAN introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:186,investor=Charles RIVA introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:186,investor=Charles RIVA introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:12,investor=Han CHIH-HENG introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:110,investor=CINCORIA LIMITED introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:110,investor=CINCORIA LIMITED introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:71,investor=Global Custody & Clearing Limited introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:187,investor=Jeremie CYROT introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:187,investor=Jeremie CYROT introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:187,investor=Jeremie CYROT introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:187,investor=Jeremie CYROT introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:74,investor=Stephane DAHAN introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:132,investor=Damien KRAUSER introducer=VERSO BI basis=invested_amount dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC106,VC6:132,investor=Damien KRAUSER introducer=VERSO BI basis=spread dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC106,VC6:132,investor=Damien KRAUSER introducer=VERSO PARTNER basis=invested_amount dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC106,VC6:15,investor=Daryl PAK YONGJIE introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:47,investor=LEE RAND GROUP introducer=Anand Sethia basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:47,investor=LEE RAND GROUP introducer=Anand Sethia basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:47,investor=LEE RAND GROUP introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:91,investor=David HOLDEN introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:114,investor=Rabin D. and Dolly LAI introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:172,investor=Denis MATTHEY introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:172,investor=Denis MATTHEY introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:172,investor=Denis MATTHEY introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:172,investor=Denis MATTHEY introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:75,investor=Jean DUTIL introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:16,investor=Ekkawat SAE-JEE introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:28,investor=Elidon Estate Inc introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:113,investor=Emma Graham-Taylor & Gregory SOMMERVILLE introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:113,investor=Emma Graham-Taylor & Gregory SOMMERVILLE introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:83,investor=Erich GRAF introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:83,investor=Erich GRAF introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:135,investor=Eric Pascal LE SEIGNEUR introducer=VERSO BI basis=spread dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC106,VC6:158,investor=Eric SARASIN introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:158,investor=Eric SARASIN introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:104,investor=Fabien ROTH introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:104,investor=Fabien ROTH introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:64,investor=FigTree Family Office Ltd introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:84,investor=TERRA Financial & Management Services SA introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:161,investor=Scott FLETCHER introducer=VERSO BI basis=invested_amount dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC106,VC6:161,investor=Scott FLETCHER introducer=VERSO BI basis=spread dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC106,VC6:161,investor=Scott FLETCHER introducer=VERSO PARTNER basis=invested_amount dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC106,VC6:161,investor=Scott FLETCHER introducer=VERSO PARTNER basis=spread dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC106,VC6:142,investor=Kevin FOSTER WILTSHIRE introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:142,investor=Kevin FOSTER WILTSHIRE introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:49,investor=LEE RAND GROUP introducer=Anand Sethia basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:49,investor=LEE RAND GROUP introducer=Anand Sethia basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:49,investor=LEE RAND GROUP introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:17,investor=Tan Sor GEOK introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:89,investor=GORILLA PE Inc introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:89,investor=GORILLA PE Inc introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:214,investor=Samuel GRANDCHAMP introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:214,investor=Samuel GRANDCHAMP introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:214,investor=Samuel GRANDCHAMP introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:214,investor=Samuel GRANDCHAMP introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:31,investor=VERSO GROUP introducer=VERSO BI basis=invested_amount dashboard_rows=6 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:31,investor=VERSO GROUP introducer=VERSO BI basis=spread dashboard_rows=6 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:55,investor=VERSO GROUP introducer=Anand Sethia basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:55,investor=VERSO GROUP introducer=Anand Sethia basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:31,investor=VERSO GROUP introducer=VERSO PARTNER basis=invested_amount dashboard_rows=7 db_rows=2
+fail,commission_row_count_mismatch,VC106,VC6:31,investor=VERSO GROUP introducer=VERSO PARTNER basis=spread dashboard_rows=7 db_rows=3
+fail,commission_row_count_mismatch,VC106,VC6:119,investor=Imran HAKIM introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:57,investor=Hedgebay Securities LLC introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:57,investor=Hedgebay Securities LLC introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:58,investor=Hedgebay Securities LLC introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:58,investor=Hedgebay Securities LLC introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:94,investor=Imrat HAYAT introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:68,investor=Matthew HAYCOX introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:111,investor=Hayden RUSHTON introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:43,investor=ROSEN INVEST HOLDINGS Inc introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:86,investor=JASSQ HOLDING LIMITED introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:212,investor=RLABS HOLDINGS LTD introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:212,investor=RLABS HOLDINGS LTD introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:136,investor=Swip Holdings Ltd introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:136,investor=Swip Holdings Ltd introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:50,investor=PANT Investments Inc introducer=Anand Sethia basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:50,investor=PANT Investments Inc introducer=Anand Sethia basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:50,investor=PANT Investments Inc introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:45,investor=JIMENEZ TRADING INC introducer=Anand Sethia basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:45,investor=JIMENEZ TRADING INC introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:87,investor=INNOSIGHT VENTURES Pte Ltd introducer=VERSO BI basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:87,investor=INNOSIGHT VENTURES Pte Ltd introducer=VERSO PARTNER basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:23,investor=KRANA INVESTMENTS PTE. LTD. introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:118,investor=Karthic JAYARAMAN introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:70,investor=Steve J MANNING introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:63,investor=Stephen JORDAN introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:21,investor=OEP Ltd introducer=VERSO BI basis=invested_amount dashboard_rows=12 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:21,investor=OEP Ltd introducer=VERSO BI basis=spread dashboard_rows=12 db_rows=1
+fail,commission_row_count_mismatch,VC106,VC6:54,investor=Julien MACHOT introducer=Anand Sethia basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:54,investor=Julien MACHOT introducer=Anand Sethia basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:21,investor=OEP Ltd introducer=VERSO PARTNER basis=invested_amount dashboard_rows=9 db_rows=4
+fail,commission_row_count_mismatch,VC106,VC6:21,investor=OEP Ltd introducer=VERSO PARTNER basis=spread dashboard_rows=9 db_rows=6
+fail,commission_row_count_mismatch,VC106,VC6:106,investor=KABELLA LTD introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:106,investor=KABELLA LTD introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:9,investor=SHEILA and KAMLESH MADHVANI introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:52,investor=LEE RAND GROUP introducer=Anand Sethia basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:52,investor=LEE RAND GROUP introducer=Anand Sethia basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:52,investor=LEE RAND GROUP introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:120,investor=Kenilworth Ltd introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:115,investor=Kim LUND introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:10,investor=SAMIR KOHI introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:53,investor=LEE RAND GROUP introducer=Anand Sethia basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:53,investor=LEE RAND GROUP introducer=Anand Sethia basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:53,investor=LEE RAND GROUP introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:60,investor=ONC Limited introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:107,investor=SOUTH SOUND LTD introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:44,investor=Mrs & Mr Subbiah SUBRAMANIAN introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:44,investor=Mrs & Mr Subbiah SUBRAMANIAN introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:80,investor=Manraj Singh SEKHON introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:80,investor=Manraj Singh SEKHON introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:67,investor=Mark MATTHEWS introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:19,investor=Matteo Massimo MARTINI introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:85,investor=Shana NUSSBERGER introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:85,investor=Shana NUSSBERGER introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:65,investor=Oliver WRIGHT introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:51,investor=LEE RAND GROUP introducer=Anand Sethia basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:51,investor=LEE RAND GROUP introducer=Anand Sethia basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:51,investor=LEE RAND GROUP introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:82,investor=Serge RICHARD introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:82,investor=Serge RICHARD introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:82,investor=Serge RICHARD introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:82,investor=Serge RICHARD introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:39,investor=Sabrina WINZ introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:39,investor=Sabrina WINZ introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:59,investor=Hedgebay Securities LLC introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:59,investor=Hedgebay Securities LLC introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC106,VC6:35,investor=VOLF Trust introducer=TERRA Financial basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:31,investor=BenSkyla AG introducer=Julien basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:31,investor=BenSkyla AG introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:31,investor=BenSkyla AG introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:31,investor=BenSkyla AG introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:7,investor=DALINGA HOLDING AG introducer=Daniel Baumslag basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:7,investor=DALINGA HOLDING AG introducer=Terra basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:7,investor=DALINGA HOLDING AG introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:7,investor=DALINGA HOLDING AG introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:19,investor=Johann Markus AKERMANN introducer=Daniel Baumslag basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:19,investor=Johann Markus AKERMANN introducer=Terra basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:19,investor=Johann Markus AKERMANN introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:19,investor=Johann Markus AKERMANN introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:21,investor=Alberto Attilio RAVANO introducer=AUX basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:21,investor=Alberto Attilio RAVANO introducer=Daniel Baumslag basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:21,investor=Alberto Attilio RAVANO introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:21,investor=Alberto Attilio RAVANO introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:25,investor=Antonio Bruno PERONACE introducer=AUX basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:25,investor=Antonio Bruno PERONACE introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:25,investor=Antonio Bruno PERONACE introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:25,investor=Antonio Bruno PERONACE introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:12,"investor=Dan
+Jean BAUMSLAG
+DUTIL introducer=Daniel Baumslag basis=invested_amount dashboard_rows=1 db_rows=0"
+fail,commission_row_count_mismatch,VC111,VC11:12,"investor=Dan
+Jean BAUMSLAG
+DUTIL introducer=Daniel Baumslag basis=spread dashboard_rows=1 db_rows=0"
+fail,commission_row_count_mismatch,VC111,VC11:12,"investor=Dan
+Jean BAUMSLAG
+DUTIL introducer=John basis=invested_amount dashboard_rows=1 db_rows=0"
+fail,commission_row_count_mismatch,VC111,VC11:12,"investor=Dan
+Jean BAUMSLAG
+DUTIL introducer=John basis=spread dashboard_rows=1 db_rows=0"
+fail,commission_row_count_mismatch,VC111,VC11:4,investor=Dan BAUMSLAG introducer=VERSO basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:4,investor=Dan BAUMSLAG introducer=VERSO basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:30,investor=Beatrice and Marcel KNOPF introducer=Julien basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:30,investor=Beatrice and Marcel KNOPF introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:30,investor=Beatrice and Marcel KNOPF introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:30,investor=Beatrice and Marcel KNOPF introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:27,investor=BRAHMA FINANCE introducer=AUX basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:27,investor=BRAHMA FINANCE introducer=AUX basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:27,investor=BRAHMA FINANCE introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:27,investor=BRAHMA FINANCE introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:27,investor=BRAHMA FINANCE introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:24,investor=Bright Phoenix Holdings LTD introducer=Daniel Baumslag basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:24,investor=Bright Phoenix Holdings LTD introducer=Gemera basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:24,investor=Bright Phoenix Holdings LTD introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:24,investor=Bright Phoenix Holdings LTD introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:14,investor=Bruce HAWKINS introducer=Daniel Baumslag basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:14,investor=Bruce HAWKINS introducer=John basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:14,investor=Bruce HAWKINS introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:14,investor=Bruce HAWKINS introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:16,investor=James BURCH introducer=Daniel Baumslag basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:16,investor=James BURCH introducer=John basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:16,investor=James BURCH introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:16,investor=James BURCH introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:18,investor=Sandra KOHLER CABIAN introducer=Daniel Baumslag basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:18,investor=Sandra KOHLER CABIAN introducer=John basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:18,investor=Sandra KOHLER CABIAN introducer=John basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:18,investor=Sandra KOHLER CABIAN introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:18,investor=Sandra KOHLER CABIAN introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:13,investor=Stephane DAHAN introducer=Daniel Baumslag basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:13,investor=Stephane DAHAN introducer=John basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:13,investor=Stephane DAHAN introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:13,investor=Stephane DAHAN introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:10,investor=David HOLDEN introducer=Daniel Baumslag basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:10,investor=David HOLDEN introducer=John basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:10,investor=David HOLDEN introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:10,investor=David HOLDEN introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:29,investor=Denis MATTHEY introducer=AUX basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:29,investor=Denis MATTHEY introducer=AUX basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:29,investor=Denis MATTHEY introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:29,investor=Denis MATTHEY introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:29,investor=Denis MATTHEY introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:29,investor=Denis MATTHEY introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:20,investor=Erich GRAF introducer=Daniel Baumslag basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:20,investor=Erich GRAF introducer=Terra basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:20,investor=Erich GRAF introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:20,investor=Erich GRAF introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:22,investor=FINALMA SUISSE SA introducer=AUX basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:22,investor=FINALMA SUISSE SA introducer=Daniel Baumslag basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:22,investor=FINALMA SUISSE SA introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:22,investor=FINALMA SUISSE SA introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:33,investor=Wymo Finance Limited introducer=Anand Sethia basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:33,investor=Wymo Finance Limited introducer=Anand Sethia basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:33,investor=Wymo Finance Limited introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:33,investor=Wymo Finance Limited introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:33,investor=Wymo Finance Limited introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:38,investor=TERRA Financial & Management Services SA introducer=Rick + Andrew basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:38,investor=TERRA Financial & Management Services SA introducer=Rick + Andrew basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:11,investor=TERRA Financial & Management Services SA introducer=Daniel Baumslag basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:11,investor=TERRA Financial & Management Services SA introducer=John basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:11,investor=TERRA Financial & Management Services SA introducer=John basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:38,investor=TERRA Financial & Management Services SA introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:11,investor=TERRA Financial & Management Services SA introducer=VERSO basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:11,investor=TERRA Financial & Management Services SA introducer=VERSO basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:28,investor=GTV Partners SA introducer=AUX basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:28,investor=GTV Partners SA introducer=AUX basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:28,investor=GTV Partners SA introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:28,investor=GTV Partners SA introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:28,investor=GTV Partners SA introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:28,investor=GTV Partners SA introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:35,investor=Vladimir GUSEV introducer=Terra basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:35,investor=Vladimir GUSEV introducer=VERSO PARTNER basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:35,investor=Vladimir GUSEV introducer=VERSO basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:35,investor=Vladimir GUSEV introducer=VERSO basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:34,investor=HASSBRO Investments Limited introducer=Anand Sethia basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:34,investor=HASSBRO Investments Limited introducer=Anand Sethia basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:34,investor=HASSBRO Investments Limited introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:34,investor=HASSBRO Investments Limited introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:34,investor=HASSBRO Investments Limited introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:32,investor=Peter HOGLAND introducer=Julien basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:32,investor=Peter HOGLAND introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:32,investor=Peter HOGLAND introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:32,investor=Peter HOGLAND introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:5,investor=ROSEN INVEST HOLDINGS INC introducer=Daniel Baumslag basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:5,investor=ROSEN INVEST HOLDINGS INC introducer=Gemera basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:5,investor=ROSEN INVEST HOLDINGS INC introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:5,investor=ROSEN INVEST HOLDINGS INC introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:39,investor=LPP Investment Holdings Ltd introducer=Rick + Andrew basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:39,investor=LPP Investment Holdings Ltd introducer=Rick + Andrew basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:39,investor=LPP Investment Holdings Ltd introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:39,investor=LPP Investment Holdings Ltd introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:39,investor=LPP Investment Holdings Ltd introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:39,investor=LPP Investment Holdings Ltd introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:6,investor=STRUCTURED ISSUANCE Ltd introducer=Daniel Baumslag basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:6,investor=STRUCTURED ISSUANCE Ltd introducer=Stableton+Terra basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:6,investor=STRUCTURED ISSUANCE Ltd introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:6,investor=STRUCTURED ISSUANCE Ltd introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:26,investor=Julien MACHOT introducer=AUX basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:26,investor=Julien MACHOT introducer=AUX basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:26,investor=Julien MACHOT introducer=VERSO PARTNER basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:26,investor=Julien MACHOT introducer=VERSO PARTNER basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:3,investor=Julien MACHOT introducer=VERSO basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:3,investor=Julien MACHOT introducer=VERSO basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:9,"investor=OEP LIMITED
+(Transfer from AS ADVISORY DWC LLC) introducer=Daniel Baumslag basis=invested_amount dashboard_rows=1 db_rows=0"
+fail,commission_row_count_mismatch,VC111,VC11:9,"investor=OEP LIMITED
+(Transfer from AS ADVISORY DWC LLC) introducer=Daniel Baumslag basis=spread dashboard_rows=1 db_rows=0"
+fail,commission_row_count_mismatch,VC111,VC11:9,"investor=OEP LIMITED
+(Transfer from AS ADVISORY DWC LLC) introducer=Terra basis=invested_amount dashboard_rows=1 db_rows=0"
+fail,commission_row_count_mismatch,VC111,VC11:9,"investor=OEP LIMITED
+(Transfer from AS ADVISORY DWC LLC) introducer=Terra basis=spread dashboard_rows=1 db_rows=0"
+fail,commission_row_count_mismatch,VC111,VC11:9,"investor=OEP LIMITED
+(Transfer from AS ADVISORY DWC LLC) introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0"
+fail,commission_row_count_mismatch,VC111,VC11:9,"investor=OEP LIMITED
+(Transfer from AS ADVISORY DWC LLC) introducer=VERSO basis=spread dashboard_rows=1 db_rows=0"
+fail,commission_row_count_mismatch,VC111,VC11:23,investor=MONFIN LTD introducer=AUX basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:23,investor=MONFIN LTD introducer=Daniel Baumslag basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:23,investor=MONFIN LTD introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:23,investor=MONFIN LTD introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:17,investor=Mark MATTHEWS introducer=Daniel Baumslag basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:17,investor=Mark MATTHEWS introducer=John basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:17,investor=Mark MATTHEWS introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:17,investor=Mark MATTHEWS introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:37,investor=Zandera (Finco) Limited introducer=Rick + Andrew basis=invested_amount dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC111,VC11:37,investor=Zandera (Finco) Limited introducer=Rick + Andrew basis=spread dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC111,VC11:37,investor=Zandera (Finco) Limited introducer=VERSO PARTNER basis=invested_amount dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC111,VC11:37,investor=Zandera (Finco) Limited introducer=VERSO PARTNER basis=spread dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC111,VC11:37,investor=Zandera (Finco) Limited introducer=VERSO basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:37,investor=Zandera (Finco) Limited introducer=VERSO basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:8,investor=Tartrifuge SA introducer=Daniel Baumslag basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:8,investor=Tartrifuge SA introducer=Terra basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:8,investor=Tartrifuge SA introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:8,investor=Tartrifuge SA introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:15,investor=VOLF Trust introducer=Daniel Baumslag basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:15,investor=VOLF Trust introducer=Terra basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:15,investor=VOLF Trust introducer=VERSO basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC111,VC11:15,investor=VOLF Trust introducer=VERSO basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC112,VC12:21,investor=Giovanni Antonio Alberto ALBERTINI introducer=FINSA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC112,VC12:18,investor=Liudmila and Alexey ROMANOV introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC112,VC12:20,investor=Sheikh Yousef AL SABAH introducer=TERRA basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC112,VC12:20,investor=Sheikh Yousef AL SABAH introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC112,VC12:17,investor=Beatrice and Marcel KNOPF introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC112,VC12:22,investor=Julien MACHOT introducer=FINSA basis=invested_amount dashboard_rows=5 db_rows=0
+fail,commission_row_count_mismatch,VC112,VC12:22,investor=Julien MACHOT introducer=FINSA basis=spread dashboard_rows=5 db_rows=0
+fail,commission_row_count_mismatch,VC112,VC12:19,investor=Tom ROAD introducer=TERRA basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC112,VC12:19,investor=Tom ROAD introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC112,VC12:23,investor=VERSO X introducer=FINSA basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC112,VC12:23,investor=VERSO X introducer=FINSA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:74,investor=Abhie Shreyas SHAH introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:74,investor=Abhie Shreyas SHAH introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:74,investor=Abhie Shreyas SHAH introducer=Robin basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:61,investor=AS ADVISORY DWC LLC introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:61,investor=AS ADVISORY DWC LLC introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:61,investor=AS ADVISORY DWC LLC introducer=Omar basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:61,investor=AS ADVISORY DWC LLC introducer=Omar basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:7,investor=Dalinga AG introducer=Dan basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:7,investor=Dalinga AG introducer=Terra basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:6,investor=Markus AKERMANN introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:6,investor=Markus AKERMANN introducer=Terra basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:9,investor=Liudmila Romanova and Alexey ROMANOV introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:9,investor=Liudmila Romanova and Alexey ROMANOV introducer=Terra basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:26,investor=Philip ALGAR introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:26,investor=Philip ALGAR introducer=Terra basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:41,investor=Nineteen77 Global Multi-Strategy Alpha Master Limited introducer=Denis basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:41,investor=Nineteen77 Global Multi-Strategy Alpha Master Limited introducer=Denis basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:41,investor=Nineteen77 Global Multi-Strategy Alpha Master Limited introducer=Gary basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:41,investor=Nineteen77 Global Multi-Strategy Alpha Master Limited introducer=Gary basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:72,investor=Sheikh Yousef AL SABAH introducer=Rick basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:72,investor=Sheikh Yousef AL SABAH introducer=Rick basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:72,investor=Sheikh Yousef AL SABAH introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:72,investor=Sheikh Yousef AL SABAH introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:73,investor=Andrew MEYER introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:73,investor=Andrew MEYER introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:73,investor=Andrew MEYER introducer=Robin basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:11,investor=Andrey GORYAINOV introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:11,investor=Andrey GORYAINOV introducer=Terra basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:22,investor=Shrai and Aparna MADHVANI introducer=Rick basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:10,investor=IQEQ (SWITZERLAND) LIMITED ATO RAYCAT INVESTMENT TRUST introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:10,investor=IQEQ (SWITZERLAND) LIMITED ATO RAYCAT INVESTMENT TRUST introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:10,investor=IQEQ (SWITZERLAND) LIMITED ATO RAYCAT INVESTMENT TRUST introducer=Terra basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:10,investor=IQEQ (SWITZERLAND) LIMITED ATO RAYCAT INVESTMENT TRUST introducer=Terra basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:47,investor=Hong Bao NGOC LE introducer=Denis basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:47,investor=Hong Bao NGOC LE introducer=Denis basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:47,investor=Hong Bao NGOC LE introducer=John basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:47,investor=Hong Bao NGOC LE introducer=John basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:4,investor=Barbara and Heinz WINZ introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:4,investor=Barbara and Heinz WINZ introducer=Terra basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:44,investor=John BARROWMAN introducer=Denis basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:44,investor=John BARROWMAN introducer=Denis basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:44,investor=John BARROWMAN introducer=Enguerrand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:44,investor=John BARROWMAN introducer=Enguerrand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:56,investor=Daniel BAUMSLAG introducer=Rick basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:56,investor=Daniel BAUMSLAG introducer=Rick basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:56,investor=Daniel BAUMSLAG introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:56,investor=Daniel BAUMSLAG introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:36,investor=Charles DE BAVIER introducer=Denis basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:36,investor=Charles DE BAVIER introducer=Denis basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:36,investor=Charles DE BAVIER introducer=Enguerrand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:36,investor=Charles DE BAVIER introducer=Enguerrand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:17,investor=Beatrice and Marcel KNOPF introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:17,investor=Beatrice and Marcel KNOPF introducer=Terra basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:78,investor=Keir BENBOW introducer=Rick basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:78,investor=Keir BENBOW introducer=Rick basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:78,investor=Keir BENBOW introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:78,investor=Keir BENBOW introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:65,investor=Benjamin POURRAT introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:65,investor=Benjamin POURRAT introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:65,investor=Benjamin POURRAT introducer=Enguerrand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:65,investor=Benjamin POURRAT introducer=Enguerrand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:24,investor=Bright Phoenix Holdings Ltd introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:24,investor=Bright Phoenix Holdings Ltd introducer=Sandro basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:42,investor=Gielke Jan BURGMANS introducer=Denis basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:42,investor=Gielke Jan BURGMANS introducer=Denis basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:42,investor=Gielke Jan BURGMANS introducer=Gary basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:42,investor=Gielke Jan BURGMANS introducer=Gary basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:5,investor=Sandra KOHLER CABIAN introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:5,investor=Sandra KOHLER CABIAN introducer=Terra basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:5,investor=Sandra KOHLER CABIAN introducer=Terra basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:57,investor=SMR3T Capital Pte Ltd introducer=Rick basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:57,investor=SMR3T Capital Pte Ltd introducer=Rick basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:57,investor=SMR3T Capital Pte Ltd introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:57,investor=SMR3T Capital Pte Ltd introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:35,investor=Mayuriben Chetan K. JOGANI introducer=Denis basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:35,investor=Mayuriben Chetan K. JOGANI introducer=Enguerrand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:35,investor=Mayuriben Chetan K. JOGANI introducer=Enguerrand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:58,investor=CLOUD IN HEAVEN SAS introducer=Rick basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:58,investor=CLOUD IN HEAVEN SAS introducer=Rick basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:58,investor=CLOUD IN HEAVEN SAS introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:58,investor=CLOUD IN HEAVEN SAS introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:40,investor=Jeremie COMEL introducer=Denis basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:40,investor=Jeremie COMEL introducer=Denis basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:40,investor=Jeremie COMEL introducer=Enguerrand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:51,investor=Deyan D MIHOV introducer=Rick basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:51,investor=Deyan D MIHOV introducer=Rick basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:51,investor=Deyan D MIHOV introducer=Anand basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:51,investor=Deyan D MIHOV introducer=Anand basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:75,investor=Deyan D MIHOV introducer=Robin basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:75,investor=Deyan D MIHOV introducer=Robin basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:30,investor=Mrs Rosario Teresa & Mr Deepak HIQUIANA-TANEJA & TANEJA introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:30,investor=Mrs Rosario Teresa & Mr Deepak HIQUIANA-TANEJA & TANEJA introducer=Sandro basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:23,investor=Ivan DE introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:23,investor=Ivan DE introducer=Terra basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:54,investor=Denis MATTHEY introducer=Rick basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:54,investor=Denis MATTHEY introducer=Rick basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:54,investor=Denis MATTHEY introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:54,investor=Denis MATTHEY introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:55,investor=Robert Jan DETTMEIJER introducer=Rick basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:55,investor=Robert Jan DETTMEIJER introducer=Rick basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:55,investor=Robert Jan DETTMEIJER introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:55,investor=Robert Jan DETTMEIJER introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:45,investor=Robin DOBLE introducer=Denis basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:45,investor=Robin DOBLE introducer=Denis basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:45,investor=Robin DOBLE introducer=Enguerrand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:45,investor=Robin DOBLE introducer=Enguerrand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:43,investor=Halim EL MOGHAZI introducer=Denis basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:43,investor=Halim EL MOGHAZI introducer=Denis basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:43,investor=Halim EL MOGHAZI introducer=Enguerrand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:28,investor=EMPIRE GROUP Limited introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:28,investor=EMPIRE GROUP Limited introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:28,investor=EMPIRE GROUP Limited introducer=Enguerrand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:28,investor=EMPIRE GROUP Limited introducer=Enguerrand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:21,investor=Erich GRAF introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:21,investor=Erich GRAF introducer=Terra basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:37,investor=Erwan TAROUILLY introducer=Denis basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:37,investor=Erwan TAROUILLY introducer=Enguerrand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:37,investor=Erwan TAROUILLY introducer=Enguerrand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:34,investor=NEWBRIDGE FINANCE SPF introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:34,investor=NEWBRIDGE FINANCE SPF introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:34,investor=NEWBRIDGE FINANCE SPF introducer=Enguerrand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:67,investor=Scott FLETCHER introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:67,investor=Scott FLETCHER introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:39,investor=Scott FLETCHER introducer=Denis basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:39,investor=Scott FLETCHER introducer=Denis basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:39,investor=Scott FLETCHER introducer=Enguerrand basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:39,investor=Scott FLETCHER introducer=Enguerrand basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:32,investor=FRALIS SPF introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:32,investor=FRALIS SPF introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:64,investor=FRALIS SPF introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:64,investor=FRALIS SPF introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:32,investor=FRALIS SPF introducer=Enguerrand basis=invested_amount dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC113,VC13:32,investor=FRALIS SPF introducer=Enguerrand basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:19,investor=Gershon KOH introducer=Rick basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:19,investor=Gershon KOH introducer=Rick basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:19,investor=Gershon KOH introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:19,investor=Gershon KOH introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:46,investor=Tuygan GOKER introducer=Denis basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:46,investor=Tuygan GOKER introducer=Denis basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:46,investor=Tuygan GOKER introducer=John basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:46,investor=Tuygan GOKER introducer=John basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:25,investor=TEKAPO Group Limited introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:25,investor=TEKAPO Group Limited introducer=Sandro basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:16,investor=Mark HAYWARD introducer=Rick basis=invested_amount dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC113,VC13:16,investor=Mark HAYWARD introducer=Anand basis=invested_amount dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC113,VC13:15,investor=Zandera (Finco) Limited introducer=Rick basis=invested_amount dashboard_rows=4 db_rows=2
+fail,commission_row_count_mismatch,VC113,VC13:15,investor=Zandera (Finco) Limited introducer=Anand basis=invested_amount dashboard_rows=4 db_rows=2
+fail,commission_row_count_mismatch,VC113,VC13:14,investor=Rosen Invest Holdings Inc introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:14,investor=Rosen Invest Holdings Inc introducer=Gemera basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:33,investor=SUMMIT INVESTMENT HOLDINGS LLC introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:33,investor=SUMMIT INVESTMENT HOLDINGS LLC introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:33,investor=SUMMIT INVESTMENT HOLDINGS LLC introducer=Enguerrand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:33,investor=SUMMIT INVESTMENT HOLDINGS LLC introducer=Enguerrand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:12,investor=Liubov and Igor ZINKEVICH introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:12,investor=Liubov and Igor ZINKEVICH introducer=Terra basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:18,investor=Scott Ikott TOMMEY introducer=Rick basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:48,investor=Marco JERRENTRUP introducer=Denis basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:48,investor=Marco JERRENTRUP introducer=Denis basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:48,investor=Marco JERRENTRUP introducer=John basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:48,investor=Marco JERRENTRUP introducer=John basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:50,investor=Julien MACHOT introducer=Rick basis=invested_amount dashboard_rows=4 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:50,investor=Julien MACHOT introducer=Rick basis=spread dashboard_rows=4 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:50,investor=Julien MACHOT introducer=Anand basis=invested_amount dashboard_rows=6 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:50,investor=Julien MACHOT introducer=Anand basis=spread dashboard_rows=6 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:68,investor=Julien MACHOT introducer=Enguerrand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:68,investor=Julien MACHOT introducer=Enguerrand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:60,investor=Julien MACHOT introducer=Omar basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:60,investor=Julien MACHOT introducer=Omar basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:71,investor=Majid (VOIDED) KADDOUMI (VOIDED) introducer=Rick basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:71,investor=Majid (VOIDED) KADDOUMI (VOIDED) introducer=Rick basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:71,investor=Majid (VOIDED) KADDOUMI (VOIDED) introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:71,investor=Majid (VOIDED) KADDOUMI (VOIDED) introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:13,investor=Sheila and Kamlesh MADHVANI introducer=Rick basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:62,investor=OEP Ltd introducer=VERSO BI basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:62,investor=OEP Ltd introducer=VERSO BI basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:62,investor=OEP Ltd introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:62,investor=OEP Ltd introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:20,investor=Signet Logistics Ltd introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:20,investor=Signet Logistics Ltd introducer=Terra basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:29,investor=Mrs Nilakantan & Mr Subbiah MAHESWARI & SUBRAMANIAN introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:29,investor=Mrs Nilakantan & Mr Subbiah MAHESWARI & SUBRAMANIAN introducer=Sandro basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:59,investor=Majid MOHAMMED introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:59,investor=Majid MOHAMMED introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:59,investor=Majid MOHAMMED introducer=Omar basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:59,investor=Majid MOHAMMED introducer=Omar basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:66,investor=Mark MATTHEWS introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:66,investor=Mark MATTHEWS introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:66,investor=Mark MATTHEWS introducer=Enguerrand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:66,investor=Mark MATTHEWS introducer=Enguerrand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:27,investor=Sebastian MERIDA introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:27,investor=Sebastian MERIDA introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:27,investor=Sebastian MERIDA introducer=Enguerrand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:79,investor=Mickael RYAN introducer=Rick basis=invested_amount dashboard_rows=4 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:79,investor=Mickael RYAN introducer=Rick basis=spread dashboard_rows=4 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:79,investor=Mickael RYAN introducer=Anand basis=invested_amount dashboard_rows=4 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:79,investor=Mickael RYAN introducer=Anand basis=spread dashboard_rows=4 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:63,investor=PETRATECH introducer=Aboud basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:63,investor=PETRATECH introducer=Aboud basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:63,investor=PETRATECH introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:63,investor=PETRATECH introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:31,investor=SAFE introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:31,investor=SAFE introducer=Sandro basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:31,investor=SAFE introducer=Sandro basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:38,investor=Thierry ULDRY introducer=Denis basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:38,investor=Thierry ULDRY introducer=Denis basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC113,VC13:38,investor=Thierry ULDRY introducer=Enguerrand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC118,VC18:7,investor=Markus AKERMANN introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC118,VC18:5,investor=Liudmila and Alexey ROMANOVA & ROMANOV introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC118,VC18:8,investor=Talal CHAMSI PASHA introducer=Dan basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC118,VC18:8,investor=Talal CHAMSI PASHA introducer=Dan basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC118,VC18:8,investor=Talal CHAMSI PASHA introducer=TERRA basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC118,VC18:8,investor=Talal CHAMSI PASHA introducer=TERRA basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC118,VC18:6,investor=SIGNET LOGISTICS Ltd introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC118,VC18:4,investor=VOLF TRUST introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC122,VC22:12,investor=LF GROUP SARL introducer=Pierre Paumier basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:15,investor=AS ADVISORY introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:15,investor=AS ADVISORY introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:15,investor=AS ADVISORY introducer=TERRA basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:15,investor=AS ADVISORY introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:20,investor=DALINGA HOLDING AG introducer=Dan basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:20,investor=DALINGA HOLDING AG introducer=TERRA basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:22,investor=MA GROUP AG introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:22,investor=MA GROUP AG introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:33,investor=Alain DECOMBE introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:33,investor=Alain DECOMBE introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:33,investor=Alain DECOMBE introducer=TERRA basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:33,investor=Alain DECOMBE introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:18,investor=ALPHA OMEGA SAS introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:18,investor=ALPHA OMEGA SAS introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:18,investor=ALPHA OMEGA SAS introducer=TERRA basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:18,investor=ALPHA OMEGA SAS introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:23,investor=Andrew MEYER introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:23,investor=Andrew MEYER introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:23,investor=Andrew MEYER introducer=TERRA basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:23,investor=Andrew MEYER introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:28,investor=Serge AURIER introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:28,investor=Serge AURIER introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:28,investor=Serge AURIER introducer=TERRA basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:28,investor=Serge AURIER introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:27,investor=Dan BAUMSLAG introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:27,investor=Dan BAUMSLAG introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:27,investor=Dan BAUMSLAG introducer=TERRA basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:27,investor=Dan BAUMSLAG introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:12,investor=Benjamin PRESSET introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:12,investor=Benjamin PRESSET introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:12,investor=Benjamin PRESSET introducer=TERRA basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:12,investor=Benjamin PRESSET introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:26,investor=Anand RATHI introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:26,investor=Anand RATHI introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:26,investor=Anand RATHI introducer=TERRA basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:26,investor=Anand RATHI introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:13,investor=CAREITAS introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:13,investor=CAREITAS introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:13,investor=CAREITAS introducer=TERRA basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:13,investor=CAREITAS introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:16,investor=Laurent CREHANGE introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:16,investor=Laurent CREHANGE introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:16,investor=Laurent CREHANGE introducer=TERRA basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:16,investor=Laurent CREHANGE introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:30,investor=Robin DOBLE introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:30,investor=Robin DOBLE introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:30,investor=Robin DOBLE introducer=TERRA basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:30,investor=Robin DOBLE introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:9,investor=Eric SARASIN introducer=Dan basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:9,investor=Eric SARASIN introducer=Dan basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:9,investor=Eric SARASIN introducer=TERRA basis=invested_amount dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC125,VC25:9,investor=Eric SARASIN introducer=TERRA basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:19,investor=GOOD PROTEIN FUND VCC introducer=Dan basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:19,investor=GOOD PROTEIN FUND VCC introducer=Dan basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:19,investor=GOOD PROTEIN FUND VCC introducer=TERRA basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:19,investor=GOOD PROTEIN FUND VCC introducer=TERRA basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:11,investor=Sylvain GARIEL introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:11,investor=Sylvain GARIEL introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:11,investor=Sylvain GARIEL introducer=TERRA basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:11,investor=Sylvain GARIEL introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:25,investor=Xavier GODRON introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:25,investor=Xavier GODRON introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:25,investor=Xavier GODRON introducer=TERRA basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:25,investor=Xavier GODRON introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:36,investor=LF GROUP SARL introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:36,investor=LF GROUP SARL introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:36,investor=LF GROUP SARL introducer=Pierre Paumier basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:10,investor=ZEBRA HOLDING introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:10,investor=ZEBRA HOLDING introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:10,investor=ZEBRA HOLDING introducer=TERRA basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:10,investor=ZEBRA HOLDING introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:14,investor=OEP LTD introducer=Dan basis=invested_amount dashboard_rows=3 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:14,investor=OEP LTD introducer=Dan basis=spread dashboard_rows=3 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:14,investor=OEP LTD introducer=TERRA basis=invested_amount dashboard_rows=3 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:14,investor=OEP LTD introducer=TERRA basis=spread dashboard_rows=3 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:17,investor=Pierre LECOMTE introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:17,investor=Pierre LECOMTE introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:17,investor=Pierre LECOMTE introducer=TERRA basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:17,investor=Pierre LECOMTE introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:34,investor=SC STONEA introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:34,investor=SC STONEA introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:34,investor=SC STONEA introducer=TERRA basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:34,investor=SC STONEA introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:24,investor=Thomas YBERT introducer=Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:24,investor=Thomas YBERT introducer=Dan basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:24,investor=Thomas YBERT introducer=TERRA basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC125,VC25:24,investor=Thomas YBERT introducer=TERRA basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:14,investor=SC TBC INVEST 3 introducer=Simone basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:14,investor=SC TBC INVEST 3 introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:28,investor=Odile and Georges Abou MRAD and FENERGI introducer=Alpha Gaia basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:28,investor=Odile and Georges Abou MRAD and FENERGI introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:28,investor=Odile and Georges Abou MRAD and FENERGI introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:4,investor=AS Advisory DWC-LLC introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:4,investor=AS Advisory DWC-LLC introducer=John basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:4,investor=AS Advisory DWC-LLC introducer=John basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:23,investor=Alexandre BARBARANELLI introducer=Simone basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:23,investor=Alexandre BARBARANELLI introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:23,investor=Alexandre BARBARANELLI introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:26,investor=ALPHA GAIA CAPITAL FZE introducer=Alpha Gaia basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:26,investor=ALPHA GAIA CAPITAL FZE introducer=Alpha Gaia basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:26,investor=ALPHA GAIA CAPITAL FZE introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:26,investor=ALPHA GAIA CAPITAL FZE introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:25,investor=Amanda RYZOWY introducer=Simone basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:25,investor=Amanda RYZOWY introducer=Simone basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:25,investor=Amanda RYZOWY introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:25,investor=Amanda RYZOWY introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:30,investor=Anatoliy KOGAN introducer=Alpha Gaia basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:30,investor=Anatoliy KOGAN introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:30,investor=Anatoliy KOGAN introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:15,investor=ODIN (ANIM X II LP) introducer=Simone basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:15,investor=ODIN (ANIM X II LP) introducer=Anand basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:35,investor=ODIN (ANIM X II LP) introducer=Pierre Paumier basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:35,investor=ODIN (ANIM X II LP) introducer=Pierre Paumier basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:45,investor=ANIM X II LP introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:45,investor=ANIM X II LP introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:45,investor=ANIM X II LP introducer=Pierre Paumier basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:45,investor=ANIM X II LP introducer=Pierre Paumier basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:21,investor=Mrs Anisha Bansal and Mr Rahul KARKUN introducer=Simone basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:21,investor=Mrs Anisha Bansal and Mr Rahul KARKUN introducer=Anand basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:21,investor=Mrs Anisha Bansal and Mr Rahul KARKUN introducer=Anand basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:40,investor=Mrs Anisha Bansal and Mr Rahul KARKUN introducer=Pierre Paumier basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:40,investor=Mrs Anisha Bansal and Mr Rahul KARKUN introducer=Pierre Paumier basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:16,investor=Serge AURIER introducer=Simone basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:16,investor=Serge AURIER introducer=Anand basis=invested_amount dashboard_rows=3 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:16,investor=Serge AURIER introducer=Anand basis=spread dashboard_rows=3 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:37,investor=Serge AURIER introducer=Pierre Paumier basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:37,investor=Serge AURIER introducer=Pierre Paumier basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:17,investor=John BARROWMAN introducer=Simone basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:17,investor=John BARROWMAN introducer=Anand basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:17,investor=John BARROWMAN introducer=Anand basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:42,investor=John BARROWMAN introducer=Pierre Paumier basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:42,investor=John BARROWMAN introducer=Pierre Paumier basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:11,investor=BBQ Opportunity Ventures introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:11,investor=BBQ Opportunity Ventures introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:11,investor=BBQ Opportunity Ventures introducer=Gio basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:11,investor=BBQ Opportunity Ventures introducer=Gio basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:24,investor=Keir BENBOW introducer=Simone basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:24,investor=Keir BENBOW introducer=Simone basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:24,investor=Keir BENBOW introducer=Anand basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:24,investor=Keir BENBOW introducer=Anand basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:43,investor=Keir BENBOW introducer=Pierre Paumier basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:43,investor=Keir BENBOW introducer=Pierre Paumier basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:20,investor=Garson Brandon LEVY introducer=Simone basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:20,investor=Garson Brandon LEVY introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:20,investor=Garson Brandon LEVY introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:34,investor=BSV SPV III LLC introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:34,investor=BSV SPV III LLC introducer=Pierre Paumier basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:34,investor=BSV SPV III LLC introducer=Pierre Paumier basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:32,investor=Danielle BURNS introducer=Gestio Capital basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:32,investor=Danielle BURNS introducer=Gestio Capital basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:32,investor=Danielle BURNS introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:32,investor=Danielle BURNS introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:31,investor=GESTIO CAPITAL LTD introducer=Gestio Capital basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:31,investor=GESTIO CAPITAL LTD introducer=Gestio Capital basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:31,investor=GESTIO CAPITAL LTD introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:18,investor=Anand RATHI introducer=Simone basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:7,investor=Anand RATHI introducer=Anand basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:7,investor=Anand RATHI introducer=Anand basis=spread dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC126,VC26:7,investor=Anand RATHI introducer=Gio basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:7,investor=Anand RATHI introducer=Gio basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:27,investor=Desmond CARBERY introducer=Alpha Gaia basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:27,investor=Desmond CARBERY introducer=Alpha Gaia basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:27,investor=Desmond CARBERY introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:27,investor=Desmond CARBERY introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:3,investor=CLOUDSAFE HOLDINGS LIMITED introducer=Anand+Dan basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:19,investor=DRussell Goman RD LLC introducer=Simone basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:19,investor=DRussell Goman RD LLC introducer=Anand basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:19,investor=DRussell Goman RD LLC introducer=Anand basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:38,investor=DRussell Goman RD LLC introducer=Pierre Paumier basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:38,investor=DRussell Goman RD LLC introducer=Pierre Paumier basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:13,investor=FITAIHI Holdings SARL introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:13,investor=FITAIHI Holdings SARL introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:13,investor=FITAIHI Holdings SARL introducer=Gio basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:13,investor=FITAIHI Holdings SARL introducer=Gio basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:5,investor=Scott FLETCHER introducer=Anand basis=invested_amount dashboard_rows=3 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:5,investor=Scott FLETCHER introducer=Anand basis=spread dashboard_rows=3 db_rows=2
+fail,commission_row_count_mismatch,VC126,VC26:5,investor=Scott FLETCHER introducer=Gio basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:44,investor=Scott FLETCHER introducer=Pierre Paumier basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:44,investor=Scott FLETCHER introducer=Pierre Paumier basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:29,investor=Georgi GEORGIEV introducer=Alpha Gaia basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:29,investor=Georgi GEORGIEV introducer=Alpha Gaia basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:29,investor=Georgi GEORGIEV introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:29,investor=Georgi GEORGIEV introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:8,investor=Tuygan GOKER introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:8,investor=Tuygan GOKER introducer=Gio basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:33,investor=LF GROUP SARL introducer=Anand basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:33,investor=LF GROUP SARL introducer=Anand basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:33,investor=LF GROUP SARL introducer=Pierre Paumier basis=invested_amount dashboard_rows=2 db_rows=1
+fail,commission_row_count_mismatch,VC126,VC26:33,investor=LF GROUP SARL introducer=Pierre Paumier basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:9,investor=Julien MACHOT introducer=Anand basis=invested_amount dashboard_rows=3 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:9,investor=Julien MACHOT introducer=Anand basis=spread dashboard_rows=3 db_rows=2
+fail,commission_row_count_mismatch,VC126,VC26:9,investor=Julien MACHOT introducer=Gio basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:9,investor=Julien MACHOT introducer=Gio basis=spread dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:36,investor=Julien MACHOT introducer=Pierre Paumier basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:36,investor=Julien MACHOT introducer=Pierre Paumier basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:10,investor=VERSO MANAGEMENT LTD. introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:10,investor=VERSO MANAGEMENT LTD. introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:10,investor=VERSO MANAGEMENT LTD. introducer=Gio basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:10,investor=VERSO MANAGEMENT LTD. introducer=Gio basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:22,investor=Mathieu MARIOTTI introducer=Simone basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:22,investor=Mathieu MARIOTTI introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:22,investor=Mathieu MARIOTTI introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:46,investor=ODIN introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:46,investor=ODIN introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:46,investor=ODIN introducer=Pierre Paumier basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC126,VC26:46,investor=ODIN introducer=Pierre Paumier basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:7,investor=777 WALNUT LLC introducer=Elevation basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:11,investor=Band Capital Limited introducer=Elevation basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:11,investor=Band Capital Limited introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:3,investor=Charles DE BAVIER introducer=Elevation basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:3,investor=Charles DE BAVIER introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:8,investor=Keir Richard BENBOW introducer=Elevation basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:8,investor=Keir Richard BENBOW introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:8,investor=Keir Richard BENBOW introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:5,investor=CARTA INVESTMENTS LLC introducer=Elevation basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:18,investor=Ellen STAUDENMAYER introducer=Elevation basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:18,investor=Ellen STAUDENMAYER introducer=Elevation basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:18,investor=Ellen STAUDENMAYER introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:18,investor=Ellen STAUDENMAYER introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:13,investor=Tuygan GOKER introducer=Elevation basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:13,investor=Tuygan GOKER introducer=Anand basis=invested_amount dashboard_rows=2 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:10,investor=ZANDERA (Holdco) Ltd introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:4,investor=JASSQ HOLDING LIMITED introducer=Elevation basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:4,investor=JASSQ HOLDING LIMITED introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:15,investor=VERSO HOLDINGS introducer=Elevation basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:15,investor=VERSO HOLDINGS introducer=Elevation basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:15,investor=VERSO HOLDINGS introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:15,investor=VERSO HOLDINGS introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:12,investor=Jeremy LOWY introducer=Elevation basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:9,investor=Marco JERRENTRUP introducer=Elevation basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:9,investor=Marco JERRENTRUP introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:9,investor=Marco JERRENTRUP introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:16,investor=Tobias JOERN introducer=Elevation basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:16,investor=Tobias JOERN introducer=Elevation basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:16,investor=Tobias JOERN introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:16,investor=Tobias JOERN introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:6,investor=Sahejman Singh KAHLON introducer=Elevation basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:19,investor=Michael RYAN introducer=Elevation basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:19,investor=Michael RYAN introducer=Elevation basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:19,investor=Michael RYAN introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:19,investor=Michael RYAN introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:17,investor=René ROSSDEUTSCHER introducer=Elevation basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:17,investor=René ROSSDEUTSCHER introducer=Elevation basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:17,investor=René ROSSDEUTSCHER introducer=Anand basis=invested_amount dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC133,VC33:17,investor=René ROSSDEUTSCHER introducer=Anand basis=spread dashboard_rows=1 db_rows=0
+fail,commission_row_count_mismatch,VC143,VC43:5,investor=LF GROUP SARL introducer=Pierre Paumier basis=spread dashboard_rows=1 db_rows=0
+warn,strikethrough_commission_row_reinstated_ruled,VC125,strike:489,source_row=489 investor=DALINGA HOLDING AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=499.87 db_rows=1
+warn,strikethrough_commission_row_reinstated_ruled,VC125,strike:490,source_row=490 investor=DALINGA HOLDING AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=99.27 db_rows=1
+warn,strikethrough_commission_row_reinstated_ruled,VC125,strike:494,source_row=494 investor=MA GROUP AG introducer=Daniel Baumslag basis=invested_amount rate_bps=200 amount=358.0 db_rows=1
+warn,strikethrough_commission_row_reinstated_ruled,VC125,strike:496,source_row=496 investor=DALINGA HOLDING AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=499.87 db_rows=1
+warn,strikethrough_commission_row_reinstated_ruled,VC125,strike:497,source_row=497 investor=DALINGA HOLDING AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=99.27 db_rows=1
+warn,strikethrough_commission_row_reinstated_ruled,VC125,strike:500,source_row=500 investor=MA GROUP AG introducer=Terra Financial & Management Services SA basis=invested_amount rate_bps=200 amount=358.0 db_rows=1
+warn,introduction_tuple_repeat_ruled,VC106,,introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 count=2
+warn,introduction_tuple_repeat_ruled,VC106,,introducer_id=d5e08d13-ebdf-4d8c-a218-ee50e2117c6f investor_id=996ec13d-5df9-4b46-8581-29bf3880c052 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 count=2
+warn,introduction_tuple_repeat_ruled,VC126,,introducer_id=b661243f-e6b4-41f1-b239-de4b197a689a investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 count=2
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=02c9c133-1301-4130-a6a9-440a1d2a4429 investor=Vladimir GUSEV deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=0308805b-92d6-4e9a-b7b3-29bd4bfa7620 investor=MONFIN LTD deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC106,,introduction_id=044e430d-66a0-4e9a-8c35-9e424f1bb659 investor=GREENLEAF deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-09-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC106,,introduction_id=076fd345-6b20-42c5-9726-95339744d9a4 investor=VERSO GROUP deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-05-17 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=07bdf1e6-32bf-46c0-94e1-a356767bfcc4 investor=VOLF Trust deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=09710f38-1fbf-49bb-b6e3-bb08a141d4bf investor=DRussell Goman RD LLC deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC106,,introduction_id=0da66e92-0df6-4e60-95d1-a3203bfac3a3 investor=Global Custody & Clearing Limited deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-02-27 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=0e1e3211-d31c-40e9-bc7c-d122a42b23af investor=Tartrifuge SA deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=0ec1b9cd-e7f7-41bf-b607-54b32ff7ab2d investor=MONFIN LTD deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=108c8008-898b-4813-82ed-50abc1b44f32 investor=JIMENEZ TRADING INC deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=114c5266-c67d-45f6-b1b6-856f5c499d65 investor=Grouperia Inc deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,introduction_missing_date_ruled,VC106,,introduction_id=11673e9c-1afc-4586-a5ae-83b52b7c5e29 deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=132a765c-baeb-4b53-8bc0-47d6cd24ec18 investor=ODIN (ANIM X II LP) deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=165c8617-b8b9-414e-a9bf-5b73ed10746a investor=Bright Phoenix Holdings LTD deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=16ca5555-4a94-4d13-8c4c-8e2a66a58135 investor=James BURCH deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC106,,introduction_id=1fac59b1-0f2e-4fd4-b8de-0adae37b0027 investor=GORILLA PE Inc deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-04-14 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=21873dd1-4d2a-4a1a-8751-00676fc35c6a investor=The Investment Trust of Trustees of the Wills of Ross R. Hall deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=2241f875-cada-4f05-8c04-ac0b9d4bd7bb investor=Mark MATTHEWS deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=262e0eb9-0fd4-40ab-9ddb-a561956b1fb2 investor=TERRA Financial & Management Services SA deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=268f9aeb-5769-4ca2-a500-482dd3e86b15 investor=GREENLEAF deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=26e62985-689d-4760-bafc-4c764c0a7221 investor=Zandera (Holdco) Limited deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=2819842a-916f-430d-8601-5eb2727b4d74 investor=Erich GRAF deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC133,,introduction_id=2a96c83d-c2fd-4496-acf6-c215ce463644 investor=778 WALNUT LLC deal_id=750e0559-a10a-48eb-9593-106329bf9f53 introduced_at=2026-01-25 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=3512ca75-26eb-4934-a5a2-d062c9720fc5 investor=Beatrice and Marcel KNOPF deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=3a1888dc-2596-48d0-9745-8c3255497b20 investor=DALINGA HOLDING AG deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=4105a626-4a3f-4bb6-9c4d-96e6d1210966 investor=HASSBRO Investments Limited deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=42787da8-928d-4ab3-82cd-7b2440f5651b investor=Gorilla PE LP deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=457d13cc-3720-419c-b84b-8fc09c3c6dc3 investor=BenSkyla AG deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=464f8cf5-c7bf-4156-b3ae-e22b0ef8fea6 investor=Vladimir GUSEV deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC113,,introduction_id=469d0eab-88fb-4675-83c8-c81885f05dfc investor=Zandera (Holdco) Limited deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=4ce1ce4e-886d-418a-85c0-6704a3edcadd investor=Peter HOGLAND deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=51d812e7-71ba-44f7-b6f2-94c6740ff7c8 investor=Mark MATTHEWS deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=53abdf58-a23d-4cb8-acf4-0e463aa9ac31 investor=Bruce HAWKINS deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=597f2443-c0ba-42d3-bd41-ef2339ff2daa investor=Bruce HAWKINS deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC113,,introduction_id=5a6f22c0-cef1-42f5-952c-6113e94cf519 investor=Zandera (Holdco) Limited deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=6a7d0d85-2b3b-4e0d-ba59-d28be5dee53f investor=Wymo Finance Limited deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=70fa5966-70a9-4cf3-b490-6113b2c076a1 investor=STRUCTURED ISSUANCE Ltd deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=71625a10-61f3-4c5a-8846-61e32c2aafda investor=John BARROWMAN deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC106,,introduction_id=7707c221-1c2b-4e2b-aec4-32ec1023819e investor=JIMENEZ TRADING INC deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-02-14 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=78b4f7e5-f4bd-4bff-8a0f-372b98b1bc2e investor=FINALMA SUISSE SA deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=7b743c34-aebd-406c-b15a-e2e4b8997bc2 investor=VOLF Trust deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=82228118-03c3-4f8d-a375-55f937ceadea investor=Zandera (Holdco) Limited deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=9224f67b-d455-4506-8adc-e2510c561bbb investor=TERRA Financial & Management Services SA deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC106,,introduction_id=93535a96-bf7e-4bf0-87c3-ac8ce894ca79 investor=Global Custody & Clearing Limited deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-02-27 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=98534f33-7d0f-46b5-91d3-344562a323aa investor=Bright Phoenix Holdings LTD deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=99d27889-4724-42cb-aff0-1de45f38c532 investor=ROSEN INVEST HOLDINGS Inc deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=99d5430a-57c9-4149-b5d9-f527e35925e5 investor=Global Custody & Clearing Limited deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=9d05568b-9a19-4307-ad9c-8baf0b7cd9d6 investor=FINALMA SUISSE SA deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=9d593850-fd45-4838-8116-79c358ca256f investor=Serge AURIER deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=a23c394e-7fee-44ae-9726-73ab3fdeadb3 investor=Sandra KOHLER CABIAN deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC106,,introduction_id=a347eaa0-dc0f-45ad-bd5b-160d47ab56e0 investor=JIMENEZ TRADING INC deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-02-14 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=a71009c8-871f-4fcf-b0a8-4e913cc6798b investor=DALINGA HOLDING AG deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=a7a47938-9243-4b31-a519-3b50ffa12167 investor=Scott FLETCHER deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=a92a7c39-ee9c-449a-b670-7b87ff5e8428 investor=James BURCH deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=ab5842d9-bc2c-40e4-b486-9e756ee36bb7 investor=David HOLDEN deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=ac188f02-b869-4c35-ab0f-75ae435b8a85 investor=STRUCTURED ISSUANCE Ltd deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=aef24760-8171-4671-be9a-04776899ef29 investor=Anisha Bansal and Rahul KARKUN deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC113,,introduction_id=b1b00e80-820d-48b5-b08c-627933d54b26 investor=SAFE deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=b235be1a-93cd-4acd-a28d-8720090349aa investor=Stephane DAHAN deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=ba1a18c0-d7af-44ee-b2af-90c0192ed33d investor=BRAHMA FINANCE deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=bfaed53f-d7a5-481f-9b2c-1ed5a19c3959 investor=Peter HOGLAND deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=c3558143-f5ba-43e2-bc69-00649a2fd312 investor=Stephane DAHAN deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC106,,introduction_id=c52361b6-e74a-4f44-bfdf-4f9852788ab7 investor=STABLETON (ALTERNATIVE ISSUANCE) deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-01-06 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC106,,introduction_id=cc4fb8cb-3d31-410b-94f5-cb02456bc5c6 investor=GORILLA PE Inc deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-04-14 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC122,,introduction_id=cf66cbb0-6191-4705-9165-7c6fe3ef01c8 investor=LF GROUP SARL deal_id=06653c86-b191-438a-9f32-d0a3224854b1 introduced_at=2026-01-25 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC106,,introduction_id=cff91985-9d95-4c69-88d8-984dbca8f92c investor=GREENLEAF deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-09-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=d27aa6a6-5aeb-47e7-8210-609811d8402b investor=TAG Capital Management deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=d391d0b5-f722-42de-92cf-10535318c8e3 investor=JIMENEZ TRADING INC deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=d7cb5980-65d6-46b6-a9de-ec85d8878001 investor=Erich GRAF deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=d8fc1b9a-24d4-4ed4-bf73-40fd6e23f319 investor=The Investment Trust of Trustees of the Wills deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=da05fc12-da5f-4ca5-81fe-824034c8ddaf investor=Julien MACHOT deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2024-12-31 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=de756846-0c58-4a9d-8906-83e373647501 investor=Gorilla PE (Bermuda) Reinsurance Co Ltd deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=e1f13519-2fea-4a13-9743-2fac0ff62b57 investor=HASSBRO Investments Limited deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=e5d30834-acf1-48d7-b79a-175ea095442e investor=LF GROUP SARL deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=e5d5f86c-c205-49cd-8b99-242ed67650b0 investor=The Investment Trust of Trustees of the Wills of Richard R. Hall deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC113,,introduction_id=eb0d5078-0302-4550-a19d-273cdb54107b investor=PETRATECH deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=ec100c25-55d6-462b-b10b-dc232b63b3ad investor=ODIN (ANIM X II LP) deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=eed76674-94f1-45d7-96e8-a4b1160ab67c investor=Beatrice and Marcel KNOPF deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=f22227d4-de71-472e-bb19-f60f36b84757 investor=ROSEN INVEST HOLDINGS Inc deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=f2712a6d-c0ae-4edd-8717-bb30d7856446 investor=Scott FLETCHER deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=f5876e92-b259-4803-85e6-e778c439fda3 investor=David HOLDEN deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=f6fce0e8-b7c5-4c90-97d7-6e7fbc54a9b3 investor=Tartrifuge SA deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC126,,introduction_id=f7ec4dac-212d-4102-a40a-3d88d773fc5d investor=Julien MACHOT deal_id=e2d649da-f1e9-49ca-b426-dd8ade244f12 introduced_at=2024-12-31 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=f9beaf1b-36fd-494b-ba67-c20e51e4f6fe investor=BenSkyla AG deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC111,,introduction_id=fa76bc82-0d6f-4040-a384-495c7d655264 investor=Wymo Finance Limited deal_id=9a8c133e-fad0-4e5a-8118-24225a0bef68 introduced_at=2026-01-20 reason=no_subscription_for_deal_investor
+warn,orphan_introduction_without_subscription,VC106,,introduction_id=ff155fe9-7f23-424c-a2f9-f6e5885858bc investor=Charles RIVA deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 introduced_at=2021-08-31 reason=no_subscription_for_deal_investor
+warn,commission_rate_amount_formula_ruled,VC113,,deal_id=1e4061bd-6e36-4298-8e98-9fd55ab6a448 investor_id=02e7a81c-d5bf-4839-9776-f89ae320b586 rate_bps=200 amount_sum=40000.0 expected_row_sum=20000.0 expected_split_sum=20000.0 tolerance=200.0 sample_commission_id=9390646c-b70a-451b-8b6e-16a11a397833 reason=VC113 Zandera two invested_amount rows with one NULL base created for dedup in DB_CHANGES_CHECKPOINT_2026-02-11.md Section 21
+warn,commission_base_amount_vs_funded_amount_ruled,VC106,,deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=24c96f5a-0b23-4e40-b562-c0570df12fd8 commission_base_sum=200000.0 funded_sum=150000.0 unique_base_values=[100000.0] reason=VC106 split-commission legacy base allocation documented in DB_CHANGES_CHECKPOINT_2026-02-11.md Section 21
+warn,commission_base_amount_vs_funded_amount_ruled,VC106,,deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=996ec13d-5df9-4b46-8581-29bf3880c052 commission_base_sum=50000.0 funded_sum=100000.0 unique_base_values=[50000.0] reason=VC106 split-commission legacy base allocation documented in DB_CHANGES_CHECKPOINT_2026-02-11.md Section 16/21
+warn,commission_base_amount_vs_funded_amount_ruled,VC106,,deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=e78f40f3-7e17-44cd-af46-a01a2f195f3e commission_base_sum=400000.0 funded_sum=200000.0 unique_base_values=[100000.0] reason=VC106 LE SEIGNEUR two spread rows with one NULL base documented in DB_CHANGES_CHECKPOINT_2026-02-11.md Section 21
+warn,commission_base_amount_vs_funded_amount_ruled,VC106,,"deal_id=07eff085-9f1d-4e02-b1e2-d717817503f1 investor_id=f3dabc56-d079-4536-9ad5-9e6b543aea21 commission_base_sum=1424873.0 funded_sum=2350372.0 unique_base_values=[2240.0, 70902.0, 82917.0, 234607.0, 250000.0, 349344.0, 434863.0] reason=VC106 MACHOT multiple split commission rows; base sum intentionally diverges from funded sum per historical migration"
+warn,commission_totals_ruled_diff_spread,VC106,,dashboard=6326296.752 db=6326296.81 delta=0.058 expected=0.058
+warn,commission_totals_ruled_diff_spread,VC113,,dashboard=963887.6075 db=963887.62 delta=0.0125 expected=0.0125
+warn,commission_totals_ruled_diff_spread,VC114,,dashboard=0.4 db=0.0 delta=-0.4 expected=-0.4
+warn,commission_totals_ruled_diff_spread,VC133,,dashboard=222892.5 db=217680.0 delta=-5212.5 expected=-5212.5
+warn,commission_row_ruled_dashboard_override,VC133,VC33:7,investor=777 WALNUT LLC introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=825.0 db_amount=0.0
+warn,commission_row_ruled_dashboard_override,VC133,d04fcd07-6af9-41a6-9530-06dbe8588b63,investor=778 WALNUT LLC introducer=Set Cap basis=spread expected_amount=2805.0 expected_rate=n/a dashboard_amount=0.0 db_amount=2805.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:11,investor=Band Capital Limited introducer=Elevation basis=spread expected_amount=53700.0 expected_rate=n/a dashboard_amount=8950.0 db_amount=53700.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:11,investor=Band Capital Limited introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=12530.0 db_amount=0.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:3,investor=Charles DE BAVIER introducer=Elevation basis=spread expected_amount=9900.0 expected_rate=n/a dashboard_amount=1650.0 db_amount=9900.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:3,investor=Charles DE BAVIER introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=5610.0 db_amount=0.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:8,investor=Keir Richard BENBOW introducer=Elevation basis=spread expected_amount=5250.0 expected_rate=n/a dashboard_amount=1750.0 db_amount=5250.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:5,investor=CARTA INVESTMENTS LLC introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=1650.0 db_amount=0.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:13,investor=Tuygan GOKER introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=10525.0 db_amount=0.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:13,investor=Tuygan GOKER introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=12915.0 db_amount=0.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:10,investor=ZANDERA (Holdco) Ltd introducer=Elevation+Rick basis=spread expected_amount=96750.0 expected_rate=n/a dashboard_amount=112875.0 db_amount=96750.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:10,investor=ZANDERA (Holdco) Ltd introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=24187.5 db_amount=0.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:4,investor=JASSQ HOLDING LIMITED introducer=Elevation basis=spread expected_amount=30000.0 expected_rate=n/a dashboard_amount=5000.0 db_amount=30000.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:4,investor=JASSQ HOLDING LIMITED introducer=Anand basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=7000.0 db_amount=0.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:12,investor=Jeremy LOWY introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=825.0 db_amount=0.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:9,investor=Marco JERRENTRUP introducer=Elevation basis=spread expected_amount=5250.0 expected_rate=n/a dashboard_amount=1750.0 db_amount=5250.0
+warn,commission_row_ruled_dashboard_override,VC133,VC33:6,investor=Sahejman Singh KAHLON introducer=Elevation basis=spread expected_amount=0.0 expected_rate=n/a dashboard_amount=825.0 db_amount=0.0

@@ -113,14 +113,13 @@ export async function POST(request: Request) {
     }
 
     const requiredPersonaType = personaKey.startsWith('investor_') ? 'investor' : personaKey
-    const hasPersonaAccessFromRpc = ((personas || []) as Array<{ persona_type: string }>).some(
-      (persona) => persona.persona_type === requiredPersonaType
-    )
     const profileRole = profile?.role
-    const hasPersonaAccessFromProfile =
+    const userPersonaList = (personas || []) as Array<{ persona_type: string }>
+
+    const hasPersonaAccess =
+      userPersonaList.some(p => p.persona_type === requiredPersonaType) ||
       (requiredPersonaType === 'ceo' && (profileRole === 'ceo' || profileRole === 'staff_admin')) ||
       (requiredPersonaType === 'staff' && (profileRole === 'staff_ops' || profileRole === 'staff_rm'))
-    const hasPersonaAccess = hasPersonaAccessFromRpc || hasPersonaAccessFromProfile
 
     if (!hasPersonaAccess) {
       return NextResponse.json(
@@ -129,6 +128,7 @@ export async function POST(request: Request) {
       )
     }
 
+    // Verify active persona matches
     const cookieStore = await cookies()
     const activePersona = resolveActivePersona((personas || []) as PersonaIdentity[], {
       cookiePersonaType: cookieStore.get('verso_active_persona_type')?.value?.trim(),

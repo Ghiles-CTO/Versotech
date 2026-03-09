@@ -10,7 +10,8 @@
       "commission_row_ruled_dashboard_override",
       "commission_base_amount_vs_funded_amount_ruled",
       "commission_rate_amount_formula_ruled",
-      "dashboard_formula_error_token"
+      "dashboard_formula_error_token",
+      "orphan_introduction_without_subscription"
     ],
     "vc2": [
       "dashboard_combined_introducer_name",
@@ -24,7 +25,8 @@
       "performance_fee_threshold_multiplier_non_zero_ruled",
       "commission_base_amount_vs_funded_amount_ruled",
       "commission_rate_amount_formula_ruled",
-      "dashboard_formula_error_token"
+      "dashboard_formula_error_token",
+      "orphan_introduction_without_subscription"
     ],
     "in": [
       "dashboard_combined_introducer_name",
@@ -36,7 +38,8 @@
       "performance_fee_threshold_multiplier_non_zero_ruled",
       "commission_base_amount_vs_funded_amount_ruled",
       "commission_rate_amount_formula_ruled",
-      "dashboard_formula_error_token"
+      "dashboard_formula_error_token",
+      "orphan_introduction_without_subscription"
     ]
   },
   "forbidden_check_substrings": [
@@ -62,7 +65,8 @@
       "commission_row_ruled_dashboard_override": 50,
       "commission_base_amount_vs_funded_amount_ruled": 50,
       "commission_rate_amount_formula_ruled": 50,
-      "dashboard_formula_error_token": 200
+      "dashboard_formula_error_token": 200,
+      "orphan_introduction_without_subscription": 50
     },
     "vc2": {
       "dashboard_combined_introducer_name": 25,
@@ -76,7 +80,8 @@
       "performance_fee_threshold_multiplier_non_zero_ruled": 10,
       "commission_base_amount_vs_funded_amount_ruled": 50,
       "commission_rate_amount_formula_ruled": 50,
-      "dashboard_formula_error_token": 200
+      "dashboard_formula_error_token": 200,
+      "orphan_introduction_without_subscription": 50
     },
     "in": {
       "dashboard_combined_introducer_name": 15,
@@ -88,7 +93,8 @@
       "performance_fee_threshold_multiplier_non_zero_ruled": 10,
       "commission_base_amount_vs_funded_amount_ruled": 50,
       "commission_rate_amount_formula_ruled": 50,
-      "dashboard_formula_error_token": 200
+      "dashboard_formula_error_token": 200,
+      "orphan_introduction_without_subscription": 50
     }
   },
   "warning_expiry_by_scope": {
@@ -101,7 +107,8 @@
       "commission_row_ruled_dashboard_override": "2026-12-31",
       "commission_base_amount_vs_funded_amount_ruled": "2026-12-31",
       "commission_rate_amount_formula_ruled": "2026-12-31",
-      "dashboard_formula_error_token": "2026-12-31"
+      "dashboard_formula_error_token": "2026-12-31",
+      "orphan_introduction_without_subscription": "2026-12-31"
     },
     "vc2": {
       "dashboard_combined_introducer_name": "2026-12-31",
@@ -115,7 +122,8 @@
       "performance_fee_threshold_multiplier_non_zero_ruled": "2026-12-31",
       "commission_base_amount_vs_funded_amount_ruled": "2026-12-31",
       "commission_rate_amount_formula_ruled": "2026-12-31",
-      "dashboard_formula_error_token": "2026-12-31"
+      "dashboard_formula_error_token": "2026-12-31",
+      "orphan_introduction_without_subscription": "2026-12-31"
     },
     "in": {
       "dashboard_combined_introducer_name": "2026-12-31",
@@ -127,7 +135,8 @@
       "performance_fee_threshold_multiplier_non_zero_ruled": "2026-12-31",
       "commission_base_amount_vs_funded_amount_ruled": "2026-12-31",
       "commission_rate_amount_formula_ruled": "2026-12-31",
-      "dashboard_formula_error_token": "2026-12-31"
+      "dashboard_formula_error_token": "2026-12-31",
+      "orphan_introduction_without_subscription": "2026-12-31"
     }
   },
   "warning_owner_by_scope": {
@@ -140,7 +149,8 @@
       "commission_row_ruled_dashboard_override": "Data Governance",
       "commission_base_amount_vs_funded_amount_ruled": "Data Governance",
       "commission_rate_amount_formula_ruled": "Data Governance",
-      "dashboard_formula_error_token": "Data Governance"
+      "dashboard_formula_error_token": "Data Governance",
+      "orphan_introduction_without_subscription": "Data Governance"
     },
     "vc2": {
       "dashboard_combined_introducer_name": "Data Governance",
@@ -154,7 +164,8 @@
       "performance_fee_threshold_multiplier_non_zero_ruled": "Data Governance",
       "commission_base_amount_vs_funded_amount_ruled": "Data Governance",
       "commission_rate_amount_formula_ruled": "Data Governance",
-      "dashboard_formula_error_token": "Data Governance"
+      "dashboard_formula_error_token": "Data Governance",
+      "orphan_introduction_without_subscription": "Data Governance"
     },
     "in": {
       "dashboard_combined_introducer_name": "Data Governance",
@@ -166,7 +177,8 @@
       "performance_fee_threshold_multiplier_non_zero_ruled": "Data Governance",
       "commission_base_amount_vs_funded_amount_ruled": "Data Governance",
       "commission_rate_amount_formula_ruled": "Data Governance",
-      "dashboard_formula_error_token": "Data Governance"
+      "dashboard_formula_error_token": "Data Governance",
+      "orphan_introduction_without_subscription": "Data Governance"
     }
   },
   "warning_reason_by_scope": {
@@ -179,7 +191,8 @@
       "commission_row_ruled_dashboard_override": "Documented explicit override assertions",
       "commission_base_amount_vs_funded_amount_ruled": "Documented legacy split/base allocation exception",
       "commission_rate_amount_formula_ruled": "Documented legacy split/rate formula exception",
-      "dashboard_formula_error_token": "Dashboard formula error token interpreted as zero-equivalent; flagged for visibility"
+      "dashboard_formula_error_token": "Dashboard formula error token interpreted as zero-equivalent; flagged for visibility",
+      "orphan_introduction_without_subscription": "Historical introduction exists without a matching subscription (zero-ownership/non-subscribed case); retained with explicit warning"
     },
     "vc2": {
       "dashboard_combined_introducer_name": "Combined labels retained pending canonical split mapping",
@@ -193,7 +206,8 @@
       "performance_fee_threshold_multiplier_non_zero_ruled": "Documented historical threshold multiplier retained by governance decision",
       "commission_base_amount_vs_funded_amount_ruled": "Documented legacy split/base allocation exception",
       "commission_rate_amount_formula_ruled": "Documented legacy split/rate formula exception",
-      "dashboard_formula_error_token": "Dashboard formula error token interpreted as zero-equivalent; flagged for visibility"
+      "dashboard_formula_error_token": "Dashboard formula error token interpreted as zero-equivalent; flagged for visibility",
+      "orphan_introduction_without_subscription": "Historical introduction exists without a matching subscription (zero-ownership/non-subscribed case); retained with explicit warning"
     },
     "in": {
       "dashboard_combined_introducer_name": "Combined labels retained pending canonical split mapping",
@@ -205,7 +219,8 @@
       "performance_fee_threshold_multiplier_non_zero_ruled": "Documented historical threshold multiplier retained by governance decision",
       "commission_base_amount_vs_funded_amount_ruled": "Documented legacy split/base allocation exception",
       "commission_rate_amount_formula_ruled": "Documented legacy split/rate formula exception",
-      "dashboard_formula_error_token": "Dashboard formula error token interpreted as zero-equivalent; flagged for visibility"
+      "dashboard_formula_error_token": "Dashboard formula error token interpreted as zero-equivalent; flagged for visibility",
+      "orphan_introduction_without_subscription": "Historical introduction exists without a matching subscription (zero-ownership/non-subscribed case); retained with explicit warning"
     }
   },
   "warning_expiry_by_check": {

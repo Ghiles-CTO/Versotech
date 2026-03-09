@@ -30,6 +30,17 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { data: profile } = await clientSupabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const isStaff = profile?.role?.startsWith('staff_') || profile?.role === 'ceo'
+    if (!isStaff) {
+      return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
+    }
+
     const serviceSupabase = createServiceClient()
     const { data: document, error } = await serviceSupabase
       .from('deal_data_room_documents')
