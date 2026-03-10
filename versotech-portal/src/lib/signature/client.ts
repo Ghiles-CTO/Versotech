@@ -20,6 +20,10 @@ import { detectAnchors, getPlacementsFromAnchors } from './anchor-detector'
 import { calculateSubscriptionFeeEvents, createFeeEvents } from '../fees/subscription-fee-calculator'
 import { createServiceClient } from '@/lib/supabase/server'
 import type { SignaturePlacementRecord } from './types'
+import {
+  maybeReleaseDeferredInvestorRequests,
+  shouldDelayFinalSignatureCompletion,
+} from './staged-release'
 import { sendSignatureRequestEmail } from '@/lib/email/resend-service'
 import type {
   CreateSignatureRequestParams,
@@ -1519,6 +1523,19 @@ export async function submitSignature(
       console.log('ℹ️ [SIGNATURE] No pending tasks found for this signature request')
     }
 
+    const updatedSignatureRequest = {
+      ...signatureRequest,
+      status: 'signed',
+      signed_pdf_path: signedPdfPath,
+      signed_pdf_size: signedPdfBytes.length,
+    } as SignatureRequestRecord
+
+    await maybeReleaseDeferredInvestorRequests(
+      updatedSignatureRequest,
+      supabase,
+      createSignatureRequest
+    )
+
     // IMMEDIATELY update document file_key so signature is visible when viewing
     // This ensures users can see signatures before ALL signatories have signed
     if (signatureRequest.document_id) {
@@ -1584,14 +1601,14 @@ export async function submitSignature(
 
     // If this is a subscription pack, commit once ALL investor signers have signed
     await checkAndCommitSubscriptionIfInvestorComplete(
-      signatureRequest as SignatureRequestRecord,
+      updatedSignatureRequest,
       supabase
     )
 
     // Check if all signatures for this document/workflow are complete
     console.log('🔍 [SIGNATURE] Checking if all signatures are complete')
     await checkAndCompleteSignatures(
-      signatureRequest,
+      updatedSignatureRequest,
       signedPdfPath,
       signedPdfBytes,
       supabase
@@ -2001,6 +2018,17 @@ async function checkAndCompleteSignatures(
       pending: allSignatureRequests.filter(req => req.status === 'pending').length,
       grouping_type: groupingType
     })
+
+    const shouldDelayCompletion = await shouldDelayFinalSignatureCompletion(
+      signatureRequest,
+      allSignatureRequests,
+      supabase
+    )
+
+    if (shouldDelayCompletion) {
+      console.log('⏳ [SIGNATURE] Waiting for staged investor signature requests to be released before final completion')
+      return
+    }
 
     const allSigned = allSignatureRequests.every((req) => req.status === 'signed')
 

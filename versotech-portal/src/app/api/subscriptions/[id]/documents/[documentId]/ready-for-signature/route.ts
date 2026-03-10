@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { getCeoSigner } from '@/lib/staff/ceo-signer'
 import { convertDocxToPdf } from '@/lib/gotenberg/convert'
 import { applySubscriptionPackPageNumbers } from '@/lib/subscription/page-numbering'
+import type { SignaturePosition, SubscriptionSignatureWorkflowConfig } from '@/lib/signature/types'
 
 // Schema for multi-signatory support with optional arranger countersigning
 const requestSchema = z.object({
@@ -335,11 +336,14 @@ export async function POST(
       }, { status: 400 })
     }
 
-    signatories = members.map(m => ({
+    const sortOrder = new Map(body.signatory_member_ids.map((memberId, index) => [memberId, index]))
+    signatories = [...members]
+      .sort((left, right) => (sortOrder.get(left.id) ?? 0) - (sortOrder.get(right.id) ?? 0))
+      .map(m => ({
       id: m.id,
       full_name: m.full_name,
       email: m.email
-    }))
+      }))
   } else {
     // Check if investor is entity type - auto-fetch signatories from investor_members
     const isEntityInvestor = subscription.investor.type === 'entity' ||
@@ -591,6 +595,37 @@ export async function POST(
     const signedUrl = await getSignedUrlForDocument(targetDocument.file_key)
     console.log('✅ [READY-FOR-SIGNATURE] Got signed URL')
 
+    const signerPositions: SignaturePosition[] = ['party_a', 'party_a_2', 'party_a_3', 'party_a_4', 'party_a_5']
+    const investorSignerSnapshots: SubscriptionSignatureWorkflowConfig['investor_signers'] = signatories.map((signatory, index) => ({
+      member_id: signatory.id !== 'investor_primary' ? signatory.id : null,
+      signer_name: signatory.full_name,
+      signer_email: signatory.email,
+      signature_position: signerPositions[index] || (`party_a_${index + 1}` as SignaturePosition),
+    }))
+
+    const signatureWorkflowConfig: SubscriptionSignatureWorkflowConfig = {
+      mode: 'internal_first',
+      internal_roles: ['admin', 'arranger'],
+      investor_signers: investorSignerSnapshots,
+      investor_requests_released_at: null,
+    }
+
+    const { error: configPersistError } = await serviceSupabase
+      .from('documents')
+      .update({
+        signature_workflow_config: signatureWorkflowConfig,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', targetDocumentId)
+
+    if (configPersistError) {
+      console.error('❌ [READY-FOR-SIGNATURE] Failed to persist staged signature workflow config:', configPersistError)
+      return NextResponse.json({
+        error: 'Failed to store staged signature workflow configuration',
+        details: configPersistError.message,
+      }, { status: 500 })
+    }
+
     // ============================================================
     // STEP 1: CREATE ISSUER (party_b) SIGNATURE REQUEST
     // ============================================================
@@ -724,48 +759,15 @@ export async function POST(
       }, { status: 400 })
     }
 
-    // ============================================================
-    // STEP 2: CREATE INVESTOR SIGNATURE REQUESTS (AFTER COMPANY)
-    // ============================================================
-    console.log('🔍 [READY-FOR-SIGNATURE] Creating investor signature requests (they sign AFTER company)...')
-    const signerPositions = ['party_a', 'party_a_2', 'party_a_3', 'party_a_4', 'party_a_5']
-    const investorSignatureRequests = []
-
-    for (let i = 0; i < signatories.length; i++) {
-      const signatory = signatories[i]
-      const position = signerPositions[i] || `party_a_${i + 1}`
-
-      const investorSigPayload = {
-        investor_id: subscription.investor_id,
-        signer_email: signatory.email,
-        signer_name: signatory.full_name,
-        document_type: 'subscription',
-        google_drive_url: signedUrl,
-        signer_role: 'investor',
-        signature_position: position,
-        subscription_id: subscriptionId,
-        document_id: targetDocumentId,
-        deal_id: subscription.deal_id,
-        member_id: signatory.id !== 'investor_primary' ? signatory.id : undefined,
-        total_party_a_signatories: signatories.length
-      }
-
-      const investorSigData = await createSignatureRequestViaApi('investor', investorSigPayload)
-      investorSignatureRequests.push({
-        signatory: signatory.full_name,
-        email: signatory.email,
-        ...investorSigData
-      })
-    }
-
-    console.log('✅ [READY-FOR-SIGNATURE] All investor signatures created')
+    console.log('⏳ [READY-FOR-SIGNATURE] Investor signature requests staged until CEO and arranger have both signed')
 
     await serviceSupabase
       .from('documents')
       .update({
         ready_for_signature: true,
         status: 'pending_signature',
-        signature_status: 'pending'
+        signature_status: 'pending',
+        updated_at: new Date().toISOString(),
       })
       .eq('id', targetDocumentId)
 
@@ -811,14 +813,16 @@ export async function POST(
 
     console.log('✅ Multi-signatory signature requests created for subscription pack:', {
       document_id: targetDocumentId,
-      investor_requests: investorSignatureRequests.length,
+      staged_investor_requests: investorSignerSnapshots.length,
       issuer_request: issuerSigData.signature_request_id,
       arranger_request: arrangerSigData?.signature_request_id || null
     })
 
     return NextResponse.json({
       success: true,
-      investor_signature_requests: investorSignatureRequests,
+      investor_signature_requests: [],
+      release_mode: 'internal_first' as const,
+      staged_investor_signers: investorSignerSnapshots.length,
       issuer_request: issuerSigData,
       issuer_name: issuerName,
       arranger_request: arrangerSigData,

@@ -1380,32 +1380,31 @@ async function handleEntityApproval(
                   : result.n8n_response
 
                 try {
-                  // Create investor signature request (PARTY A) with member_id
-                  const investorSigPayload = {
-                    workflow_run_id: result.workflow_run_id,
-                    investor_id: investorData.id,
-                    member_id: signatory.member_id || undefined, // Track specific signatory
-                    deal_id: dealInterest.deal_id,
-                    signer_email: signatory.email,
-                    signer_name: signatory.full_name,
-                    document_type: 'nda' as const,
-                    google_drive_file_id: googleDriveFile.id,
-                    google_drive_url: googleDriveFile.webContentLink || googleDriveFile.webViewLink,
-                    signer_role: 'investor' as const,
-                    signature_position: 'party_a' as const
+                  const signatureReleaseConfig = {
+                    mode: 'internal_first' as const,
+                    investor_signer: {
+                      member_id: signatory.member_id || null,
+                      signer_name: signatory.full_name,
+                      signer_email: signatory.email,
+                      signature_position: 'party_a' as const,
+                    },
+                    investor_requests_released_at: null,
                   }
 
-                  console.log('🔍 [NDA] Investor signature request:', {
-                    signatory: signatory.full_name,
-                    member_id: signatory.member_id
-                  })
+                  const { error: workflowUpdateError } = await supabase
+                    .from('workflow_runs')
+                    .update({
+                      input_params: {
+                        ...ndaPayload,
+                        signature_release_config: signatureReleaseConfig,
+                      },
+                      updated_at: new Date().toISOString(),
+                    })
+                    .eq('id', result.workflow_run_id)
 
-                  const investorSigResult = await createSignatureRequest(investorSigPayload, supabase)
-
-                  if (investorSigResult.success) {
-                    console.log(`📧 [NDA] Investor signature request created for ${signatory.full_name}`)
-                  } else {
-                    console.error(`Failed to create investor signature request for ${signatory.full_name}:`, investorSigResult.error)
+                  if (workflowUpdateError) {
+                    console.error(`❌ [NDA] Failed to persist staged signature config for ${signatory.full_name}:`, workflowUpdateError)
+                    continue
                   }
 
                   // Create admin signature request (PARTY B) for this NDA document
@@ -1425,7 +1424,7 @@ async function handleEntityApproval(
                   const adminSigResult = await createSignatureRequest(adminSigPayload, supabase)
 
                   if (adminSigResult.success) {
-                    console.log(`📧 [NDA] Admin signature request created for ${signatory.full_name}'s NDA`)
+                    console.log(`📧 [NDA] Admin signature request created for ${signatory.full_name}'s NDA; investor release is staged`)
                   } else {
                     console.error(`Failed to create admin signature request:`, adminSigResult.error)
                   }

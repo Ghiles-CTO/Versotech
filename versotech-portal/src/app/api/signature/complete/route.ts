@@ -5,6 +5,8 @@ import { buildExecutedDocumentName, formatCounterpartyName } from '@/lib/documen
 import { resolveIntroducerSignatories } from '@/lib/signature/introducer-signatories'
 import { sendSignatureRequestEmail } from '@/lib/email/resend-service'
 import { generateSigningUrl } from '@/lib/signature/token'
+import { createSignatureRequest } from '@/lib/signature/client'
+import { maybeReleaseDeferredInvestorRequests } from '@/lib/signature/staged-release'
 import crypto from 'crypto'
 
 function normalizeWebhookSignature(rawSignature: string): string | null {
@@ -85,6 +87,22 @@ export async function POST(request: NextRequest) {
   })
 
   const supabase = createServiceClient()
+
+  if (typeof signature_request_id === 'string' && signature_request_id.length > 0) {
+    const { data: completedSignatureRequest } = await supabase
+      .from('signature_requests')
+      .select('*')
+      .eq('id', signature_request_id)
+      .maybeSingle()
+
+    if (completedSignatureRequest) {
+      await maybeReleaseDeferredInvestorRequests(
+        completedSignatureRequest,
+        supabase,
+        createSignatureRequest
+      )
+    }
+  }
 
   // Check for countersignature notifications (CEO/Arranger)
   if (document_type === 'subscription') {

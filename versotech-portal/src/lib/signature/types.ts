@@ -16,6 +16,7 @@ export interface SignatureRequestRecord {
   id: string
   workflow_run_id?: string // Optional - only for n8n generated documents
   investor_id: string
+  deal_id?: string
   member_id?: string // For entity investors: specific investor_member who must sign
   signer_user_id?: string // Platform user ID for signing verification
   signer_email: string
@@ -145,4 +146,24 @@ export interface PostSignatureHandlerParams {
   signedPdfPath: string
   signedPdfBytes: Uint8Array
   supabase: any
+}
+
+export interface StagedInvestorSignerSnapshot {
+  member_id?: string | null
+  signer_name: string
+  signer_email: string
+  signature_position: SignaturePosition
+}
+
+export interface SubscriptionSignatureWorkflowConfig {
+  mode: 'internal_first'
+  internal_roles: Array<'admin' | 'arranger'>
+  investor_signers: StagedInvestorSignerSnapshot[]
+  investor_requests_released_at?: string | null
+}
+
+export interface NdaSignatureReleaseConfig {
+  mode: 'internal_first'
+  investor_signer: StagedInvestorSignerSnapshot
+  investor_requests_released_at?: string | null
 }

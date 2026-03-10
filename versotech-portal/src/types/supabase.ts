@@ -3812,6 +3812,7 @@ export type Database = {
           partner_id: string | null
           published_at: string | null
           ready_for_signature: boolean | null
+          signature_workflow_config: Json | null
           signature_workflow_run_id: string | null
           status: string | null
           subscription_id: string | null
@@ -3848,6 +3849,7 @@ export type Database = {
           partner_id?: string | null
           published_at?: string | null
           ready_for_signature?: boolean | null
+          signature_workflow_config?: Json | null
           signature_workflow_run_id?: string | null
           status?: string | null
           subscription_id?: string | null
@@ -3884,6 +3886,7 @@ export type Database = {
           partner_id?: string | null
           published_at?: string | null
           ready_for_signature?: boolean | null
+          signature_workflow_config?: Json | null
           signature_workflow_run_id?: string | null
           status?: string | null
           subscription_id?: string | null
