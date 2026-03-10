@@ -6,6 +6,8 @@ import { z } from 'zod'
 
 // Allowed document types for KYC submissions - SIMPLIFIED
 const ALLOWED_DOCUMENT_TYPES = [
+  // Questionnaire
+  'questionnaire',
   // Individual ID docs
   'passport',
   'national_id',
