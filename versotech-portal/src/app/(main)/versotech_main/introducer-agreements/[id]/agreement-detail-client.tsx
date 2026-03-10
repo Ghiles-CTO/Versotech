@@ -141,22 +141,32 @@ export function AgreementDetailClient({
   const [previewLoading, setPreviewLoading] = useState(false)
   const [previewError, setPreviewError] = useState<string | null>(null)
 
-  // Handle PDF download - use signed PDF for active agreements
-  const handleDownloadPdf = async () => {
-    // For active agreements, prefer the signed PDF; otherwise use the original
-    const isActive = agreement.status === 'active'
-    const pdfPath = isActive && agreement.signed_pdf_url ? agreement.signed_pdf_url : agreement.pdf_url
-    // Signed PDFs are in 'signatures' bucket, originals in 'deal-documents'
-    const bucket = isActive && agreement.signed_pdf_url ? 'signatures' : 'deal-documents'
+  const getAgreementPdfUrl = async (mode: 'preview' | 'download') => {
+    const response = await fetch(`/api/introducer-agreements/${agreement.id}/download?mode=${mode}`)
+    if (!response.ok) {
+      throw new Error('Failed to get document URL')
+    }
 
-    if (!pdfPath) return
+    const data = await response.json()
+    const fileUrl = data.url || data.download_url
+
+    if (!fileUrl) {
+      throw new Error('Document URL missing from response')
+    }
+
+    return fileUrl as string
+  }
+
+  // Handle PDF download via the agreement route so storage bucket resolution stays server-side.
+  const handleDownloadPdf = async () => {
+    if (!agreement.pdf_url && !agreement.signed_pdf_url) return
 
     setDownloadingPdf(true)
     try {
-      const response = await fetch(`/api/storage/download?path=${encodeURIComponent(pdfPath)}&bucket=${bucket}`)
-      if (!response.ok) {
-        throw new Error('Failed to download file')
-      }
+      const fileUrl = await getAgreementPdfUrl('download')
+      const response = await fetch(fileUrl)
+      if (!response.ok) throw new Error('Failed to download file')
+
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -177,24 +187,15 @@ export function AgreementDetailClient({
 
   // Handle PDF preview - opens fullscreen viewer
   const handlePreviewPdf = async () => {
-    const isActive = agreement.status === 'active'
-    const pdfPath = isActive && agreement.signed_pdf_url ? agreement.signed_pdf_url : agreement.pdf_url
-    const bucket = isActive && agreement.signed_pdf_url ? 'signatures' : 'deal-documents'
-
-    if (!pdfPath) return
+    if (!agreement.pdf_url && !agreement.signed_pdf_url) return
 
     setPreviewLoading(true)
     setPreviewError(null)
     setIsPreviewOpen(true)
 
     try {
-      // Get a signed URL for the PDF
-      const response = await fetch(`/api/storage/signed-url?path=${encodeURIComponent(pdfPath)}&bucket=${bucket}`)
-      if (!response.ok) {
-        throw new Error('Failed to get preview URL')
-      }
-      const data = await response.json()
-      setPreviewUrl(data.signedUrl)
+      const fileUrl = await getAgreementPdfUrl('preview')
+      setPreviewUrl(fileUrl)
     } catch (error) {
       console.error('Error loading PDF preview:', error)
       setPreviewError('Failed to load PDF preview')

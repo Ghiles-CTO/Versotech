@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useCallback, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -65,6 +65,7 @@ function AcceptInvitationContent() {
   // Core states
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [errorStatus, setErrorStatus] = useState<string | null>(null)
   const [invitation, setInvitation] = useState<InvitationResponse | null>(null)
 
   // Accept states
@@ -89,6 +90,28 @@ function AcceptInvitationContent() {
   const [signInPassword, setSignInPassword] = useState('')
   const [signingIn, setSigningIn] = useState(false)
 
+  const fetchInvitation = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/invitations/${token}`)
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to load invitation')
+        setErrorStatus(typeof data.status === 'string' ? data.status : null)
+        return
+      }
+
+      setError(null)
+      setErrorStatus(null)
+      setInvitation(data)
+    } catch (err) {
+      setError('Failed to load invitation details')
+      setErrorStatus(null)
+    } finally {
+      setLoading(false)
+    }
+  }, [token])
+
   useEffect(() => {
     if (!token) {
       setError('Invalid invitation link - no token provided')
@@ -96,26 +119,8 @@ function AcceptInvitationContent() {
       return
     }
 
-    fetchInvitation()
-  }, [token])
-
-  const fetchInvitation = async () => {
-    try {
-      const response = await fetch(`/api/invitations/${token}`)
-      const data = await response.json()
-
-      if (!response.ok) {
-        setError(data.error || 'Failed to load invitation')
-        return
-      }
-
-      setInvitation(data)
-    } catch (err) {
-      setError('Failed to load invitation details')
-    } finally {
-      setLoading(false)
-    }
-  }
+    void fetchInvitation()
+  }, [fetchInvitation, token])
 
   // For logged-in users accepting invitation
   const handleAccept = async () => {
@@ -273,7 +278,7 @@ function AcceptInvitationContent() {
             <div className="mx-auto w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
               <XCircle className="h-6 w-6 text-destructive" />
             </div>
-            <CardTitle>Invalid Invitation</CardTitle>
+            <CardTitle>{errorStatus === 'accepted' ? 'Invitation Already Accepted' : 'Invalid Invitation'}</CardTitle>
             <CardDescription>{error}</CardDescription>
           </CardHeader>
           <CardFooter className="justify-center">
@@ -393,7 +398,7 @@ function AcceptInvitationContent() {
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 You're signed in as {user_email}, but this invitation was sent to {inv.email}.
-                You can still accept it with your current account.
+                Please sign in with the invited email address to accept it.
               </AlertDescription>
             </Alert>
           )}

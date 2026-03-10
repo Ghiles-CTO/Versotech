@@ -28,6 +28,8 @@ import { SubscribeNowDialog } from '@/components/deals/subscribe-now-dialog'
 import { AskQuestionButton } from '@/components/deals/ask-question-button'
 import { DealFaqSection } from '@/components/deals/deal-faq-section'
 import { getAccountStatusCopy, formatKycStatusLabel } from '@/lib/account-approval-status'
+import { cookies } from 'next/headers'
+import { readActivePersonaCookieValues, resolveActiveInvestorLink } from '@/lib/kyc/active-investor-link'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,18 +48,21 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
   }
 
   const serviceSupabase = createServiceClient()
+  const cookieStore = await cookies()
+  const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(cookieStore)
+  const { link: investorLink } = await resolveActiveInvestorLink<{ investor_id: string }>({
+    supabase: serviceSupabase,
+    userId: user.id,
+    cookiePersonaType,
+    cookiePersonaId,
+    select: 'investor_id',
+  })
 
-  // Get investor ID
-  const { data: investorLinks } = await serviceSupabase
-    .from('investor_users')
-    .select('investor_id')
-    .eq('user_id', user.id)
-
-  if (!investorLinks || investorLinks.length === 0) {
+  if (!investorLink?.investor_id) {
     redirect('/versotech_main/opportunities')
   }
 
-  const investorId = investorLinks[0].investor_id
+  const investorId = investorLink.investor_id
 
   const { data: investorAccount } = await serviceSupabase
     .from('investors')

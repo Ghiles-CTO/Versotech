@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { readActivePersonaCookieValues, resolveActiveInvestorLink } from '@/lib/kyc/active-investor-link'
 
 export async function GET(
   request: NextRequest,
@@ -35,6 +36,15 @@ export async function GET(
 
     // Use service client to fetch document (bypasses RLS for permission check)
     const serviceSupabase = createServiceClient()
+    const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(request.cookies)
+    const { link: activeInvestorLink } = await resolveActiveInvestorLink<{ investor_id: string }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookiePersonaType,
+      cookiePersonaId,
+      select: 'investor_id',
+    })
+    const activeInvestorId = activeInvestorLink?.investor_id ?? null
     const { data: document, error: docError } = await serviceSupabase
       .from('documents')
       .select('id, name, file_key, mime_type, type, owner_investor_id, vehicle_id, deal_id, subscription_id, partner_id, commercial_partner_id, introducer_id')
@@ -138,25 +148,18 @@ export async function GET(
 
       // If not a lawyer or arranger with access, check investor access
       if (!hasAccess) {
-        const { data: investorLinks } = await supabase
-          .from('investor_users')
-          .select('investor_id')
-          .eq('user_id', user.id)
-
-        const investorIds = investorLinks?.map(link => link.investor_id) || []
-
         // Check access via owner_investor_id
-        if (document.owner_investor_id && investorIds.includes(document.owner_investor_id)) {
+        if (activeInvestorId && document.owner_investor_id === activeInvestorId) {
           hasAccess = true
         }
 
         // Check access via vehicle subscription
-        if (!hasAccess && document.vehicle_id && investorIds.length > 0) {
+        if (!hasAccess && document.vehicle_id && activeInvestorId) {
           const { data: subscription } = await supabase
             .from('subscriptions')
             .select('id')
             .eq('vehicle_id', document.vehicle_id)
-            .in('investor_id', investorIds)
+            .eq('investor_id', activeInvestorId)
             .maybeSingle()
 
           if (subscription) {
@@ -165,12 +168,12 @@ export async function GET(
         }
 
         // Check access via deal membership
-        if (!hasAccess && document.deal_id && investorIds.length > 0) {
+        if (!hasAccess && document.deal_id && activeInvestorId) {
           const { data: dealMember } = await supabase
             .from('deal_memberships')
             .select('deal_id')
             .eq('deal_id', document.deal_id)
-            .in('investor_id', investorIds)
+            .eq('investor_id', activeInvestorId)
             .maybeSingle()
 
           if (dealMember) {

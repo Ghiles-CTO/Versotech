@@ -69,6 +69,29 @@ function resolveProfileRoleFromInvitation(entityType: string, invitationRole: st
   return PROFILE_ROLE_BY_ENTITY[entityType] ?? null
 }
 
+function getInvitationStatusError(status: string | null | undefined) {
+  const normalizedStatus = (status || '').toLowerCase().trim()
+
+  if (normalizedStatus === 'accepted') {
+    return {
+      error: 'This invitation has already been accepted. Please sign in.',
+      status: 'accepted',
+    }
+  }
+
+  if (normalizedStatus === 'expired') {
+    return {
+      error: 'This invitation has expired',
+      status: 'expired',
+    }
+  }
+
+  return {
+    error: `This invitation has already been ${normalizedStatus || 'used'}`,
+    status: normalizedStatus || 'used',
+  }
+}
+
 /**
  * GET /api/invitations/[token]
  * Get invitation details (for the accept page)
@@ -97,19 +120,16 @@ export async function GET(
       return NextResponse.json({ error: 'Invitation not found' }, { status: 404 })
     }
 
+    // Check if already used
+    if (invitation.status !== 'pending') {
+      return NextResponse.json(getInvitationStatusError(invitation.status), { status: 400 })
+    }
+
     // Check if expired
     if (new Date(invitation.expires_at) < new Date()) {
       return NextResponse.json({
         error: 'This invitation has expired',
         status: 'expired'
-      }, { status: 400 })
-    }
-
-    // Check if already used
-    if (invitation.status !== 'pending') {
-      return NextResponse.json({
-        error: `This invitation has already been ${invitation.status}`,
-        status: invitation.status
       }, { status: 400 })
     }
 
@@ -200,6 +220,11 @@ export async function POST(
       return NextResponse.json({ error: 'Invitation not found' }, { status: 404 })
     }
 
+    // Check if already used
+    if (invitation.status !== 'pending') {
+      return NextResponse.json(getInvitationStatusError(invitation.status), { status: 400 })
+    }
+
     // Check if expired
     if (new Date(invitation.expires_at) < new Date()) {
       await serviceSupabase
@@ -207,14 +232,7 @@ export async function POST(
         .update({ status: 'expired' })
         .eq('id', invitation.id)
 
-      return NextResponse.json({ error: 'This invitation has expired' }, { status: 400 })
-    }
-
-    // Check if already used
-    if (invitation.status !== 'pending') {
-      return NextResponse.json({
-        error: `This invitation has already been ${invitation.status}`
-      }, { status: 400 })
+      return NextResponse.json({ error: 'This invitation has expired', status: 'expired' }, { status: 400 })
     }
 
     const invitedProfileRole = resolveProfileRoleFromInvitation(invitation.entity_type, invitation.role)

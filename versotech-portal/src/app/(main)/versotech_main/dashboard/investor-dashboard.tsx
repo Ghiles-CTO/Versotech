@@ -4,10 +4,14 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
-import { usePersona, Persona } from '@/contexts/persona-context'
+import { Persona } from '@/contexts/persona-context'
 import { useTheme } from '@/components/theme-provider'
 import { InvestorActionCenter, DashboardTask, DashboardActivity } from '@/components/dashboard/investor-action-center'
 import { FeaturedDealsSection, FeaturedDeal } from '@/components/dashboard/featured-deals-section'
+import {
+  InvestorDashboardOnboardingCard,
+  type DashboardOnboardingState,
+} from '@/components/dashboard/investor-dashboard-onboarding-card'
 import { VideoIntroModal } from '@/components/video/video-intro-modal'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -43,6 +47,7 @@ interface InvestorDashboardData {
     avatarUrl: string | null
     hasSeenIntroVideo: boolean
   } | null
+  onboarding: DashboardOnboardingState | null
   vehicles: PortfolioVehicle[]
   featuredDeals: FeaturedDeal[]
   tasks: DashboardTask[]
@@ -306,6 +311,24 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
       try {
         const supabase = createClient()
         const investorIds = [investorId]
+        const onboardingPromise = fetch('/api/investors/me/dashboard-onboarding', {
+          credentials: 'same-origin',
+        })
+          .then(async (response) => {
+            if (response.status === 404) {
+              return null
+            }
+
+            if (!response.ok) {
+              throw new Error('Failed to load dashboard onboarding state')
+            }
+
+            return (await response.json()) as DashboardOnboardingState
+          })
+          .catch((onboardingError) => {
+            console.error('[InvestorDashboard] Error fetching onboarding state:', onboardingError)
+            return null
+          })
 
         // Fetch all data in parallel
         const [
@@ -314,7 +337,8 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
           dealsRes,
           tasksRes,
           activityRes,
-          positionsRes
+          positionsRes,
+          onboardingRes
         ] = await Promise.all([
           // Profile (includes intro video status)
           supabase
@@ -392,7 +416,9 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
             .from('positions')
             .select('id')
             .in('investor_id', investorIds)
-            .limit(1)
+            .limit(1),
+
+          onboardingPromise
         ])
 
         // Map activity events to dashboard activity format
@@ -405,7 +431,6 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
           closed_deal_interest: { title: 'Interest Registered', activity_type: 'deal' },
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const recentActivity: DashboardActivity[] = (activityRes.data ?? []).map((event: any) => {
           const mapping = eventTypeMap[event.event_type] || { title: event.event_type, activity_type: 'deal' }
           const dealName = event.deals?.name || 'Deal'
@@ -470,6 +495,7 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
             avatarUrl: profileRes.data.avatar_url,
             hasSeenIntroVideo: profileRes.data.has_seen_intro_video ?? true
           } : null,
+          onboarding: onboardingRes,
           vehicles: (vehiclesRes.data ?? []) as PortfolioVehicle[],
           featuredDeals: processedDeals as FeaturedDeal[],
           tasks: sortedTasks as DashboardTask[],
@@ -507,6 +533,8 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
 
   const displayName = persona?.entity_name || data.profile?.displayName || 'Investor'
   const firstName = (displayName || 'Investor').split(' ')[0] || 'Investor'
+  const normalizedAccountApprovalStatus = data.onboarding?.accountApprovalStatus?.toLowerCase().trim() ?? null
+  const isAccountApproved = normalizedAccountApprovalStatus === 'approved'
 
   const summaryTiles = [
     {
@@ -517,7 +545,12 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
     {
       label: 'Outstanding tasks',
       value: data.tasksTotal,
-      helper: data.tasksTotal ? 'Pending actions' : 'All caught up'
+      helper:
+        data.tasksTotal > 0
+          ? 'Pending actions'
+          : data.onboarding && !isAccountApproved
+            ? 'Onboarding pending'
+            : 'All caught up'
     },
     {
       label: 'Active holdings',
@@ -710,6 +743,10 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
           </div>
         </div>
       </section>
+
+      {data.onboarding && !isAccountApproved && (
+        <InvestorDashboardOnboardingCard state={data.onboarding} />
+      )}
 
       {/* Featured Deals */}
       <FeaturedDealsSection deals={data.featuredDeals} />

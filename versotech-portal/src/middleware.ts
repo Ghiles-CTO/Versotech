@@ -622,9 +622,9 @@ export async function middleware(request: NextRequest) {
 
       // =========================================================================
       // ACCOUNT APPROVAL STATUS CHECK
-      // Block accounts that are pending_approval or pending_onboarding from
-      // accessing most platform features. They can only access their profile
-      // and KYC submission endpoints.
+      // Keep stale persona cookies from forcing a pending persona when an
+      // approved persona is available. Account-level action blocking is handled
+      // by the relevant APIs; page browsing should remain available.
       // =========================================================================
       if (Array.isArray(personas) && personas.length > 0) {
         // Multi-persona safety:
@@ -663,43 +663,6 @@ export async function middleware(request: NextRequest) {
           })
         }
 
-        const hasNewAccount = approvedPersonas.length === 0 && isPendingPersona(personaForAccess)
-
-        // Note: Rejected accounts can browse freely - transaction blocking is handled at API level
-        // (see /api/deals/[id]/interests and /api/deals/[id]/subscriptions routes)
-
-        // Paths allowed for pending accounts (profile + KYC submission only)
-        const allowedPendingPaths = [
-          '/versotech_main/profile',
-          '/versotech_main/investor-profile',
-          '/versotech_main/partner-profile',
-          '/versotech_main/lawyer-profile',
-          '/versotech_main/arranger-profile',
-          '/versotech_main/introducer-profile',
-          '/versotech_main/commercial-partner-profile',
-          '/versotech_main/onboarding',
-          '/api/me/personal-kyc',
-          '/api/me/entity-kyc',
-          '/api/investors/me',
-          '/api/partners/me',
-          '/api/lawyers/me',
-          '/api/arrangers/me',
-          '/api/introducers/me',
-          '/api/commercial-partners/me',
-        ]
-
-        const isAllowedForPending = allowedPendingPaths.some(p =>
-          pathname.startsWith(p) || pathname === p
-        ) || pathname === '/logout' || pathname.startsWith('/api/auth')
-
-        if (hasNewAccount && !isCEO && !hasPersona('staff') && !isAllowedForPending) {
-          console.log(`[auth] Active persona pending approval, redirecting to profile: ${user.email}`, {
-            persona_type: personaForAccess?.persona_type,
-            entity_id: personaForAccess?.entity_id,
-            account_approval_status: personaForAccess?.account_approval_status,
-          })
-          return NextResponse.redirect(new URL('/versotech_main/profile', request.url))
-        }
       }
 
       const ceoOnlyPaths = [

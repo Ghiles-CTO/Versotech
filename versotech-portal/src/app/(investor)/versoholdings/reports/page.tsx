@@ -1,9 +1,11 @@
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 
 import { AppLayout } from '@/components/layout/app-layout'
 import { ReportsPageClient } from '@/components/reports/reports-page-client'
 import { getProfile } from '@/lib/auth'
 import { loadInvestorDocuments } from '@/lib/documents/investor-documents'
+import { readActivePersonaCookieValues, resolveActiveInvestorLink } from '@/lib/kyc/active-investor-link'
 import { createServiceClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
@@ -23,13 +25,17 @@ export default async function ReportsPage({
   }
 
   const serviceSupabase = createServiceClient()
+  const cookieStore = await cookies()
+  const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(cookieStore)
+  const { link: investorLink } = await resolveActiveInvestorLink<{ investor_id: string }>({
+    supabase: serviceSupabase,
+    userId: profile.id,
+    cookiePersonaType,
+    cookiePersonaId,
+    select: 'investor_id',
+  })
 
-  const { data: investorLinks } = await serviceSupabase
-    .from('investor_users')
-    .select('investor_id')
-    .eq('user_id', profile.id)
-
-  const investorIds = investorLinks?.map(link => link.investor_id) ?? []
+  const investorIds = investorLink?.investor_id ? [investorLink.investor_id] : []
 
   // If user has no linked investors, skip the request tickets query
   const [requestsResult, documentsData] = await Promise.all([

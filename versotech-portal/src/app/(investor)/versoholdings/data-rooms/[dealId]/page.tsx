@@ -25,6 +25,8 @@ import { SubmitSubscriptionForm } from '@/components/deals/submit-subscription-f
 import { RequestExtensionButton } from '@/components/deals/request-extension-button'
 import { DealFaqSection } from '@/components/deals/deal-faq-section'
 import Link from 'next/link'
+import { cookies } from 'next/headers'
+import { readActivePersonaCookieValues, resolveActiveInvestorLink } from '@/lib/kyc/active-investor-link'
 
 export const dynamic = 'force-dynamic'
 
@@ -81,18 +83,21 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
   }
 
   const serviceSupabase = createServiceClient()
+  const cookieStore = await cookies()
+  const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(cookieStore)
+  const { link: investorLink } = await resolveActiveInvestorLink<{ investor_id: string }>({
+    supabase: serviceSupabase,
+    userId: user.id,
+    cookiePersonaType,
+    cookiePersonaId,
+    select: 'investor_id',
+  })
 
-  const { data: investorLinks } = await serviceSupabase
-    .from('investor_users')
-    .select('investor_id')
-    .eq('user_id', user.id)
-
-  if (!investorLinks || investorLinks.length === 0) {
+  if (!investorLink?.investor_id) {
     notFound()
   }
 
-  const investorIds = investorLinks.map(link => link.investor_id)
-  const primaryInvestorId = investorIds[0]
+  const primaryInvestorId = investorLink.investor_id
 
   // Check access (must not be revoked AND must not be expired)
   const now = new Date().toISOString()
@@ -100,7 +105,7 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
     .from('deal_data_room_access')
     .select('*')
     .eq('deal_id', dealId)
-    .in('investor_id', investorIds)
+    .eq('investor_id', primaryInvestorId)
     .is('revoked_at', null)
     .or(`expires_at.is.null,expires_at.gt.${now}`)
     .single()

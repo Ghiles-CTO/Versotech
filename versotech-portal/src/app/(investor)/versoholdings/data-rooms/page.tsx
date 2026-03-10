@@ -6,6 +6,8 @@ import {
 } from 'lucide-react'
 import { DataRoomDocument } from '@/components/deals/data-room-documents'
 import { DataRoomPreviewCard } from '@/components/deals/data-room-preview-card'
+import { cookies } from 'next/headers'
+import { readActivePersonaCookieValues, resolveActiveInvestorLink } from '@/lib/kyc/active-investor-link'
 
 export const dynamic = 'force-dynamic'
 
@@ -63,13 +65,17 @@ export default async function DataRoomsPage() {
   }
 
   const serviceSupabase = createServiceClient()
+  const cookieStore = await cookies()
+  const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(cookieStore)
+  const { link: investorLink } = await resolveActiveInvestorLink<{ investor_id: string }>({
+    supabase: serviceSupabase,
+    userId: user.id,
+    cookiePersonaType,
+    cookiePersonaId,
+    select: 'investor_id',
+  })
 
-  const { data: investorLinks } = await serviceSupabase
-    .from('investor_users')
-    .select('investor_id')
-    .eq('user_id', user.id)
-
-  if (!investorLinks || investorLinks.length === 0) {
+  if (!investorLink?.investor_id) {
     return (
       <AppLayout brand="versoholdings">
         <div className="p-6">
@@ -87,14 +93,13 @@ export default async function DataRoomsPage() {
     )
   }
 
-  const investorIds = investorLinks.map(link => link.investor_id)
-  const primaryInvestorId = investorIds[0]
+  const primaryInvestorId = investorLink.investor_id
 
   const now = new Date().toISOString()
   const { data: accessData } = await serviceSupabase
     .from('deal_data_room_access')
     .select('id, deal_id, investor_id, granted_at, expires_at, auto_granted, notes, revoked_at')
-    .in('investor_id', investorIds)
+    .eq('investor_id', primaryInvestorId)
     .is('revoked_at', null)
     .or(`expires_at.is.null,expires_at.gt.${now}`)
     .order('granted_at', { ascending: false })

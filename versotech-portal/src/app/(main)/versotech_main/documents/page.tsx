@@ -4,6 +4,9 @@ import { CategorizedDocumentsClient } from '@/components/documents/categorized-d
 import { loadInvestorDocuments } from '@/lib/documents/investor-documents'
 import { AlertCircle, FileText } from 'lucide-react'
 import { checkCeoOnlyAccess } from '@/lib/auth'
+import { cookies } from 'next/headers'
+import { resolveActivePersona, type PersonaIdentity } from '@/lib/persona/active-persona'
+import { readActivePersonaCookieValues, resolveActiveInvestorLink } from '@/lib/kyc/active-investor-link'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,12 +38,29 @@ export default async function DocumentsPage() {
     )
   }
 
-  // Check user personas for access level
-  const isCeo = await checkCeoOnlyAccess(user.id)
+  const cookieStore = await cookies()
+  const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(cookieStore)
   const serviceSupabase = createServiceClient()
+  const { data: personas, error: personasError } = await clientSupabase.rpc('get_user_personas', {
+    p_user_id: user.id,
+  })
+
+  if (personasError) {
+    console.warn('[DocumentsPage] Persona lookup failed:', personasError.message)
+  }
+
+  const activePersona = resolveActivePersona((personas || []) as PersonaIdentity[], {
+    cookiePersonaType,
+    cookiePersonaId,
+  })
+
+  const isCeo = await checkCeoOnlyAccess(user.id)
+  const isStaffView = activePersona
+    ? activePersona.persona_type === 'ceo' || activePersona.persona_type === 'staff'
+    : isCeo
 
   // CEO gets full document management access
-  if (isCeo) {
+  if (isStaffView) {
     const { data: profile } = await serviceSupabase
       .from('profiles')
       .select('role, display_name, title')
@@ -67,13 +87,15 @@ export default async function DocumentsPage() {
   }
 
   // Non-staff users: Use the full categorized document experience
-  // Get investor IDs linked to this user
-  const { data: investorLinks } = await serviceSupabase
-    .from('investor_users')
-    .select('investor_id')
-    .eq('user_id', user.id)
+  const { link: investorLink } = await resolveActiveInvestorLink<{ investor_id: string }>({
+    supabase: serviceSupabase,
+    userId: user.id,
+    cookiePersonaType,
+    cookiePersonaId,
+    select: 'investor_id',
+  })
 
-  const investorIds = investorLinks?.map(link => link.investor_id) ?? []
+  const investorIds = investorLink?.investor_id ? [investorLink.investor_id] : []
 
   // Load full investor documents (owner docs + vehicle docs from subscriptions)
   const documentsData = await loadInvestorDocuments(serviceSupabase, investorIds)

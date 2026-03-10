@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { applyPdfWatermark } from '@/lib/documents/pdf-watermark'
 import { applyImageWatermark } from '@/lib/documents/image-watermark'
+import { readActivePersonaCookieValues, resolveActiveInvestorLink } from '@/lib/kyc/active-investor-link'
 import crypto from 'crypto'
 
 function isPdf(fileName: string | null | undefined): boolean {
@@ -96,6 +97,15 @@ export async function GET(
       .single()
 
     const isStaff = profile?.role?.startsWith('staff_') || profile?.role === 'ceo'
+    const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(request.cookies)
+    const { link: activeInvestorLink } = await resolveActiveInvestorLink<{ investor_id: string }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookiePersonaType,
+      cookiePersonaId,
+      select: 'investor_id',
+    })
+    const activeInvestorId = activeInvestorLink?.investor_id ?? null
 
     // Block investor download mode — investors get preview only
     if (mode === 'download' && !isStaff) {
@@ -128,14 +138,7 @@ export async function GET(
 
       if (!isFeaturedDoc) {
         // Non-featured docs require active data room access
-        const { data: investorUsers } = await serviceSupabase
-          .from('investor_users')
-          .select('investor_id')
-          .eq('user_id', user.id)
-
-        const investorIds = investorUsers?.map(iu => iu.investor_id) ?? []
-
-        if (investorIds.length === 0) {
+        if (!activeInvestorId) {
           return NextResponse.json({
             error: 'No investor profile found'
           }, { status: 403 })
@@ -145,7 +148,7 @@ export async function GET(
           .from('deal_data_room_access')
           .select('*')
           .eq('deal_id', dealId)
-          .in('investor_id', investorIds)
+          .eq('investor_id', activeInvestorId)
           .is('revoked_at', null)
           .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
           .limit(1)
@@ -170,16 +173,11 @@ export async function GET(
     // Resolve investor entity name for watermark (non-staff only)
     let entityName: string | null = null
     if (!isStaff) {
-      const { data: investorUsers } = await serviceSupabase
-        .from('investor_users')
-        .select('investor_id')
-        .eq('user_id', user.id)
-
-      if (investorUsers && investorUsers.length > 0) {
+      if (activeInvestorId) {
         const { data: investor } = await serviceSupabase
           .from('investors')
           .select('legal_name')
-          .eq('id', investorUsers[0].investor_id)
+          .eq('id', activeInvestorId)
           .maybeSingle()
 
         entityName = investor?.legal_name || null
