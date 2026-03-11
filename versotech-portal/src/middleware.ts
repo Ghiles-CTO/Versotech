@@ -621,48 +621,35 @@ export async function middleware(request: NextRequest) {
       const matchesPrefix = (prefixes: string[]) => prefixes.some((prefix) => pathname.startsWith(prefix))
 
       // =========================================================================
-      // ACCOUNT APPROVAL STATUS CHECK
-      // Keep stale persona cookies from forcing a pending persona when an
-      // approved persona is available. Account-level action blocking is handled
-      // by the relevant APIs; page browsing should remain available.
+      // ACTIVE PERSONA COOKIE HEALING
+      // Only repair persona cookies when they point to an entity the user no
+      // longer has. A valid pending persona must remain selectable.
       // =========================================================================
       if (Array.isArray(personas) && personas.length > 0) {
-        // Multi-persona safety:
-        // If at least one persona is approved/active, do not hard-lock user to profile.
-        // Also auto-heal stale active persona cookies that still point to a pending entity.
         const activePersonaType = request.cookies.get('verso_active_persona_type')?.value
         const activePersonaId = request.cookies.get('verso_active_persona_id')?.value
-        const isPendingPersona = (p: any) =>
-          ['pending_onboarding', 'new'].includes((p?.account_approval_status || '').toLowerCase())
-
-        const approvedPersonas = personas.filter((p: any) => !isPendingPersona(p))
 
         const personaFromCookie = personas.find((p: any) =>
           p?.entity_id === activePersonaId &&
           (!activePersonaType || p?.persona_type === activePersonaType)
         )
 
-        let personaForAccess =
-          personaFromCookie ||
-          approvedPersonas[0] ||
-          personas[0]
+        if (!personaFromCookie && (activePersonaType || activePersonaId)) {
+          const fallbackPersona = personas[0]
 
-        if (isPendingPersona(personaForAccess) && approvedPersonas.length > 0) {
-          const fallbackPersona = approvedPersonas[0]
-          personaForAccess = fallbackPersona
-
-          supabaseResponse.cookies.set('verso_active_persona_type', String(fallbackPersona.persona_type), {
-            sameSite: 'lax',
-            path: '/',
-            maxAge: 60 * 60 * 24 * 365,
-          })
-          supabaseResponse.cookies.set('verso_active_persona_id', String(fallbackPersona.entity_id), {
-            sameSite: 'lax',
-            path: '/',
-            maxAge: 60 * 60 * 24 * 365,
-          })
+          if (fallbackPersona) {
+            supabaseResponse.cookies.set('verso_active_persona_type', String(fallbackPersona.persona_type), {
+              sameSite: 'lax',
+              path: '/',
+              maxAge: 60 * 60 * 24 * 365,
+            })
+            supabaseResponse.cookies.set('verso_active_persona_id', String(fallbackPersona.entity_id), {
+              sameSite: 'lax',
+              path: '/',
+              maxAge: 60 * 60 * 24 * 365,
+            })
+          }
         }
-
       }
 
       const ceoOnlyPaths = [

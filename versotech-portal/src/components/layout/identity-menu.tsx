@@ -65,6 +65,8 @@ export function IdentityMenu({ profile, className }: IdentityMenuProps) {
   const { personas, activePersona, switchPersona, hasMultiplePersonas } = usePersona()
   const { theme } = useTheme()
   const router = useRouter()
+  const avatarSrc = profile.avatar || undefined
+  const avatarAlt = profile.displayName
 
   // Hydration fix: Only apply theme after component mounts to avoid SSR mismatch
   useEffect(() => {
@@ -135,7 +137,7 @@ export function IdentityMenu({ profile, className }: IdentityMenuProps) {
             "text-xs",
             isDark ? 'bg-white/20 text-white' : 'bg-black/10 text-black'
           )}>
-            {getInitials(profile.displayName)}
+            {getInitials(avatarAlt)}
           </AvatarFallback>
         </Avatar>
         <div className="text-left">
@@ -157,15 +159,15 @@ export function IdentityMenu({ profile, className }: IdentityMenuProps) {
             "flex items-center gap-2 h-auto px-3 py-2",
             isDark ? 'hover:bg-white/10' : 'hover:bg-black/5',
             className
-          )}
-        >
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={profile.avatar || undefined} alt={profile.displayName} />
-            <AvatarFallback className={cn(
-              "text-xs",
-              isDark ? 'bg-white/20 text-white' : 'bg-black/10 text-black'
+        )}
+      >
+        <Avatar className="h-8 w-8">
+          <AvatarImage src={avatarSrc} alt={avatarAlt} />
+          <AvatarFallback className={cn(
+            "text-xs",
+            isDark ? 'bg-white/20 text-white' : 'bg-black/10 text-black'
             )}>
-              {getInitials(profile.displayName)}
+              {getInitials(avatarAlt)}
             </AvatarFallback>
           </Avatar>
           <div className="text-left">
@@ -192,12 +194,12 @@ export function IdentityMenu({ profile, className }: IdentityMenuProps) {
         <div className="px-3 py-3">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={profile.avatar || undefined} alt={profile.displayName} />
+              <AvatarImage src={avatarSrc} alt={avatarAlt} />
               <AvatarFallback className={cn(
                 "text-sm",
                 isDark ? 'bg-white/20 text-white' : 'bg-black/10 text-black'
               )}>
-                {getInitials(profile.displayName)}
+                {getInitials(avatarAlt)}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">

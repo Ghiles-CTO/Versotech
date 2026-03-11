@@ -22,7 +22,6 @@ import {
   FolderOpen,
   Home,
   Lock,
-  Shield,
   Briefcase
 } from 'lucide-react'
 
@@ -346,24 +345,6 @@ export function CategorizedDocumentsClient({
           )}
         </div>
 
-        {/* Security Notice */}
-        <Card className="border-blue-200 dark:border-blue-800 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 border-2">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-blue-100 dark:bg-blue-900/50 rounded-xl">
-                <Shield className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <div className="font-bold text-blue-900 dark:text-blue-100 text-lg mb-1">Document Security & Compliance</div>
-                <div className="text-blue-700 dark:text-blue-300 leading-relaxed">
-                  All documents are watermarked with your name and download timestamp.
-                  Access is logged for compliance and security purposes as required by BVI FSC and GDPR regulations.
-                  Download links expire after 15 minutes for security.
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     )
   }
@@ -500,23 +481,6 @@ export function CategorizedDocumentsClient({
           )
         })}
       </div>
-
-      {/* Security Notice */}
-      <Card className="border-blue-200 dark:border-blue-800 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 border-2">
-        <CardContent className="p-6">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/50 rounded-xl">
-              <Shield className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <div className="font-bold text-blue-900 dark:text-blue-100 text-lg mb-1">Document Security</div>
-              <div className="text-blue-700 dark:text-blue-300 leading-relaxed">
-                All documents are watermarked and tracked. Download links expire after 15 minutes.
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Document Preview - Full Screen */}
       <DocumentViewerFullscreen

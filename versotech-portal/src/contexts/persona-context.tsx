@@ -1,7 +1,7 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useCallback, useRef, useTransition, ReactNode } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   ACTIVE_PERSONA_ID_COOKIE,
@@ -69,11 +69,10 @@ interface PersonaProviderProps {
 
 export function PersonaProvider({ children, initialPersonas = [], userId }: PersonaProviderProps) {
   const router = useRouter()
-  const pathname = usePathname()
   const [personas, setPersonas] = useState<Persona[]>(initialPersonas)
   const [activePersona, setActivePersona] = useState<Persona | null>(null)
   const [isLoading, setIsLoading] = useState(!initialPersonas.length)
-  const [isSwitchingPersona, startPersonaSwitchTransition] = useTransition()
+  const [isSwitchingPersona, setIsSwitchingPersona] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const hasRefreshedForPersonaMismatch = useRef(false)
   const storageKey = getPerUserPersonaStorageKey(userId)
@@ -169,23 +168,14 @@ export function PersonaProvider({ children, initialPersonas = [], userId }: Pers
 
   // Switch active persona
   const switchPersona = useCallback((persona: Persona) => {
-    // Update React state immediately for instant UI feedback
+    if (isSwitchingPersona) return
+
     setActivePersona(persona)
-    // Persist to localStorage for future sessions
+    setIsSwitchingPersona(true)
     localStorage.setItem(storageKey, persona.entity_id)
-    // Set cookie for server-side persona detection
     setPersonaCookie(persona.persona_type, persona.entity_id)
-    hasRefreshedForPersonaMismatch.current = true
-
-    startPersonaSwitchTransition(() => {
-      if (pathname.startsWith('/versotech_main/dashboard')) {
-        router.refresh()
-        return
-      }
-
-      router.push('/versotech_main/dashboard')
-    })
-  }, [pathname, router, startPersonaSwitchTransition, storageKey])
+    window.location.assign('/versotech_main/dashboard')
+  }, [isSwitchingPersona, storageKey])
 
   // Load personas on mount if not provided
   useEffect(() => {
