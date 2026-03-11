@@ -10,7 +10,10 @@ import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { NewConversationDialog } from './new-conversation-dialog'
 import type { StaffDirectoryEntry, InvestorDirectoryEntry } from './new-conversation-dialog'
-import { isAgentChatConversation } from '@/lib/compliance/agent-chat'
+import {
+  isAgentChatConversation,
+  shouldHideWayneAgentConversation,
+} from '@/lib/compliance/agent-chat'
 
 interface MessagingClientProps {
   initialConversations: ConversationSummary[]
@@ -46,6 +49,10 @@ function resetMainScrollPosition(target: HTMLElement) {
 }
 
 export function MessagingClient({ initialConversations, currentUserId, canCreateConversation = true }: MessagingClientProps) {
+  const visibleInitialConversations = useMemo(
+    () => initialConversations.filter((conversation) => !shouldHideWayneAgentConversation(conversation.metadata)),
+    [initialConversations]
+  )
   const supabase = useMemo(() => createClient(), [])
   const searchParams = useSearchParams()
   const initialCompliance = searchParams?.get('compliance') === 'true'
@@ -54,13 +61,16 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
     ...INITIAL_FILTERS,
     complianceOnly: initialCompliance,
   })
-  const [conversations, setConversations] = useState<ConversationSummary[]>(initialConversations)
+  const [conversations, setConversations] = useState<ConversationSummary[]>(visibleInitialConversations)
   const [isLoading, setIsLoading] = useState(false)
   const [activeConversationId, setActiveConversationId] = useState<string | null>(() => {
-    if (requestedConversationId && initialConversations.some((c) => c.id === requestedConversationId)) {
+    if (
+      requestedConversationId &&
+      visibleInitialConversations.some((conversation) => conversation.id === requestedConversationId)
+    ) {
       return requestedConversationId
     }
-    return initialConversations[0]?.id || null
+    return visibleInitialConversations[0]?.id || null
   })
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isNewConversationOpen, setIsNewConversationOpen] = useState(false)
@@ -133,6 +143,7 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
     try {
       const filtersToUse = nextFilters || filters
       let { conversations: data } = await fetchConversationsClient({ ...filtersToUse, includeMessages: true, limit: 50 })
+      data = data.filter((conversation) => !shouldHideWayneAgentConversation(conversation.metadata))
 
       // Investor inbox reuses staff messaging UI. If an investor toggles "Unread" while
       // there are 0 unread messages, the list looks empty and feels broken. Auto-fallback
@@ -140,15 +151,17 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
       if (!canCreateConversation && filtersToUse.unreadOnly === true && data.length === 0) {
         const relaxedFilters: ConversationFilters = { ...filtersToUse, unreadOnly: false }
         const relaxedResult = await fetchConversationsClient({ ...relaxedFilters, includeMessages: true, limit: 50 })
-        data = relaxedResult.conversations
+        data = relaxedResult.conversations.filter(
+          (conversation) => !shouldHideWayneAgentConversation(conversation.metadata)
+        )
         setFilters(relaxedFilters)
       }
 
       setConversations(data)
 
-      // If no conversations found and we have an active one, keep it
-      // Otherwise select the first one
-      if (data.length > 0 && !activeConversationId) {
+      if (data.length === 0) {
+        setActiveConversationId(null)
+      } else if (!activeConversationId || !data.some((conversation) => conversation.id === activeConversationId)) {
         setActiveConversationId(data[0].id)
       }
     } catch (error: any) {
@@ -167,7 +180,7 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
       }
       loadConversations(nextFilters, true)
     }
-  }, [initialCompliance, loadConversations])
+  }, [filters, initialCompliance, loadConversations])
 
   const handleFiltersChange = useCallback((nextFilters: ConversationFilters) => {
     setFilters(nextFilters)
@@ -209,7 +222,9 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
       }, () => {
         // New conversation created — do a background refetch (rare event)
         void fetchConversationsClient({ ...filtersRef.current, includeMessages: true, limit: 50 })
-          .then(({ conversations: data }) => setConversations(data))
+          .then(({ conversations: data }) =>
+            setConversations(data.filter((conversation) => !shouldHideWayneAgentConversation(conversation.metadata)))
+          )
           .catch(console.error)
       })
       .on('postgres_changes', {
@@ -234,7 +249,9 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
           if (idx === -1) {
             // Message for a conversation not in our list — background refetch
             void fetchConversationsClient({ ...filtersRef.current, includeMessages: true, limit: 50 })
-              .then(({ conversations: data }) => setConversations(data))
+              .then(({ conversations: data }) =>
+                setConversations(data.filter((conversation) => !shouldHideWayneAgentConversation(conversation.metadata)))
+              )
               .catch(console.error)
             return prev
           }
@@ -421,5 +438,3 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
     </div>
   )
 }
-
-

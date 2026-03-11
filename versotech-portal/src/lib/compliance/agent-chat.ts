@@ -1,4 +1,5 @@
 const DEFAULT_AGENT_TASK_CODE = 'W001'
+const WAYNE_CHAT_ENABLED = process.env.NEXT_PUBLIC_ENABLE_WAYNE_CHAT === 'true'
 
 type ServiceClient = any
 
@@ -37,6 +38,15 @@ function asIsoDate(value?: string | null) {
 function normalizeText(value: unknown) {
   if (typeof value !== 'string') return ''
   return value.trim().toLowerCase()
+}
+
+export function isWayneChatEnabled() {
+  return WAYNE_CHAT_ENABLED
+}
+
+export function isWayneAgentName(value: unknown) {
+  const normalized = normalizeText(value)
+  return normalized.startsWith('wayne')
 }
 
 function isDefaultComplianceReason(value: unknown) {
@@ -95,6 +105,10 @@ export function isAgentChatConversation(metadata: unknown): boolean {
   return parsed.default_thread === true || parsed.task_code === DEFAULT_AGENT_TASK_CODE
 }
 
+export function shouldHideWayneAgentConversation(metadata: unknown): boolean {
+  return !isWayneChatEnabled() && isAgentChatConversation(metadata)
+}
+
 export function buildAgentChatMetadata(
   previous: unknown,
   agent: ComplianceAgentIdentity | null
@@ -117,6 +131,7 @@ export async function resolveComplianceChatAgent(
   supabase: ServiceClient,
   options?: { requireActive?: boolean }
 ): Promise<ComplianceAgentIdentity | null> {
+  if (!isWayneChatEnabled()) return null
   const requireActive = options?.requireActive !== false
 
   const { data: assignment } = await supabase
@@ -172,6 +187,7 @@ export async function ensureDefaultAgentConversationForInvestor(
   supabase: ServiceClient,
   userId: string
 ) {
+  if (!isWayneChatEnabled()) return null
   const agent = await resolveComplianceChatAgent(supabase, { requireActive: false })
   if (!agent) return null
 

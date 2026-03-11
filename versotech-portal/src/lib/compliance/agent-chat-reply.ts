@@ -2,6 +2,7 @@ import { generateComplianceReply } from '@/lib/compliance/chat-assistant'
 import {
   buildAgentChatMetadata,
   isAgentChatConversation,
+  isWayneChatEnabled,
   readAgentChatMetadata,
   resolveComplianceChatAgent,
 } from '@/lib/compliance/agent-chat'
@@ -117,6 +118,10 @@ export async function processAgentChatReply(
   const metadataRoot = asRecord(conversation.metadata)
   if (!isAgentChatConversation(metadataRoot)) {
     return { ok: true, status: 'not_agent_thread' as const }
+  }
+
+  if (!isWayneChatEnabled()) {
+    return { ok: true, status: 'wayne_disabled' as const }
   }
 
   const agentChatMeta = readAgentChatMetadata(metadataRoot)

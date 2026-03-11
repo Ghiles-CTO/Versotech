@@ -15,6 +15,11 @@ import { getCurrentUser } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolveAgentIdForTask } from '@/lib/agents'
 import { suggestKycExpiryDate } from '@/lib/compliance/kyc-expiry-assistant'
+import {
+  isWayneAgentName,
+  isWayneChatEnabled,
+  shouldHideWayneAgentConversation,
+} from '@/lib/compliance/agent-chat'
 
 type AgentRow = {
   id: string
@@ -725,7 +730,9 @@ export default async function AgentsPage({
       : Promise.resolve({ data: [] }),
   ])
 
-  const agents: AgentRow[] = agentsData ?? []
+  const agents: AgentRow[] = (agentsData ?? []).filter(
+    (agent) => isWayneChatEnabled() || !isWayneAgentName(agent.name)
+  )
   const assignments: TaskRow[] = assignmentsData ?? []
   const blacklistEntries: BlacklistEntry[] = blacklistEntriesData ?? []
   const blacklistMatches: BlacklistMatch[] = blacklistMatchesData ?? []
@@ -736,8 +743,12 @@ export default async function AgentsPage({
   const dealRiskProfilesRaw: DealRiskProfileRow[] = dealRiskProfilesData ?? []
   const activityLogs: ComplianceActivityRow[] = activityLogsData ?? []
   const ofacScreenings: OfacScreeningRow[] = ofacScreeningsData ?? []
-  const agentChatConversations: ComplianceConversationRow[] = agentChatConversationsData ?? []
-  const complianceConversations: ComplianceConversationRow[] = complianceConversationsData ?? []
+  const agentChatConversations: ComplianceConversationRow[] = (agentChatConversationsData ?? []).filter(
+    (conversation) => !shouldHideWayneAgentConversation(conversation.metadata)
+  )
+  const complianceConversations: ComplianceConversationRow[] = (complianceConversationsData ?? []).filter(
+    (conversation) => !shouldHideWayneAgentConversation(conversation.metadata)
+  )
 
   const { data: kycSubmissionsData } = shouldLoadKycTab
     ? await supabase
@@ -1767,7 +1778,7 @@ export default async function AgentsPage({
       preview: conversation.preview || '—',
       participants: participants.length ? participants.join(', ') : '—',
       status,
-      assignedAgent: assignedAgent?.name || 'Wayne O\'Connor',
+      assignedAgent: assignedAgent?.name || 'Compliance Team',
       assignedAgentAvatarUrl: assignedAgent?.avatar_url ?? null,
       firstContactAt,
       firstContactState: firstContactAt ? 'Started' : 'Awaiting investor first message',
@@ -4675,7 +4686,9 @@ export default async function AgentsPage({
                 <div>
                   <CardTitle>Investor Chat Directory</CardTitle>
                   <CardDescription>
-                    All Wayne default chats, with first-contact state and latest conversation activity.
+                    {isWayneChatEnabled()
+                      ? 'All Wayne default chats, with first-contact state and latest conversation activity.'
+                      : 'Wayne chat is hidden and disabled.'}
                   </CardDescription>
                 </div>
                 <a
@@ -4689,11 +4702,13 @@ export default async function AgentsPage({
 	            <CardContent className="space-y-3">
 	              {renderPagination('chat', 'chat_page', paginatedChatRows)}
 
-	              {paginatedChatRows.totalRows === 0 ? (
-	                <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-	                  No agent chat threads found yet.
-	                </div>
-              ) : (
+		              {paginatedChatRows.totalRows === 0 ? (
+		                <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+		                  {isWayneChatEnabled()
+		                    ? 'No agent chat threads found yet.'
+		                    : 'Wayne chat is hidden and disabled.'}
+		                </div>
+	              ) : (
                 <div className="overflow-x-auto rounded-lg border border-muted/60">
                   <table className="min-w-full text-sm">
                     <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
@@ -4855,7 +4870,7 @@ export default async function AgentsPage({
                                     {(assignedAgent?.name || 'WO').split(' ').map((w: string) => w[0]).join('').slice(0, 2)}
                                   </AvatarFallback>
                                 </Avatar>
-                                {assignedAgent?.name || 'Auto (Wayne)'}
+                                {assignedAgent?.name || 'Unassigned'}
                               </div>
                             </td>
                             <td className="px-3 py-3 text-muted-foreground">

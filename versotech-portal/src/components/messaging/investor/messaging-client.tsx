@@ -7,6 +7,7 @@ import { InvestorContacts } from './contacts'
 import { ConversationView } from '@/components/messaging/staff/conversation-view'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { shouldHideWayneAgentConversation } from '@/lib/compliance/agent-chat'
 
 interface InvestorMessagingClientProps {
   currentUserId: string
@@ -34,8 +35,14 @@ function resetMainScrollPosition(target: HTMLElement) {
 }
 
 export function InvestorMessagingClient({ currentUserId, initialConversations }: InvestorMessagingClientProps) {
-  const [conversations, setConversations] = useState<ConversationSummary[]>(initialConversations)
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(initialConversations[0]?.id || null)
+  const visibleInitialConversations = useMemo(
+    () => initialConversations.filter((conversation) => !shouldHideWayneAgentConversation(conversation.metadata)),
+    [initialConversations]
+  )
+  const [conversations, setConversations] = useState<ConversationSummary[]>(visibleInitialConversations)
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(
+    visibleInitialConversations[0]?.id || null
+  )
   const [filters, setFilters] = useState<ConversationFilters>(INITIAL_FILTERS)
   const [isLoading, setIsLoading] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -52,10 +59,18 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
     try {
       const filtersToUse = nextFilters || filters
       const { conversations: data } = await fetchConversationsClient({ ...filtersToUse, includeMessages: true, limit: 50 })
-      setConversations(data)
+      const visibleConversations = data.filter(
+        (conversation) => !shouldHideWayneAgentConversation(conversation.metadata)
+      )
+      setConversations(visibleConversations)
 
-      if (data.length > 0 && !activeConversationId) {
-        setActiveConversationId(data[0].id)
+      if (visibleConversations.length === 0) {
+        setActiveConversationId(null)
+      } else if (
+        !activeConversationId ||
+        !visibleConversations.some((conversation) => conversation.id === activeConversationId)
+      ) {
+        setActiveConversationId(visibleConversations[0].id)
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to load conversations')
@@ -123,7 +138,9 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
       }, () => {
         void fetchConversationsClient({ ...filters, includeMessages: true, limit: 50 })
           .then(({ conversations: data }) => {
-            setConversations(data)
+            setConversations(
+              data.filter((conversation) => !shouldHideWayneAgentConversation(conversation.metadata))
+            )
           })
           .catch(console.error)
       })
@@ -138,7 +155,9 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
         if (messageConvId && messageConvId !== activeConversationIdRef.current) {
           void fetchConversationsClient({ ...filters, includeMessages: true, limit: 50 })
             .then(({ conversations: data }) => {
-              setConversations(data)
+              setConversations(
+                data.filter((conversation) => !shouldHideWayneAgentConversation(conversation.metadata))
+              )
             })
             .catch(console.error)
         }

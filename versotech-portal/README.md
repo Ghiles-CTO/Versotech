@@ -120,6 +120,9 @@ The platform uses a comprehensive 48-table PostgreSQL schema with 29 ENUMs:
    # For production:
    # NEXT_PUBLIC_APP_URL=https://your-production-domain.com
    # NEXT_PUBLIC_SITE_URL=https://your-production-domain.com
+
+   # Wayne compliance chat stays disabled unless you explicitly turn it back on
+   # NEXT_PUBLIC_ENABLE_WAYNE_CHAT=true
    ```
 
 4. **Authentication Setup**

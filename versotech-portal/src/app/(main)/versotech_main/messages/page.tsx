@@ -4,7 +4,10 @@ import { normalizeConversation } from '@/lib/messaging/supabase'
 import { AlertCircle } from 'lucide-react'
 import { ComplianceQuestionCard } from '@/components/notifications/compliance-question-card'
 import { checkStaffAccess } from '@/lib/auth'
-import { ensureDefaultAgentConversationForInvestor } from '@/lib/compliance/agent-chat'
+import {
+  ensureDefaultAgentConversationForInvestor,
+  shouldHideWayneAgentConversation,
+} from '@/lib/compliance/agent-chat'
 
 export const dynamic = 'force-dynamic'
 
@@ -209,7 +212,9 @@ export default async function MessagesPage() {
   }
 
   // Normalize conversations
-  const normalizedConversations = conversationData.map(normalizeConversation)
+  const normalizedConversations = conversationData
+    .map(normalizeConversation)
+    .filter((conversation) => !shouldHideWayneAgentConversation(conversation.metadata))
 
   // Compute unread counts
   const conversationIds = normalizedConversations.map(conv => conv.id)

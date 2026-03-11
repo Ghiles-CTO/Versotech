@@ -3,7 +3,10 @@ import { InvestorMessagingClient } from '@/components/messaging/investor/messagi
 import { requireAuth } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 import { normalizeConversation } from '@/lib/messaging/supabase'
-import { ensureDefaultAgentConversationForInvestor } from '@/lib/compliance/agent-chat'
+import {
+  ensureDefaultAgentConversationForInvestor,
+  shouldHideWayneAgentConversation,
+} from '@/lib/compliance/agent-chat'
 
 export const dynamic = 'force-dynamic'
 
@@ -83,7 +86,9 @@ export default async function MessagesPage() {
     throw new Error(error.message)
   }
 
-  const conversations = (data || []).map(normalizeConversation)
+  const conversations = (data || [])
+    .map(normalizeConversation)
+    .filter((conversation) => !shouldHideWayneAgentConversation(conversation.metadata))
 
   return (
     <AppLayout brand="versoholdings">

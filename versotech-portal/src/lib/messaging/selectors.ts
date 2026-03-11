@@ -1,11 +1,12 @@
 import type { ConversationSummary, ConversationFilters } from '@/types/messaging'
-import { isAgentChatConversation } from '@/lib/compliance/agent-chat'
+import { isAgentChatConversation, shouldHideWayneAgentConversation } from '@/lib/compliance/agent-chat'
 
 export function applyConversationFilters(
   conversations: ConversationSummary[],
   filters: ConversationFilters
 ) {
   return conversations.filter((conversation) => {
+    if (shouldHideWayneAgentConversation(conversation.metadata)) return false
     if (filters.type !== 'all' && conversation.type !== filters.type) return false
     if (filters.visibility !== 'all' && conversation.visibility !== filters.visibility) return false
     if (filters.dealId && conversation.dealId !== filters.dealId) return false
@@ -45,4 +46,3 @@ export function sortConversations(conversations: ConversationSummary[]) {
     return bTime - aTime
   })
 }
-
