@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { ProfilePageClient } from '@/components/profile/profile-page-client'
 import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
-import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
+import { readActivePersonaCookieValues, resolveActiveInvestorLink } from '@/lib/kyc/active-investor-link'
 import {
   getInvestorAccountApprovalReadiness,
   type InvestorAccountApprovalReadiness,
@@ -30,8 +30,7 @@ export default async function ProfilePage({
   }
 
   const cookieStore = await cookies()
-  const cookiePersonaType = cookieStore.get('verso_active_persona_type')?.value
-  const cookiePersonaId = cookieStore.get('verso_active_persona_id')?.value
+  const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(cookieStore)
 
   const { data: personas, error: personaError } = await supabase.rpc('get_user_personas', {
     p_user_id: user.id,
@@ -74,11 +73,18 @@ export default async function ProfilePage({
   let investorAccountApprovalReadiness: InvestorAccountApprovalReadiness | null = null
 
   // Check if user is associated with an investor
-  const { link: investorUser, error: investorUserError } = await resolvePrimaryInvestorLink(
-    serviceSupabase,
-    user.id,
-    'investor_id, role, is_primary, can_sign'
-  )
+  const { link: investorUser, error: investorUserError } = await resolveActiveInvestorLink<{
+    investor_id: string
+    role: string | null
+    is_primary: boolean | null
+    can_sign: boolean | null
+  }>({
+    supabase: serviceSupabase,
+    userId: user.id,
+    cookiePersonaType,
+    cookiePersonaId,
+    select: 'investor_id, role, is_primary, can_sign',
+  })
 
   if (investorUserError) {
     console.error('[ProfilePage] Error fetching investor_users:', investorUserError)
@@ -304,8 +310,8 @@ export default async function ProfilePage({
       }
 
       investorUserInfo = {
-        role: investorUser.role,
-        is_primary: investorUser.is_primary,
+        role: investorUser.role || '',
+        is_primary: investorUser.is_primary === true,
         can_sign: investorUser.can_sign || false
       }
 

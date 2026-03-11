@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
 import { getInvestorAccountApprovalReadiness } from '@/lib/kyc/investor-account-approval-readiness'
+import { readActivePersonaCookieValues, resolveActiveInvestorLink } from '@/lib/kyc/active-investor-link'
 
 export async function GET() {
   try {
     const supabase = await createClient()
     const serviceSupabase = createServiceClient()
+    const cookieStore = await cookies()
+    const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(cookieStore)
 
     const {
       data: { user },
@@ -18,11 +21,17 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { link: investorUser, error: investorUserError } = await resolvePrimaryInvestorLink(
-      serviceSupabase,
-      user.id,
-      'investor_id, role, is_primary'
-    )
+    const { link: investorUser, error: investorUserError } = await resolveActiveInvestorLink<{
+      investor_id: string
+      role: string | null
+      is_primary: boolean | null
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookiePersonaType,
+      cookiePersonaId,
+      select: 'investor_id, role, is_primary',
+    })
 
     if (investorUserError) {
       console.error('[dashboard-onboarding] Failed to resolve investor link:', investorUserError)
