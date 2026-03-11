@@ -532,7 +532,7 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
   }
 
   const displayName = persona?.entity_name || data.profile?.displayName || 'Investor'
-  const firstName = (displayName || 'Investor').split(' ')[0] || 'Investor'
+  const firstName = (data.profile?.displayName || 'Investor').split(' ')[0] || 'Investor'
   const normalizedAccountApprovalStatus = data.onboarding?.accountApprovalStatus?.toLowerCase().trim() ?? null
   const isAccountApproved = normalizedAccountApprovalStatus === 'approved'
 
