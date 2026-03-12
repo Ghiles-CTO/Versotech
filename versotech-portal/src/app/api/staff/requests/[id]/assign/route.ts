@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { auditLogger } from '@/lib/audit'
 
 async function resolveClientAndUser() {
   const client = await createClient()
@@ -41,9 +42,28 @@ export async function POST(
   try {
     const body = await request.json()
     const assignee = typeof body.assigned_to === 'string' ? body.assigned_to.trim() : null
+    const note = typeof body.note === 'string' ? body.note.trim() : null
 
     if (!assignee) {
       return NextResponse.json({ error: 'Assignee is required' }, { status: 400 })
+    }
+
+    const serviceSupabase = createServiceClient()
+
+    const { data: currentRequest } = await serviceSupabase
+      .from('request_tickets')
+      .select(`
+        id,
+        subject,
+        status,
+        assigned_to,
+        assigned_to_profile:profiles!request_tickets_assigned_to_fkey (id, display_name, email)
+      `)
+      .eq('id', id)
+      .maybeSingle()
+
+    if (!currentRequest) {
+      return NextResponse.json({ error: 'Request not found' }, { status: 404 })
     }
 
     const { data: assigneeProfile } = await client
@@ -61,7 +81,8 @@ export async function POST(
       .from('request_tickets')
       .update({
         assigned_to: assigneeProfile.id,
-        status: 'assigned',
+        assigned_at: new Date().toISOString(),
+        status: currentRequest.status === 'open' ? 'assigned' : currentRequest.status,
       })
       .eq('id', id)
       .select(
@@ -79,10 +100,33 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to assign request' }, { status: 500 })
     }
 
+    const previousAssignee = Array.isArray(currentRequest.assigned_to_profile)
+      ? currentRequest.assigned_to_profile[0]
+      : currentRequest.assigned_to_profile
+    const wasReassignment = Boolean(currentRequest.assigned_to) && currentRequest.assigned_to !== assigneeProfile.id
+
+    await auditLogger.log({
+      actor_user_id: user.id,
+      action: wasReassignment ? 'request_reassigned' : 'request_assigned',
+      entity: 'request_tickets',
+      entity_id: id,
+      metadata: {
+        summary: wasReassignment
+          ? `Reassigned to ${assigneeProfile.display_name || assigneeProfile.email}`
+          : `Assigned to ${assigneeProfile.display_name || assigneeProfile.email}`,
+        previous_assignee_id: previousAssignee?.id || null,
+        previous_assignee_name: previousAssignee?.display_name || previousAssignee?.email || null,
+        assignee_id: assigneeProfile.id,
+        assignee_name: assigneeProfile.display_name || assigneeProfile.email,
+        previous_status: currentRequest.status,
+        new_status: currentRequest.status === 'open' ? 'assigned' : currentRequest.status,
+        note: note || null,
+      },
+    })
+
     return NextResponse.json({ request: updateResult })
   } catch (error) {
     console.error('[assign-request] Unexpected error', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-

@@ -82,7 +82,6 @@ export async function GET(request: Request) {
     } else if (filters.assigned_to && filters.assigned_to !== 'all') {
       query = query.eq('assigned_to', filters.assigned_to)
     }
-    // Overdue filtering requires due_date which doesn't exist in current schema; ignore for now
     if (filters.q) {
       const search = filters.q
       query = query.or(
@@ -106,9 +105,25 @@ export async function GET(request: Request) {
       )
     }
 
+    const filteredRequests = (requests || []).filter((ticket: any) => {
+      if (filters.overdue_only !== 'true') {
+        return true
+      }
+
+      if (!ticket?.due_date) {
+        return false
+      }
+
+      if (['ready', 'closed', 'cancelled'].includes(ticket.status || '')) {
+        return false
+      }
+
+      return new Date(ticket.due_date) < new Date()
+    })
+
     const statsQuery = supabase
       .from('request_tickets')
-      .select('status', { count: 'exact', head: false })
+      .select('status, due_date', { count: 'exact', head: false })
 
     const { data: allTickets, error: statsError } = await statsQuery
 
@@ -122,16 +137,20 @@ export async function GET(request: Request) {
           open_count: allTickets.filter((ticket: any) => ticket.status === 'open').length,
           in_progress_count: allTickets.filter((ticket: any) => ['assigned', 'in_progress'].includes(ticket.status)).length,
           ready_count: allTickets.filter((ticket: any) => ticket.status === 'ready').length,
-          overdue_count: 0,
+          overdue_count: allTickets.filter((ticket: any) => {
+            if (!ticket?.due_date) return false
+            if (['ready', 'closed', 'cancelled'].includes(ticket.status || '')) return false
+            return new Date(ticket.due_date) < new Date()
+          }).length,
           avg_fulfillment_time_hours: null,
           sla_compliance_rate: null,
         }
       : null
 
     return NextResponse.json({
-      requests: requests || [],
+      requests: filteredRequests,
       stats,
-      hasData: Boolean(requests && requests.length > 0),
+      hasData: Boolean((requests && requests.length > 0) || (allTickets && allTickets.length > 0)),
     })
   } catch (err) {
     console.error('[StaffRequests] Unexpected error:', err)
@@ -145,5 +164,3 @@ export async function GET(request: Request) {
     )
   }
 }
-
-

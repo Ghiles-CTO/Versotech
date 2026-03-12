@@ -9011,13 +9011,19 @@ export type Database = {
       }
       request_tickets: {
         Row: {
+          assigned_at: string | null
           assigned_to: string | null
           category: string | null
+          closed_at: string | null
+          completion_note: string | null
           created_at: string | null
           created_by: string | null
           deal_id: string | null
           details: string | null
           due_date: string | null
+          escalated_at: string | null
+          escalated_by: string | null
+          escalation_reason: string | null
           id: string
           investor_id: string | null
           linked_workflow_run: string | null
@@ -9025,15 +9031,22 @@ export type Database = {
           result_doc_id: string | null
           status: Database["public"]["Enums"]["request_status_enum"] | null
           subject: string | null
+          updated_at: string | null
         }
         Insert: {
+          assigned_at?: string | null
           assigned_to?: string | null
           category?: string | null
+          closed_at?: string | null
+          completion_note?: string | null
           created_at?: string | null
           created_by?: string | null
           deal_id?: string | null
           details?: string | null
           due_date?: string | null
+          escalated_at?: string | null
+          escalated_by?: string | null
+          escalation_reason?: string | null
           id?: string
           investor_id?: string | null
           linked_workflow_run?: string | null
@@ -9041,15 +9054,22 @@ export type Database = {
           result_doc_id?: string | null
           status?: Database["public"]["Enums"]["request_status_enum"] | null
           subject?: string | null
+          updated_at?: string | null
         }
         Update: {
+          assigned_at?: string | null
           assigned_to?: string | null
           category?: string | null
+          closed_at?: string | null
+          completion_note?: string | null
           created_at?: string | null
           created_by?: string | null
           deal_id?: string | null
           details?: string | null
           due_date?: string | null
+          escalated_at?: string | null
+          escalated_by?: string | null
+          escalation_reason?: string | null
           id?: string
           investor_id?: string | null
           linked_workflow_run?: string | null
@@ -9057,6 +9077,7 @@ export type Database = {
           result_doc_id?: string | null
           status?: Database["public"]["Enums"]["request_status_enum"] | null
           subject?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -9078,6 +9099,13 @@ export type Database = {
             columns: ["deal_id"]
             isOneToOne: false
             referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "request_tickets_escalated_by_fkey"
+            columns: ["escalated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {

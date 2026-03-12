@@ -67,7 +67,7 @@ export function RequestAssignmentDialog({
   const loadStaffList = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch('/api/profiles?role=staff_admin%2Cstaff_ops%2Cstaff_rm', {
+      const response = await fetch('/api/profiles?role=staff_admin%2Cstaff_ops%2Cstaff_rm%2Cceo', {
         credentials: 'include',
       })
 
@@ -144,6 +144,9 @@ export function RequestAssignmentDialog({
 
       toast.success('Request assigned to you')
       onUpdate?.()
+      setOpen(false)
+      setSelectedStaff('')
+      setNote('')
     } catch (error) {
       console.error('Failed to assign request:', error)
       toast.error('Failed to assign request')
@@ -251,4 +254,3 @@ export function RequestAssignmentDialog({
     </Dialog>
   )
 }
-

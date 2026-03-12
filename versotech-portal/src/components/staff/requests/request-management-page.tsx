@@ -112,14 +112,10 @@ const priorityOptions = [
 
 const categoryOptions = [
   { value: 'all', label: 'All categories' },
-  { value: 'tax_doc', label: 'Tax Documents' },
-  { value: 'analysis', label: 'Performance Analysis' },
-  { value: 'data_export', label: 'Data Exports' },
-  { value: 'presentation', label: 'Presentations' },
-  { value: 'communication', label: 'Communications' },
-  { value: 'cashflow', label: 'Cashflow' },
-  { value: 'valuation', label: 'Valuation' },
-  { value: 'other', label: 'Other' },
+  ...Object.entries(REQUEST_CATEGORIES).map(([value, config]) => ({
+    value,
+    label: config.label,
+  })),
 ]
 
 const prioritySortOrder: Record<string, number> = {
@@ -215,6 +211,21 @@ export function RequestManagementPage() {
     router.replace(query ? `?${query}` : '?', { scroll: false })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters])
+
+  useEffect(() => {
+    const requestId = searchParams?.get('requestId')
+    if (!requestId || !requests.length) {
+      return
+    }
+
+    const match = requests.find((request) => request.id === requestId)
+    if (!match) {
+      return
+    }
+
+    setSelectedRequest((current) => (current?.id === match.id ? current : match))
+    setIsDialogOpen(true)
+  }, [requests, searchParams])
 
   async function loadRequests(showLoader = true) {
     if (showLoader) {
@@ -329,6 +340,9 @@ export function RequestManagementPage() {
   }
 
   const openRequest = (request: RequestTicketWithRelations) => {
+    const params = new URLSearchParams(searchParams?.toString() || '')
+    params.set('requestId', request.id)
+    router.replace(`?${params.toString()}`, { scroll: false })
     setSelectedRequest(request)
     setIsDialogOpen(true)
   }
@@ -386,7 +400,18 @@ export function RequestManagementPage() {
         currentUserId={currentUserId}
       />
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={(open) => {
+          setIsDialogOpen(open)
+
+          if (!open) {
+            const params = new URLSearchParams(searchParams?.toString() || '')
+            params.delete('requestId')
+            router.replace(params.toString() ? `?${params.toString()}` : '?', { scroll: false })
+          }
+        }}
+      >
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Request Details</DialogTitle>
@@ -1186,5 +1211,4 @@ function EyeIcon() {
     </svg>
   )
 }
-
 

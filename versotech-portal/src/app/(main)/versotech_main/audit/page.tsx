@@ -9,7 +9,9 @@ import {
 } from 'lucide-react'
 import { AuditLogFilters } from '@/components/audit/audit-log-filters'
 import { AuditLogTable } from '@/components/audit/audit-log-table'
+import { AdminCasesPanel } from '@/components/audit/admin-cases-panel'
 import { ComplianceAlerts } from '@/components/audit/compliance-alerts'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { checkStaffAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
@@ -67,6 +69,7 @@ export default async function AuditPage({
   }
 
   const params = await searchParams
+  const activeTab = params.tab === 'cases' ? 'cases' : 'system'
 
   // Get filter parameters
   const search = params.search as string | undefined
@@ -218,60 +221,70 @@ export default async function AuditPage({
         </Card>
       </div>
 
-      {/* Search and Filters */}
-      <AuditLogFilters />
+      <Tabs defaultValue={activeTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 sm:w-auto">
+          <TabsTrigger value="system">System Audit</TabsTrigger>
+          <TabsTrigger value="cases">Admin Cases</TabsTrigger>
+        </TabsList>
 
-      {/* Audit Log Table */}
-      <AuditLogTable logs={auditLogs || []} />
+        <TabsContent value="system" className="space-y-6">
+          <AuditLogFilters />
 
-      {/* Compliance Summary */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ComplianceAlerts alerts={complianceAlerts || []} />
+          <AuditLogTable logs={auditLogs || []} />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Security Summary</CardTitle>
-            <CardDescription>
-              System security and access patterns
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span className="text-sm">All admin actions logged</span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ComplianceAlerts alerts={complianceAlerts || []} />
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Security Summary</CardTitle>
+                <CardDescription>
+                  System security and access patterns
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">All admin actions logged</span>
+                    </div>
+                    <Badge className="bg-green-100 text-green-800">Active</Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Document access tracking</span>
+                    </div>
+                    <Badge className="bg-green-100 text-green-800">Active</Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                      <span className="text-sm">Monitoring compliance alerts</span>
+                    </div>
+                    <Badge className="bg-yellow-100 text-yellow-800">Active</Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Lock className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm">Data encryption active</span>
+                    </div>
+                    <Badge className="bg-blue-100 text-blue-800">Enabled</Badge>
+                  </div>
                 </div>
-                <Badge className="bg-green-100 text-green-800">Active</Badge>
-              </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span className="text-sm">Document access tracking</span>
-                </div>
-                <Badge className="bg-green-100 text-green-800">Active</Badge>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                  <span className="text-sm">Monitoring compliance alerts</span>
-                </div>
-                <Badge className="bg-yellow-100 text-yellow-800">Active</Badge>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Lock className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm">Data encryption active</span>
-                </div>
-                <Badge className="bg-blue-100 text-blue-800">Enabled</Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        <TabsContent value="cases">
+          <AdminCasesPanel />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

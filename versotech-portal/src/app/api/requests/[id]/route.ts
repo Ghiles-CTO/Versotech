@@ -130,7 +130,7 @@ export async function PATCH(
     // Fetch original ticket for audit trail
     const { data: originalTicket } = await supabase
       .from('request_tickets')
-      .select('investor_id, subject, status')
+      .select('investor_id, subject, status, priority, assigned_to, completion_note, result_doc_id, closed_at')
       .eq('id', id)
       .single()
 
@@ -143,13 +143,21 @@ export async function PATCH(
 
     // Prepare update object
     const updates: any = {}
-    if (body.status) updates.status = body.status
-    if (body.assigned_to !== undefined) updates.assigned_to = body.assigned_to
+    if (body.status) {
+      updates.status = body.status
+      if (body.status === 'closed' || body.status === 'cancelled') {
+        updates.closed_at = new Date().toISOString()
+      } else if (originalTicket.closed_at) {
+        updates.closed_at = null
+      }
+    }
+    if (body.assigned_to !== undefined) {
+      updates.assigned_to = body.assigned_to
+      updates.assigned_at = body.assigned_to ? new Date().toISOString() : null
+    }
     if (body.priority) updates.priority = body.priority
     if (body.completion_note) updates.completion_note = body.completion_note
     if (body.result_doc_id) updates.result_doc_id = body.result_doc_id
-
-    // closed_at column not present in current schema; skip timestamping
 
     // Update the ticket
     const { data: updatedTicket, error: updateError } = await supabase
@@ -192,18 +200,53 @@ export async function PATCH(
       })
     }
 
-    // Log audit
-    await auditLogger.log({
-      actor_user_id: userId,
-      action: 'request_updated',
-      entity: 'request_tickets',
-      entity_id: id,
-      metadata: {
-        changes: updates,
-        previous_status: originalTicket.status,
-        new_status: body.status
-      }
-    })
+    if (body.assigned_to !== undefined && body.assigned_to !== originalTicket.assigned_to) {
+      const assignee = Array.isArray(updatedTicket.assigned_to_profile)
+        ? updatedTicket.assigned_to_profile[0]
+        : updatedTicket.assigned_to_profile
+
+      await auditLogger.log({
+        actor_user_id: userId,
+        action: originalTicket.assigned_to ? 'request_reassigned' : 'request_assigned',
+        entity: 'request_tickets',
+        entity_id: id,
+        metadata: {
+          summary: `${originalTicket.assigned_to ? 'Reassigned' : 'Assigned'} to ${assignee?.display_name || assignee?.email || 'staff member'}`,
+          previous_assignee_id: originalTicket.assigned_to,
+          assignee_id: body.assigned_to,
+          assignee_name: assignee?.display_name || assignee?.email || null,
+        },
+      })
+    }
+
+    if (body.priority && body.priority !== originalTicket.priority) {
+      await auditLogger.log({
+        actor_user_id: userId,
+        action: 'request_priority_changed',
+        entity: 'request_tickets',
+        entity_id: id,
+        metadata: {
+          summary: `Priority changed to ${body.priority.replace(/_/g, ' ')}`,
+          previous_priority: originalTicket.priority,
+          new_priority: body.priority,
+        },
+      })
+    }
+
+    if (body.status && body.status !== originalTicket.status) {
+      await auditLogger.log({
+        actor_user_id: userId,
+        action: 'request_status_changed',
+        entity: 'request_tickets',
+        entity_id: id,
+        metadata: {
+          summary: `Status changed to ${body.status.replace(/_/g, ' ')}`,
+          previous_status: originalTicket.status,
+          new_status: body.status,
+          completion_note: body.completion_note || null,
+        },
+      })
+    }
 
     return NextResponse.json({
       ticket: updatedTicket,

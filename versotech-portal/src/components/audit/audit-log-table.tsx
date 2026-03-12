@@ -30,13 +30,25 @@ interface AuditLog {
   action: string
   entity_type: string | null
   entity_id: string | null
-  details: string | null
+  action_details: Record<string, unknown> | string | null
   ip_address: string | null
   user_agent: string | null
   risk_level: string | null
   compliance_flag: boolean | null
   before_value: any
   after_value: any
+}
+
+function getActionDetailsSummary(details: AuditLog['action_details']) {
+  if (!details) return 'No details provided'
+  if (typeof details === 'string') return details
+  if (typeof details.summary === 'string' && details.summary.trim().length > 0) {
+    return details.summary.trim()
+  }
+  if (typeof details.reason === 'string' && details.reason.trim().length > 0) {
+    return details.reason.trim()
+  }
+  return JSON.stringify(details)
 }
 
 function getActionIcon(action: string) {
@@ -160,7 +172,7 @@ export function AuditLogTable({ logs }: { logs: AuditLog[] }) {
                         )}
                       </div>
 
-                      <p className="text-foreground mb-3">{log.details || 'No details provided'}</p>
+                      <p className="text-foreground mb-3">{getActionDetailsSummary(log.action_details)}</p>
 
                       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 text-sm">
                         <div>
@@ -248,6 +260,10 @@ export function AuditLogTable({ logs }: { logs: AuditLog[] }) {
                   <p className="text-sm text-muted-foreground">{selectedLog.action}</p>
                 </div>
                 <div>
+                  <h4 className="font-medium mb-1">Summary</h4>
+                  <p className="text-sm text-muted-foreground">{getActionDetailsSummary(selectedLog.action_details)}</p>
+                </div>
+                <div>
                   <h4 className="font-medium mb-1">Risk Level</h4>
                   <Badge className={getRiskColor(selectedLog.risk_level)}>
                     {selectedLog.risk_level || 'Unknown'}
@@ -267,8 +283,17 @@ export function AuditLogTable({ logs }: { logs: AuditLog[] }) {
 
               <div>
                 <h4 className="font-medium mb-1">Details</h4>
-                <p className="text-sm text-muted-foreground">{selectedLog.details}</p>
+                <p className="text-sm text-muted-foreground">{getActionDetailsSummary(selectedLog.action_details)}</p>
               </div>
+
+              {selectedLog.action_details && typeof selectedLog.action_details === 'object' && (
+                <div>
+                  <h4 className="font-medium mb-1">Action Metadata</h4>
+                  <pre className="text-sm bg-gray-900 p-3 rounded-lg overflow-auto">
+                    {JSON.stringify(selectedLog.action_details, null, 2)}
+                  </pre>
+                </div>
+              )}
 
               {selectedLog.user_agent && (
                 <div>
