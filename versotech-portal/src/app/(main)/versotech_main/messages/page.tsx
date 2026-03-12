@@ -5,7 +5,15 @@ import { AlertCircle } from 'lucide-react'
 import { ComplianceQuestionCard } from '@/components/notifications/compliance-question-card'
 import { checkStaffAccess } from '@/lib/auth'
 import {
-  ensureDefaultAgentConversationForInvestor,
+  ensureAccountSupportConversationForUser,
+  getRequestActivePersonaForUser,
+  hasAccountSupportInboxAccessForUser,
+} from '@/lib/messaging/account-support'
+import {
+  isAccountSupportConversationMetadata,
+  isAccountSupportPersonaType,
+} from '@/lib/messaging/account-support.shared'
+import {
   shouldHideWayneAgentConversation,
 } from '@/lib/compliance/agent-chat'
 
@@ -41,17 +49,13 @@ export default async function MessagesPage() {
   // Check user personas for access control
   const isStaff = await checkStaffAccess(user.id)
   const serviceSupabase = createServiceClient()
-
-  const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
-    p_user_id: user.id
-  })
-  const isArranger = personas?.some((p: any) => p.persona_type === 'arranger') || false
-  const isIntroducer = personas?.some((p: any) => p.persona_type === 'introducer') || false
-  const isInvestor = personas?.some((p: any) => p.persona_type === 'investor') || false
+  const hasCeoInboxAccess = await hasAccountSupportInboxAccessForUser(serviceSupabase, user.id)
+  const activePersona = await getRequestActivePersonaForUser(serviceSupabase, user.id)
+  const activePersonaType = activePersona?.persona_type ?? null
 
   // Block arrangers who don't have staff access
   // Per user stories: Arrangers need notifications, not messaging
-  if (isArranger && !isStaff && !isInvestor) {
+  if (activePersonaType === 'arranger' && !isStaff) {
     return (
       <div className="space-y-8">
         <div className="text-center py-10">
@@ -71,33 +75,11 @@ export default async function MessagesPage() {
     )
   }
 
-  // Block introducers who don't have staff access
-  // Per PRD: Introducers have zero messaging user stories - passive notification recipients only
-  if (isIntroducer && !isStaff && !isInvestor) {
-    return (
-      <div className="space-y-8">
-        <div className="text-center py-10">
-          <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-foreground mb-2">
-            Messages Not Available
-          </h3>
-          <p className="text-muted-foreground">
-            As an introducer, you&apos;ll receive important updates via the notification system.
-            Check the notification bell for alerts about introduction progress and commission updates.
-          </p>
-        </div>
-        <div className="max-w-2xl mx-auto">
-          <ComplianceQuestionCard />
-        </div>
-      </div>
-    )
-  }
-
   // Only staff get elevated messaging access (all conversations)
   const hasStaffAccess = isStaff
 
-  if (!hasStaffAccess && isInvestor) {
-    await ensureDefaultAgentConversationForInvestor(serviceSupabase, user.id)
+  if (isAccountSupportPersonaType(activePersonaType)) {
+    await ensureAccountSupportConversationForUser(serviceSupabase, user.id)
   }
 
   let conversationData: any[] = []
@@ -214,6 +196,13 @@ export default async function MessagesPage() {
   // Normalize conversations
   const normalizedConversations = conversationData
     .map(normalizeConversation)
+    .filter((conversation) => {
+      if (!isAccountSupportConversationMetadata(conversation.metadata)) {
+        return true
+      }
+
+      return hasCeoInboxAccess || isAccountSupportPersonaType(activePersonaType)
+    })
     .filter((conversation) => !shouldHideWayneAgentConversation(conversation.metadata))
 
   // Compute unread counts

@@ -21,42 +21,32 @@ export function AskQuestionButton({ dealId, dealName, className }: AskQuestionBu
     setError(null)
 
     try {
-      // Get default support staff via API (bypasses RLS - investors can't see staff profiles)
-      const staffResponse = await fetch('/api/support/default-staff')
-      if (!staffResponse.ok) {
-        const staffError = await staffResponse.json().catch(() => ({}))
-        throw new Error(staffError.error || 'Unable to find support team member')
-      }
-
-      const { staff_id: adminId } = await staffResponse.json()
-
-      // Create conversation
-      const response = await fetch('/api/conversations', {
+      const response = await fetch('/api/support/conversation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          subject: `Question about ${dealName}`,
-          participant_ids: [adminId],
-          type: 'dm',
-          visibility: 'investor',
-          initial_message: `Hi, I have a question about the ${dealName} deal.`
+          initial_message: `Hi, I have a question about the ${dealName} deal.`,
+          message_metadata: {
+            source: 'deal_question',
+            deal_id: dealId,
+            deal_name: dealName,
+          },
         })
       })
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        console.error('Conversation creation failed:', errorData)
-        throw new Error(errorData.error || `Failed to create conversation (${response.status})`)
+        console.error('Support conversation failed:', errorData)
+        throw new Error(errorData.error || `Failed to open support conversation (${response.status})`)
       }
 
       const { conversation } = await response.json()
 
-      // Navigate to messages page with the new conversation
-      router.push(`/versotech_main/messages?conversation=${conversation.id}`)
+      router.push(`/versoholdings/messages?conversation=${conversation.id}`)
     } catch (err) {
-      console.error('Failed to create conversation:', err)
+      console.error('Failed to open support conversation:', err)
       setError(err instanceof Error ? err.message : 'Failed to start conversation')
       setIsLoading(false)
     }
@@ -73,7 +63,7 @@ export function AskQuestionButton({ dealId, dealName, className }: AskQuestionBu
         {isLoading ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            Starting conversation...
+            Opening support...
           </>
         ) : (
           <>

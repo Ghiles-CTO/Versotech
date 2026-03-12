@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react'
 import { MessagingClient } from '@/components/messaging/staff/messaging-client'
 import { fetchConversationsClient } from '@/lib/messaging/supabase'
+import { isAccountSupportPersonaType } from '@/lib/messaging/account-support.shared'
 import { AlertCircle, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { usePersona } from '@/contexts/persona-context'
 
 export default function MessagesContent() {
-  const { activePersona, isCEO, isStaff } = usePersona()
+  const { activePersona, isCEO, isStaff, isLoading: personaLoading } = usePersona()
   // Staff/CEO can create new conversations (requires access to investor/staff directories)
   // Use isCEO/isStaff which check ALL personas, not just active - so CEO with multiple personas retains this ability
   const canCreateConversation = isCEO || isStaff
@@ -18,6 +19,12 @@ export default function MessagesContent() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (personaLoading) {
+      return
+    }
+
+    let cancelled = false
+
     async function fetchConversations() {
       try {
         setLoading(true)
@@ -31,24 +38,47 @@ export default function MessagesContent() {
 
         setCurrentUserId(user.id)
 
+        if (isAccountSupportPersonaType(activePersona?.persona_type)) {
+          const supportResponse = await fetch('/api/support/conversation', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          })
+
+          if (!supportResponse.ok && supportResponse.status !== 404) {
+            const supportError = await supportResponse.json().catch(() => null)
+            console.error('[MessagesContent] Failed to ensure support thread:', supportError)
+          }
+        }
+
         // Use API route (service client) to get all participants — not browser client (RLS-limited)
         const { conversations: data } = await fetchConversationsClient({
           includeMessages: true,
           limit: 50,
         })
 
-        setConversations(data)
-        setError(null)
+        if (!cancelled) {
+          setConversations(data)
+          setError(null)
+        }
       } catch (err) {
         console.error('[MessagesContent] Error:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load messages')
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load messages')
+        }
       } finally {
-        setLoading(false)
+        if (!cancelled) {
+          setLoading(false)
+        }
       }
     }
 
     fetchConversations()
-  }, [])
+    return () => {
+      cancelled = true
+    }
+  }, [activePersona?.entity_id, activePersona?.persona_type, canCreateConversation, personaLoading])
 
   if (loading) {
     return (

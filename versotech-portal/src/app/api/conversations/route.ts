@@ -10,6 +10,13 @@ import type {
   ConversationParticipant,
 } from '@/types/messaging'
 import { normalizeMessage, normalizeConversation } from '@/lib/messaging/supabase'
+import {
+  isAccountSupportConversationMetadata,
+} from '@/lib/messaging/account-support.shared'
+import {
+  hasAccountSupportInboxAccessForUser,
+  getRequestActivePersonaForUser,
+} from '@/lib/messaging/account-support'
 
 type NormalizedConversation = ConversationSummary
 
@@ -184,6 +191,11 @@ export async function GET(request: NextRequest) {
     // Check staff status using database profile (not JWT metadata)
     const isStaff = await isStaffUser(supabase, user)
     const client = createServiceClient()  // Use service client to fetch all participants (security enforced via application-level filtering at line 210)
+    const canAccessAccountSupportInbox = await hasAccountSupportInboxAccessForUser(client, user.id)
+    const activePersona = await getRequestActivePersonaForUser(client, user.id)
+    const isActiveExternalSupportPersona = activePersona
+      ? ['investor', 'introducer', 'partner', 'commercial_partner'].includes(activePersona.persona_type)
+      : false
 
     const selectColumns = buildSelectColumns(includeMessages)
 
@@ -209,9 +221,14 @@ export async function GET(request: NextRequest) {
     const baseList = (rawConversations || []).filter((conv: any) => {
       const participants: any[] = conv.conversation_participants || []
       const isParticipant = participants.some(p => p?.user_id === user.id)
+      const isAccountSupportConversation = isAccountSupportConversationMetadata(conv.metadata)
 
       // Non-staff can only view conversations they participate in
       if (!isStaff && !isParticipant) {
+        return false
+      }
+
+      if (isAccountSupportConversation && isStaff && !canAccessAccountSupportInbox && !isActiveExternalSupportPersona) {
         return false
       }
 
@@ -330,11 +347,19 @@ export async function POST(request: NextRequest) {
     
     console.log('[POST /api/conversations] Authenticated user:', user.id)
     const userId = user.id
-    const userRole = user.user_metadata?.role || null
 
     const body = await request.json()
     console.log('[POST /api/conversations] Request body:', body)
     const { subject, participant_ids, type = 'dm', initial_message, visibility } = body
+
+    const serviceClient = createServiceClient()
+    const isStaff = await isStaffUser(serviceClient, user)
+    if (!isStaff) {
+      return NextResponse.json(
+        { error: 'Only internal staff can create ad hoc conversations' },
+        { status: 403 }
+      )
+    }
 
     if (!participant_ids || participant_ids.length === 0) {
       return NextResponse.json({ error: 'At least one participant is required' }, { status: 400 })
@@ -363,7 +388,6 @@ export async function POST(request: NextRequest) {
     })
 
     // Use service client to bypass RLS for conversation creation
-    const serviceClient = createServiceClient()
     const { data: conversation, error: convError } = await serviceClient
       .from('conversations')
       .insert({
