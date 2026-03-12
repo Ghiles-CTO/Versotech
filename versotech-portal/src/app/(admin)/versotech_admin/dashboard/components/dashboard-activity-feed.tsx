@@ -19,8 +19,8 @@ interface ActivityItem {
   timestamp: string
   actor_id: string
   actor_name: string | null
-  action: string
-  entity_type: string
+  action: string | null
+  entity_type: string | null
   entity_id: string
   before_value: unknown
   after_value: unknown
@@ -31,7 +31,7 @@ interface DashboardActivityFeedProps {
 }
 
 // Transform action names into human-readable descriptions
-function getActionDescription(action: string, entityType: string): string {
+function getActionDescription(action: string | null, entityType: string | null): string {
   // Action mapping for common audit actions
   const actionMap: Record<string, string> = {
     // User actions
@@ -62,13 +62,16 @@ function getActionDescription(action: string, entityType: string): string {
     'ALLOCATION_CREATE': 'Created allocation',
   }
 
+  const normalizedAction = action?.trim() || ''
+  const normalizedEntityType = entityType?.trim() || ''
+
   // Try exact match first
-  if (actionMap[action]) {
-    return actionMap[action]
+  if (normalizedAction && actionMap[normalizedAction]) {
+    return actionMap[normalizedAction]
   }
 
   // Try to construct a readable description from the action and entity type
-  const actionParts = action.toLowerCase().split('_')
+  const actionParts = normalizedAction.toLowerCase().split('_').filter(Boolean)
   const verb = actionParts[0]
 
   const verbMap: Record<string, string> = {
@@ -90,10 +93,12 @@ function getActionDescription(action: string, entityType: string): string {
   }
 
   // Build description from verb and entity type
-  const readableVerb = verbMap[verb] || verb.charAt(0).toUpperCase() + verb.slice(1)
-  const readableEntity = entityType.toLowerCase().replace(/_/g, ' ')
+  const readableVerb = verb
+    ? (verbMap[verb] || verb.charAt(0).toUpperCase() + verb.slice(1))
+    : 'Updated'
+  const readableEntity = normalizedEntityType.toLowerCase().replace(/_/g, ' ')
 
-  return `${readableVerb} ${readableEntity}`
+  return readableEntity ? `${readableVerb} ${readableEntity}` : readableVerb
 }
 
 function ActivityFeedSkeleton() {

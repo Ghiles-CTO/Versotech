@@ -32,7 +32,6 @@ import {
   Briefcase,
   UserCheck,
   Search,
-  Bell,
   Calendar,
   Lock,
   Share2,
@@ -100,7 +99,6 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Requests', href: '/versotech_main/requests', icon: ClipboardList, description: 'Service requests' },
     { name: 'Calendar', href: '/versotech_main/calendar', icon: Calendar, description: 'Schedule' },
     { name: 'Processes', href: '/versotech_main/processes', icon: Workflow, description: 'Workflows' },
-    { name: 'Marketing', href: '/versotech_main/admin/marketing', icon: Bell, description: 'Dashboard announcements' },
     // Admin (always last)
     { name: 'Admin', href: '/versotech_main/admin', icon: Database, description: 'System settings' },
   ],
@@ -124,7 +122,6 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Users', href: '/versotech_main/users', icon: Users, description: 'Platform users' },
     { name: 'Accounts', href: '/versotech_main/accounts', icon: Building2, description: 'Business entities' },
     { name: 'Calendar', href: '/versotech_main/calendar', icon: Calendar, description: 'Schedule' },
-    { name: 'Marketing', href: '/versotech_main/admin/marketing', icon: Bell, description: 'Dashboard announcements' },
   ],
 
   // Investor persona

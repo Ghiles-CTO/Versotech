@@ -6,12 +6,15 @@ import {
   ArrowDown,
   ArrowUp,
   Eye,
+  EyeOff,
   FileUp,
+  Image as ImageIcon,
   Loader2,
   PencilLine,
   Plus,
   RefreshCcw,
   Save,
+  Sparkles,
   Trash2,
   Upload,
 } from 'lucide-react'
@@ -33,6 +36,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import {
@@ -43,6 +47,28 @@ import {
   type MarketingCardType,
   type MarketingLead,
 } from '@/types/dashboard-marketing'
+
+/* ── Type badge colours for card list ─────────────────────────────── */
+
+const TYPE_DOT_COLORS: Record<string, string> = {
+  opportunity: 'bg-amber-500',
+  event: 'bg-violet-500',
+  news: 'bg-sky-500',
+}
+
+const TYPE_BADGE_COLORS: Record<string, string> = {
+  opportunity: 'border-amber-200/80 bg-amber-50 text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-400',
+  event: 'border-violet-200/80 bg-violet-50 text-violet-700 dark:border-violet-800/60 dark:bg-violet-950/40 dark:text-violet-400',
+  news: 'border-sky-200/80 bg-sky-50 text-sky-700 dark:border-sky-800/60 dark:bg-sky-950/40 dark:text-sky-400',
+}
+
+const TYPE_THUMB_BG: Record<string, string> = {
+  opportunity: 'bg-amber-50 dark:bg-amber-950/30',
+  event: 'bg-violet-50 dark:bg-violet-950/30',
+  news: 'bg-sky-50 dark:bg-sky-950/30',
+}
+
+/* ── Form state helpers (all unchanged) ───────────────────────────── */
 
 type MarketingCardFormState = {
   id: string | null
@@ -58,6 +84,7 @@ type MarketingCardFormState = {
   external_url: string
   link_domain: string
   source_published_at: string
+  metadata_json: Record<string, unknown> | null
   cta_enabled: boolean
   cta_label: string
 }
@@ -77,8 +104,29 @@ function createEmptyFormState(): MarketingCardFormState {
     external_url: '',
     link_domain: '',
     source_published_at: '',
+    metadata_json: null,
     cta_enabled: true,
     cta_label: "I'm interested",
+  }
+}
+
+function createNextFormState(current: MarketingCardFormState): MarketingCardFormState {
+  const next = createEmptyFormState()
+
+  if (current.card_type === 'news') {
+    return {
+      ...next,
+      card_type: 'news',
+      media_type: 'link',
+      cta_enabled: true,
+      cta_label: 'Open',
+    }
+  }
+
+  return {
+    ...next,
+    card_type: current.card_type,
+    media_type: current.media_type === 'link' ? 'image' : current.media_type,
   }
 }
 
@@ -97,6 +145,7 @@ function toFormState(card: MarketingCard): MarketingCardFormState {
     external_url: card.external_url ?? '',
     link_domain: card.link_domain ?? '',
     source_published_at: card.source_published_at ?? '',
+    metadata_json: card.metadata_json ?? null,
     cta_enabled: card.cta_enabled,
     cta_label: card.cta_label ?? '',
   }
@@ -116,6 +165,7 @@ function formToPayload(form: MarketingCardFormState, sortOrder: number) {
     external_url: form.external_url || null,
     link_domain: form.link_domain || null,
     source_published_at: form.source_published_at || null,
+    metadata_json: form.metadata_json,
     cta_enabled: form.card_type === 'news' ? form.cta_enabled : true,
     cta_label: form.card_type === 'news' ? (form.cta_enabled ? form.cta_label || 'Open' : null) : "I'm interested",
     sort_order: sortOrder,
@@ -137,7 +187,7 @@ function formToPreviewCard(form: MarketingCardFormState): MarketingCard {
     external_url: form.external_url || null,
     link_domain: form.link_domain || null,
     source_published_at: form.source_published_at || null,
-    metadata_json: null,
+    metadata_json: form.metadata_json,
     cta_enabled: form.card_type === 'news' ? form.cta_enabled : true,
     cta_label: form.card_type === 'news' ? form.cta_label || 'Open' : "I'm interested",
     sort_order: 0,
@@ -149,6 +199,23 @@ function formToPreviewCard(form: MarketingCardFormState): MarketingCard {
   }
 }
 
+function hasFormContent(form: MarketingCardFormState): boolean {
+  return Boolean(
+    form.id ||
+    form.title.trim() ||
+    form.summary.trim() ||
+    form.image_url.trim() ||
+    form.video_url.trim() ||
+    form.external_url.trim()
+  )
+}
+
+function areFormsEqual(left: MarketingCardFormState, right: MarketingCardFormState): boolean {
+  return JSON.stringify(left) === JSON.stringify(right)
+}
+
+/* ── Main component ───────────────────────────────────────────────── */
+
 export function MarketingAdminClient() {
   const [cards, setCards] = useState<MarketingCard[]>([])
   const [leads, setLeads] = useState<MarketingLead[]>([])
@@ -157,19 +224,40 @@ export function MarketingAdminClient() {
   const [uploadingField, setUploadingField] = useState<'image' | 'video' | null>(null)
   const [fetchingMetadata, setFetchingMetadata] = useState(false)
   const [form, setForm] = useState<MarketingCardFormState>(createEmptyFormState())
+  const [formBaseline, setFormBaseline] = useState<MarketingCardFormState>(createEmptyFormState())
+  const isEditing = Boolean(form.id)
+  const hasUnsavedChanges = !areFormsEqual(form, formBaseline)
 
   const publishedCards = useMemo(
     () => cards.filter((card) => card.status === 'published'),
     [cards]
   )
 
-  const previewCards = useMemo(() => {
-    if (publishedCards.length > 0) {
-      return publishedCards.map((card) => (card.id === form.id ? formToPreviewCard(form) : card))
+  const draftCards = useMemo(
+    () => cards.filter((card) => card.status === 'draft'),
+    [cards]
+  )
+
+  const workingPreviewCards = useMemo(() => {
+    if (!hasFormContent(form)) {
+      return [...cards].sort((left, right) => left.sort_order - right.sort_order)
     }
 
-    return form.title.trim() ? [formToPreviewCard(form)] : []
-  }, [form, publishedCards])
+    const previewCard = formToPreviewCard(form)
+
+    if (form.id) {
+      return cards
+        .map((card) =>
+          card.id === form.id
+            ? { ...previewCard, sort_order: card.sort_order }
+            : card
+        )
+        .sort((left, right) => left.sort_order - right.sort_order)
+    }
+
+    return [...cards, { ...previewCard, sort_order: cards.length }]
+      .sort((left, right) => left.sort_order - right.sort_order)
+  }, [cards, form])
 
   const loadData = async () => {
     setLoading(true)
@@ -214,7 +302,44 @@ export function MarketingAdminClient() {
     }))
   }
 
-  const resetForm = () => setForm(createEmptyFormState())
+  const applyFormState = (nextForm: MarketingCardFormState) => {
+    setForm(nextForm)
+    setFormBaseline(nextForm)
+  }
+
+  const confirmDiscardChanges = () => {
+    if (!hasUnsavedChanges) return true
+
+    return window.confirm('Discard your unsaved changes?')
+  }
+
+  const startNewCard = () => {
+    if (!confirmDiscardChanges()) {
+      return
+    }
+
+    applyFormState(createEmptyFormState())
+  }
+
+  const resetForm = () => {
+    if (!confirmDiscardChanges()) {
+      return
+    }
+
+    applyFormState({ ...formBaseline })
+  }
+
+  const editCard = (card: MarketingCard) => {
+    if (form.id === card.id && !hasUnsavedChanges) {
+      return
+    }
+
+    if (!confirmDiscardChanges()) {
+      return
+    }
+
+    applyFormState(toFormState(card))
+  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -239,9 +364,10 @@ export function MarketingAdminClient() {
       }
 
       const savedCard = (await response.json()) as MarketingCard
-      toast.success(form.id ? 'Card updated' : 'Card created')
+      const wasEditing = Boolean(form.id)
+      toast.success(wasEditing ? 'Card updated' : 'Card created')
       await loadData()
-      setForm(toFormState(savedCard))
+      applyFormState(wasEditing ? toFormState(savedCard) : createNextFormState(form))
     } catch (error) {
       console.error('[marketing-admin] Failed to save card:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to save card')
@@ -266,7 +392,7 @@ export function MarketingAdminClient() {
 
       toast.success('Card deleted')
       if (form.id === card.id) {
-        resetForm()
+        applyFormState(createEmptyFormState())
       }
       await loadData()
     } catch (error) {
@@ -348,16 +474,27 @@ export function MarketingAdminClient() {
       }
 
       const metadata = await response.json()
+
+      if (metadata.error) {
+        throw new Error(typeof metadata.error === 'string' ? metadata.error : 'Server returned an error')
+      }
+
+      if (!metadata.title && !metadata.summary && !metadata.imageUrl) {
+        toast.warning('No metadata found for this URL — fields were not updated.')
+        return
+      }
+
       setForm((current) => ({
         ...current,
         card_type: 'news',
         media_type: 'link',
-        title: metadata.title ?? current.title,
-        summary: metadata.summary ?? current.summary,
-        image_url: metadata.imageUrl ?? current.image_url,
-        external_url: metadata.externalUrl ?? current.external_url,
-        link_domain: metadata.linkDomain ?? current.link_domain,
-        source_published_at: metadata.sourcePublishedAt ?? current.source_published_at,
+        title: metadata.title || current.title,
+        summary: metadata.summary || current.summary,
+        image_url: metadata.imageUrl || current.image_url,
+        external_url: metadata.externalUrl || current.external_url,
+        link_domain: metadata.linkDomain || current.link_domain,
+        source_published_at: metadata.sourcePublishedAt || current.source_published_at,
+        metadata_json: metadata.metadata ?? current.metadata_json,
         cta_enabled: current.cta_enabled,
         cta_label: current.cta_label || 'Open',
       }))
@@ -408,7 +545,8 @@ export function MarketingAdminClient() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      {/* ── Page header ──────────────────────────────────────────── */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-foreground">Marketing</h1>
@@ -422,91 +560,215 @@ export function MarketingAdminClient() {
             <RefreshCcw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
-          <Button type="button" onClick={resetForm}>
+          <Button type="button" onClick={startNewCard}>
             <Plus className="mr-2 h-4 w-4" />
             New card
           </Button>
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.1fr,0.9fr]">
-        <Card className="rounded-3xl border-slate-200/80">
+      {/* ── Stats bar ────────────────────────────────────────────── */}
+      <div className="flex flex-wrap gap-3">
+        <div className="flex items-center gap-2 rounded-lg border border-slate-200/60 bg-white px-3 py-1.5 dark:border-slate-700/60 dark:bg-slate-800">
+          <div className="h-2 w-2 rounded-full bg-emerald-500" />
+          <span className="text-xs font-medium text-foreground">{publishedCards.length} published</span>
+        </div>
+        <div className="flex items-center gap-2 rounded-lg border border-slate-200/60 bg-white px-3 py-1.5 dark:border-slate-700/60 dark:bg-slate-800">
+          <div className="h-2 w-2 rounded-full bg-slate-300 dark:bg-slate-600" />
+          <span className="text-xs font-medium text-foreground">{draftCards.length} drafts</span>
+        </div>
+        <div className="flex items-center gap-2 rounded-lg border border-slate-200/60 bg-white px-3 py-1.5 dark:border-slate-700/60 dark:bg-slate-800">
+          <span className="text-xs font-medium text-muted-foreground">{cards.length} total</span>
+        </div>
+        {leads.length > 0 && (
+          <div className="flex items-center gap-2 rounded-lg border border-slate-200/60 bg-white px-3 py-1.5 dark:border-slate-700/60 dark:bg-slate-800">
+            <span className="text-xs font-medium text-muted-foreground">{leads.length} interest leads</span>
+          </div>
+        )}
+      </div>
+
+      {/* ── Main grid ────────────────────────────────────────────── */}
+      <div className="grid gap-6 lg:grid-cols-[1.2fr,0.8fr]">
+        {/* ── Card list ──────────────────────────────────────────── */}
+        <Card className="rounded-2xl border-slate-200/80 dark:border-slate-700/80">
           <CardHeader>
             <CardTitle>Announcement cards</CardTitle>
-            <CardDescription>Mixed investor feed shown in manual order.</CardDescription>
+            <CardDescription>
+              Manual order for the investor carousel. Use Edit to revise a card, or New card to add another one.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="max-h-[600px] space-y-3 overflow-y-auto">
             {loading ? (
-              <div className="flex min-h-[220px] items-center justify-center text-sm text-muted-foreground">
+              <div className="flex items-center justify-center py-6 text-sm text-muted-foreground">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Loading cards
               </div>
             ) : cards.length === 0 ? (
-              <div className="rounded-2xl border border-dashed p-8 text-sm text-muted-foreground">
-                No cards yet. Create the first announcement on the right.
+              <div className="flex items-center gap-3 rounded-xl border border-dashed p-5">
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800">
+                  <Sparkles className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">No cards yet</p>
+                  <p className="text-xs text-muted-foreground">Create the first announcement using the form.</p>
+                </div>
               </div>
             ) : (
-              cards.map((card, index) => (
-                <div
-                  key={card.id}
-                  className={cn(
-                    'rounded-2xl border p-4 transition-colors',
-                    form.id === card.id ? 'border-primary bg-primary/5' : 'border-slate-200/80'
-                  )}
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant="outline">{MARKETING_BADGE_LABELS[card.card_type]}</Badge>
-                        <Badge variant={card.status === 'published' ? 'default' : 'outline'}>
-                          {card.status}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">#{index + 1}</span>
+              cards.map((card, index) => {
+                const typeDot = TYPE_DOT_COLORS[card.card_type] ?? 'bg-slate-400 dark:bg-slate-500'
+                const typeBadge = TYPE_BADGE_COLORS[card.card_type] ?? ''
+                const thumbBg = TYPE_THUMB_BG[card.card_type] ?? 'bg-slate-50 dark:bg-slate-800'
+
+                return (
+                  <div
+                    key={card.id}
+                    className={cn(
+                      'overflow-hidden rounded-xl border transition-all',
+                      form.id === card.id
+                        ? 'border-primary/30 bg-primary/[0.03] ring-1 ring-primary/20'
+                        : 'border-slate-200/80 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600'
+                    )}
+                  >
+                    {/* Top: thumbnail + info */}
+                    <div className="flex gap-4 p-4">
+                      <div className="relative h-20 w-32 flex-shrink-0 overflow-hidden rounded-lg">
+                        {card.image_url ? (
+                          <img src={card.image_url} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className={cn('flex h-full w-full items-center justify-center', thumbBg)}>
+                            <ImageIcon className="h-5 w-5 text-slate-300 dark:text-slate-600" />
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <p className="font-semibold text-foreground">{card.title}</p>
-                        <p className="mt-1 text-sm text-muted-foreground">{card.summary}</p>
+
+                      <div className="min-w-0 flex-1 space-y-1.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              'rounded-full border-transparent px-2.5 py-0.5 text-[11px] font-semibold',
+                              typeBadge
+                            )}
+                          >
+                            {MARKETING_BADGE_LABELS[card.card_type]}
+                          </Badge>
+                          <div className="flex items-center gap-1.5">
+                            <div
+                              className={cn(
+                                'h-2 w-2 rounded-full',
+                                card.status === 'published' ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
+                              )}
+                            />
+                            <span className="text-xs text-muted-foreground">{card.status}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">#{index + 1}</span>
+                        </div>
+                        <p className="text-sm font-semibold text-foreground">
+                          {card.title || 'Untitled card'}
+                        </p>
+                        <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                          {card.summary || 'No summary'}
+                        </p>
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
-                      <Button type="button" size="sm" variant="outline" onClick={() => setForm(toFormState(card))}>
-                        <PencilLine className="mr-2 h-4 w-4" />
-                        Edit
-                      </Button>
-                      <Button type="button" size="sm" variant="outline" onClick={() => void handlePublishToggle(card)}>
-                        <Eye className="mr-2 h-4 w-4" />
-                        {card.status === 'published' ? 'Unpublish' : 'Publish'}
-                      </Button>
-                      <Button type="button" size="sm" variant="outline" onClick={() => void handleMove(card.id, -1)} disabled={index === 0}>
-                        <ArrowUp className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => void handleMove(card.id, 1)}
-                        disabled={index === cards.length - 1}
-                      >
-                        <ArrowDown className="h-4 w-4" />
-                      </Button>
-                      <Button type="button" size="sm" variant="outline" onClick={() => void handleDelete(card)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    {/* Bottom: actions bar */}
+                    <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2 dark:border-slate-800">
+                      <div className="flex gap-1">
+                        <Button type="button" size="sm" variant="ghost" className="h-8 px-3 text-xs" onClick={() => editCard(card)}>
+                          <PencilLine className="mr-1.5 h-3.5 w-3.5" />
+                          Edit
+                        </Button>
+                        <Button type="button" size="sm" variant="ghost" className="h-8 px-3 text-xs" onClick={() => void handlePublishToggle(card)}>
+                          {card.status === 'published' ? (
+                            <EyeOff className="mr-1.5 h-3.5 w-3.5" />
+                          ) : (
+                            <Eye className="mr-1.5 h-3.5 w-3.5" />
+                          )}
+                          {card.status === 'published' ? 'Unpublish' : 'Publish'}
+                        </Button>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          onClick={() => void handleMove(card.id, -1)}
+                          disabled={index === 0}
+                          title="Move up"
+                        >
+                          <ArrowUp className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          onClick={() => void handleMove(card.id, 1)}
+                          disabled={index === cards.length - 1}
+                          title="Move down"
+                        >
+                          <ArrowDown className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-destructive/60 hover:text-destructive"
+                          onClick={() => void handleDelete(card)}
+                          title="Delete"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                )
+              })
             )}
           </CardContent>
         </Card>
 
-        <Card className="rounded-3xl border-slate-200/80">
+        {/* ── Editor form ────────────────────────────────────────── */}
+        <Card className="rounded-2xl border-slate-200/80 dark:border-slate-700/80">
           <CardHeader>
-            <CardTitle>{form.id ? 'Edit card' : 'Create card'}</CardTitle>
-            <CardDescription>Keep copy tight and use one media mode per card.</CardDescription>
+            <CardTitle>{isEditing ? 'Edit card' : 'Create card'}</CardTitle>
+            <CardDescription>
+              {isEditing
+                ? 'You are editing an existing card. Start a new card before saving if you want another slide.'
+                : 'You are creating a new card. Saving creates a new slide and keeps the editor ready for the next one.'}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
+            <div
+              className={cn(
+                'rounded-xl border p-4',
+                isEditing
+                  ? 'border-amber-200 bg-amber-50 dark:border-amber-800/60 dark:bg-amber-950/30'
+                  : 'border-emerald-200 bg-emerald-50 dark:border-emerald-800/60 dark:bg-emerald-950/30'
+              )}
+            >
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">
+                    {isEditing ? 'Editing existing card' : 'Creating a new card'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {isEditing
+                      ? `${form.title || 'Untitled card'} will be updated when you save.`
+                      : 'Use this form to add a new announcement without overwriting an existing one.'}
+                  </p>
+                </div>
+                {isEditing && (
+                  <Button type="button" variant="outline" size="sm" onClick={startNewCard}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Start new card
+                  </Button>
+                )}
+              </div>
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label>Type</Label>
@@ -515,9 +777,24 @@ export function MarketingAdminClient() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="opportunity">Investment Opportunity</SelectItem>
-                    <SelectItem value="event">Event</SelectItem>
-                    <SelectItem value="news">News</SelectItem>
+                    <SelectItem value="opportunity">
+                      <span className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-amber-500" />
+                        Investment Opportunity
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="event">
+                      <span className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-violet-500" />
+                        Event
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="news">
+                      <span className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-sky-500" />
+                        News
+                      </span>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -528,8 +805,18 @@ export function MarketingAdminClient() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="draft">
+                      <span className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-slate-300 dark:bg-slate-600" />
+                        Draft
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="published">
+                      <span className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                        Published
+                      </span>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -549,17 +836,24 @@ export function MarketingAdminClient() {
             </div>
 
             {form.card_type === 'news' && (
-              <div className="rounded-2xl border border-slate-200/80 p-4">
+              <div className="rounded-xl border border-sky-200/60 bg-sky-50/30 p-4 dark:border-sky-800/60 dark:bg-sky-950/20">
                 <div className="flex flex-wrap items-end gap-3">
                   <div className="min-w-0 flex-1 space-y-2">
-                    <Label>Article URL</Label>
+                    <Label className="text-sky-700 dark:text-sky-400">Article URL</Label>
                     <Input
                       value={form.external_url}
                       onChange={(event) => updateForm({ external_url: event.target.value })}
                       placeholder="https://"
+                      className="border-sky-200/60 bg-white dark:border-sky-800/60 dark:bg-slate-900"
                     />
                   </div>
-                  <Button type="button" variant="outline" onClick={() => void handleIngestMetadata()} disabled={fetchingMetadata}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void handleIngestMetadata()}
+                    disabled={fetchingMetadata}
+                    className="border-sky-200/60 text-sky-700 hover:bg-sky-50 dark:border-sky-800/60 dark:text-sky-400 dark:hover:bg-sky-950/30"
+                  >
                     {fetchingMetadata ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -592,7 +886,7 @@ export function MarketingAdminClient() {
             </div>
 
             {(form.media_type === 'image' || form.media_type === 'video' || form.card_type === 'news') && (
-              <div className="space-y-3 rounded-2xl border border-slate-200/80 p-4">
+              <div className="space-y-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80 p-4">
                 <div className="space-y-2">
                   <Label>{form.media_type === 'video' ? 'Preview image URL' : 'Image URL'}</Label>
                   <Input
@@ -601,10 +895,15 @@ export function MarketingAdminClient() {
                     placeholder="https://"
                   />
                 </div>
+                {form.image_url && (
+                  <div className="overflow-hidden rounded-lg border">
+                    <img src={form.image_url} alt="Preview" className="h-28 w-full object-cover" />
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-3">
                   <Label
                     htmlFor="marketing-image-upload"
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium"
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition hover:bg-slate-50 dark:hover:bg-slate-800"
                   >
                     {uploadingField === 'image' ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -631,7 +930,7 @@ export function MarketingAdminClient() {
             )}
 
             {form.media_type === 'video' && (
-              <div className="space-y-3 rounded-2xl border border-slate-200/80 p-4">
+              <div className="space-y-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80 p-4">
                 <div className="space-y-2">
                   <Label>Video URL</Label>
                   <Input
@@ -643,7 +942,7 @@ export function MarketingAdminClient() {
                 <div className="flex flex-wrap gap-3">
                   <Label
                     htmlFor="marketing-video-upload"
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium"
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition hover:bg-slate-50 dark:hover:bg-slate-800"
                   >
                     {uploadingField === 'video' ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -698,7 +997,7 @@ export function MarketingAdminClient() {
               </div>
             )}
 
-            <div className="rounded-2xl border border-slate-200/80 p-4">
+            <div className="rounded-xl border border-slate-200/80 dark:border-slate-700/80 p-4">
               {form.card_type === 'news' ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between gap-4">
@@ -744,86 +1043,111 @@ export function MarketingAdminClient() {
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    Save card
+                    {isEditing ? 'Save changes' : 'Create card'}
                   </>
                 )}
               </Button>
+              {isEditing && (
+                <Button type="button" variant="outline" onClick={startNewCard}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create another
+                </Button>
+              )}
               <Button type="button" variant="outline" onClick={resetForm}>
-                Clear
+                Reset form
               </Button>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.1fr,0.9fr]">
-        <Card className="hidden rounded-3xl border-slate-200/80 xl:block">
-          <CardHeader>
-            <CardTitle>Desktop preview</CardTitle>
-            <CardDescription>Preview of the investor announcement rail with published cards.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {previewCards.length > 0 ? (
-              <MarketingAnnouncementsCarousel items={previewCards} previewMode />
-            ) : (
-              <div className="rounded-2xl border border-dashed p-8 text-sm text-muted-foreground">
-                Publish a card or fill the form to generate a preview.
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* ── Preview (full width) ──────────────────────────────────── */}
+      <Card className="rounded-2xl border-slate-200/80 dark:border-slate-700/80">
+        <CardHeader className="pb-3">
+          <Tabs defaultValue="working" className="space-y-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">Preview</CardTitle>
+              <TabsList className="h-8">
+                <TabsTrigger value="working" className="px-3 text-xs">Working</TabsTrigger>
+                <TabsTrigger value="live" className="px-3 text-xs">Live</TabsTrigger>
+              </TabsList>
+            </div>
+            <TabsContent value="working" className="mt-0">
+              {workingPreviewCards.length > 0 ? (
+                <MarketingAnnouncementsCarousel items={workingPreviewCards} previewMode />
+              ) : (
+                <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
+                  Select or create a card to preview.
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="live" className="mt-0">
+              {publishedCards.length > 0 ? (
+                <MarketingAnnouncementsCarousel items={publishedCards} previewMode />
+              ) : (
+                <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
+                  No published cards yet.
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </CardHeader>
+      </Card>
 
-        <Card className="rounded-3xl border-slate-200/80">
-          <CardHeader>
-            <CardTitle>Interest log</CardTitle>
-            <CardDescription>Read-only list of investors who clicked the interest CTA.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {leads.length === 0 ? (
-              <div className="rounded-2xl border border-dashed p-8 text-sm text-muted-foreground">
-                No interest has been captured yet.
+      {/* ── Interest log (full width) ─────────────────────────────── */}
+      <Card className="rounded-2xl border-slate-200/80 dark:border-slate-700/80">
+        <CardHeader>
+          <CardTitle>Interest log</CardTitle>
+          <CardDescription>Read-only list of investors who clicked the interest CTA.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {leads.length === 0 ? (
+            <div className="flex items-center gap-3 rounded-xl border border-dashed p-5">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800">
+                <Eye className="h-4 w-4 text-slate-400 dark:text-slate-500" />
               </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Investor</TableHead>
-                      <TableHead>Card</TableHead>
-                      <TableHead>User</TableHead>
-                      <TableHead>Time</TableHead>
+              <p className="text-sm text-muted-foreground">No interest has been captured yet.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Investor</TableHead>
+                    <TableHead>Card</TableHead>
+                    <TableHead>User</TableHead>
+                    <TableHead>Time</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {leads.map((lead) => (
+                    <TableRow key={lead.id}>
+                      <TableCell>
+                        <div className="font-medium text-foreground">{lead.investor_name ?? 'Unknown investor'}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="font-medium text-foreground">{lead.card_title}</div>
+                          <div className="text-xs text-muted-foreground">{MARKETING_BADGE_LABELS[lead.card_type]}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="text-sm text-foreground">{lead.user_name ?? 'Unknown user'}</div>
+                          <div className="text-xs text-muted-foreground">{lead.user_email ?? 'No email'}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {format(new Date(lead.created_at), 'MMM d, yyyy HH:mm')}
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {leads.map((lead) => (
-                      <TableRow key={lead.id}>
-                        <TableCell>
-                          <div className="font-medium text-foreground">{lead.investor_name ?? 'Unknown investor'}</div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="font-medium text-foreground">{lead.card_title}</div>
-                            <div className="text-xs text-muted-foreground">{MARKETING_BADGE_LABELS[lead.card_type]}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="text-sm text-foreground">{lead.user_name ?? 'Unknown user'}</div>
-                            <div className="text-xs text-muted-foreground">{lead.user_email ?? 'No email'}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {format(new Date(lead.created_at), 'MMM d, yyyy HH:mm')}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

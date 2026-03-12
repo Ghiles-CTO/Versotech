@@ -34,6 +34,7 @@ function getPageTitle(pathname: string): string {
     '/versotech_admin/growth/retention': 'Retention Analysis',
     '/versotech_admin/growth/funnel': 'Conversion Funnels',
     '/versotech_admin/growth/cohorts': 'Cohort Analysis',
+    '/versotech_admin/marketing': 'Marketing',
     '/versotech_admin/agents': 'AI Agents',
     '/versotech_admin/settings': 'Settings',
   }

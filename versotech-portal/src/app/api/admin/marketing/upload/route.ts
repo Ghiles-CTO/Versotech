@@ -24,6 +24,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'File is required' }, { status: 400 })
   }
 
+  if (!['image', 'video'].includes(mediaKind)) {
+    return NextResponse.json({ error: 'Unsupported media kind' }, { status: 400 })
+  }
+
+  if (mediaKind === 'image' && !file.type.startsWith('image/')) {
+    return NextResponse.json({ error: 'Image uploads must use an image file' }, { status: 400 })
+  }
+
+  if (mediaKind === 'video' && !file.type.startsWith('video/')) {
+    return NextResponse.json({ error: 'Video uploads must use a video file' }, { status: 400 })
+  }
+
   const supabase = createServiceClient() as any
   const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
   const storagePath = `marketing/${mediaKind}/${Date.now()}-${sanitizedName}`

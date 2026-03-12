@@ -9,6 +9,7 @@ import {
 } from '@/lib/persona/active-persona'
 import {
   ACCOUNT_SUPPORT_AVATAR_URL,
+  ACCOUNT_SUPPORT_DISPLAY_NAME,
   ACCOUNT_SUPPORT_METADATA_TYPE,
   ACCOUNT_SUPPORT_OWNER_SCOPE,
   buildAccountSupportSubject,

@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { getAuthenticatedUser, hasPermission } from '@/lib/api-auth'
+import { getAuthenticatedUser } from '@/lib/api-auth'
 
 export async function requireAuthenticatedProfile() {
   const supabase = await createClient()
@@ -26,18 +26,9 @@ export async function requireMarketingAdmin() {
     return auth
   }
 
-  const { data: profile } = await auth.supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', auth.user.id)
-    .single()
+  const hasAccess = await hasMarketingAdminAccess(auth.supabase, auth.user.id)
 
-  const hasAdminProfileRole = profile?.role === 'ceo' || profile?.role === 'staff_admin'
-  const hasAdminPermission = hasAdminProfileRole
-    ? true
-    : await hasPermission(auth.supabase, auth.user.id, ['super_admin'])
-
-  if (!hasAdminPermission) {
+  if (!hasAccess) {
     return {
       ...auth,
       response: new Response(JSON.stringify({ error: 'Forbidden' }), {
@@ -48,6 +39,25 @@ export async function requireMarketingAdmin() {
   }
 
   return auth
+}
+
+export async function hasMarketingAdminAccess(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
+  const { data: personas } = await supabase.rpc('get_user_personas', {
+    p_user_id: userId,
+  })
+
+  const hasAdminPersona = Array.isArray(personas) && personas.some(
+    (persona: { persona_type?: string | null; role_in_entity?: string | null }) =>
+      persona.persona_type === 'ceo' ||
+      (persona.persona_type === 'staff' &&
+        (persona.role_in_entity === 'ceo' || persona.role_in_entity === 'staff_admin'))
+  )
+
+  if (hasAdminPersona) {
+    return true
+  }
+
+  return false
 }
 
 export async function verifyInvestorMembership(userId: string, investorId: string) {
