@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { Clock3 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { sessionManager } from '@/lib/session-manager'
 
 /**
@@ -13,6 +14,27 @@ export function AuthInit() {
   const pathname = usePathname()
   const [isClient, setIsClient] = useState(false)
   const [idleState, setIdleState] = useState(sessionManager.getIdleState())
+
+  const handleContinueSession = () => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    window.dispatchEvent(new MouseEvent('mousemove', {
+      bubbles: true,
+      clientX: 1,
+      clientY: 1,
+    }))
+  }
+
+  const handleCloseSession = () => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    sessionManager.forceSignOut('idle_timeout')
+    window.location.replace('/versotech_main/login?error=idle_timeout')
+  }
 
   useEffect(() => {
     setIsClient(true)
@@ -59,7 +81,8 @@ export function AuthInit() {
 
   return (
     <div className="pointer-events-none fixed bottom-4 right-4 z-[120]">
-      <div className="flex items-center gap-3 rounded-2xl border border-amber-400/20 bg-zinc-950/95 px-4 py-3 text-white shadow-2xl shadow-black/40 backdrop-blur-xl">
+      <div className="pointer-events-auto rounded-2xl border border-amber-400/20 bg-zinc-950/95 px-4 py-3 text-white shadow-2xl shadow-black/40 backdrop-blur-xl">
+        <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-400/15 text-amber-300">
           <Clock3 className="h-5 w-5" />
         </div>
@@ -70,6 +93,26 @@ export function AuthInit() {
           <p className="text-sm font-medium text-white">
             Logging out in {idleState.countdownSeconds}s
           </p>
+        </div>
+        </div>
+        <div className="mt-3 flex items-center justify-end gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={handleContinueSession}
+            className="border border-white/10 bg-white/8 text-white hover:bg-white/14"
+          >
+            Continue Session
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleCloseSession}
+            className="bg-amber-400 text-zinc-950 hover:bg-amber-300"
+          >
+            Close Session
+          </Button>
         </div>
       </div>
     </div>

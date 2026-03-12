@@ -57,7 +57,7 @@ function UnifiedLoginContent() {
         }
 
         if (parsed.reason === 'idle_timeout') {
-          return { type: 'info' as const, text: 'You were signed out after 5 minutes of inactivity.' }
+          return { type: 'info' as const, text: 'Your session was closed due to inactivity.' }
         }
 
         if (parsed.reason === 'signed_out') {
@@ -81,7 +81,7 @@ function UnifiedLoginContent() {
           nextMessage = { type: 'error', text: 'Your session has expired. Please sign in again.' }
           break
         case 'idle_timeout':
-          nextMessage = { type: 'info', text: 'You were signed out after 5 minutes of inactivity.' }
+          nextMessage = { type: 'info', text: 'Your session was closed due to inactivity.' }
           break
         case 'signed_out':
           nextMessage = { type: 'info', text: 'You have been signed out.' }
