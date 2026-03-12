@@ -431,18 +431,6 @@ export function OnboardingActionModal() {
             </>
           )}
 
-          {/* Dismiss */}
-          <button
-            onClick={dismiss}
-            className={cn(
-              'w-full rounded-xl px-4 py-2.5 text-[13px] font-medium transition-colors',
-              isDark
-                ? 'text-white/40 hover:text-white/60 hover:bg-white/[0.04]'
-                : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
-            )}
-          >
-            {isUnderReview ? 'Close' : 'Remind me later'}
-          </button>
         </div>
       </DialogContent>
     </Dialog>
