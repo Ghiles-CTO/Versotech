@@ -39,6 +39,7 @@ export interface MarketingCard {
 
 export interface MarketingCardsResponse {
   items: MarketingCard[]
+  submittedCardIds: string[]
   generatedAt: string
 }
 

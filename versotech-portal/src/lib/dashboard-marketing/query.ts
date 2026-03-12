@@ -31,9 +31,13 @@ function rowToCard(row: any): MarketingCard {
   }
 }
 
-export function buildMarketingCardsResponse(rows: any[]): MarketingCardsResponse {
+export function buildMarketingCardsResponse(
+  rows: any[],
+  options?: { submittedCardIds?: string[] }
+): MarketingCardsResponse {
   return {
     items: (rows ?? []).map(rowToCard),
+    submittedCardIds: options?.submittedCardIds ?? [],
     generatedAt: new Date().toISOString(),
   }
 }

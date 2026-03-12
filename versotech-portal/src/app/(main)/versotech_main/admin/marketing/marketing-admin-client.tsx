@@ -23,7 +23,13 @@ import { toast } from 'sonner'
 import { MarketingAnnouncementsCarousel } from '@/components/dashboard/marketing-announcements-carousel'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -35,7 +41,14 @@ import {
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
@@ -57,8 +70,10 @@ const TYPE_DOT_COLORS: Record<string, string> = {
 }
 
 const TYPE_BADGE_COLORS: Record<string, string> = {
-  opportunity: 'border-amber-200/80 bg-amber-50 text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-400',
-  event: 'border-violet-200/80 bg-violet-50 text-violet-700 dark:border-violet-800/60 dark:bg-violet-950/40 dark:text-violet-400',
+  opportunity:
+    'border-amber-200/80 bg-amber-50 text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-400',
+  event:
+    'border-violet-200/80 bg-violet-50 text-violet-700 dark:border-violet-800/60 dark:bg-violet-950/40 dark:text-violet-400',
   news: 'border-sky-200/80 bg-sky-50 text-sky-700 dark:border-sky-800/60 dark:bg-sky-950/40 dark:text-sky-400',
 }
 
@@ -68,7 +83,7 @@ const TYPE_THUMB_BG: Record<string, string> = {
   news: 'bg-sky-50 dark:bg-sky-950/30',
 }
 
-/* ── Form state helpers (all unchanged) ───────────────────────────── */
+/* ── Form state helpers ───────────────────────────────────────────── */
 
 type MarketingCardFormState = {
   id: string | null
@@ -110,7 +125,9 @@ function createEmptyFormState(): MarketingCardFormState {
   }
 }
 
-function createNextFormState(current: MarketingCardFormState): MarketingCardFormState {
+function createNextFormState(
+  current: MarketingCardFormState
+): MarketingCardFormState {
   const next = createEmptyFormState()
 
   if (current.card_type === 'news') {
@@ -131,65 +148,83 @@ function createNextFormState(current: MarketingCardFormState): MarketingCardForm
 }
 
 function toFormState(card: MarketingCard): MarketingCardFormState {
+  const isNewsCard = card.card_type === 'news'
+
   return {
     id: card.id,
     card_type: card.card_type,
     status: card.status,
     title: card.title,
     summary: card.summary,
-    media_type: card.media_type,
+    media_type: isNewsCard ? 'link' : card.media_type,
     image_url: card.image_url ?? '',
     image_storage_path: card.image_storage_path ?? '',
-    video_url: card.video_url ?? '',
-    video_storage_path: card.video_storage_path ?? '',
+    video_url: isNewsCard ? '' : (card.video_url ?? ''),
+    video_storage_path: isNewsCard ? '' : (card.video_storage_path ?? ''),
     external_url: card.external_url ?? '',
     link_domain: card.link_domain ?? '',
     source_published_at: card.source_published_at ?? '',
     metadata_json: card.metadata_json ?? null,
-    cta_enabled: card.cta_enabled,
-    cta_label: card.cta_label ?? '',
+    cta_enabled: isNewsCard ? card.cta_enabled : true,
+    cta_label: isNewsCard ? (card.cta_label ?? 'Open') : "I'm interested",
   }
 }
 
 function formToPayload(form: MarketingCardFormState, sortOrder: number) {
+  const isNewsCard = form.card_type === 'news'
+  const mediaType = isNewsCard ? 'link' : form.media_type
+
   return {
     card_type: form.card_type,
     status: form.status,
     title: form.title,
     summary: form.summary,
-    media_type: form.media_type,
+    media_type: mediaType,
     image_url: form.image_url || null,
     image_storage_path: form.image_storage_path || null,
-    video_url: form.video_url || null,
-    video_storage_path: form.video_storage_path || null,
+    video_url: mediaType === 'video' ? form.video_url || null : null,
+    video_storage_path:
+      mediaType === 'video' ? form.video_storage_path || null : null,
     external_url: form.external_url || null,
     link_domain: form.link_domain || null,
     source_published_at: form.source_published_at || null,
     metadata_json: form.metadata_json,
-    cta_enabled: form.card_type === 'news' ? form.cta_enabled : true,
-    cta_label: form.card_type === 'news' ? (form.cta_enabled ? form.cta_label || 'Open' : null) : "I'm interested",
+    cta_enabled: isNewsCard ? form.cta_enabled : true,
+    cta_label: isNewsCard
+      ? form.cta_enabled
+        ? form.cta_label || 'Open'
+        : null
+      : "I'm interested",
     sort_order: sortOrder,
   }
 }
 
 function formToPreviewCard(form: MarketingCardFormState): MarketingCard {
+  const isNewsCard = form.card_type === 'news'
+  const mediaType = isNewsCard ? 'link' : form.media_type
+
   return {
     id: form.id ?? 'preview-card',
     card_type: form.card_type,
     status: form.status,
     title: form.title || 'Preview title',
     summary: form.summary || 'Preview summary',
-    media_type: form.media_type,
+    media_type: mediaType,
     image_url: form.image_url || null,
     image_storage_path: form.image_storage_path || null,
-    video_url: form.video_url || null,
-    video_storage_path: form.video_storage_path || null,
+    video_url: mediaType === 'video' ? form.video_url || null : null,
+    video_storage_path:
+      mediaType === 'video' ? form.video_storage_path || null : null,
     external_url: form.external_url || null,
     link_domain: form.link_domain || null,
     source_published_at: form.source_published_at || null,
     metadata_json: form.metadata_json,
-    cta_enabled: form.card_type === 'news' ? form.cta_enabled : true,
-    cta_label: form.card_type === 'news' ? form.cta_label || 'Open' : "I'm interested",
+    cta_enabled: isNewsCard ? form.cta_enabled : true,
+    cta_label: isNewsCard
+      ? form.cta_enabled
+        ? form.cta_label || 'Open'
+        : null
+      : "I'm interested",
     sort_order: 0,
     published_at: null,
     created_by: null,
@@ -210,7 +245,10 @@ function hasFormContent(form: MarketingCardFormState): boolean {
   )
 }
 
-function areFormsEqual(left: MarketingCardFormState, right: MarketingCardFormState): boolean {
+function areFormsEqual(
+  left: MarketingCardFormState,
+  right: MarketingCardFormState
+): boolean {
   return JSON.stringify(left) === JSON.stringify(right)
 }
 
@@ -221,12 +259,19 @@ export function MarketingAdminClient() {
   const [leads, setLeads] = useState<MarketingLead[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [uploadingField, setUploadingField] = useState<'image' | 'video' | null>(null)
+  const [uploadingField, setUploadingField] = useState<
+    'image' | 'video' | null
+  >(null)
   const [fetchingMetadata, setFetchingMetadata] = useState(false)
-  const [form, setForm] = useState<MarketingCardFormState>(createEmptyFormState())
-  const [formBaseline, setFormBaseline] = useState<MarketingCardFormState>(createEmptyFormState())
+  const [form, setForm] = useState<MarketingCardFormState>(
+    createEmptyFormState()
+  )
+  const [formBaseline, setFormBaseline] = useState<MarketingCardFormState>(
+    createEmptyFormState()
+  )
   const isEditing = Boolean(form.id)
   const hasUnsavedChanges = !areFormsEqual(form, formBaseline)
+  const isNewsCard = form.card_type === 'news'
 
   const publishedCards = useMemo(
     () => cards.filter((card) => card.status === 'published'),
@@ -240,7 +285,9 @@ export function MarketingAdminClient() {
 
   const workingPreviewCards = useMemo(() => {
     if (!hasFormContent(form)) {
-      return [...cards].sort((left, right) => left.sort_order - right.sort_order)
+      return [...cards].sort(
+        (left, right) => left.sort_order - right.sort_order
+      )
     }
 
     const previewCard = formToPreviewCard(form)
@@ -255,8 +302,9 @@ export function MarketingAdminClient() {
         .sort((left, right) => left.sort_order - right.sort_order)
     }
 
-    return [...cards, { ...previewCard, sort_order: cards.length }]
-      .sort((left, right) => left.sort_order - right.sort_order)
+    return [...cards, { ...previewCard, sort_order: cards.length }].sort(
+      (left, right) => left.sort_order - right.sort_order
+    )
   }, [cards, form])
 
   const loadData = async () => {
@@ -295,10 +343,22 @@ export function MarketingAdminClient() {
     setForm((current) => ({
       ...current,
       card_type: cardType,
-      media_type: cardType === 'news' ? 'link' : current.media_type,
-      external_url: cardType === 'news' ? current.external_url : current.external_url,
+      media_type:
+        cardType === 'news'
+          ? 'link'
+          : current.card_type === 'news' && current.media_type === 'link'
+            ? 'image'
+            : current.media_type,
+      video_url: cardType === 'news' ? '' : current.video_url,
+      video_storage_path: cardType === 'news' ? '' : current.video_storage_path,
+      external_url: current.external_url,
       cta_enabled: cardType === 'news' ? current.cta_enabled : true,
-      cta_label: cardType === 'news' ? current.cta_label || 'Open' : "I'm interested",
+      cta_label:
+        cardType === 'news'
+          ? !current.cta_label || current.cta_label === "I'm interested"
+            ? 'Open'
+            : current.cta_label
+          : "I'm interested",
     }))
   }
 
@@ -345,11 +405,14 @@ export function MarketingAdminClient() {
     setSaving(true)
     try {
       const sortOrder = form.id
-        ? cards.find((card) => card.id === form.id)?.sort_order ?? cards.length
+        ? (cards.find((card) => card.id === form.id)?.sort_order ??
+          cards.length)
         : cards.length
 
       const payload = formToPayload(form, sortOrder)
-      const url = form.id ? `/api/admin/marketing/cards/${form.id}` : '/api/admin/marketing/cards'
+      const url = form.id
+        ? `/api/admin/marketing/cards/${form.id}`
+        : '/api/admin/marketing/cards'
       const method = form.id ? 'PATCH' : 'POST'
 
       const response = await fetch(url, {
@@ -360,17 +423,25 @@ export function MarketingAdminClient() {
 
       if (!response.ok) {
         const errorPayload = await response.json().catch(() => null)
-        throw new Error(errorPayload?.error?.formErrors?.[0] || errorPayload?.error || 'Failed to save card')
+        throw new Error(
+          errorPayload?.error?.formErrors?.[0] ||
+            errorPayload?.error ||
+            'Failed to save card'
+        )
       }
 
       const savedCard = (await response.json()) as MarketingCard
       const wasEditing = Boolean(form.id)
       toast.success(wasEditing ? 'Card updated' : 'Card created')
       await loadData()
-      applyFormState(wasEditing ? toFormState(savedCard) : createNextFormState(form))
+      applyFormState(
+        wasEditing ? toFormState(savedCard) : createNextFormState(form)
+      )
     } catch (error) {
       console.error('[marketing-admin] Failed to save card:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to save card')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to save card'
+      )
     } finally {
       setSaving(false)
     }
@@ -402,7 +473,15 @@ export function MarketingAdminClient() {
   }
 
   const handlePublishToggle = async (card: MarketingCard) => {
-    const nextStatus: MarketingCardStatus = card.status === 'published' ? 'draft' : 'published'
+    if (form.id === card.id && hasUnsavedChanges) {
+      toast.error(
+        'Save or reset your current edits before changing publish status'
+      )
+      return
+    }
+
+    const nextStatus: MarketingCardStatus =
+      card.status === 'published' ? 'draft' : 'published'
 
     try {
       const response = await fetch(`/api/admin/marketing/cards/${card.id}`, {
@@ -415,7 +494,13 @@ export function MarketingAdminClient() {
         throw new Error('Failed to update status')
       }
 
-      toast.success(nextStatus === 'published' ? 'Card published' : 'Card moved to draft')
+      const updatedCard = (await response.json()) as MarketingCard
+      toast.success(
+        nextStatus === 'published' ? 'Card published' : 'Card moved to draft'
+      )
+      if (form.id === updatedCard.id) {
+        applyFormState(toFormState(updatedCard))
+      }
       await loadData()
     } catch (error) {
       console.error('[marketing-admin] Failed to update status:', error)
@@ -476,11 +561,17 @@ export function MarketingAdminClient() {
       const metadata = await response.json()
 
       if (metadata.error) {
-        throw new Error(typeof metadata.error === 'string' ? metadata.error : 'Server returned an error')
+        throw new Error(
+          typeof metadata.error === 'string'
+            ? metadata.error
+            : 'Server returned an error'
+        )
       }
 
       if (!metadata.title && !metadata.summary && !metadata.imageUrl) {
-        toast.warning('No metadata found for this URL — fields were not updated.')
+        toast.warning(
+          'No metadata found for this URL — fields were not updated.'
+        )
         return
       }
 
@@ -493,7 +584,8 @@ export function MarketingAdminClient() {
         image_url: metadata.imageUrl || current.image_url,
         external_url: metadata.externalUrl || current.external_url,
         link_domain: metadata.linkDomain || current.link_domain,
-        source_published_at: metadata.sourcePublishedAt || current.source_published_at,
+        source_published_at:
+          metadata.sourcePublishedAt || current.source_published_at,
         metadata_json: metadata.metadata ?? current.metadata_json,
         cta_enabled: current.cta_enabled,
         cta_label: current.cta_label || 'Open',
@@ -549,14 +641,21 @@ export function MarketingAdminClient() {
       {/* ── Page header ──────────────────────────────────────────── */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Marketing</h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+            Marketing
+          </h1>
           <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-            Curate the investor dashboard announcement carousel with investment opportunities, events,
-            and news.
+            Curate the investor dashboard announcement carousel with investment
+            opportunities, events, and news.
           </p>
         </div>
         <div className="flex gap-2">
-          <Button type="button" variant="outline" onClick={() => void loadData()} disabled={loading}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void loadData()}
+            disabled={loading}
+          >
             <RefreshCcw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
@@ -571,18 +670,26 @@ export function MarketingAdminClient() {
       <div className="flex flex-wrap gap-3">
         <div className="flex items-center gap-2 rounded-lg border border-slate-200/60 bg-white px-3 py-1.5 dark:border-slate-700/60 dark:bg-slate-800">
           <div className="h-2 w-2 rounded-full bg-emerald-500" />
-          <span className="text-xs font-medium text-foreground">{publishedCards.length} published</span>
+          <span className="text-xs font-medium text-foreground">
+            {publishedCards.length} published
+          </span>
         </div>
         <div className="flex items-center gap-2 rounded-lg border border-slate-200/60 bg-white px-3 py-1.5 dark:border-slate-700/60 dark:bg-slate-800">
           <div className="h-2 w-2 rounded-full bg-slate-300 dark:bg-slate-600" />
-          <span className="text-xs font-medium text-foreground">{draftCards.length} drafts</span>
+          <span className="text-xs font-medium text-foreground">
+            {draftCards.length} drafts
+          </span>
         </div>
         <div className="flex items-center gap-2 rounded-lg border border-slate-200/60 bg-white px-3 py-1.5 dark:border-slate-700/60 dark:bg-slate-800">
-          <span className="text-xs font-medium text-muted-foreground">{cards.length} total</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            {cards.length} total
+          </span>
         </div>
         {leads.length > 0 && (
           <div className="flex items-center gap-2 rounded-lg border border-slate-200/60 bg-white px-3 py-1.5 dark:border-slate-700/60 dark:bg-slate-800">
-            <span className="text-xs font-medium text-muted-foreground">{leads.length} interest leads</span>
+            <span className="text-xs font-medium text-muted-foreground">
+              {leads.length} interest leads
+            </span>
           </div>
         )}
       </div>
@@ -594,7 +701,8 @@ export function MarketingAdminClient() {
           <CardHeader>
             <CardTitle>Announcement cards</CardTitle>
             <CardDescription>
-              Manual order for the investor carousel. Use Edit to revise a card, or New card to add another one.
+              Manual order for the investor carousel. Use Edit to revise a card,
+              or New card to add another one.
             </CardDescription>
           </CardHeader>
           <CardContent className="max-h-[600px] space-y-3 overflow-y-auto">
@@ -609,15 +717,23 @@ export function MarketingAdminClient() {
                   <Sparkles className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-foreground">No cards yet</p>
-                  <p className="text-xs text-muted-foreground">Create the first announcement using the form.</p>
+                  <p className="text-sm font-medium text-foreground">
+                    No cards yet
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Create the first announcement using the form.
+                  </p>
                 </div>
               </div>
             ) : (
               cards.map((card, index) => {
-                const typeDot = TYPE_DOT_COLORS[card.card_type] ?? 'bg-slate-400 dark:bg-slate-500'
+                const typeDot =
+                  TYPE_DOT_COLORS[card.card_type] ??
+                  'bg-slate-400 dark:bg-slate-500'
                 const typeBadge = TYPE_BADGE_COLORS[card.card_type] ?? ''
-                const thumbBg = TYPE_THUMB_BG[card.card_type] ?? 'bg-slate-50 dark:bg-slate-800'
+                const thumbBg =
+                  TYPE_THUMB_BG[card.card_type] ??
+                  'bg-slate-50 dark:bg-slate-800'
 
                 return (
                   <div
@@ -633,9 +749,18 @@ export function MarketingAdminClient() {
                     <div className="flex gap-4 p-4">
                       <div className="relative h-20 w-32 flex-shrink-0 overflow-hidden rounded-lg">
                         {card.image_url ? (
-                          <img src={card.image_url} alt="" className="h-full w-full object-cover" />
+                          <img
+                            src={card.image_url}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
                         ) : (
-                          <div className={cn('flex h-full w-full items-center justify-center', thumbBg)}>
+                          <div
+                            className={cn(
+                              'flex h-full w-full items-center justify-center',
+                              thumbBg
+                            )}
+                          >
                             <ImageIcon className="h-5 w-5 text-slate-300 dark:text-slate-600" />
                           </div>
                         )}
@@ -656,12 +781,18 @@ export function MarketingAdminClient() {
                             <div
                               className={cn(
                                 'h-2 w-2 rounded-full',
-                                card.status === 'published' ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
+                                card.status === 'published'
+                                  ? 'bg-emerald-500'
+                                  : 'bg-slate-300 dark:bg-slate-600'
                               )}
                             />
-                            <span className="text-xs text-muted-foreground">{card.status}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {card.status}
+                            </span>
                           </div>
-                          <span className="text-xs text-muted-foreground">#{index + 1}</span>
+                          <span className="text-xs text-muted-foreground">
+                            #{index + 1}
+                          </span>
                         </div>
                         <p className="text-sm font-semibold text-foreground">
                           {card.title || 'Untitled card'}
@@ -675,17 +806,31 @@ export function MarketingAdminClient() {
                     {/* Bottom: actions bar */}
                     <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2 dark:border-slate-800">
                       <div className="flex gap-1">
-                        <Button type="button" size="sm" variant="ghost" className="h-8 px-3 text-xs" onClick={() => editCard(card)}>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 px-3 text-xs"
+                          onClick={() => editCard(card)}
+                        >
                           <PencilLine className="mr-1.5 h-3.5 w-3.5" />
                           Edit
                         </Button>
-                        <Button type="button" size="sm" variant="ghost" className="h-8 px-3 text-xs" onClick={() => void handlePublishToggle(card)}>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 px-3 text-xs"
+                          onClick={() => void handlePublishToggle(card)}
+                        >
                           {card.status === 'published' ? (
                             <EyeOff className="mr-1.5 h-3.5 w-3.5" />
                           ) : (
                             <Eye className="mr-1.5 h-3.5 w-3.5" />
                           )}
-                          {card.status === 'published' ? 'Unpublish' : 'Publish'}
+                          {card.status === 'published'
+                            ? 'Unpublish'
+                            : 'Publish'}
                         </Button>
                       </div>
                       <div className="flex gap-1">
@@ -752,7 +897,9 @@ export function MarketingAdminClient() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-foreground">
-                    {isEditing ? 'Editing existing card' : 'Creating a new card'}
+                    {isEditing
+                      ? 'Editing existing card'
+                      : 'Creating a new card'}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {isEditing
@@ -761,7 +908,12 @@ export function MarketingAdminClient() {
                   </p>
                 </div>
                 {isEditing && (
-                  <Button type="button" variant="outline" size="sm" onClick={startNewCard}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={startNewCard}
+                  >
                     <Plus className="mr-2 h-4 w-4" />
                     Start new card
                   </Button>
@@ -772,7 +924,12 @@ export function MarketingAdminClient() {
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label>Type</Label>
-                <Select value={form.card_type} onValueChange={(value) => setCardType(value as MarketingCardType)}>
+                <Select
+                  value={form.card_type}
+                  onValueChange={(value) =>
+                    setCardType(value as MarketingCardType)
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -800,7 +957,12 @@ export function MarketingAdminClient() {
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
-                <Select value={form.status} onValueChange={(value) => updateForm({ status: value as MarketingCardStatus })}>
+                <Select
+                  value={form.status}
+                  onValueChange={(value) =>
+                    updateForm({ status: value as MarketingCardStatus })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -822,16 +984,31 @@ export function MarketingAdminClient() {
               </div>
               <div className="space-y-2">
                 <Label>Media mode</Label>
-                <Select value={form.media_type} onValueChange={(value) => updateForm({ media_type: value as MarketingCardMediaType })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="image">Image</SelectItem>
-                    <SelectItem value="video">Uploaded video</SelectItem>
-                    <SelectItem value="link">External link preview</SelectItem>
-                  </SelectContent>
-                </Select>
+                {isNewsCard ? (
+                  <div className="rounded-md border border-sky-200/60 bg-sky-50/40 px-3 py-2 text-sm text-sky-700 dark:border-sky-800/60 dark:bg-sky-950/20 dark:text-sky-300">
+                    Link preview
+                  </div>
+                ) : (
+                  <Select
+                    value={form.media_type}
+                    onValueChange={(value) =>
+                      updateForm({
+                        media_type: value as MarketingCardMediaType,
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="image">Image</SelectItem>
+                      <SelectItem value="video">Uploaded video</SelectItem>
+                      <SelectItem value="link">
+                        External link preview
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             </div>
 
@@ -839,10 +1016,14 @@ export function MarketingAdminClient() {
               <div className="rounded-xl border border-sky-200/60 bg-sky-50/30 p-4 dark:border-sky-800/60 dark:bg-sky-950/20">
                 <div className="flex flex-wrap items-end gap-3">
                   <div className="min-w-0 flex-1 space-y-2">
-                    <Label className="text-sky-700 dark:text-sky-400">Article URL</Label>
+                    <Label className="text-sky-700 dark:text-sky-400">
+                      Article URL
+                    </Label>
                     <Input
                       value={form.external_url}
-                      onChange={(event) => updateForm({ external_url: event.target.value })}
+                      onChange={(event) =>
+                        updateForm({ external_url: event.target.value })
+                      }
                       placeholder="https://"
                       className="border-sky-200/60 bg-white dark:border-sky-800/60 dark:bg-slate-900"
                     />
@@ -872,7 +1053,10 @@ export function MarketingAdminClient() {
 
             <div className="space-y-2">
               <Label>Title</Label>
-              <Input value={form.title} onChange={(event) => updateForm({ title: event.target.value })} />
+              <Input
+                value={form.title}
+                onChange={(event) => updateForm({ title: event.target.value })}
+              />
             </div>
 
             <div className="space-y-2">
@@ -880,24 +1064,38 @@ export function MarketingAdminClient() {
               <Textarea
                 rows={4}
                 value={form.summary}
-                onChange={(event) => updateForm({ summary: event.target.value })}
+                onChange={(event) =>
+                  updateForm({ summary: event.target.value })
+                }
                 placeholder="Short, punchy explanatory copy."
               />
             </div>
 
-            {(form.media_type === 'image' || form.media_type === 'video' || form.card_type === 'news') && (
+            {(form.media_type === 'image' ||
+              form.media_type === 'video' ||
+              form.card_type === 'news') && (
               <div className="space-y-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80 p-4">
                 <div className="space-y-2">
-                  <Label>{form.media_type === 'video' ? 'Preview image URL' : 'Image URL'}</Label>
+                  <Label>
+                    {form.media_type === 'video'
+                      ? 'Preview image URL'
+                      : 'Image URL'}
+                  </Label>
                   <Input
                     value={form.image_url}
-                    onChange={(event) => updateForm({ image_url: event.target.value })}
+                    onChange={(event) =>
+                      updateForm({ image_url: event.target.value })
+                    }
                     placeholder="https://"
                   />
                 </div>
                 {form.image_url && (
                   <div className="overflow-hidden rounded-lg border">
-                    <img src={form.image_url} alt="Preview" className="h-28 w-full object-cover" />
+                    <img
+                      src={form.image_url}
+                      alt="Preview"
+                      className="h-28 w-full object-cover"
+                    />
                   </div>
                 )}
                 <div className="flex flex-wrap gap-3">
@@ -935,7 +1133,9 @@ export function MarketingAdminClient() {
                   <Label>Video URL</Label>
                   <Input
                     value={form.video_url}
-                    onChange={(event) => updateForm({ video_url: event.target.value })}
+                    onChange={(event) =>
+                      updateForm({ video_url: event.target.value })
+                    }
                     placeholder="https://"
                   />
                 </div>
@@ -974,7 +1174,9 @@ export function MarketingAdminClient() {
                   <Label>External URL</Label>
                   <Input
                     value={form.external_url}
-                    onChange={(event) => updateForm({ external_url: event.target.value })}
+                    onChange={(event) =>
+                      updateForm({ external_url: event.target.value })
+                    }
                     placeholder="https://"
                   />
                 </div>
@@ -982,7 +1184,9 @@ export function MarketingAdminClient() {
                   <Label>Domain label</Label>
                   <Input
                     value={form.link_domain}
-                    onChange={(event) => updateForm({ link_domain: event.target.value })}
+                    onChange={(event) =>
+                      updateForm({ link_domain: event.target.value })
+                    }
                     placeholder="bloomberg.com"
                   />
                 </div>
@@ -990,8 +1194,14 @@ export function MarketingAdminClient() {
                   <Label>Published at</Label>
                   <Input
                     type="datetime-local"
-                    value={form.source_published_at ? form.source_published_at.slice(0, 16) : ''}
-                    onChange={(event) => updateForm({ source_published_at: event.target.value })}
+                    value={
+                      form.source_published_at
+                        ? form.source_published_at.slice(0, 16)
+                        : ''
+                    }
+                    onChange={(event) =>
+                      updateForm({ source_published_at: event.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -1003,11 +1213,18 @@ export function MarketingAdminClient() {
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <Label>Show CTA button</Label>
-                      <p className="text-xs text-muted-foreground">Without a button, the media/title still opens the link.</p>
+                      <p className="text-xs text-muted-foreground">
+                        Without a button, the media/title still opens the link.
+                      </p>
                     </div>
                     <Switch
                       checked={form.cta_enabled}
-                      onCheckedChange={(checked) => updateForm({ cta_enabled: checked, cta_label: checked ? form.cta_label || 'Open' : '' })}
+                      onCheckedChange={(checked) =>
+                        updateForm({
+                          cta_enabled: checked,
+                          cta_label: checked ? form.cta_label || 'Open' : '',
+                        })
+                      }
                     />
                   </div>
                   {form.cta_enabled && (
@@ -1015,7 +1232,9 @@ export function MarketingAdminClient() {
                       <Label>CTA label</Label>
                       <Input
                         value={form.cta_label}
-                        onChange={(event) => updateForm({ cta_label: event.target.value })}
+                        onChange={(event) =>
+                          updateForm({ cta_label: event.target.value })
+                        }
                         placeholder="Open"
                       />
                     </div>
@@ -1025,7 +1244,10 @@ export function MarketingAdminClient() {
                 <div>
                   <Label>CTA</Label>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Opportunity and event cards always use the investor CTA: <span className="font-medium text-foreground">I&apos;m interested</span>
+                    Opportunity and event cards always use the investor CTA:{' '}
+                    <span className="font-medium text-foreground">
+                      I&apos;m interested
+                    </span>
                   </p>
                 </div>
               )}
@@ -1034,7 +1256,11 @@ export function MarketingAdminClient() {
             <Separator />
 
             <div className="flex flex-wrap gap-3">
-              <Button type="button" onClick={() => void handleSave()} disabled={saving}>
+              <Button
+                type="button"
+                onClick={() => void handleSave()}
+                disabled={saving}
+              >
                 {saving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -1068,13 +1294,20 @@ export function MarketingAdminClient() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">Preview</CardTitle>
               <TabsList className="h-8">
-                <TabsTrigger value="working" className="px-3 text-xs">Working</TabsTrigger>
-                <TabsTrigger value="live" className="px-3 text-xs">Live</TabsTrigger>
+                <TabsTrigger value="working" className="px-3 text-xs">
+                  Working
+                </TabsTrigger>
+                <TabsTrigger value="live" className="px-3 text-xs">
+                  Live
+                </TabsTrigger>
               </TabsList>
             </div>
             <TabsContent value="working" className="mt-0">
               {workingPreviewCards.length > 0 ? (
-                <MarketingAnnouncementsCarousel items={workingPreviewCards} previewMode />
+                <MarketingAnnouncementsCarousel
+                  items={workingPreviewCards}
+                  previewMode
+                />
               ) : (
                 <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
                   Select or create a card to preview.
@@ -1083,7 +1316,10 @@ export function MarketingAdminClient() {
             </TabsContent>
             <TabsContent value="live" className="mt-0">
               {publishedCards.length > 0 ? (
-                <MarketingAnnouncementsCarousel items={publishedCards} previewMode />
+                <MarketingAnnouncementsCarousel
+                  items={publishedCards}
+                  previewMode
+                />
               ) : (
                 <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
                   No published cards yet.
@@ -1098,7 +1334,9 @@ export function MarketingAdminClient() {
       <Card className="rounded-2xl border-slate-200/80 dark:border-slate-700/80">
         <CardHeader>
           <CardTitle>Interest log</CardTitle>
-          <CardDescription>Read-only list of investors who clicked the interest CTA.</CardDescription>
+          <CardDescription>
+            Read-only list of investors who clicked the interest CTA.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {leads.length === 0 ? (
@@ -1106,7 +1344,9 @@ export function MarketingAdminClient() {
               <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800">
                 <Eye className="h-4 w-4 text-slate-400 dark:text-slate-500" />
               </div>
-              <p className="text-sm text-muted-foreground">No interest has been captured yet.</p>
+              <p className="text-sm text-muted-foreground">
+                No interest has been captured yet.
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -1123,18 +1363,28 @@ export function MarketingAdminClient() {
                   {leads.map((lead) => (
                     <TableRow key={lead.id}>
                       <TableCell>
-                        <div className="font-medium text-foreground">{lead.investor_name ?? 'Unknown investor'}</div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="font-medium text-foreground">{lead.card_title}</div>
-                          <div className="text-xs text-muted-foreground">{MARKETING_BADGE_LABELS[lead.card_type]}</div>
+                        <div className="font-medium text-foreground">
+                          {lead.investor_name ?? 'Unknown investor'}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
-                          <div className="text-sm text-foreground">{lead.user_name ?? 'Unknown user'}</div>
-                          <div className="text-xs text-muted-foreground">{lead.user_email ?? 'No email'}</div>
+                          <div className="font-medium text-foreground">
+                            {lead.card_title}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {MARKETING_BADGE_LABELS[lead.card_type]}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="text-sm text-foreground">
+                            {lead.user_name ?? 'Unknown user'}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {lead.user_email ?? 'No email'}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">

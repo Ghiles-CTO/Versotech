@@ -8,13 +8,11 @@ import {
 } from '@/types/dashboard-marketing'
 
 const nullableTrimmedString = (max: number) =>
-  z
-    .union([z.string(), z.null(), z.undefined()])
-    .transform((value) => {
-      if (typeof value !== 'string') return null
-      const trimmed = value.trim()
-      return trimmed.length ? trimmed.slice(0, max) : null
-    })
+  z.union([z.string(), z.null(), z.undefined()]).transform((value) => {
+    if (typeof value !== 'string') return null
+    const trimmed = value.trim()
+    return trimmed.length ? trimmed.slice(0, max) : null
+  })
 
 const requiredTrimmedString = (max: number) => z.string().trim().min(1).max(max)
 
@@ -51,13 +49,21 @@ export const marketingCardCreateSchema = z
     external_url: nullableUrl,
     link_domain: nullableTrimmedString(120),
     source_published_at: nullableDateTime,
-    metadata_json: z.record(z.string(), z.unknown()).nullable().optional().default(null),
+    metadata_json: z
+      .record(z.string(), z.unknown())
+      .nullable()
+      .optional()
+      .default(null),
     cta_enabled: z.boolean().optional(),
     cta_label: nullableTrimmedString(60),
     sort_order: z.coerce.number().int().min(0).max(9999).default(0),
   })
   .superRefine((value, ctx) => {
-    if (value.media_type === 'image' && !value.image_url) {
+    if (
+      value.card_type !== 'news' &&
+      value.media_type === 'image' &&
+      !value.image_url
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Image cards require an image.',
@@ -65,7 +71,7 @@ export const marketingCardCreateSchema = z
       })
     }
 
-    if (value.media_type === 'video') {
+    if (value.card_type !== 'news' && value.media_type === 'video') {
       if (!value.video_url) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -82,7 +88,11 @@ export const marketingCardCreateSchema = z
       }
     }
 
-    if (value.media_type === 'link' && !value.external_url) {
+    if (
+      value.card_type !== 'news' &&
+      value.media_type === 'link' &&
+      !value.external_url
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Link cards require an external URL.',
@@ -136,9 +146,8 @@ export type MarketingCardCreateInput = z.infer<typeof marketingCardCreateSchema>
 
 export function normalizeMarketingCardInput(input: MarketingCardCreateInput) {
   const cardType = input.card_type as MarketingCardType
-  const ctaEnabled =
-    input.cta_enabled ??
-    (cardType === 'news' ? false : true)
+  const mediaType = cardType === 'news' ? 'link' : input.media_type
+  const ctaEnabled = input.cta_enabled ?? (cardType === 'news' ? false : true)
 
   let ctaLabel = input.cta_label
 
@@ -152,6 +161,9 @@ export function normalizeMarketingCardInput(input: MarketingCardCreateInput) {
 
   return {
     ...input,
+    media_type: mediaType,
+    video_url: mediaType === 'video' ? input.video_url : null,
+    video_storage_path: mediaType === 'video' ? input.video_storage_path : null,
     cta_enabled: ctaEnabled,
     cta_label: ctaEnabled ? ctaLabel : null,
     link_domain: input.link_domain,
