@@ -95,22 +95,17 @@ function buildReminderCopy(params: {
   stage: ReminderStage
   isReadyToSubmit: boolean
 }) {
-  const stageLabel =
-    params.stage.key === '48h' ? '48-hour' :
-    params.stage.key === '72h' ? '72-hour' :
-    '5-day'
-
   if (params.isReadyToSubmit) {
     return {
       title: 'Submit your account for approval',
-      message: `This is your ${stageLabel} reminder. Your onboarding is complete. Submit your account for CEO approval to unlock investing for ${params.investorName}.`,
+      message: 'Your onboarding is complete. Submit your account for approval to unlock investing.',
       link: '/versotech_main/profile?tab=overview',
     }
   }
 
   return {
     title: 'Complete your account onboarding',
-    message: `This is your ${stageLabel} reminder. Your account setup for ${params.investorName} is still incomplete. Finish the required onboarding items so your account can be submitted for CEO approval.`,
+    message: 'Your account setup is still incomplete. Finish the required onboarding items so your account can be submitted for approval.',
     link: '/versotech_main/profile?tab=kyc',
   }
 }
