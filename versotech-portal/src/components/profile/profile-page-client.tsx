@@ -170,6 +170,8 @@ interface ProfilePageClientProps {
   }
   variant?: 'investor' | 'staff'
   defaultTab?: string
+  defaultAction?: string | null
+  defaultMemberId?: string | null
   investorInfo?: InvestorInfo | null
   investorUserInfo?: InvestorUserInfo | null
   memberInfo?: MemberKYCData | null
@@ -307,6 +309,8 @@ export function ProfilePageClient({
   profile: initialProfile,
   variant = 'investor',
   defaultTab = 'overview',
+  defaultAction,
+  defaultMemberId,
   investorInfo,
   investorUserInfo,
   memberInfo,
@@ -343,6 +347,24 @@ export function ProfilePageClient({
   const hasPendingAccountApproval = readiness?.hasPendingApproval || false
   const latestAccountRequestInfo = readiness?.latestRequestInfo || null
   const isAccountApprovalReady = readiness?.isReady || false
+
+  // Handle action query param from onboarding modal navigation
+  useEffect(() => {
+    if (!defaultAction) return
+    if (defaultAction === 'edit-entity-overview') {
+      setShowEntityOverviewDialog(true)
+    }
+    if (defaultAction === 'edit-individual-kyc') {
+      setShowKycDialog(true)
+    }
+    // Clean up action/memberId params from URL after handling
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('action')
+      url.searchParams.delete('memberId')
+      window.history.replaceState({}, '', url.toString())
+    }
+  }, [defaultAction])
 
   // Submit entity KYC for review
   const handleSubmitEntityKyc = async () => {
@@ -1161,7 +1183,7 @@ export function ProfilePageClient({
             </div>
 
             {/* KYC Documents */}
-            <KYCDocumentsTab />
+            <KYCDocumentsTab autoOpenUpload={defaultAction === 'upload-doc'} />
           </TabsContent>
         )}
 
@@ -1201,6 +1223,7 @@ export function ProfilePageClient({
               canManage={investorUserInfo?.role === 'admin' || investorUserInfo?.is_primary}
               title="Directors, UBOs & Signatories"
               description="Manage directors, beneficial owners (>25% ownership), and authorized signatories with full KYC information"
+              autoEditMemberId={defaultAction === 'edit-member' ? defaultMemberId : null}
             />
           </TabsContent>
         )}

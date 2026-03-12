@@ -93,6 +93,8 @@ interface GenericEntityMembersTabProps {
   title?: string
   /** Optional custom description */
   description?: string
+  /** Auto-open the edit dialog for a specific member on mount (deep-link from onboarding modal) */
+  autoEditMemberId?: string | null
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -121,6 +123,7 @@ export function GenericEntityMembersTab({
   canManage = true,
   title = 'Entity Members',
   description = 'Manage directors, shareholders, and beneficial owners',
+  autoEditMemberId,
 }: GenericEntityMembersTabProps) {
   const [members, setMembers] = useState<EntityMember[]>([])
   const [memberSnapshots, setMemberSnapshots] = useState<Record<string, Record<string, unknown>>>({})
@@ -175,6 +178,16 @@ export function GenericEntityMembersTab({
     loadMembers()
     loadSnapshots()
   }, [loadMembers, loadSnapshots])
+
+  // Auto-open edit dialog for a specific member (deep-link from onboarding modal)
+  useEffect(() => {
+    if (!autoEditMemberId || loading || members.length === 0) return
+    const target = members.find((m) => m.id === autoEditMemberId)
+    if (target) {
+      setEditingMember(target)
+      setEditDialogOpen(true)
+    }
+  }, [autoEditMemberId, loading, members])
 
   const handleAddMember = () => {
     setEditingMember(null)

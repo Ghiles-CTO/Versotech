@@ -59,7 +59,12 @@ interface InvestorMember {
   role: string
 }
 
-export function KYCDocumentsTab() {
+interface KYCDocumentsTabProps {
+  /** Auto-open the upload dialog on mount (e.g., from onboarding modal deep-link) */
+  autoOpenUpload?: boolean
+}
+
+export function KYCDocumentsTab({ autoOpenUpload }: KYCDocumentsTabProps = {}) {
   const [submissions, setSubmissions] = useState<KYCSubmission[]>([])
   const [investorMembers, setInvestorMembers] = useState<InvestorMember[]>([])
   const [isEntityInvestor, setIsEntityInvestor] = useState(false)
@@ -71,6 +76,13 @@ export function KYCDocumentsTab() {
   useEffect(() => {
     loadSubmissions()
   }, [])
+
+  // Auto-open upload dialog when deep-linked from onboarding modal
+  useEffect(() => {
+    if (autoOpenUpload && !loading) {
+      setUploadDialogOpen(true)
+    }
+  }, [autoOpenUpload, loading])
 
   const loadSubmissions = async () => {
     setLoading(true)

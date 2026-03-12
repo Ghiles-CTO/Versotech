@@ -6,6 +6,7 @@ import { GlobalKeyboardShortcuts } from './global-keyboard-shortcuts'
 import { PersonaSidebar, MobileSidebarContent } from './persona-sidebar'
 import { NotificationCenter } from './notification-center'
 import { IdentityMenu } from './identity-menu'
+import { OnboardingActionModal } from '@/components/onboarding/onboarding-action-modal'
 import { usePersona } from '@/contexts/persona-context'
 import { AuthUser } from '@/lib/auth'
 import { Sun, Moon, Monitor, Menu } from 'lucide-react'
@@ -134,6 +135,8 @@ function UnifiedAppLayoutInner({ children, profile }: UnifiedAppLayoutProps) {
     }).catch(() => null)
   }, [isLoading, personas, profile.id])
 
+  const hasInvestorPersona = !isLoading && (personas || []).some((p) => p?.persona_type === 'investor')
+
   if (isLoading) {
     // Use CSS classes that respond to .staff-dark - prevents SSR flash
     return (
@@ -148,6 +151,9 @@ function UnifiedAppLayoutInner({ children, profile }: UnifiedAppLayoutProps) {
     <div className="flex h-screen min-h-screen overflow-hidden app-main-bg">
       {/* Global Keyboard Shortcuts */}
       <GlobalKeyboardShortcuts brand="versotech" role={profile.role} />
+
+      {/* Onboarding action modal — investors only */}
+      {hasInvestorPersona && <OnboardingActionModal />}
 
       {/* Persona-aware Sidebar */}
       <PersonaSidebar />

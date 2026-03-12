@@ -16,10 +16,12 @@ export const revalidate = 0
 export default async function ProfilePage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>
+  searchParams: Promise<{ tab?: string; action?: string; memberId?: string }>
 }) {
   const resolvedSearchParams = await searchParams
   const defaultTab = resolvedSearchParams.tab || 'overview'
+  const defaultAction = resolvedSearchParams.action || null
+  const defaultMemberId = resolvedSearchParams.memberId || null
   const supabase = await createClient()
   const serviceSupabase = createServiceClient()
 
@@ -405,6 +407,8 @@ export default async function ProfilePage({
       }}
       variant={showAsStaff ? 'staff' : 'investor'}
       defaultTab={defaultTab}
+      defaultAction={defaultAction}
+      defaultMemberId={defaultMemberId}
       investorInfo={investorInfo}
       investorUserInfo={investorUserInfo}
       memberInfo={memberInfo}
