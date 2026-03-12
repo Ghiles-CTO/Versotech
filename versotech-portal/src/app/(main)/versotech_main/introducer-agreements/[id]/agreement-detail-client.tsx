@@ -392,7 +392,7 @@ export function AgreementDetailClient({
           )}
 
           {/* Staff: Sign (if pending CEO signature) */}
-          {isStaff && agreement.status === 'approved' && (
+          {isStaff && ['approved', 'pending_ceo_signature', 'pending_arranger_signature'].includes(agreement.status) && (
             <Button
               asChild
               className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500"

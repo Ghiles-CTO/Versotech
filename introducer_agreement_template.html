@@ -418,14 +418,7 @@
             {{ $json.entity_signature_html }}
             {{ $json.individual_signature_html }}
 
-            <!-- Arranger/VERSO Signature (always shown) -->
-            <div style="margin-top: 20px; text-align: center;">
-                <div class="signature-line" style="margin: 3cm auto 0.2cm; position:relative;">
-                    <span style="position:absolute;left:50%;top:0;font-size:1px;line-height:1px;color:#ffffff;opacity:0.01;transform:translateX(-50%);">SIG_ANCHOR:party_a</span>
-                </div>
-                <div class="signature-name">{{ $json.arranger_name }}</div>
-                <div class="signature-title">represented by {{ $json.verso_representative_name }}<br>{{ $json.verso_representative_title }}</div>
-            </div>
+            {{ $json.internal_signature_html }}
         </td>
     </tr>
 </table>

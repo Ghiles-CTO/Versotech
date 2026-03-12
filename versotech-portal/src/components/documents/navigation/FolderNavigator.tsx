@@ -1029,7 +1029,7 @@ function DocumentListRow({
       }
       await downloadFileFromUrl(
         downloadUrl,
-        document.file_name || document.name || 'document'
+        displayName || 'document'
       )
       toast.success('Download started')
     } catch {

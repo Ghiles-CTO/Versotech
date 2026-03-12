@@ -32,15 +32,24 @@ function applyFilters(rows: TableRow[], filters: Filter[]): TableRow[] {
   )
 }
 
-function createSupabaseMock(initialData: TableData) {
+function createSupabaseMock(
+  initialData: TableData,
+  options?: { signedUrlResult?: { data: { signedUrl: string } | null; error: unknown } }
+) {
   const tables: TableData = Object.fromEntries(
     Object.entries(initialData).map(([tableName, rows]) => [tableName, rows.map((row) => ({ ...row }))])
   )
 
-  const signedUrlSpy = vi.fn(async (path: string) => ({
-    data: { signedUrl: `https://signed.local/${path}` },
-    error: null,
-  }))
+  const signedUrlSpy = vi.fn(async (path: string) => {
+    if (options?.signedUrlResult) {
+      return options.signedUrlResult
+    }
+
+    return {
+      data: { signedUrl: `https://signed.local/${path}` },
+      error: null,
+    }
+  })
 
   function createQuery(tableName: string) {
     const state: {
@@ -394,5 +403,138 @@ describe('staged-release', () => {
     )
 
     expect(shouldDelay).toBe(true)
+  })
+
+  it('does not fall back to the unsigned NDA source when the signed copy cannot be loaded', async () => {
+    const { supabase } = createSupabaseMock(
+      {
+        workflow_runs: [
+          {
+            id: 'wf-1',
+            input_params: {
+              signature_release_config: {
+                mode: 'internal_first',
+                investor_signer: {
+                  member_id: 'member-1',
+                  signer_name: 'NDA Investor',
+                  signer_email: 'nda-investor@example.com',
+                  signature_position: 'party_a',
+                },
+                investor_requests_released_at: null,
+              },
+            },
+          },
+        ],
+        signature_requests: [
+          {
+            id: 'sig-admin',
+            workflow_run_id: 'wf-1',
+            status: 'signed',
+            signer_role: 'admin',
+            signature_position: 'party_b',
+            signed_pdf_path: 'signed/admin.pdf',
+            google_drive_url: 'https://unsigned-source.local/nda.pdf',
+          },
+        ],
+      },
+      {
+        signedUrlResult: {
+          data: null,
+          error: new Error('signed url failed'),
+        },
+      }
+    )
+
+    const createSignatureRequest = vi.fn(async () => ({ success: true, signature_request_id: 'nda-investor-sig' }))
+
+    await expect(
+      maybeReleaseDeferredInvestorRequests(
+        buildSignatureRequest({
+          id: 'sig-admin',
+          document_type: 'nda',
+          workflow_run_id: 'wf-1',
+          signer_role: 'admin',
+          deal_id: 'deal-1',
+          signed_pdf_path: 'signed/admin.pdf',
+          google_drive_url: 'https://unsigned-source.local/nda.pdf',
+          signature_position: 'party_b',
+        }),
+        supabase as any,
+        createSignatureRequest
+      )
+    ).rejects.toThrow('Failed to resolve an NDA document URL for staged investor release')
+
+    expect(createSignatureRequest).not.toHaveBeenCalled()
+  })
+
+  it('does not fall back to the unsigned subscription source when the signed copy cannot be loaded', async () => {
+    const { supabase } = createSupabaseMock(
+      {
+        documents: [
+          {
+            id: 'doc-1',
+            file_key: 'subscriptions/original.pdf',
+            deal_id: 'deal-1',
+            subscription_id: 'sub-1',
+            signature_workflow_config: {
+              mode: 'internal_first',
+              internal_roles: ['admin', 'arranger'],
+              investor_signers: [
+                {
+                  member_id: 'member-1',
+                  signer_name: 'Investor Signer',
+                  signer_email: 'investor@example.com',
+                  signature_position: 'party_a',
+                },
+              ],
+              investor_requests_released_at: null,
+            },
+          },
+        ],
+        signature_requests: [
+          {
+            id: 'sig-admin',
+            document_id: 'doc-1',
+            status: 'signed',
+            signer_role: 'admin',
+            signature_position: 'party_b',
+            signed_pdf_path: 'signed/admin.pdf',
+          },
+          {
+            id: 'sig-arranger',
+            document_id: 'doc-1',
+            status: 'signed',
+            signer_role: 'arranger',
+            signature_position: 'party_c',
+            signed_pdf_path: 'signed/arranger.pdf',
+          },
+        ],
+      },
+      {
+        signedUrlResult: {
+          data: null,
+          error: new Error('signed url failed'),
+        },
+      }
+    )
+
+    const createSignatureRequest = vi.fn(async () => ({ success: true, signature_request_id: 'new-investor-sig' }))
+
+    await expect(
+      maybeReleaseDeferredInvestorRequests(
+        buildSignatureRequest({
+          document_type: 'subscription',
+          signer_role: 'arranger',
+          document_id: 'doc-1',
+          subscription_id: 'sub-1',
+          deal_id: 'deal-1',
+          signed_pdf_path: 'signed/arranger.pdf',
+        }),
+        supabase as any,
+        createSignatureRequest
+      )
+    ).rejects.toThrow('Failed to resolve a signed subscription document URL for staged investor release')
+
+    expect(createSignatureRequest).not.toHaveBeenCalled()
   })
 })

@@ -8,7 +8,7 @@
  * - Subscribers: party_a, party_a_2, party_a_3, ... (first is 'party_a', NOT 'party_a_1')
  * - Issuer: party_b, party_b_form, party_b_wire, party_b_tcs
  * - Arranger: party_c, party_c_tcs
- * - Introducer agreements: party_a (VERSO/Arranger), party_b, party_b_2, ...
+ * - Introducer agreements: party_a (VERSO), party_c (Arranger), party_b, party_b_2, ...
  */
 
 import { existsSync } from 'fs'
@@ -478,8 +478,15 @@ export function getRequiredAnchorsForSubscriptionPack(subscriberCount: number): 
  * @param signatoryCount - Number of introducer signers
  * @returns Array of anchor IDs that should be present in the PDF
  */
-export function getRequiredAnchorsForIntroducerAgreement(signatoryCount: number): string[] {
+export function getRequiredAnchorsForIntroducerAgreement(
+  signatoryCount: number,
+  hasSeparateArranger = false
+): string[] {
   const required: string[] = ['party_a']
+
+  if (hasSeparateArranger) {
+    required.push('party_c')
+  }
 
   for (let i = 1; i <= signatoryCount; i++) {
     const base = i === 1 ? 'party_b' : `party_b_${i}`

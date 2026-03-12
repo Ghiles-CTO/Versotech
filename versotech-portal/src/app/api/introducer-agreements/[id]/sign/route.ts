@@ -3,7 +3,7 @@
  * POST /api/introducer-agreements/[id]/sign - Create signature request and return signing URL
  *
  * Signing Flow:
- * - If agreement has arranger_id: Arranger signs first → then Introducer
+ * - If agreement has arranger_id: CEO + Arranger sign internally → then Introducer
  * - If no arranger_id: CEO signs first → then Introducer
  */
 
@@ -13,12 +13,18 @@ import crypto from 'crypto'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { SignatureStorageManager } from '@/lib/signature/storage'
 import { detectAnchors, getPlacementsFromAnchors } from '@/lib/signature/anchor-detector'
+import { canSignIntroducerAgreement } from '@/lib/signature/introducer-agreement-flow'
 
-async function getPartyASignaturePlacements(
+async function getInternalSignaturePlacements(
   supabase: ReturnType<typeof createServiceClient>,
   pdfPath: string | null
 ) {
-  if (!pdfPath) return null
+  if (!pdfPath) {
+    return {
+      partyAPlacements: null,
+      partyCPlacements: null,
+    }
+  }
 
   try {
     const storage = new SignatureStorageManager(supabase)
@@ -27,14 +33,172 @@ async function getPartyASignaturePlacements(
 
     if (anchors.length === 0) {
       console.warn('⚠️ [introducer-agreements/sign] No anchors detected in PDF')
-      return null
+      return {
+        partyAPlacements: null,
+        partyCPlacements: null,
+      }
     }
 
-    const placements = getPlacementsFromAnchors(anchors, 'party_a', 'introducer_agreement')
-    return placements.length > 0 ? placements : null
+    const partyAPlacements = getPlacementsFromAnchors(anchors, 'party_a', 'introducer_agreement')
+    const partyCPlacements = getPlacementsFromAnchors(anchors, 'party_c', 'introducer_agreement')
+
+    return {
+      partyAPlacements: partyAPlacements.length > 0 ? partyAPlacements : null,
+      partyCPlacements: partyCPlacements.length > 0 ? partyCPlacements : null,
+    }
   } catch (error) {
     console.error('❌ [introducer-agreements/sign] Failed to detect anchors:', error)
+    return {
+      partyAPlacements: null,
+      partyCPlacements: null,
+    }
+  }
+}
+
+function isDuplicateSignatureRequestError(error: unknown): boolean {
+  const candidate = error as { code?: string; message?: string; details?: string } | null
+  const combined = [candidate?.message, candidate?.details]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+
+  return candidate?.code === '23505' || combined.includes('duplicate key')
+}
+
+async function getReusableSignatureRequest(
+  serviceSupabase: ReturnType<typeof createServiceClient>,
+  requestId: string | null | undefined
+) {
+  if (!requestId) {
     return null
+  }
+
+  const { data: existingRequest } = await serviceSupabase
+    .from('signature_requests')
+    .select('id, signing_token, token_expires_at, status')
+    .eq('id', requestId)
+    .single()
+
+  if (!existingRequest) {
+    return null
+  }
+
+  if (existingRequest.status !== 'pending') {
+    return existingRequest
+  }
+
+  const expiresAt = new Date(existingRequest.token_expires_at)
+  if (expiresAt <= new Date()) {
+    return null
+  }
+
+  return existingRequest
+}
+
+async function createInternalSignatureRequest(params: {
+  serviceSupabase: ReturnType<typeof createServiceClient>
+  agreement: any
+  actorUserId: string
+  actorEmail: string
+  actorName: string
+  signerRole: 'admin' | 'arranger'
+  signaturePosition: 'party_a' | 'party_c'
+  signatureRequestField: 'ceo_signature_request_id' | 'arranger_signature_request_id'
+  signerType: 'ceo' | 'arranger'
+  previousStatus: string
+  nextStatus: 'pending_ceo_signature' | 'pending_arranger_signature'
+  signaturePlacements: any[] | null
+}) {
+  const {
+    serviceSupabase,
+    agreement,
+    actorUserId,
+    actorEmail,
+    actorName,
+    signerRole,
+    signaturePosition,
+    signatureRequestField,
+    signerType,
+    previousStatus,
+    nextStatus,
+    signaturePlacements,
+  } = params
+
+  const signingToken = crypto.randomUUID()
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+
+  const { data: signatureRequest, error: createError } = await serviceSupabase
+    .from('signature_requests')
+    .insert({
+      investor_id: agreement.introducer_id,
+      introducer_id: agreement.introducer_id,
+      introducer_agreement_id: agreement.id,
+      signer_email: actorEmail,
+      signer_name: actorName,
+      document_type: 'introducer_agreement',
+      signer_role: signerRole,
+      signature_position: signaturePosition,
+      signing_token: signingToken,
+      token_expires_at: expiresAt.toISOString(),
+      unsigned_pdf_path: agreement.pdf_url,
+      ...(signaturePlacements && signaturePlacements.length > 0
+        ? { signature_placements: signaturePlacements }
+        : {}),
+      status: 'pending',
+      created_by: actorUserId,
+    })
+    .select('id')
+    .single()
+
+  if (createError || !signatureRequest) {
+    if (isDuplicateSignatureRequestError(createError)) {
+      const { data: duplicateRequest } = await serviceSupabase
+        .from('signature_requests')
+        .select('id, signing_token, token_expires_at, status')
+        .eq('introducer_agreement_id', agreement.id)
+        .eq('signer_role', signerRole)
+        .eq('signature_position', signaturePosition)
+        .in('status', ['pending', 'signed'])
+        .maybeSingle()
+
+      if (duplicateRequest) {
+        return duplicateRequest.status === 'pending' ? duplicateRequest : null
+      }
+    }
+
+    console.error(`[introducer-agreements/sign] Create ${signerType} signature request error:`, createError)
+    return null
+  }
+
+  await serviceSupabase
+    .from('introducer_agreements')
+    .update({
+      [signatureRequestField]: signatureRequest.id,
+      status: nextStatus,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', agreement.id)
+
+  await auditLogger.log({
+    actor_user_id: actorUserId,
+    action: AuditActions.AGREEMENT_SIGNED,
+    entity: AuditEntities.INTRODUCER_AGREEMENTS,
+    entity_id: agreement.id,
+    metadata: {
+      introducer_id: agreement.introducer_id,
+      arranger_id: agreement.arranger_id,
+      signer_role: signerType,
+      previous_status: previousStatus,
+      new_status: nextStatus,
+      signature_request_id: signatureRequest.id,
+    },
+  })
+
+  return {
+    id: signatureRequest.id,
+    signing_token: signingToken,
+    token_expires_at: expiresAt.toISOString(),
+    status: 'pending',
   }
 }
 
@@ -107,181 +271,90 @@ export async function POST(
     )
     const isIntroducerForAgreement = !!introducerPersona
 
-    const introducer = agreement.introducer as any
     const hasArranger = !!agreement.arranger_id
-    const partyAPlacements = await getPartyASignaturePlacements(serviceSupabase, agreement.pdf_url)
+    const { partyAPlacements, partyCPlacements } = await getInternalSignaturePlacements(
+      serviceSupabase,
+      agreement.pdf_url
+    )
 
-    // Handle Arranger signing (status = 'approved', agreement has arranger)
-    if (isArrangerForAgreement && agreement.status === 'approved' && hasArranger) {
-      // Check if arranger signature request already exists
-      if (agreement.arranger_signature_request_id) {
-        const { data: existingRequest } = await serviceSupabase
-          .from('signature_requests')
-          .select('signing_token, token_expires_at, status')
-          .eq('id', agreement.arranger_signature_request_id)
-          .single()
+    // Handle Arranger signing
+    if (isArrangerForAgreement && canSignIntroducerAgreement(agreement.status, 'arranger', hasArranger)) {
+      const existingRequest = await getReusableSignatureRequest(
+        serviceSupabase,
+        agreement.arranger_signature_request_id
+      )
 
-        if (existingRequest && existingRequest.status === 'pending') {
-          const expiresAt = new Date(existingRequest.token_expires_at)
-          if (expiresAt > new Date()) {
-            return NextResponse.json({
-              signing_url: `/sign/${existingRequest.signing_token}`,
-              pdf_url: agreement.pdf_url,
-            })
-          }
-        }
+      if (existingRequest?.status === 'pending') {
+        return NextResponse.json({
+          signing_url: `/sign/${existingRequest.signing_token}`,
+          pdf_url: agreement.pdf_url,
+        })
       }
 
-      // Create new signature request for arranger
-      const signingToken = crypto.randomUUID()
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+      const signatureRequest = await createInternalSignatureRequest({
+        serviceSupabase,
+        agreement,
+        actorUserId: user.id,
+        actorEmail: user.email || '',
+        actorName: user.user_metadata?.full_name || arrangerEntity?.legal_name || 'Arranger',
+        signerRole: 'arranger',
+        signaturePosition: 'party_c',
+        signatureRequestField: 'arranger_signature_request_id',
+        signerType: 'arranger',
+        previousStatus: agreement.status,
+        nextStatus: 'pending_ceo_signature',
+        signaturePlacements: partyCPlacements,
+      })
 
-      const arrangerName = arrangerEntity?.legal_name || 'Arranger'
-
-      const { data: signatureRequest, error: createError } = await serviceSupabase
-        .from('signature_requests')
-        .insert({
-          investor_id: agreement.introducer_id,
-          introducer_id: agreement.introducer_id,
-          introducer_agreement_id: agreement.id,
-          signer_email: user.email,
-          signer_name: user.user_metadata?.full_name || arrangerName,
-          document_type: 'introducer_agreement',
-          signer_role: 'arranger',
-          signature_position: 'party_a',
-          signing_token: signingToken,
-          token_expires_at: expiresAt.toISOString(),
-          unsigned_pdf_path: agreement.pdf_url,
-          ...(partyAPlacements && partyAPlacements.length > 0
-            ? { signature_placements: partyAPlacements }
-            : {}),
-          status: 'pending',
-          created_by: user.id,
-        })
-        .select('id')
-        .single()
-
-      if (createError || !signatureRequest) {
-        console.error('[introducer-agreements/sign] Create arranger signature request error:', createError)
+      if (!signatureRequest) {
         return NextResponse.json({ error: 'Failed to create signature request' }, { status: 500 })
       }
 
-      // Update agreement with arranger signature request ID and status
-      await serviceSupabase
-        .from('introducer_agreements')
-        .update({
-          arranger_signature_request_id: signatureRequest.id,
-          status: 'pending_arranger_signature',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', id)
-
-      // Audit log: Arranger initiated signing (GAP-8)
-      await auditLogger.log({
-        actor_user_id: user.id,
-        action: AuditActions.AGREEMENT_SIGNED,
-        entity: AuditEntities.INTRODUCER_AGREEMENTS,
-        entity_id: id,
-        metadata: {
-          introducer_id: agreement.introducer_id,
-          arranger_id: agreement.arranger_id,
-          signer_role: 'arranger',
-          previous_status: 'approved',
-          new_status: 'pending_arranger_signature',
-          signature_request_id: signatureRequest.id
-        }
-      })
-
       return NextResponse.json({
-        signing_url: `/sign/${signingToken}`,
+        signing_url: `/sign/${signatureRequest.signing_token}`,
         pdf_url: agreement.pdf_url,
-        expires_at: expiresAt.toISOString(),
+        expires_at: signatureRequest.token_expires_at,
         signer_type: 'arranger',
       })
     }
 
-    // Handle CEO signing (status = 'approved', no arranger OR arranger already signed)
-    if (isStaff && agreement.status === 'approved' && !hasArranger) {
-      // Check if CEO signature request already exists
-      if (agreement.ceo_signature_request_id) {
-        const { data: existingRequest } = await serviceSupabase
-          .from('signature_requests')
-          .select('signing_token, token_expires_at, status')
-          .eq('id', agreement.ceo_signature_request_id)
-          .single()
+    // Handle CEO signing
+    if (isStaff && canSignIntroducerAgreement(agreement.status, 'admin', hasArranger)) {
+      const existingRequest = await getReusableSignatureRequest(
+        serviceSupabase,
+        agreement.ceo_signature_request_id
+      )
 
-        if (existingRequest && existingRequest.status === 'pending') {
-          const expiresAt = new Date(existingRequest.token_expires_at)
-          if (expiresAt > new Date()) {
-            return NextResponse.json({
-              signing_url: `/sign/${existingRequest.signing_token}`,
-              pdf_url: agreement.pdf_url,
-            })
-          }
-        }
+      if (existingRequest?.status === 'pending') {
+        return NextResponse.json({
+          signing_url: `/sign/${existingRequest.signing_token}`,
+          pdf_url: agreement.pdf_url,
+        })
       }
 
-      // Create new signature request for CEO
-      const signingToken = crypto.randomUUID()
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+      const signatureRequest = await createInternalSignatureRequest({
+        serviceSupabase,
+        agreement,
+        actorUserId: user.id,
+        actorEmail: user.email || '',
+        actorName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'CEO',
+        signerRole: 'admin',
+        signaturePosition: 'party_a',
+        signatureRequestField: 'ceo_signature_request_id',
+        signerType: 'ceo',
+        previousStatus: agreement.status,
+        nextStatus: 'pending_ceo_signature',
+        signaturePlacements: partyAPlacements,
+      })
 
-      const { data: signatureRequest, error: createError } = await serviceSupabase
-        .from('signature_requests')
-        .insert({
-          investor_id: agreement.introducer_id,
-          introducer_id: agreement.introducer_id,
-          introducer_agreement_id: agreement.id,
-          signer_email: user.email,
-          signer_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'CEO',
-          document_type: 'introducer_agreement',
-          signer_role: 'admin',
-          signature_position: 'party_a',
-          signing_token: signingToken,
-          token_expires_at: expiresAt.toISOString(),
-          unsigned_pdf_path: agreement.pdf_url,
-          ...(partyAPlacements && partyAPlacements.length > 0
-            ? { signature_placements: partyAPlacements }
-            : {}),
-          status: 'pending',
-          created_by: user.id,
-        })
-        .select('id')
-        .single()
-
-      if (createError || !signatureRequest) {
-        console.error('[introducer-agreements/sign] Create CEO signature request error:', createError)
+      if (!signatureRequest) {
         return NextResponse.json({ error: 'Failed to create signature request' }, { status: 500 })
       }
 
-      // Update agreement with CEO signature request ID and status
-      await serviceSupabase
-        .from('introducer_agreements')
-        .update({
-          ceo_signature_request_id: signatureRequest.id,
-          status: 'pending_ceo_signature',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', id)
-
-      // Audit log: CEO initiated signing (GAP-8)
-      await auditLogger.log({
-        actor_user_id: user.id,
-        action: AuditActions.AGREEMENT_SIGNED,
-        entity: AuditEntities.INTRODUCER_AGREEMENTS,
-        entity_id: id,
-        metadata: {
-          introducer_id: agreement.introducer_id,
-          signer_role: 'ceo',
-          previous_status: 'approved',
-          new_status: 'pending_ceo_signature',
-          signature_request_id: signatureRequest.id
-        }
-      })
-
       return NextResponse.json({
-        signing_url: `/sign/${signingToken}`,
+        signing_url: `/sign/${signatureRequest.signing_token}`,
         pdf_url: agreement.pdf_url,
-        expires_at: expiresAt.toISOString(),
+        expires_at: signatureRequest.token_expires_at,
         signer_type: 'ceo',
       })
     }
@@ -313,22 +386,22 @@ export async function POST(
     }
 
     // Provide helpful error messages
-    if (isStaff && agreement.status !== 'approved') {
+    if (isStaff && !canSignIntroducerAgreement(agreement.status, 'admin', hasArranger)) {
       return NextResponse.json(
-        { error: `Cannot sign agreement in status: ${agreement.status}. Must be approved.` },
+        { error: `Cannot sign agreement in status: ${agreement.status}. It is not ready for internal signature.` },
         { status: 400 }
       )
     }
 
-    if (isArrangerForAgreement && agreement.status !== 'approved') {
+    if (isArrangerForAgreement && !canSignIntroducerAgreement(agreement.status, 'arranger', hasArranger)) {
       return NextResponse.json(
-        { error: `Cannot sign agreement in status: ${agreement.status}. Must be approved.` },
+        { error: `Cannot sign agreement in status: ${agreement.status}. It is not ready for arranger signature.` },
         { status: 400 }
       )
     }
 
     if (isIntroducerForAgreement && agreement.status !== 'pending_introducer_signature') {
-      const firstSigner = hasArranger ? 'Arranger' : 'CEO'
+      const firstSigner = hasArranger ? 'CEO and arranger' : 'CEO'
       return NextResponse.json(
         { error: `Cannot sign agreement in status: ${agreement.status}. ${firstSigner} must sign first.` },
         { status: 400 }

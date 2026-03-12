@@ -188,7 +188,7 @@ export default function MyIntroducersPage() {
           introducer:introducer_id (id, legal_name)
         `)
         .eq('arranger_id', arrangerUser.arranger_id)
-        .in('status', ['approved', 'pending_arranger_signature'])
+        .in('status', ['approved', 'pending_ceo_signature', 'pending_arranger_signature'])
         .order('created_at', { ascending: false })
 
       const pendingList: PendingAgreement[] = []

@@ -40,27 +40,86 @@ function UnifiedLoginContent() {
   useEffect(() => {
     const error = searchParams.get('error')
     const messageParam = searchParams.get('message')
+    const getRecentLogoutMessage = () => {
+      if (typeof window === 'undefined') {
+        return null
+      }
+
+      try {
+        const rawLogoutEvent = window.localStorage.getItem('verso.session.logout')
+        if (!rawLogoutEvent) {
+          return null
+        }
+
+        const parsed = JSON.parse(rawLogoutEvent) as { at?: number; reason?: string }
+        if (!parsed.at || Date.now() - parsed.at > 60_000) {
+          return null
+        }
+
+        if (parsed.reason === 'idle_timeout') {
+          return { type: 'info' as const, text: 'You were signed out after 5 minutes of inactivity.' }
+        }
+
+        if (parsed.reason === 'signed_out') {
+          return { type: 'info' as const, text: 'You have been signed out.' }
+        }
+      } catch {
+        return null
+      }
+
+      return null
+    }
 
     if (error) {
-      let errorMessage = 'Authentication error occurred'
-      switch (error) {
-        case 'session_expired': errorMessage = 'Your session has expired. Please sign in again.'; break
-        case 'profile_not_found': errorMessage = 'User profile not found. Please contact support.'; break
-        case 'auth_failed': errorMessage = 'Authentication failed. Please try again.'; break
-        case 'auth_required': errorMessage = 'Please sign in to continue.'; break
-        case 'session_not_found': errorMessage = 'Session not found. Please try your invitation link again or contact support.'; break
-        case 'no_personas': errorMessage = 'No access configured. Please contact your administrator.'; break
-        case 'link_expired': errorMessage = 'This link has expired. Please request a new password reset.'; break
-        case 'access_denied': errorMessage = 'Access denied. The link may be invalid or already used.'; break
-        default: errorMessage = 'An error occurred. Please try again.';
+      let nextMessage: { type: 'error' | 'success' | 'info', text: string } = {
+        type: 'error',
+        text: 'Authentication error occurred',
       }
-      setMessage({ type: 'error', text: errorMessage })
+
+      switch (error) {
+        case 'session_expired':
+          nextMessage = { type: 'error', text: 'Your session has expired. Please sign in again.' }
+          break
+        case 'idle_timeout':
+          nextMessage = { type: 'info', text: 'You were signed out after 5 minutes of inactivity.' }
+          break
+        case 'signed_out':
+          nextMessage = { type: 'info', text: 'You have been signed out.' }
+          break
+        case 'profile_not_found':
+          nextMessage = { type: 'error', text: 'User profile not found. Please contact support.' }
+          break
+        case 'auth_failed':
+          nextMessage = { type: 'error', text: 'Authentication failed. Please try again.' }
+          break
+        case 'auth_required':
+          nextMessage = { type: 'error', text: 'Please sign in to continue.' }
+          break
+        case 'session_not_found':
+          nextMessage = { type: 'error', text: 'Session not found. Please try your invitation link again or contact support.' }
+          break
+        case 'no_personas':
+          nextMessage = { type: 'error', text: 'No access configured. Please contact your administrator.' }
+          break
+        case 'link_expired':
+          nextMessage = { type: 'error', text: 'This link has expired. Please request a new password reset.' }
+          break
+        case 'access_denied':
+          nextMessage = { type: 'error', text: 'Access denied. The link may be invalid or already used.' }
+          break
+        default:
+          nextMessage = { type: 'error', text: 'An error occurred. Please try again.' }
+      }
+
+      setMessage(nextMessage)
     } else if (messageParam === 'password_set') {
       setMessage({ type: 'success', text: 'Password set successfully! Please sign in with your new credentials.' })
     } else if (messageParam === 'password_reset') {
       setMessage({ type: 'success', text: 'Password reset successfully! Please sign in with your new password.' })
     } else if (messageParam === 'signed_out') {
       setMessage({ type: 'info', text: 'You have been signed out.' })
+    } else {
+      setMessage(getRecentLogoutMessage())
     }
   }, [searchParams])
 

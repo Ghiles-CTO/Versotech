@@ -24,6 +24,7 @@ import {
   maybeReleaseDeferredInvestorRequests,
   shouldDelayFinalSignatureCompletion,
 } from './staged-release'
+import { canSignIntroducerAgreement } from './introducer-agreement-flow'
 import { sendSignatureRequestEmail } from '@/lib/email/resend-service'
 import type {
   CreateSignatureRequestParams,
@@ -59,6 +60,45 @@ function normalizeCreateSignatureRequestError(error: unknown): string {
   }
 
   return message
+}
+
+function buildDuplicateInsertErrorMessage(params: CreateSignatureRequestParams): string {
+  if (params.document_id) {
+    return `A signature request already exists for ${params.signer_role} at position ${params.signature_position} on this document`
+  }
+
+  if (params.workflow_run_id) {
+    return `A signature request already exists for ${params.signer_role} at position ${params.signature_position} on this workflow`
+  }
+
+  return 'A duplicate signature request already exists'
+}
+
+function normalizeSignatureRequestInsertError(
+  error: unknown,
+  params: CreateSignatureRequestParams
+): string {
+  const candidate = error as { code?: string; message?: string; details?: string; hint?: string } | null
+  const combined = [
+    candidate?.message,
+    candidate?.details,
+    candidate?.hint,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+
+  if (
+    candidate?.code === '23505' ||
+    combined.includes('duplicate key') ||
+    combined.includes('already exists') ||
+    combined.includes('signature_requests_document_signer') ||
+    combined.includes('signature_requests_workflow_signer')
+  ) {
+    return buildDuplicateInsertErrorMessage(params)
+  }
+
+  return normalizeCreateSignatureRequestError(error)
 }
 
 /**
@@ -488,7 +528,7 @@ export async function createSignatureRequest(
       console.error('❌ [SIGNATURE] Failed to create signature request:', insertError)
       return {
         success: false,
-        error: 'Failed to create signature request'
+        error: normalizeSignatureRequestInsertError(insertError, params)
       }
     }
 
@@ -1068,6 +1108,59 @@ export async function submitSignature(
       return {
         success: false,
         error: 'Document has already been signed'
+      }
+    }
+
+    if (
+      signatureRequest.document_type === 'introducer_agreement' &&
+      signatureRequest.introducer_agreement_id &&
+      (signatureRequest.signer_role === 'admin' ||
+        signatureRequest.signer_role === 'arranger' ||
+        signatureRequest.signer_role === 'introducer')
+    ) {
+      const { data: introducerAgreement, error: introducerAgreementError } = await supabase
+        .from('introducer_agreements')
+        .select('id, status, arranger_id')
+        .eq('id', signatureRequest.introducer_agreement_id)
+        .maybeSingle()
+
+      if (introducerAgreementError || !introducerAgreement) {
+        console.error('❌ [SIGNATURE] Introducer agreement not found for signature request:', introducerAgreementError)
+        return {
+          success: false,
+          error: 'Introducer agreement not found'
+        }
+      }
+
+      const normalizedSignerRole =
+        signatureRequest.signer_role === 'introducer'
+          ? 'introducer'
+          : signatureRequest.signer_role === 'arranger'
+            ? 'arranger'
+            : 'admin'
+
+      if (
+        !canSignIntroducerAgreement(
+          introducerAgreement.status,
+          normalizedSignerRole,
+          !!introducerAgreement.arranger_id
+        )
+      ) {
+        const errorMessage =
+          normalizedSignerRole === 'introducer'
+            ? 'Cannot sign yet. The internal side must sign first.'
+            : 'Cannot sign this agreement yet. It is not ready for internal signature.'
+
+        console.log('❌ [SIGNATURE] Introducer agreement signing blocked by workflow state:', {
+          agreement_status: introducerAgreement.status,
+          signer_role: normalizedSignerRole,
+          agreement_id: introducerAgreement.id,
+        })
+
+        return {
+          success: false,
+          error: errorMessage
+        }
       }
     }
 

@@ -376,6 +376,26 @@ export async function POST(
 
     const ANCHOR_CSS = 'position:absolute;left:50%;top:0;font-size:1px;line-height:1px;color:#ffffff;opacity:0.01;transform:translateX(-50%);';
 
+    const buildInternalSignatureBlock = ({
+      anchorId,
+      entityName,
+      titleHtml,
+      marginTop = 20,
+    }: {
+      anchorId: 'party_a' | 'party_c'
+      entityName: string
+      titleHtml: string
+      marginTop?: number
+    }) => `
+      <div style="margin-top: ${marginTop}px; text-align: center;">
+        <div class="signature-line" style="margin: 3cm auto 0.2cm; position:relative;">
+          <span style="${ANCHOR_CSS}">SIG_ANCHOR:${anchorId}</span>
+        </div>
+        <div class="signature-name">${entityName}</div>
+        <div class="signature-title">${titleHtml}</div>
+      </div>
+    `;
+
     const entitySignatureHtml = isEntity
       ? introducerSignatories.map((signatory, index) => {
           const number = index + 1;
@@ -407,6 +427,33 @@ export async function POST(
       </div>
       `
       : '';
+
+    const versoSignatureHtml = buildInternalSignatureBlock({
+      anchorId: 'party_a',
+      entityName: arrangerId ? 'VERSO (Internal Approval)' : (arranger?.legal_name || 'VERSO Management Ltd'),
+      titleHtml: `represented by ${userProfile?.display_name || 'Julien MACHOT'}<br>${userProfile?.title || 'Managing Partner'}`,
+      marginTop: arrangerId ? 0 : 20,
+    });
+
+    const arrangerSignatureHtml = arrangerId
+      ? buildInternalSignatureBlock({
+          anchorId: 'party_c',
+          entityName: arranger?.legal_name || 'Arranger',
+          titleHtml: 'Authorized Representative',
+          marginTop: 0,
+        })
+      : '';
+
+    const internalSignatureHtml = arrangerId
+      ? `
+      <table class="signature-table" style="margin-top: 20px;">
+        <tr>
+          <td style="width: 50%; vertical-align: top;">${versoSignatureHtml}</td>
+          <td style="width: 50%; vertical-align: top;">${arrangerSignatureHtml}</td>
+        </tr>
+      </table>
+      `
+      : versoSignatureHtml;
 
     // Create the introducer agreement with ALL fields
     const { data: agreement, error: agreementError } = await supabase
@@ -649,6 +696,7 @@ export async function POST(
         performance_fee_payment_html: performanceFeePaymentHtml,
         entity_signature_html: entitySignatureHtml,
         individual_signature_html: individualSignatureHtml,
+        internal_signature_html: internalSignatureHtml,
 
         // Raw values for n8n (in case it needs to do its own calculations)
         raw_subscription_fee_bps: subscriptionFeeBps,
@@ -795,17 +843,27 @@ export async function POST(
                   const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days
 
                   let signaturePlacements: any[] | null = null;
+                  let arrangerSignaturePlacements: any[] | null = null;
                   try {
                     const anchors = await detectAnchors(new Uint8Array(pdfBuffer));
                     if (anchors.length > 0) {
                       const introducerAnchorCount = isEntity ? introducerSignatories.length : 1;
-                      const requiredAnchors = getRequiredAnchorsForIntroducerAgreement(introducerAnchorCount);
+                      const requiredAnchors = getRequiredAnchorsForIntroducerAgreement(introducerAnchorCount, !!arrangerId);
                       validateRequiredAnchors(anchors, requiredAnchors);
                       const placements = getPlacementsFromAnchors(anchors, 'party_a', 'introducer_agreement');
                       if (placements.length > 0) {
                         signaturePlacements = placements;
                       } else {
                         console.warn('⚠️ No signature placements found for CEO anchor (party_a)');
+                      }
+
+                      if (arrangerId) {
+                        const arrangerPlacements = getPlacementsFromAnchors(anchors, 'party_c', 'introducer_agreement');
+                        if (arrangerPlacements.length > 0) {
+                          arrangerSignaturePlacements = arrangerPlacements;
+                        } else {
+                          console.warn('⚠️ No signature placements found for arranger anchor (party_c)');
+                        }
                       }
                     } else {
                       console.warn('⚠️ No anchors detected in introducer agreement PDF');
@@ -861,6 +919,10 @@ export async function POST(
                     const introducerName = introducer?.legal_name || 'Unknown Introducer';
                     const feeDescription = `${subscriptionFeePercent}% subscription fee${hasPerformanceFee ? `, ${performanceFeePercent}% performance fee` : ''}`;
 
+                    const nextStepMessage = arrangerId
+                      ? 'After both you and the arranger sign, the introducer will receive a signing link.'
+                      : 'After you sign, the introducer will receive a signing link.'
+
                     const { error: taskError } = await serviceSupabase.from('tasks').insert({
                       owner_user_id: ceoUser.id,
                       kind: 'countersignature',
@@ -871,7 +933,7 @@ export async function POST(
                         `• Deal: ${dealName}\n` +
                         `• Fees: ${feeDescription}\n` +
                         `• Reference: ${referenceNumber}\n\n` +
-                        `After you sign, the introducer will receive a signing link.`,
+                        nextStepMessage,
                       status: 'pending',
                       priority: 'high',
                       related_entity_type: 'signature_request',
@@ -898,6 +960,76 @@ export async function POST(
                       console.error('⚠️ Failed to create CEO task:', taskError);
                     } else {
                       console.log('✅ CEO task created in VERSOSign');
+                    }
+
+                    if (arrangerId) {
+                      try {
+                        const { data: arrangerUser } = await serviceSupabase
+                          .from('arranger_users')
+                          .select(`
+                            user_id,
+                            profiles:user_id (
+                              email,
+                              display_name
+                            )
+                          `)
+                          .eq('arranger_id', arrangerId)
+                          .limit(1)
+                          .maybeSingle();
+
+                        const arrangerProfile = Array.isArray(arrangerUser?.profiles)
+                          ? arrangerUser?.profiles[0]
+                          : arrangerUser?.profiles;
+                        const arrangerEmail = arrangerProfile?.email;
+                        const arrangerDisplayName =
+                          arrangerProfile?.display_name || arranger?.legal_name || 'Arranger';
+
+                        if (!arrangerEmail) {
+                          console.warn('⚠️ No arranger email found for introducer agreement signature request');
+                        } else {
+                          const arrangerSigningToken = crypto.randomUUID();
+                          const arrangerExpiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+
+                          const { data: arrangerSignatureRequest, error: arrangerSigReqError } = await serviceSupabase
+                            .from('signature_requests')
+                            .insert({
+                              introducer_id: feePlan.introducer_id,
+                              introducer_agreement_id: agreement.id,
+                              deal_id: feePlan.deal_id,
+                              signer_email: arrangerEmail,
+                              signer_name: arrangerDisplayName,
+                              document_type: 'introducer_agreement',
+                              signer_role: 'arranger',
+                              signature_position: 'party_c',
+                              signing_token: arrangerSigningToken,
+                              token_expires_at: arrangerExpiresAt.toISOString(),
+                              unsigned_pdf_path: fileKey,
+                              ...(arrangerSignaturePlacements && arrangerSignaturePlacements.length > 0
+                                ? { signature_placements: arrangerSignaturePlacements }
+                                : {}),
+                              status: 'pending',
+                              created_by: user.id,
+                            })
+                            .select('id')
+                            .single();
+
+                          if (arrangerSigReqError || !arrangerSignatureRequest) {
+                            console.error('❌ Failed to create arranger signature request:', arrangerSigReqError);
+                          } else {
+                            await serviceSupabase
+                              .from('introducer_agreements')
+                              .update({
+                                arranger_signature_request_id: arrangerSignatureRequest.id,
+                                updated_at: new Date().toISOString(),
+                              })
+                              .eq('id', agreement.id);
+
+                            console.log('✅ Arranger signature request created:', arrangerSignatureRequest.id);
+                          }
+                        }
+                      } catch (arrangerSignatureError) {
+                        console.error('❌ Error creating arranger signature request:', arrangerSignatureError);
+                      }
                     }
                   }
                 }

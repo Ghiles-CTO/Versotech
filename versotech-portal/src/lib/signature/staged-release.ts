@@ -141,7 +141,7 @@ async function resolveSubscriptionReleaseSourceUrl(
       SIGNATURES_BUCKET,
       latestSignedInternal.signed_pdf_path
     )
-    if (signedUrl) return signedUrl
+    return signedUrl
   }
 
   if (!documentFileKey) {
@@ -161,7 +161,7 @@ async function resolveNdaReleaseSourceUrl(
       SIGNATURES_BUCKET,
       signatureRequest.signed_pdf_path
     )
-    if (signedUrl) return signedUrl
+    return signedUrl
   }
 
   if (signatureRequest.workflow_run_id) {
@@ -180,7 +180,7 @@ async function resolveNdaReleaseSourceUrl(
         SIGNATURES_BUCKET,
         latestSignedAdmin.signed_pdf_path
       )
-      if (signedUrl) return signedUrl
+      return signedUrl
     }
 
     if (latestSignedAdmin?.google_drive_url) {

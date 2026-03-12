@@ -8,6 +8,7 @@ import { Persona } from '@/contexts/persona-context'
 import { useTheme } from '@/components/theme-provider'
 import { InvestorActionCenter, DashboardTask, DashboardActivity } from '@/components/dashboard/investor-action-center'
 import { FeaturedDealsSection, FeaturedDeal } from '@/components/dashboard/featured-deals-section'
+import { MarketingAnnouncementsCarousel } from '@/components/dashboard/marketing-announcements-carousel'
 import type { DashboardOnboardingState } from '@/components/dashboard/investor-dashboard-onboarding-card'
 import { VideoIntroModal } from '@/components/video/video-intro-modal'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
@@ -740,6 +741,8 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
           </div>
         </div>
       </section>
+
+      <MarketingAnnouncementsCarousel investorId={investorId} />
 
       {/* Featured Deals */}
       <FeaturedDealsSection deals={data.featuredDeals} />
