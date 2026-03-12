@@ -96,6 +96,33 @@ export class DocumentService {
   /**
    * Parse and validate a JSON API response (non-PDF path)
    */
+  private static async parseBinaryPreviewResponse(
+    response: Response,
+    documentId: string
+  ): Promise<DocumentUrlResponse> {
+    if (!response.ok) {
+      return this.parseResponse(response)
+    }
+
+    const blob = await response.blob()
+    const blobUrl = URL.createObjectURL(blob)
+    const contentType = response.headers.get('Content-Type') || 'application/octet-stream'
+    const docType = contentType.includes('application/pdf') ? 'pdf' : 'other'
+
+    return {
+      download_url: blobUrl,
+      document: {
+        id: documentId,
+        name: '',
+        type: docType,
+      },
+      expires_in_seconds: 0,
+    }
+  }
+
+  /**
+   * Parse and validate a JSON API response (non-PDF path)
+   */
   private static async parseResponse(
     response: Response
   ): Promise<DocumentUrlResponse> {
@@ -172,6 +199,11 @@ export class DocumentService {
           },
         }
       )
+
+      const contentType = response.headers.get('Content-Type') || ''
+      if (contentType.includes('application/pdf')) {
+        return await this.parseBinaryPreviewResponse(response, documentId)
+      }
 
       return await this.parseResponse(response)
     } catch (error) {

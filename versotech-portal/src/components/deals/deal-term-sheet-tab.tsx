@@ -40,6 +40,7 @@ import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerF
 import type { DocumentReference } from '@/types/document-viewer.types'
 import { usePersona } from '@/contexts/persona-context'
 import { toast } from 'sonner'
+import { downloadFileFromUrl } from '@/lib/browser-download'
 
 type TermSheet = Record<string, any>
 
@@ -484,10 +485,13 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
     setPreviewDocument(null)
   }
 
-  const handleDownload = () => {
-    if (previewUrl) {
-      window.open(previewUrl, '_blank')
-    }
+  const handleDownload = async () => {
+    if (!previewUrl || !previewDocument) return
+
+    await downloadFileFromUrl(
+      previewUrl,
+      previewDocument.file_name || previewDocument.name || 'Term Sheet.pdf'
+    )
   }
 
   // Generate PDF handler - triggers n8n workflow

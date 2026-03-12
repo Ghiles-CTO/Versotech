@@ -68,6 +68,7 @@ import { useProxyMode } from '@/components/commercial-partner'
 import { getAccountStatusCopy, formatKycStatusLabel } from '@/lib/account-approval-status'
 import { isPreviewableExtension } from '@/constants/document-preview.constants'
 import { DocumentService } from '@/services/document.service'
+import { downloadFileFromUrl } from '@/lib/browser-download'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -368,10 +369,11 @@ function getDocIcon(fileName: string, fileType: string, isExternal: boolean) {
   return { Icon: File, color: 'text-muted-foreground' }
 }
 
-function FeaturedDocRow({ doc, dealId, onPreview }: {
+function FeaturedDocRow({ doc, dealId, onPreview, canDownload }: {
   doc: { id: string; file_name: string; file_size: number; file_type: string; external_link?: string | null }
   dealId: string
   onPreview?: (doc: { id: string; file_name: string; file_size: number; file_type: string }) => void
+  canDownload: boolean
 }) {
   const [loading, setLoading] = useState<'preview' | 'download' | null>(null)
   const { Icon, color } = getDocIcon(doc.file_name, doc.file_type, !!doc.external_link)
@@ -387,12 +389,14 @@ function FeaturedDocRow({ doc, dealId, onPreview }: {
       onPreview(doc)
       return
     }
+    if (mode === 'download' && !canDownload) {
+      return
+    }
+
     setLoading(mode)
     try {
-      const response = await fetch(`/api/deals/${dealId}/documents/${doc.id}/download?mode=${mode}`)
-      if (!response.ok) throw new Error('Failed to get link')
-      const data = await response.json()
-      window.open(data.download_url, '_blank')
+      const data = await DocumentService.getDealDocumentDownloadUrl(dealId, doc.id)
+      await downloadFileFromUrl(data.download_url, doc.file_name || 'document')
     } catch {
       toast.error(`Failed to ${mode} document`)
     } finally {
@@ -442,20 +446,22 @@ function FeaturedDocRow({ doc, dealId, onPreview }: {
                 )}
               </Button>
             )}
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              title="Download"
-              onClick={() => handleAction('download')}
-              disabled={loading !== null}
-            >
-              {loading === 'download' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Download className="h-4 w-4" />
-              )}
-            </Button>
+            {canDownload && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                title="Download"
+                onClick={() => handleAction('download')}
+                disabled={loading !== null}
+              >
+                {loading === 'download' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+              </Button>
+            )}
           </>
         )}
       </div>
@@ -471,7 +477,7 @@ export default function OpportunityDetailPage() {
   const actionParam = searchParams.get('action')
   const fromParam = searchParams.get('from') // Track where user came from
 
-  const { hasAnyPersona, isLoading: personaLoading, activePersona, error: personaError } = usePersona()
+  const { hasAnyPersona, isLoading: personaLoading, activePersona, error: personaError, isStaff, isCEO } = usePersona()
   const [opportunity, setOpportunity] = useState<Opportunity | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -1178,6 +1184,7 @@ export default function OpportunityDetailPage() {
                     key={doc.id}
                     doc={doc}
                     dealId={opportunity.id}
+                    canDownload={isStaff || isCEO}
                     onPreview={(d) => {
                       const docRef: DocumentReference = {
                         id: d.id,
@@ -1193,6 +1200,10 @@ export default function OpportunityDetailPage() {
 
                       DocumentService.getDealDocumentPreviewUrl(opportunity.id, d.id)
                         .then((res) => {
+                          setPreviewDocument((current) => current ? {
+                            ...current,
+                            preview_type: res.document?.type || null,
+                          } : current)
                           setPreviewUrl(res.download_url)
                           setPreviewWatermark(res.watermark || null)
                         })
@@ -1255,10 +1266,13 @@ export default function OpportunityDetailPage() {
               setPreviewDocument(null)
             }
 
-            const handleDownloadFromPreview = () => {
-              if (previewUrl) {
-                window.open(previewUrl, '_blank')
-              }
+            const handleDownloadFromPreview = async () => {
+              if (!previewUrl || !previewDocument) return
+
+              await downloadFileFromUrl(
+                previewUrl,
+                previewDocument.file_name || previewDocument.name || 'document'
+              )
             }
 
             // Get vehicle identifier (entity_code like VC209)
@@ -1923,9 +1937,11 @@ export default function OpportunityDetailPage() {
           setPreviewWatermark(null)
         }}
         onDownload={() => {
-          if (previewUrl) {
-            window.open(previewUrl, '_blank')
-          }
+          if (!previewUrl || !previewDocument) return
+          void downloadFileFromUrl(
+            previewUrl,
+            previewDocument.file_name || previewDocument.name || 'document'
+          )
         }}
         watermark={previewWatermark}
         hideDownload

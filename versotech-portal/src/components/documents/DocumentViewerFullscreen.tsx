@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Download, Loader2, AlertCircle, FileText, AlertTriangle, FileImage, FileVideo2, Music, FileSpreadsheet } from 'lucide-react'
+import { X, Download, Loader2, AlertCircle, FileText, AlertTriangle, FileImage, FileVideo2, Music, FileSpreadsheet, Pause, Play } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatFileSize } from '@/lib/utils'
 import { DocumentReference } from '@/types/document-viewer.types'
@@ -55,6 +55,145 @@ function getToolbarIcon(fileType: FileTypeCategory) {
   }
 }
 
+const PREVIEW_TYPE_OVERRIDES: FileTypeCategory[] = ['pdf', 'image', 'video', 'audio', 'excel', 'docx', 'text']
+
+function formatPlaybackTime(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds < 0) return '0:00'
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = Math.floor(seconds % 60)
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+}
+
+function RestrictedAudioPlayer({
+  src,
+  title,
+  onError,
+}: {
+  src: string
+  title: string
+  onError: () => void
+}) {
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    const handlePlay = () => setIsPlaying(true)
+    const handlePause = () => setIsPlaying(false)
+    const handleTimeUpdate = () => setCurrentTime(audio.currentTime)
+    const handleLoadedMetadata = () => setDuration(audio.duration || 0)
+    const handleEnded = () => {
+      setIsPlaying(false)
+      setCurrentTime(0)
+    }
+
+    audio.addEventListener('play', handlePlay)
+    audio.addEventListener('pause', handlePause)
+    audio.addEventListener('timeupdate', handleTimeUpdate)
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
+    audio.addEventListener('ended', handleEnded)
+    audio.addEventListener('error', onError)
+
+    return () => {
+      audio.removeEventListener('play', handlePlay)
+      audio.removeEventListener('pause', handlePause)
+      audio.removeEventListener('timeupdate', handleTimeUpdate)
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
+      audio.removeEventListener('ended', handleEnded)
+      audio.removeEventListener('error', onError)
+    }
+  }, [onError])
+
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    audio.pause()
+    audio.currentTime = 0
+    setIsPlaying(false)
+    setCurrentTime(0)
+    setDuration(0)
+  }, [src])
+
+  const togglePlayback = async () => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    if (audio.paused) {
+      await audio.play().catch(onError)
+      return
+    }
+
+    audio.pause()
+  }
+
+  const handleSeek = (event: ChangeEvent<HTMLInputElement>) => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    const nextTime = Number(event.target.value)
+    audio.currentTime = nextTime
+    setCurrentTime(nextTime)
+  }
+
+  return (
+    <div className="w-full h-full flex items-center justify-center">
+      <div className="bg-gray-800 rounded-2xl p-8 flex flex-col items-center gap-6 max-w-md w-full mx-4">
+        <Music className="h-20 w-20 text-gray-400" />
+        <p className="text-white text-lg font-medium text-center truncate w-full">
+          {title}
+        </p>
+
+        <audio
+          ref={audioRef}
+          src={src}
+          preload="metadata"
+          className="hidden"
+          onContextMenu={(event) => event.preventDefault()}
+        />
+
+        <div className="w-full space-y-3">
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              size="icon"
+              variant="secondary"
+              onClick={() => void togglePlayback()}
+              className="h-11 w-11 rounded-full"
+            >
+              {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
+            </Button>
+
+            <div className="flex-1 space-y-1">
+              <input
+                type="range"
+                min={0}
+                max={Math.max(duration, currentTime, 0)}
+                step="0.1"
+                value={Math.min(currentTime, duration || currentTime || 0)}
+                onChange={handleSeek}
+                className="w-full accent-white"
+                aria-label="Audio playback progress"
+              />
+              <div className="flex items-center justify-between text-xs text-gray-300">
+                <span>{formatPlaybackTime(currentTime)}</span>
+                <span>{formatPlaybackTime(duration)}</span>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-400">
+            Download is disabled for this preview.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function DocumentViewerFullscreen({
   isOpen,
   document,
@@ -77,6 +216,11 @@ export function DocumentViewerFullscreen({
 
   // Determine file type category
   const fileType = useMemo<FileTypeCategory>(() => {
+    const previewType = document?.preview_type
+    if (previewType && PREVIEW_TYPE_OVERRIDES.includes(previewType as FileTypeCategory)) {
+      return previewType as FileTypeCategory
+    }
+
     const fileName = document?.file_name || document?.name
     const mimeType = document?.mime_type || document?.file_type
     return getFileTypeCategory(fileName, mimeType)
@@ -111,7 +255,7 @@ export function DocumentViewerFullscreen({
         }
       }
     }
-  }, [isOpen, onClose, onDownload])
+  }, [hideDownload, isOpen, onClose, onDownload])
 
   // Reset content error when URL changes
   useEffect(() => {
@@ -271,22 +415,31 @@ export function DocumentViewerFullscreen({
         )}
 
         {showContent && fileType === 'audio' && (
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="bg-gray-800 rounded-2xl p-8 flex flex-col items-center gap-6 max-w-md w-full mx-4">
-              <Music className="h-20 w-20 text-gray-400" />
-              <p className="text-white text-lg font-medium text-center truncate w-full">
-                {document?.file_name || document?.name || 'Audio File'}
-              </p>
-              <audio
-                src={viewerUrl}
-                controls
-                className="w-full"
-                onError={() => setContentError(true)}
-              >
-                Your browser does not support audio playback.
-              </audio>
+          hideDownload ? (
+            <RestrictedAudioPlayer
+              src={viewerUrl}
+              title={document?.file_name || document?.name || 'Audio File'}
+              onError={() => setContentError(true)}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="bg-gray-800 rounded-2xl p-8 flex flex-col items-center gap-6 max-w-md w-full mx-4">
+                <Music className="h-20 w-20 text-gray-400" />
+                <p className="text-white text-lg font-medium text-center truncate w-full">
+                  {document?.file_name || document?.name || 'Audio File'}
+                </p>
+                <audio
+                  src={viewerUrl}
+                  controls
+                  controlsList="nodownload"
+                  className="w-full"
+                  onError={() => setContentError(true)}
+                >
+                  Your browser does not support audio playback.
+                </audio>
+              </div>
             </div>
-          </div>
+          )
         )}
 
         {showContent && fileType === 'excel' && (
@@ -311,7 +464,7 @@ export function DocumentViewerFullscreen({
           const wm = watermarkProp || document?.watermark
           if (!wm?.viewer_email) return null
           const line1 = wm.viewer_email
-          const line2 = wm.entity_name || wm.viewer_name || ''
+          const line2 = wm.viewer_name || wm.entity_name || ''
           return (
             <div
               className="absolute inset-0 pointer-events-none overflow-hidden select-none"

@@ -3,6 +3,11 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { applyPdfWatermark } from '@/lib/documents/pdf-watermark'
 import { applyImageWatermark } from '@/lib/documents/image-watermark'
+import {
+  convertOfficePreviewToPdf,
+  getPreviewPdfFileName,
+  isOfficePreviewConvertible,
+} from '@/lib/gotenberg/office-preview'
 import { readActivePersonaCookieValues, resolveActiveInvestorLink } from '@/lib/kyc/active-investor-link'
 import crypto from 'crypto'
 
@@ -196,11 +201,13 @@ export async function GET(
       entity_name: entityName,
     }
 
+    const isOfficePreview = mode === 'preview' && isOfficePreviewConvertible(document.file_name, getMimeType(document.file_name))
     const fileType = isPdf(document.file_name) ? 'pdf'
       : isImage(document.file_name) ? 'image'
       : 'other'
 
-    const accessMethod = fileType === 'pdf' ? 'watermarked_pdf'
+    const accessMethod = isOfficePreview ? 'office_preview_pdf'
+      : fileType === 'pdf' ? 'watermarked_pdf'
       : fileType === 'image' ? 'watermarked_image'
       : 'proxied_binary'
 
@@ -253,12 +260,43 @@ export async function GET(
     const rawBytes = new Uint8Array(await fileBlob.arrayBuffer())
     const disposition = mode === 'download' ? 'attachment' : 'inline'
     const safeFileName = (document.file_name || 'document').replace(/[^\w.\-_ ]/g, '_')
+    const previewPdfFileName = getPreviewPdfFileName(document.file_name)
+
+    if (isOfficePreview) {
+      try {
+        const previewPdfBytes = await convertOfficePreviewToPdf({
+          bytes: rawBytes,
+          fileName: document.file_name || 'document',
+          mimeType: getMimeType(document.file_name),
+        })
+
+        return new Response(Buffer.from(previewPdfBytes), {
+          headers: {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `inline; filename="${previewPdfFileName}"`,
+            'Content-Length': String(previewPdfBytes.byteLength),
+            'Cache-Control': 'no-store',
+            'X-Watermark-Email': user.email || '',
+            'X-Watermark-Entity': entityName || '',
+            'X-Watermark-Name': profile?.display_name || '',
+            'X-Document-Id': document.id,
+          },
+        })
+      } catch (error) {
+        console.error('Deal Office preview conversion failed:', {
+          document_id: document.id,
+          file_key: document.file_key,
+          error,
+        })
+        return NextResponse.json({ error: 'Failed to generate document preview' }, { status: 500 })
+      }
+    }
 
     // --- PDF: watermark then stream ---
     if (fileType === 'pdf') {
       const watermarkedBytes = await applyPdfWatermark(rawBytes, {
         line1: user.email || 'Unknown',
-        line2: entityName || undefined,
+        line2: profile?.display_name || undefined,
       })
 
       return new Response(Buffer.from(watermarkedBytes), {
@@ -279,7 +317,7 @@ export async function GET(
     if (fileType === 'image') {
       const watermarkedBuffer = await applyImageWatermark(rawBytes, {
         email: user.email || 'Unknown',
-        entityName: entityName || undefined,
+        entityName: profile?.display_name || undefined,
       })
       const watermarkedBytes = new Uint8Array(watermarkedBuffer)
 

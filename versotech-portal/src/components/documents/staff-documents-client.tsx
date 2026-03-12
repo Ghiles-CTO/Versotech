@@ -47,6 +47,7 @@ import { RenameFolderDialog } from './rename-folder-dialog'
 import { RenameDocumentDialog } from './rename-document-dialog'
 import { DocumentFolder } from '@/types/documents'
 import { parseVehicleHierarchy, VehicleNode } from '@/lib/documents/vehicle-hierarchy'
+import { downloadFileFromUrl } from '@/lib/browser-download'
 import { toast } from 'sonner'
 import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from './DocumentViewerFullscreen'
@@ -1696,7 +1697,8 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
         const data = await response.json()
         const downloadUrl = data.url || data.download_url
         if (downloadUrl) {
-          window.open(downloadUrl, '_blank')
+          const doc = documents.find(item => item.id === documentId)
+          await downloadFileFromUrl(downloadUrl, doc?.name || 'document')
           toast.success('Download started')
         } else {
           toast.error('No download URL in response')

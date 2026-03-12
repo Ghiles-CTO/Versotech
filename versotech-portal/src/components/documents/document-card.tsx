@@ -45,6 +45,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { DocumentService } from '@/services/document.service'
+import { downloadFileFromUrl } from '@/lib/browser-download'
 
 interface DocumentCardProps {
   document: Document
@@ -150,47 +152,21 @@ export function DocumentCard({
 }: DocumentCardProps) {
   const [isDownloading, setIsDownloading] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const displayName = document.file_name || (document as any).name || 'Untitled Document'
 
   const handleDownload = async () => {
     setIsDownloading(true)
 
     try {
-      const response = await fetch(`/api/documents/${document.id}/download`)
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          toast.error('Document not found or access denied')
-        } else if (response.status === 401) {
-          toast.error('Please sign in to download documents')
-        } else {
-          toast.error('Failed to generate download link')
-        }
-        return
-      }
-
-      const { download_url, watermark, expires_in_seconds } = await response.json()
-
-      if (watermark) {
-        toast.info(`Document will be watermarked with: ${watermark.downloaded_by}`, {
-          duration: 5000,
-        })
-      }
-
-      window.open(download_url, '_blank')
-
-      toast.success(
-        `Download link generated. Expires in ${Math.floor(expires_in_seconds / 60)} minutes`,
-        { duration: 5000 }
-      )
+      const { download_url } = await DocumentService.getDownloadUrl(document.id)
+      await downloadFileFromUrl(download_url, displayName)
+      toast.success('Download started')
     } catch (error) {
       toast.error('Failed to download document. Please try again.')
     } finally {
       setIsDownloading(false)
     }
   }
-
-  // Handle both file_name and name (for different document types)
-  const displayName = document.file_name || (document as any).name || 'Untitled Document'
 
   const formattedSize = formatFileSize(document.file_size_bytes)
   const formattedType = formatDocumentType(document.type)

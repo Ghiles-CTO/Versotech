@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { downloadFileFromUrl } from '@/lib/browser-download'
 import { FileText, ExternalLink, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -107,13 +108,31 @@ export function DealSubscriptionsTab({ dealId }: DealSubscriptionsTabProps) {
     }).format(amount)
   }
 
-  const handleViewDetails = (subscription: SubscriptionWithDocuments) => {
+  const handleViewDetails = async (subscription: SubscriptionWithDocuments) => {
     // First try to open the formal subscription if it exists
     if ((subscription as any).subscription_id) {
       window.open(`/versotech_main/subscriptions/${(subscription as any).subscription_id}`, '_blank')
     } else if (subscription.pack_document_id) {
-      // Otherwise, if there's a subscription pack, download it
-      window.open(`/api/documents/${subscription.pack_document_id}/download`, '_blank')
+      try {
+        const response = await fetch(`/api/documents/${subscription.pack_document_id}/download`)
+        if (!response.ok) {
+          throw new Error('Failed to download subscription pack')
+        }
+
+        const data = await response.json()
+        const downloadUrl = data.url || data.download_url
+        if (!downloadUrl) {
+          throw new Error('No download link available')
+        }
+
+        await downloadFileFromUrl(
+          downloadUrl,
+          `subscription-pack-${subscription.id}.pdf`
+        )
+        toast.success('Subscription pack downloaded')
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Failed to download subscription pack')
+      }
     } else {
       // No converted subscription and no pack yet
       toast.info('This subscription has not been converted to a formal commitment yet, and no subscription pack has been generated.')

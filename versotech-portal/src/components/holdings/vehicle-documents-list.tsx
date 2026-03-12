@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { FileText, Download, Eye } from 'lucide-react'
 import { DocumentService } from '@/services/document.service'
+import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
+import { downloadFileFromUrl } from '@/lib/browser-download'
 import { toast } from 'sonner'
 
 interface Document {
@@ -25,19 +27,19 @@ interface VehicleDocumentsListProps {
 export function VehicleDocumentsList({ documents }: VehicleDocumentsListProps) {
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [previewingId, setPreviewingId] = useState<string | null>(null)
+  const [previewDocument, setPreviewDocument] = useState<(Document & { preview_type?: string | null }) | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewError, setPreviewError] = useState<string | null>(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   const handleDownload = async (doc: Document) => {
     try {
       setDownloadingId(doc.id)
       const { download_url } = await DocumentService.getDownloadUrl(doc.id)
-
-      // Trigger download
-      const link = document.createElement('a')
-      link.href = download_url
-      link.download = doc.name || doc.file_key?.split('/').pop() || 'document'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      await downloadFileFromUrl(
+        download_url,
+        doc.name || doc.file_key?.split('/').pop() || 'document'
+      )
 
       toast.success('Download started')
     } catch (error: any) {
@@ -51,18 +53,31 @@ export function VehicleDocumentsList({ documents }: VehicleDocumentsListProps) {
   const handlePreview = async (doc: Document) => {
     try {
       setPreviewingId(doc.id)
-      const { download_url } = await DocumentService.getPreviewUrl(doc.id)
-
-      // Open preview in new tab
-      window.open(download_url, '_blank')
-
-      toast.success('Opening preview')
+      setPreviewDocument(doc)
+      setPreviewUrl(null)
+      setPreviewError(null)
+      setPreviewOpen(true)
+      const response = await DocumentService.getPreviewUrl(doc.id)
+      setPreviewDocument((current) => current ? {
+        ...current,
+        preview_type: response.document?.type || null,
+      } : current)
+      setPreviewUrl(response.download_url)
     } catch (error: any) {
       console.error('Preview error:', error)
-      toast.error(error.message || 'Failed to preview document')
+      const errorMessage = error.message || 'Failed to preview document'
+      setPreviewError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setPreviewingId(null)
     }
+  }
+
+  const closePreview = () => {
+    setPreviewOpen(false)
+    setPreviewDocument(null)
+    setPreviewUrl(null)
+    setPreviewError(null)
   }
 
   return (
@@ -134,6 +149,20 @@ export function VehicleDocumentsList({ documents }: VehicleDocumentsListProps) {
           </div>
         )}
       </CardContent>
+      <DocumentViewerFullscreen
+        isOpen={previewOpen}
+        document={previewDocument ? {
+          id: previewDocument.id,
+          name: previewDocument.name,
+          file_name: previewDocument.name || previewDocument.file_key?.split('/').pop() || 'document',
+          type: previewDocument.type,
+        } : null}
+        previewUrl={previewUrl}
+        isLoading={previewingId !== null}
+        error={previewError}
+        onClose={closePreview}
+        onDownload={() => previewDocument && handleDownload(previewDocument)}
+      />
     </Card>
   )
 }

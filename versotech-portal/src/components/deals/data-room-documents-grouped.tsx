@@ -4,9 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   FileText,
-  Download,
   ExternalLink,
-  Loader2,
   ChevronRight,
   ChevronDown,
   Folder,
@@ -17,7 +15,6 @@ import {
 import { DataRoomDocument } from './data-room-documents'
 import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
-import { DocumentService } from '@/services/document.service'
 
 interface DataRoomDocumentsGroupedProps {
   documents: DataRoomDocument[]
@@ -38,7 +35,6 @@ const getFolderStyle = (folderName: string) => {
 }
 
 export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGroupedProps) {
-  const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
 
   // Document viewer hook
@@ -94,42 +90,6 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
       file_name: doc.file_name,
       name: doc.file_name,
     }, doc.deal_id)
-  }
-
-  const handleDownload = async (doc: DataRoomDocument) => {
-    setDownloadingId(doc.id)
-
-    try {
-      // If it's an external link, just open it directly
-      if (doc.external_link) {
-        window.open(doc.external_link, '_blank', 'noopener,noreferrer')
-        setDownloadingId(null)
-        return
-      }
-
-      if (!doc.file_key) {
-        throw new Error('No file available for download')
-      }
-
-      // Use DocumentService for secure download (handles watermarked PDF blobs)
-      const data = await DocumentService.getDealDocumentDownloadUrl(doc.deal_id, doc.id)
-
-      if (data.download_url.startsWith('blob:')) {
-        // Watermarked PDF: trigger download via anchor element
-        const a = window.document.createElement('a')
-        a.href = data.download_url
-        a.download = doc.file_name || 'document.pdf'
-        a.click()
-        setTimeout(() => URL.revokeObjectURL(data.download_url), 1000)
-      } else {
-        window.open(data.download_url, '_blank', 'noopener,noreferrer')
-      }
-    } catch (err) {
-      console.error('Download error:', err)
-      alert(err instanceof Error ? err.message : 'Failed to download document')
-    } finally {
-      setDownloadingId(null)
-    }
   }
 
   const getFileIcon = (fileName: string) => {
@@ -205,27 +165,17 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
                       Preview
                     </Button>
                   )}
-                  <Button
-                    onClick={() => handleDownload(doc)}
-                    disabled={downloadingId === doc.id}
-                    variant="ghost"
-                    size="sm"
-                    className="text-amber-700 hover:text-amber-800 hover:bg-amber-100"
-                  >
-                    {downloadingId === doc.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : doc.external_link ? (
-                      <>
-                        <ExternalLink className="h-4 w-4 mr-1.5" />
-                        View
-                      </>
-                    ) : (
-                      <>
-                        <Download className="h-4 w-4 mr-1.5" />
-                        Download
-                      </>
-                    )}
-                  </Button>
+                  {doc.external_link && (
+                    <Button
+                      onClick={() => window.open(doc.external_link!, '_blank', 'noopener,noreferrer')}
+                      variant="ghost"
+                      size="sm"
+                      className="text-amber-700 hover:text-amber-800 hover:bg-amber-100"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-1.5" />
+                      Open
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
@@ -299,27 +249,17 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
                           Preview
                         </Button>
                       )}
-                      <Button
-                        onClick={() => handleDownload(doc)}
-                        disabled={downloadingId === doc.id}
-                        variant="ghost"
-                        size="sm"
-                        className="text-slate-600 hover:text-blue-600 hover:bg-blue-50/50"
-                      >
-                        {downloadingId === doc.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : doc.external_link ? (
-                          <>
-                            <ExternalLink className="h-4 w-4 mr-1.5" />
-                            View
-                          </>
-                        ) : (
-                          <>
-                            <Download className="h-4 w-4 mr-1.5" />
-                            Download
-                          </>
-                        )}
-                      </Button>
+                      {doc.external_link && (
+                        <Button
+                          onClick={() => window.open(doc.external_link!, '_blank', 'noopener,noreferrer')}
+                          variant="ghost"
+                          size="sm"
+                          className="text-slate-600 hover:text-blue-600 hover:bg-blue-50/50"
+                        >
+                          <ExternalLink className="h-4 w-4 mr-1.5" />
+                          Open
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -338,6 +278,7 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
         error={previewError}
         onClose={closePreview}
         onDownload={downloadDocument}
+        hideDownload
         watermark={watermark}
       />
     </div>

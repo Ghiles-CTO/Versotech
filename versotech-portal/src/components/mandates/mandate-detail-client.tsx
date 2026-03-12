@@ -37,6 +37,8 @@ import { Input } from '@/components/ui/input'
 import Link from 'next/link'
 import { DealLogo } from '@/components/deals/deal-logo'
 import { formatDate, formatDateTime } from '@/lib/format'
+import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
+import type { DocumentReference } from '@/types/document-viewer.types'
 
 const statusColors: Record<string, string> = {
   draft: 'bg-white/10 text-foreground border border-white/20',
@@ -103,6 +105,12 @@ export function MandateDetailClient({
   const [sigDateFrom, setSigDateFrom] = useState('')
   const [sigDateTo, setSigDateTo] = useState('')
   const [downloading, setDownloading] = useState<string | null>(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewError, setPreviewError] = useState<string | null>(null)
+  const [previewDocument, setPreviewDocument] = useState<DocumentReference | null>(null)
+  const [previewSource, setPreviewSource] = useState<{ fileKey: string; fileName: string } | null>(null)
 
   // Create subscription map for journey tracking
   const subscriptionMap = new Map(
@@ -168,6 +176,22 @@ export function MandateDetailClient({
     sig.status === 'pending' || sig.status === 'sent'
   )
 
+  const closePreview = () => {
+    setPreviewOpen(false)
+    const urlToRevoke = previewUrl
+
+    setTimeout(() => {
+      if (urlToRevoke?.startsWith('blob:')) {
+        URL.revokeObjectURL(urlToRevoke)
+      }
+      setPreviewUrl(null)
+      setPreviewError(null)
+      setPreviewLoading(false)
+      setPreviewDocument(null)
+      setPreviewSource(null)
+    }, 300)
+  }
+
   // Handle document download/preview via API
   const handleDocumentAction = async (fileKey: string, fileName: string, mode: 'download' | 'preview') => {
     if (!fileKey) {
@@ -176,6 +200,23 @@ export function MandateDetailClient({
     }
 
     setDownloading(fileKey)
+    if (mode === 'preview') {
+      if (previewUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl)
+      }
+
+      setPreviewDocument({
+        id: fileKey,
+        file_name: fileName,
+        name: fileName,
+      })
+      setPreviewSource({ fileKey, fileName })
+      setPreviewOpen(true)
+      setPreviewLoading(true)
+      setPreviewError(null)
+      setPreviewUrl(null)
+    }
+
     try {
       console.log(`[Document ${mode}] Fetching: ${fileKey}`)
       const response = await fetch(
@@ -208,8 +249,7 @@ export function MandateDetailClient({
       const url = URL.createObjectURL(blob)
 
       if (mode === 'preview') {
-        // Open in new tab for preview
-        window.open(url, '_blank', 'noopener,noreferrer')
+        setPreviewUrl(url)
       } else {
         // Download
         const a = document.createElement('a')
@@ -221,11 +261,19 @@ export function MandateDetailClient({
       }
 
       // Clean up after a delay (allow time for download/preview)
-      setTimeout(() => URL.revokeObjectURL(url), 10000)
+      if (mode !== 'preview') {
+        setTimeout(() => URL.revokeObjectURL(url), 10000)
+      }
     } catch (err) {
       console.error('Document action error:', err)
+      if (mode === 'preview') {
+        setPreviewError('Failed to preview document')
+      }
       alert('Failed to access document. Please check your connection and try again.')
     } finally {
+      if (mode === 'preview') {
+        setPreviewLoading(false)
+      }
       setDownloading(null)
     }
   }
@@ -1292,6 +1340,20 @@ export function MandateDetailClient({
           )}
         </TabsContent>
       </Tabs>
+
+      <DocumentViewerFullscreen
+        isOpen={previewOpen}
+        document={previewDocument}
+        previewUrl={previewUrl}
+        isLoading={previewLoading}
+        error={previewError}
+        onClose={closePreview}
+        onDownload={() => {
+          if (previewSource) {
+            void handleDocumentAction(previewSource.fileKey, previewSource.fileName, 'download')
+          }
+        }}
+      />
     </div>
   )
 }

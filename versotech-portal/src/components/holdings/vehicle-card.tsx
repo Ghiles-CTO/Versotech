@@ -27,6 +27,7 @@ import {
   Calendar,
   TrendingDown
 } from 'lucide-react'
+import { downloadFileFromUrl } from '@/lib/browser-download'
 import { cn } from '@/lib/utils'
 import { SellPositionForm } from '@/components/investor/sell-position-form'
 
@@ -139,8 +140,9 @@ export function VehicleCard({
     try {
       const response = await fetch(`/api/documents/${doc.id}/download`)
       const data = await response.json()
-      if (data.url) {
-        window.open(data.url, '_blank')
+      const downloadUrl = data.url || data.download_url
+      if (downloadUrl) {
+        await downloadFileFromUrl(downloadUrl, doc.name || 'document')
       }
     } catch (error) {
       console.error('Download failed:', error)

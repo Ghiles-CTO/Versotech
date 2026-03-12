@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
 import { DocumentService } from '@/services/document.service'
 import { DocumentReference, DocumentError } from '@/types/document-viewer.types'
+import { downloadFileFromUrl, triggerBrowserDownload } from '@/lib/browser-download'
 import {
   PREVIEW_ERROR_MESSAGES,
   isPreviewableExtension,
@@ -113,6 +114,13 @@ export function useDocumentViewer() {
         : await DocumentService.getPreviewUrl(doc.id)
 
       // Set preview URL and watermark data (separate state to avoid race conditions)
+      setDocument((current) => {
+        if (!current) return current
+        return {
+          ...current,
+          preview_type: response.document?.type || null,
+        }
+      })
       setPreviewUrl(response.download_url)
       previewUrlRef.current = response.download_url
       setWatermark(response.watermark || null)
@@ -161,14 +169,14 @@ export function useDocumentViewer() {
   const downloadDocument = useCallback(async () => {
     const doc = documentRef.current
     if (!doc) return
+    const fileName = doc.file_name || doc.name || 'document.pdf'
+    const originalFileType = getFileTypeCategory(fileName, doc.mime_type)
+    const canReusePreviewBlob = originalFileType === 'pdf' || originalFileType === 'image'
 
     try {
       // For deal documents with a blob preview URL, reuse it (already watermarked)
-      if (dealIdRef.current && previewUrlRef.current?.startsWith('blob:')) {
-        const a = window.document.createElement('a')
-        a.href = previewUrlRef.current
-        a.download = doc.file_name || doc.name || 'document.pdf'
-        a.click()
+      if (dealIdRef.current && previewUrlRef.current?.startsWith('blob:') && canReusePreviewBlob) {
+        triggerBrowserDownload(previewUrlRef.current, fileName)
         return
       }
 
@@ -179,26 +187,22 @@ export function useDocumentViewer() {
           doc.id
         )
         if (response.download_url.startsWith('blob:')) {
-          const a = window.document.createElement('a')
-          a.href = response.download_url
-          a.download = doc.file_name || doc.name || 'document.pdf'
-          a.click()
+          triggerBrowserDownload(response.download_url, fileName)
           setTimeout(() => URL.revokeObjectURL(response.download_url), 1000)
           return
         }
-        window.open(response.download_url, '_blank')
+        await downloadFileFromUrl(response.download_url, fileName)
         return
       }
 
-      // Non-deal docs: use previewUrl if available
-      if (previewUrlRef.current) {
-        window.open(previewUrlRef.current, '_blank')
-        return
-      }
-
-      // Otherwise fetch download URL
+      // Non-deal docs should use the explicit download endpoint instead of the preview URL.
       const response = await DocumentService.getDownloadUrl(doc.id)
-      window.open(response.download_url, '_blank')
+      if (response.download_url.startsWith('blob:')) {
+        triggerBrowserDownload(response.download_url, fileName)
+        setTimeout(() => URL.revokeObjectURL(response.download_url), 1000)
+        return
+      }
+      await downloadFileFromUrl(response.download_url, fileName)
     } catch (err) {
       console.error('Failed to download document:', err)
 

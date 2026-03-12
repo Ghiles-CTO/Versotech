@@ -51,6 +51,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate } from '@/lib/format'
+import { downloadFileFromUrl } from '@/lib/browser-download'
 
 // ============================================================================
 // TYPES - Matches new comprehensive API response
@@ -298,7 +299,7 @@ export function LawyerDealClient({ data }: LawyerDealClientProps) {
       } else {
         const url = await fetchSignedUrl(doc.id)
         if (url) {
-          window.open(url, '_blank')
+          await downloadFileFromUrl(url, doc.name || 'document')
           toast.success('Document download started')
         }
       }

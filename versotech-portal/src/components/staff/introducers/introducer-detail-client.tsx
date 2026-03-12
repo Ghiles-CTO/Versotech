@@ -62,6 +62,8 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { formatCurrency, formatBps, formatDate } from '@/lib/format'
 import { statusStyles, kycStyles, getStatusStyle } from '@/lib/status-styles'
+import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
+import type { DocumentReference } from '@/types/document-viewer.types'
 
 type IntroducerDetail = {
   id: string
@@ -273,6 +275,12 @@ export function IntroducerDetailClient({
   const [dispatchDialogOpen, setDispatchDialogOpen] = useState(false)
   const [sendingAgreement, setSendingAgreement] = useState<string | null>(null)
   const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewError, setPreviewError] = useState<string | null>(null)
+  const [previewDocument, setPreviewDocument] = useState<DocumentReference | null>(null)
+  const [previewSource, setPreviewSource] = useState<{ pdfUrl: string; referenceNumber: string | null } | null>(null)
 
   // Handle PDF download from Supabase storage
   const handleDownloadPdf = async (pdfUrl: string, referenceNumber: string | null) => {
@@ -306,22 +314,56 @@ export function IntroducerDetailClient({
     }
   }
 
-  // Preview PDF in new tab
-  const handlePreviewPdf = async (pdfUrl: string) => {
+  const handleClosePreview = () => {
+    setPreviewOpen(false)
+    const urlToRevoke = previewUrl
+
+    setTimeout(() => {
+      if (urlToRevoke?.startsWith('blob:')) {
+        window.URL.revokeObjectURL(urlToRevoke)
+      }
+      setPreviewUrl(null)
+      setPreviewError(null)
+      setPreviewLoading(false)
+      setPreviewDocument(null)
+      setPreviewSource(null)
+    }, 300)
+  }
+
+  const handlePreviewPdf = async (pdfUrl: string, referenceNumber: string | null = null) => {
+    if (previewUrl?.startsWith('blob:')) {
+      window.URL.revokeObjectURL(previewUrl)
+    }
+
+    const fileName = pdfUrl.split('/').pop() || `${referenceNumber || 'agreement'}.pdf`
+    setPreviewDocument({
+      id: pdfUrl,
+      file_name: fileName,
+      name: fileName,
+      mime_type: 'application/pdf',
+      type: 'introducer_agreement',
+    })
+    setPreviewSource({ pdfUrl, referenceNumber })
+    setPreviewOpen(true)
+    setPreviewLoading(true)
+    setPreviewError(null)
+    setPreviewUrl(null)
+
     try {
-      // Fetch the file directly from our API
       const response = await fetch(`/api/storage/download?path=${encodeURIComponent(pdfUrl)}&bucket=deal-documents`)
       if (!response.ok) {
         throw new Error('Failed to load file')
       }
 
-      // Convert response to blob and open in new tab
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
-      window.open(url, '_blank')
+      setPreviewUrl(url)
     } catch (error) {
       console.error('Error previewing PDF:', error)
+      setPreviewError('Failed to preview PDF')
       toast.error('Failed to preview PDF')
+    } finally {
+      setPreviewLoading(false)
     }
   }
 
@@ -994,13 +1036,10 @@ export function IntroducerDetailClient({
                                           className="flex-1 text-blue-400 border-blue-400/30 hover:bg-blue-400/10"
                                           onClick={(e) => {
                                             e.stopPropagation()
-                                            // Preview in new tab
-                                            fetch(`/api/storage/download?path=${encodeURIComponent(feePlan.introducer_agreement!.pdf_url!)}&bucket=deal-documents`)
-                                              .then(res => res.blob())
-                                              .then(blob => {
-                                                const url = window.URL.createObjectURL(blob)
-                                                window.open(url, '_blank')
-                                              })
+                                            handlePreviewPdf(
+                                              feePlan.introducer_agreement!.pdf_url!,
+                                              feePlan.introducer_agreement!.reference_number
+                                            )
                                           }}
                                         >
                                           <Eye className="h-4 w-4 mr-1" />
@@ -1305,7 +1344,7 @@ export function IntroducerDetailClient({
                                 <DropdownMenuItem
                                   onClick={(e) => {
                                     e.stopPropagation()
-                                    handlePreviewPdf(agreement.pdf_url!)
+                                    handlePreviewPdf(agreement.pdf_url!, agreement.reference_number)
                                   }}
                                 >
                                   <Eye className="h-4 w-4 mr-2" />
@@ -1524,6 +1563,20 @@ export function IntroducerDetailClient({
           onSuccess={() => router.refresh()}
         />
       )}
+
+      <DocumentViewerFullscreen
+        isOpen={previewOpen}
+        document={previewDocument}
+        previewUrl={previewUrl}
+        isLoading={previewLoading}
+        error={previewError}
+        onClose={handleClosePreview}
+        onDownload={() => {
+          if (previewSource) {
+            void handleDownloadPdf(previewSource.pdfUrl, previewSource.referenceNumber)
+          }
+        }}
+      />
     </div>
   )
 }

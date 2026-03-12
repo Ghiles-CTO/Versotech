@@ -70,6 +70,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { downloadFileFromUrl } from '@/lib/browser-download'
 
 // Search result from server-side search API
 interface SearchResult {
@@ -1020,8 +1021,16 @@ function DocumentListRow({
         toast.error('Failed to generate download link')
         return
       }
-      const { download_url } = await response.json()
-      window.open(download_url, '_blank')
+      const data = await response.json()
+      const downloadUrl = data.url || data.download_url
+      if (!downloadUrl) {
+        toast.error('No download link available')
+        return
+      }
+      await downloadFileFromUrl(
+        downloadUrl,
+        document.file_name || document.name || 'document'
+      )
       toast.success('Download started')
     } catch {
       toast.error('Failed to download document')

@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
+import { downloadFileFromUrl } from '@/lib/browser-download'
 
 interface DocumentVersion {
   id: string
@@ -111,8 +112,16 @@ export function VersionHistorySheet({
         throw new Error('Failed to generate download link')
       }
 
-      const { download_url } = await response.json()
-      window.open(download_url, '_blank')
+      const data = await response.json()
+      const downloadUrl = data.url || data.download_url
+      if (!downloadUrl) {
+        throw new Error('No download URL returned')
+      }
+
+      await downloadFileFromUrl(
+        downloadUrl,
+        version.file_key.split('/').pop() || `${documentName}-v${version.version_number}`
+      )
 
       toast.success(`Downloading version ${version.version_number}`)
     } catch (err) {

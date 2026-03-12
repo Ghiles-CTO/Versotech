@@ -1,6 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { readActivePersonaCookieValues, resolveActiveInvestorLink } from '@/lib/kyc/active-investor-link'
+import {
+  convertOfficePreviewToPdf,
+  getPreviewPdfFileName,
+  isOfficePreviewConvertible,
+} from '@/lib/gotenberg/office-preview'
+
+function resolveDocumentBucket(
+  fileKey: string,
+  documentType: string | null,
+  subscriptionId: string | null
+) {
+  const documentsBucket = process.env.STORAGE_BUCKET_NAME || 'documents'
+  const dealDocumentsBucket = process.env.DEAL_DOCUMENTS_BUCKET || 'deal-documents'
+
+  if (
+    fileKey.startsWith('subscriptions/') ||
+    fileKey.startsWith('introducer-agreements/') ||
+    fileKey.startsWith('placement-agreements/')
+  ) {
+    return dealDocumentsBucket
+  }
+
+  if (fileKey.startsWith('documents/')) {
+    return documentsBucket
+  }
+
+  const dealDocumentTypes = ['subscription_draft', 'subscription_pack', 'subscription_final', 'deal_document']
+  if (dealDocumentTypes.includes(documentType || '') || subscriptionId) {
+    return dealDocumentsBucket
+  }
+
+  return documentsBucket
+}
 
 export async function GET(
   request: NextRequest,
@@ -9,6 +42,8 @@ export async function GET(
   const { id: documentId } = await params
 
   try {
+    const mode = request.nextUrl.searchParams.get('mode') || 'download'
+
     // Get authenticated user
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -33,6 +68,8 @@ export async function GET(
         { status: 404 }
       )
     }
+
+    const requestedFileKey = request.nextUrl.searchParams.get('file_key')
 
     // Use service client to fetch document (bypasses RLS for permission check)
     const serviceSupabase = createServiceClient()
@@ -60,6 +97,13 @@ export async function GET(
 
     // Permission check: Staff can access all documents, lawyers can access their deals, investors their own
     const isStaff = profile.role.startsWith('staff_') || profile.role === 'ceo'
+
+    if (requestedFileKey && !isStaff) {
+      return NextResponse.json(
+        { error: 'Version downloads are only available to staff' },
+        { status: 403 }
+      )
+    }
 
     if (!isStaff) {
       let hasAccess = false
@@ -232,33 +276,107 @@ export async function GET(
       }
     }
 
-    // Determine which bucket based on document type
-    // Subscription-related documents are stored in deal-documents bucket
-    const dealDocumentTypes = ['subscription_draft', 'subscription_pack', 'subscription_final', 'deal_document']
-    const bucket = dealDocumentTypes.includes(document.type) || document.subscription_id
-      ? 'deal-documents'
-      : (process.env.STORAGE_BUCKET_NAME || 'documents')
+    let resolvedFileKey = document.file_key
+    let resolvedMimeType = document.mime_type
+
+    if (requestedFileKey) {
+      const { data: versionRecord, error: versionError } = await serviceSupabase
+        .from('document_versions')
+        .select('file_key, mime_type')
+        .eq('document_id', documentId)
+        .eq('file_key', requestedFileKey)
+        .maybeSingle()
+
+      if (versionError || !versionRecord) {
+        return NextResponse.json(
+          { error: 'Document version not found' },
+          { status: 404 }
+        )
+      }
+
+      resolvedFileKey = versionRecord.file_key
+      resolvedMimeType = versionRecord.mime_type || document.mime_type
+    }
+
+    if (!resolvedFileKey) {
+      return NextResponse.json(
+        { error: 'Document file not found' },
+        { status: 404 }
+      )
+    }
+
+    const bucket = resolveDocumentBucket(
+      resolvedFileKey,
+      document.type,
+      document.subscription_id
+    )
+    const resolvedFileName = resolvedFileKey.split('/').pop() || document.name
+    const previewPdfFileName = getPreviewPdfFileName(resolvedFileName)
+
+    if (mode === 'preview' && isOfficePreviewConvertible(resolvedFileName, resolvedMimeType)) {
+      const { data: fileBlob, error: downloadError } = await serviceSupabase.storage
+        .from(bucket)
+        .download(resolvedFileKey)
+
+      if (downloadError || !fileBlob) {
+        console.error('Storage download failed during Office preview:', downloadError)
+        return NextResponse.json(
+          { error: 'Failed to fetch document preview from storage' },
+          { status: 500 }
+        )
+      }
+
+      try {
+        const rawBytes = new Uint8Array(await fileBlob.arrayBuffer())
+        const previewPdfBytes = await convertOfficePreviewToPdf({
+          bytes: rawBytes,
+          fileName: resolvedFileName,
+          mimeType: resolvedMimeType,
+        })
+
+        return new Response(Buffer.from(previewPdfBytes), {
+          headers: {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `inline; filename="${previewPdfFileName}"`,
+            'Content-Length': String(previewPdfBytes.byteLength),
+            'Cache-Control': 'no-store',
+          },
+        })
+      } catch (error) {
+        console.error('Office preview conversion failed:', {
+          document_id: document.id,
+          file_key: resolvedFileKey,
+          mime_type: resolvedMimeType,
+          error,
+        })
+
+        return NextResponse.json(
+          { error: 'Failed to generate document preview' },
+          { status: 500 }
+        )
+      }
+    }
 
     // Log document details for debugging
     console.log('Generating signed URL for document:', {
       id: document.id,
-      name: document.name,
-      file_key: document.file_key,
-      mime_type: document.mime_type,
+      name: resolvedFileName,
+      file_key: resolvedFileKey,
+      mime_type: resolvedMimeType,
       bucket: bucket
     })
 
     // Generate signed URL (expires in 1 hour)
     const { data: signedUrlData, error: signedUrlError} = await serviceSupabase.storage
       .from(bucket)
-      .createSignedUrl(document.file_key, 3600)
+      .createSignedUrl(resolvedFileKey, 3600)
 
     if (signedUrlError || !signedUrlData) {
       console.error('Signed URL generation error:', {
         error: signedUrlError,
         document_id: document.id,
-        file_key: document.file_key,
-        mime_type: document.mime_type
+        file_key: resolvedFileKey,
+        mime_type: resolvedMimeType
       })
 
       // Provide more specific error message
@@ -272,7 +390,7 @@ export async function GET(
             : errorMessage,
           details: {
             document_id: document.id,
-            file_name: document.name
+            file_name: resolvedFileName
           }
         },
         { status: isNotFound ? 404 : 500 }
@@ -283,8 +401,8 @@ export async function GET(
     return NextResponse.json({
       success: true,
       url: signedUrlData.signedUrl,  // Using 'url' as expected by DocumentViewer component
-      fileName: document.name,
-      mimeType: document.mime_type,
+      fileName: resolvedFileName,
+      mimeType: resolvedMimeType,
       expiresAt: new Date(Date.now() + 3600 * 1000).toISOString()
     })
 

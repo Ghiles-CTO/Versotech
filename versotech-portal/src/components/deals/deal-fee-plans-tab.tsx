@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, DollarSign, Edit, FileText, Users, Building2, Briefcase, CheckCircle, Clock, XCircle, FileSignature, Loader2, FileDown, Eye, Download } from 'lucide-react'
 import { toast } from 'sonner'
 import FeePlanEditModal from '@/components/fees/FeePlanEditModal'
+import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import { useRouter } from 'next/navigation'
 
 interface DealFeePlansTabProps {
@@ -20,6 +21,19 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
   const [selectedPlan, setSelectedPlan] = useState<any>(null)
   const [generatingAgreement, setGeneratingAgreement] = useState<string | null>(null)
   const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewError, setPreviewError] = useState<string | null>(null)
+  const [previewSourcePath, setPreviewSourcePath] = useState<string | null>(null)
+  const [previewReferenceNumber, setPreviewReferenceNumber] = useState<string | null>(null)
+  const [previewDocument, setPreviewDocument] = useState<{
+    id: string
+    name: string
+    file_name: string
+    mime_type: string
+    type: string
+  } | null>(null)
 
   // Handle PDF download from Supabase storage
   const handleDownloadPdf = async (pdfUrl: string, referenceNumber: string | null) => {
@@ -49,20 +63,54 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
     }
   }
 
-  // Handle PDF preview in new tab
-  const handlePreviewPdf = async (pdfUrl: string) => {
+  // Handle PDF preview in the fullscreen viewer
+  const handlePreviewPdf = async (pdfUrl: string, referenceNumber: string | null) => {
+    if (previewUrl?.startsWith('blob:')) {
+      window.URL.revokeObjectURL(previewUrl)
+    }
+
+    const fileName = pdfUrl.split('/').pop() || `${referenceNumber || 'agreement'}.pdf`
+    setPreviewSourcePath(pdfUrl)
+    setPreviewReferenceNumber(referenceNumber)
+    setPreviewDocument({
+      id: pdfUrl,
+      name: fileName,
+      file_name: fileName,
+      mime_type: 'application/pdf',
+      type: 'agreement'
+    })
+    setPreviewOpen(true)
+    setPreviewLoading(true)
+    setPreviewError(null)
+    setPreviewUrl(null)
+
     try {
       const response = await fetch(`/api/storage/download?path=${encodeURIComponent(pdfUrl)}&bucket=deal-documents`)
       if (!response.ok) {
         throw new Error('Failed to load file')
       }
       const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      window.open(url, '_blank')
+      setPreviewUrl(window.URL.createObjectURL(blob))
     } catch (error) {
       console.error('Error previewing PDF:', error)
-      toast.error('Failed to preview PDF')
+      const errorMessage = 'Failed to preview PDF'
+      setPreviewError(errorMessage)
+      toast.error(errorMessage)
+    } finally {
+      setPreviewLoading(false)
     }
+  }
+
+  const closePreview = () => {
+    setPreviewOpen(false)
+    if (previewUrl?.startsWith('blob:')) {
+      window.URL.revokeObjectURL(previewUrl)
+    }
+    setPreviewUrl(null)
+    setPreviewError(null)
+    setPreviewSourcePath(null)
+    setPreviewReferenceNumber(null)
+    setPreviewDocument(null)
   }
 
   // Get PDF URL from agreement (introducer or placement)
@@ -459,7 +507,7 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => handlePreviewPdf(pdfUrl)}
+                                  onClick={() => handlePreviewPdf(pdfUrl, referenceNumber)}
                                   className="text-blue-400 border-blue-400/30 hover:bg-blue-400/10"
                                 >
                                   <Eye className="h-4 w-4 mr-1" />
@@ -500,6 +548,20 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
         onSuccess={handleModalSuccess}
         feePlan={selectedPlan}
         dealId={dealId}
+      />
+
+      <DocumentViewerFullscreen
+        isOpen={previewOpen}
+        document={previewDocument}
+        previewUrl={previewUrl}
+        isLoading={previewLoading}
+        error={previewError}
+        onClose={closePreview}
+        onDownload={() => {
+          if (previewSourcePath) {
+            handleDownloadPdf(previewSourcePath, previewReferenceNumber)
+          }
+        }}
       />
     </div>
   )

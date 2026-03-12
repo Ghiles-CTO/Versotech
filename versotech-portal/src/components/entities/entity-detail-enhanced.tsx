@@ -66,6 +66,7 @@ import { FolderManager } from './folder-manager'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { downloadFileFromUrl } from '@/lib/browser-download'
 import { cn } from '@/lib/utils'
 import { useConfirmationDialog } from '@/hooks/use-confirmation-dialog'
 import { SubscriptionEditModal } from './subscription-edit-modal'
@@ -909,16 +910,17 @@ export function EntityDetailEnhanced({
 
   // Document preview now handled by useDocumentViewer hook
 
-  const handleDownloadDocument = useCallback(async (docId: string) => {
+  const handleDownloadDocument = useCallback(async (doc: EntityDocument) => {
     try {
-      const response = await fetch(`/api/documents/${docId}/download`)
+      const response = await fetch(`/api/documents/${doc.id}/download`)
       if (!response.ok) {
         throw new Error('Failed to get download URL')
       }
 
       const data = await response.json()
-      if (data.download_url) {
-        window.open(data.download_url, '_blank')
+      const downloadUrl = data.url || data.download_url
+      if (downloadUrl) {
+        await downloadFileFromUrl(downloadUrl, doc.file_name || doc.name || 'document')
       }
     } catch (error) {
       console.error('Failed to download document:', error)
@@ -2083,7 +2085,7 @@ export function EntityDetailEnhanced({
                                 variant="outline"
                                 size="sm"
                                 className="gap-2"
-                                onClick={() => handleDownloadDocument(doc.id)}
+                                onClick={() => handleDownloadDocument(doc)}
                               >
                                 <Download className="h-4 w-4" />
                                 Download
