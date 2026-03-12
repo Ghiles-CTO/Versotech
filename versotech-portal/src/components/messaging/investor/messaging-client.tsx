@@ -191,6 +191,7 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
             key={activeConversation.id}
             conversation={activeConversation}
             currentUserId={currentUserId}
+            supportDisplayMode="external"
             showAssistantBadge={false}
             showComplianceControls={false}
             onRead={() => markConversationRead(activeConversation.id)}

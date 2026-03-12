@@ -202,6 +202,7 @@ export async function GET(request: NextRequest) {
     let query = client
       .from('conversations')
       .select(selectColumns)
+      .is('archived_at', null)
       .order('last_message_at', { ascending: false, nullsFirst: false })
       .limit(fetchLimit)
 

@@ -9,6 +9,12 @@ import { Loader2, RefreshCw, MessageSquarePlus, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { applyConversationFilters, sortConversations, formatRelativeTime, getInitials, truncateText } from '@/lib/messaging'
 import { isAgentChatConversation } from '@/lib/compliance/agent-chat'
+import {
+  ACCOUNT_SUPPORT_AVATAR_URL,
+  ACCOUNT_SUPPORT_DISPLAY_NAME,
+  hasAccountSupportInboxAccess,
+  isAccountSupportConversationMetadata,
+} from '@/lib/messaging/account-support.shared'
 
 interface ConversationsSidebarProps {
   conversations: ConversationSummary[]
@@ -211,27 +217,43 @@ export function ConversationsSidebar({
               const agentName = typeof agentChat?.agent_name === 'string' ? agentChat.agent_name : null
               const agentAvatar = typeof agentChat?.agent_avatar_url === 'string' ? agentChat.agent_avatar_url : null
               const isAgentThread = isAgentChatConversation(conversation.metadata)
+              const isSupportConversation = isAccountSupportConversationMetadata(conversation.metadata)
 
               // Show the OTHER participant's avatar/name, not the current user's
               const otherParticipants = currentUserId
                 ? conversation.participants.filter(p => p.id !== currentUserId)
                 : conversation.participants
-              const displayParticipant = otherParticipants[0] || conversation.participants[0]
+              const counterpartyParticipants = isSupportConversation
+                ? otherParticipants.filter((participant) => !hasAccountSupportInboxAccess(participant.role))
+                : otherParticipants
+              const displayParticipant =
+                counterpartyParticipants[0] || otherParticipants[0] || conversation.participants[0]
 
               // For agent threads, always show agent identity regardless of staff/investor view
-              const displayName = (isAgentThread && agentName)
+              const displayName = (isSupportConversation && !canCreateConversation)
+                ? ACCOUNT_SUPPORT_DISPLAY_NAME
+                : (isAgentThread && agentName)
                 ? agentName
                 : (!canCreateConversation && (agentName || conversation.subject))
                   ? (agentName || conversation.subject || 'Compliance Team')
                   : (conversation.subject || 'Untitled Conversation')
-              const displayAvatarUrl = (isAgentThread && agentAvatar)
+              const displayAvatarUrl = (isSupportConversation && !canCreateConversation)
+                ? ACCOUNT_SUPPORT_AVATAR_URL
+                : (isAgentThread && agentAvatar)
                 ? agentAvatar
                 : displayParticipant?.avatarUrl
-              const displayAvatarName = (isAgentThread && agentName)
+              const displayAvatarName = (isSupportConversation && !canCreateConversation)
+                ? ACCOUNT_SUPPORT_DISPLAY_NAME
+                : (isAgentThread && agentName)
                 ? agentName
                 : (displayParticipant?.displayName || displayParticipant?.email || displayName)
+              const externalParticipantCount = conversation.participants.filter(
+                (participant) => !hasAccountSupportInboxAccess(participant.role)
+              ).length
               // For agent threads, count the virtual agent as a participant
-              const effectiveParticipantCount = isAgentThread
+              const effectiveParticipantCount = isSupportConversation
+                ? Math.max(externalParticipantCount + 1, 2)
+                : isAgentThread
                 ? Math.max(conversation.participants.length + 1, 2)
                 : conversation.participants.length
               

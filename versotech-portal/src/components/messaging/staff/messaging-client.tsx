@@ -411,6 +411,7 @@ export function MessagingClient({ initialConversations, currentUserId, canCreate
 	            key={activeConversation.id}
 	            conversation={activeConversation}
 	            currentUserId={currentUserId}
+	            supportDisplayMode={canCreateConversation ? 'default' : 'external'}
 	            showAssistantBadge={canCreateConversation && !hideAssistantBadge}
 	            showComplianceControls={canCreateConversation}
 	            onRead={() => markConversationRead(activeConversation.id)}

@@ -79,6 +79,7 @@ export default async function MessagesPage() {
       )
     `)
     .in('id', conversationIds)
+    .is('archived_at', null)
     .order('last_message_at', { ascending: false, nullsFirst: false })
     .limit(50)
 

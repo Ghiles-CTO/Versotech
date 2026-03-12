@@ -8,6 +8,7 @@ import {
   type PersonaIdentity,
 } from '@/lib/persona/active-persona'
 import {
+  ACCOUNT_SUPPORT_AVATAR_URL,
   ACCOUNT_SUPPORT_METADATA_TYPE,
   ACCOUNT_SUPPORT_OWNER_SCOPE,
   buildAccountSupportSubject,
@@ -30,6 +31,12 @@ type EnsureAccountSupportConversationResult = {
   created: boolean
   persona: AccountSupportPersona
   subject: string
+}
+
+const ACCOUNT_SUPPORT_BOOTSTRAP_SOURCE = 'account_support'
+
+function defaultSupportWelcomeMessage() {
+  return 'Welcome to Versotech. Feel free to ask any questions you have regarding the onboarding and investment lifecycle. We will get back to you as soon as we see your query.'
 }
 
 const ACCOUNT_SUPPORT_CONFIG: Record<
@@ -219,35 +226,22 @@ async function getExternalParticipantIds(
 }
 
 async function getSupportOwnerIds(supabase: any): Promise<string[]> {
-  const [
-    { data: profileOwners, error: profileError },
-    { data: ceoOwners, error: ceoError },
-  ] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('id')
-      .in('role', ['ceo', 'staff_admin']),
-    supabase
-      .from('ceo_users')
-      .select('user_id'),
-  ])
+  const { data: ownerRows, error: ownerError } = await supabase
+    .from('profiles')
+    .select('id')
+    .in('role', ['ceo', 'staff_admin'])
+    .is('deleted_at', null)
+    .order('role', { ascending: true })
+    .order('created_at', { ascending: true })
+    .limit(50)
 
-  if (profileError) {
-    throw new Error(profileError.message)
+  if (ownerError) {
+    throw new Error(ownerError.message)
   }
 
-  if (ceoError) {
-    throw new Error(ceoError.message)
-  }
-
-  return Array.from(
-    new Set(
-      [
-        ...(profileOwners || []).map((row: { id?: string | null }) => row.id),
-        ...(ceoOwners || []).map((row: { user_id?: string | null }) => row.user_id),
-      ].filter((id: unknown): id is string => typeof id === 'string' && id.length > 0)
-    )
-  )
+  return (ownerRows || [])
+    .map((row: { id?: string | null }) => row.id)
+    .filter((id: unknown): id is string => typeof id === 'string' && id.length > 0)
 }
 
 async function syncConversationParticipants(
@@ -315,6 +309,46 @@ function buildSupportMetadata(persona: AccountSupportPersona, entityName: string
   }
 }
 
+async function ensureSupportBootstrapMessage(supabase: any, conversationId: string) {
+  const { data: existingMessages, error: existingError } = await supabase
+    .from('messages')
+    .select('id, metadata')
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: true })
+    .limit(20)
+
+  if (existingError) {
+    throw new Error(existingError.message)
+  }
+
+  const hasBootstrapMessage = (existingMessages || []).some((message: any) => {
+    const metadata = asRecord(message?.metadata)
+    return metadata.source === ACCOUNT_SUPPORT_BOOTSTRAP_SOURCE && metadata.bootstrap === true
+  })
+
+  if (hasBootstrapMessage) {
+    return
+  }
+
+  const { error: insertError } = await supabase.from('messages').insert({
+    conversation_id: conversationId,
+    sender_id: null,
+    message_type: 'system',
+    body: defaultSupportWelcomeMessage(),
+    metadata: {
+      source: ACCOUNT_SUPPORT_BOOTSTRAP_SOURCE,
+      bootstrap: true,
+      assistant_name: ACCOUNT_SUPPORT_DISPLAY_NAME,
+      assistant_avatar_url: ACCOUNT_SUPPORT_AVATAR_URL,
+      support_sender: true,
+    },
+  })
+
+  if (insertError) {
+    throw new Error(insertError.message)
+  }
+}
+
 export async function ensureAccountSupportConversationForPersona(
   supabase: any,
   {
@@ -377,11 +411,31 @@ export async function ensureAccountSupportConversationForPersona(
       .single()
 
     if (createError) {
-      throw new Error(createError.message)
-    }
+      if (createError.code !== '23505') {
+        throw new Error(createError.message)
+      }
 
-    conversation = createdConversation
-    created = true
+      const { data: raceRows, error: raceError } = await supabase
+        .from('conversations')
+        .select('id, subject, metadata')
+        .contains('metadata', metadataLookup)
+        .is('archived_at', null)
+        .order('created_at', { ascending: true })
+        .limit(1)
+
+      if (raceError) {
+        throw new Error(raceError.message)
+      }
+
+      conversation = raceRows?.[0] ?? null
+
+      if (!conversation) {
+        throw new Error(createError.message)
+      }
+    } else {
+      conversation = createdConversation
+      created = true
+    }
   } else {
     const currentMetadata = asRecord(conversation.metadata)
     const needsUpdate =
@@ -408,6 +462,7 @@ export async function ensureAccountSupportConversationForPersona(
   }
 
   await syncConversationParticipants(supabase, conversation.id, participantIds)
+  await ensureSupportBootstrapMessage(supabase, conversation.id)
 
   return {
     conversationId: conversation.id,

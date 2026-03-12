@@ -6,6 +6,8 @@ export type AccountSupportPersonaType =
 
 export const ACCOUNT_SUPPORT_METADATA_TYPE = 'account_support'
 export const ACCOUNT_SUPPORT_OWNER_SCOPE = 'ceo_inbox'
+export const ACCOUNT_SUPPORT_DISPLAY_NAME = 'Verso Support'
+export const ACCOUNT_SUPPORT_AVATAR_URL = '/versotech-icon.png'
 
 const ACCOUNT_SUPPORT_PERSONA_TYPES = new Set<AccountSupportPersonaType>([
   'investor',
@@ -38,6 +40,14 @@ export function isAccountSupportConversationMetadata(metadata: unknown): boolean
   )
 }
 
+export function isAccountSupportSenderMetadata(metadata: unknown): boolean {
+  const record = asRecord(metadata)
+  return (
+    record.support_sender === true ||
+    (record.source === 'account_support' && typeof record.assistant_name === 'string')
+  )
+}
+
 export function buildAccountSupportSubject(entityName: string): string {
-  return `Verso Support / ${entityName}`
+  return `${ACCOUNT_SUPPORT_DISPLAY_NAME} / ${entityName}`
 }

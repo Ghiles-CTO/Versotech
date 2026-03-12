@@ -8,6 +8,11 @@ import { RefreshCw, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { applyConversationFilters, sortConversations, formatRelativeTime, getInitials, truncateText } from '@/lib/messaging'
 import { isAgentChatConversation } from '@/lib/compliance/agent-chat'
+import {
+  ACCOUNT_SUPPORT_AVATAR_URL,
+  ACCOUNT_SUPPORT_DISPLAY_NAME,
+  isAccountSupportConversationMetadata,
+} from '@/lib/messaging/account-support.shared'
 
 interface InvestorContactsProps {
   conversations: ConversationSummary[]
@@ -80,17 +85,20 @@ export function InvestorContacts({
               const metadata = (conversation.metadata as Record<string, any>) || {}
               const agentChat = (metadata.agent_chat as Record<string, any>) || {}
               const isAgentChat = isAgentChatConversation(metadata)
+              const isSupportConversation = isAccountSupportConversationMetadata(metadata)
               const agentName = typeof agentChat.agent_name === 'string' ? agentChat.agent_name : null
               const agentAvatarUrl = typeof agentChat.agent_avatar_url === 'string' ? agentChat.agent_avatar_url : null
 
               const otherParticipants = conversation.participants.filter(p => p.id !== currentUserId)
               const staffParticipant = otherParticipants.find(p => (p.role || '').startsWith('staff_') || p.role === 'ceo')
 
-              const contactName = isAgentChat
+              const contactName = isSupportConversation
+                ? ACCOUNT_SUPPORT_DISPLAY_NAME
+                : isAgentChat
                 ? (agentName || conversation.subject || 'Verso Team')
                 : (staffParticipant?.displayName || staffParticipant?.email || conversation.subject || 'Verso Team')
 
-              const additionalParticipants = otherParticipants.length > 1
+              const additionalParticipants = !isSupportConversation && otherParticipants.length > 1
                 ? ` +${otherParticipants.length - 1}`
                 : ''
               const timestamp = conversation.lastMessageAt || conversation.createdAt
@@ -114,7 +122,9 @@ export function InvestorContacts({
                         <Avatar className="h-11 w-11 transition-transform duration-200 group-hover:scale-110">
                           {isAgentChat && agentAvatarUrl ? (
                             <AvatarImage src={agentAvatarUrl} alt={contactName} />
-                          ) : staffParticipant?.avatarUrl ? (
+                          ) : isSupportConversation ? (
+                            <AvatarImage src={ACCOUNT_SUPPORT_AVATAR_URL} alt={contactName} />
+                          ) : !isSupportConversation && staffParticipant?.avatarUrl ? (
                             <AvatarImage src={staffParticipant.avatarUrl} alt={contactName} />
                           ) : null}
                           <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
@@ -154,7 +164,7 @@ export function InvestorContacts({
                           {truncateText(conversation.preview || conversation.latestMessage?.body || 'Start the conversation', 60)}
                         </p>
                         
-                        {staffParticipant?.role && (
+                        {!isSupportConversation && staffParticipant?.role && (
                           <div className="flex items-center gap-2 mt-1.5">
                             <Badge variant="outline" className="text-[10px] capitalize px-1.5 py-0">
                               {staffParticipant.role.replace('staff_', '')}

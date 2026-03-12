@@ -40,6 +40,13 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
+import {
+  ACCOUNT_SUPPORT_AVATAR_URL,
+  ACCOUNT_SUPPORT_DISPLAY_NAME,
+  hasAccountSupportInboxAccess,
+  isAccountSupportConversationMetadata,
+  isAccountSupportSenderMetadata,
+} from '@/lib/messaging/account-support.shared'
 
 // Module-level tracker for pending agent replies. Survives component unmount/remount
 // so the new instance can pick up polling where the old one left off.
@@ -51,6 +58,7 @@ const pendingAgentReplies = new Map<
 interface ConversationViewProps {
   conversation: ConversationSummary
   currentUserId: string
+  supportDisplayMode?: 'default' | 'external'
   showAssistantBadge?: boolean
   showComplianceControls?: boolean
   onRead?: () => void
@@ -62,6 +70,7 @@ interface ConversationViewProps {
 export function ConversationView({
   conversation,
   currentUserId,
+  supportDisplayMode = 'default',
   showAssistantBadge = true,
   showComplianceControls = true,
   onRead,
@@ -95,6 +104,13 @@ export function ConversationView({
   const [typingUsers, setTypingUsers] = useState<Map<string, { name: string; expiresAt: number }>>(new Map())
   const lastTypingBroadcastRef = useRef(0)
   const typingChannelRef = useRef<ReturnType<ReturnType<typeof getClientSupabase>['channel']> | null>(null)
+  const isSupportConversation = isAccountSupportConversationMetadata(conversation.metadata)
+  const isExternalSupportView =
+    supportDisplayMode === 'external' &&
+    isSupportConversation
+  const isSupportInboxMember = hasAccountSupportInboxAccess(
+    conversation.participants.find((participant) => participant.id === currentUserId)?.role
+  )
 
   useEffect(() => {
     // Must explicitly set to true on mount so that React Strict Mode's
@@ -117,7 +133,10 @@ export function ConversationView({
         if (userId === currentUserId) return
         setTypingUsers(prev => {
           const next = new Map(prev)
-          next.set(userId, { name: userName, expiresAt: Date.now() + 3000 })
+          next.set(userId, {
+            name: isExternalSupportView ? ACCOUNT_SUPPORT_DISPLAY_NAME : userName,
+            expiresAt: Date.now() + 3000,
+          })
           return next
         })
       })
@@ -129,7 +148,7 @@ export function ConversationView({
       typingChannelRef.current = null
       supabase.removeChannel(channel)
     }
-  }, [conversation.id, currentUserId])
+  }, [conversation.id, currentUserId, isExternalSupportView])
 
   // Auto-clear expired typing indicators
   useEffect(() => {
@@ -235,6 +254,36 @@ export function ConversationView({
   }, [conversation.metadata])
 
   const displayParticipants = useMemo(() => {
+    if (isSupportConversation) {
+      const externalParticipants = conversation.participants.filter(
+        (participant) =>
+          !hasAccountSupportInboxAccess(participant.role) &&
+          (!isExternalSupportView || participant.id !== currentUserId)
+      )
+
+      if (!isExternalSupportView) {
+        const nonSelfParticipants = conversation.participants.filter((participant) => participant.id !== currentUserId)
+        return externalParticipants.length > 0 ? externalParticipants : nonSelfParticipants
+      }
+
+      return [
+        {
+          id: 'account-support',
+          displayName: ACCOUNT_SUPPORT_DISPLAY_NAME,
+          email: null,
+          role: 'staff_admin',
+          avatarUrl: ACCOUNT_SUPPORT_AVATAR_URL,
+          participantRole: 'member',
+          joinedAt: conversation.createdAt,
+          lastReadAt: null,
+          lastNotifiedAt: null,
+          isMuted: false,
+          isPinned: false,
+        },
+        ...externalParticipants,
+      ]
+    }
+
     const nonSelfParticipants = conversation.participants.filter((participant) => participant.id !== currentUserId)
     if (nonSelfParticipants.length > 0) return nonSelfParticipants
     if (!agentChatMeta.agentName) return conversation.participants
@@ -254,10 +303,15 @@ export function ConversationView({
         isPinned: false,
       },
     ]
-  }, [agentChatMeta.agentAvatarUrl, agentChatMeta.agentName, conversation.createdAt, conversation.participants, currentUserId])
+  }, [agentChatMeta.agentAvatarUrl, agentChatMeta.agentName, conversation.createdAt, conversation.participants, currentUserId, isExternalSupportView, isSupportConversation])
 
   // Total participant count includes self + virtual agent for display purposes
-  const totalParticipantCount = agentChatMeta.agentName
+  const totalParticipantCount = isSupportConversation
+    ? Math.max(
+        conversation.participants.filter((participant) => !hasAccountSupportInboxAccess(participant.role)).length + 1,
+        2
+      )
+    : agentChatMeta.agentName
     ? Math.max(conversation.participants.length + 1, 2)
     : conversation.participants.length
 
@@ -301,9 +355,13 @@ export function ConversationView({
     const map = new Map<string, { name: string, email: string | null }>()
     conversation.participants.forEach(participant => {
       if (participant.id) {
+        const isSupportParticipant =
+          isSupportConversation && hasAccountSupportInboxAccess(participant.role)
         map.set(participant.id, {
-          name: participant.displayName || participant.email || 'Unknown User',
-          email: participant.email
+          name: isSupportParticipant
+            ? ACCOUNT_SUPPORT_DISPLAY_NAME
+            : participant.displayName || participant.email || 'Unknown User',
+          email: isSupportParticipant ? null : participant.email
         })
       }
     })
@@ -312,7 +370,7 @@ export function ConversationView({
       map.set(currentUserId, { name: 'You', email: null })
     }
     return map
-  }, [conversation.participants, currentUserId])
+  }, [conversation.participants, currentUserId, isSupportConversation])
 
   // Group messages for better visual flow
   const groupedMessages = useMemo(() => {
@@ -564,7 +622,11 @@ export function ConversationView({
             {/* Conversation Info */}
             <div className="flex-1">
               <h3 className="text-base font-semibold text-foreground">
-                {conversation.subject || 'Untitled Conversation'}
+                {isExternalSupportView
+                  ? ACCOUNT_SUPPORT_DISPLAY_NAME
+                  : isSupportConversation
+                  ? (conversation.subject || ACCOUNT_SUPPORT_DISPLAY_NAME)
+                  : (conversation.subject || 'Untitled Conversation')}
               </h3>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Users className="h-3 w-3" />
@@ -657,7 +719,12 @@ export function ConversationView({
                   typeof metadata.assistant_name === 'string' ? metadata.assistant_name : null
                 const assistantAvatarUrl =
                   typeof metadata.assistant_avatar_url === 'string' ? metadata.assistant_avatar_url : null
-                const senderInfo = message.sender?.displayName
+                const isSupportSender =
+                  isSupportConversation &&
+                  (isAccountSupportSenderMetadata(metadata) || hasAccountSupportInboxAccess(message.sender?.role))
+                const senderInfo = isSupportSender
+                  ? { name: ACCOUNT_SUPPORT_DISPLAY_NAME, email: null }
+                  : message.sender?.displayName
                   ? { name: message.sender.displayName, email: message.sender.email }
                   : participantsLookup.get(message.senderId || '')
                 const displayName = senderInfo?.name || assistantName || (isAssistantMessage ? 'Compliance Assistant' : 'Unknown User')
@@ -699,7 +766,7 @@ export function ConversationView({
                       senderName={displayName}
                       assistantName={isAssistantMessage ? assistantName || 'Compliance Assistant' : null}
                       senderEmail={senderInfo?.email}
-                      senderAvatarUrl={message.sender?.avatarUrl ?? assistantAvatarUrl ?? null}
+                      senderAvatarUrl={isSupportSender ? ACCOUNT_SUPPORT_AVATAR_URL : (message.sender?.avatarUrl ?? assistantAvatarUrl ?? null)}
                       isSelf={isSelf}
                       isGroupStart={message.isGroupStart}
                       isGroupEnd={message.isGroupEnd}
@@ -734,6 +801,11 @@ export function ConversationView({
 
       {/* Enhanced Composer (WhatsApp/Slack style) */}
       <div className={cn("relative z-10 border-t border-border bg-card px-6 py-4", typingUsers.size > 0 && "border-t-0")}>
+        {isSupportConversation && isSupportInboxMember && (
+          <div className="mb-2 text-xs font-medium text-muted-foreground">
+            Replying as {ACCOUNT_SUPPORT_DISPLAY_NAME}
+          </div>
+        )}
         <div className="flex items-end gap-2">
           {/* Message Input Container */}
           <div className="flex-1 relative">

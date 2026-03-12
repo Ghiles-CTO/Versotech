@@ -7,6 +7,18 @@ import {
   isAgentChatConversation,
   markAgentChatFirstContact,
 } from '@/lib/compliance/agent-chat'
+import {
+  ACCOUNT_SUPPORT_AVATAR_URL,
+  ACCOUNT_SUPPORT_DISPLAY_NAME,
+  hasAccountSupportInboxAccess,
+  isAccountSupportConversationMetadata,
+} from '@/lib/messaging/account-support.shared'
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {}
+}
 
 // Get messages for a conversation
 export async function GET(
@@ -102,6 +114,37 @@ export async function POST(
       return NextResponse.json({ error: 'Conversation not found' }, { status: 404 })
     }
 
+    const isSupportConversation = isAccountSupportConversationMetadata(conversation.metadata)
+    let outgoingMetadata = asRecord(messageMetadata)
+
+    if (isSupportConversation && isStaff) {
+      const { data: senderProfile, error: senderProfileError } = await serviceSupabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .maybeSingle()
+
+      if (senderProfileError) {
+        console.error('Error loading support sender role:', senderProfileError)
+        return NextResponse.json({ error: 'Failed to validate support sender' }, { status: 500 })
+      }
+
+      if (!hasAccountSupportInboxAccess(senderProfile?.role)) {
+        return NextResponse.json({ error: 'Only Verso Support can reply in this conversation' }, { status: 403 })
+      }
+
+      outgoingMetadata = {
+        ...outgoingMetadata,
+        source:
+          typeof outgoingMetadata.source === 'string' && outgoingMetadata.source
+            ? outgoingMetadata.source
+            : 'account_support',
+        support_sender: true,
+        assistant_name: ACCOUNT_SUPPORT_DISPLAY_NAME,
+        assistant_avatar_url: ACCOUNT_SUPPORT_AVATAR_URL,
+      }
+    }
+
     // Create message (RLS will enforce access control)
     if (isStaff) {
       const { data: existingParticipant } = await serviceSupabase
@@ -131,7 +174,7 @@ export async function POST(
         body,
         file_key,
         reply_to_message_id,
-        metadata: messageMetadata ?? {}
+        metadata: outgoingMetadata
       })
       .select(`
         *,
