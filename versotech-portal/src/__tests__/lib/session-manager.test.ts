@@ -4,6 +4,7 @@ import { sessionManager } from '@/lib/session-manager'
 
 const LAST_ACTIVITY_KEY = 'verso.session.lastActivityAt'
 const LOGOUT_EVENT_KEY = 'verso.session.logout'
+const ONBOARDING_MODAL_DISMISSED_KEY = 'verso_onboarding_action_dismissed'
 
 const createStorageMock = (): Storage => {
   const store = new Map<string, string>()
@@ -89,6 +90,8 @@ describe('sessionManager idle timeout', () => {
   })
 
   it('shows the final 10-second countdown and logs out at 5 minutes', async () => {
+    window.sessionStorage.setItem(ONBOARDING_MODAL_DISMISSED_KEY, '1')
+
     vi.advanceTimersByTime(4 * 60 * 1000 + 50 * 1000)
     expect(sessionManager.getIdleState()).toEqual({
       countdownSeconds: 10,
@@ -104,6 +107,7 @@ describe('sessionManager idle timeout', () => {
       method: 'POST',
     })
     expect(replaceMock).toHaveBeenCalledWith('/versotech_main/login?error=idle_timeout')
+    expect(window.sessionStorage.getItem(ONBOARDING_MODAL_DISMISSED_KEY)).toBeNull()
 
     const logoutPayload = JSON.parse(window.localStorage.getItem(LOGOUT_EVENT_KEY) ?? '{}')
     expect(logoutPayload.reason).toBe('idle_timeout')

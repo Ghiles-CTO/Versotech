@@ -13,6 +13,7 @@ const IDLE_COUNTDOWN_MS = 10 * 1000
 const ACTIVITY_WRITE_THROTTLE_MS = 1000
 const LAST_ACTIVITY_KEY = 'verso.session.lastActivityAt'
 const LOGOUT_EVENT_KEY = 'verso.session.logout'
+const ONBOARDING_MODAL_DISMISSED_KEY = 'verso_onboarding_action_dismissed'
 const IDLE_DISABLED_EXACT_ROUTES = new Set([
   '/',
   '/versoholdings/login',
@@ -243,6 +244,9 @@ class SessionManager {
     // Clear all local auth data
     this.clearAllAuthData()
     window.localStorage.removeItem(LAST_ACTIVITY_KEY)
+    if (reason === 'idle_timeout') {
+      window.sessionStorage.removeItem(ONBOARDING_MODAL_DISMISSED_KEY)
+    }
 
     // Call logout API to clear server-side session
     void fetch('/api/auth/logout', {
