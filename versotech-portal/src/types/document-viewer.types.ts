@@ -13,6 +13,8 @@ export interface DocumentReference {
   mime_type?: string | null
   file_size_bytes?: number | null
   type?: string | null
+  preview_type?: string | null
+  preview_strategy?: 'direct' | 'office_embed' | null
   [key: string]: any // Allow additional properties
 }
 
@@ -21,13 +23,17 @@ export interface DocumentReference {
  */
 export interface DocumentUrlResponse {
   download_url: string
+  url?: string
   mode?: 'preview' | 'download'
+  preview_strategy?: 'direct' | 'office_embed'
+  hide_download?: boolean
   document: {
     id: string
     name: string
     type: string
     file_key?: string
     external_url?: string
+    preview_strategy?: 'direct' | 'office_embed'
     [key: string]: any
   }
   watermark?: {

@@ -13,6 +13,11 @@ import {
   getFileTypeCategory,
   getSizeLimitLabel,
 } from '@/constants/document-preview.constants'
+import {
+  buildOfficePreviewUrl,
+  canPreviewExternalOfficeLink,
+  getOfficePreviewType,
+} from '@/lib/documents/office-viewer'
 
 /**
  * Hook for managing document preview state and operations
@@ -54,18 +59,10 @@ export function useDocumentViewer() {
       ? isPreviewableMimeType(mimeType)
       : false // If no MIME type, must fail validation
 
-    // Explicitly check for Office documents that cannot be previewed
-    // Note: xlsx/xls/csv are now previewable via ExcelPreview, so exclude them
     const fileExt = fileName.split('.').pop()?.toLowerCase() || ''
-    // Note: docx is now previewable via DocxPreview, so exclude it from blocked list
-    const officeExtensions = ['doc', 'pptx', 'ppt', 'odt', 'ods', 'odp']
-    const isOfficeByExtension = officeExtensions.includes(fileExt)
-
-    const isOfficeDocument = isOfficeByExtension || (mimeType && (
-      mimeType.includes('presentationml') || // PowerPoint 2007+
-      mimeType.includes('msword') || // Old Word format (.doc)
-      mimeType.includes('ms-powerpoint') || // Old PowerPoint format
-      mimeType.includes('opendocument') // OpenOffice/LibreOffice formats
+    const officeExtensions = ['odt', 'ods', 'odp']
+    const isOfficeDocument = officeExtensions.includes(fileExt) || (mimeType && (
+      mimeType.includes('opendocument')
     ))
 
     if (isOfficeDocument) {
@@ -108,6 +105,23 @@ export function useDocumentViewer() {
     setIsLoading(true)
 
     try {
+      const externalUrl = doc.external_url || doc.external_link
+      if (!dealId && canPreviewExternalOfficeLink(externalUrl, doc.file_name || doc.name, doc.mime_type)) {
+        const previewType = getOfficePreviewType(doc.file_name || doc.name, doc.mime_type)
+        const embeddedPreviewUrl = buildOfficePreviewUrl(externalUrl, { hideDownload: !!dealId })
+
+        setDocument((current) => current ? {
+          ...current,
+          preview_type: previewType,
+          preview_strategy: 'office_embed',
+        } : current)
+        setPreviewUrl(embeddedPreviewUrl)
+        previewUrlRef.current = embeddedPreviewUrl
+        setWatermark(doc.watermark || null)
+        setIsLoading(false)
+        return
+      }
+
       // Fetch preview URL based on document type
       const response = dealId
         ? await DocumentService.getDealDocumentPreviewUrl(dealId, doc.id)
@@ -119,6 +133,7 @@ export function useDocumentViewer() {
         return {
           ...current,
           preview_type: response.document?.type || null,
+          preview_strategy: response.preview_strategy || response.document?.preview_strategy || 'direct',
         }
       })
       setPreviewUrl(response.download_url)

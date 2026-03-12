@@ -153,4 +153,62 @@ describe('useDocumentViewer', () => {
     expect(anchorClickSpy).toHaveBeenCalledTimes(1)
     expect(openSpy).not.toHaveBeenCalled()
   })
+
+  it('opens non-deal Microsoft-hosted Office links in the in-app viewer without calling the API', async () => {
+    const externalOfficeDocument = {
+      id: 'doc-2',
+      file_name: 'teaser.docx',
+      name: 'teaser.docx',
+      mime_type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      external_link: 'https://versotech.sharepoint.com/:w:/r/sites/investors/Shared%20Documents/teaser.docx?d=abc123',
+    }
+
+    const previewSpy = vi.spyOn(DocumentService, 'getPreviewUrl')
+
+    const { result } = renderHook(() => useDocumentViewer())
+
+    await act(async () => {
+      await result.current.openPreview(externalOfficeDocument as any)
+    })
+
+    expect(previewSpy).not.toHaveBeenCalled()
+    expect(result.current.isOpen).toBe(true)
+    expect(result.current.previewUrl).toContain('action=embedview')
+    expect(result.current.document?.preview_type).toBe('docx')
+    expect(result.current.document?.preview_strategy).toBe('office_embed')
+  })
+
+  it('allows PowerPoint files through the shared preview flow', async () => {
+    const powerpointDocument = {
+      id: 'doc-3',
+      file_name: 'pitch-deck.pptx',
+      name: 'pitch-deck.pptx',
+      mime_type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      file_size_bytes: 2048,
+    }
+
+    const previewSpy = vi.spyOn(DocumentService, 'getPreviewUrl').mockResolvedValue({
+      download_url: 'https://view.officeapps.live.com/op/embed.aspx?src=https%3A%2F%2Fstorage.example%2Fpitch-deck.pptx',
+      url: 'https://view.officeapps.live.com/op/embed.aspx?src=https%3A%2F%2Fstorage.example%2Fpitch-deck.pptx',
+      preview_strategy: 'office_embed',
+      document: {
+        id: 'doc-3',
+        name: 'pitch-deck.pptx',
+        type: 'presentation',
+        preview_strategy: 'office_embed',
+      },
+      expires_in_seconds: 900,
+    } as any)
+
+    const { result } = renderHook(() => useDocumentViewer())
+
+    await act(async () => {
+      await result.current.openPreview(powerpointDocument as any)
+    })
+
+    expect(previewSpy).toHaveBeenCalledWith('doc-3')
+    expect(result.current.error).toBeNull()
+    expect(result.current.document?.preview_type).toBe('presentation')
+    expect(result.current.document?.preview_strategy).toBe('office_embed')
+  })
 })

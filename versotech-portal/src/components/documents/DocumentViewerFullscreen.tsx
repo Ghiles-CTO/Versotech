@@ -2,13 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Download, Loader2, AlertCircle, FileText, AlertTriangle, FileImage, FileVideo2, Music, FileSpreadsheet, Pause, Play } from 'lucide-react'
+import { X, Download, Loader2, AlertCircle, FileText, AlertTriangle, FileImage, FileVideo2, Music, FileSpreadsheet, Pause, Play, Presentation } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatFileSize } from '@/lib/utils'
 import { DocumentReference } from '@/types/document-viewer.types'
 import { getFileTypeCategory, type FileTypeCategory } from '@/constants/document-preview.constants'
-import { ExcelPreview } from './ExcelPreview'
-import { DocxPreview } from './DocxPreview'
 import { PdfCanvasViewer } from './PdfCanvasViewer'
 
 interface DocumentViewerFullscreenProps {
@@ -51,11 +49,12 @@ function getToolbarIcon(fileType: FileTypeCategory) {
     case 'video': return FileVideo2
     case 'audio': return Music
     case 'excel': return FileSpreadsheet
+    case 'presentation': return Presentation
     default: return FileText
   }
 }
 
-const PREVIEW_TYPE_OVERRIDES: FileTypeCategory[] = ['pdf', 'image', 'video', 'audio', 'excel', 'docx', 'text']
+const PREVIEW_TYPE_OVERRIDES: FileTypeCategory[] = ['pdf', 'image', 'video', 'audio', 'excel', 'docx', 'presentation', 'text']
 
 function formatPlaybackTime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return '0:00'
@@ -194,6 +193,33 @@ function RestrictedAudioPlayer({
   )
 }
 
+function OfficeDocumentFrame({
+  src,
+  title,
+  hideDownload,
+  onError,
+}: {
+  src: string
+  title: string
+  hideDownload: boolean
+  onError: () => void
+}) {
+  const sandbox = hideDownload
+    ? 'allow-same-origin allow-scripts allow-forms'
+    : 'allow-same-origin allow-scripts allow-forms allow-popups allow-downloads'
+
+  return (
+    <iframe
+      src={src}
+      className="w-full h-full border-0 bg-white"
+      title={title}
+      sandbox={sandbox}
+      referrerPolicy="no-referrer"
+      onError={onError}
+    />
+  )
+}
+
 export function DocumentViewerFullscreen({
   isOpen,
   document,
@@ -227,6 +253,7 @@ export function DocumentViewerFullscreen({
   }, [document])
 
   const viewerUrl = previewUrl ?? null
+  const previewStrategy = document?.preview_strategy || 'direct'
 
   const ToolbarIcon = getToolbarIcon(fileType)
 
@@ -261,6 +288,13 @@ export function DocumentViewerFullscreen({
   useEffect(() => {
     setContentError(false)
   }, [previewUrl])
+
+  useEffect(() => {
+    if (!previewUrl || isLoading || error) return
+    if ((fileType === 'excel' || fileType === 'docx' || fileType === 'presentation') && previewStrategy !== 'office_embed') {
+      setContentError(true)
+    }
+  }, [error, fileType, isLoading, previewStrategy, previewUrl])
 
   // Don't render until mounted (for portal) or if not open
   if (!isOpen || !mounted) return null
@@ -442,12 +476,31 @@ export function DocumentViewerFullscreen({
           )
         )}
 
-        {showContent && fileType === 'excel' && (
-          <ExcelPreview url={viewerUrl} onDownload={onDownload} />
+        {showContent && fileType === 'excel' && previewStrategy === 'office_embed' && (
+          <OfficeDocumentFrame
+            src={viewerUrl}
+            title={document?.file_name || document?.name || 'Spreadsheet Preview'}
+            hideDownload={hideDownload}
+            onError={() => setContentError(true)}
+          />
         )}
 
-        {showContent && fileType === 'docx' && (
-          <DocxPreview url={viewerUrl} onDownload={onDownload} />
+        {showContent && fileType === 'docx' && previewStrategy === 'office_embed' && (
+          <OfficeDocumentFrame
+            src={viewerUrl}
+            title={document?.file_name || document?.name || 'Document Preview'}
+            hideDownload={hideDownload}
+            onError={() => setContentError(true)}
+          />
+        )}
+
+        {showContent && fileType === 'presentation' && previewStrategy === 'office_embed' && (
+          <OfficeDocumentFrame
+            src={viewerUrl}
+            title={document?.file_name || document?.name || 'Presentation Preview'}
+            hideDownload={hideDownload}
+            onError={() => setContentError(true)}
+          />
         )}
 
         {showContent && fileType === 'text' && (

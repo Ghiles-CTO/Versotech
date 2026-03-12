@@ -9,6 +9,7 @@ import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerF
 import { DocumentService } from '@/services/document.service'
 import { getFileTypeCategory } from '@/constants/document-preview.constants'
 import { usePersona } from '@/contexts/persona-context'
+import { canPreviewExternalOfficeLink } from '@/lib/documents/office-viewer'
 
 export interface DataRoomDocument {
   id: string
@@ -78,6 +79,7 @@ export function DataRoomDocuments({ documents }: DataRoomDocumentsProps) {
     viewer.openPreview({
       id: doc.id,
       file_name: fileName,
+      external_link: doc.external_link,
     }, doc.deal_id)
   }
 
@@ -101,7 +103,9 @@ export function DataRoomDocuments({ documents }: DataRoomDocumentsProps) {
           <div className="divide-y divide-border">
             {docs.map((doc) => {
               const fileName = doc.file_name ?? doc.file_key?.split('/').pop() ?? 'Untitled'
-              const canPreview = !doc.external_link && getFileTypeCategory(fileName) !== 'unsupported'
+              const canPreview = doc.external_link
+                ? canPreviewExternalOfficeLink(doc.external_link, fileName)
+                : getFileTypeCategory(fileName) !== 'unsupported'
 
               return (
                 <div key={doc.id} className="flex items-center justify-between px-3 py-2.5 text-sm hover:bg-muted">
@@ -110,7 +114,7 @@ export function DataRoomDocuments({ documents }: DataRoomDocumentsProps) {
                       {fileName}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {doc.external_link ? 'External link' : `Uploaded ${new Date(doc.created_at).toLocaleDateString()}`}
+                      {doc.external_link ? 'Microsoft-hosted link' : `Uploaded ${new Date(doc.created_at).toLocaleDateString()}`}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">

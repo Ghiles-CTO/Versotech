@@ -23,12 +23,22 @@ describe('DocumentService.getPreviewUrl', () => {
     vi.unstubAllGlobals()
   })
 
-  it('parses binary PDF previews for uploaded Office files', async () => {
+  it('parses Office embed previews for uploaded Office files', async () => {
     fetchMock.mockResolvedValue(
-      new Response(new Blob(['preview-bytes'], { type: 'application/pdf' }), {
+      new Response(JSON.stringify({
+        download_url: 'https://view.officeapps.live.com/op/embed.aspx?src=https%3A%2F%2Fstorage.example%2Fdoc.docx',
+        preview_strategy: 'office_embed',
+        document: {
+          id: 'doc-1',
+          name: 'board-pack.docx',
+          type: 'docx',
+          preview_strategy: 'office_embed',
+        },
+        expires_in_seconds: 900,
+      }), {
         status: 200,
         headers: {
-          'Content-Type': 'application/pdf',
+          'Content-Type': 'application/json',
         },
       })
     )
@@ -41,8 +51,36 @@ describe('DocumentService.getPreviewUrl', () => {
         'Content-Type': 'application/json',
       },
     })
-    expect(createObjectUrlSpy).toHaveBeenCalledTimes(1)
-    expect(response.download_url).toBe('blob:office-preview')
-    expect(response.document.type).toBe('pdf')
+    expect(createObjectUrlSpy).not.toHaveBeenCalled()
+    expect(response.download_url).toContain('view.officeapps.live.com')
+    expect(response.document.type).toBe('docx')
+    expect(response.preview_strategy).toBe('office_embed')
+  })
+
+  it('parses PowerPoint Office embed previews', async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({
+        download_url: 'https://view.officeapps.live.com/op/embed.aspx?src=https%3A%2F%2Fstorage.example%2Fdeck.pptx',
+        preview_strategy: 'office_embed',
+        document: {
+          id: 'doc-2',
+          name: 'deck.pptx',
+          type: 'presentation',
+          preview_strategy: 'office_embed',
+        },
+        expires_in_seconds: 900,
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+    )
+
+    const response = await DocumentService.getPreviewUrl('doc-2')
+
+    expect(response.document.type).toBe('presentation')
+    expect(response.preview_strategy).toBe('office_embed')
+    expect(response.download_url).toContain('view.officeapps.live.com')
   })
 })

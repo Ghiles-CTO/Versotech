@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { readActivePersonaCookieValues, resolveActiveInvestorLink } from '@/lib/kyc/active-investor-link'
 import {
-  convertOfficePreviewToPdf,
-  getPreviewPdfFileName,
-  isOfficePreviewConvertible,
-} from '@/lib/gotenberg/office-preview'
+  buildOfficePreviewUrl,
+  getOfficePreviewType,
+  isOfficePreviewSupported,
+} from '@/lib/documents/office-viewer'
 
 function resolveDocumentBucket(
   fileKey: string,
@@ -311,43 +311,21 @@ export async function GET(
       document.subscription_id
     )
     const resolvedFileName = resolvedFileKey.split('/').pop() || document.name
-    const previewPdfFileName = getPreviewPdfFileName(resolvedFileName)
+    const officePreviewType = mode === 'preview'
+      ? getOfficePreviewType(resolvedFileName, resolvedMimeType)
+      : null
 
-    if (mode === 'preview' && isOfficePreviewConvertible(resolvedFileName, resolvedMimeType)) {
-      const { data: fileBlob, error: downloadError } = await serviceSupabase.storage
+    if (officePreviewType && isOfficePreviewSupported(resolvedFileName, resolvedMimeType)) {
+      const { data: signedPreviewUrl, error: signedPreviewError } = await serviceSupabase.storage
         .from(bucket)
-        .download(resolvedFileKey)
+        .createSignedUrl(resolvedFileKey, 900)
 
-      if (downloadError || !fileBlob) {
-        console.error('Storage download failed during Office preview:', downloadError)
-        return NextResponse.json(
-          { error: 'Failed to fetch document preview from storage' },
-          { status: 500 }
-        )
-      }
-
-      try {
-        const rawBytes = new Uint8Array(await fileBlob.arrayBuffer())
-        const previewPdfBytes = await convertOfficePreviewToPdf({
-          bytes: rawBytes,
-          fileName: resolvedFileName,
-          mimeType: resolvedMimeType,
-        })
-
-        return new Response(Buffer.from(previewPdfBytes), {
-          headers: {
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': `inline; filename="${previewPdfFileName}"`,
-            'Content-Length': String(previewPdfBytes.byteLength),
-            'Cache-Control': 'no-store',
-          },
-        })
-      } catch (error) {
-        console.error('Office preview conversion failed:', {
+      if (signedPreviewError || !signedPreviewUrl) {
+        console.error('Signed Office preview URL generation error:', {
+          error: signedPreviewError,
           document_id: document.id,
           file_key: resolvedFileKey,
           mime_type: resolvedMimeType,
-          error,
         })
 
         return NextResponse.json(
@@ -355,6 +333,19 @@ export async function GET(
           { status: 500 }
         )
       }
+
+      return NextResponse.json({
+        download_url: buildOfficePreviewUrl(signedPreviewUrl.signedUrl),
+        url: buildOfficePreviewUrl(signedPreviewUrl.signedUrl),
+        preview_strategy: 'office_embed',
+        document: {
+          id: document.id,
+          name: resolvedFileName,
+          type: officePreviewType,
+          preview_strategy: 'office_embed',
+        },
+        expires_in_seconds: 900,
+      })
     }
 
     // Log document details for debugging

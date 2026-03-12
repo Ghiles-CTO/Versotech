@@ -15,6 +15,7 @@ import {
 import { DataRoomDocument } from './data-room-documents'
 import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
+import { canPreviewExternalOfficeLink } from '@/lib/documents/office-viewer'
 
 interface DataRoomDocumentsGroupedProps {
   documents: DataRoomDocument[]
@@ -50,6 +51,11 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
     watermark
   } = useDocumentViewer()
 
+  const canPreviewDocument = (doc: DataRoomDocument) =>
+    doc.external_link
+      ? canPreviewExternalOfficeLink(doc.external_link, doc.file_name, undefined)
+      : true
+
   // Separate featured and regular documents
   const featuredDocs = documents.filter(doc => doc.is_featured)
   const regularDocs = documents.filter(doc => !doc.is_featured)
@@ -78,8 +84,7 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
   }
 
   const handlePreview = async (doc: DataRoomDocument) => {
-    // External links can't be previewed - open directly
-    if (doc.external_link) {
+    if (doc.external_link && !canPreviewDocument(doc)) {
       window.open(doc.external_link, '_blank', 'noopener,noreferrer')
       return
     }
@@ -89,6 +94,7 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
       id: doc.id,
       file_name: doc.file_name,
       name: doc.file_name,
+      external_link: doc.external_link,
     }, doc.deal_id)
   }
 
@@ -154,7 +160,7 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
                   </div>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  {!doc.external_link && (
+                  {canPreviewDocument(doc) && (
                     <Button
                       onClick={() => handlePreview(doc)}
                       variant="ghost"
@@ -165,7 +171,7 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
                       Preview
                     </Button>
                   )}
-                  {doc.external_link && (
+                  {doc.external_link && !canPreviewDocument(doc) && (
                     <Button
                       onClick={() => window.open(doc.external_link!, '_blank', 'noopener,noreferrer')}
                       variant="ghost"
@@ -238,7 +244,7 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      {!doc.external_link && (
+                      {canPreviewDocument(doc) && (
                         <Button
                           onClick={() => handlePreview(doc)}
                           variant="ghost"
@@ -249,7 +255,7 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
                           Preview
                         </Button>
                       )}
-                      {doc.external_link && (
+                      {doc.external_link && !canPreviewDocument(doc) && (
                         <Button
                           onClick={() => window.open(doc.external_link!, '_blank', 'noopener,noreferrer')}
                           variant="ghost"

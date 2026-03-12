@@ -3,7 +3,7 @@
  * Defines limits and supported types for the document preview system
  */
 
-export type FileTypeCategory = 'pdf' | 'image' | 'video' | 'audio' | 'excel' | 'docx' | 'text' | 'unsupported'
+export type FileTypeCategory = 'pdf' | 'image' | 'video' | 'audio' | 'excel' | 'docx' | 'presentation' | 'text' | 'unsupported'
 
 /** Per-type size limits in bytes */
 export const SIZE_LIMITS: Record<FileTypeCategory, number> = {
@@ -13,6 +13,7 @@ export const SIZE_LIMITS: Record<FileTypeCategory, number> = {
   audio: 200 * 1024 * 1024,     // 200MB
   excel: 50 * 1024 * 1024,      // 50MB
   docx: 50 * 1024 * 1024,       // 50MB
+  presentation: 100 * 1024 * 1024, // 100MB
   text: 25 * 1024 * 1024,       // 25MB
   unsupported: 0,
 }
@@ -43,6 +44,8 @@ export const PREVIEW_CONFIG = {
     'text/csv',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'application/msword',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/vnd.ms-powerpoint',
   ] as const,
 
   /** Supported file extensions for preview */
@@ -62,7 +65,10 @@ export const PREVIEW_CONFIG = {
     'xlsx',
     'xls',
     'csv',
+    'doc',
     'docx',
+    'ppt',
+    'pptx',
   ] as const,
 } as const
 
@@ -103,7 +109,10 @@ export function getFileTypeCategory(fileName?: string | null, mimeType?: string 
   if (['xlsx', 'xls', 'csv'].includes(ext) || mime.includes('spreadsheet') || mime.includes('ms-excel') || mime === 'text/csv') return 'excel'
 
   // Word documents
-  if (['docx'].includes(ext) || mime.includes('wordprocessingml')) return 'docx'
+  if (['doc', 'docx'].includes(ext) || mime.includes('wordprocessingml') || mime.includes('msword')) return 'docx'
+
+  // PowerPoint / presentation
+  if (['ppt', 'pptx'].includes(ext) || mime.includes('presentationml') || mime.includes('ms-powerpoint')) return 'presentation'
 
   // Plain text
   if (['txt', 'text'].includes(ext) || mime === 'text/plain') return 'text'

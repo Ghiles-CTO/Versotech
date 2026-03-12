@@ -12,18 +12,18 @@ export class DocumentService {
   }
 
   /**
-   * Validate that a URL is a valid storage URL from Supabase
+   * Validate that a URL is safe to use in the browser.
    */
-  private static isValidStorageUrl(url: string): boolean {
+  private static isValidResponseUrl(url: string): boolean {
     if (!url) return false
 
     if (url.startsWith('blob:')) return true
-    if (!url.startsWith('https://')) return false
-
-    return (
-      url.includes('supabase.co/storage') ||
-      url.includes('supabase.com/storage')
-    )
+    try {
+      const parsedUrl = new URL(url)
+      return parsedUrl.protocol === 'https:' || parsedUrl.protocol === 'http:'
+    } catch {
+      return false
+    }
   }
 
   /**
@@ -79,10 +79,12 @@ export class DocumentService {
       return {
         download_url: blobUrl,
         url: blobUrl,
+        preview_strategy: 'direct',
         document: {
           id: response.headers.get('X-Document-Id') || '',
           name: '',
           type: docType,
+          preview_strategy: 'direct',
         },
         watermark,
         expires_in_seconds: 0, // blob URLs don't expire
@@ -111,10 +113,13 @@ export class DocumentService {
 
     return {
       download_url: blobUrl,
+      url: blobUrl,
+      preview_strategy: 'direct',
       document: {
         id: documentId,
         name: '',
         type: docType,
+        preview_strategy: 'direct',
       },
       expires_in_seconds: 0,
     }
@@ -155,9 +160,9 @@ export class DocumentService {
     }
 
     // Validate URL format
-    if (!this.isValidStorageUrl(downloadUrl)) {
+    if (!this.isValidResponseUrl(downloadUrl)) {
       throw new DocumentError(
-        'Invalid download URL format',
+        'Invalid document URL format',
         500,
         data
       )
@@ -166,6 +171,10 @@ export class DocumentService {
     // Normalize response to always have both fields for compatibility
     data.url = downloadUrl
     data.download_url = downloadUrl
+    data.preview_strategy = data.preview_strategy || data.document?.preview_strategy || 'direct'
+    if (data.document) {
+      data.document.preview_strategy = data.document.preview_strategy || data.preview_strategy
+    }
 
     return data as DocumentUrlResponse
   }

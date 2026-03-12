@@ -27,7 +27,7 @@ interface VehicleDocumentsListProps {
 export function VehicleDocumentsList({ documents }: VehicleDocumentsListProps) {
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [previewingId, setPreviewingId] = useState<string | null>(null)
-  const [previewDocument, setPreviewDocument] = useState<(Document & { preview_type?: string | null }) | null>(null)
+  const [previewDocument, setPreviewDocument] = useState<(Document & { preview_type?: string | null; preview_strategy?: 'direct' | 'office_embed' | null }) | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewError, setPreviewError] = useState<string | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
@@ -61,6 +61,7 @@ export function VehicleDocumentsList({ documents }: VehicleDocumentsListProps) {
       setPreviewDocument((current) => current ? {
         ...current,
         preview_type: response.document?.type || null,
+        preview_strategy: response.preview_strategy || response.document?.preview_strategy || 'direct',
       } : current)
       setPreviewUrl(response.download_url)
     } catch (error: any) {
@@ -156,6 +157,8 @@ export function VehicleDocumentsList({ documents }: VehicleDocumentsListProps) {
           name: previewDocument.name,
           file_name: previewDocument.name || previewDocument.file_key?.split('/').pop() || 'document',
           type: previewDocument.type,
+          preview_type: previewDocument.preview_type,
+          preview_strategy: previewDocument.preview_strategy,
         } : null}
         previewUrl={previewUrl}
         isLoading={previewingId !== null}

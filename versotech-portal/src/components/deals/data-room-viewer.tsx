@@ -24,6 +24,7 @@ import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import { DocumentReference } from '@/types/document-viewer.types'
 import { getFileTypeCategory } from '@/constants/document-preview.constants'
+import { canPreviewExternalOfficeLink } from '@/lib/documents/office-viewer'
 
 export interface DataRoomDocument {
   id: string
@@ -95,7 +96,9 @@ function DocumentRow({
 }) {
   const FileIcon = getFileIcon(document.file_type)
   const isExternal = !!document.external_link
-  const canPreview = isPreviewableType(document.file_type, document.file_name)
+  const canPreview = isExternal
+    ? canPreviewExternalOfficeLink(document.external_link, document.file_name, document.file_type)
+    : isPreviewableType(document.file_type, document.file_name)
 
   return (
     <div className="flex items-center justify-between py-3 px-4 hover:bg-muted rounded-lg transition-colors group">
@@ -123,7 +126,17 @@ function DocumentRow({
 
       {hasAccess && (
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          {isExternal ? (
+          {canPreview ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onPreview(document)}
+              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+            >
+              <Eye className="h-4 w-4 mr-1" />
+              Preview
+            </Button>
+          ) : isExternal ? (
             <Button
               variant="ghost"
               size="sm"
@@ -132,22 +145,7 @@ function DocumentRow({
               <ExternalLink className="h-4 w-4 mr-1" />
               Open
             </Button>
-          ) : (
-            <>
-              {/* In-app preview button for supported file types */}
-              {canPreview && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onPreview(document)}
-                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                >
-                  <Eye className="h-4 w-4 mr-1" />
-                  Preview
-                </Button>
-              )}
-            </>
-          )}
+          ) : null}
         </div>
       )}
     </div>
@@ -216,7 +214,17 @@ export function DataRoomViewer({
   dealId,
   onRequestAccess
 }: DataRoomViewerProps) {
-  const viewer = useDocumentViewer()
+  const {
+    isOpen,
+    document: previewDocument,
+    previewUrl,
+    isLoading,
+    error,
+    openPreview,
+    closePreview,
+    downloadDocument,
+    watermark,
+  } = useDocumentViewer()
 
   // Handle in-app preview for a data room document
   const handlePreview = useCallback((doc: DataRoomDocument) => {
@@ -225,9 +233,10 @@ export function DataRoomViewer({
       file_name: doc.file_name,
       mime_type: doc.file_type,
       file_size_bytes: doc.file_size,
+      external_link: doc.external_link,
     }
-    viewer.openPreview(docRef, dealId)
-  }, [viewer.openPreview, dealId])
+    openPreview(docRef, dealId)
+  }, [dealId, openPreview])
 
   // Group documents by folder with featured section
   const { featured, folders } = useMemo(() => {
@@ -326,14 +335,14 @@ export function DataRoomViewer({
 
       {/* In-app Document Preview */}
       <DocumentViewerFullscreen
-        isOpen={viewer.isOpen}
-        document={viewer.document}
-        previewUrl={viewer.previewUrl}
-        isLoading={viewer.isLoading}
-        error={viewer.error}
-        onClose={viewer.closePreview}
-        onDownload={viewer.downloadDocument}
-        watermark={viewer.watermark}
+        isOpen={isOpen}
+        document={previewDocument}
+        previewUrl={previewUrl}
+        isLoading={isLoading}
+        error={error}
+        onClose={closePreview}
+        onDownload={downloadDocument}
+        watermark={watermark}
         hideDownload
       />
     </div>

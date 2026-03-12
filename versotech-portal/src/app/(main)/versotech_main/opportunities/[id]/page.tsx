@@ -71,6 +71,7 @@ import { DocumentService } from '@/services/document.service'
 import { downloadFileFromUrl } from '@/lib/browser-download'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { canPreviewExternalOfficeLink } from '@/lib/documents/office-viewer'
 
 interface Document {
   id: string
@@ -372,15 +373,21 @@ function getDocIcon(fileName: string, fileType: string, isExternal: boolean) {
 function FeaturedDocRow({ doc, dealId, onPreview, canDownload }: {
   doc: { id: string; file_name: string; file_size: number; file_type: string; external_link?: string | null }
   dealId: string
-  onPreview?: (doc: { id: string; file_name: string; file_size: number; file_type: string }) => void
+  onPreview?: (doc: { id: string; file_name: string; file_size: number; file_type: string; external_link?: string | null }) => void
   canDownload: boolean
 }) {
   const [loading, setLoading] = useState<'preview' | 'download' | null>(null)
   const { Icon, color } = getDocIcon(doc.file_name, doc.file_type, !!doc.external_link)
-  const canPreview = !doc.external_link && isPreviewableExtension(doc.file_name)
+  const canPreview = doc.external_link
+    ? canPreviewExternalOfficeLink(doc.external_link, doc.file_name, doc.file_type)
+    : isPreviewableExtension(doc.file_name)
 
   const handleAction = async (mode: 'preview' | 'download') => {
     if (doc.external_link) {
+      if (mode === 'preview' && canPreview && onPreview) {
+        onPreview(doc)
+        return
+      }
       window.open(doc.external_link, '_blank', 'noopener,noreferrer')
       return
     }
@@ -423,10 +430,10 @@ function FeaturedDocRow({ doc, dealId, onPreview, canDownload }: {
             size="icon"
             variant="ghost"
             className="h-8 w-8 text-blue-600"
-            title="Open link"
+            title={canPreview ? 'Preview' : 'Open link'}
             onClick={() => handleAction('preview')}
           >
-            <ExternalLink className="h-4 w-4" />
+            {canPreview ? <Eye className="h-4 w-4" /> : <ExternalLink className="h-4 w-4" />}
           </Button>
         ) : (
           <>
@@ -1191,18 +1198,21 @@ export default function OpportunityDetailPage() {
                         file_name: d.file_name,
                         mime_type: d.file_type,
                         file_size_bytes: d.file_size,
+                        external_link: d.external_link,
                       }
                       setPreviewDocument(docRef)
                       setPreviewOpen(true)
                       setPreviewLoading(true)
                       setPreviewError(null)
                       setPreviewUrl(null)
+                      setPreviewWatermark(null)
 
                       DocumentService.getDealDocumentPreviewUrl(opportunity.id, d.id)
                         .then((res) => {
                           setPreviewDocument((current) => current ? {
                             ...current,
                             preview_type: res.document?.type || null,
+                            preview_strategy: res.preview_strategy || res.document?.preview_strategy || 'direct',
                           } : current)
                           setPreviewUrl(res.download_url)
                           setPreviewWatermark(res.watermark || null)

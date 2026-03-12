@@ -4,10 +4,11 @@ import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { applyPdfWatermark } from '@/lib/documents/pdf-watermark'
 import { applyImageWatermark } from '@/lib/documents/image-watermark'
 import {
-  convertOfficePreviewToPdf,
-  getPreviewPdfFileName,
-  isOfficePreviewConvertible,
-} from '@/lib/gotenberg/office-preview'
+  buildOfficePreviewUrl,
+  canPreviewExternalOfficeLink,
+  getOfficePreviewType,
+  isOfficePreviewSupported,
+} from '@/lib/documents/office-viewer'
 import { readActivePersonaCookieValues, resolveActiveInvestorLink } from '@/lib/kyc/active-investor-link'
 import crypto from 'crypto'
 
@@ -201,7 +202,35 @@ export async function GET(
       entity_name: entityName,
     }
 
-    const isOfficePreview = mode === 'preview' && isOfficePreviewConvertible(document.file_name, getMimeType(document.file_name))
+    if (
+      mode === 'preview' &&
+      document.external_link &&
+      canPreviewExternalOfficeLink(document.external_link, document.file_name, getMimeType(document.file_name))
+    ) {
+      const previewType = getOfficePreviewType(document.file_name, getMimeType(document.file_name))
+      const previewUrl = buildOfficePreviewUrl(document.external_link, { hideDownload: !isStaff })
+
+      return NextResponse.json({
+        download_url: previewUrl,
+        url: previewUrl,
+        preview_strategy: 'office_embed',
+        hide_download: !isStaff,
+        document: {
+          id: document.id,
+          name: document.file_name || 'document',
+          type: previewType!,
+          preview_strategy: 'office_embed',
+          external_url: document.external_link,
+        },
+        watermark: watermarkInfo,
+        expires_in_seconds: 900,
+      })
+    }
+
+    const officePreviewType = mode === 'preview'
+      ? getOfficePreviewType(document.file_name, getMimeType(document.file_name))
+      : null
+    const isOfficePreview = !!officePreviewType && isOfficePreviewSupported(document.file_name, getMimeType(document.file_name))
     const fileType = isPdf(document.file_name) ? 'pdf'
       : isImage(document.file_name) ? 'image'
       : 'other'
@@ -247,6 +276,38 @@ export async function GET(
       })
     }
 
+    if (isOfficePreview) {
+      const { data: signedPreviewUrl, error: signedPreviewError } = await serviceSupabase.storage
+        .from(bucket)
+        .createSignedUrl(document.file_key, 900)
+
+      if (signedPreviewError || !signedPreviewUrl) {
+        console.error('Deal Office preview URL generation failed:', {
+          document_id: document.id,
+          file_key: document.file_key,
+          error: signedPreviewError,
+        })
+        return NextResponse.json({ error: 'Failed to generate document preview' }, { status: 500 })
+      }
+
+      const previewUrl = buildOfficePreviewUrl(signedPreviewUrl.signedUrl, { hideDownload: !isStaff })
+
+      return NextResponse.json({
+        download_url: previewUrl,
+        url: previewUrl,
+        preview_strategy: 'office_embed',
+        hide_download: !isStaff,
+        document: {
+          id: document.id,
+          name: document.file_name || 'document',
+          type: officePreviewType!,
+          preview_strategy: 'office_embed',
+        },
+        watermark: watermarkInfo,
+        expires_in_seconds: 900,
+      })
+    }
+
     // Download raw bytes from storage (PDF, image, and other types)
     const { data: fileBlob, error: downloadError } = await serviceSupabase.storage
       .from(bucket)
@@ -260,37 +321,6 @@ export async function GET(
     const rawBytes = new Uint8Array(await fileBlob.arrayBuffer())
     const disposition = mode === 'download' ? 'attachment' : 'inline'
     const safeFileName = (document.file_name || 'document').replace(/[^\w.\-_ ]/g, '_')
-    const previewPdfFileName = getPreviewPdfFileName(document.file_name)
-
-    if (isOfficePreview) {
-      try {
-        const previewPdfBytes = await convertOfficePreviewToPdf({
-          bytes: rawBytes,
-          fileName: document.file_name || 'document',
-          mimeType: getMimeType(document.file_name),
-        })
-
-        return new Response(Buffer.from(previewPdfBytes), {
-          headers: {
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': `inline; filename="${previewPdfFileName}"`,
-            'Content-Length': String(previewPdfBytes.byteLength),
-            'Cache-Control': 'no-store',
-            'X-Watermark-Email': user.email || '',
-            'X-Watermark-Entity': entityName || '',
-            'X-Watermark-Name': profile?.display_name || '',
-            'X-Document-Id': document.id,
-          },
-        })
-      } catch (error) {
-        console.error('Deal Office preview conversion failed:', {
-          document_id: document.id,
-          file_key: document.file_key,
-          error,
-        })
-        return NextResponse.json({ error: 'Failed to generate document preview' }, { status: 500 })
-      }
-    }
 
     // --- PDF: watermark then stream ---
     if (fileType === 'pdf') {
