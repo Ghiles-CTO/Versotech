@@ -4,6 +4,8 @@ import { createClient, resetClient } from '@/lib/supabase/client'
 import { sessionManager } from '@/lib/session-manager'
 import type { User, Session } from '@supabase/supabase-js'
 
+const ONBOARDING_MODAL_DISMISSED_KEY = 'verso_onboarding_action_dismissed'
+
 export interface AuthUser {
   id: string
   email: string
@@ -153,6 +155,10 @@ export const signIn = async (email: string, password: string, portal: 'investor'
     }
     if (!hasSession) {
       console.warn('[auth-client] Session propagation timeout after sign-in')
+    }
+
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem(ONBOARDING_MODAL_DISMISSED_KEY)
     }
 
     sessionManager.markAuthenticated()
