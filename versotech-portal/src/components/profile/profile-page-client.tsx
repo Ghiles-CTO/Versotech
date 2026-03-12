@@ -913,6 +913,7 @@ export function ProfilePageClient({
               onRefresh={() => window.location.reload()}
               profileEmail={profile.email}
               profileName={profile.display_name || profile.full_name}
+              autoOpenEdit={defaultAction === 'edit-personal-kyc'}
             />
           )}
 

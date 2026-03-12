@@ -93,9 +93,28 @@ function resolveNextAction(state: DashboardOnboardingState): OnboardingAction {
 function resolveEntityAction(items: DashboardOnboardingMissingItem[]): OnboardingAction {
   const entityGroup = items.find((i) => i.scope === 'entity')
   const memberGroups = items.filter((i) => i.scope === 'member')
+  // The user's own member is the first member group (API builds it first)
+  const userMember = memberGroups[0] || null
+  const otherMembers = memberGroups.slice(1)
 
+  // Priority 1: User's personal info missing/rejected
+  if (userMember) {
+    for (const raw of userMember.missingItems) {
+      const parsed = parseItemSuffix(raw)
+      if (parsed.label === 'Personal Information') {
+        const verb = parsed.status === 'rejected' ? 'Resubmit' : 'Complete'
+        return {
+          title: `${verb} your personal details`,
+          description: 'Fill in your personal information to continue setting up your account.',
+          ctaLabel: `${verb} personal details`,
+          href: '/versotech_main/profile?tab=overview&action=edit-personal-kyc',
+        }
+      }
+    }
+  }
+
+  // Priority 2: Entity Information missing/rejected
   if (entityGroup) {
-    // Priority 1: Entity Information
     for (const raw of entityGroup.missingItems) {
       const parsed = parseItemSuffix(raw)
       if (parsed.label === 'Entity Information') {
@@ -104,75 +123,55 @@ function resolveEntityAction(items: DashboardOnboardingMissingItem[]): Onboardin
           title: `${verb} your company details`,
           description: parsed.status === 'rejected'
             ? 'Your company information was rejected during review. Please update and resubmit your entity details.'
-            : 'Your company information is required before we can verify your account. This includes legal name, country of incorporation, and contact details.',
+            : 'Fill in your company information to continue setting up your account.',
           ctaLabel: `${verb} company details`,
           href: '/versotech_main/profile?tab=overview&action=edit-entity-overview',
         }
       }
     }
+  }
 
-    // Priority 2: Specific entity KYC document
-    for (const raw of entityGroup.missingItems) {
-      const parsed = parseItemSuffix(raw)
-      if (parsed.label !== 'Entity Information' && !parsed.label.includes('active member')) {
-        const verb = parsed.status === 'rejected' ? 'Reupload' : 'Upload'
-        return {
-          title: `${verb} ${parsed.label}`,
-          description: parsed.status === 'rejected'
-            ? `Your ${parsed.label} was rejected during review. Please upload an updated version.`
-            : `We need your ${parsed.label} to verify your entity. This is a required corporate document.`,
-          ctaLabel: `${verb} ${parsed.label}`,
-          href: '/versotech_main/profile?tab=kyc&action=upload-doc',
-        }
-      }
-    }
-
-    // Active member required
-    for (const raw of entityGroup.missingItems) {
-      if (raw.toLowerCase().includes('active member')) {
-        return {
-          title: 'Add a director or beneficial owner',
-          description: 'At least one active director or beneficial owner (UBO) must be registered on your account before you can proceed.',
-          ctaLabel: 'Add a member',
-          href: '/versotech_main/profile?tab=entity-members',
-        }
+  // Priority 3: User's personal docs (combined — list each missing doc)
+  if (userMember) {
+    const missingDocs = userMember.missingItems
+      .map((raw) => parseItemSuffix(raw))
+      .filter((p) => p.label !== 'Personal Information')
+      .map((p) => p.label)
+    if (missingDocs.length > 0) {
+      return {
+        title: 'Upload your personal documents',
+        description: `The following documents are required: ${missingDocs.join(', ')}.`,
+        ctaLabel: 'Upload personal documents',
+        href: '/versotech_main/profile?tab=kyc&action=upload-doc',
       }
     }
   }
 
-  // Priority 3: Specific member personal info
-  for (const member of memberGroups) {
-    for (const raw of member.missingItems) {
-      const parsed = parseItemSuffix(raw)
-      if (parsed.label === 'Personal Information') {
-        const verb = parsed.status === 'rejected' ? 'Resubmit' : 'Complete'
-        return {
-          title: `${verb} personal details for ${member.name}`,
-          description: parsed.status === 'rejected'
-            ? `The personal information for ${member.name} was rejected. Please update their details and resubmit.`
-            : `We need the personal information for ${member.name} including name, date of birth, nationality, and residential address.`,
-          ctaLabel: `${verb} ${member.name}\u2019s details`,
-          href: `/versotech_main/profile?tab=entity-members&action=edit-member&memberId=${member.memberId}`,
-        }
+  // Priority 4: Entity KYC documents (list all missing)
+  if (entityGroup) {
+    const missingEntityDocs = entityGroup.missingItems
+      .map((raw) => parseItemSuffix(raw))
+      .filter((p) => p.label !== 'Entity Information' && !p.label.toLowerCase().includes('active member'))
+      .map((p) => p.label)
+    if (missingEntityDocs.length > 0) {
+      return {
+        title: 'Upload your entity documents',
+        description: `The following documents are required: ${missingEntityDocs.join(', ')}.`,
+        ctaLabel: 'Upload entity documents',
+        href: '/versotech_main/profile?tab=kyc&action=upload-doc',
       }
     }
   }
 
-  // Priority 4: Specific member document
-  for (const member of memberGroups) {
-    for (const raw of member.missingItems) {
-      const parsed = parseItemSuffix(raw)
-      if (parsed.label !== 'Personal Information') {
-        const verb = parsed.status === 'rejected' ? 'Reupload' : 'Upload'
-        return {
-          title: `${verb} ${parsed.label} for ${member.name}`,
-          description: parsed.status === 'rejected'
-            ? `The ${parsed.label} for ${member.name} was rejected during review. Please upload an updated version.`
-            : `We need a ${parsed.label} for ${member.name}. This is required for each director and beneficial owner.`,
-          ctaLabel: `${verb} ${member.name}\u2019s ${parsed.label}`,
-          href: `/versotech_main/profile?tab=kyc&action=upload-doc&memberId=${member.memberId}`,
-        }
-      }
+  // Priority 5: Members missing KYC — names only, no doc specifics
+  const membersWithMissingKyc = otherMembers.filter((m) => m.missingItems.length > 0)
+  if (membersWithMissingKyc.length > 0) {
+    const names = membersWithMissingKyc.map((m) => m.name).join(', ')
+    return {
+      title: 'Members require KYC information',
+      description: `We are missing KYC information for ${names}. Please review and complete their details.`,
+      ctaLabel: 'Review members',
+      href: '/versotech_main/profile?tab=entity-members',
     }
   }
 
@@ -195,43 +194,31 @@ function resolveIndividualAction(items: DashboardOnboardingMissingItem[]): Onboa
     }
   }
 
+  // Priority 1: Personal Information
   for (const raw of entityGroup.missingItems) {
     const parsed = parseItemSuffix(raw)
-
     if (parsed.label === 'Personal Information') {
       const verb = parsed.status === 'rejected' ? 'Resubmit' : 'Complete'
       return {
         title: `${verb} your personal details`,
-        description: parsed.status === 'rejected'
-          ? 'Your personal information was rejected during review. Please update and resubmit your details.'
-          : 'We need your personal information including full name, date of birth, nationality, and residential address.',
+        description: 'Fill in your personal information to continue setting up your account.',
         ctaLabel: `${verb} personal details`,
         href: '/versotech_main/profile?tab=overview&action=edit-individual-kyc',
       }
     }
+  }
 
-    if (parsed.label === 'Proof of Identification') {
-      const verb = parsed.status === 'rejected' ? 'Reupload' : 'Upload'
-      return {
-        title: `${verb} your Proof of Identification`,
-        description: parsed.status === 'rejected'
-          ? 'Your ID document was rejected. Please upload a valid passport, national ID card, or driving licence.'
-          : 'We need a copy of your passport, national ID card, or driving licence to verify your identity.',
-        ctaLabel: `${verb} Proof of ID`,
-        href: '/versotech_main/profile?tab=kyc&action=upload-doc',
-      }
-    }
-
-    if (parsed.label === 'Proof of Address') {
-      const verb = parsed.status === 'rejected' ? 'Reupload' : 'Upload'
-      return {
-        title: `${verb} your Proof of Address`,
-        description: parsed.status === 'rejected'
-          ? 'Your proof of address was rejected. Please upload a utility bill, bank statement, or government correspondence dated within the last 3 months.'
-          : 'We need a recent document (within 3 months) that confirms your residential address, such as a utility bill or bank statement.',
-        ctaLabel: `${verb} Proof of Address`,
-        href: '/versotech_main/profile?tab=kyc&action=upload-doc',
-      }
+  // Priority 2: Personal documents (combined — list each missing doc)
+  const missingDocs = entityGroup.missingItems
+    .map((raw) => parseItemSuffix(raw))
+    .filter((p) => p.label !== 'Personal Information')
+    .map((p) => p.label)
+  if (missingDocs.length > 0) {
+    return {
+      title: 'Upload your personal documents',
+      description: `The following documents are required: ${missingDocs.join(', ')}.`,
+      ctaLabel: 'Upload personal documents',
+      href: '/versotech_main/profile?tab=kyc&action=upload-doc',
     }
   }
 

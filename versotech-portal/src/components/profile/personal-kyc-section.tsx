@@ -1,7 +1,7 @@
 'use client'
 
 import type { ComponentType, ReactNode } from 'react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -75,6 +75,8 @@ interface PersonalKYCSectionProps {
   onRefresh?: () => void
   profileEmail?: string | null
   profileName?: string | null
+  /** Auto-open the edit dialog on mount (e.g., from onboarding modal deep-link) */
+  autoOpenEdit?: boolean
 }
 
 const normalizeComparableValue = (value: unknown): string | null => {
@@ -204,9 +206,17 @@ export function PersonalKYCSection({
   onRefresh,
   profileEmail,
   profileName,
+  autoOpenEdit,
 }: PersonalKYCSectionProps) {
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Auto-open edit dialog when deep-linked from onboarding modal
+  useEffect(() => {
+    if (autoOpenEdit && memberData) {
+      setShowEditDialog(true)
+    }
+  }, [autoOpenEdit, memberData])
 
   // Format date for display
   const formatDate = (dateStr: string | null) => {
