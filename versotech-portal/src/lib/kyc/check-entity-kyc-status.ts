@@ -679,6 +679,66 @@ export async function updateMemberKYCStatus(
   }
 }
 
+export async function syncLinkedIndividualInvestorMemberKycStatus(
+  supabase: SupabaseClient,
+  investorId: string,
+  status: 'pending' | 'approved'
+) {
+  const nowIso = new Date().toISOString()
+  const { data: linkedMembers, error } = await supabase
+    .from('investor_members')
+    .select('id, kyc_status')
+    .eq('investor_id', investorId)
+    .eq('is_active', true)
+    .not('linked_user_id', 'is', null)
+    .limit(2)
+
+  if (error) {
+    console.warn(`[KYC] Failed loading linked investor members for individual investor ${investorId}:`, error)
+    return false
+  }
+
+  const safeLinkedMembers = (linkedMembers || []).filter(Boolean) as Array<{
+    id: string
+    kyc_status?: string | null
+  }>
+
+  if (safeLinkedMembers.length !== 1) {
+    if (safeLinkedMembers.length > 1) {
+      console.warn(
+        `[KYC] Skipped linked member sync for individual investor ${investorId}: expected 1 active linked member, found ${safeLinkedMembers.length}`
+      )
+    }
+    return false
+  }
+
+  const [linkedMember] = safeLinkedMembers
+  if (normalizeStatus(linkedMember.kyc_status) === status) {
+    return true
+  }
+
+  const updateData: Record<string, unknown> = {
+    kyc_status: status,
+    updated_at: nowIso,
+    kyc_approved_at: status === 'approved' ? nowIso : null,
+  }
+
+  const { error: updateError } = await supabase
+    .from('investor_members')
+    .update(updateData)
+    .eq('id', linkedMember.id)
+
+  if (updateError) {
+    console.warn(
+      `[KYC] Failed syncing linked investor member ${linkedMember.id} for individual investor ${investorId}:`,
+      updateError
+    )
+    return false
+  }
+
+  return true
+}
+
 /**
  * Creates an account activation approval request when KYC requirements are complete.
  */
@@ -1021,6 +1081,7 @@ export async function checkAndUpdateEntityKYCStatus(
     }
 
     if (!requirementsMet) {
+      let investorMovedBackToPending = false
       if (currentKycStatus === 'approved' && currentAccountStatus !== 'approved') {
         const pendingKycUpdate: Record<string, unknown> = {
           kyc_status: 'pending',
@@ -1035,6 +1096,22 @@ export async function checkAndUpdateEntityKYCStatus(
           .from(config.entityTable)
           .update(pendingKycUpdate)
           .eq('id', entityId)
+
+        investorMovedBackToPending = true
+      }
+
+      if (
+        entityType === 'investor' &&
+        isIndividual &&
+        currentAccountStatus !== 'approved' &&
+        (investorMovedBackToPending ||
+          currentKycStatus === 'pending' ||
+          currentKycStatus === 'submitted' ||
+          currentKycStatus === 'under_review' ||
+          currentKycStatus === 'review' ||
+          currentKycStatus === 'in_progress')
+      ) {
+        await syncLinkedIndividualInvestorMemberKycStatus(supabase, entityId, 'pending')
       }
       return
     }
@@ -1055,6 +1132,10 @@ export async function checkAndUpdateEntityKYCStatus(
         .from(config.entityTable)
         .update(entityUpdateData)
         .eq('id', entityId)
+    }
+
+    if (entityType === 'investor' && isIndividual) {
+      await syncLinkedIndividualInvestorMemberKycStatus(supabase, entityId, 'approved')
     }
 
     // Manual lock path:

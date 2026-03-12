@@ -1,6 +1,7 @@
 export type AccountStatusKey =
   | 'new'
   | 'incomplete'
+  | 'not_yet_approved'
   | 'pending_approval'
   | 'approved'
   | 'rejected'
@@ -14,6 +15,10 @@ const STATUS_LABELS: Record<AccountStatusKey, { label: string; description: stri
   incomplete: {
     label: 'INCOMPLETE',
     description: 'User can view dispatched deals and positions but cannot request data room access, confirm interest, or invest.'
+  },
+  not_yet_approved: {
+    label: 'NOT YET APPROVED',
+    description: 'KYC is complete, but the account has not yet been submitted or approved.'
   },
   pending_approval: {
     label: 'PENDING APPROVAL',
@@ -62,7 +67,7 @@ export function getAccountStatusCopy(
   if (accountStatus === 'new') return STATUS_LABELS.new
   if (accountStatus === 'pending_onboarding') {
     if (kyc && KYC_PROGRESS_STATUSES.has(kyc)) return STATUS_LABELS.incomplete
-    if (kyc && KYC_APPROVED_STATUSES.has(kyc)) return STATUS_LABELS.pending_approval
+    if (kyc && KYC_APPROVED_STATUSES.has(kyc)) return STATUS_LABELS.not_yet_approved
     if (kyc && KYC_REJECTED_STATUSES.has(kyc)) return STATUS_LABELS.rejected
     return STATUS_LABELS.new
   }
