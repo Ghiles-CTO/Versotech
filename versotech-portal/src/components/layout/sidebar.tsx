@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { useNotifications } from '@/hooks/use-notifications'
-import { createClient } from '@/lib/supabase/client'
+import { signOut as sharedSignOut } from '@/lib/auth-client'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
@@ -284,8 +284,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
     e.preventDefault()
     e.stopPropagation()
     try {
-      const supabase = createClient()
-      await supabase.auth.signOut()
+      await sharedSignOut()
       router.push('/login')
     } catch (error) {
       console.error('Sign out error:', error)

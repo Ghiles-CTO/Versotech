@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
+import { signOut as sharedSignOut } from '@/lib/auth-client'
 import { useNotifications } from '@/hooks/use-notifications'
 import { cn } from '@/lib/utils'
 import { usePersona, Persona } from '@/contexts/persona-context'
@@ -328,8 +329,7 @@ export function PersonaSidebar() {
     e.preventDefault()
     e.stopPropagation()
     try {
-      const supabase = createClient()
-      await supabase.auth.signOut()
+      await sharedSignOut()
       router.push('/versotech_main/login')
     } catch (error) {
       console.error('Sign out error:', error)
@@ -572,9 +572,12 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
   }, [activePersona, personas])
 
   const handleSignOut = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/versotech_main/login')
+    try {
+      await sharedSignOut()
+      router.push('/versotech_main/login')
+    } catch (error) {
+      console.error('Sign out error:', error)
+    }
   }
 
   return (
