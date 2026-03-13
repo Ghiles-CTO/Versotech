@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { InlinePdfViewer } from '@/components/signature/inline-pdf-viewer'
+import { SignatureCanvasWidget } from '@/components/signature/signature-canvas-widget'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -29,7 +31,8 @@ import {
   CheckCheck,
   FileCheck,
   Upload,
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -43,6 +46,17 @@ interface TasksPageClientProps {
   staffCreatedTasks: Task[]
   generalComplianceTasks: Task[]
   signatureTasks: Task[]
+}
+
+interface SignatureRequestPublicView {
+  signer_name: string
+  signer_email: string
+  document_type: string
+  unsigned_pdf_url?: string | null
+  google_drive_url?: string | null
+  status: string
+  verification_required?: boolean
+  verification_completed_at?: string | null
 }
 
 export function TasksPageClient({
@@ -63,6 +77,11 @@ export function TasksPageClient({
   const [isUpdating, setIsUpdating] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [signatureRequest, setSignatureRequest] = useState<SignatureRequestPublicView | null>(null)
+  const [signatureToken, setSignatureToken] = useState<string | null>(null)
+  const [signatureLoading, setSignatureLoading] = useState(false)
+  const [signatureSubmitting, setSignatureSubmitting] = useState(false)
+  const [signatureError, setSignatureError] = useState<string | null>(null)
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     onboarding: true,
     staffCreated: true,
@@ -169,6 +188,115 @@ export function TasksPageClient({
       [section]: !prev[section]
     }))
   }
+
+  const isSignatureTask = useCallback((task: Task | null) => {
+    return Boolean(
+      investorIds.length > 0 &&
+      task?.category === 'signatures' &&
+      task.instructions?.type === 'signature' &&
+      task.related_entity_type === 'signature_request' &&
+      task.instructions?.action_url
+    )
+  }, [investorIds.length])
+
+  const extractTokenFromUrl = useCallback((url: string) => {
+    const queryMatch = url.match(/[?&]token=([^&]+)/)
+    if (queryMatch) return queryMatch[1]
+
+    const pathMatch = url.match(/\/sign\/([^/?]+)/)
+    return pathMatch ? pathMatch[1] : null
+  }, [])
+
+  const loadSignatureRequest = useCallback(async (task: Task) => {
+    if (!task.instructions?.action_url) return
+
+    const token = extractTokenFromUrl(task.instructions.action_url)
+    if (!token) {
+      setSignatureRequest(null)
+      setSignatureToken(null)
+      setSignatureError('Unable to load this signing request.')
+      return
+    }
+
+    setSignatureLoading(true)
+    setSignatureError(null)
+
+    try {
+      const response = await fetch(`/api/signature/${token}`)
+
+      if (!response.ok) {
+        if (response.status === 410) {
+          throw new Error('This signature request has expired.')
+        }
+        if (response.status === 404) {
+          throw new Error('This signature request could not be found.')
+        }
+
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to load the document for signing.')
+      }
+
+      const data = await response.json()
+      setSignatureRequest(data)
+      setSignatureToken(token)
+    } catch (error) {
+      setSignatureRequest(null)
+      setSignatureToken(null)
+      setSignatureError(
+        error instanceof Error ? error.message : 'Failed to load the document for signing.'
+      )
+    } finally {
+      setSignatureLoading(false)
+    }
+  }, [extractTokenFromUrl])
+
+  const handleSignatureSubmit = useCallback(async (signatureDataUrl: string) => {
+    if (!signatureToken) return
+
+    setSignatureSubmitting(true)
+    setSignatureError(null)
+
+    try {
+      const response = await fetch('/api/signature/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: signatureToken,
+          signature_data_url: signatureDataUrl
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to submit your signature.')
+      }
+
+      toast.success('Document signed successfully')
+      setSelectedTask(null)
+      await refreshTasks()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to submit your signature.'
+      setSignatureError(message)
+      toast.error(message)
+    } finally {
+      setSignatureSubmitting(false)
+    }
+  }, [refreshTasks, signatureToken])
+
+  useEffect(() => {
+    setUploadError(null)
+
+    if (!isSignatureTask(selectedTask)) {
+      setSignatureRequest(null)
+      setSignatureToken(null)
+      setSignatureLoading(false)
+      setSignatureSubmitting(false)
+      setSignatureError(null)
+      return
+    }
+
+    loadSignatureRequest(selectedTask)
+  }, [isSignatureTask, loadSignatureRequest, selectedTask])
 
   async function completeTask(taskId: string) {
     setIsUpdating(true)
@@ -465,6 +593,20 @@ export function TasksPageClient({
   const totalCompleted = allTasks.filter(t => t.status === 'completed' || t.status === 'waived').length
   const totalOverdue = allTasks.filter(isOverdue).length
   const completionRate = allTasks.length > 0 ? Math.round((totalCompleted / allTasks.length) * 100) : 0
+  const signaturePreviewUrl = signatureRequest?.unsigned_pdf_url || signatureRequest?.google_drive_url || null
+  const requiresInlineVerificationFallback = Boolean(
+    signatureRequest?.verification_required && !signatureRequest?.verification_completed_at
+  )
+  const selectedInstructions = selectedTask?.instructions ?? null
+  const taskSteps = Array.isArray(selectedInstructions?.steps) ? selectedInstructions.steps : []
+  const taskRequirements = Array.isArray(selectedInstructions?.requirements) ? selectedInstructions.requirements : []
+  const hasTaskBreakdown = Boolean(
+    taskSteps.length > 0 ||
+    taskRequirements.length > 0 ||
+    selectedInstructions?.wire_details ||
+    selectedInstructions?.assigned_by
+  )
+  const selectedTaskIsSignature = isSignatureTask(selectedTask)
 
   return (
     <>
@@ -597,7 +739,10 @@ export function TasksPageClient({
 
       {/* Task Details Dialog */}
       <Dialog open={!!selectedTask} onOpenChange={(open) => !open && setSelectedTask(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className={cn(
+          "max-h-[90vh] overflow-y-auto",
+          selectedTaskIsSignature ? "max-w-6xl" : "max-w-3xl"
+        )}>
           <DialogHeader>
             <div className="flex items-start justify-between pr-6">
               <div className="flex-1">
@@ -629,8 +774,104 @@ export function TasksPageClient({
               </div>
             )}
 
+            {selectedTaskIsSignature && selectedTask?.status !== 'completed' && selectedTask?.status !== 'waived' && (
+              <div className="space-y-4">
+                <div className="bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Ready to Sign</h4>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    Review the document on the left and complete your signature on the right.
+                  </p>
+                </div>
+
+                {signatureLoading ? (
+                  <div className="flex items-center justify-center rounded-lg border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900/50 py-16">
+                    <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading document...
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid gap-6 lg:grid-cols-2">
+                    {signaturePreviewUrl ? (
+                      <InlinePdfViewer
+                        pdfUrl={signaturePreviewUrl}
+                        documentName={selectedTask?.title || 'Document'}
+                      />
+                    ) : (
+                      <Card className="h-full border border-gray-200 dark:border-zinc-700">
+                        <CardContent className="flex h-full min-h-[320px] items-center justify-center p-6 text-center text-sm text-gray-600 dark:text-gray-400">
+                          Document preview is not available for this signing request.
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {requiresInlineVerificationFallback ? (
+                      <Card className="h-full border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30">
+                        <CardContent className="flex h-full min-h-[320px] flex-col items-center justify-center gap-4 p-6 text-center">
+                          <div className="space-y-2">
+                            <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                              One extra verification step is needed
+                            </h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Use the secure signing link below to finish this signature.
+                            </p>
+                          </div>
+                          {selectedTask?.instructions?.action_url && (
+                            <Button asChild>
+                              <a
+                                href={selectedTask.instructions.action_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                Continue Secure Signing
+                                <ExternalLink className="h-4 w-4 ml-2" />
+                              </a>
+                            </Button>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ) : signatureRequest && signatureToken ? (
+                      <SignatureCanvasWidget
+                        onSignatureCapture={handleSignatureSubmit}
+                        signerName={signatureRequest.signer_name}
+                        signerEmail={signatureRequest.signer_email}
+                        isSubmitting={signatureSubmitting}
+                      />
+                    ) : (
+                      <Card className="h-full border border-gray-200 dark:border-zinc-700">
+                        <CardContent className="flex h-full min-h-[320px] items-center justify-center p-6 text-center text-sm text-gray-600 dark:text-gray-400">
+                          Unable to load the signing form right now.
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                )}
+
+                {signatureError && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
+                    {signatureError}
+                  </div>
+                )}
+
+                {selectedTask?.instructions?.action_url && (
+                  <div className="flex justify-end">
+                    <Button variant="outline" asChild>
+                      <a
+                        href={selectedTask.instructions.action_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Open secure link
+                        <ExternalLink className="h-4 w-4 ml-2" />
+                      </a>
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Task Breakdown */}
-            {selectedTask?.instructions && (
+            {selectedInstructions && hasTaskBreakdown && (
               <div className="bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                 <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
                   <CheckCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -638,53 +879,57 @@ export function TasksPageClient({
                 </h4>
 
                 {/* Steps */}
-                <div className="mb-4">
-                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Steps to Complete</p>
-                  <ol className="space-y-1.5 text-sm text-gray-700 dark:text-gray-300">
-                    {selectedTask.instructions.steps.map((step, idx) => (
-                      <li key={idx} className="flex gap-2">
-                        <span className="text-blue-600 dark:text-blue-400 font-medium">{idx + 1}.</span>
-                        <span>{step}</span>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
+                {taskSteps.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Steps to Complete</p>
+                    <ol className="space-y-1.5 text-sm text-gray-700 dark:text-gray-300">
+                      {taskSteps.map((step, idx) => (
+                        <li key={idx} className="flex gap-2">
+                          <span className="text-blue-600 dark:text-blue-400 font-medium">{idx + 1}.</span>
+                          <span>{step}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
 
                 {/* Requirements */}
-                <div className="mb-4">
-                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Requirements</p>
-                  <ul className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
-                    {selectedTask.instructions.requirements.map((req, idx) => (
-                      <li key={idx} className="flex gap-2">
-                        <span className="text-blue-600 dark:text-blue-400">•</span>
-                        <span>{req}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                {taskRequirements.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Requirements</p>
+                    <ul className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                      {taskRequirements.map((req, idx) => (
+                        <li key={idx} className="flex gap-2">
+                          <span className="text-blue-600 dark:text-blue-400">•</span>
+                          <span>{req}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 {/* Wire Details if applicable */}
-                {selectedTask.instructions.wire_details && (
+                {selectedInstructions.wire_details && (
                   <div className="bg-white dark:bg-zinc-900 border border-blue-200 dark:border-blue-800 rounded p-3">
                     <p className="text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Wire Transfer Details</p>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">Amount:</span>
-                        <span className="ml-2 font-semibold text-foreground">{selectedTask.instructions.wire_details.amount}</span>
+                        <span className="ml-2 font-semibold text-foreground">{selectedInstructions.wire_details.amount}</span>
                       </div>
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">Bank:</span>
-                        <span className="ml-2 font-semibold text-foreground">{selectedTask.instructions.wire_details.bank}</span>
+                        <span className="ml-2 font-semibold text-foreground">{selectedInstructions.wire_details.bank}</span>
                       </div>
                     </div>
                   </div>
                 )}
 
                 {/* Assigned By */}
-                {selectedTask.instructions.assigned_by && (
+                {selectedInstructions.assigned_by && (
                   <div className="text-xs text-gray-600 dark:text-gray-400 pt-2 border-t border-blue-200 dark:border-blue-800">
                     <span>Assigned by: </span>
-                    <span className="font-medium">{selectedTask.instructions.assigned_by}</span>
+                    <span className="font-medium">{selectedInstructions.assigned_by}</span>
                   </div>
                 )}
               </div>
@@ -784,25 +1029,6 @@ export function TasksPageClient({
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                   Accepted formats: PDF, JPG, PNG, HEIC, WEBP (Max 10MB)
                 </p>
-              </div>
-            )}
-
-            {/* Signature Action Button */}
-            {selectedTask?.related_entity_type === 'signature_request' && selectedTask?.instructions?.action_url && (
-              <div className="bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
-                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Ready to Sign</h4>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
-                  Click below to open the document and complete your signature.
-                </p>
-                <a
-                  href={selectedTask.instructions.action_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-                >
-                  Open Document
-                  <ExternalLink className="h-4 w-4" />
-                </a>
               </div>
             )}
 
