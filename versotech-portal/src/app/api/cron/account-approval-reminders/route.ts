@@ -98,14 +98,14 @@ function buildReminderCopy(params: {
   if (params.isReadyToSubmit) {
     return {
       title: 'Submit your account for approval',
-      message: 'Your onboarding is complete. Submit your account for approval to unlock investing.',
+      message: `Your onboarding is complete. Submit your account for approval to unlock investing for ${params.investorName}.`,
       link: '/versotech_main/profile?tab=overview',
     }
   }
 
   return {
     title: 'Complete your account onboarding',
-    message: 'Your account setup is still incomplete. Finish the required onboarding items so your account can be submitted for approval.',
+    message: `Your account setup for ${params.investorName} is still incomplete. Finish the required onboarding items so your account can be submitted for approval.`,
     link: '/versotech_main/profile?tab=kyc',
   }
 }
