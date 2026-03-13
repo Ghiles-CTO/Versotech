@@ -183,7 +183,7 @@ function mapTermSheetToForm(termSheet?: TermSheet): FormState {
     ? Number(String(termSheet.price_per_share_text).replace(/[^\d.]/g, ''))
     : null
   const formattedCompletionDate = termSheet.completion_date
-    ? `By ${formatUTC(termSheet.completion_date, 'MMMM d, yyyy')}`
+    ? `By ${formatUTC(termSheet.completion_date, 'MMMM d, yyyy HH:mm')}`
     : ''
   return {
     term_sheet_date: termSheet.term_sheet_date ? termSheet.term_sheet_date.slice(0, 10) : '',
@@ -213,7 +213,7 @@ function mapTermSheetToForm(termSheet?: TermSheet): FormState {
     interest_confirmation_text: termSheet.interest_confirmation_text ?? DEFAULT_TERMSHEET_TEXT.interest_confirmation_text,
     capital_call_timeline: termSheet.capital_call_timeline ?? DEFAULT_TERMSHEET_TEXT.capital_call_timeline,
     validity_date: termSheet.validity_date ? termSheet.validity_date.slice(0, 16) : '',
-    completion_date: termSheet.completion_date ? termSheet.completion_date.slice(0, 10) : '',
+    completion_date: termSheet.completion_date ? termSheet.completion_date.slice(0, 16) : '',
     completion_date_text: termSheet.completion_date_text ?? formattedCompletionDate,
     in_principle_approval_text: termSheet.in_principle_approval_text ?? DEFAULT_TERMSHEET_TEXT.in_principle_approval_text,
     subscription_pack_note: termSheet.subscription_pack_note ?? DEFAULT_TERMSHEET_TEXT.subscription_pack_note,
@@ -940,7 +940,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                       )}
                       <FieldValue
                         label="Completion Date"
-                        value={published.completion_date ? formatUTC(published.completion_date, 'dd MMM yyyy') : published.completion_date_text || '—'}
+                        value={published.completion_date ? formatUTC(published.completion_date, 'dd MMM yyyy HH:mm') : published.completion_date_text || '—'}
                       />
                       {published.validity_date && (
                         <FieldValue label="Validity Date" value={formatUTC(published.validity_date, 'dd MMM yyyy HH:mm')} />
@@ -1126,7 +1126,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   )}
                   <FieldValue
                     label="Completion Date"
-                    value={termSheet.completion_date ? formatUTC(termSheet.completion_date, 'dd MMM yyyy') : termSheet.completion_date_text || '—'}
+                    value={termSheet.completion_date ? formatUTC(termSheet.completion_date, 'dd MMM yyyy HH:mm') : termSheet.completion_date_text || '—'}
                   />
                 </dl>
               </div>
@@ -1527,12 +1527,12 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                 <Label htmlFor="completion_date">Completion Date</Label>
                 <Input
                   id="completion_date"
-                  type="date"
+                  type="datetime-local"
                   value={formValues.completion_date}
                   onChange={event => setFormValues(prev => ({ ...prev, completion_date: event.target.value }))}
                 />
                 <p className="text-xs text-muted-foreground">
-                  When set, enables automatic CEO approval for deal closing.
+                  When set, sends a one-time notification to staff and CEO when the closing date arrives.
                 </p>
               </div>
             </div>

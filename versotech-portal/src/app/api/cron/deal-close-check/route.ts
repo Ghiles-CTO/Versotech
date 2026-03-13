@@ -1,27 +1,27 @@
 /**
- * Termsheet Close Approval Check Cron Job
+ * Termsheet Close Date Notification Cron Job
  *
  * GET /api/cron/deal-close-check
  *
- * Daily cron job to request CEO approval when TERMSHEETS reach their completion date.
- * - Creates a termsheet_close approval assigned to CEO for EACH termsheet
- * - Does NOT execute closing actions directly
+ * Cron job to notify staff when TERMSHEETS reach their completion date.
+ * - Sends one notification to staff/CEO users for EACH termsheet
+ * - Does NOT create close approvals automatically
  *
- * Closing actions (certificates, commissions) run only after CEO approves.
- * Only subscriptions linked to the approved termsheet are processed.
+ * Closing actions still run only through the manual Request Close workflow.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { createInvestorNotification } from '@/lib/notifications'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getCeoSigner } from '@/lib/staff/ceo-signer'
 
 export const dynamic = 'force-dynamic'
 
-type TermsheetCloseApprovalResult = {
+type TermsheetCloseNotificationResult = {
   termsheetId: string
   dealId: string
   dealName: string
-  approvalId?: string
+  notificationsCreated?: number
   created: boolean
   skippedReason?: string
 }
@@ -38,6 +38,45 @@ async function getFallbackRequesterId(supabase: ReturnType<typeof createServiceC
     .maybeSingle()
 
   return profile?.id || null
+}
+
+async function getNotificationRecipientIds(supabase: ReturnType<typeof createServiceClient>) {
+  const recipientIds = new Set<string>()
+
+  const [{ data: staffProfiles }, { data: ceoUsers }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('id')
+      .in('role', STAFF_ROLES),
+    supabase
+      .from('ceo_users')
+      .select('user_id')
+  ])
+
+  for (const profile of staffProfiles || []) {
+    if (profile.id) recipientIds.add(profile.id)
+  }
+
+  for (const ceoUser of ceoUsers || []) {
+    if (ceoUser.user_id) recipientIds.add(ceoUser.user_id)
+  }
+
+  return [...recipientIds]
+}
+
+function formatCompletionDateLabel(completionDate: string) {
+  const parsed = new Date(completionDate)
+  if (Number.isNaN(parsed.getTime())) return completionDate
+
+  return `${parsed.toLocaleString('en-GB', {
+    timeZone: 'UTC',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })} UTC`
 }
 
 interface TermsheetWithDeal {
@@ -146,9 +185,9 @@ export async function GET(request: NextRequest) {
 
   const supabase = createServiceClient()
   const now = new Date()
-  const results: TermsheetCloseApprovalResult[] = []
+  const results: TermsheetCloseNotificationResult[] = []
   let totalTermsheetsChecked = 0
-  let approvalsCreated = 0
+  let notificationsCreated = 0
 
   try {
     // Query TERMSHEETS with completion_date reached, not yet processed
@@ -187,15 +226,23 @@ export async function GET(request: NextRequest) {
     if (!termsheets || termsheets.length === 0) {
       return NextResponse.json({
         success: true,
-        message: 'No termsheets ready for close approvals',
+        message: 'No termsheets ready for close date notifications',
         termsheetsChecked: 0,
-        approvalsCreated: 0
+        notificationsCreated: 0
       })
     }
 
     totalTermsheetsChecked = termsheets.length
     const ceoSigner = await getCeoSigner(supabase)
     const fallbackRequesterId = ceoSigner?.id || await getFallbackRequesterId(supabase)
+    const recipientIds = await getNotificationRecipientIds(supabase)
+
+    if (recipientIds.length === 0) {
+      return NextResponse.json(
+        { error: 'No staff recipients found for close date notifications' },
+        { status: 500 }
+      )
+    }
 
     for (const termsheet of termsheets as unknown as TermsheetWithDeal[]) {
       // Normalize deal (Supabase may return array or single object)
@@ -216,89 +263,134 @@ export async function GET(request: NextRequest) {
         continue
       }
 
-      // Check for existing approval for THIS termsheet
       const { data: existingApproval } = await supabase
         .from('approvals')
         .select('id, status')
         .eq('entity_type', 'termsheet_close')
         .eq('entity_id', termsheet.id)
+        .eq('status', 'pending')
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
 
-      if (existingApproval && ['pending', 'approved', 'rejected'].includes(existingApproval.status)) {
+      if (existingApproval) {
         results.push({
           termsheetId: termsheet.id,
           dealId: termsheet.deal_id,
           dealName: deal?.name || 'Unknown',
           created: false,
-          skippedReason: `Existing approval: ${existingApproval.status}`
+          skippedReason: 'Manual close request already pending'
+        })
+        continue
+      }
+
+      // Check which recipients have already been notified for THIS termsheet
+      const { data: existingNotifications } = await supabase
+        .from('investor_notifications')
+        .select('user_id')
+        .eq('deal_id', termsheet.deal_id)
+        .contains('data', {
+          notification_kind: 'termsheet_close_due',
+          termsheet_id: termsheet.id,
+        })
+
+      const alreadyNotified = new Set((existingNotifications || []).map(notification => notification.user_id))
+      const pendingRecipientIds = recipientIds.filter(recipientId => !alreadyNotified.has(recipientId))
+
+      if (pendingRecipientIds.length === 0) {
+        results.push({
+          termsheetId: termsheet.id,
+          dealId: termsheet.deal_id,
+          dealName: deal?.name || 'Unknown',
+          created: false,
+          skippedReason: 'Notification already sent'
         })
         continue
       }
 
       const metadata = await buildTermsheetCloseMetadata(supabase, termsheet)
+      const completionDateLabel = formatCompletionDateLabel(termsheet.completion_date)
+      const title = 'Term sheet close date reached'
+      const message = `Deal "${deal?.name || 'Unknown Deal'}" term sheet v${termsheet.version} reached its closing date on ${completionDateLabel}. Review it and use Request Close when ready.`
 
-      // Create approval for THIS termsheet
-      const { data: approval, error: approvalError } = await supabase
-        .from('approvals')
-        .insert({
-          entity_type: 'termsheet_close',
-          entity_id: termsheet.id, // Termsheet ID, not deal ID
-          action: 'approve',
-          status: 'pending',
-          priority: 'high',
-          requested_by: fallbackRequesterId,
-          assigned_to: ceoSigner?.id || null,
-          related_deal_id: termsheet.deal_id,
-          request_reason: `Termsheet completion date reached (${deal?.name} v${termsheet.version}); CEO approval required.`,
-          entity_metadata: {
-            ...metadata,
-            close_mode: 'automatic',
-            close_requested_at: now.toISOString(),
-          }
-        })
-        .select('id')
-        .single()
+      const notificationResults = await Promise.allSettled(
+        pendingRecipientIds.map(recipientId =>
+          createInvestorNotification({
+            userId: recipientId,
+            investorId: undefined,
+            title,
+            message,
+            link: `/versotech_main/deals/${termsheet.deal_id}`,
+            type: 'system',
+            createdBy: fallbackRequesterId || undefined,
+            dealId: termsheet.deal_id,
+            sendEmailNotification: false,
+            extraMetadata: {
+              ...metadata,
+              notification_kind: 'termsheet_close_due',
+              notified_at: now.toISOString(),
+            },
+          })
+        )
+      )
 
-      if (approvalError) {
-        console.error('[termsheet-close-cron] Failed to create approval:', approvalError)
+      const successfulNotifications = notificationResults.filter(result => result.status === 'fulfilled').length
+
+      if (successfulNotifications === 0) {
+        console.error('[termsheet-close-cron] Failed to create notifications for termsheet:', termsheet.id)
         results.push({
           termsheetId: termsheet.id,
           dealId: termsheet.deal_id,
           dealName: deal?.name || 'Unknown',
           created: false,
-          skippedReason: 'Approval creation failed'
+          skippedReason: 'Notification creation failed'
         })
         continue
       }
 
-      approvalsCreated++
+      notificationsCreated += successfulNotifications
+
+      await supabase.from('audit_logs').insert({
+        event_type: 'system',
+        action: 'termsheet_close_date_notification_sent',
+        entity_type: 'deal_fee_structure',
+        entity_id: termsheet.id,
+        actor_id: fallbackRequesterId,
+        action_details: {
+          deal_id: termsheet.deal_id,
+          deal_name: deal?.name || 'Unknown Deal',
+          termsheet_version: termsheet.version,
+          completion_date: termsheet.completion_date,
+          notifications_created: successfulNotifications,
+        },
+        timestamp: now.toISOString(),
+      })
+
       results.push({
         termsheetId: termsheet.id,
         dealId: termsheet.deal_id,
         dealName: deal?.name || 'Unknown',
-        approvalId: approval.id,
+        notificationsCreated: successfulNotifications,
         created: true
       })
     }
 
     await supabase.from('audit_logs').insert({
       event_type: 'system',
-      action: 'termsheet_close_approval_check_cron',
+      action: 'termsheet_close_notification_check_cron',
       action_details: {
         termsheets_checked: totalTermsheetsChecked,
-        approvals_created: approvalsCreated,
-        errors: results.filter(r => r.created === false && r.skippedReason === 'Approval creation failed').length
+        notifications_created: notificationsCreated,
+        errors: results.filter(r => r.created === false && r.skippedReason === 'Notification creation failed').length
       },
       timestamp: now.toISOString(),
     })
 
     return NextResponse.json({
       success: true,
-      message: `Created ${approvalsCreated} termsheet close approvals`,
+      message: `Created ${notificationsCreated} termsheet close date notifications`,
       termsheetsChecked: totalTermsheetsChecked,
-      approvalsCreated,
+      notificationsCreated,
       results
     })
   } catch (error) {
