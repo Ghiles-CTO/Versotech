@@ -45,6 +45,7 @@ function parseItemSuffix(raw: string): { label: string; status: 'missing' | 'rej
 type OnboardingAction = {
   title: string
   description: string
+  documentList?: string[]
   ctaLabel: string
   href: string | null // null = dismiss-only (under_review)
   isSubmitAction?: boolean
@@ -139,9 +140,10 @@ function resolveEntityAction(items: DashboardOnboardingMissingItem[]): Onboardin
       .map((p) => p.label)
     if (missingDocs.length > 0) {
       return {
-        title: 'Upload your personal documents',
-        description: `The following documents are required: ${missingDocs.join(', ')}.`,
-        ctaLabel: 'Upload personal documents',
+        title: 'Personal KYC documents',
+        description: 'The following documents are required:',
+        documentList: missingDocs,
+        ctaLabel: 'Upload personal KYC documents',
         href: '/versotech_main/profile?tab=kyc&action=upload-doc',
       }
     }
@@ -155,9 +157,10 @@ function resolveEntityAction(items: DashboardOnboardingMissingItem[]): Onboardin
       .map((p) => p.label)
     if (missingEntityDocs.length > 0) {
       return {
-        title: 'Upload your entity documents',
-        description: `The following documents are required: ${missingEntityDocs.join(', ')}.`,
-        ctaLabel: 'Upload entity documents',
+        title: 'Company KYC documents',
+        description: 'The following documents are required:',
+        documentList: missingEntityDocs,
+        ctaLabel: 'Upload company KYC documents',
         href: '/versotech_main/profile?tab=kyc&action=upload-doc',
       }
     }
@@ -215,9 +218,10 @@ function resolveIndividualAction(items: DashboardOnboardingMissingItem[]): Onboa
     .map((p) => p.label)
   if (missingDocs.length > 0) {
     return {
-      title: 'Upload your personal documents',
-      description: `The following documents are required: ${missingDocs.join(', ')}.`,
-      ctaLabel: 'Upload personal documents',
+      title: 'Personal KYC documents',
+      description: 'The following documents are required:',
+      documentList: missingDocs,
+      ctaLabel: 'Upload personal KYC documents',
       href: '/versotech_main/profile?tab=kyc&action=upload-doc',
     }
   }
@@ -348,6 +352,17 @@ export function OnboardingActionModal() {
             )}>
               {action.description}
             </DialogDescription>
+
+            {action.documentList && action.documentList.length > 0 && (
+              <ul className={cn(
+                'mt-2 list-disc space-y-1 pl-5 text-[13px] leading-relaxed text-left',
+                isDark ? 'text-white/70' : 'text-slate-600'
+              )}>
+                {action.documentList.map((document) => (
+                  <li key={document}>{document}</li>
+                ))}
+              </ul>
+            )}
           </DialogHeader>
         </div>
 
