@@ -51,6 +51,13 @@ const entityOverviewSchema = z.object({
 
 type EntityOverviewForm = z.infer<typeof entityOverviewSchema>
 
+type SaveFollowUpResult = {
+  level?: 'success' | 'info' | 'error'
+  message?: string
+  closeDialog?: boolean
+  refresh?: boolean
+}
+
 interface EntityOverviewEditDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -60,7 +67,8 @@ interface EntityOverviewEditDialogProps {
     address_line_2?: string | null
   }
   apiEndpoint: string
-  onSuccess?: () => void
+  afterSave?: () => Promise<SaveFollowUpResult | void> | SaveFollowUpResult | void
+  onSuccess?: () => void | Promise<void>
 }
 
 const toNullable = (value: string | null | undefined): string | null => {
@@ -75,6 +83,7 @@ export function EntityOverviewEditDialog({
   entityName,
   initialData,
   apiEndpoint,
+  afterSave,
   onSuccess,
 }: EntityOverviewEditDialogProps) {
   const [isSaving, setIsSaving] = useState(false)
@@ -150,9 +159,27 @@ export function EntityOverviewEditDialog({
         throw new Error(errorData.error || 'Failed to update entity information')
       }
 
-      toast.success('Entity overview updated')
-      onOpenChange(false)
-      onSuccess?.()
+      const followUpResult = await afterSave?.()
+      const followUpLevel = followUpResult?.level || 'success'
+      const followUpMessage = followUpResult?.message || 'Entity overview updated'
+      const shouldCloseDialog = followUpResult?.closeDialog ?? true
+      const shouldRefresh = followUpResult?.refresh ?? true
+
+      if (followUpLevel === 'info') {
+        toast.info(followUpMessage)
+      } else if (followUpLevel === 'error') {
+        toast.error(followUpMessage)
+      } else {
+        toast.success(followUpMessage)
+      }
+
+      if (shouldCloseDialog) {
+        onOpenChange(false)
+      }
+
+      if (shouldRefresh) {
+        await onSuccess?.()
+      }
     } catch (error) {
       console.error('Error saving entity overview:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to save changes')

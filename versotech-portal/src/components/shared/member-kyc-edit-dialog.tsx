@@ -144,6 +144,13 @@ const memberKycEditSchema = z.object({
 
 type MemberKycEditForm = z.infer<typeof memberKycEditSchema>
 
+type SaveFollowUpResult = {
+  level?: 'success' | 'info' | 'error'
+  message?: string
+  closeDialog?: boolean
+  refresh?: boolean
+}
+
 interface MemberKYCEditDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -153,10 +160,44 @@ interface MemberKYCEditDialogProps {
   memberName?: string
   initialData?: Partial<MemberKycEditForm>
   apiEndpoint: string
-  onSuccess?: () => void
+  afterSave?: () => Promise<SaveFollowUpResult | void> | SaveFollowUpResult | void
+  onSuccess?: () => void | Promise<void>
   mode?: 'create' | 'edit'
   showIdentification?: boolean
   showSignatoryField?: boolean
+}
+
+const FALLBACK_ROLE_LABELS: Record<string, string> = {
+  beneficial_owner: 'Beneficial Owner',
+  authorized_signatory: 'Authorized Signatory',
+  partner: 'Partner',
+  associate: 'Associate',
+  counsel: 'Counsel',
+  paralegal: 'Paralegal',
+  other: 'Other',
+}
+
+const formatFallbackRoleLabel = (role: string) =>
+  FALLBACK_ROLE_LABELS[role] ||
+  role
+    .split('_')
+    .filter(Boolean)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+
+export const getRoleOptions = (selectedRole?: string | null) => {
+  const options = [...MEMBER_ROLES]
+  if (!selectedRole || options.some((role) => role.value === selectedRole)) {
+    return options
+  }
+
+  return [
+    ...options,
+    {
+      value: selectedRole,
+      label: LEGACY_ROLE_LABELS[selectedRole] || formatFallbackRoleLabel(selectedRole),
+    },
+  ]
 }
 
 // Compact section header
@@ -192,6 +233,7 @@ export function MemberKYCEditDialog({
   memberName,
   initialData,
   apiEndpoint,
+  afterSave,
   onSuccess,
   mode = 'edit',
   showIdentification = false,
@@ -278,6 +320,7 @@ export function MemberKYCEditDialog({
   const selectedRole = form.watch('role')
   const watchIsUsTaxpayer = form.watch('is_us_taxpayer')
   const isUBO = selectedRole === 'ubo' || selectedRole === 'beneficial_owner' || selectedRole === 'shareholder'
+  const roleOptions = getRoleOptions(selectedRole)
 
   const handleSubmit = async (data: MemberKycEditForm) => {
     setIsSaving(true)
@@ -317,9 +360,29 @@ export function MemberKYCEditDialog({
         throw new Error(firstFieldError || errorData.error || `Failed to ${mode} member`)
       }
 
-      toast.success(mode === 'create' ? 'Member added successfully' : 'Member updated successfully')
-      onOpenChange(false)
-      onSuccess?.()
+      const followUpResult = await afterSave?.()
+      const followUpLevel = followUpResult?.level || 'success'
+      const followUpMessage =
+        followUpResult?.message ||
+        (mode === 'create' ? 'Member added successfully' : 'Member updated successfully')
+      const shouldCloseDialog = followUpResult?.closeDialog ?? true
+      const shouldRefresh = followUpResult?.refresh ?? true
+
+      if (followUpLevel === 'info') {
+        toast.info(followUpMessage)
+      } else if (followUpLevel === 'error') {
+        toast.error(followUpMessage)
+      } else {
+        toast.success(followUpMessage)
+      }
+
+      if (shouldCloseDialog) {
+        onOpenChange(false)
+      }
+
+      if (shouldRefresh) {
+        await onSuccess?.()
+      }
     } catch (error) {
       console.error(`Error ${mode}ing member:`, error)
       toast.error(error instanceof Error ? error.message : `Failed to ${mode} member`)
@@ -381,16 +444,11 @@ export function MemberKYCEditDialog({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {MEMBER_ROLES.map((role) => (
+                            {roleOptions.map((role) => (
                               <SelectItem key={role.value} value={role.value}>
                                 {role.label}
                               </SelectItem>
                             ))}
-                            {!!selectedRole && LEGACY_ROLE_LABELS[selectedRole] && (
-                              <SelectItem value={selectedRole}>
-                                {LEGACY_ROLE_LABELS[selectedRole]}
-                              </SelectItem>
-                            )}
                           </SelectContent>
                         </Select>
                         {showSignatoryField && (

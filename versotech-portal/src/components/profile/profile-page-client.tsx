@@ -206,102 +206,66 @@ const ACCOUNT_APPROVAL_BADGES: Record<string, { label: string; className: string
   unauthorized: { label: 'Account Restricted', className: 'bg-red-100 text-red-800 border-red-200' },
 }
 
-const normalizeEntityFieldValue = (value: unknown): string | null => {
-  if (value === null || value === undefined) return null
-  if (typeof value === 'string') {
-    const trimmed = value.trim()
-    return trimmed.length > 0 ? trimmed : null
-  }
-  if (typeof value === 'number' || typeof value === 'boolean') {
-    return String(value)
-  }
-  return JSON.stringify(value)
+type SaveFollowUpResult = {
+  level?: 'success' | 'info' | 'error'
+  message?: string
+  closeDialog?: boolean
+  refresh?: boolean
 }
 
-const pickSnapshotValue = (
-  snapshot: Record<string, unknown> | null | undefined,
-  keys: readonly string[]
-): unknown => {
-  if (!snapshot) return null
-  for (const key of keys) {
-    const value = snapshot[key]
-    if (value !== undefined && value !== null && !(typeof value === 'string' && value.trim() === '')) {
-      return value
+export const parseProfileSaveFollowUp = async (
+  response: Response,
+  options: {
+    successMessage: string
+    alreadyHandledMessage: string
+    missingPrefix: string
+    invalidPrefix?: string
+    fallbackErrorMessage: string
+  }
+): Promise<SaveFollowUpResult> => {
+  const payload = await response.json().catch(() => ({}))
+
+  if (response.ok) {
+    return { level: 'success', message: options.successMessage }
+  }
+
+  if (Array.isArray(payload?.missing) && payload.missing.length > 0) {
+    return {
+      level: 'info',
+      message: `${options.missingPrefix} ${payload.missing.join(', ')}.`,
+      closeDialog: false,
+      refresh: false,
     }
   }
-  return null
-}
 
-const hasEntityOverviewChanges = (
-  investorInfo: InvestorInfo | null | undefined,
-  snapshot: Record<string, unknown> | null | undefined
-): boolean => {
-  if (!investorInfo) return false
-  if (!snapshot || Object.keys(snapshot).length === 0) return true
+  if (Array.isArray(payload?.invalid) && payload.invalid.length > 0) {
+    return {
+      level: 'info',
+      message: `${options.invalidPrefix || options.missingPrefix} ${payload.invalid.join(', ')}.`,
+      closeDialog: false,
+      refresh: false,
+    }
+  }
 
-  const checks: Array<{ current: unknown; keys: readonly string[] }> = [
-    { current: investorInfo.display_name, keys: ['display_name'] },
-    { current: investorInfo.legal_name, keys: ['legal_name'] },
-    { current: investorInfo.country_of_incorporation, keys: ['country_of_incorporation'] },
-    { current: investorInfo.email, keys: ['email', 'contact_email', 'primary_contact_email'] },
-    { current: investorInfo.phone, keys: ['phone', 'contact_phone', 'primary_contact_phone'] },
-    { current: investorInfo.phone_mobile, keys: ['phone_mobile'] },
-    { current: investorInfo.phone_office, keys: ['phone_office'] },
-    { current: investorInfo.website, keys: ['website'] },
-    {
-      current: investorInfo.registered_address_line_1,
-      keys: ['registered_address', 'registered_address_line_1', 'address', 'address_line_1'],
-    },
-    { current: investorInfo.registered_address_line_2, keys: ['registered_address_2', 'registered_address_line_2', 'address_2', 'address_line_2'] },
-    { current: investorInfo.registered_city, keys: ['registered_city', 'city'] },
-    { current: investorInfo.registered_state, keys: ['registered_state', 'state_province'] },
-    { current: investorInfo.registered_postal_code, keys: ['registered_postal_code', 'postal_code'] },
-    { current: investorInfo.registered_country, keys: ['registered_country', 'country'] },
-  ]
+  if (
+    typeof payload?.error === 'string' &&
+    (
+      payload.error.includes('already submitted') ||
+      payload.error.includes('already approved') ||
+      payload.error.includes('No personal information changes to submit') ||
+      payload.error.includes('Entity KYC information already submitted')
+    )
+  ) {
+    return {
+      level: 'info',
+      message: options.alreadyHandledMessage,
+    }
+  }
 
-  return checks.some(
-    ({ current, keys }) =>
-      normalizeEntityFieldValue(current) !==
-      normalizeEntityFieldValue(pickSnapshotValue(snapshot, keys))
-  )
-}
-
-const hasPersonalInfoOverviewChanges = (
-  investorInfo: InvestorInfo | null | undefined,
-  snapshot: Record<string, unknown> | null | undefined
-): boolean => {
-  if (!investorInfo) return false
-  if (!snapshot || Object.keys(snapshot).length === 0) return true
-
-  const checks: Array<{ current: unknown; keys: readonly string[] }> = [
-    { current: investorInfo.first_name, keys: ['first_name'] },
-    { current: investorInfo.middle_name, keys: ['middle_name'] },
-    { current: investorInfo.last_name, keys: ['last_name'] },
-    { current: investorInfo.name_suffix, keys: ['name_suffix'] },
-    { current: investorInfo.date_of_birth, keys: ['date_of_birth'] },
-    { current: investorInfo.country_of_birth, keys: ['country_of_birth'] },
-    { current: investorInfo.nationality, keys: ['nationality'] },
-    { current: investorInfo.email, keys: ['email'] },
-    { current: investorInfo.phone_mobile, keys: ['phone_mobile'] },
-    { current: investorInfo.phone_office, keys: ['phone_office'] },
-    { current: investorInfo.residential_street, keys: ['residential_street', 'address', 'address_line_1'] },
-    { current: investorInfo.residential_line_2, keys: ['residential_line_2', 'address_2', 'address_line_2'] },
-    { current: investorInfo.residential_city, keys: ['residential_city', 'city'] },
-    { current: investorInfo.residential_state, keys: ['residential_state', 'state_province'] },
-    { current: investorInfo.residential_postal_code, keys: ['residential_postal_code', 'postal_code'] },
-    { current: investorInfo.residential_country, keys: ['residential_country', 'country'] },
-    { current: investorInfo.is_us_citizen, keys: ['is_us_citizen'] },
-    { current: investorInfo.is_us_taxpayer, keys: ['is_us_taxpayer'] },
-    { current: investorInfo.us_taxpayer_id, keys: ['us_taxpayer_id'] },
-    { current: investorInfo.country_of_tax_residency, keys: ['country_of_tax_residency', 'tax_residency'] },
-    { current: investorInfo.tax_id_number, keys: ['tax_id_number'] },
-  ]
-
-  return checks.some(
-    ({ current, keys }) =>
-      normalizeEntityFieldValue(current) !==
-      normalizeEntityFieldValue(pickSnapshotValue(snapshot, keys))
-  )
+  return {
+    level: 'error',
+    message: options.fallbackErrorMessage,
+  }
 }
 
 export function ProfilePageClient({
@@ -314,16 +278,12 @@ export function ProfilePageClient({
   investorInfo,
   investorUserInfo,
   memberInfo,
-  latestEntityInfoSnapshot,
-  latestPersonalInfoSnapshot,
   latestMemberPersonalInfoSnapshot,
   investorAccountApprovalReadiness,
 }: ProfilePageClientProps) {
   const [profile, setProfile] = useState(initialProfile)
   const [showKycDialog, setShowKycDialog] = useState(false)
   const [showEntityOverviewDialog, setShowEntityOverviewDialog] = useState(false)
-  const [isSubmittingEntityKyc, setIsSubmittingEntityKyc] = useState(false)
-  const [isSubmittingPersonalKyc, setIsSubmittingPersonalKyc] = useState(false)
   const [isSubmittingAccountApproval, setIsSubmittingAccountApproval] = useState(false)
   const [showRequestInfoDetails, setShowRequestInfoDetails] = useState(false)
   const [approvedDocMetadata, setApprovedDocMetadata] = useState<ApprovedKycDocumentMetadata | null>(null)
@@ -332,15 +292,7 @@ export function ProfilePageClient({
   const isIndividual = investorInfo?.type === 'individual'
   const isEntity = hasInvestorEntity && investorInfo?.type !== 'individual'
   const isStaff = variant === 'staff'
-  const entityKycStatus = (investorInfo?.kyc_status || '').toLowerCase()
   const canSubmitEntityInfo = !!(investorUserInfo?.is_primary || investorUserInfo?.role === 'admin')
-  const entityHasUnsubmittedChanges = isEntity
-    ? hasEntityOverviewChanges(investorInfo, latestEntityInfoSnapshot)
-    : false
-  const personalHasUnsubmittedChanges = isIndividual
-    ? hasPersonalInfoOverviewChanges(investorInfo, latestPersonalInfoSnapshot)
-    : false
-  const personalSubmitInFlight = ['submitted', 'pending_review', 'under_review'].includes(entityKycStatus)
   const canSubmitAccountApproval = !!(investorUserInfo?.is_primary || investorUserInfo?.role === 'admin')
   const readiness = investorAccountApprovalReadiness || null
   const missingAccountKycItems = readiness?.missingItems || []
@@ -366,12 +318,13 @@ export function ProfilePageClient({
     }
   }, [defaultAction])
 
-  // Submit entity KYC for review
-  const handleSubmitEntityKyc = async () => {
-    setIsSubmittingEntityKyc(true)
+  const submitEntityKycAfterSave = async (): Promise<SaveFollowUpResult> => {
     try {
       if (!investorInfo?.id) {
-        throw new Error('Investor entity not found')
+        return {
+          level: 'error',
+          message: 'Changes saved, but entity KYC could not be updated.',
+        }
       }
 
       const response = await fetch('/api/me/entity-kyc/submit', {
@@ -383,42 +336,41 @@ export function ProfilePageClient({
         }),
       })
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to submit entity KYC')
-      }
-
-      toast.success('Entity KYC saved')
-      window.location.reload()
+      return parseProfileSaveFollowUp(response, {
+        successMessage: 'Entity KYC saved',
+        alreadyHandledMessage: 'Changes saved.',
+        missingPrefix: 'Changes saved. Complete',
+        invalidPrefix: 'Changes saved. Fix',
+        fallbackErrorMessage: 'Changes saved, but entity KYC could not be updated.',
+      })
     } catch (error) {
-      console.error('Error submitting entity KYC:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to submit entity KYC')
-    } finally {
-      setIsSubmittingEntityKyc(false)
+      console.error('Error submitting entity KYC after save:', error)
+      return {
+        level: 'error',
+        message: 'Changes saved, but entity KYC could not be updated.',
+      }
     }
   }
 
-  // Submit personal info for individual investor review.
-  const handleSubmitPersonalKyc = async () => {
-    setIsSubmittingPersonalKyc(true)
+  const submitPersonalKycAfterSave = async (): Promise<SaveFollowUpResult> => {
     try {
       const response = await fetch('/api/investors/me/submit-personal-kyc', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       })
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to submit personal KYC')
-      }
-
-      toast.success('Personal KYC saved')
-      window.location.reload()
+      return parseProfileSaveFollowUp(response, {
+        successMessage: 'Personal KYC saved',
+        alreadyHandledMessage: 'Changes saved.',
+        missingPrefix: 'Changes saved. Complete',
+        fallbackErrorMessage: 'Changes saved, but personal KYC could not be updated.',
+      })
     } catch (error) {
-      console.error('Error submitting personal KYC:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to submit personal KYC')
-    } finally {
-      setIsSubmittingPersonalKyc(false)
+      console.error('Error submitting personal KYC after save:', error)
+      return {
+        level: 'error',
+        message: 'Changes saved, but personal KYC could not be updated.',
+      }
     }
   }
 
@@ -878,28 +830,6 @@ export function ProfilePageClient({
                     </div>
                   </div>
                 </section>
-
-                <div className="pt-2">
-                  <Button
-                    onClick={handleSubmitEntityKyc}
-                    disabled={isSubmittingEntityKyc || !entityHasUnsubmittedChanges || !canSubmitEntityInfo}
-                    size="sm"
-                  >
-                    <Send className="h-4 w-4 mr-2" />
-                    {isSubmittingEntityKyc ? 'Saving...' : 'Save'}
-                  </Button>
-                  {!canSubmitEntityInfo ? (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Only primary contacts can save.
-                    </p>
-                  ) : (
-                    !entityHasUnsubmittedChanges && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        No edits to save.
-                      </p>
-                    )
-                  )}
-                </div>
               </OverviewSectionCard>
             )}
 
@@ -951,40 +881,6 @@ export function ProfilePageClient({
                 onEdit={() => setShowKycDialog(true)}
                 title="Personal KYC Information"
               />
-
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="space-y-1">
-                      <p className="font-medium text-foreground">Save Personal Information</p>
-                      <p className="text-sm text-muted-foreground">
-                        Save personal information updates for KYC processing.
-                      </p>
-                      {personalSubmitInFlight && (
-                        <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                          <Send className="h-3 w-3 mr-1" />
-                          Personal Info Saved
-                        </Badge>
-                      )}
-                      {!personalHasUnsubmittedChanges && (
-                        <p className="text-xs text-muted-foreground">No edits to save.</p>
-                      )}
-                    </div>
-                    <Button
-                      onClick={handleSubmitPersonalKyc}
-                      disabled={
-                        isSubmittingPersonalKyc ||
-                        personalSubmitInFlight ||
-                        !personalHasUnsubmittedChanges
-                      }
-                      size="sm"
-                    >
-                      <Send className="h-4 w-4 mr-2" />
-                      {isSubmittingPersonalKyc ? 'Saving...' : 'Save'}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           )}
 
@@ -1259,6 +1155,7 @@ export function ProfilePageClient({
           initialData={{
             first_name: investorInfo.first_name ?? (profile.display_name?.split(' ')[0]) ?? undefined,
             middle_name: investorInfo.middle_name ?? undefined,
+            middle_initial: investorInfo.middle_initial ?? undefined,
             last_name: investorInfo.last_name ?? (profile.display_name?.split(' ').slice(1).join(' ')) ?? undefined,
             name_suffix: investorInfo.name_suffix ?? undefined,
             date_of_birth: investorInfo.date_of_birth ?? undefined,
@@ -1272,12 +1169,14 @@ export function ProfilePageClient({
             us_taxpayer_id: investorInfo.us_taxpayer_id ?? undefined,
             country_of_tax_residency: investorInfo.country_of_tax_residency ?? undefined,
             residential_street: investorInfo.residential_street ?? undefined,
+            residential_line_2: investorInfo.residential_line_2 ?? undefined,
             residential_city: investorInfo.residential_city ?? undefined,
             residential_state: investorInfo.residential_state ?? undefined,
             residential_postal_code: investorInfo.residential_postal_code ?? undefined,
             residential_country: investorInfo.residential_country ?? undefined,
           }}
           apiEndpoint="/api/investors/me"
+          afterSave={submitPersonalKycAfterSave}
           onSuccess={() => window.location.reload()}
         />
       )}
@@ -1296,7 +1195,7 @@ export function ProfilePageClient({
             phone_mobile: investorInfo.phone_mobile,
             phone_office: investorInfo.phone_office,
             website: investorInfo.website,
-            address: investorInfo.registered_address || investorInfo.registered_address_line_1,
+            address: investorInfo.registered_address_line_1 || investorInfo.registered_address,
             address_2: investorInfo.registered_address_line_2,
             city: investorInfo.registered_city,
             state_province: investorInfo.registered_state,
@@ -1304,6 +1203,7 @@ export function ProfilePageClient({
             country: investorInfo.registered_country,
           }}
           apiEndpoint="/api/investors/me"
+          afterSave={canSubmitEntityInfo ? submitEntityKycAfterSave : undefined}
           onSuccess={() => window.location.reload()}
         />
       )}

@@ -101,6 +101,13 @@ const individualKycEditSchema = z.object({
 
 type IndividualKycEditForm = z.infer<typeof individualKycEditSchema>
 
+type SaveFollowUpResult = {
+  level?: 'success' | 'info' | 'error'
+  message?: string
+  closeDialog?: boolean
+  refresh?: boolean
+}
+
 // ID types for the select dropdown
 const ID_TYPES = [
   { value: 'passport', label: 'Passport' },
@@ -118,7 +125,8 @@ interface EntityKYCEditDialogProps {
   entityName?: string
   initialData?: Partial<IndividualKycEditForm>
   apiEndpoint: string
-  onSuccess?: () => void
+  afterSave?: () => Promise<SaveFollowUpResult | void> | SaveFollowUpResult | void
+  onSuccess?: () => void | Promise<void>
   showPersonalInfo?: boolean
   showAddress?: boolean
   showTaxInfo?: boolean
@@ -157,6 +165,7 @@ export function EntityKYCEditDialog({
   entityName,
   initialData,
   apiEndpoint,
+  afterSave,
   onSuccess,
   showPersonalInfo = true,
   showAddress = true,
@@ -229,9 +238,27 @@ export function EntityKYCEditDialog({
         throw new Error(firstFieldError || errorData.error || 'Failed to save KYC data')
       }
 
-      toast.success('KYC information updated successfully')
-      onOpenChange(false)
-      onSuccess?.()
+      const followUpResult = await afterSave?.()
+      const followUpLevel = followUpResult?.level || 'success'
+      const followUpMessage = followUpResult?.message || 'KYC information updated successfully'
+      const shouldCloseDialog = followUpResult?.closeDialog ?? true
+      const shouldRefresh = followUpResult?.refresh ?? true
+
+      if (followUpLevel === 'info') {
+        toast.info(followUpMessage)
+      } else if (followUpLevel === 'error') {
+        toast.error(followUpMessage)
+      } else {
+        toast.success(followUpMessage)
+      }
+
+      if (shouldCloseDialog) {
+        onOpenChange(false)
+      }
+
+      if (shouldRefresh) {
+        await onSuccess?.()
+      }
     } catch (error) {
       console.error('Error saving KYC data:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to save KYC data')

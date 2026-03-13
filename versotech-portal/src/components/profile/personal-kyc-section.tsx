@@ -9,7 +9,6 @@ import { cn } from '@/lib/utils'
 import {
   User,
   Edit,
-  Send,
   AlertCircle,
   Phone,
   MapPin,
@@ -21,7 +20,6 @@ import {
   CheckCircle,
   XCircle,
 } from 'lucide-react'
-import { toast } from 'sonner'
 import { MemberKYCEditDialog } from '@/components/shared/member-kyc-edit-dialog'
 import { getCountryName } from '@/components/kyc/country-select'
 
@@ -31,9 +29,11 @@ export type MemberKYCData = {
   full_name: string | null
   first_name: string | null
   middle_name: string | null
+  middle_initial?: string | null
   last_name: string | null
   name_suffix: string | null
   role: string | null
+  ownership_percentage?: number | null
   email: string | null
   phone: string | null
   phone_mobile: string | null
@@ -77,30 +77,6 @@ interface PersonalKYCSectionProps {
   profileName?: string | null
   /** Auto-open the edit dialog on mount (e.g., from onboarding modal deep-link) */
   autoOpenEdit?: boolean
-}
-
-const normalizeComparableValue = (value: unknown): string | null => {
-  if (value === null || value === undefined) return null
-  if (typeof value === 'string') {
-    const trimmed = value.trim()
-    return trimmed.length > 0 ? trimmed : null
-  }
-  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
-  return JSON.stringify(value)
-}
-
-const pickSnapshotValue = (
-  snapshot: Record<string, unknown> | null | undefined,
-  keys: readonly string[]
-): unknown => {
-  if (!snapshot) return null
-  for (const key of keys) {
-    const value = snapshot[key]
-    if (value !== undefined && value !== null && !(typeof value === 'string' && value.trim() === '')) {
-      return value
-    }
-  }
-  return null
 }
 
 // --- Visual helpers (same style as IndividualKycDisplay) ---
@@ -202,14 +178,12 @@ export function PersonalKYCSection({
   memberData,
   entityType,
   entityId,
-  latestReviewSnapshot,
   onRefresh,
   profileEmail,
   profileName,
   autoOpenEdit,
 }: PersonalKYCSectionProps) {
   const [showEditDialog, setShowEditDialog] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Auto-open edit dialog when deep-linked from onboarding modal
   useEffect(() => {
@@ -247,48 +221,14 @@ export function PersonalKYCSection({
     return parts.length > 0 ? parts.join(', ') : null
   }
 
-  const hasEditsToSave = !!memberData && (
-    !latestReviewSnapshot ||
-    Object.keys(latestReviewSnapshot).length === 0 ||
-    [
-      { current: memberData.first_name, keys: ['first_name'] },
-      { current: memberData.middle_name, keys: ['middle_name'] },
-      { current: memberData.last_name, keys: ['last_name'] },
-      { current: memberData.name_suffix, keys: ['name_suffix'] },
-      { current: memberData.date_of_birth, keys: ['date_of_birth'] },
-      { current: memberData.country_of_birth, keys: ['country_of_birth'] },
-      { current: memberData.nationality, keys: ['nationality'] },
-      { current: memberData.email, keys: ['email'] },
-      { current: memberData.phone_mobile, keys: ['phone_mobile'] },
-      { current: memberData.phone_office, keys: ['phone_office'] },
-      { current: memberData.residential_street, keys: ['residential_street', 'address', 'address_line_1'] },
-      { current: memberData.residential_line_2, keys: ['residential_line_2', 'address_2', 'address_line_2'] },
-      { current: memberData.residential_city, keys: ['residential_city', 'city'] },
-      { current: memberData.residential_state, keys: ['residential_state', 'state_province'] },
-      { current: memberData.residential_postal_code, keys: ['residential_postal_code', 'postal_code'] },
-      { current: memberData.residential_country, keys: ['residential_country', 'country'] },
-      { current: memberData.is_us_citizen, keys: ['is_us_citizen'] },
-      { current: memberData.is_us_taxpayer, keys: ['is_us_taxpayer'] },
-      { current: memberData.us_taxpayer_id, keys: ['us_taxpayer_id'] },
-      { current: memberData.country_of_tax_residency, keys: ['country_of_tax_residency', 'tax_residency'] },
-      { current: memberData.tax_id_number, keys: ['tax_id_number'] },
-      { current: memberData.id_type, keys: ['id_type'] },
-      { current: memberData.id_number, keys: ['id_number'] },
-      { current: memberData.id_issue_date, keys: ['id_issue_date'] },
-      { current: memberData.id_expiry_date, keys: ['id_expiry_date'] },
-      { current: memberData.id_issuing_country, keys: ['id_issuing_country'] },
-    ].some(
-      ({ current, keys }) =>
-        normalizeComparableValue(current) !==
-        normalizeComparableValue(pickSnapshotValue(latestReviewSnapshot, keys))
-    )
-  )
+  const submitAfterSave = async () => {
+    if (!memberData?.id) {
+      return {
+        level: 'success' as const,
+        message: 'Personal KYC saved',
+      }
+    }
 
-  // Submit personal KYC for review
-  const handleSubmitForReview = async () => {
-    if (!memberData?.id) return
-
-    setIsSubmitting(true)
     try {
       const response = await fetch('/api/me/personal-kyc/submit', {
         method: 'POST',
@@ -299,18 +239,43 @@ export function PersonalKYCSection({
         }),
       })
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to submit KYC')
+      const payload = await response.json().catch(() => ({}))
+
+      if (response.ok) {
+        return {
+          level: 'success' as const,
+          message: 'Personal KYC saved',
+        }
       }
 
-      toast.success('Personal KYC saved')
-      onRefresh?.()
+      if (Array.isArray(payload?.missing) && payload.missing.length > 0) {
+        return {
+          level: 'info' as const,
+          message: `Changes saved. Complete ${payload.missing.join(', ')} to finish this step.`,
+          closeDialog: false,
+          refresh: false,
+        }
+      }
+
+      if (typeof payload?.error === 'string') {
+        if (
+          payload.error.includes('already submitted') ||
+          payload.error.includes('already approved') ||
+          payload.error.includes('No personal information changes to submit')
+        ) {
+          return {
+            level: 'info' as const,
+            message: 'Changes saved.',
+          }
+        }
+      }
     } catch (error) {
-      console.error('Error submitting KYC:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to submit KYC')
-    } finally {
-      setIsSubmitting(false)
+      console.error('Error submitting KYC after save:', error)
+    }
+
+    return {
+      level: 'error' as const,
+      message: 'Changes saved, but personal KYC could not be updated.',
     }
   }
 
@@ -401,23 +366,6 @@ export function PersonalKYCSection({
               )}
             </div>
           </Section>
-
-          {/* Save Button */}
-          <div className="pt-4 border-t">
-            <Button
-              onClick={handleSubmitForReview}
-              disabled={isSubmitting || !hasEditsToSave}
-            >
-              <Send className="h-4 w-4 mr-2" />
-              {isSubmitting ? 'Saving...' : 'Save'}
-            </Button>
-            {!hasEditsToSave && (
-              <p className="text-sm text-muted-foreground mt-2">
-                No edits to save.
-              </p>
-            )}
-          </div>
-
           {/* KYC Notes (if rejected) */}
           {memberData.kyc_status === 'rejected' && memberData.kyc_notes && (
             <div className="pt-4 border-t">
@@ -445,6 +393,7 @@ export function PersonalKYCSection({
           role: memberData.role || 'other',
           first_name: memberData.first_name || (profileName?.split(' ')[0]) || '',
           middle_name: memberData.middle_name,
+          middle_initial: memberData.middle_initial,
           last_name: memberData.last_name || (profileName?.split(' ').slice(1).join(' ')) || '',
           name_suffix: memberData.name_suffix,
           date_of_birth: memberData.date_of_birth,
@@ -464,8 +413,10 @@ export function PersonalKYCSection({
           us_taxpayer_id: memberData.us_taxpayer_id,
           country_of_tax_residency: memberData.country_of_tax_residency,
           tax_id_number: memberData.tax_id_number,
+          ownership_percentage: memberData.ownership_percentage ?? undefined,
         }}
         apiEndpoint={MEMBER_API_ENDPOINTS[entityType]}
+        afterSave={submitAfterSave}
         onSuccess={() => {
           setShowEditDialog(false)
           onRefresh?.()

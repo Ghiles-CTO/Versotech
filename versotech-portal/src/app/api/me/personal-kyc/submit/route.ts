@@ -91,6 +91,8 @@ type MemberRow = {
   middle_initial?: string | null
   last_name: string | null
   name_suffix?: string | null
+  role?: string | null
+  ownership_percentage?: number | null
   kyc_status: string | null
   date_of_birth: string | null
   country_of_birth?: string | null
@@ -290,6 +292,8 @@ export async function POST(request: Request) {
     const submissionMemberIdColumn = `${entityType}_member_id`
 
     const reviewSnapshot: Record<string, unknown> = {
+      role: member.role,
+      ownership_percentage: member.ownership_percentage,
       first_name: member.first_name,
       middle_name: member.middle_name,
       middle_initial: member.middle_initial,
