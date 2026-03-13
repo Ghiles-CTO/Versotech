@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
-import Link from 'next/link'
+import { useState, useMemo, useEffect, type MouseEvent as ReactMouseEvent } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -336,6 +335,17 @@ export function PersonaSidebar() {
     }
   }
 
+  const handleNavigate = (event: ReactMouseEvent<HTMLButtonElement>, href: string) => {
+    if (event.defaultPrevented) return
+
+    if (event.metaKey || event.ctrlKey || event.button === 1) {
+      window.open(href, '_blank', 'noopener,noreferrer')
+      return
+    }
+
+    router.push(href)
+  }
+
   return (
     <div className={cn(
       // Hidden on mobile, flex on desktop - CSS-first responsive (no JS flash)
@@ -440,7 +450,19 @@ export function PersonaSidebar() {
           const tourId = `nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`
 
           return (
-            <Link key={item.href} href={item.href} className="block group relative" data-tour={tourId}>
+            <button
+              key={item.href}
+              type="button"
+              onClick={(event) => handleNavigate(event, item.href)}
+              onAuxClick={(event) => {
+                if (event.button === 1) {
+                  handleNavigate(event, item.href)
+                }
+              }}
+              className="block w-full p-0 text-left group relative appearance-none border-0 bg-transparent cursor-pointer"
+              data-tour={tourId}
+              aria-current={isActive ? 'page' : undefined}
+            >
               <div className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
                 isActive
@@ -492,7 +514,7 @@ export function PersonaSidebar() {
                   )}
                 </div>
               )}
-            </Link>
+            </button>
           )
         })}
       </div>
@@ -502,7 +524,17 @@ export function PersonaSidebar() {
         "p-4 border-t mt-auto space-y-1",
         isDark ? "border-white/5" : "border-gray-100"
       )}>
-        <Link href="/versotech_main/help" className="block group relative">
+        <button
+          type="button"
+          onClick={(event) => handleNavigate(event, '/versotech_main/help')}
+          onAuxClick={(event) => {
+            if (event.button === 1) {
+              handleNavigate(event, '/versotech_main/help')
+            }
+          }}
+          className="block w-full p-0 text-left group relative appearance-none border-0 bg-transparent cursor-pointer"
+          aria-current={isNavItemActive(pathname, '/versotech_main/help') ? 'page' : undefined}
+        >
           <div className={cn(
             "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
             isNavItemActive(pathname, '/versotech_main/help')
@@ -531,7 +563,7 @@ export function PersonaSidebar() {
               Help & Support
             </div>
           )}
-        </Link>
+        </button>
         <Button
           variant="ghost"
           onClick={handleSignOut}
@@ -580,6 +612,19 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
     }
   }
 
+  const handleNavigate = (event: ReactMouseEvent<HTMLButtonElement>, href: string) => {
+    if (event.defaultPrevented) return
+
+    if (event.metaKey || event.ctrlKey || event.button === 1) {
+      window.open(href, '_blank', 'noopener,noreferrer')
+      onClose()
+      return
+    }
+
+    onClose()
+    router.push(href)
+  }
+
   return (
     <div className={cn(
       "flex flex-col h-full",
@@ -617,12 +662,18 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
           const tourId = `nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`
 
           return (
-            <Link
+            <button
               key={item.href}
-              href={item.href}
-              onClick={onClose}
-              className="block group relative"
+              type="button"
+              onClick={(event) => handleNavigate(event, item.href)}
+              onAuxClick={(event) => {
+                if (event.button === 1) {
+                  handleNavigate(event, item.href)
+                }
+              }}
+              className="block w-full p-0 text-left group relative appearance-none border-0 bg-transparent cursor-pointer"
               data-tour={tourId}
+              aria-current={isActive ? 'page' : undefined}
             >
               <div className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
@@ -645,17 +696,23 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
                   </span>
                 )}
               </div>
-            </Link>
+            </button>
           )
         })}
       </div>
 
       {/* Help & Sign Out */}
       <div className={cn("p-4 border-t mt-auto space-y-1", isDark ? "border-white/5" : "border-gray-100")}>
-        <Link
-          href="/versotech_main/help"
-          onClick={onClose}
-          className="block"
+        <button
+          type="button"
+          onClick={(event) => handleNavigate(event, '/versotech_main/help')}
+          onAuxClick={(event) => {
+            if (event.button === 1) {
+              handleNavigate(event, '/versotech_main/help')
+            }
+          }}
+          className="block w-full p-0 text-left appearance-none border-0 bg-transparent cursor-pointer"
+          aria-current={isNavItemActive(pathname, '/versotech_main/help') ? 'page' : undefined}
         >
           <div className={cn(
             "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
@@ -675,7 +732,7 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
             )} />
             <span className="text-sm font-medium">Help & Support</span>
           </div>
-        </Link>
+        </button>
         <Button
           variant="ghost"
           onClick={handleSignOut}
