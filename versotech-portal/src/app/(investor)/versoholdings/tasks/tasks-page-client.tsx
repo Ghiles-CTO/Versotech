@@ -295,6 +295,10 @@ export function TasksPageClient({
       return
     }
 
+    if (!selectedTask) {
+      return
+    }
+
     loadSignatureRequest(selectedTask)
   }, [isSignatureTask, loadSignatureRequest, selectedTask])
 

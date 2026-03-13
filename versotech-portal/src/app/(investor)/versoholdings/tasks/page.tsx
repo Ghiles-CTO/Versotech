@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 export const dynamic = 'force-dynamic'
 
 export interface TaskInstructions {
+  type?: string
   steps: string[]
   requirements: string[]
   estimated_time: string
