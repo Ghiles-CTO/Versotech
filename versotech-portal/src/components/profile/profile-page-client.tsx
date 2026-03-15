@@ -863,6 +863,7 @@ export function ProfilePageClient({
                   phone_mobile: investorInfo.phone_mobile,
                   phone_office: investorInfo.phone_office,
                   residential_street: investorInfo.residential_street,
+                  residential_line_2: investorInfo.residential_line_2,
                   residential_city: investorInfo.residential_city,
                   residential_state: investorInfo.residential_state,
                   residential_postal_code: investorInfo.residential_postal_code,
@@ -880,6 +881,7 @@ export function ProfilePageClient({
                 }}
                 onEdit={() => setShowKycDialog(true)}
                 title="Personal KYC Information"
+                addressDisplay="combined"
               />
             </div>
           )}

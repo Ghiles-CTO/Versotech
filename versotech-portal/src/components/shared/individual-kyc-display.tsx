@@ -83,6 +83,7 @@ interface IndividualKycDisplayProps {
   showAddress?: boolean
   showTaxInfo?: boolean
   showIdentification?: boolean
+  addressDisplay?: 'split' | 'combined'
 }
 
 // Helper to format dates
@@ -104,6 +105,19 @@ function buildFullName(data: IndividualKycData): string {
     data.name_suffix,
   ].filter(Boolean)
   return parts.join(' ') || '-'
+}
+
+function buildFullAddress(data: IndividualKycData): string {
+  const parts = [
+    data.residential_street,
+    data.residential_line_2,
+    data.residential_city,
+    data.residential_state,
+    data.residential_postal_code,
+    getCountryName(data.residential_country),
+  ].filter(Boolean)
+
+  return parts.join(', ') || '-'
 }
 
 function hasValue(value: ReactNode): boolean {
@@ -199,6 +213,7 @@ export function IndividualKycDisplay({
   showAddress = true,
   showTaxInfo = true,
   showIdentification = false,
+  addressDisplay = 'split',
 }: IndividualKycDisplayProps) {
   const hasAnyData =
     data.first_name ||
@@ -261,12 +276,15 @@ export function IndividualKycDisplay({
                   <Field label="Email" value={data.email} />
                   <Field icon={Phone} label="Mobile Phone" value={data.phone_mobile} />
                   <Field icon={Phone} label="Office Phone" value={data.phone_office} />
+                  {addressDisplay === 'combined' && (
+                    <Field icon={MapPin} label="Address" value={buildFullAddress(data)} />
+                  )}
                 </div>
               </Section>
             )}
 
             {/* Residential Address */}
-            {showAddress && (
+            {showAddress && addressDisplay === 'split' && (
               <Section icon={MapPin} title="Residential Address">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Field label="Street Address" value={data.residential_street} />
