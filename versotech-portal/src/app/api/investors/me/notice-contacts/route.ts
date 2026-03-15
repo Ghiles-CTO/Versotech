@@ -1,6 +1,8 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { resolveActiveInvestorLinkFromCookies } from '@/lib/kyc/active-investor-link'
+import { cookies } from 'next/headers'
 
 const noticeContactSchema = z.object({
   contact_type: z.enum(['legal', 'tax', 'compliance', 'accounting', 'general', 'other']),
@@ -34,18 +36,20 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get investor ID for this user
-    const { data: investorLinks, error: linksError } = await serviceSupabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
-      .limit(1)
+    const cookieStore = await cookies()
+    const { link: investorLink, error: investorLinkError } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id',
+    })
 
-    if (linksError || !investorLinks || investorLinks.length === 0) {
+    if (investorLinkError || !investorLink?.investor_id) {
       return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
     }
-
-    const investorId = investorLinks[0].investor_id
+    const investorId = investorLink.investor_id
 
     // Get notice contacts for this investor
     const { data: contacts, error: contactsError } = await serviceSupabase
@@ -77,7 +81,7 @@ export async function GET() {
  * POST /api/investors/me/notice-contacts
  * Add a new notice contact for the investor entity
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const serviceSupabase = createServiceClient()
 
@@ -87,18 +91,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get investor ID for this user
-    const { data: investorLinks, error: linksError } = await serviceSupabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
-      .limit(1)
+    const { link: investorLink, error: investorLinkError } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore: request.cookies,
+      select: 'investor_id',
+    })
 
-    if (linksError || !investorLinks || investorLinks.length === 0) {
+    if (investorLinkError || !investorLink?.investor_id) {
       return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
     }
-
-    const investorId = investorLinks[0].investor_id
+    const investorId = investorLink.investor_id
 
     // Parse and validate request body
     const body = await request.json()

@@ -4,6 +4,8 @@ import { syncUserSignatoryFromMember } from '@/lib/kyc/member-signatory-sync'
 import { MEMBER_KYC_PROFILE_FIELDS } from '@/lib/kyc/member-kyc-fields'
 import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { resolveActiveInvestorLinkFromCookies } from '@/lib/kyc/active-investor-link'
 
 interface RouteParams {
   params: Promise<{ memberId: string }>
@@ -24,29 +26,26 @@ export async function GET(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get investor IDs for this user
-    const { data: investorLinks } = await serviceSupabase
-      .from('investor_users')
-      .select('investor_id, role, is_primary')
-      .eq('user_id', user.id)
-    if (!investorLinks || investorLinks.length === 0) {
+    const cookieStore = await cookies()
+    const { link: investorLink, error: investorLinkError } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id',
+    })
+
+    if (investorLinkError || !investorLink?.investor_id) {
       return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
     }
-
-    const investorLinksWithAccess = investorLinks as Array<{
-      investor_id: string
-      role?: string | null
-      is_primary?: boolean | null
-    }>
-
-    const investorIds = investorLinksWithAccess.map(link => link.investor_id)
 
     // Fetch member and verify ownership
     const { data: member, error: memberError } = await serviceSupabase
       .from('investor_members')
       .select('*')
       .eq('id', memberId)
-      .in('investor_id', investorIds)
+      .eq('investor_id', investorLink.investor_id)
       .single()
 
     if (memberError || !member) {
@@ -75,37 +74,33 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get investor IDs for this user
-    const { data: investorLinks } = await serviceSupabase
-      .from('investor_users')
-      .select('investor_id, role, is_primary')
-      .eq('user_id', user.id)
+    const cookieStore = await cookies()
+    const { link: investorLink, error: investorLinkError } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+      role: string | null
+      is_primary: boolean | null
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id, role, is_primary',
+    })
 
-    if (!investorLinks || investorLinks.length === 0) {
+    if (investorLinkError || !investorLink?.investor_id) {
       return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
     }
-
-    const investorLinksWithAccess = investorLinks as Array<{
-      investor_id: string
-      role?: string | null
-      is_primary?: boolean | null
-    }>
-    const investorIds = investorLinksWithAccess.map(link => link.investor_id)
     // Verify member belongs to user's investor
     const { data: existingMember } = await serviceSupabase
       .from('investor_members')
       .select('id, investor_id, email, kyc_status, phone_mobile')
       .eq('id', memberId)
-      .in('investor_id', investorIds)
+      .eq('investor_id', investorLink.investor_id)
       .single()
     if (!existingMember) {
       return NextResponse.json({ error: 'Member not found' }, { status: 404 })
     }
 
-    const memberAccess = investorLinksWithAccess.find(
-      link => link.investor_id === existingMember.investor_id
-    )
-    const canManageMembers = memberAccess?.role === 'admin' || memberAccess?.is_primary === true
+    const canManageMembers = investorLink.role === 'admin' || investorLink.is_primary === true
     const isSelfMember =
       typeof existingMember.email === 'string' &&
       typeof user.email === 'string' &&
@@ -208,36 +203,33 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get investor IDs for this user
-    const { data: investorLinks } = await serviceSupabase
-      .from('investor_users')
-      .select('investor_id, role, is_primary')
-      .eq('user_id', user.id)
-    if (!investorLinks || investorLinks.length === 0) {
+    const cookieStore = await cookies()
+    const { link: investorLink, error: investorLinkError } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+      role: string | null
+      is_primary: boolean | null
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id, role, is_primary',
+    })
+
+    if (investorLinkError || !investorLink?.investor_id) {
       return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
     }
-
-    const investorLinksWithAccess = investorLinks as Array<{
-      investor_id: string
-      role?: string | null
-      is_primary?: boolean | null
-    }>
-    const investorIds = investorLinksWithAccess.map(link => link.investor_id)
     // Verify member belongs to user's investor
     const { data: existingMember } = await serviceSupabase
       .from('investor_members')
       .select('id, investor_id')
       .eq('id', memberId)
-      .in('investor_id', investorIds)
+      .eq('investor_id', investorLink.investor_id)
       .single()
     if (!existingMember) {
       return NextResponse.json({ error: 'Member not found' }, { status: 404 })
     }
 
-    const memberAccess = investorLinksWithAccess.find(
-      link => link.investor_id === existingMember.investor_id
-    )
-    const canManageMembers = memberAccess?.role === 'admin' || memberAccess?.is_primary === true
+    const canManageMembers = investorLink.role === 'admin' || investorLink.is_primary === true
     if (!canManageMembers) {
       return NextResponse.json(
         { error: 'Only admin or primary users can manage members' },

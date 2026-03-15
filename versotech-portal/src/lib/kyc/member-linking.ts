@@ -80,11 +80,12 @@ export async function fetchMemberWithAutoLink({
   if (normalizedEmail) {
     const { data: candidates, error: candidatesError } = await supabase
       .from(memberTable)
-      .select(`id, email`)
+      .select(`id, email, created_at`)
       .eq(entityIdColumn, entityId)
       .eq('is_active', true)
       .is('linked_user_id', null)
       .ilike('email', normalizedEmail)
+      .order('created_at', { ascending: true })
       .limit(2)
 
     if (candidatesError) {
@@ -92,8 +93,20 @@ export async function fetchMemberWithAutoLink({
     }
 
     const safeCandidates = candidates || []
-    if (safeCandidates.length === 1) {
+    if (safeCandidates.length >= 1) {
       const candidate = safeCandidates[0]
+      if (safeCandidates.length > 1) {
+        console.warn(
+          `[${context}] Multiple unlinked members matched email; linking oldest match to avoid creating a duplicate`,
+          {
+            memberTable,
+            entityId,
+            userId,
+            matchedMemberIds: safeCandidates.map(entry => entry.id),
+          }
+        )
+      }
+
       const { data: linkedRow, error: linkError } = await supabase
         .from(memberTable)
         .update({ linked_user_id: userId })
@@ -133,12 +146,6 @@ export async function fetchMemberWithAutoLink({
       if (racedLinked) {
         return { member: racedLinked, error: null, autoLinked: false }
       }
-    } else if (safeCandidates.length > 1) {
-      console.warn(`[${context}] Skipped auto-link: multiple unlinked members matched email`, {
-        memberTable,
-        entityId,
-        userId,
-      })
     }
   }
 

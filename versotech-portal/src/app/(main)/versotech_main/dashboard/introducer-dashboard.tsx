@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -20,7 +19,6 @@ import {
   ArrowRight,
   Loader2,
   PenLine,
-  Send,
   BarChart3,
   Target,
   Wallet,
@@ -33,10 +31,9 @@ import type { DateRange } from 'react-day-picker'
 import { format } from 'date-fns'
 import { type CurrencyTotals, formatCurrencyTotals, sumByCurrency } from '@/lib/currency-totals'
 import {
+  InvestorDashboardOnboardingCard,
   type DashboardOnboardingState,
-  resolveInvestorDashboardOnboardingStage,
 } from '@/components/dashboard/investor-dashboard-onboarding-card'
-import { toast } from 'sonner'
 
 type Persona = {
   persona_type: string
@@ -119,85 +116,7 @@ type RecentIntroduction = {
   } | null
 }
 
-type IntroducerOnboardingAction = {
-  title: string
-  description: string
-  ctaLabel?: string
-  href: string | null
-  isSubmitAction?: boolean
-}
-
-function getIntroducerOnboardingAction(state: DashboardOnboardingState): IntroducerOnboardingAction {
-  const stage = resolveInvestorDashboardOnboardingStage(state)
-  const entityType = (state.entityType || state.investorType || 'entity').toLowerCase().trim()
-  const isIndividual = entityType === 'individual'
-  const profileHref = state.profileHref || '/versotech_main/introducer-profile?tab=profile'
-  const kycHref = state.kycHref || '/versotech_main/introducer-profile?tab=kyc'
-  const membersHref = state.membersHref || '/versotech_main/introducer-profile?tab=entity-members'
-  const submitHref = state.submitHref || '/versotech_main/introducer-profile?tab=profile&action=submit-approval'
-
-  if (stage === 'under_review') {
-    return {
-      title: 'Your account is under review',
-      description: 'Your introducer account has been submitted and is currently under review. You will be notified once a decision is made.',
-      href: null,
-    }
-  }
-
-  if (stage === 'action_required') {
-    return {
-      title: 'Action required on your account',
-      description:
-        state.latestRequestInfo?.details ||
-        'Our review team has flagged items that require your attention. Please review and update the requested items.',
-      ctaLabel: 'Review requested updates',
-      href: profileHref,
-    }
-  }
-
-  if (stage === 'ready_to_submit') {
-    return {
-      title: 'Your account is ready to submit',
-      description: 'All required introducer information and KYC documents are in place. Submit your account for approval to activate introductions, agreements, and commissions.',
-      ctaLabel: 'Submit for approval',
-      href: submitHref,
-      isSubmitAction: true,
-    }
-  }
-
-  const firstMissingGroup = state.missingItems[0] || null
-  const normalizedMissingItems = firstMissingGroup?.missingItems.map((item) => item.toLowerCase()) || []
-
-  if (firstMissingGroup?.scope === 'entity' && normalizedMissingItems.some((item) => item.includes('entity information'))) {
-    return {
-      title: 'Complete your company details',
-      description: 'Finish your entity profile so the introducer account can move forward to KYC review.',
-      ctaLabel: 'Complete company details',
-      href: profileHref,
-    }
-  }
-
-  if (firstMissingGroup?.scope === 'member') {
-    return {
-      title: isIndividual ? 'Complete your personal KYC' : 'Complete member onboarding',
-      description: isIndividual
-        ? 'Finish your personal details and KYC documents to continue activating your introducer account.'
-        : `Finish the remaining personal details and KYC items for ${firstMissingGroup.name}.`,
-      ctaLabel: isIndividual ? 'Open profile' : 'Review members',
-      href: isIndividual ? profileHref : membersHref,
-    }
-  }
-
-  return {
-    title: 'Upload remaining KYC items',
-    description: 'Finish the remaining compliance items so your introducer account can be submitted for approval.',
-    ctaLabel: 'Open KYC',
-    href: kycHref,
-  }
-}
-
 export function IntroducerDashboard({ introducerId, userId, persona }: IntroducerDashboardProps) {
-  const router = useRouter()
   const { theme } = useTheme()
   // Theme system uses 'staff-dark' for dark mode across all personas
   const isDark = theme === 'staff-dark'
@@ -210,7 +129,6 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
   const [recentIntroductions, setRecentIntroductions] = useState<RecentIntroduction[]>([])
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
   const [onboarding, setOnboarding] = useState<DashboardOnboardingState | null>(null)
-  const [isSubmittingOnboarding, setIsSubmittingOnboarding] = useState(false)
 
   useEffect(() => {
     async function fetchData() {
@@ -427,47 +345,6 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
     )
   }
 
-  const onboardingStage = onboarding ? resolveInvestorDashboardOnboardingStage(onboarding) : null
-  const onboardingAction = onboarding ? getIntroducerOnboardingAction(onboarding) : null
-
-  async function handleSubmitAccountApproval() {
-    if (!onboarding?.submitEndpoint) {
-      return
-    }
-
-    setIsSubmittingOnboarding(true)
-    try {
-      const response = await fetch(onboarding.submitEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
-      const payload = await response.json().catch(() => null)
-
-      if (!response.ok) {
-        throw new Error(payload?.error || 'Failed to submit account for approval')
-      }
-
-      toast.success('Account submitted for approval.')
-      setOnboarding((current) =>
-        current
-          ? {
-              ...current,
-              accountApprovalStatus: 'pending_approval',
-              hasPendingApproval: true,
-              latestRequestInfo: null,
-            }
-          : current
-      )
-      router.refresh()
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to submit account for approval'
-      toast.error(message)
-    } finally {
-      setIsSubmittingOnboarding(false)
-    }
-  }
-
   const statusStyles: Record<string, string> = {
     interested: 'bg-blue-500/20 text-blue-400',
     approved: 'bg-purple-500/20 text-purple-400',
@@ -497,78 +374,7 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
         )}
       </div>
 
-      {onboarding && onboarding.accountApprovalStatus !== 'approved' && onboardingAction && (
-        <Card className={
-          onboardingStage === 'action_required'
-            ? (isDark ? 'border-amber-500/30 bg-amber-500/10' : 'border-amber-200 bg-amber-50')
-            : isDark
-              ? 'border-white/10 bg-white/5'
-              : 'border-slate-200/80 bg-white'
-        }>
-          <CardContent className="py-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-full ${
-                  onboardingStage === 'under_review'
-                    ? 'bg-blue-500/15'
-                    : onboardingStage === 'action_required'
-                      ? 'bg-amber-500/15'
-                      : onboardingStage === 'ready_to_submit'
-                        ? 'bg-emerald-500/15'
-                        : 'bg-primary/10'
-                }`}>
-                  {onboardingStage === 'under_review' ? (
-                    <Clock className="h-5 w-5 text-blue-500" />
-                  ) : onboardingStage === 'action_required' ? (
-                    <AlertTriangle className="h-5 w-5 text-amber-500" />
-                  ) : onboardingStage === 'ready_to_submit' ? (
-                    <Send className="h-5 w-5 text-emerald-500" />
-                  ) : (
-                    <CheckCircle2 className="h-5 w-5 text-primary" />
-                  )}
-                </div>
-                <div className="space-y-1">
-                  <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    {onboardingAction.title}
-                  </p>
-                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {onboardingAction.description}
-                  </p>
-                  {onboarding.latestRequestInfo && onboardingStage !== 'under_review' && (
-                    <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                      Reviewer note: {onboarding.latestRequestInfo.details}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {onboardingAction.isSubmitAction && onboarding.canSubmitAccountApproval ? (
-                  <Button onClick={handleSubmitAccountApproval} disabled={isSubmittingOnboarding}>
-                    {isSubmittingOnboarding ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4 mr-2" />
-                    )}
-                    {onboardingAction.ctaLabel}
-                  </Button>
-                ) : onboardingAction.href ? (
-                  <Button asChild>
-                    <Link href={onboardingAction.href}>
-                      {onboardingAction.ctaLabel || 'Open profile'}
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Link>
-                  </Button>
-                ) : null}
-                {onboardingAction.isSubmitAction && !onboarding.canSubmitAccountApproval && (
-                  <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                    An introducer admin or primary user needs to submit this account.
-                  </p>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {onboarding && <InvestorDashboardOnboardingCard state={onboarding} />}
 
       {/* Alert for Pending Agreement */}
       {pendingAgreement && (

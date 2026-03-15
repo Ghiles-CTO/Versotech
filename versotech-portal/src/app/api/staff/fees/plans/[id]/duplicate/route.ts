@@ -4,7 +4,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { checkStaffAccess } from '@/lib/auth';
+import {
+  buildIntroducerCommercialBlockPayload,
+  getIntroducerCommercialEligibility,
+} from '@/lib/introducers/commercial-eligibility';
 
 /**
  * POST /api/staff/fees/plans/[id]/duplicate
@@ -17,6 +22,7 @@ export async function POST(
   try {
     const { id } = await params;
     const supabase = await createClient();
+    const serviceSupabase = createServiceClient()
 
     // Check auth
     const {
@@ -24,6 +30,11 @@ export async function POST(
     } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const hasStaffAccess = await checkStaffAccess(user.id)
+    if (!hasStaffAccess) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // Fetch the original fee plan with components
@@ -44,6 +55,23 @@ export async function POST(
       }
       console.error('Error fetching fee plan:', fetchError);
       return NextResponse.json({ error: 'Failed to fetch fee plan' }, { status: 500 });
+    }
+
+    if (originalPlan.introducer_id) {
+      const eligibility = await getIntroducerCommercialEligibility({
+        supabase: serviceSupabase,
+        introducerId: originalPlan.introducer_id,
+      });
+
+      if (!eligibility) {
+        return NextResponse.json({ error: 'Failed to verify introducer eligibility' }, { status: 500 });
+      }
+
+      if (!eligibility.eligible) {
+        return NextResponse.json(buildIntroducerCommercialBlockPayload(eligibility), {
+          status: 409,
+        });
+      }
     }
 
     // Create new fee plan (copy of original)

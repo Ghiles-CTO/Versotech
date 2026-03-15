@@ -1,6 +1,9 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import {
+  evaluateIntroducerCommercialEligibility,
+} from '@/lib/introducers/commercial-eligibility'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -45,12 +48,12 @@ export async function GET(request: Request, { params }: RouteParams) {
       p_user_id: user.id
     })
 
-    const hasStaffAccess = personas?.some(
-      (p: { persona_type: string }) => p.persona_type === 'staff'
+    const hasStaffOrCeoAccess = personas?.some(
+      (p: { persona_type: string }) => p.persona_type === 'staff' || p.persona_type === 'ceo'
     ) || false
 
-    if (!hasStaffAccess) {
-      return NextResponse.json({ error: 'Forbidden: Staff access required' }, { status: 403 })
+    if (!hasStaffOrCeoAccess) {
+      return NextResponse.json({ error: 'Forbidden: Staff or CEO access required' }, { status: 403 })
     }
 
     // Parse query params
@@ -77,6 +80,63 @@ export async function GET(request: Request, { params }: RouteParams) {
       : entity_type === 'introducer'
         ? { introducer_id: entity_id }
         : { commercial_partner_id: entity_id }
+
+    const entityTable = entity_type === 'partner'
+      ? 'partners'
+      : entity_type === 'introducer'
+        ? 'introducers'
+        : 'commercial_partners'
+
+    const entitySelect = entity_type === 'introducer'
+      ? 'id, legal_name, display_name, account_approval_status, onboarding_status'
+      : 'id, legal_name, display_name'
+
+    const { data: entity } = await serviceSupabase
+      .from(entityTable)
+      .select(entitySelect)
+      .eq('id', entity_id)
+      .single()
+
+    if (!entity) {
+      return NextResponse.json(
+        { error: `${entity_type} not found` },
+        { status: 404 }
+      )
+    }
+
+    const entityRecord = entity as any
+
+    if (entity_type === 'introducer') {
+      const eligibility = evaluateIntroducerCommercialEligibility({
+        id: entity_id,
+        legal_name: entityRecord.legal_name ?? null,
+        display_name: entityRecord.display_name ?? null,
+        account_approval_status: entityRecord.account_approval_status ?? null,
+        onboarding_status: entityRecord.onboarding_status ?? null,
+      })
+
+      if (!eligibility.eligible) {
+        return NextResponse.json({
+          deal_id: dealId,
+          entity_id,
+          entity_type,
+          entity_name: (entity as any)?.display_name || (entity as any)?.legal_name || 'Unknown',
+          term_sheet_id: term_sheet_id || null,
+          fee_plans: [],
+          accepted_plans: [],
+          can_dispatch: false,
+          message: eligibility.message,
+          reasonCode: eligibility.reasonCode,
+          summary: {
+            total: 0,
+            accepted: 0,
+            sent: 0,
+            draft: 0,
+            rejected: 0,
+          },
+        })
+      }
+    }
 
     // Query fee plans for this entity and deal
     let query = serviceSupabase
@@ -144,24 +204,11 @@ export async function GET(request: Request, { params }: RouteParams) {
       }
     }
 
-    // Get entity name for UI display
-    const entityTable = entity_type === 'partner'
-      ? 'partners'
-      : entity_type === 'introducer'
-        ? 'introducers'
-        : 'commercial_partners'
-
-    const { data: entity } = await serviceSupabase
-      .from(entityTable)
-      .select('id, legal_name, display_name')
-      .eq('id', entity_id)
-      .single()
-
     return NextResponse.json({
       deal_id: dealId,
       entity_id,
       entity_type,
-      entity_name: entity?.display_name || entity?.legal_name || 'Unknown',
+      entity_name: entityRecord.display_name || entityRecord.legal_name || 'Unknown',
       term_sheet_id: term_sheet_id || null, // Include filter context in response
       fee_plans: feePlans || [],
       accepted_plans: acceptedPlans,

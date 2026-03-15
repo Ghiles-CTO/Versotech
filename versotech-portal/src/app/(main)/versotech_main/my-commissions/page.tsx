@@ -45,6 +45,11 @@ import { formatCurrency, formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
 import { SubmitInvoiceDialog, type CommissionType } from '@/components/commissions/submit-invoice-dialog'
 import { ViewInvoiceDialog } from '@/components/commissions/view-invoice-dialog'
+import {
+  ACTIVE_PERSONA_ID_COOKIE,
+  ACTIVE_PERSONA_TYPE_COOKIE,
+  readCookieValue,
+} from '@/lib/persona/active-persona'
 
 // ============================================================================
 // Types
@@ -156,6 +161,10 @@ const ENTITY_CONFIG: Record<EntityType, {
   },
 }
 
+function getCommissionsLoadErrorMessage() {
+  return 'Unable to load commissions right now.'
+}
+
 // ============================================================================
 // Main Component
 // ============================================================================
@@ -198,26 +207,51 @@ export default function MyCommissionsPage() {
         return
       }
 
-      // Detect entity type by checking all user tables in parallel
+      const activePersonaType = readCookieValue(document.cookie, ACTIVE_PERSONA_TYPE_COOKIE)
+      const activePersonaId = readCookieValue(document.cookie, ACTIVE_PERSONA_ID_COOKIE)
+
       const [partnerResult, introducerResult, cpResult] = await Promise.all([
-        supabase.from('partner_users').select('partner_id').eq('user_id', user.id).maybeSingle(),
-        supabase.from('introducer_users').select('introducer_id').eq('user_id', user.id).maybeSingle(),
-        supabase.from('commercial_partner_users').select('commercial_partner_id').eq('user_id', user.id).maybeSingle(),
+        supabase.from('partner_users').select('partner_id').eq('user_id', user.id),
+        supabase.from('introducer_users').select('introducer_id').eq('user_id', user.id),
+        supabase.from('commercial_partner_users').select('commercial_partner_id').eq('user_id', user.id),
       ])
 
-      // Determine entity type and ID
       let detectedType: EntityType | null = null
       let detectedId: string | null = null
+      const partnerIds = (partnerResult.data || []).map((row) => row.partner_id).filter(Boolean)
+      const introducerIds = (introducerResult.data || []).map((row) => row.introducer_id).filter(Boolean)
+      const commercialPartnerIds = (cpResult.data || []).map((row) => row.commercial_partner_id).filter(Boolean)
 
-      if (partnerResult.data?.partner_id) {
+      if (
+        activePersonaType === 'partner' &&
+        activePersonaId &&
+        partnerIds.includes(activePersonaId)
+      ) {
         detectedType = 'partner'
-        detectedId = partnerResult.data.partner_id
-      } else if (introducerResult.data?.introducer_id) {
+        detectedId = activePersonaId
+      } else if (
+        activePersonaType === 'introducer' &&
+        activePersonaId &&
+        introducerIds.includes(activePersonaId)
+      ) {
         detectedType = 'introducer'
-        detectedId = introducerResult.data.introducer_id
-      } else if (cpResult.data?.commercial_partner_id) {
+        detectedId = activePersonaId
+      } else if (
+        activePersonaType === 'commercial_partner' &&
+        activePersonaId &&
+        commercialPartnerIds.includes(activePersonaId)
+      ) {
         detectedType = 'commercial_partner'
-        detectedId = cpResult.data.commercial_partner_id
+        detectedId = activePersonaId
+      } else if (partnerIds[0]) {
+        detectedType = 'partner'
+        detectedId = partnerIds[0]
+      } else if (introducerIds[0]) {
+        detectedType = 'introducer'
+        detectedId = introducerIds[0]
+      } else if (commercialPartnerIds[0]) {
+        detectedType = 'commercial_partner'
+        detectedId = commercialPartnerIds[0]
       }
 
       if (!detectedType || !detectedId) {
@@ -300,7 +334,7 @@ export default function MyCommissionsPage() {
       setError(null)
     } catch (err) {
       console.error('[MyCommissionsPage] Error:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load commissions')
+      setError(getCommissionsLoadErrorMessage())
     } finally {
       setLoading(false)
     }

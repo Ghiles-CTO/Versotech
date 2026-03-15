@@ -8,6 +8,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
+import {
+  readActivePersonaCookieValues,
+  resolveActiveIntroducerLink,
+} from '@/lib/kyc/active-introducer-link'
 
 const createAgreementSchema = z.object({
   introducer_id: z.string().uuid(),
@@ -49,6 +53,7 @@ export async function GET(request: NextRequest) {
     const isStaff = personas?.some((p: any) => p.persona_type === 'staff')
     const introducerPersona = personas?.find((p: any) => p.persona_type === 'introducer')
     const arrangerPersona = personas?.find((p: any) => p.persona_type === 'arranger')
+    const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(request.cookies)
 
     // Get query params
     const searchParams = request.nextUrl.searchParams
@@ -74,7 +79,30 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
 
     // Filter based on role
-    if (isStaff) {
+    const activeArrangerPersona =
+      cookiePersonaType === 'arranger'
+        ? personas?.find((p: any) => p.persona_type === 'arranger' && p.entity_id === cookiePersonaId)
+        : null
+
+    if (cookiePersonaType === 'introducer' && introducerPersona) {
+      const { link: introducerUser, error: introducerUserError } = await resolveActiveIntroducerLink<{
+        introducer_id: string
+      }>({
+        supabase: serviceSupabase,
+        userId: user.id,
+        cookiePersonaType,
+        cookiePersonaId,
+        select: 'introducer_id',
+      })
+
+      if (introducerUserError || !introducerUser) {
+        return NextResponse.json({ error: 'Not an introducer' }, { status: 403 })
+      }
+
+      query = query.eq('introducer_id', introducerUser.introducer_id)
+    } else if (cookiePersonaType === 'arranger' && activeArrangerPersona) {
+      query = query.eq('arranger_id', activeArrangerPersona.entity_id)
+    } else if (isStaff) {
       // Staff can see all, optionally filter by introducer_id
       if (introducerId) {
         query = query.eq('introducer_id', introducerId)
@@ -84,13 +112,17 @@ export async function GET(request: NextRequest) {
       query = query.eq('arranger_id', arrangerPersona.entity_id)
     } else if (introducerPersona) {
       // Introducer can only see their own agreements
-      const { data: introducerUser } = await serviceSupabase
-        .from('introducer_users')
-        .select('introducer_id')
-        .eq('user_id', user.id)
-        .single()
+      const { link: introducerUser, error: introducerUserError } = await resolveActiveIntroducerLink<{
+        introducer_id: string
+      }>({
+        supabase: serviceSupabase,
+        userId: user.id,
+        cookiePersonaType,
+        cookiePersonaId,
+        select: 'introducer_id',
+      })
 
-      if (!introducerUser) {
+      if (introducerUserError || !introducerUser) {
         return NextResponse.json({ error: 'Not an introducer' }, { status: 403 })
       }
 

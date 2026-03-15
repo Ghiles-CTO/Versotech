@@ -14,6 +14,7 @@ import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { SignatureStorageManager } from '@/lib/signature/storage'
 import { detectAnchors, getPlacementsFromAnchors } from '@/lib/signature/anchor-detector'
 import { canSignIntroducerAgreement } from '@/lib/signature/introducer-agreement-flow'
+import { readActivePersonaCookieValues } from '@/lib/kyc/active-introducer-link'
 
 async function getInternalSignaturePlacements(
   supabase: ReturnType<typeof createServiceClient>,
@@ -263,13 +264,39 @@ export async function POST(
     const arrangerPersona = personas?.find(
       (p: any) => p.persona_type === 'arranger' && p.entity_id === agreement.arranger_id
     )
-    const isArrangerForAgreement = !!arrangerPersona && agreement.arranger_id
+    const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(request.cookies)
+    const isActiveArrangerContext =
+      !cookiePersonaType ||
+      (cookiePersonaType === 'arranger' &&
+        !!agreement.arranger_id &&
+        (!cookiePersonaId || cookiePersonaId === agreement.arranger_id))
+    const isArrangerForAgreement =
+      !!arrangerPersona &&
+      !!agreement.arranger_id &&
+      isActiveArrangerContext
 
     // Check if user is an introducer for this agreement
     const introducerPersona = personas?.find(
       (p: any) => p.persona_type === 'introducer' && p.entity_id === agreement.introducer_id
     )
-    const isIntroducerForAgreement = !!introducerPersona
+    const isIntroducerForAgreement =
+      !!introducerPersona &&
+      (!cookiePersonaType ||
+        (cookiePersonaType === 'introducer' &&
+          (!cookiePersonaId || cookiePersonaId === agreement.introducer_id)))
+
+    if (
+      !isStaff &&
+      !!cookiePersonaType &&
+      cookiePersonaType !== 'staff' &&
+      !isArrangerForAgreement &&
+      !isIntroducerForAgreement
+    ) {
+      return NextResponse.json(
+        { error: 'Switch to the linked introducer or arranger profile to sign this agreement.' },
+        { status: 403 }
+      )
+    }
 
     const hasArranger = !!agreement.arranger_id
     const { partyAPlacements, partyCPlacements } = await getInternalSignaturePlacements(

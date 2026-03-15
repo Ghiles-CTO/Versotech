@@ -293,10 +293,10 @@ async function handleAccountActivationRequestInfo(params: {
   const cleanedReason = (reason || '').trim()
   const detailsMessage = details || cleanedReason || 'Please update your submitted information and resubmit.'
 
-  const entitySnapshotColumns =
-    entityTable === 'investors'
-      ? 'account_approval_status, onboarding_status'
-      : 'account_approval_status'
+  const supportsOnboardingStatus = entityTable === 'investors' || entityTable === 'introducers'
+  const entitySnapshotColumns = supportsOnboardingStatus
+    ? 'account_approval_status, onboarding_status'
+    : 'account_approval_status'
   const { data: entitySnapshot, error: entitySnapshotError } = await supabase
     .from(entityTable)
     .select(entitySnapshotColumns)
@@ -369,6 +369,7 @@ async function handleAccountActivationRequestInfo(params: {
     .from(entityTable)
     .update({
       account_approval_status: 'pending_onboarding',
+      ...(supportsOnboardingStatus ? { onboarding_status: 'pending' } : {}),
       updated_at: nowIso,
     })
     .eq('id', approval.entity_id)
@@ -410,7 +411,7 @@ async function handleAccountActivationRequestInfo(params: {
       account_approval_status: (entitySnapshot as any).account_approval_status ?? null,
       updated_at: rollbackTimestamp,
     }
-    if (entityTable === 'investors') {
+    if (supportsOnboardingStatus) {
       entityRollbackData.onboarding_status = (entitySnapshot as any).onboarding_status ?? null
     }
 
@@ -710,7 +711,8 @@ export async function POST(
       if (approval.entity_type === 'account_activation') {
         const entityTable = resolveAccountActivationEntityTable(approval.entity_metadata || {})
         if (entityTable) {
-          const selectColumns = entityTable === 'investors'
+          const supportsOnboardingStatus = entityTable === 'investors' || entityTable === 'introducers'
+          const selectColumns = supportsOnboardingStatus
             ? 'account_approval_status, onboarding_status'
             : 'account_approval_status'
           const { data: snapshot } = await serviceSupabase
@@ -724,7 +726,7 @@ export async function POST(
               entityTable,
               entityId: approval.entity_id,
               accountApprovalStatus: (snapshot as any).account_approval_status ?? null,
-              onboardingStatus: entityTable === 'investors' ? (snapshot as any).onboarding_status ?? null : undefined,
+              onboardingStatus: supportsOnboardingStatus ? (snapshot as any).onboarding_status ?? null : undefined,
             }
           }
         }
@@ -750,7 +752,10 @@ export async function POST(
             updated_at: rollbackTimestamp,
           }
 
-          if (accountActivationSnapshot.entityTable === 'investors') {
+          if (
+            accountActivationSnapshot.entityTable === 'investors' ||
+            accountActivationSnapshot.entityTable === 'introducers'
+          ) {
             restorePayload.onboarding_status = accountActivationSnapshot.onboardingStatus ?? null
           }
 
@@ -2624,7 +2629,7 @@ async function handleEntityApproval(
           account_approval_status: 'approved',
           updated_at: new Date().toISOString(),
         }
-        if (entityTable === 'investors') {
+        if (entityTable === 'investors' || entityTable === 'introducers') {
           activationUpdateData.onboarding_status = 'completed'
         }
 
@@ -2887,13 +2892,19 @@ async function handleEntityRejection(
       const entityTable = resolveAccountActivationEntityTable(metadata)
 
       if (entityTable) {
+        const rejectionUpdatePayload: Record<string, unknown> = {
+          account_approval_status: 'rejected',
+          account_rejection_reason: reason,
+          updated_at: new Date().toISOString()
+        }
+
+        if (entityTable === 'investors' || entityTable === 'introducers') {
+          rejectionUpdatePayload.onboarding_status = 'pending'
+        }
+
         await supabase
           .from(entityTable)
-          .update({
-            account_approval_status: 'rejected',
-            account_rejection_reason: reason,
-            updated_at: new Date().toISOString()
-          })
+          .update(rejectionUpdatePayload)
           .eq('id', entityId)
 
         console.log(`[AccountActivation] Account rejected: ${entityTable}.${entityId}`)

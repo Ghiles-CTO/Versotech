@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { resolveActiveIntroducerLinkFromCookies } from '@/lib/kyc/active-introducer-link'
 
 /**
  * GET /api/introducers/me/introductions/export
@@ -19,19 +20,25 @@ export async function GET(request: NextRequest) {
     const supabase = createServiceClient()
 
     // Get introducer entity for this user
-    const { data: introducerLink } = await supabase
-      .from('introducer_users')
-      .select('introducer_id, introducers(id, legal_name, display_name)')
-      .eq('user_id', user.id)
-      .single()
+    const { link: introducerLink, error: introducerLinkError } = await resolveActiveIntroducerLinkFromCookies<{
+      introducer_id: string
+    }>({
+      supabase,
+      userId: user.id,
+      cookieStore: request.cookies,
+      select: 'introducer_id',
+    })
 
-    if (!introducerLink || !introducerLink.introducer_id) {
+    if (introducerLinkError || !introducerLink?.introducer_id) {
       return NextResponse.json({ error: 'No introducer profile found' }, { status: 403 })
     }
 
-    const introducerRaw = introducerLink.introducers as unknown
-    const introducer = (Array.isArray(introducerRaw) ? introducerRaw[0] : introducerRaw) as { id: string; legal_name: string; display_name: string | null }
     const introducerId = introducerLink.introducer_id
+    const { data: introducer } = await supabase
+      .from('introducers')
+      .select('id, legal_name, display_name')
+      .eq('id', introducerId)
+      .maybeSingle()
 
     // Rate limiting - check for recent export requests (1 per minute)
     const { data: recentExport } = await supabase
@@ -194,7 +201,8 @@ export async function GET(request: NextRequest) {
     const summaryContent = `\n\n"Summary"\n"Total Introductions","${totalIntroductions}"\n"Successful Conversions","${successfulIntroductions}"\n"Conversion Rate","${totalIntroductions > 0 ? Math.round((successfulIntroductions / totalIntroductions) * 100) : 0}%"\n"Total Commission","${totalCommission}"\n"Paid Commission","${paidCommission}"\n"Pending Commission","${totalCommission - paidCommission}"`
 
     const fullCsv = csvContent + summaryContent
-    const filename = `introductions-${introducer.display_name || introducer.legal_name}-${new Date().toISOString().split('T')[0]}.csv`
+    const introducerLabel = introducer?.display_name || introducer?.legal_name || 'introducer'
+    const filename = `introductions-${introducerLabel}-${new Date().toISOString().split('T')[0]}.csv`
 
     // Log the export for rate limiting
     await supabase.from('audit_logs').insert({

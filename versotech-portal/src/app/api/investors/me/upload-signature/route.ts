@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
+import { resolveActiveInvestorLinkFromCookies } from '@/lib/kyc/active-investor-link'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,11 +15,15 @@ export async function POST(request: NextRequest) {
     const serviceSupabase = createServiceClient()
 
     // Verify user is an investor with signing permissions
-    const { link: investorUser, error: investorError } = await resolvePrimaryInvestorLink(
-      serviceSupabase,
-      user.id,
-      'investor_id, can_sign'
-    )
+    const { link: investorUser, error: investorError } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+      can_sign: boolean | null
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore: request.cookies,
+      select: 'investor_id, can_sign',
+    })
 
     if (investorError || !investorUser) {
       return NextResponse.json({ error: 'Not an investor' }, { status: 403 })
@@ -119,13 +124,18 @@ export async function DELETE() {
     }
 
     const serviceSupabase = createServiceClient()
+    const cookieStore = await cookies()
 
     // Verify user is an investor
-    const { link: investorUser, error: investorError } = await resolvePrimaryInvestorLink(
-      serviceSupabase,
-      user.id,
-      'investor_id, signature_specimen_url'
-    )
+    const { link: investorUser, error: investorError } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+      signature_specimen_url?: string | null
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id, signature_specimen_url',
+    })
 
     if (investorError || !investorUser) {
       return NextResponse.json({ error: 'Not an investor' }, { status: 403 })

@@ -4,6 +4,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
 import { sendDealDispatchFanout } from '@/lib/deals/dispatch-fanout'
+import {
+  buildIntroducerCommercialBlockPayload,
+  getIntroducerCommercialEligibility,
+} from '@/lib/introducers/commercial-eligibility'
 
 const addMemberSchema = z.object({
   user_id: z.string().uuid().optional(),
@@ -172,6 +176,26 @@ export async function POST(
     const body = await request.json()
     const validatedData = addMemberSchema.parse(body)
 
+    if (
+      validatedData.referred_by_entity_type === 'introducer' &&
+      validatedData.referred_by_entity_id
+    ) {
+      const eligibility = await getIntroducerCommercialEligibility({
+        supabase,
+        introducerId: validatedData.referred_by_entity_id,
+      })
+
+      if (!eligibility) {
+        return NextResponse.json({ error: 'Failed to verify introducer eligibility' }, { status: 500 })
+      }
+
+      if (!eligibility.eligible) {
+        return NextResponse.json(buildIntroducerCommercialBlockPayload(eligibility), {
+          status: 409,
+        })
+      }
+    }
+
     // Resolve user_id from email or investor_id if not provided directly
     let resolvedUserId = validatedData.user_id
     let resolvedInvestorId = validatedData.investor_id
@@ -235,6 +259,24 @@ export async function POST(
 
     // Fee plan validation: If adding through an entity, verify fee plan is accepted
     if (validatedData.referred_by_entity_id && validatedData.assigned_fee_plan_id) {
+      if (validatedData.referred_by_entity_type === 'introducer') {
+        const eligibility = await getIntroducerCommercialEligibility({
+          supabase,
+          introducerId: validatedData.referred_by_entity_id,
+        })
+
+        if (!eligibility) {
+          return NextResponse.json({ error: 'Failed to verify introducer eligibility' }, { status: 500 })
+        }
+
+        if (!eligibility.eligible) {
+          return NextResponse.json(
+            buildIntroducerCommercialBlockPayload(eligibility),
+            { status: 409 }
+          )
+        }
+      }
+
       // Build entity filter based on type
       const entityFilter = validatedData.referred_by_entity_type === 'partner'
         ? { partner_id: validatedData.referred_by_entity_id }

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { resolveActiveInvestorLinkFromCookies } from '@/lib/kyc/active-investor-link'
 import { checkAndUpdateEntityKYCStatus } from '@/lib/kyc/check-entity-kyc-status'
 import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
 import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
@@ -35,12 +37,29 @@ export async function POST(
     }
 
     const serviceSupabase = createServiceClient()
+    const cookieStore = await cookies()
+    const { link: investorLink, error: investorLinkError } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id',
+    })
+
+    if (investorLinkError || !investorLink?.investor_id) {
+      return NextResponse.json(
+        { error: 'No investor profile found' },
+        { status: 404 }
+      )
+    }
 
     // Verify the member belongs to this user via linked_user_id
     const { data: member, error: memberError } = await serviceSupabase
       .from('investor_members')
       .select('id, investor_id, linked_user_id, full_name, kyc_status, first_name, last_name, date_of_birth, nationality, phone_mobile, residential_street, residential_country, id_type, id_number')
       .eq('id', memberId)
+      .eq('investor_id', investorLink.investor_id)
       .eq('linked_user_id', user.id)
       .eq('is_active', true)
       .single()

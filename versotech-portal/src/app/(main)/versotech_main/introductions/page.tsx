@@ -44,6 +44,11 @@ import { createClient } from '@/lib/supabase/client'
 import { type CurrencyTotals, formatCurrencyTotals, sumByCurrency } from '@/lib/currency-totals'
 import Link from 'next/link'
 import {
+  ACTIVE_PERSONA_ID_COOKIE,
+  ACTIVE_PERSONA_TYPE_COOKIE,
+  readCookieValue,
+} from '@/lib/persona/active-persona'
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -118,6 +123,14 @@ type Summary = {
   totalCommissionEarnedByCurrency: CurrencyTotals
   pendingCommission: number
   pendingCommissionByCurrency: CurrencyTotals
+}
+
+function getIntroductionsLoadErrorMessage() {
+  return 'Unable to load introductions right now.'
+}
+
+function getIntroductionsExportErrorMessage() {
+  return 'Unable to export introductions right now.'
 }
 
 type JourneyStage = 'interested' | 'approved' | 'signed' | 'funded' | 'passed'
@@ -293,7 +306,7 @@ export default function IntroductionsPage() {
       toast.success('Introductions exported successfully')
     } catch (err) {
       console.error('[IntroductionsPage] Export error:', err)
-      toast.error(err instanceof Error ? err.message : 'Failed to export introductions')
+      toast.error(getIntroductionsExportErrorMessage())
     } finally {
       setExporting(false)
     }
@@ -312,14 +325,22 @@ export default function IntroductionsPage() {
           return
         }
 
-        // Check if user is an introducer
-        const { data: introducerUser, error: introducerUserError } = await supabase
+        const activePersonaType = readCookieValue(document.cookie, ACTIVE_PERSONA_TYPE_COOKIE)
+        const activePersonaId = readCookieValue(document.cookie, ACTIVE_PERSONA_ID_COOKIE)
+
+        const { data: introducerLinks, error: introducerUserError } = await supabase
           .from('introducer_users')
           .select('introducer_id')
           .eq('user_id', user.id)
-          .single()
+          .order('is_primary', { ascending: false })
 
-        if (introducerUserError || !introducerUser) {
+        const introducerIds = (introducerLinks || []).map((row) => row.introducer_id).filter(Boolean)
+        const selectedIntroducerId =
+          activePersonaType === 'introducer' && activePersonaId && introducerIds.includes(activePersonaId)
+            ? activePersonaId
+            : introducerIds[0] || null
+
+        if (introducerUserError || !selectedIntroducerId) {
           // Maybe they're staff - show all introductions
           await fetchAllIntroductions(supabase)
           return
@@ -329,7 +350,7 @@ export default function IntroductionsPage() {
         const { data: introducer, error: introducerError } = await supabase
           .from('introducers')
           .select('id, legal_name, default_commission_bps, status')
-          .eq('id', introducerUser.introducer_id)
+          .eq('id', selectedIntroducerId)
           .single()
 
         if (introducerError) throw introducerError
@@ -355,7 +376,7 @@ export default function IntroductionsPage() {
               legal_name
             )
           `)
-          .eq('introducer_id', introducerUser.introducer_id)
+          .eq('introducer_id', selectedIntroducerId)
           .order('introduced_at', { ascending: false })
 
         if (introError) throw introError
@@ -486,7 +507,7 @@ export default function IntroductionsPage() {
         setError(null)
       } catch (err) {
         console.error('[IntroductionsPage] Error:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load introductions')
+        setError(getIntroductionsLoadErrorMessage())
       } finally {
         setLoading(false)
       }

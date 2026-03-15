@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
+import { resolveActiveInvestorLinkFromCookies } from '@/lib/kyc/active-investor-link'
 import { getInvestorAccountApprovalReadiness } from '@/lib/kyc/investor-account-approval-readiness'
 
 async function resolveAccountApprovalAssignee(serviceSupabase: ReturnType<typeof createServiceClient>) {
@@ -87,11 +88,17 @@ export async function POST() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { link: investorUser, error: investorUserError } = await resolvePrimaryInvestorLink(
-      serviceSupabase,
-      user.id,
-      'investor_id, role, is_primary'
-    )
+    const cookieStore = await cookies()
+    const { link: investorUser, error: investorUserError } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+      role: string | null
+      is_primary: boolean | null
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id, role, is_primary',
+    })
 
     if (investorUserError || !investorUser?.investor_id) {
       return NextResponse.json({ error: 'Investor account not found' }, { status: 404 })

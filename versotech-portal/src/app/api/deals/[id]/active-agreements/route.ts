@@ -1,5 +1,6 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { evaluateIntroducerCommercialEligibility } from '@/lib/introducers/commercial-eligibility'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -66,6 +67,31 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     if (!hasStaffAccess) {
       return NextResponse.json({ error: 'Forbidden: Staff access required' }, { status: 403 })
+    }
+
+    const { data: introducer } = await serviceSupabase
+      .from('introducers')
+      .select('id, legal_name, display_name, account_approval_status, onboarding_status')
+      .eq('id', introducerId)
+      .single()
+
+    if (!introducer) {
+      return NextResponse.json(
+        { error: 'Introducer not found' },
+        { status: 404 }
+      )
+    }
+
+    const eligibility = evaluateIntroducerCommercialEligibility(introducer)
+    if (!eligibility.eligible) {
+      return NextResponse.json({
+        deal_id: dealId,
+        agreements: [],
+        total: 0,
+        eligible: false,
+        reasonCode: eligibility.reasonCode,
+        message: eligibility.message,
+      })
     }
 
     // Query active introducer agreements for this deal AND this introducer
@@ -159,7 +185,9 @@ export async function GET(request: Request, { params }: RouteParams) {
     return NextResponse.json({
       deal_id: dealId,
       agreements: validAgreements,
-      total: validAgreements.length
+      total: validAgreements.length,
+      eligible: true,
+      message: null,
     })
 
   } catch (error) {

@@ -95,7 +95,7 @@ type Agreement = {
 
 interface AgreementDetailClientProps {
   agreement: Agreement
-  isStaff: boolean
+  viewerRole: 'staff' | 'introducer' | 'arranger'
   currentUserId: string
 }
 
@@ -127,7 +127,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export function AgreementDetailClient({
   agreement,
-  isStaff,
+  viewerRole,
   currentUserId,
 }: AgreementDetailClientProps) {
   const router = useRouter()
@@ -140,6 +140,9 @@ export function AgreementDetailClient({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [previewError, setPreviewError] = useState<string | null>(null)
+  const isStaff = viewerRole === 'staff'
+  const isIntroducer = viewerRole === 'introducer'
+  const isArranger = viewerRole === 'arranger'
 
   const getAgreementPdfUrl = async (mode: 'preview' | 'download') => {
     const response = await fetch(`/api/introducer-agreements/${agreement.id}/download?mode=${mode}`)
@@ -228,13 +231,13 @@ export function AgreementDetailClient({
         method: 'POST',
       })
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to send agreement')
+        throw new Error('Unable to send the agreement right now.')
       }
       toast.success('Agreement sent to introducer for approval')
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to send agreement')
+      console.error('[AgreementDetailClient] Send failed:', error)
+      toast.error('Unable to send the agreement right now.')
     } finally {
       setLoading(null)
     }
@@ -247,13 +250,13 @@ export function AgreementDetailClient({
         method: 'POST',
       })
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to approve agreement')
+        throw new Error('Unable to approve the agreement right now.')
       }
       toast.success('Agreement approved! CEO will be notified to sign.')
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to approve agreement')
+      console.error('[AgreementDetailClient] Approve failed:', error)
+      toast.error('Unable to approve the agreement right now.')
     } finally {
       setLoading(null)
     }
@@ -268,13 +271,13 @@ export function AgreementDetailClient({
         body: JSON.stringify({ reason: rejectReason }),
       })
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to reject agreement')
+        throw new Error('Unable to reject the agreement right now.')
       }
       toast.success('Agreement rejected')
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to reject agreement')
+      console.error('[AgreementDetailClient] Reject failed:', error)
+      toast.error('Unable to reject the agreement right now.')
     } finally {
       setLoading(null)
       setRejectReason('')
@@ -337,7 +340,7 @@ export function AgreementDetailClient({
           )}
 
           {/* Introducer: Approve or Reject */}
-          {!isStaff && agreement.status === 'pending_approval' && (
+          {isIntroducer && agreement.status === 'pending_approval' && (
             <>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -392,7 +395,8 @@ export function AgreementDetailClient({
           )}
 
           {/* Staff: Sign (if pending CEO signature) */}
-          {isStaff && ['approved', 'pending_ceo_signature', 'pending_arranger_signature'].includes(agreement.status) && (
+          {(isStaff || isArranger) &&
+            ['approved', 'pending_ceo_signature', 'pending_arranger_signature'].includes(agreement.status) && (
             <Button
               asChild
               className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500"
@@ -405,7 +409,7 @@ export function AgreementDetailClient({
           )}
 
           {/* Introducer: Sign (if pending introducer signature) */}
-          {!isStaff && agreement.status === 'pending_introducer_signature' && (
+          {isIntroducer && agreement.status === 'pending_introducer_signature' && (
             <Button
               asChild
               className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500"

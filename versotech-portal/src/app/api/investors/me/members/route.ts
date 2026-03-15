@@ -4,6 +4,8 @@ import { syncUserSignatoryFromMember } from '@/lib/kyc/member-signatory-sync'
 import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 import { getMemberOverallKycStatusMap } from '@/lib/kyc/member-kyc-overall-status'
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { resolveActiveInvestorLinkFromCookies } from '@/lib/kyc/active-investor-link'
 
 /**
  * GET /api/investors/me/members
@@ -19,31 +21,37 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get investor IDs for this user
-    const { data: investorLinks, error: linksError } = await serviceSupabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
+    const cookieStore = await cookies()
+    const { link: investorLink, error: investorLinkError } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id',
+    })
 
-    if (linksError || !investorLinks || investorLinks.length === 0) {
+    if (investorLinkError || !investorLink?.investor_id) {
       return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
     }
 
-    const investorIds = investorLinks.map(link => link.investor_id)
-
     // Check if any of the linked investors is an entity type
-    const { data: investors, error: investorsError } = await serviceSupabase
+    const { data: investor, error: investorError } = await serviceSupabase
       .from('investors')
       .select('id, type, display_name')
-      .in('id', investorIds)
-      .in('type', ['entity', 'institutional'])
+      .eq('id', investorLink.investor_id)
+      .maybeSingle()
 
-    if (investorsError) {
-      console.error('Error fetching investors:', investorsError)
+    if (investorError) {
+      console.error('Error fetching investor:', investorError)
       return NextResponse.json({ error: 'Failed to fetch investor info' }, { status: 500 })
     }
 
-    if (!investors || investors.length === 0) {
+    if (!investor) {
+      return NextResponse.json({ error: 'Investor not found' }, { status: 404 })
+    }
+
+    if (!['entity', 'institutional'].includes(investor.type || '')) {
       return NextResponse.json({
         members: [],
         message: 'Not an entity-type investor'
@@ -51,11 +59,10 @@ export async function GET(request: Request) {
     }
 
     // Get members for entity-type investors
-    const entityInvestorIds = investors.map(i => i.id)
     const { data: members, error: membersError } = await serviceSupabase
       .from('investor_members')
       .select('*')
-      .in('investor_id', entityInvestorIds)
+      .eq('investor_id', investor.id)
       .eq('is_active', true)
       .order('created_at', { ascending: false })
 
@@ -70,18 +77,12 @@ export async function GET(request: Request) {
     )
     const overallStatusMap: Record<string, string> = {}
 
-    for (const investorId of entityInvestorIds) {
-      const memberIds = memberList
-        .filter((member) => member.investor_id === investorId)
-        .map((member) => member.id)
-        .filter(Boolean)
-
-      if (memberIds.length === 0) continue
-
+    const memberIds = memberList.map((member) => member.id).filter(Boolean)
+    if (memberIds.length > 0) {
       const investorStatusMap = await getMemberOverallKycStatusMap({
         supabase: serviceSupabase,
         entityType: 'investor',
-        entityId: investorId,
+        entityId: investor.id,
         memberIds,
         memberCurrentStatuses,
       })
@@ -96,7 +97,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       members: membersWithOverallStatus,
-      investors: investors
+      investors: [investor]
     })
   } catch (error) {
     console.error('Unexpected error in GET /api/investors/me/members:', error)
@@ -118,20 +119,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get primary investor ID for this user
-    const { data: investorLinks, error: linksError } = await serviceSupabase
-      .from('investor_users')
-      .select('investor_id, role, is_primary')
-      .eq('user_id', user.id)
-      .order('is_primary', { ascending: false })
-      .order('created_at', { ascending: true })
-      .limit(1)
+    const cookieStore = await cookies()
+    const { link: investorLink, error: investorLinkError } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+      role: string | null
+      is_primary: boolean | null
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id, role, is_primary',
+    })
 
-    if (linksError || !investorLinks || investorLinks.length === 0) {
+    if (investorLinkError || !investorLink?.investor_id) {
       return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
     }
 
-    const investorLink = investorLinks[0]
     const canManageMembers = investorLink.role === 'admin' || investorLink.is_primary === true
     if (!canManageMembers) {
       return NextResponse.json(

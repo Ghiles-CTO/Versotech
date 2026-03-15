@@ -17,6 +17,11 @@ import { createFeePlanSchema } from '@/lib/fees/validation';
 import type { FeePlan, FeeComponent } from '@/lib/fees/types';
 import { validateFeeComponentsAgainstTermSheet } from '@/lib/fees/term-sheet-sync';
 import { checkStaffAccess } from '@/lib/auth';
+import {
+  buildIntroducerCommercialBlockPayload,
+  evaluateIntroducerCommercialEligibility,
+  getIntroducerCommercialEligibility,
+} from '@/lib/introducers/commercial-eligibility';
 
 /**
  * GET /api/staff/fees/plans
@@ -47,14 +52,14 @@ export async function GET(request: NextRequest) {
       ? `*,
          components:fee_components(*),
          term_sheet:term_sheet_id (id, version, status, subscription_fee_percent, management_fee_percent, carried_interest_percent),
-         introducer:introducer_id (id, legal_name),
+         introducer:introducer_id (id, legal_name, account_approval_status, onboarding_status),
          partner:partner_id (id, name),
          commercial_partner:commercial_partner_id (id, name),
          introducer_agreement:generated_agreement_id (id, reference_number, status, pdf_url),
          placement_agreement:generated_placement_agreement_id (id, reference_number, status, pdf_url)`
       : `*,
          term_sheet:term_sheet_id (id, version, status, subscription_fee_percent, management_fee_percent, carried_interest_percent),
-         introducer:introducer_id (id, legal_name),
+         introducer:introducer_id (id, legal_name, account_approval_status, onboarding_status),
          partner:partner_id (id, name),
          commercial_partner:commercial_partner_id (id, name),
          introducer_agreement:generated_agreement_id (id, reference_number, status, pdf_url),
@@ -96,6 +101,12 @@ export async function GET(request: NextRequest) {
 
         return {
           ...plan,
+          introducer: plan.introducer
+            ? {
+                ...plan.introducer,
+                commercial_eligibility: evaluateIntroducerCommercialEligibility(plan.introducer),
+              }
+            : plan.introducer,
           subscription_count: count || 0,
         };
       })
@@ -216,6 +227,26 @@ export async function POST(request: NextRequest) {
           { error: `${entityType} not found`, details: `The specified ${entityType}_id does not exist` },
           { status: 400 }
         );
+      }
+
+      if (entityType === 'introducer') {
+        const eligibility = await getIntroducerCommercialEligibility({
+          supabase: serviceSupabase,
+          introducerId: entityId,
+        });
+
+        if (!eligibility) {
+          return NextResponse.json(
+            { error: 'Failed to verify introducer eligibility' },
+            { status: 500 }
+          );
+        }
+
+        if (!eligibility.eligible) {
+          return NextResponse.json(buildIntroducerCommercialBlockPayload(eligibility), {
+            status: 409,
+          });
+        }
       }
     }
 

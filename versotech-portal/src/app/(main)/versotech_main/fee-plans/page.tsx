@@ -62,6 +62,7 @@ import {
 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { createClient } from '@/lib/supabase/client'
+import { evaluateIntroducerCommercialEligibility } from '@/lib/introducers/commercial-eligibility'
 
 type FeeComponent = {
   id?: string
@@ -95,6 +96,8 @@ type Partner = {
   id: string
   name: string
   type: 'partner' | 'introducer' | 'commercial_partner'
+  account_approval_status?: string | null
+  onboarding_status?: string | null
 }
 
 const FEE_KINDS = [
@@ -207,11 +210,17 @@ export default function FeePlansPage() {
           if (introducerIds.length > 0) {
             const { data: introducersData } = await supabase
               .from('introducers')
-              .select('id, legal_name')
+              .select('id, legal_name, account_approval_status, onboarding_status')
               .in('id', introducerIds)
 
             ;(introducersData || []).forEach((i: any) => {
-              allPartners.push({ id: i.id, name: i.legal_name, type: 'introducer' })
+              allPartners.push({
+                id: i.id,
+                name: i.legal_name,
+                type: 'introducer',
+                account_approval_status: i.account_approval_status ?? null,
+                onboarding_status: i.onboarding_status ?? null,
+              })
             })
           }
 
@@ -377,6 +386,19 @@ export default function FeePlansPage() {
     setError(null)
 
     try {
+      const selectedIntroducerEligibility =
+        formEntityType === 'introducer' && formEntityId !== 'none'
+          ? getIntroducerEligibility(formEntityId)
+          : null
+
+      if (selectedIntroducerEligibility && !selectedIntroducerEligibility.eligible) {
+        setError(
+          selectedIntroducerEligibility.message ||
+            'This introducer is not ready for commercial activity yet.'
+        )
+        return
+      }
+
       const payload: any = {
         name: formName.trim(),
         description: formDescription.trim() || undefined,
@@ -456,6 +478,16 @@ export default function FeePlansPage() {
       return
     }
 
+    const introducerEligibility = getIntroducerEligibility(plan.introducer_id)
+    if (introducerEligibility && !introducerEligibility.eligible) {
+      toast.error('Cannot send fee plan', {
+        description:
+          introducerEligibility.message ||
+          'This introducer is not ready for commercial activity yet.',
+      })
+      return
+    }
+
     setSending(plan.id)
     setError(null)
 
@@ -507,6 +539,26 @@ export default function FeePlansPage() {
   }
 
   const formatBps = (bps: number) => `${(bps / 100).toFixed(2)}%`
+
+  const getPartnerRecord = (
+    entityId: string | null | undefined,
+    entityType: Partner['type']
+  ) => {
+    if (!entityId) return null
+    return partners.find((partner) => partner.id === entityId && partner.type === entityType) || null
+  }
+
+  const getIntroducerEligibility = (introducerId: string | null | undefined) => {
+    const introducer = getPartnerRecord(introducerId, 'introducer')
+    if (!introducer) return null
+
+    return evaluateIntroducerCommercialEligibility({
+      id: introducer.id,
+      legal_name: introducer.name,
+      account_approval_status: introducer.account_approval_status ?? null,
+      onboarding_status: introducer.onboarding_status ?? null,
+    })
+  }
 
   const getEntityName = (plan: FeePlan) => {
     if (plan.partner_id) {
@@ -572,6 +624,15 @@ export default function FeePlansPage() {
                     key={plan.id}
                     className="border rounded-lg p-4 bg-muted/30"
                   >
+                    {(() => {
+                      const introducerEligibility = getIntroducerEligibility(plan.introducer_id)
+                      if (!introducerEligibility || introducerEligibility.eligible) return null
+                      return (
+                        <p className="text-xs text-amber-600 mb-2">
+                          {introducerEligibility.message || 'Commercial actions are blocked until approval and onboarding are complete.'}
+                        </p>
+                      )
+                    })()}
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4 text-muted-foreground" />
@@ -613,7 +674,8 @@ export default function FeePlansPage() {
                             e.stopPropagation()
                             handleSend(plan)
                           }}
-                          disabled={sending === plan.id}
+                          disabled={sending === plan.id || !!(getIntroducerEligibility(plan.introducer_id) && !getIntroducerEligibility(plan.introducer_id)?.eligible)}
+                          title={getIntroducerEligibility(plan.introducer_id)?.message || undefined}
                         >
                           {sending === plan.id ? (
                             <Loader2 className="h-3 w-3 mr-1 animate-spin" />
@@ -770,7 +832,18 @@ export default function FeePlansPage() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {getEntityIcon(plan)}
-                          <span>{getEntityName(plan)}</span>
+                          <div>
+                            <span>{getEntityName(plan)}</span>
+                            {(() => {
+                              const introducerEligibility = getIntroducerEligibility(plan.introducer_id)
+                              if (!introducerEligibility || introducerEligibility.eligible) return null
+                              return (
+                                <div className="text-xs text-amber-600 mt-1">
+                                  {introducerEligibility.message || 'Commercial actions are blocked until approval and onboarding are complete.'}
+                                </div>
+                              )
+                            })()}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -815,8 +888,8 @@ export default function FeePlansPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleSend(plan)}
-                              disabled={sending === plan.id}
-                              title="Send to entity"
+                              disabled={sending === plan.id || !!(getIntroducerEligibility(plan.introducer_id) && !getIntroducerEligibility(plan.introducer_id)?.eligible)}
+                              title={getIntroducerEligibility(plan.introducer_id)?.message || 'Send to entity'}
                               aria-label={`Send fee plan "${plan.name}" to entity`}
                             >
                               {sending === plan.id ? (
@@ -941,11 +1014,39 @@ export default function FeePlansPage() {
                         <SelectItem value="none">None</SelectItem>
                         {partners
                           .filter(p => p.type === formEntityType)
-                          .map((p) => (
-                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                          ))}
+                          .map((p) => {
+                            const introducerEligibility = p.type === 'introducer'
+                              ? evaluateIntroducerCommercialEligibility({
+                                  id: p.id,
+                                  legal_name: p.name,
+                                  account_approval_status: p.account_approval_status ?? null,
+                                  onboarding_status: p.onboarding_status ?? null,
+                                })
+                              : null
+                            const disabledOption = !!introducerEligibility && !introducerEligibility.eligible
+
+                            return (
+                              <SelectItem key={p.id} value={p.id} disabled={disabledOption}>
+                                <div className="flex items-center gap-2">
+                                  <span>{p.name}</span>
+                                  {disabledOption && (
+                                    <span className="text-amber-400 text-xs">(approval required)</span>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            )
+                          })}
                       </SelectContent>
                     </Select>
+                    {formEntityType === 'introducer' && formEntityId !== 'none' && (() => {
+                      const introducerEligibility = getIntroducerEligibility(formEntityId)
+                      if (!introducerEligibility || introducerEligibility.eligible) return null
+                      return (
+                        <p className="text-xs text-amber-600">
+                          {introducerEligibility.message || 'This introducer is not ready for commercial activity yet.'}
+                        </p>
+                      )
+                    })()}
                   </div>
                 )}
               </div>

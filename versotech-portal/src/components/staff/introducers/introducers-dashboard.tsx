@@ -47,6 +47,8 @@ import { EditIntroducerDialog } from '@/components/staff/introducers/edit-introd
 import { AddIntroductionDialog } from '@/components/staff/introducers/add-introduction-dialog'
 import { EditIntroductionDialog } from '@/components/staff/introducers/edit-introduction-dialog'
 import { InviteUserDialog } from '@/components/users/invite-user-dialog'
+import { DispatchIntroducerInvestorDialog } from '@/components/staff/introducers/dispatch-introducer-investor-dialog'
+import { evaluateIntroducerCommercialEligibility } from '@/lib/introducers/commercial-eligibility'
 
 export type IntroducersDashboardProps = {
   summary: {
@@ -66,6 +68,8 @@ export type IntroducersDashboardProps = {
     commissionCapAmount: number | null
     paymentTerms: string | null
     status: string
+    accountApprovalStatus?: string | null
+    onboardingStatus?: string | null
     createdAt: string | null
     totalIntroductions: number
     successfulAllocations: number
@@ -112,6 +116,9 @@ export function IntroducersDashboard({ summary, introducers, recentIntroductions
   const [editingIntroduction, setEditingIntroduction] = useState<IntroducersDashboardProps['recentIntroductions'][number] | null>(null)
   const [addIntroductionOpen, setAddIntroductionOpen] = useState(false)
   const [inviteDialogIntroducer, setInviteDialogIntroducer] = useState<IntroducersDashboardProps['introducers'][number] | null>(null)
+  const [dispatchDialogOpen, setDispatchDialogOpen] = useState(false)
+  const [selectedIntroducerForDispatch, setSelectedIntroducerForDispatch] = useState<IntroducersDashboardProps['introducers'][number] | null>(null)
+  const [dispatchFeePlans, setDispatchFeePlans] = useState<React.ComponentProps<typeof DispatchIntroducerInvestorDialog>['feePlans']>([])
   const { setOpen } = useAddIntroducer()
 
   // Fee plan modal state
@@ -120,6 +127,18 @@ export function IntroducersDashboard({ summary, introducers, recentIntroductions
 
   // Handler for creating a fee plan for an introducer
   const handleCreateFeePlan = (introducer: IntroducersDashboardProps['introducers'][number]) => {
+    const eligibility = evaluateIntroducerCommercialEligibility({
+      id: introducer.id,
+      legal_name: introducer.legalName,
+      account_approval_status: introducer.accountApprovalStatus,
+      onboarding_status: introducer.onboardingStatus,
+    })
+
+    if (!eligibility.eligible) {
+      toast.error(eligibility.message || 'This introducer is not ready for commercial activity yet.')
+      return
+    }
+
     setSelectedIntroducerForFeePlan(introducer)
     setFeePlanModalOpen(true)
   }
@@ -132,10 +151,33 @@ export function IntroducersDashboard({ summary, introducers, recentIntroductions
   }
 
   // Handler for dispatching investor through an introducer
-  const handleDispatchInvestor = (introducer: IntroducersDashboardProps['introducers'][number]) => {
-    // Navigate to dispatch page with introducer pre-selected
-    // For now, show toast with info - will implement full dispatch modal in next phase
-    toast.info(`To dispatch an investor through ${introducer.legalName}, go to a deal's Members tab and use "Add Participant"`)
+  const handleDispatchInvestor = async (introducer: IntroducersDashboardProps['introducers'][number]) => {
+    const eligibility = evaluateIntroducerCommercialEligibility({
+      id: introducer.id,
+      legal_name: introducer.legalName,
+      account_approval_status: introducer.accountApprovalStatus,
+      onboarding_status: introducer.onboardingStatus,
+    })
+
+    if (!eligibility.eligible) {
+      toast.error(eligibility.message || 'This introducer is not ready for commercial activity yet.')
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/introducers/${introducer.id}/fee-plans`)
+      if (!response.ok) {
+        throw new Error('Failed to load introducer fee plans')
+      }
+
+      const data = await response.json()
+      setDispatchFeePlans(data.fee_plans || [])
+      setSelectedIntroducerForDispatch(introducer)
+      setDispatchDialogOpen(true)
+    } catch (error) {
+      console.error('[IntroducersDashboard] Failed to load fee plans for dispatch:', error)
+      toast.error('Failed to load dispatch options for this introducer.')
+    }
   }
 
   const filteredIntroducers = useMemo(() => {
@@ -328,7 +370,27 @@ export function IntroducersDashboard({ summary, introducers, recentIntroductions
           setSelectedIntroducerForFeePlan(null)
         }}
         onSuccess={handleFeePlanSuccess}
+        initialEntityType={selectedIntroducerForFeePlan ? 'introducer' : undefined}
+        initialEntityId={selectedIntroducerForFeePlan?.id}
       />
+
+      {selectedIntroducerForDispatch && (
+        <DispatchIntroducerInvestorDialog
+          open={dispatchDialogOpen}
+          onOpenChange={(open) => {
+            setDispatchDialogOpen(open)
+            if (!open) {
+              setSelectedIntroducerForDispatch(null)
+              setDispatchFeePlans([])
+            }
+          }}
+          introducerId={selectedIntroducerForDispatch.id}
+          introducerName={selectedIntroducerForDispatch.legalName}
+          accountApprovalStatus={selectedIntroducerForDispatch.accountApprovalStatus}
+          onboardingStatus={selectedIntroducerForDispatch.onboardingStatus}
+          feePlans={dispatchFeePlans}
+        />
+      )}
     </div>
   )
 }
@@ -380,6 +442,13 @@ function IntroducerRow({
     inactive: 'bg-gray-100 text-gray-800',
     suspended: 'bg-yellow-100 text-yellow-800',
   }
+  const commercialEligibility = evaluateIntroducerCommercialEligibility({
+    id: introducer.id,
+    legal_name: introducer.legalName,
+    account_approval_status: introducer.accountApprovalStatus,
+    onboarding_status: introducer.onboardingStatus,
+  })
+  const commercialActionsDisabled = !commercialEligibility.eligible
 
   return (
     <div className="border border-border rounded-lg p-4 bg-background/60 hover:bg-background/80 transition-colors">
@@ -413,11 +482,17 @@ function IntroducerRow({
                     Invite User
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={onCreateFeePlan}>
+                  <DropdownMenuItem
+                    onClick={onCreateFeePlan}
+                    disabled={commercialActionsDisabled}
+                  >
                     <FileText className="mr-2 h-4 w-4" />
                     Create Fee Plan
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={onDispatchInvestor}>
+                  <DropdownMenuItem
+                    onClick={onDispatchInvestor}
+                    disabled={commercialActionsDisabled}
+                  >
                     <Send className="mr-2 h-4 w-4" />
                     Dispatch Investor
                   </DropdownMenuItem>
@@ -434,6 +509,11 @@ function IntroducerRow({
               ) : null}
               {introducer.paymentTerms ? <span>Terms: {introducer.paymentTerms}</span> : null}
             </div>
+            {commercialActionsDisabled && (
+              <div className="text-xs text-amber-600">
+                {commercialEligibility.message || 'Commercial actions are blocked until onboarding is completed and the account is approved.'}
+              </div>
+            )}
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-6">

@@ -253,12 +253,18 @@ export async function POST(
         const isUnauthorized = currentStatus === 'unauthorized' || currentStatus === 'blacklisted'
 
         if (!isUnauthorized) {
+          const accountUpdateData: Record<string, unknown> = {
+            account_approval_status: action === 'reject' ? 'rejected' : 'pending_onboarding',
+            updated_at: new Date().toISOString()
+          }
+
+          if (entityTable === 'investors' || entityTable === 'introducers') {
+            accountUpdateData.onboarding_status = 'pending'
+          }
+
           await serviceSupabase
             .from(entityTable)
-            .update({
-              account_approval_status: action === 'reject' ? 'rejected' : 'pending_onboarding',
-              updated_at: new Date().toISOString()
-            })
+            .update(accountUpdateData)
             .eq('id', entityId)
         }
 

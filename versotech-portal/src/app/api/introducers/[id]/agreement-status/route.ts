@@ -1,5 +1,9 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import {
+  readActivePersonaCookieValues,
+  resolveActiveIntroducerLink,
+} from '@/lib/kyc/active-introducer-link'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -9,7 +13,7 @@ interface RouteParams {
  * GET /api/introducers/:id/agreement-status
  * Check if an introducer has a valid signed agreement
  */
-export async function GET(request: Request, { params }: RouteParams) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   const { id: introducerId } = await params
   const supabase = await createClient()
   const serviceSupabase = createServiceClient()
@@ -30,10 +34,25 @@ export async function GET(request: Request, { params }: RouteParams) {
       (p: { persona_type: string }) => p.persona_type === 'staff'
     ) || false
 
-    const isIntroducerUser = personas?.some(
+    let isIntroducerUser = personas?.some(
       (p: { persona_type: string; entity_id: string }) =>
         p.persona_type === 'introducer' && p.entity_id === introducerId
     ) || false
+
+    if (!hasStaffAccess && isIntroducerUser) {
+      const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(request.cookies)
+      const { link: introducerUser } = await resolveActiveIntroducerLink<{
+        introducer_id: string
+      }>({
+        supabase: serviceSupabase,
+        userId: user.id,
+        cookiePersonaType,
+        cookiePersonaId,
+        select: 'introducer_id',
+      })
+
+      isIntroducerUser = introducerUser?.introducer_id === introducerId
+    }
 
     if (!hasStaffAccess && !isIntroducerUser) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

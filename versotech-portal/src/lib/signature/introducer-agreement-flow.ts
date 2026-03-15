@@ -11,6 +11,7 @@ import { resolveIntroducerSignatories } from './introducer-signatories'
 import { SignatureStorageManager } from './storage'
 import { generateSigningUrl } from './token'
 import type { SignaturePosition } from './types'
+import { createInvestorNotification } from '@/lib/notifications'
 
 type AgreementRequestState = {
   id: string
@@ -368,14 +369,26 @@ export async function maybeReleaseIntroducerAgreementCounterpartyRequests({
         )
       }
 
-      await supabase.from('investor_notifications').insert({
-        user_id: signatory.user_id,
-        investor_id: null,
-        title: 'Introducer Agreement Ready for Your Signature',
-        message: `Your introducer agreement for ${dealName} has been signed by ${signerLabel} and is ready for your signature.`,
-        link: `/versotech_main/versosign`,
-        type: 'action_required',
-      })
+      try {
+        await createInvestorNotification({
+          userId: signatory.user_id,
+          title: 'Introducer Agreement Ready for Your Signature',
+          message: `Your introducer agreement for ${dealName} has been signed by ${signerLabel} and is ready for your signature.`,
+          link: '/versotech_main/versosign',
+          type: 'introducer_agreement_pending',
+          dealId: agreement.deal_id || undefined,
+          extraMetadata: {
+            introducerId: agreement.introducer_id,
+            agreementId: agreement.id,
+            signatureRequestId: introducerSignatureRequest.id,
+          },
+        })
+      } catch (notificationError) {
+        console.error(
+          `⚠️ [INTRODUCER AGREEMENT FLOW] Failed to notify introducer signer ${signatory.email}:`,
+          notificationError
+        )
+      }
     } else {
       console.log(
         `ℹ️ [INTRODUCER AGREEMENT FLOW] Signatory ${signatory.email} has no linked user. Email-only signing path used.`

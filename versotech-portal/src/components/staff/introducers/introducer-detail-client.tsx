@@ -64,6 +64,7 @@ import { formatCurrency, formatBps, formatDate } from '@/lib/format'
 import { statusStyles, kycStyles, getStatusStyle } from '@/lib/status-styles'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import type { DocumentReference } from '@/types/document-viewer.types'
+import { evaluateIntroducerCommercialEligibility } from '@/lib/introducers/commercial-eligibility'
 
 type IntroducerDetail = {
   id: string
@@ -76,6 +77,8 @@ type IntroducerDetail = {
   commission_cap_amount: number | null
   payment_terms: string | null
   status: string
+  account_approval_status?: string | null
+  onboarding_status?: string | null
   kyc_status: string | null
   notes: string | null
   created_at: string | null
@@ -268,6 +271,13 @@ export function IntroducerDetailClient({
   agreements
 }: IntroducerDetailClientProps) {
   const router = useRouter()
+  const commercialEligibility = evaluateIntroducerCommercialEligibility({
+    id: introducer.id,
+    legal_name: introducer.legal_name,
+    account_approval_status: introducer.account_approval_status,
+    onboarding_status: introducer.onboarding_status,
+  })
+  const commercialActionsDisabled = !commercialEligibility.eligible
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
   const [createAgreementOpen, setCreateAgreementOpen] = useState(false)
@@ -588,7 +598,9 @@ export function IntroducerDetailClient({
             variant="default"
             size="sm"
             onClick={() => setDispatchDialogOpen(true)}
+            disabled={commercialActionsDisabled}
             className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white"
+            title={commercialActionsDisabled ? commercialEligibility.message || undefined : undefined}
           >
             <Send className="h-4 w-4 mr-2" />
             Dispatch Investor
@@ -620,6 +632,11 @@ export function IntroducerDetailClient({
           </Badge>
         )}
       </div>
+      {commercialActionsDisabled && (
+        <p className="text-sm text-amber-600">
+          {commercialEligibility.message || 'Commercial actions are blocked until onboarding is completed and the account is approved.'}
+        </p>
+      )}
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -1140,7 +1157,9 @@ export function IntroducerDetailClient({
                   </p>
                   <Button
                     onClick={() => setDispatchDialogOpen(true)}
+                    disabled={commercialActionsDisabled}
                     className="mb-4 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white"
+                    title={commercialActionsDisabled ? commercialEligibility.message || undefined : undefined}
                   >
                     <Send className="h-4 w-4 mr-2" />
                     Dispatch Investor
@@ -1522,6 +1541,8 @@ export function IntroducerDetailClient({
         onOpenChange={setDispatchDialogOpen}
         introducerId={introducer.id}
         introducerName={introducer.legal_name}
+        accountApprovalStatus={introducer.account_approval_status}
+        onboardingStatus={introducer.onboarding_status}
         feePlans={feePlans}
       />
 

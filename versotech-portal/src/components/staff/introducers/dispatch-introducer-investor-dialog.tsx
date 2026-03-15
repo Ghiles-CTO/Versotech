@@ -30,12 +30,15 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { evaluateIntroducerCommercialEligibility } from '@/lib/introducers/commercial-eligibility'
 
 interface DispatchIntroducerInvestorDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   introducerId: string
   introducerName: string
+  accountApprovalStatus?: string | null
+  onboardingStatus?: string | null
   feePlans: FeePlan[]
 }
 
@@ -74,9 +77,18 @@ export function DispatchIntroducerInvestorDialog({
   onOpenChange,
   introducerId,
   introducerName,
+  accountApprovalStatus,
+  onboardingStatus,
   feePlans,
 }: DispatchIntroducerInvestorDialogProps) {
   const router = useRouter()
+  const commercialEligibility = evaluateIntroducerCommercialEligibility({
+    id: introducerId,
+    legal_name: introducerName,
+    account_approval_status: accountApprovalStatus,
+    onboarding_status: onboardingStatus,
+  })
+  const commercialActionsDisabled = !commercialEligibility.eligible
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -97,14 +109,14 @@ export function DispatchIntroducerInvestorDialog({
   // 2. introducer_agreement?.status='active' AND signed_date not null
   // Memoized to prevent infinite re-render loops
   const validFeePlans = useMemo(() =>
-    feePlans.filter(fp =>
+    (commercialActionsDisabled ? [] : feePlans).filter(fp =>
       fp.status === 'accepted' &&
       fp.is_active &&
       fp.introducer_agreement?.status === 'active' &&
       fp.introducer_agreement?.signed_date !== null &&
       fp.deal !== null
     ),
-    [feePlans]
+    [commercialActionsDisabled, feePlans]
   )
 
   // Get unique deals from valid fee plans
@@ -275,16 +287,32 @@ export function DispatchIntroducerInvestorDialog({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          {commercialActionsDisabled && (
+            <div className="p-4 rounded-lg border border-amber-500/30 bg-amber-500/5">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-amber-300">Commercial actions are blocked</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {commercialEligibility.message || 'This introducer is not ready for commercial activity yet.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
           {/* No valid fee plans warning */}
           {validFeePlans.length === 0 ? (
             <div className="p-4 rounded-lg border border-amber-500/30 bg-amber-500/5">
               <div className="flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-amber-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-amber-300">No active fee agreements</p>
+                  <p className="text-sm font-medium text-amber-300">
+                    {commercialActionsDisabled ? 'Introducer not ready for dispatch' : 'No active fee agreements'}
+                  </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {introducerName} has no active fee agreements with signed terms.
-                    Create and sign an introducer agreement from a deal first.
+                    {commercialActionsDisabled
+                      ? commercialEligibility.message || `${introducerName} cannot dispatch investors yet.`
+                      : `${introducerName} has no active fee agreements with signed terms. Create and sign an introducer agreement from a deal first.`}
                   </p>
                 </div>
               </div>

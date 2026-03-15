@@ -3,6 +3,10 @@ import { auditLogger, AuditActions } from '@/lib/audit'
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
 import { createFeePlanSchema } from '@/lib/fees/validation'
+import {
+  buildIntroducerCommercialBlockPayload,
+  getIntroducerCommercialEligibility,
+} from '@/lib/introducers/commercial-eligibility'
 
 const createDealFeePlanSchema = createFeePlanSchema.omit({ deal_id: true })
 
@@ -108,6 +112,23 @@ export async function POST(
     }
 
     const { components, ...feePlanData } = validation.data
+
+    if (feePlanData.introducer_id) {
+      const eligibility = await getIntroducerCommercialEligibility({
+        supabase,
+        introducerId: feePlanData.introducer_id,
+      })
+
+      if (!eligibility) {
+        return NextResponse.json({ error: 'Failed to verify introducer eligibility' }, { status: 500 })
+      }
+
+      if (!eligibility.eligible) {
+        return NextResponse.json(buildIntroducerCommercialBlockPayload(eligibility), {
+          status: 409,
+        })
+      }
+    }
 
     // Validate term sheet belongs to this deal and is published
     const { data: termSheet, error: termSheetError } = await supabase

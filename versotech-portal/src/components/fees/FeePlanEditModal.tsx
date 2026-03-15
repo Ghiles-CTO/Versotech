@@ -56,6 +56,8 @@ interface FeePlanEditModalProps {
   feePlan?: FeePlanWithComponents | null;
   dealId?: string;
   initialTermSheetId?: string;
+  initialEntityType?: EntityType;
+  initialEntityId?: string;
 }
 
 interface FeeComponent {
@@ -448,6 +450,8 @@ export default function FeePlanEditModal({
   feePlan,
   dealId,
   initialTermSheetId,
+  initialEntityType,
+  initialEntityId,
 }: FeePlanEditModalProps) {
   // UI State
   const [loading, setLoading] = useState(false);
@@ -600,7 +604,7 @@ export default function FeePlanEditModal({
       // Create mode - reset form
       resetForm();
     }
-  }, [open, feePlan, dealId, initialTermSheetId]);
+  }, [open, feePlan, dealId, initialTermSheetId, initialEntityType, initialEntityId]);
 
   // Validate components against term sheet
   useEffect(() => {
@@ -630,14 +634,18 @@ export default function FeePlanEditModal({
     setIsActive(true);
     setTermSheetId(initialTermSheetId);
     setSelectedTermSheet(null);
-    setEntityType(undefined);
-    setEntityId(undefined);
+    setEntityType(initialEntityType);
+    setEntityId(initialEntityId);
     setComponents([]);
     setAgreementTerms(DEFAULT_AGREEMENT_TERMS);
     setError(null);
     setValidationErrors([]);
-    setExpandedSections({ basic: true, components: true, agreement: false });
-  }, [dealId, initialTermSheetId]);
+    setExpandedSections({
+      basic: true,
+      components: true,
+      agreement: !!initialEntityType && !!initialEntityId,
+    });
+  }, [dealId, initialTermSheetId, initialEntityId, initialEntityType]);
 
   const loadDeals = async () => {
     try {

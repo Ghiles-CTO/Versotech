@@ -48,3 +48,21 @@ export async function resolveActiveInvestorLink<T = ActiveInvestorLink>(params: 
     preferredEntityId: cookiePersonaType === 'investor' ? cookiePersonaId : null,
   })
 }
+
+export async function resolveActiveInvestorLinkFromCookies<T = ActiveInvestorLink>(params: {
+  supabase: SupabaseClient<any>
+  userId: string
+  cookieStore?: CookieReader | null
+  select?: string
+}) {
+  const { supabase, userId, cookieStore, select } = params
+  const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(cookieStore)
+
+  return resolveActiveInvestorLink<T>({
+    supabase,
+    userId,
+    select,
+    cookiePersonaType,
+    cookiePersonaId,
+  })
+}

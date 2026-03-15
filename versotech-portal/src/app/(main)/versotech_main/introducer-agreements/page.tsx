@@ -41,6 +41,11 @@ import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import {
+  ACTIVE_PERSONA_ID_COOKIE,
+  ACTIVE_PERSONA_TYPE_COOKIE,
+  readCookieValue,
+} from '@/lib/persona/active-persona'
 
 type Agreement = {
   id: string
@@ -75,6 +80,8 @@ type Summary = {
   pendingAgreements: number
   expiringSoon: number
 }
+
+type AgreementViewScope = 'introducer' | 'arranger' | 'staff'
 
 const STATUS_STYLES: Record<string, { className: string; label: string }> = {
   // Workflow statuses with distinctive colors
@@ -147,6 +154,7 @@ const AGREEMENT_TYPE_LABELS: Record<string, string> = {
 export default function IntroducerAgreementsPage() {
   const router = useRouter()
   const [introducerInfo, setIntroducerInfo] = useState<IntroducerInfo | null>(null)
+  const [viewScope, setViewScope] = useState<AgreementViewScope>('staff')
   const [agreements, setAgreements] = useState<Agreement[]>([])
   const [summary, setSummary] = useState<Summary>({
     totalAgreements: 0,
@@ -202,43 +210,96 @@ export default function IntroducerAgreementsPage() {
           return
         }
 
-        // Check if user is an introducer
-        const { data: introducerUser, error: introducerUserError } = await supabase
-          .from('introducer_users')
-          .select('introducer_id')
-          .eq('user_id', user.id)
-          .single()
+        const activePersonaType = readCookieValue(document.cookie, ACTIVE_PERSONA_TYPE_COOKIE)
+        const activePersonaId = readCookieValue(document.cookie, ACTIVE_PERSONA_ID_COOKIE)
 
-        if (introducerUserError || !introducerUser) {
-          // Maybe they're staff - show all agreements as placeholder
-          await fetchAllAgreements(supabase)
+        const [{ data: introducerLinks, error: introducerUserError }, { data: arrangerLinks, error: arrangerUserError }, { data: personas }] =
+          await Promise.all([
+            supabase
+              .from('introducer_users')
+              .select('introducer_id')
+              .eq('user_id', user.id)
+              .order('is_primary', { ascending: false }),
+            supabase
+              .from('arranger_users')
+              .select('arranger_id')
+              .eq('user_id', user.id)
+              .order('is_primary', { ascending: false }),
+            supabase.rpc('get_user_personas', { p_user_id: user.id }),
+          ])
+
+        if (introducerUserError || arrangerUserError) {
+          throw new Error('Failed to resolve agreement access')
+        }
+
+        const isStaff = personas?.some((persona: any) => persona.persona_type === 'staff')
+        const introducerIds = (introducerLinks || []).map((row) => row.introducer_id).filter(Boolean)
+        const arrangerIds = (arrangerLinks || []).map((row) => row.arranger_id).filter(Boolean)
+
+        if (activePersonaType && !['introducer', 'arranger', 'staff'].includes(activePersonaType)) {
+          setError('Switch to your introducer or arranger profile to view fee agreements.')
           return
         }
 
-        // Fetch introducer info
-        const { data: introducer, error: introducerError } = await supabase
-          .from('introducers')
-          .select('id, legal_name, status, default_commission_bps, logo_url')
-          .eq('id', introducerUser.introducer_id)
-          .single()
+        const selectedIntroducerId =
+          activePersonaType === 'introducer' && activePersonaId && introducerIds.includes(activePersonaId)
+            ? activePersonaId
+            : !activePersonaType
+              ? introducerIds[0] || null
+              : null
 
-        if (introducerError) throw introducerError
-        setIntroducerInfo(introducer)
+        const selectedArrangerId =
+          activePersonaType === 'arranger' && activePersonaId && arrangerIds.includes(activePersonaId)
+            ? activePersonaId
+            : !activePersonaType && !selectedIntroducerId
+              ? arrangerIds[0] || null
+              : null
 
-        // Fetch agreements for this introducer
-        const { data: agreementsData, error: agreementsError } = await supabase
-          .from('introducer_agreements')
-          .select('*')
-          .eq('introducer_id', introducerUser.introducer_id)
-          .order('created_at', { ascending: false })
+        if (selectedIntroducerId) {
+          setViewScope('introducer')
 
-        if (agreementsError) throw agreementsError
+          const { data: introducer, error: introducerError } = await supabase
+            .from('introducers')
+            .select('id, legal_name, status, default_commission_bps, logo_url')
+            .eq('id', selectedIntroducerId)
+            .single()
 
-        processAgreements(agreementsData || [])
+          if (introducerError) throw introducerError
+          setIntroducerInfo(introducer)
+
+          const { data: agreementsData, error: agreementsError } = await supabase
+            .from('introducer_agreements')
+            .select('*')
+            .eq('introducer_id', selectedIntroducerId)
+            .order('created_at', { ascending: false })
+
+          if (agreementsError) throw agreementsError
+          processAgreements(agreementsData || [])
+        } else if (selectedArrangerId) {
+          setViewScope('arranger')
+          setIntroducerInfo(null)
+
+          const { data: agreementsData, error: agreementsError } = await supabase
+            .from('introducer_agreements')
+            .select('*')
+            .eq('arranger_id', selectedArrangerId)
+            .order('created_at', { ascending: false })
+
+          if (agreementsError) throw agreementsError
+          processAgreements(agreementsData || [])
+        } else if (isStaff) {
+          setViewScope('staff')
+          setIntroducerInfo(null)
+          await fetchAllAgreements(supabase)
+        } else {
+          setError('You do not have access to fee agreements.')
+          return
+        }
+
         setError(null)
       } catch (err) {
         console.error('[IntroducerAgreementsPage] Error:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load agreements')
+        setError('Unable to load fee agreements right now.')
       } finally {
         setLoading(false)
       }
@@ -366,7 +427,9 @@ export default function IntroducerAgreementsPage() {
           <p className="text-muted-foreground mt-1">
             {introducerInfo
               ? `Manage your commission agreements as ${introducerInfo.legal_name}`
-              : 'View and manage all introducer agreements'}
+              : viewScope === 'arranger'
+                ? 'Review introducer agreements across your arranger network'
+                : 'View and manage all introducer agreements'}
           </p>
         </div>
         {introducerInfo && introducerInfo.default_commission_bps && (
@@ -560,7 +623,9 @@ export default function IntroducerAgreementsPage() {
                     ? 'No agreements match your filters'
                     : introducerInfo
                       ? 'No fee agreements on file'
-                      : 'No introducer agreements found'}
+                      : viewScope === 'arranger'
+                        ? 'No introducer agreements linked to your arranger account'
+                        : 'No introducer agreements found'}
                 </p>
                 {introducerInfo && agreements.length === 0 && (
                   <p className="text-sm text-muted-foreground/70 max-w-sm">

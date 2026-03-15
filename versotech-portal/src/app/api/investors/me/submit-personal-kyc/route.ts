@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
+import { resolveActiveInvestorLinkFromCookies } from '@/lib/kyc/active-investor-link'
 import { checkAndUpdateEntityKYCStatus } from '@/lib/kyc/check-entity-kyc-status'
 import { resolveKycSubmissionAssignee } from '@/lib/kyc/reviewer-assignment'
 import { notifyCeoPersonalInfoSubmitted } from '@/lib/kyc/submit-notifications'
@@ -50,12 +51,15 @@ export async function POST() {
     }
 
     const serviceSupabase = createServiceClient()
-
-    const { link: investorUser, error: investorUserError } = await resolvePrimaryInvestorLink(
-      serviceSupabase,
-      user.id,
-      'investor_id'
-    )
+    const cookieStore = await cookies()
+    const { link: investorUser, error: investorUserError } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id',
+    })
 
     if (investorUserError || !investorUser?.investor_id) {
       return NextResponse.json({ error: 'Investor profile not found' }, { status: 404 })

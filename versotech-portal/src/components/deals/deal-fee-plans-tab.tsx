@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import FeePlanEditModal from '@/components/fees/FeePlanEditModal'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import { useRouter } from 'next/navigation'
+import { evaluateIntroducerCommercialEligibility } from '@/lib/introducers/commercial-eligibility'
 
 interface DealFeePlansTabProps {
   dealId: string
@@ -317,6 +318,19 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
 
   // Check if this plan can have an agreement generated
   const canGenerateAgreement = (plan: any) => {
+    if (plan.introducer_id) {
+      const eligibility = evaluateIntroducerCommercialEligibility({
+        id: plan.introducer_id,
+        legal_name: plan.introducer?.legal_name || plan.introducer?.display_name || 'Introducer',
+        account_approval_status: plan.introducer?.account_approval_status,
+        onboarding_status: plan.introducer?.onboarding_status,
+      })
+
+      if (!eligibility.eligible) {
+        return false
+      }
+    }
+
     // Introducers: need introducer_id and no existing agreement
     if (plan.introducer_id && !plan.generated_agreement_id) return true
     // Partners: need partner_id and no existing placement agreement
@@ -326,7 +340,20 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
 
   // Get appropriate tooltip for generate button
   const getGenerateTooltip = (plan: any) => {
-    if (plan.introducer_id) return 'Generate Introducer Agreement (DOC 3)'
+    if (plan.introducer_id) {
+      const eligibility = evaluateIntroducerCommercialEligibility({
+        id: plan.introducer_id,
+        legal_name: plan.introducer?.legal_name || plan.introducer?.display_name || 'Introducer',
+        account_approval_status: plan.introducer?.account_approval_status,
+        onboarding_status: plan.introducer?.onboarding_status,
+      })
+
+      if (!eligibility.eligible) {
+        return eligibility.message || 'This introducer is not ready for commercial activity yet.'
+      }
+
+      return 'Generate Introducer Agreement (DOC 3)'
+    }
     if (plan.partner_id) return 'Generate Placement Agreement'
     return ''
   }
@@ -359,6 +386,20 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {feePlans.map((plan) => {
                 const entityInfo = getEntityInfo(plan)
+                const introducerEligibility = plan.introducer_id
+                  ? evaluateIntroducerCommercialEligibility({
+                      id: plan.introducer_id,
+                      legal_name: plan.introducer?.legal_name || plan.introducer?.display_name || 'Introducer',
+                      account_approval_status: plan.introducer?.account_approval_status,
+                      onboarding_status: plan.introducer?.onboarding_status,
+                    })
+                  : null
+                const canGenerate = canGenerateAgreement(plan)
+                const showDisabledIntroducerGenerate =
+                  !!introducerEligibility &&
+                  !introducerEligibility.eligible &&
+                  !!plan.introducer_id &&
+                  !plan.generated_agreement_id
                 return (
                   <Card key={plan.id} className="border border-border bg-muted/50">
                     <CardHeader>
@@ -376,12 +417,12 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
                         </div>
                         <div className="flex items-center gap-1">
                           {/* Generate Agreement button - for introducers and partners */}
-                          {canGenerateAgreement(plan) && (
+                          {(canGenerate || showDisabledIntroducerGenerate) && (
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleGenerateAgreement(plan)}
-                              disabled={generatingAgreement === plan.id}
+                              disabled={generatingAgreement === plan.id || showDisabledIntroducerGenerate}
                               className="text-green-400 hover:text-green-300"
                               title={getGenerateTooltip(plan)}
                             >

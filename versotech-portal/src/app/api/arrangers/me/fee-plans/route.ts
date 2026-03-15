@@ -8,6 +8,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { createFeePlanSchema } from '@/lib/fees/validation'
 import { z } from 'zod'
+import {
+  buildIntroducerCommercialBlockPayload,
+  getIntroducerCommercialEligibility,
+} from '@/lib/introducers/commercial-eligibility'
 
 // Extended schema for arranger fee plan creation
 // Note: Uses .safeExtend() because createFeePlanSchema has a refinement
@@ -145,6 +149,23 @@ export async function POST(request: NextRequest) {
     }
 
     const { components, partner_id, introducer_id, commercial_partner_id, ...feePlanData } = validation.data
+
+    if (introducer_id) {
+      const eligibility = await getIntroducerCommercialEligibility({
+        supabase: serviceSupabase,
+        introducerId: introducer_id,
+      })
+
+      if (!eligibility) {
+        return NextResponse.json({ error: 'Failed to verify introducer eligibility' }, { status: 500 })
+      }
+
+      if (!eligibility.eligible) {
+        return NextResponse.json(buildIntroducerCommercialBlockPayload(eligibility), {
+          status: 409,
+        })
+      }
+    }
 
     // Verify the entity belongs to arranger's network (via deal relationships)
     if (partner_id) {

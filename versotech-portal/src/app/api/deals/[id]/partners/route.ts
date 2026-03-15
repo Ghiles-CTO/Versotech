@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import {
+  buildIntroducerCommercialBlockPayload,
+  evaluateIntroducerCommercialEligibility,
+  getIntroducerCommercialEligibility,
+} from '@/lib/introducers/commercial-eligibility'
 
 interface RouteContext {
   params: Promise<{ id: string }>
@@ -37,7 +41,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         introducer_id,
         commercial_partner_id,
         partner:partners(id, name, legal_name, status, contact_email),
-        introducer:introducers(id, legal_name, status, email),
+        introducer:introducers(id, legal_name, status, email, account_approval_status, onboarding_status),
         commercial_partner:commercial_partners(id, name, legal_name, status, contact_email),
         fee_components(id, kind, rate_bps, flat_amount, calc_method, frequency)
       `)
@@ -80,6 +84,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
         entity_name: entity?.name || entity?.legal_name || 'Unknown',
         entity_status: entity?.status,
         entity_email: entity?.contact_email || entity?.email, // introducers use 'email', partners/CPs use 'contact_email'
+        entity_commercial_eligibility:
+          entityType === 'introducer' && entity
+            ? evaluateIntroducerCommercialEligibility(entity)
+            : null,
         fee_components: fp.fee_components || [],
       }
     }).filter(Boolean)
@@ -159,6 +167,24 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (entityError || !entity) {
       return NextResponse.json({ error: `${entity_type} not found` }, { status: 404 })
+    }
+
+    if (entity_type === 'introducer') {
+      const eligibility = await getIntroducerCommercialEligibility({
+        supabase: serviceSupabase,
+        introducerId: entity_id,
+      })
+
+      if (!eligibility) {
+        return NextResponse.json({ error: 'Failed to verify introducer eligibility' }, { status: 500 })
+      }
+
+      if (!eligibility.eligible) {
+        return NextResponse.json(
+          buildIntroducerCommercialBlockPayload(eligibility),
+          { status: 409 }
+        )
+      }
     }
 
     // Check if this entity is already assigned to this deal

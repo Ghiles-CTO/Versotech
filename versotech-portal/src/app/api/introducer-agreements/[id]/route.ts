@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { readActivePersonaCookieValues } from '@/lib/kyc/active-introducer-link'
 
 const updateAgreementSchema = z.object({
   agreement_type: z.enum(['referral', 'revenue_share', 'fixed_fee', 'hybrid']).optional(),
@@ -48,6 +49,7 @@ export async function GET(
     })
 
     const isStaff = personas?.some((p: any) => p.persona_type === 'staff')
+    const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(request.cookies)
 
     // Fetch agreement
     const { data, error } = await serviceSupabase
@@ -82,14 +84,36 @@ export async function GET(
 
     // Check access
     if (!isStaff) {
-      // Introducer can only see their own agreements
-      const { data: introducerUser } = await serviceSupabase
-        .from('introducer_users')
-        .select('introducer_id')
-        .eq('user_id', user.id)
-        .single()
+      const allowIntroducerContext =
+        !cookiePersonaType ||
+        (cookiePersonaType === 'introducer' && (!cookiePersonaId || cookiePersonaId === data.introducer_id))
 
-      if (!introducerUser || introducerUser.introducer_id !== data.introducer_id) {
+      const allowArrangerContext =
+        !cookiePersonaType ||
+        (cookiePersonaType === 'arranger' &&
+          !!data.arranger_id &&
+          (!cookiePersonaId || cookiePersonaId === data.arranger_id))
+
+      const [{ data: introducerUser }, { data: arrangerUser }] = await Promise.all([
+        allowIntroducerContext
+          ? serviceSupabase
+              .from('introducer_users')
+              .select('introducer_id')
+              .eq('user_id', user.id)
+              .eq('introducer_id', data.introducer_id)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+        allowArrangerContext && data.arranger_id
+          ? serviceSupabase
+              .from('arranger_users')
+              .select('arranger_id')
+              .eq('user_id', user.id)
+              .eq('arranger_id', data.arranger_id)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+      ])
+
+      if (!introducerUser && !arrangerUser) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
       }
     }

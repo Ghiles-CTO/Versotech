@@ -31,6 +31,7 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { evaluateIntroducerCommercialEligibility } from '@/lib/introducers/commercial-eligibility'
 
 interface AddParticipantModalProps {
   dealId: string
@@ -86,6 +87,12 @@ interface ActiveAgreement {
   term_sheet_version: number
   reference_number?: string
   signed_date?: string
+}
+
+interface ActiveAgreementsResponse {
+  agreements: ActiveAgreement[]
+  eligible?: boolean
+  message?: string | null
 }
 
 interface LinkableInvestor {
@@ -222,6 +229,7 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
   const [linkableInvestors, setLinkableInvestors] = useState<LinkableInvestor[]>([])
   const [linkableInvestorsLoading, setLinkableInvestorsLoading] = useState(false)
   const [selectedLinkableInvestorId, setSelectedLinkableInvestorId] = useState<string>('')
+  const [introducerDispatchBlockMessage, setIntroducerDispatchBlockMessage] = useState<string | null>(null)
 
   // Check if current role requires a referring entity
   const requiresReferrer = !!ROLES_REQUIRING_REFERRER[investorRole]
@@ -322,10 +330,17 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
     setSelectedAgreement(null)
     setLinkableInvestors([])
     setSelectedLinkableInvestorId('')
+    setIntroducerDispatchBlockMessage(null)
     try {
       const response = await fetch(`/api/deals/${dealId}/active-agreements?introducer_id=${introducerId}`)
       if (response.ok) {
-        const data = await response.json()
+        const data = (await response.json()) as ActiveAgreementsResponse
+        if (data.eligible === false) {
+          setIntroducerDispatchBlockMessage(data.message || 'This introducer is not ready for dispatch.')
+          setActiveAgreements([])
+          return
+        }
+        setIntroducerDispatchBlockMessage(null)
         setActiveAgreements(data.agreements || [])
       }
     } catch (err) {
@@ -377,6 +392,7 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
       setSelectedAgreement(null)
       setLinkableInvestors([])
       setSelectedLinkableInvestorId('')
+      setIntroducerDispatchBlockMessage(null)
     }
   }, [open])
 
@@ -403,6 +419,7 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
     setSelectedAgreement(null)
     setLinkableInvestors([])
     setSelectedLinkableInvestorId('')
+    setIntroducerDispatchBlockMessage(null)
   }, [category])
 
   // Reset referring entity when role changes
@@ -426,6 +443,26 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
   // Fetch active agreements when an introducer is selected (for dispatch flow)
   useEffect(() => {
     if (category === 'introducer' && selectedEntity?.id) {
+      const eligibility = evaluateIntroducerCommercialEligibility({
+        id: selectedEntity.id,
+        legal_name: getEntityDisplayName(selectedEntity),
+        account_approval_status: selectedEntity.account_approval_status,
+        onboarding_status: selectedEntity.onboarding_status,
+      })
+
+      if (!eligibility.eligible) {
+        setActiveAgreements([])
+        setSelectedAgreementId('')
+        setSelectedAgreement(null)
+        setLinkableInvestors([])
+        setSelectedLinkableInvestorId('')
+        setIntroducerDispatchBlockMessage(
+          eligibility.message || 'This introducer is not ready for dispatch.'
+        )
+        return
+      }
+
+      setIntroducerDispatchBlockMessage(null)
       fetchActiveAgreements(selectedEntity.id)
     } else if (category === 'introducer') {
       // Reset agreement state when introducer is deselected
@@ -434,6 +471,7 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
       setSelectedAgreement(null)
       setLinkableInvestors([])
       setSelectedLinkableInvestorId('')
+      setIntroducerDispatchBlockMessage(null)
     }
   }, [category, selectedEntity?.id, fetchActiveAgreements])
 
@@ -758,18 +796,40 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
                       <SelectValue placeholder={`Select a ${selectedCategoryInfo?.label.toLowerCase()}`} />
                     </SelectTrigger>
                     <SelectContent>
-                      {getEntityListForCategory().map((entity) => (
-                        <SelectItem key={entity.id} value={entity.id}>
-                          <div className="flex flex-col">
-                            <span>{getEntityDisplayName(entity)}</span>
-                            {entity.contact_email && (
-                              <span className="text-xs text-muted-foreground">{entity.contact_email}</span>
-                            )}
-                          </div>
-                        </SelectItem>
-                      ))}
+                      {getEntityListForCategory().map((entity) => {
+                        const introducerEligibility = category === 'introducer'
+                          ? evaluateIntroducerCommercialEligibility({
+                              id: entity.id,
+                              legal_name: getEntityDisplayName(entity),
+                              account_approval_status: entity.account_approval_status,
+                              onboarding_status: entity.onboarding_status,
+                            })
+                          : null
+                        const disabledOption = !!introducerEligibility && !introducerEligibility.eligible
+
+                        return (
+                          <SelectItem key={entity.id} value={entity.id} disabled={disabledOption}>
+                            <div className="flex flex-col">
+                              <span>
+                                {getEntityDisplayName(entity)}
+                                {disabledOption && (
+                                  <span className="ml-1 text-amber-400 text-xs">(approval required)</span>
+                                )}
+                              </span>
+                              {entity.contact_email && (
+                                <span className="text-xs text-muted-foreground">{entity.contact_email}</span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        )
+                      })}
                     </SelectContent>
                   </Select>
+                )}
+                {category === 'introducer' && (
+                  <p className="text-xs text-muted-foreground">
+                    Ineligible introducers stay visible but are disabled until account approval and onboarding are complete.
+                  </p>
                 )}
               </div>
 
@@ -840,13 +900,35 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
                       <SelectValue placeholder={`Select ${referrerEntityType?.replace('_', ' ')}`} />
                     </SelectTrigger>
                     <SelectContent>
-                      {getReferringEntityList().map((entity) => (
-                        <SelectItem key={entity.id} value={entity.id}>
-                          {getEntityDisplayName(entity)}
-                        </SelectItem>
-                      ))}
+                      {getReferringEntityList().map((entity) => {
+                        const introducerEligibility = referrerEntityType === 'introducer'
+                          ? evaluateIntroducerCommercialEligibility({
+                              id: entity.id,
+                              legal_name: getEntityDisplayName(entity),
+                              account_approval_status: entity.account_approval_status,
+                              onboarding_status: entity.onboarding_status,
+                            })
+                          : null
+                        const disabledOption = !!introducerEligibility && !introducerEligibility.eligible
+
+                        return (
+                          <SelectItem key={entity.id} value={entity.id} disabled={disabledOption}>
+                            <div className="flex items-center gap-2">
+                              <span>{getEntityDisplayName(entity)}</span>
+                              {disabledOption && (
+                                <span className="text-amber-400 text-xs">(approval required)</span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        )
+                      })}
                     </SelectContent>
                   </Select>
+                  {referrerEntityType === 'introducer' && (
+                    <p className="text-xs text-muted-foreground">
+                      Ineligible introducers stay visible but are disabled until account approval and onboarding are complete.
+                    </p>
+                  )}
 
                   {/* Term sheet required message */}
                   {selectedReferringEntity && !selectedTermSheetId && (
@@ -1044,6 +1126,18 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
                   <div className="flex items-center gap-2 py-3">
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">Loading agreements...</span>
+                  </div>
+                ) : introducerDispatchBlockMessage ? (
+                  <div className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 text-amber-300 text-sm">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 mt-0.5" />
+                      <div>
+                        <p className="font-medium">Commercial actions are blocked</p>
+                        <p className="text-xs text-amber-300/80 mt-1">
+                          {introducerDispatchBlockMessage}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 ) : activeAgreements.length === 0 ? (
                   <div className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 text-amber-300 text-sm">

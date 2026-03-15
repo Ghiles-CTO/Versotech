@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { resolveActiveIntroducerLinkFromCookies } from '@/lib/kyc/active-introducer-link'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,11 +14,15 @@ export async function POST(request: NextRequest) {
     const serviceSupabase = createServiceClient()
 
     // Verify user is an introducer
-    const { data: introducerUser, error: introducerError } = await serviceSupabase
-      .from('introducer_users')
-      .select('introducer_id, can_sign')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { link: introducerUser, error: introducerError } = await resolveActiveIntroducerLinkFromCookies<{
+      introducer_id: string
+      can_sign: boolean | null
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore: request.cookies,
+      select: 'introducer_id, can_sign',
+    })
 
     if (introducerError || !introducerUser) {
       return NextResponse.json({ error: 'Not an introducer' }, { status: 403 })
@@ -120,11 +125,15 @@ export async function DELETE(request: NextRequest) {
     const serviceSupabase = createServiceClient()
 
     // Verify user is an introducer
-    const { data: introducerUser, error: introducerError } = await serviceSupabase
-      .from('introducer_users')
-      .select('introducer_id, signature_specimen_url')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { link: introducerUser, error: introducerError } = await resolveActiveIntroducerLinkFromCookies<{
+      introducer_id: string
+      signature_specimen_url: string | null
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore: request.cookies,
+      select: 'introducer_id, signature_specimen_url',
+    })
 
     if (introducerError || !introducerUser) {
       return NextResponse.json({ error: 'Not an introducer' }, { status: 403 })

@@ -10,6 +10,7 @@ import type { PostSignatureHandlerParams } from './types'
 import { calculateSubscriptionFeeEvents, createFeeEvents } from '../fees/subscription-fee-calculator'
 import { buildExecutedDocumentName, formatCounterpartyName } from '../documents/executed-document-name'
 import { maybeReleaseIntroducerAgreementCounterpartyRequests } from './introducer-agreement-flow'
+import { createInvestorNotification } from '@/lib/notifications'
 
 /**
  * NDA Post-Signature Handler
@@ -1364,16 +1365,27 @@ export async function handleIntroducerAgreementSignature(
         .limit(5)
 
       if (arrangerUsers && arrangerUsers.length > 0) {
-        const notifications = arrangerUsers.map((au: any) => ({
-          user_id: au.user_id,
-          investor_id: null,
-          title: 'Introducer Agreement Fully Signed',
-          message: `${introducer?.legal_name || 'Introducer'}'s fee agreement has been fully executed and is now active.`,
-          link: `/versotech_main/my-introducers`,
-          type: 'introducer_agreement_signed', // GAP-6 FIX: Add proper notification type
-        }))
+        const results = await Promise.allSettled(
+          arrangerUsers.map((au: any) =>
+            createInvestorNotification({
+              userId: au.user_id,
+              title: 'Introducer Agreement Fully Signed',
+              message: `${introducer?.legal_name || 'Introducer'}'s fee agreement has been fully executed and is now active.`,
+              link: '/versotech_main/my-introducers',
+              type: 'introducer_agreement_signed',
+              dealId: agreement.deal_id || undefined,
+              extraMetadata: {
+                introducerId: agreement.introducer_id,
+                agreementId,
+              },
+            })
+          )
+        )
 
-        await supabase.from('investor_notifications').insert(notifications)
+        const failures = results.filter((result) => result.status === 'rejected')
+        if (failures.length > 0) {
+          console.error('⚠️ [INTRODUCER AGREEMENT HANDLER] Failed to notify some arranger users:', failures)
+        }
         console.log('✅ [INTRODUCER AGREEMENT HANDLER] Notifications sent to arranger users')
       }
     }
@@ -1386,16 +1398,27 @@ export async function handleIntroducerAgreementSignature(
       .limit(5)
 
     if (ceoUsers && ceoUsers.length > 0) {
-      const notifications = ceoUsers.map((ceo: any) => ({
-        user_id: ceo.id,
-        investor_id: null,
-        title: 'Introducer Agreement Fully Signed',
-        message: `${introducer?.legal_name || 'Introducer'}'s fee agreement has been fully executed and is now active.`,
-        link: `/versotech_main/introducers/${agreement.introducer_id}?tab=agreements`,
-        type: 'introducer_agreement_signed', // GAP-6 FIX: Add proper notification type
-      }))
+      const results = await Promise.allSettled(
+        ceoUsers.map((ceo: any) =>
+          createInvestorNotification({
+            userId: ceo.id,
+            title: 'Introducer Agreement Fully Signed',
+            message: `${introducer?.legal_name || 'Introducer'}'s fee agreement has been fully executed and is now active.`,
+            link: `/versotech_main/introducers/${agreement.introducer_id}?tab=agreements`,
+            type: 'introducer_agreement_signed',
+            dealId: agreement.deal_id || undefined,
+            extraMetadata: {
+              introducerId: agreement.introducer_id,
+              agreementId,
+            },
+          })
+        )
+      )
 
-      await supabase.from('investor_notifications').insert(notifications)
+      const failures = results.filter((result) => result.status === 'rejected')
+      if (failures.length > 0) {
+        console.error('⚠️ [INTRODUCER AGREEMENT HANDLER] Failed to notify some staff users:', failures)
+      }
       console.log('✅ [INTRODUCER AGREEMENT HANDLER] Notifications sent to CEO/staff')
     }
 

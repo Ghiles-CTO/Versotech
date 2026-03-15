@@ -10,6 +10,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getCeoSigner } from '@/lib/staff/ceo-signer'
 import { z } from 'zod'
+import { resolveActiveIntroducerLinkFromCookies } from '@/lib/kyc/active-introducer-link'
+import { createInvestorNotification } from '@/lib/notifications'
 
 const submitInvoiceSchema = z.object({
   invoice_document_id: z.string().uuid(), // Document ID from storage
@@ -35,13 +37,14 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user is linked to an introducer
-    const { data: introducerUser, error: introducerError } = await serviceSupabase
-      .from('introducer_users')
-      .select('introducer_id')
-      .eq('user_id', user.id)
-      .limit(1)
-      .single()
+    const { link: introducerUser, error: introducerError } = await resolveActiveIntroducerLinkFromCookies<{
+      introducer_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore: request.cookies,
+      select: 'introducer_id',
+    })
 
     if (introducerError || !introducerUser) {
       return NextResponse.json({ error: 'Not an introducer' }, { status: 403 })
@@ -154,17 +157,31 @@ export async function POST(
         .eq('arranger_id', commission.arranger_id)
 
       if (arrangerUsers && arrangerUsers.length > 0) {
-        const notifications = arrangerUsers.map(au => ({
-          user_id: au.user_id,
-          investor_id: null,
-          title: 'Invoice Received',
-          message: `Invoice received from ${introducer?.legal_name || 'Introducer'} for ${formattedAmount}${deal ? ` (${deal.name})` : ''} (approval required).`,
-          link: '/versotech_main/my-introducers',
-          type: 'info' as const,
-        }))
+        const notificationResults = await Promise.allSettled(
+          arrangerUsers.map((arrangerUser) =>
+            createInvestorNotification({
+              userId: arrangerUser.user_id,
+              title: 'Invoice Received',
+              message: `Invoice received from ${introducer?.legal_name || 'Introducer'} for ${formattedAmount}${deal ? ` (${deal.name})` : ''} (approval required).`,
+              link: '/versotech_main/my-introducers',
+              type: 'introducer_invoice_sent',
+              createdBy: user.id,
+              dealId: commission.deal_id || undefined,
+              extraMetadata: {
+                commissionId: id,
+                introducerId,
+                arrangerId: commission.arranger_id,
+                invoiceDocumentId: data.invoice_document_id,
+                invoiceNumber: data.invoice_number || null,
+              },
+            })
+          )
+        )
 
-        await serviceSupabase.from('investor_notifications').insert(notifications)
-        console.log('[submit-invoice] Sent', notifications.length, 'notifications to arranger users')
+        const failures = notificationResults.filter((result) => result.status === 'rejected')
+        if (failures.length > 0) {
+          console.error('[submit-invoice] Failed to notify some arranger users:', failures)
+        }
       }
     }
 

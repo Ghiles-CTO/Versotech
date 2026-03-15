@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
-import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
+import { resolveActiveInvestorLinkFromCookies } from '@/lib/kyc/active-investor-link'
 import { z } from 'zod'
 
 // Investors can only set these statuses - final statuses require staff action
@@ -20,12 +21,17 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
+        const cookieStore = await cookies()
         // Get investor profile and status
-        const { link: investorUser } = await resolvePrimaryInvestorLink(
+        const { link: investorUser } = await resolveActiveInvestorLinkFromCookies<{
+            investor_id: string
+            investors?: { kyc_status?: string | null } | null
+        }>({
             supabase,
-            user.id,
-            'investor_id, investors(kyc_status)'
-        )
+            userId: user.id,
+            cookieStore,
+            select: 'investor_id, investors(kyc_status)'
+        })
 
         if (!investorUser || !investorUser.investors) {
             return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
@@ -50,11 +56,15 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const { link: investorUser } = await resolvePrimaryInvestorLink(
+        const cookieStore = await cookies()
+        const { link: investorUser } = await resolveActiveInvestorLinkFromCookies<{
+            investor_id: string
+        }>({
             supabase,
-            user.id,
-            'investor_id'
-        )
+            userId: user.id,
+            cookieStore,
+            select: 'investor_id'
+        })
 
         if (!investorUser) {
             return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })

@@ -1,6 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { resolveActiveIntroducerLinkFromCookies } from '@/lib/kyc/active-introducer-link'
 
 const updateNoticeContactSchema = z.object({
   contact_type: z.enum(['legal', 'tax', 'compliance', 'accounting', 'general', 'other']).optional(),
@@ -21,7 +22,7 @@ const updateNoticeContactSchema = z.object({
 })
 
 export async function PATCH(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ contactId: string }> }
 ) {
   const supabase = await createClient()
@@ -34,17 +35,20 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: introducerLinks } = await serviceSupabase
-      .from('introducer_users')
-      .select('introducer_id')
-      .eq('user_id', user.id)
-      .limit(1)
+    const { link: introducerLink, error: introducerLinkError } = await resolveActiveIntroducerLinkFromCookies<{
+      introducer_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore: request.cookies,
+      select: 'introducer_id',
+    })
 
-    if (!introducerLinks || introducerLinks.length === 0) {
+    if (introducerLinkError || !introducerLink?.introducer_id) {
       return NextResponse.json({ error: 'No introducer profile found' }, { status: 404 })
     }
 
-    const introducerId = introducerLinks[0].introducer_id
+    const introducerId = introducerLink.introducer_id
 
     const { data: existingContact } = await serviceSupabase
       .from('entity_notice_contacts')
@@ -100,7 +104,7 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ contactId: string }> }
 ) {
   const supabase = await createClient()
@@ -113,17 +117,20 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: introducerLinks } = await serviceSupabase
-      .from('introducer_users')
-      .select('introducer_id')
-      .eq('user_id', user.id)
-      .limit(1)
+    const { link: introducerLink, error: introducerLinkError } = await resolveActiveIntroducerLinkFromCookies<{
+      introducer_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore: request.cookies,
+      select: 'introducer_id',
+    })
 
-    if (!introducerLinks || introducerLinks.length === 0) {
+    if (introducerLinkError || !introducerLink?.introducer_id) {
       return NextResponse.json({ error: 'No introducer profile found' }, { status: 404 })
     }
 
-    const introducerId = introducerLinks[0].introducer_id
+    const introducerId = introducerLink.introducer_id
 
     const { error: deleteError } = await serviceSupabase
       .from('entity_notice_contacts')

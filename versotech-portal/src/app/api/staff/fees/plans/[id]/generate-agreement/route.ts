@@ -30,6 +30,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { triggerWorkflow } from '@/lib/trigger-workflow';
 import { detectAnchors, getPlacementsFromAnchors, getRequiredAnchorsForIntroducerAgreement, validateRequiredAnchors } from '@/lib/signature/anchor-detector';
+import { checkStaffAccess } from '@/lib/auth';
+import {
+  buildIntroducerCommercialBlockPayload,
+  getIntroducerCommercialEligibility,
+} from '@/lib/introducers/commercial-eligibility';
 
 // Helper functions for formatting
 function formatCurrency(amount: number | null | undefined): string {
@@ -54,6 +59,7 @@ export async function POST(
 ) {
   try {
     const supabase = await createClient();
+    const serviceSupabase = createServiceClient()
     const { id: feePlanId } = await params;
 
     // Check auth
@@ -62,6 +68,11 @@ export async function POST(
     } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const hasStaffAccess = await checkStaffAccess(user.id)
+    if (!hasStaffAccess) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // Fetch user profile for workflow trigger
@@ -115,6 +126,21 @@ export async function POST(
         { error: 'Fee plan is not linked to an introducer' },
         { status: 400 }
       );
+    }
+
+    const eligibility = await getIntroducerCommercialEligibility({
+      supabase: serviceSupabase,
+      introducerId: feePlan.introducer_id,
+    });
+
+    if (!eligibility) {
+      return NextResponse.json({ error: 'Failed to verify introducer eligibility' }, { status: 500 });
+    }
+
+    if (!eligibility.eligible) {
+      return NextResponse.json(buildIntroducerCommercialBlockPayload(eligibility), {
+        status: 409,
+      });
     }
 
     // Ensure this is NOT a partner fee plan - only introducers get this agreement type

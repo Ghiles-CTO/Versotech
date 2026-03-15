@@ -492,12 +492,18 @@ export async function submitEntityKycForUser(params: {
       !existingAccountStatus || ['pending_onboarding', 'new', 'incomplete', 'rejected'].includes(existingAccountStatus)
 
     if (shouldUpdateAccountStatus) {
+      const entityUpdateData: Record<string, unknown> = {
+        account_approval_status: 'pending_onboarding',
+        updated_at: new Date().toISOString(),
+      }
+
+      if (config.entityTable === 'investors' || config.entityTable === 'introducers') {
+        entityUpdateData.onboarding_status = 'pending'
+      }
+
       await serviceSupabase
         .from(config.entityTable)
-        .update({
-          account_approval_status: 'pending_onboarding',
-          updated_at: new Date().toISOString(),
-        })
+        .update(entityUpdateData)
         .eq('id', entityId)
     }
 

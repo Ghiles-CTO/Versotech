@@ -8,6 +8,10 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { createInvestorNotification } from '@/lib/notifications'
 import { getEntityPrimaryAndAdminRecipients } from '@/lib/notifications/entity-recipient-groups'
+import {
+  buildIntroducerCommercialBlockPayload,
+  getIntroducerCommercialEligibility,
+} from '@/lib/introducers/commercial-eligibility'
 
 /**
  * POST /api/introducer-agreements/[id]/send
@@ -68,6 +72,23 @@ export async function POST(
         { error: 'Can only send agreements in draft status' },
         { status: 400 }
       )
+    }
+
+    if (agreement.fee_plan_id) {
+      const eligibility = await getIntroducerCommercialEligibility({
+        supabase: serviceSupabase,
+        introducerId: agreement.introducer_id,
+      })
+
+      if (!eligibility) {
+        return NextResponse.json({ error: 'Failed to verify introducer eligibility' }, { status: 500 })
+      }
+
+      if (!eligibility.eligible) {
+        return NextResponse.json(buildIntroducerCommercialBlockPayload(eligibility), {
+          status: 409,
+        })
+      }
     }
 
     // Update status to pending_approval

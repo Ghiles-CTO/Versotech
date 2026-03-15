@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
 
     let query = serviceClient
       .from("introducers")
-      .select("id, display_name, legal_name, email, status, type")
+      .select("id, display_name, legal_name, email, status, type, account_approval_status, onboarding_status")
       .order("display_name", { ascending: true })
 
     if (search && search.trim().length > 0) {
@@ -67,7 +67,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Failed to fetch introducers" }, { status: 500 })
     }
 
-    return NextResponse.json({ introducers: introducers || [] })
+    return NextResponse.json({
+      introducers: introducers || [],
+      data: introducers || [],
+    })
   } catch (error) {
     console.error("Introducers API error:", error)
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
@@ -120,6 +123,8 @@ export async function POST(request: NextRequest) {
       payment_terms: parsed.payment_terms ?? null,
       status: parsed.status,
       notes: parsed.notes ?? null,
+      account_approval_status: 'pending_onboarding',
+      onboarding_status: 'pending',
     }
 
     // Use service client to bypass RLS (we've already verified staff access above)

@@ -6,9 +6,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { submitEntityKycForUser } from '@/app/api/me/entity-kyc/submit/route'
-import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
+import { resolveActiveInvestorLinkFromCookies } from '@/lib/kyc/active-investor-link'
 
 export async function POST(_request: NextRequest) {
   try {
@@ -20,11 +21,15 @@ export async function POST(_request: NextRequest) {
     }
 
     const serviceSupabase = createServiceClient()
-    const { link: investorUser, error: investorUserError } = await resolvePrimaryInvestorLink(
-      serviceSupabase,
-      user.id,
-      'investor_id'
-    )
+    const cookieStore = await cookies()
+    const { link: investorUser, error: investorUserError } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id',
+    })
 
     if (investorUserError || !investorUser?.investor_id) {
       return NextResponse.json({ error: 'Investor not found' }, { status: 404 })
@@ -54,11 +59,15 @@ export async function GET() {
     }
 
     const serviceSupabase = createServiceClient()
-    const { link: investorUser } = await resolvePrimaryInvestorLink(
-      serviceSupabase,
-      user.id,
-      'investor_id'
-    )
+    const cookieStore = await cookies()
+    const { link: investorUser } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id',
+    })
 
     if (!investorUser?.investor_id) {
       return NextResponse.json({ error: 'Investor not found' }, { status: 404 })

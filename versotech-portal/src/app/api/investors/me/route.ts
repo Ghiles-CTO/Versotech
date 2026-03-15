@@ -1,7 +1,8 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
+import { cookies } from 'next/headers'
+import { resolveActiveInvestorLinkFromCookies } from '@/lib/kyc/active-investor-link'
 import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 
 /**
@@ -18,12 +19,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get the user's primary investor link deterministically.
-    const { link: investorLink, error: linksError } = await resolvePrimaryInvestorLink(
-      serviceSupabase,
-      user.id,
-      'investor_id'
-    )
+    const cookieStore = await cookies()
+    const { link: investorLink, error: linksError } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id',
+    })
 
     if (linksError || !investorLink?.investor_id) {
       // Return 200 with null investor instead of 404 to avoid log noise
@@ -129,11 +133,15 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { link: investorLink, error: linksError } = await resolvePrimaryInvestorLink(
-      serviceSupabase,
-      user.id,
-      'investor_id'
-    )
+    const cookieStore = await cookies()
+    const { link: investorLink, error: linksError } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id',
+    })
 
     if (linksError || !investorLink?.investor_id) {
       return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })

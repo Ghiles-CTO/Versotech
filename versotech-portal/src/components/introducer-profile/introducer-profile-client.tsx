@@ -956,20 +956,30 @@ export function IntroducerProfileClient({
                     {hasPendingAccountApproval
                       ? 'Your account is currently under review.'
                       : canSubmitAccountApproval
-                        ? 'Primary or admin users can submit the account once everything is complete.'
-                        : 'Only primary or admin users can submit the account for approval.'}
+                        ? 'Primary contacts or introducer admins can submit the account once everything is complete.'
+                        : 'Only primary contacts or introducer admins can submit the account for approval.'}
                   </div>
-                  <Button
-                    onClick={handleSubmitAccountForApproval}
-                    disabled={accountApprovalSubmitDisabled}
-                  >
-                    {isSubmittingAccountApproval ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4 mr-2" />
-                    )}
-                    Submit for Approval
-                  </Button>
+                  {hasPendingAccountApproval ? (
+                    <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50/50 px-4 py-3">
+                      <Loader2 className="h-4 w-4 text-blue-600 animate-spin shrink-0" />
+                      <p className="text-sm text-muted-foreground">
+                        Under review by the CEO.
+                      </p>
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={handleSubmitAccountForApproval}
+                      disabled={accountApprovalSubmitDisabled}
+                      className={isAccountApprovalReady && canSubmitAccountApproval ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}
+                    >
+                      {isSubmittingAccountApproval ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4 mr-2" />
+                      )}
+                      Submit for Approval
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1079,19 +1089,19 @@ export function IntroducerProfileClient({
             <Card>
               <CardContent className="pt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="font-medium text-foreground">Save Entity Information</p>
+                  <p className="font-medium text-foreground">Submit company information</p>
                   <p className="text-sm text-muted-foreground">
-                    Required to complete KYC and trigger account activation approval.
+                    Required to complete company KYC and prepare the account for approval.
                   </p>
                 </div>
                 {(introducerUserInfo.role === 'admin' || introducerUserInfo.is_primary) ? (
                   <Button onClick={handleSubmitEntityKyc} disabled={isSubmittingEntityKyc} size="sm">
                     <Send className="h-4 w-4 mr-2" />
-                    {isSubmittingEntityKyc ? 'Saving...' : 'Save'}
+                    {isSubmittingEntityKyc ? 'Submitting...' : 'Submit company information'}
                   </Button>
                 ) : (
                   <p className="text-sm text-muted-foreground">
-                    Only primary contacts can submit entity information for review.
+                    Only primary contacts or introducer admins can submit company information for review.
                   </p>
                 )}
               </CardContent>

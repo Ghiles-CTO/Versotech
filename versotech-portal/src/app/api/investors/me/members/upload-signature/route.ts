@@ -1,11 +1,12 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { resolveActiveInvestorLinkFromCookies } from '@/lib/kyc/active-investor-link'
 
 /**
  * POST /api/investors/me/members/upload-signature
  * Upload a signature specimen image for an investor member
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const serviceSupabase = createServiceClient()
 
@@ -15,18 +16,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get investor IDs for this user
-    const { data: investorLinks } = await serviceSupabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
+    const { link: investorLink, error: investorLinkError } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore: request.cookies,
+      select: 'investor_id',
+    })
 
-    if (!investorLinks || investorLinks.length === 0) {
+    if (investorLinkError || !investorLink?.investor_id) {
       return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
     }
-
-    // Use the first investor ID for storage path
-    const investorId = investorLinks[0].investor_id
+    const investorId = investorLink.investor_id
 
     // Parse form data
     const formData = await request.formData()

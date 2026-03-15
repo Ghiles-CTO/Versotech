@@ -16,6 +16,8 @@ type IntroducerRecord = {
   commission_cap_amount: number | string | null
   payment_terms: string | null
   status: string | null
+  account_approval_status: string | null
+  onboarding_status: string | null
   created_at: string | null
   introductions?: Array<{
     id: string
@@ -108,6 +110,8 @@ export default async function IntroducersPage() {
         commission_cap_amount,
         payment_terms,
         status,
+        account_approval_status,
+        onboarding_status,
         created_at,
         introductions (
           id,
@@ -181,6 +185,8 @@ export default async function IntroducersPage() {
       commissionCapAmount: record.commission_cap_amount ? Number(record.commission_cap_amount) : null,
       paymentTerms: record.payment_terms,
       status: record.status ?? 'active',
+      accountApprovalStatus: record.account_approval_status,
+      onboardingStatus: record.onboarding_status,
       createdAt: record.created_at,
       totalIntroductions: introductions.length,
       successfulAllocations,

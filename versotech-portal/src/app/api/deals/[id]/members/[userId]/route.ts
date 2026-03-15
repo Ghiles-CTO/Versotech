@@ -3,6 +3,10 @@ import { auditLogger, AuditActions } from '@/lib/audit'
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
 import { z } from 'zod'
+import {
+  buildIntroducerCommercialBlockPayload,
+  getIntroducerCommercialEligibility,
+} from '@/lib/introducers/commercial-eligibility'
 
 const patchSchema = z.object({
   referred_by_entity_id: z.string().uuid(),
@@ -145,6 +149,24 @@ export async function PATCH(
     }
 
     const { referred_by_entity_id, referred_by_entity_type, assigned_fee_plan_id, role } = validation.data
+
+    if (referred_by_entity_type === 'introducer') {
+      const eligibility = await getIntroducerCommercialEligibility({
+        supabase,
+        introducerId: referred_by_entity_id,
+      })
+
+      if (!eligibility) {
+        return NextResponse.json({ error: 'Failed to verify introducer eligibility' }, { status: 500 })
+      }
+
+      if (!eligibility.eligible) {
+        return NextResponse.json(
+          buildIntroducerCommercialBlockPayload(eligibility),
+          { status: 409 }
+        )
+      }
+    }
 
     // Fetch current membership to get term_sheet_id
     const { data: membership, error: membershipError } = await supabase

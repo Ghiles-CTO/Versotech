@@ -8,6 +8,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { updateFeePlanSchema } from '@/lib/fees/validation'
+import {
+  buildIntroducerCommercialBlockPayload,
+  getIntroducerCommercialEligibility,
+} from '@/lib/introducers/commercial-eligibility'
 
 /**
  * GET /api/arrangers/me/fee-plans/[id]
@@ -96,7 +100,7 @@ export async function PUT(
     // Verify ownership and check if already sent
     const { data: existingPlan, error: fetchError } = await serviceSupabase
       .from('fee_plans')
-      .select('id, created_by_arranger_id, status')
+      .select('id, created_by_arranger_id, status, introducer_id, partner_id, commercial_partner_id')
       .eq('id', id)
       .single()
 
@@ -127,13 +131,54 @@ export async function PUT(
       )
     }
 
-    const { components, ...feePlanData } = validation.data
+    const {
+      components,
+      introducer_id,
+      partner_id,
+      commercial_partner_id,
+      ...feePlanData
+    } = validation.data
+
+    const entityFieldProvided =
+      introducer_id !== undefined ||
+      partner_id !== undefined ||
+      commercial_partner_id !== undefined
+
+    const normalizedEntityFields = entityFieldProvided
+      ? {
+          introducer_id: introducer_id ?? null,
+          partner_id: partner_id ?? null,
+          commercial_partner_id: commercial_partner_id ?? null,
+        }
+      : {
+          introducer_id: existingPlan.introducer_id ?? null,
+          partner_id: existingPlan.partner_id ?? null,
+          commercial_partner_id: existingPlan.commercial_partner_id ?? null,
+        }
+
+    if (normalizedEntityFields.introducer_id) {
+      const eligibility = await getIntroducerCommercialEligibility({
+        supabase: serviceSupabase,
+        introducerId: normalizedEntityFields.introducer_id,
+      })
+
+      if (!eligibility) {
+        return NextResponse.json({ error: 'Failed to verify introducer eligibility' }, { status: 500 })
+      }
+
+      if (!eligibility.eligible) {
+        return NextResponse.json(buildIntroducerCommercialBlockPayload(eligibility), {
+          status: 409,
+        })
+      }
+    }
 
     // Update fee plan
     const { data: updatedPlan, error: planError } = await serviceSupabase
       .from('fee_plans')
       .update({
         ...feePlanData,
+        ...normalizedEntityFields,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)

@@ -1,5 +1,6 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
+import { cookies } from 'next/headers'
+import { resolveActiveInvestorLinkFromCookies } from '@/lib/kyc/active-investor-link'
 import { NextResponse } from 'next/server'
 
 /**
@@ -17,12 +18,15 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get investor ID from investor_users
-    const { link: investorUser, error: investorUserError } = await resolvePrimaryInvestorLink(
-      serviceSupabase,
-      user.id,
-      'investor_id'
-    )
+    const cookieStore = await cookies()
+    const { link: investorUser, error: investorUserError } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id',
+    })
 
     if (investorUserError) {
       console.error('Error fetching investor user:', investorUserError)

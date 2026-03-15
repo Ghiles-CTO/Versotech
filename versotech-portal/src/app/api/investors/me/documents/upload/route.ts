@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { createClient } from '@/lib/supabase/server'
 import { checkAndUpdateEntityKYCStatus } from '@/lib/kyc/check-entity-kyc-status'
-import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
+import { resolveActiveInvestorLinkFromCookies } from '@/lib/kyc/active-investor-link'
+import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
 import {
   buildUploadDocumentMetadata,
   validateUploadDocumentMetadata,
@@ -40,11 +41,14 @@ export async function POST(request: NextRequest) {
       .single()
 
     // Get investor ID for this user - this is the real authorization check
-    const { link: investorUser } = await resolvePrimaryInvestorLink(
-      supabase,
-      user.id,
-      'investor_id'
-    )
+    const { link: investorUser } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore: request.cookies,
+      select: 'investor_id',
+    })
 
     if (!investorUser) {
       return NextResponse.json(
@@ -134,55 +138,40 @@ export async function POST(request: NextRequest) {
     // Handle special "self_" prefix for current user uploading their own KYC
     let resolvedInvestorMemberId = investorMemberId
     if (investorMemberId?.startsWith('self_')) {
-      // User is uploading for themselves - create or find their investor_member record
       const selfUserId = investorMemberId.replace('self_', '')
-
-      // Get user's profile info
-      const { data: selfProfile } = await serviceSupabase
-        .from('profiles')
-        .select('display_name, email')
-        .eq('id', selfUserId)
-        .single()
-
-      const userName = selfProfile?.display_name || selfProfile?.email || 'Portal User'
-
-      // Check if investor_member already exists for this user (by email match)
-      const { data: existingMember } = await serviceSupabase
-        .from('investor_members')
-        .select('id')
-        .eq('investor_id', investorId)
-        .eq('email', selfProfile?.email)
-        .eq('is_active', true)
-        .maybeSingle()
-
-      if (existingMember) {
-        resolvedInvestorMemberId = existingMember.id
-      } else {
-        // Create new investor_member for this user
-        const { data: newMember, error: createError } = await serviceSupabase
-          .from('investor_members')
-          .insert({
-            investor_id: investorId,
-            full_name: userName,
-            email: selfProfile?.email,
-            linked_user_id: selfUserId,
-            role: 'authorized_signatory',
-            kyc_status: 'pending',
-            is_signatory: true,
-            created_by: user.id
-          })
-          .select('id')
-          .single()
-
-        if (createError || !newMember) {
-          console.error('Failed to create investor_member for self:', createError)
-          return NextResponse.json(
-            { error: 'Failed to create member record for KYC upload' },
-            { status: 500 }
-          )
-        }
-        resolvedInvestorMemberId = newMember.id
+      if (selfUserId !== user.id) {
+        return NextResponse.json(
+          { error: 'Invalid self member reference' },
+          { status: 400 }
+        )
       }
+
+      const { member: selfMember, error: selfMemberError } = await fetchMemberWithAutoLink({
+        supabase: serviceSupabase,
+        memberTable: 'investor_members',
+        entityIdColumn: 'investor_id',
+        entityId: investorId,
+        userId: user.id,
+        userEmail: user.email,
+        defaultFullName:
+          profile?.full_name ||
+          profile?.display_name ||
+          user.email ||
+          null,
+        createIfMissing: true,
+        select: 'id',
+        context: 'investor-documents-upload',
+      })
+
+      if (selfMemberError || !selfMember?.id) {
+        console.error('Failed to resolve investor_member for self upload:', selfMemberError)
+        return NextResponse.json(
+          { error: 'Failed to resolve member record for KYC upload' },
+          { status: 500 }
+        )
+      }
+
+      resolvedInvestorMemberId = selfMember.id
     } else if (investorMemberId) {
       const { data: member, error: memberError } = await serviceSupabase
         .from('investor_members')

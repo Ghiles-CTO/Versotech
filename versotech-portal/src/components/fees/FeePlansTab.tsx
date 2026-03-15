@@ -41,6 +41,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen';
 import type { FeePlanWithComponents } from '@/lib/fees/types';
 import { formatBps } from '@/lib/fees/calculations';
+import { evaluateIntroducerCommercialEligibility } from '@/lib/introducers/commercial-eligibility';
 import FeePlanEditModal from './FeePlanEditModal';
 
 interface FeePlanWithDeal extends FeePlanWithComponents {
@@ -59,6 +60,12 @@ interface FeePlanWithDeal extends FeePlanWithComponents {
   introducer?: {
     id: string;
     legal_name: string;
+    account_approval_status?: string | null;
+    onboarding_status?: string | null;
+    commercial_eligibility?: {
+      eligible: boolean;
+      message: string | null;
+    } | null;
   } | null;
   partner?: {
     id: string;
@@ -367,20 +374,25 @@ export default function FeePlansTab(_props: FeePlansTabProps) {
       const res = await fetch(`/api/staff/fees/plans/${planToDuplicate.id}/duplicate`, {
         method: 'POST',
       });
-      if (res.ok) {
-        const { data: duplicatedPlan } = await res.json();
-        await fetchPlans();
-        setDuplicateDialogOpen(false);
-        setPlanToDuplicate(null);
+      const payload = await res.json().catch(() => null);
+      if (!res.ok) {
+        toast.error(payload?.message || payload?.error || 'Failed to duplicate fee plan');
+        return;
+      }
 
-        // Open edit modal for the new plan
-        if (duplicatedPlan) {
-          setSelectedPlan(duplicatedPlan);
-          setEditModalOpen(true);
-        }
+      const duplicatedPlan = payload?.data;
+      await fetchPlans();
+      setDuplicateDialogOpen(false);
+      setPlanToDuplicate(null);
+
+      // Open edit modal for the new plan
+      if (duplicatedPlan) {
+        setSelectedPlan(duplicatedPlan);
+        setEditModalOpen(true);
       }
     } catch (error) {
       console.error('Error duplicating plan:', error);
+      toast.error('Failed to duplicate fee plan');
     }
   };
 
@@ -437,8 +449,24 @@ export default function FeePlansTab(_props: FeePlansTabProps) {
     return false;
   };
 
+  const getIntroducerEligibility = (plan: FeePlanWithDeal) => {
+    if (!plan.introducer) return null;
+    if (plan.introducer.commercial_eligibility) {
+      return plan.introducer.commercial_eligibility;
+    }
+    return evaluateIntroducerCommercialEligibility({
+      id: plan.introducer.id,
+      legal_name: plan.introducer.legal_name,
+      account_approval_status: plan.introducer.account_approval_status ?? null,
+      onboarding_status: plan.introducer.onboarding_status ?? null,
+    });
+  };
+
   // Check if this plan can have an agreement generated
   const canGenerateAgreement = (plan: FeePlanWithDeal) => {
+    const introducerEligibility = getIntroducerEligibility(plan);
+    if (introducerEligibility && !introducerEligibility.eligible) return false;
+
     // Introducers: need introducer and no existing agreement
     if (plan.introducer && !(plan as any).generated_agreement_id) return true;
     // Partners: need partner and no existing placement agreement
@@ -448,9 +476,26 @@ export default function FeePlansTab(_props: FeePlansTabProps) {
 
   // Get appropriate tooltip for generate button
   const getGenerateTooltip = (plan: FeePlanWithDeal) => {
+    const introducerEligibility = getIntroducerEligibility(plan);
+    if (introducerEligibility && !introducerEligibility.eligible) {
+      return introducerEligibility.message || 'This introducer is not ready for commercial activity yet.';
+    }
     if (plan.introducer) return 'Generate Introducer Agreement';
     if (plan.partner) return 'Generate Placement Agreement';
     return '';
+  };
+
+  const canDuplicatePlan = (plan: FeePlanWithDeal) => {
+    const introducerEligibility = getIntroducerEligibility(plan);
+    return !introducerEligibility || introducerEligibility.eligible;
+  };
+
+  const getDuplicateTooltip = (plan: FeePlanWithDeal) => {
+    const introducerEligibility = getIntroducerEligibility(plan);
+    if (introducerEligibility && !introducerEligibility.eligible) {
+      return introducerEligibility.message || 'This introducer is not ready for commercial activity yet.';
+    }
+    return 'Duplicate fee plan';
   };
 
   // Generate Introducer Agreement
@@ -808,11 +853,22 @@ export default function FeePlansTab(_props: FeePlansTabProps) {
                                   <TableCell>
                                     <div className="flex items-center gap-2">
                                       <GroupIcon className={`h-4 w-4 ${config.iconColor}`} />
-                                      <span>
+                                      <div>
+                                        <span>
                                         {plan.introducer?.legal_name ||
                                           plan.partner?.name ||
                                           plan.commercial_partner?.name}
-                                      </span>
+                                        </span>
+                                        {(() => {
+                                          const introducerEligibility = getIntroducerEligibility(plan);
+                                          if (!introducerEligibility || introducerEligibility.eligible) return null;
+                                          return (
+                                            <div className="text-xs text-amber-600 mt-1">
+                                              {introducerEligibility.message || 'Commercial actions blocked until approval and onboarding are complete.'}
+                                            </div>
+                                          );
+                                        })()}
+                                      </div>
                                     </div>
                                   </TableCell>
                                   <TableCell>
@@ -876,12 +932,12 @@ export default function FeePlansTab(_props: FeePlansTabProps) {
                                   <TableCell className="text-right">
                                     <div className="flex gap-1 justify-end items-center">
                                       {/* Generate Agreement button */}
-                                      {canGenerateAgreement(plan) && (
+                                      {(canGenerateAgreement(plan) || (plan.introducer && !(plan as any).generated_agreement_id)) && (
                                         <Button
                                           variant="ghost"
                                           size="sm"
                                           onClick={() => handleGenerateAgreement(plan)}
-                                          disabled={generatingAgreement === plan.id}
+                                          disabled={generatingAgreement === plan.id || !canGenerateAgreement(plan)}
                                           className="text-green-400 hover:text-green-300"
                                           title={getGenerateTooltip(plan)}
                                         >
@@ -940,6 +996,8 @@ export default function FeePlansTab(_props: FeePlansTabProps) {
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => handleDuplicateClick(plan)}
+                                        disabled={!canDuplicatePlan(plan)}
+                                        title={getDuplicateTooltip(plan)}
                                       >
                                         <Copy className="h-4 w-4" />
                                       </Button>
@@ -975,15 +1033,24 @@ export default function FeePlansTab(_props: FeePlansTabProps) {
                                             plan.commercial_partner?.name}
                                         </span>
                                       </div>
+                                      {(() => {
+                                        const introducerEligibility = getIntroducerEligibility(plan);
+                                        if (!introducerEligibility || introducerEligibility.eligible) return null;
+                                        return (
+                                          <p className="mt-2 text-xs text-amber-600">
+                                            {introducerEligibility.message || 'Commercial actions blocked until approval and onboarding are complete.'}
+                                          </p>
+                                        );
+                                      })()}
                                     </div>
                                     <div className="flex gap-1 items-center">
                                       {/* Generate Agreement button */}
-                                      {canGenerateAgreement(plan) && (
+                                      {(canGenerateAgreement(plan) || (plan.introducer && !(plan as any).generated_agreement_id)) && (
                                         <Button
                                           variant="ghost"
                                           size="icon"
                                           onClick={() => handleGenerateAgreement(plan)}
-                                          disabled={generatingAgreement === plan.id}
+                                          disabled={generatingAgreement === plan.id || !canGenerateAgreement(plan)}
                                           className="text-green-400 hover:text-green-300"
                                           title={getGenerateTooltip(plan)}
                                         >
@@ -1010,6 +1077,8 @@ export default function FeePlansTab(_props: FeePlansTabProps) {
                                         variant="ghost"
                                         size="icon"
                                         onClick={() => handleDuplicateClick(plan)}
+                                        disabled={!canDuplicatePlan(plan)}
+                                        title={getDuplicateTooltip(plan)}
                                       >
                                         <Copy className="h-4 w-4" />
                                       </Button>

@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { resolveActiveIntroducerLinkFromCookies } from '@/lib/kyc/active-introducer-link';
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,40 +29,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get the introducer profile for this user
-    // Check BOTH: direct user_id link AND introducer_users junction table
-    let introducerId: string | null = null;
+    const { link: introducerLink, error: introducerError } = await resolveActiveIntroducerLinkFromCookies<{
+      introducer_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore: request.cookies,
+      select: 'introducer_id',
+    });
 
-    // Method 1: Check direct user_id on introducers table (legacy/primary)
-    const { data: directIntroducer } = await serviceSupabase
-      .from('introducers')
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (directIntroducer) {
-      introducerId = directIntroducer.id;
-    }
-
-    // Method 2: Check introducer_users junction table (multi-user support)
-    if (!introducerId) {
-      const { data: introducerUser } = await serviceSupabase
-        .from('introducer_users')
-        .select('introducer_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (introducerUser) {
-        introducerId = introducerUser.introducer_id;
-      }
-    }
-
-    if (!introducerId) {
+    if (introducerError || !introducerLink?.introducer_id) {
       return NextResponse.json(
         { error: 'You are not registered as an introducer' },
         { status: 403 }
       );
     }
+
+    const introducerId = introducerLink.introducer_id;
 
     // Get query params for filtering
     const searchParams = request.nextUrl.searchParams;

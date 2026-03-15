@@ -1143,12 +1143,18 @@ export async function checkAndUpdateEntityKYCStatus(
     // do not auto-open a new CEO task. This must be manually re-opened by operations.
     if (activationState.hasApproved && !activationState.hasPending && currentAccountStatus !== 'approved') {
       if (currentAccountStatus === 'pending_approval') {
+        const resetPayload: Record<string, unknown> = {
+          account_approval_status: 'pending_onboarding',
+          updated_at: new Date().toISOString(),
+        }
+
+        if (entityType === 'investor' || entityType === 'introducer') {
+          resetPayload.onboarding_status = 'pending'
+        }
+
         await supabase
           .from(config.entityTable)
-          .update({
-            account_approval_status: 'pending_onboarding',
-            updated_at: new Date().toISOString(),
-          })
+          .update(resetPayload)
           .eq('id', entityId)
       }
 
@@ -1158,10 +1164,10 @@ export async function checkAndUpdateEntityKYCStatus(
       return
     }
 
-    // Investor path is now manual:
-    // account-activation approvals are created only when the investor explicitly
-    // clicks "Submit Account for Approval" from the overview page.
-    if (entityType === 'investor') {
+    // Investor and introducer account activation are now manual:
+    // approvals are created only when the user explicitly clicks
+    // "Submit Account for Approval" from the overview/dashboard surfaces.
+    if (entityType === 'investor' || entityType === 'introducer') {
       return
     }
 

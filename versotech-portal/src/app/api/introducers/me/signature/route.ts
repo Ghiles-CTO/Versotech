@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { resolveActiveIntroducerLinkFromCookies } from '@/lib/kyc/active-introducer-link'
 
 /**
  * GET /api/introducers/me/signature
@@ -17,11 +19,17 @@ export async function GET() {
     const serviceSupabase = createServiceClient()
 
     // Get the user's introducer association with signature
-    const { data: introducerUser, error: introducerError } = await serviceSupabase
-      .from('introducer_users')
-      .select('signature_specimen_url, signature_specimen_uploaded_at')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const cookieStore = await cookies()
+    const { link: introducerUser, error: introducerError } = await resolveActiveIntroducerLinkFromCookies<{
+      introducer_id: string
+      signature_specimen_url: string | null
+      signature_specimen_uploaded_at: string | null
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'introducer_id, signature_specimen_url, signature_specimen_uploaded_at',
+    })
 
     if (introducerError) {
       console.error('[introducer-get-signature] Query error:', introducerError)
@@ -59,11 +67,16 @@ export async function DELETE() {
     const serviceSupabase = createServiceClient()
 
     // Verify user is an introducer
-    const { data: introducerUser, error: introducerError } = await serviceSupabase
-      .from('introducer_users')
-      .select('introducer_id, signature_specimen_url')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const cookieStore = await cookies()
+    const { link: introducerUser, error: introducerError } = await resolveActiveIntroducerLinkFromCookies<{
+      introducer_id: string
+      signature_specimen_url: string | null
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'introducer_id, signature_specimen_url',
+    })
 
     if (introducerError || !introducerUser) {
       return NextResponse.json({ error: 'Not an introducer' }, { status: 403 })

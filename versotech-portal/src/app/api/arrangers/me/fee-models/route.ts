@@ -7,6 +7,10 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { createFeePlanSchema } from '@/lib/fees/validation'
+import {
+  buildIntroducerCommercialBlockPayload,
+  getIntroducerCommercialEligibility,
+} from '@/lib/introducers/commercial-eligibility'
 
 /**
  * GET /api/arrangers/me/fee-models
@@ -154,6 +158,23 @@ export async function POST(request: NextRequest) {
     }
 
     const { components, ...feePlanData } = validation.data
+
+    if (feePlanData.introducer_id) {
+      const eligibility = await getIntroducerCommercialEligibility({
+        supabase: serviceSupabase,
+        introducerId: feePlanData.introducer_id,
+      })
+
+      if (!eligibility) {
+        return NextResponse.json({ error: 'Failed to verify introducer eligibility' }, { status: 500 })
+      }
+
+      if (!eligibility.eligible) {
+        return NextResponse.json(buildIntroducerCommercialBlockPayload(eligibility), {
+          status: 409,
+        })
+      }
+    }
 
     // Create fee plan with arranger linkage
     const { data: feePlan, error: planError } = await serviceSupabase

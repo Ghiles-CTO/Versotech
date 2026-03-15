@@ -175,10 +175,20 @@ async function findExistingMember(params: {
     .eq('is_active', true)
     .is('linked_user_id', null)
     .ilike('email', email)
+    .order('created_at', { ascending: true })
     .limit(2)
 
   if (emailCandidatesError) throw emailCandidatesError
-  if (!emailCandidates || emailCandidates.length !== 1) return null
+  if (!emailCandidates || emailCandidates.length === 0) return null
+
+  if (emailCandidates.length > 1) {
+    console.warn('[entity-invitation] Multiple unlinked members matched invited email; reusing oldest match', {
+      memberTable: config.memberTable,
+      entityId,
+      userId,
+      matchedMemberIds: emailCandidates.map(candidate => (candidate as unknown as { id: string }).id),
+    })
+  }
 
   return {
     member: emailCandidates[0] as unknown as MemberSnapshot,

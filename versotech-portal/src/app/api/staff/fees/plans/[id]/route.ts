@@ -6,10 +6,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { updateFeePlanSchema } from '@/lib/fees/validation';
 import { syncFeePlanToTermSheet } from '@/lib/fees/term-sheet-sync';
 import { normalizeFeeComponentsForInsert } from '@/lib/fees/normalize-fee-components';
+import { checkStaffAccess } from '@/lib/auth';
+import {
+  buildIntroducerCommercialBlockPayload,
+  getIntroducerCommercialEligibility,
+} from '@/lib/introducers/commercial-eligibility';
 
 /**
  * GET /api/staff/fees/plans/[id]
@@ -22,6 +27,7 @@ export async function GET(
   try {
     const { id } = await params;
     const supabase = await createClient();
+    const serviceSupabase = createServiceClient();
 
     // Check auth
     const {
@@ -29,6 +35,11 @@ export async function GET(
     } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const hasStaffAccess = await checkStaffAccess(user.id);
+    if (!hasStaffAccess) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // Fetch fee plan with components
@@ -69,6 +80,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const supabase = await createClient();
+    const serviceSupabase = createServiceClient();
 
     // Check auth
     const {
@@ -76,6 +88,11 @@ export async function PUT(
     } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const hasStaffAccess = await checkStaffAccess(user.id);
+    if (!hasStaffAccess) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // Parse and validate request body
@@ -92,13 +109,65 @@ export async function PUT(
       );
     }
 
-    const { components, ...feePlanData } = validation.data;
+    const existingPlanResult = await serviceSupabase
+      .from('fee_plans')
+      .select('id, introducer_id, partner_id, commercial_partner_id, deal_id')
+      .eq('id', id)
+      .single();
+
+    const existingPlan = existingPlanResult.data;
+    if (existingPlanResult.error || !existingPlan) {
+      return NextResponse.json({ error: 'Fee plan not found' }, { status: 404 });
+    }
+
+    const {
+      components,
+      introducer_id,
+      partner_id,
+      commercial_partner_id,
+      ...feePlanData
+    } = validation.data;
+
+    const entityFieldProvided =
+      introducer_id !== undefined ||
+      partner_id !== undefined ||
+      commercial_partner_id !== undefined;
+
+    const normalizedEntityFields = entityFieldProvided
+      ? {
+          introducer_id: introducer_id ?? null,
+          partner_id: partner_id ?? null,
+          commercial_partner_id: commercial_partner_id ?? null,
+        }
+      : {
+          introducer_id: existingPlan.introducer_id ?? null,
+          partner_id: existingPlan.partner_id ?? null,
+          commercial_partner_id: existingPlan.commercial_partner_id ?? null,
+        };
+
+    if (normalizedEntityFields.introducer_id) {
+      const eligibility = await getIntroducerCommercialEligibility({
+        supabase: serviceSupabase,
+        introducerId: normalizedEntityFields.introducer_id,
+      });
+
+      if (!eligibility) {
+        return NextResponse.json({ error: 'Failed to verify introducer eligibility' }, { status: 500 });
+      }
+
+      if (!eligibility.eligible) {
+        return NextResponse.json(buildIntroducerCommercialBlockPayload(eligibility), {
+          status: 409,
+        });
+      }
+    }
 
     // Update fee plan
-    const { data: updatedPlan, error: planError } = await supabase
+    const { data: updatedPlan, error: planError } = await serviceSupabase
       .from('fee_plans')
       .update({
         ...feePlanData,
+        ...normalizedEntityFields,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
@@ -114,12 +183,12 @@ export async function PUT(
     let updatedComponents = null;
     if (components && components.length > 0) {
       // Delete existing components
-      await supabase.from('fee_components').delete().eq('fee_plan_id', id);
+      await serviceSupabase.from('fee_components').delete().eq('fee_plan_id', id);
 
       // Insert new components
       const componentInserts = normalizeFeeComponentsForInsert(components, id);
 
-      const { data: newComponents, error: componentsError } = await supabase
+      const { data: newComponents, error: componentsError } = await serviceSupabase
         .from('fee_components')
         .insert(componentInserts)
         .select();
@@ -139,7 +208,7 @@ export async function PUT(
 
     // Fetch current components if not updated
     if (!updatedComponents) {
-      const { data: currentComponents } = await supabase
+      const { data: currentComponents } = await serviceSupabase
         .from('fee_components')
         .select('*')
         .eq('fee_plan_id', id);
@@ -150,7 +219,7 @@ export async function PUT(
     // If this fee plan has a deal_id and components were updated, sync back to term sheet
     if (updatedPlan.deal_id && components && components.length > 0) {
       const syncResult = await syncFeePlanToTermSheet(
-        supabase,
+        serviceSupabase,
         id,
         updatedPlan.deal_id
       );

@@ -6,6 +6,10 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import {
+  buildIntroducerCommercialBlockPayload,
+  getIntroducerCommercialEligibility,
+} from '@/lib/introducers/commercial-eligibility'
 
 /**
  * POST /api/arrangers/me/fee-plans/[id]/send
@@ -57,6 +61,23 @@ export async function POST(
         { error: 'Fee plan must be assigned to an entity before sending' },
         { status: 400 }
       )
+    }
+
+    if (feePlan.introducer_id) {
+      const eligibility = await getIntroducerCommercialEligibility({
+        supabase: serviceSupabase,
+        introducerId: feePlan.introducer_id,
+      })
+
+      if (!eligibility) {
+        return NextResponse.json({ error: 'Failed to verify introducer eligibility' }, { status: 500 })
+      }
+
+      if (!eligibility.eligible) {
+        return NextResponse.json(buildIntroducerCommercialBlockPayload(eligibility), {
+          status: 409,
+        })
+      }
     }
 
     // Atomic update: Only update if status is still 'draft' (prevents race condition)

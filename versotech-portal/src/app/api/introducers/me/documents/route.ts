@@ -7,7 +7,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import crypto from 'crypto'
-import { resolvePrimaryPersonaLink } from '@/lib/kyc/persona-link'
+import { cookies } from 'next/headers'
+import { resolveActiveIntroducerLinkFromCookies } from '@/lib/kyc/active-introducer-link'
 import {
   buildUploadDocumentMetadata,
   validateUploadDocumentMetadata,
@@ -41,12 +42,13 @@ export async function GET() {
     }
 
     // Get introducer entity for current user
-    const { link: introducerUser, error: introducerError } = await resolvePrimaryPersonaLink<{
+    const cookieStore = await cookies()
+    const { link: introducerUser, error: introducerError } = await resolveActiveIntroducerLinkFromCookies<{
       introducer_id: string
     }>({
       supabase: serviceSupabase,
-      config: { userTable: 'introducer_users', entityIdColumn: 'introducer_id' },
       userId: user.id,
+      cookieStore,
       select: 'introducer_id',
     })
 
@@ -150,12 +152,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Get introducer entity for current user
-    const { link: introducerUser, error: introducerError } = await resolvePrimaryPersonaLink<{
+    const { link: introducerUser, error: introducerError } = await resolveActiveIntroducerLinkFromCookies<{
       introducer_id: string
     }>({
       supabase: serviceSupabase,
-      config: { userTable: 'introducer_users', entityIdColumn: 'introducer_id' },
       userId: user.id,
+      cookieStore: request.cookies,
       select: 'introducer_id',
     })
 

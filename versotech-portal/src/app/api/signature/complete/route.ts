@@ -5,6 +5,7 @@ import { buildExecutedDocumentName, formatCounterpartyName } from '@/lib/documen
 import { createSignatureRequest } from '@/lib/signature/client'
 import { maybeReleaseIntroducerAgreementCounterpartyRequests } from '@/lib/signature/introducer-agreement-flow'
 import { maybeReleaseDeferredInvestorRequests } from '@/lib/signature/staged-release'
+import { getIntroducerCommercialEligibility } from '@/lib/introducers/commercial-eligibility'
 import crypto from 'crypto'
 
 function normalizeWebhookSignature(rawSignature: string): string | null {
@@ -1107,55 +1108,70 @@ async function handleIntroducerAgreementCompletion(
     if (agreement.fee_plan_id) {
       console.log('📋 [INTRODUCER AGREEMENT] Updating linked fee plan to accepted:', agreement.fee_plan_id)
 
-      const { data: feePlan, error: feePlanFetchError } = await supabase
-        .from('fee_plans')
-        .select('id, status')
-        .eq('id', agreement.fee_plan_id)
-        .maybeSingle()
+      const eligibility = await getIntroducerCommercialEligibility({
+        supabase,
+        introducerId: agreement.introducer_id,
+      })
 
-      if (feePlanFetchError) {
-        console.error('❌ [INTRODUCER AGREEMENT] Failed to fetch fee plan:', feePlanFetchError)
-      } else if (feePlan && feePlan.status !== 'accepted') {
-        // Get introducer user for accepted_by field
-        const { data: introducerUser } = await supabase
-          .from('introducer_users')
-          .select('user_id')
-          .eq('introducer_id', agreement.introducer_id)
-          .limit(1)
+      if (!eligibility) {
+        console.error('❌ [INTRODUCER AGREEMENT] Failed to verify introducer eligibility before accepting fee plan')
+      } else if (!eligibility.eligible) {
+        console.warn(
+          '⏭️ [INTRODUCER AGREEMENT] Skipping fee plan acceptance because introducer is not commercially eligible:',
+          eligibility.message
+        )
+      } else {
+
+        const { data: feePlan, error: feePlanFetchError } = await supabase
+          .from('fee_plans')
+          .select('id, status')
+          .eq('id', agreement.fee_plan_id)
           .maybeSingle()
 
-        const { error: feePlanUpdateError } = await supabase
-          .from('fee_plans')
-          .update({
-            status: 'accepted',
-            accepted_at: now,
-            accepted_by: introducerUser?.user_id || null,
-            updated_at: now
-          })
-          .eq('id', agreement.fee_plan_id)
+        if (feePlanFetchError) {
+          console.error('❌ [INTRODUCER AGREEMENT] Failed to fetch fee plan:', feePlanFetchError)
+        } else if (feePlan && feePlan.status !== 'accepted') {
+          // Get introducer user for accepted_by field
+          const { data: introducerUser } = await supabase
+            .from('introducer_users')
+            .select('user_id')
+            .eq('introducer_id', agreement.introducer_id)
+            .limit(1)
+            .maybeSingle()
 
-        if (feePlanUpdateError) {
-          console.error('❌ [INTRODUCER AGREEMENT] Failed to update fee plan status:', feePlanUpdateError)
-        } else {
-          console.log('✅ [INTRODUCER AGREEMENT] Fee plan marked as accepted')
+          const { error: feePlanUpdateError } = await supabase
+            .from('fee_plans')
+            .update({
+              status: 'accepted',
+              accepted_at: now,
+              accepted_by: introducerUser?.user_id || null,
+              updated_at: now
+            })
+            .eq('id', agreement.fee_plan_id)
 
-          // Create audit log for fee plan acceptance
-          await supabase.from('audit_logs').insert({
-            event_type: 'fee_plan',
-            action: 'accepted',
-            entity_type: 'fee_plans',
-            entity_id: agreement.fee_plan_id,
-            actor_id: introducerUser?.user_id || null,
-            action_details: {
-              description: 'Fee plan accepted via introducer agreement signature',
-              introducer_id: agreement.introducer_id,
-              agreement_id: agreementId
-            },
-            timestamp: now
-          })
+          if (feePlanUpdateError) {
+            console.error('❌ [INTRODUCER AGREEMENT] Failed to update fee plan status:', feePlanUpdateError)
+          } else {
+            console.log('✅ [INTRODUCER AGREEMENT] Fee plan marked as accepted')
+
+            // Create audit log for fee plan acceptance
+            await supabase.from('audit_logs').insert({
+              event_type: 'fee_plan',
+              action: 'accepted',
+              entity_type: 'fee_plans',
+              entity_id: agreement.fee_plan_id,
+              actor_id: introducerUser?.user_id || null,
+              action_details: {
+                description: 'Fee plan accepted via introducer agreement signature',
+                introducer_id: agreement.introducer_id,
+                agreement_id: agreementId
+              },
+              timestamp: now
+            })
+          }
+        } else if (feePlan) {
+          console.log('ℹ️ [INTRODUCER AGREEMENT] Fee plan already accepted, skipping update')
         }
-      } else if (feePlan) {
-        console.log('ℹ️ [INTRODUCER AGREEMENT] Fee plan already accepted, skipping update')
       }
     }
 

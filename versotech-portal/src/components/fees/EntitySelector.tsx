@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Loader2, Users, Building2, Briefcase, AlertCircle } from 'lucide-react';
+import { evaluateIntroducerCommercialEligibility } from '@/lib/introducers/commercial-eligibility';
 
 export type EntityType = 'introducer' | 'partner' | 'commercial_partner';
 
@@ -19,6 +20,8 @@ interface Entity {
   name: string;
   email?: string;
   company_name?: string;
+  account_approval_status?: string | null;
+  onboarding_status?: string | null;
 }
 
 interface EntitySelectorProps {
@@ -151,6 +154,8 @@ export function EntitySelector({
         name: entity.name || entity.legal_name || entity.company_name || entity.contact_name,
         email: entity.email || entity.contact_email,
         company_name: entity.company_name || entity.legal_name,
+        account_approval_status: entity.account_approval_status ?? null,
+        onboarding_status: entity.onboarding_status ?? null,
       }));
 
       setEntities(normalizedEntities);
@@ -201,6 +206,17 @@ export function EntitySelector({
       case 'commercial_partner':
         return 'Commercial Partner';
     }
+  };
+
+  const getIntroducerEligibility = (entity: Entity) => {
+    if (entityType !== 'introducer') return null;
+    return evaluateIntroducerCommercialEligibility({
+      id: entity.id,
+      legal_name: entity.company_name || entity.name,
+      display_name: entity.name,
+      account_approval_status: entity.account_approval_status ?? null,
+      onboarding_status: entity.onboarding_status ?? null,
+    });
   };
 
   if (!dealId) {
@@ -289,31 +305,49 @@ export function EntitySelector({
               <span>No {entityType}s available. Add {entityType}s to the system first.</span>
             </div>
           ) : (
-            <Select
-              value={entityId || 'none'}
-              onValueChange={handleEntityChange}
-              disabled={disabled}
-            >
-              <SelectTrigger className="bg-black border-gray-700 text-white h-11">
-                <SelectValue placeholder={`Select ${getEntityTypeLabel(entityType)}`} />
-              </SelectTrigger>
-              <SelectContent className="bg-black border-gray-700 text-white max-h-60">
-                {!required && (
-                  <SelectItem value="none">No selection</SelectItem>
-                )}
-                {entities.map((entity) => (
-                  <SelectItem key={entity.id} value={entity.id}>
-                    <div className="flex items-center gap-2">
-                      {getEntityTypeIcon(entityType)}
-                      <span>{entity.name || entity.company_name}</span>
-                      {entity.email && (
-                        <span className="text-gray-400 text-xs">({entity.email})</span>
-                      )}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <>
+              <Select
+                value={entityId || 'none'}
+                onValueChange={handleEntityChange}
+                disabled={disabled}
+              >
+                <SelectTrigger className="bg-black border-gray-700 text-white h-11">
+                  <SelectValue placeholder={`Select ${getEntityTypeLabel(entityType)}`} />
+                </SelectTrigger>
+                <SelectContent className="bg-black border-gray-700 text-white max-h-60">
+                  {!required && (
+                    <SelectItem value="none">No selection</SelectItem>
+                  )}
+                  {entities.map((entity) => {
+                    const eligibility = getIntroducerEligibility(entity)
+                    const disabledOption = !!eligibility && !eligibility.eligible
+
+                    return (
+                      <SelectItem key={entity.id} value={entity.id} disabled={disabledOption}>
+                        <div className="flex items-center gap-2">
+                          {getEntityTypeIcon(entityType)}
+                          <span>{entity.name || entity.company_name}</span>
+                          {disabledOption && (
+                            <span className="text-amber-400 text-xs">
+                              (approval required)
+                            </span>
+                          )}
+                          {entity.email && (
+                            <span className="text-gray-400 text-xs">({entity.email})</span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    )
+                  })}
+                </SelectContent>
+              </Select>
+
+              {entityType === 'introducer' && (
+                <p className="text-xs text-muted-foreground">
+                  Ineligible introducers stay visible but are disabled until account approval and onboarding are complete.
+                </p>
+              )}
+            </>
           )}
         </div>
       )}

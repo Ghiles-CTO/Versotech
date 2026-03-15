@@ -2,6 +2,11 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { sendDealDispatchFanout } from '@/lib/deals/dispatch-fanout'
+import {
+  buildIntroducerCommercialBlockPayload,
+  evaluateIntroducerCommercialEligibility,
+  getIntroducerCommercialEligibility,
+} from '@/lib/introducers/commercial-eligibility'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -79,8 +84,43 @@ export async function POST(request: Request, { params }: RouteParams) {
 
     const { user_ids, role, referred_by_entity_id, referred_by_entity_type, assigned_fee_plan_id } = validation.data
 
+    if (referred_by_entity_type === 'introducer' && referred_by_entity_id) {
+      const eligibility = await getIntroducerCommercialEligibility({
+        supabase: serviceSupabase,
+        introducerId: referred_by_entity_id,
+      })
+
+      if (!eligibility) {
+        return NextResponse.json({ error: 'Failed to verify introducer eligibility' }, { status: 500 })
+      }
+
+      if (!eligibility.eligible) {
+        return NextResponse.json(buildIntroducerCommercialBlockPayload(eligibility), {
+          status: 409,
+        })
+      }
+    }
+
     // Fee plan validation: If dispatching through an entity, verify fee plan is accepted
     if (referred_by_entity_id && assigned_fee_plan_id) {
+      if (referred_by_entity_type === 'introducer') {
+        const eligibility = await getIntroducerCommercialEligibility({
+          supabase: serviceSupabase,
+          introducerId: referred_by_entity_id,
+        })
+
+        if (!eligibility) {
+          return NextResponse.json({ error: 'Failed to verify introducer eligibility' }, { status: 500 })
+        }
+
+        if (!eligibility.eligible) {
+          return NextResponse.json(
+            buildIntroducerCommercialBlockPayload(eligibility),
+            { status: 409 }
+          )
+        }
+      }
+
       // Build entity filter based on type
       const entityFilter = referred_by_entity_type === 'partner'
         ? { partner_id: referred_by_entity_id }
@@ -135,6 +175,34 @@ export async function POST(request: Request, { params }: RouteParams) {
 
       if (introducerLinks && introducerLinks.length > 0) {
         const introducerIds = [...new Set(introducerLinks.map(l => l.introducer_id))]
+
+        const { data: introducers } = await serviceSupabase
+          .from('introducers')
+          .select('id, legal_name, display_name, account_approval_status, onboarding_status')
+          .in('id', introducerIds)
+
+        const ineligibleIntroducers = (introducers || []).filter((introducer) => {
+          const eligibility = evaluateIntroducerCommercialEligibility(introducer)
+          return !eligibility.eligible
+        })
+
+        if (ineligibleIntroducers.length > 0) {
+          const blockedIntroducerIds = new Set(ineligibleIntroducers.map((introducer) => introducer.id))
+          const blockedUserIds = introducerLinks
+            .filter((link) => blockedIntroducerIds.has(link.introducer_id))
+            .map((link) => link.user_id)
+
+          const blockedIntroducerNames = ineligibleIntroducers
+            .map((introducer) => introducer.display_name || introducer.legal_name || 'Unknown Introducer')
+            .join(', ')
+
+          return NextResponse.json({
+            error: 'Introducer not commercially eligible',
+            reasonCode: 'introducer_not_commercially_eligible',
+            message: `Cannot dispatch users for ${blockedIntroducerNames} until onboarding is completed and the account is approved.`,
+            users_blocked: blockedUserIds,
+          }, { status: 409 })
+        }
 
         // Check for valid signed agreements
         const today = new Date().toISOString().split('T')[0]

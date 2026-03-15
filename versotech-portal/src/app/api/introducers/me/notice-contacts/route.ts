@@ -1,6 +1,8 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import { resolveActiveIntroducerLinkFromCookies } from '@/lib/kyc/active-introducer-link'
 
 const noticeContactSchema = z.object({
   contact_type: z.enum(['legal', 'tax', 'compliance', 'accounting', 'general', 'other']),
@@ -30,17 +32,21 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: introducerLinks } = await serviceSupabase
-      .from('introducer_users')
-      .select('introducer_id')
-      .eq('user_id', user.id)
-      .limit(1)
+    const cookieStore = await cookies()
+    const { link: introducerLink, error: introducerLinkError } = await resolveActiveIntroducerLinkFromCookies<{
+      introducer_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'introducer_id',
+    })
 
-    if (!introducerLinks || introducerLinks.length === 0) {
+    if (introducerLinkError || !introducerLink?.introducer_id) {
       return NextResponse.json({ error: 'No introducer profile found' }, { status: 404 })
     }
 
-    const introducerId = introducerLinks[0].introducer_id
+    const introducerId = introducerLink.introducer_id
 
     const { data: contacts, error: contactsError } = await serviceSupabase
       .from('entity_notice_contacts')
@@ -76,17 +82,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: introducerLinks } = await serviceSupabase
-      .from('introducer_users')
-      .select('introducer_id')
-      .eq('user_id', user.id)
-      .limit(1)
+    const cookieStore = await cookies()
+    const { link: introducerLink, error: introducerLinkError } = await resolveActiveIntroducerLinkFromCookies<{
+      introducer_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'introducer_id',
+    })
 
-    if (!introducerLinks || introducerLinks.length === 0) {
+    if (introducerLinkError || !introducerLink?.introducer_id) {
       return NextResponse.json({ error: 'No introducer profile found' }, { status: 404 })
     }
 
-    const introducerId = introducerLinks[0].introducer_id
+    const introducerId = introducerLink.introducer_id
 
     const body = await request.json()
     const parsed = noticeContactSchema.safeParse(body)

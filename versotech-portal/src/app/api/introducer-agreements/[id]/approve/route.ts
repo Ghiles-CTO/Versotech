@@ -11,6 +11,10 @@ import {
   resolveActiveIntroducerLink,
 } from '@/lib/kyc/active-introducer-link'
 import { createInvestorNotification } from '@/lib/notifications'
+import {
+  buildIntroducerCommercialBlockPayload,
+  getIntroducerCommercialEligibility,
+} from '@/lib/introducers/commercial-eligibility'
 
 /**
  * POST /api/introducer-agreements/[id]/approve
@@ -76,6 +80,23 @@ export async function POST(
         { error: 'Can only approve agreements pending approval' },
         { status: 400 }
       )
+    }
+
+    if (agreement.fee_plan_id) {
+      const eligibility = await getIntroducerCommercialEligibility({
+        supabase: serviceSupabase,
+        introducerId: agreement.introducer_id,
+      })
+
+      if (!eligibility) {
+        return NextResponse.json({ error: 'Failed to verify introducer eligibility' }, { status: 500 })
+      }
+
+      if (!eligibility.eligible) {
+        return NextResponse.json(buildIntroducerCommercialBlockPayload(eligibility), {
+          status: 409,
+        })
+      }
     }
 
     // Update status to approved

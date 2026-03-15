@@ -197,23 +197,35 @@ function hasIndividualPersonalInfoMissing(items: DashboardOnboardingMissingItem[
 
 function resolveNextStep(
   investorType: string,
-  items: DashboardOnboardingMissingItem[]
+  items: DashboardOnboardingMissingItem[],
+  hrefs?: {
+    profileHref?: string
+    kycHref?: string
+    membersHref?: string
+  },
+  personaType?: DashboardOnboardingState['personaType'],
 ): { href: string; label: string } {
+  const profileHref = hrefs?.profileHref || '/versotech_main/profile?tab=overview'
+  const kycHref = hrefs?.kycHref || '/versotech_main/profile?tab=kyc'
+  const membersHref = hrefs?.membersHref || '/versotech_main/profile?tab=entity-members'
+  const profileLabel = personaType === 'introducer' ? 'Go to Profile' : 'Go to Overview'
+  const membersLabel = personaType === 'introducer' ? 'Go to Team Members' : 'Go to Directors/UBOs'
+
   if (investorType === 'individual') {
     if (hasIndividualPersonalInfoMissing(items)) {
-      return { href: '/versotech_main/profile?tab=overview', label: 'Go to Overview' }
+      return { href: profileHref, label: profileLabel }
     }
-    return { href: '/versotech_main/profile?tab=kyc', label: 'Go to KYC' }
+    return { href: kycHref, label: 'Go to KYC' }
   }
 
   // Entity investor
   if (hasEntityInfoMissing(items)) {
-    return { href: '/versotech_main/profile?tab=overview', label: 'Go to Overview' }
+    return { href: profileHref, label: profileLabel }
   }
   if (hasMemberPersonalInfoMissing(items)) {
-    return { href: '/versotech_main/profile?tab=entity-members', label: 'Go to Directors/UBOs' }
+    return { href: membersHref, label: membersLabel }
   }
-  return { href: '/versotech_main/profile?tab=kyc', label: 'Go to KYC' }
+  return { href: kycHref, label: 'Go to KYC' }
 }
 
 /* ─── Stage descriptions ─── */
@@ -221,21 +233,38 @@ function resolveNextStep(
 function getStageDescription(
   stage: InvestorDashboardOnboardingStage,
   investorType: string,
+  personaType?: DashboardOnboardingState['personaType'],
 ) {
   const isEntity = investorType !== 'individual'
+  const isIntroducer = personaType === 'introducer'
 
   switch (stage) {
     case 'in_progress': {
       if (isEntity) {
+        if (isIntroducer) {
+          return 'To activate this introducer account, complete your company information, upload the required corporate documents, and make sure each required member has personal details and KYC documents in place. Once complete, submit the account for approval.'
+        }
         return 'To access and subscribe to investment opportunities, your account must be verified and approved. This requires completing your company information, uploading corporate documents, and ensuring each member\u2019s personal details and identity documents are submitted. Once complete, you can submit your account for approval.'
+      }
+      if (isIntroducer) {
+        return 'To activate this introducer account, complete your personal information and upload your identity documents. Once complete, submit the account for approval.'
       }
       return 'To access and subscribe to investment opportunities, your account must be verified and approved. This requires completing your personal information and uploading your identity documents (proof of ID and proof of address). Once complete, you can submit your account for approval.'
     }
     case 'ready_to_submit':
+      if (isIntroducer) {
+        return 'All information and documents have been submitted. Submit your account for approval to activate introductions, agreements, and commissions.'
+      }
       return 'All information and documents have been submitted. Submit your account for approval to unlock access to investment opportunities.'
     case 'under_review':
+      if (isIntroducer) {
+        return 'Your introducer account has been submitted for approval and is currently under review. You\u2019ll be notified once a decision is made.'
+      }
       return 'Your account has been submitted for approval and is currently under review. You\u2019ll be notified once a decision is made.'
     case 'action_required':
+      if (isIntroducer) {
+        return 'Our review team has flagged items that require your attention. Please review and update the items listed below, then resubmit your introducer account for approval.'
+      }
       return 'Our review team has flagged items that require your attention. Please review and update the items listed below, then resubmit your account for approval.'
   }
 }
@@ -303,18 +332,25 @@ export function InvestorDashboardOnboardingCard({
   const investorType = normalizeStatus(state.investorType) || 'entity'
   const isEntity = investorType !== 'individual'
   const hasOutstandingItems = state.missingItems.length > 0
-  const description = getStageDescription(stage, investorType)
+  const profileHref = state.profileHref || '/versotech_main/profile?tab=overview'
+  const kycHref = state.kycHref || '/versotech_main/profile?tab=kyc'
+  const membersHref = state.membersHref || '/versotech_main/profile?tab=entity-members'
+  const description = getStageDescription(stage, investorType, state.personaType)
 
   const entityGroup = state.missingItems.find((i) => i.scope === 'entity') || null
   const memberGroups = state.missingItems.filter((i) => i.scope === 'member')
 
   // Resolve CTA — routes to the exact profile tab based on what's missing
-  const cta = resolveNextStep(investorType, state.missingItems)
+  const cta = resolveNextStep(investorType, state.missingItems, {
+    profileHref,
+    kycHref,
+    membersHref,
+  }, state.personaType)
 
   async function handleSubmitForApproval() {
     setIsSubmitting(true)
     try {
-      const response = await fetch('/api/investors/me/submit-account-approval', {
+      const response = await fetch(state.submitEndpoint || '/api/investors/me/submit-account-approval', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       })
@@ -616,7 +652,7 @@ export function InvestorDashboardOnboardingCard({
           </Button>
         ) : stage === 'under_review' ? (
           <Button asChild variant="outline" className="w-full sm:w-auto">
-            <Link href="/versotech_main/profile?tab=kyc">
+            <Link href={kycHref}>
               View submitted documents
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
@@ -637,8 +673,10 @@ export function InvestorDashboardOnboardingCard({
               isDark ? 'text-gray-500' : 'text-slate-500'
             )}
           >
-            Only primary account holders can submit for approval.{' '}
-            <Link href="/versotech_main/profile?tab=overview" className="text-primary hover:underline">
+            {state.personaType === 'introducer'
+              ? 'Only primary contacts or introducer admins can submit for approval. '
+              : 'Only primary account holders or admins can submit for approval. '}
+            <Link href={profileHref} className="text-primary hover:underline">
               View account details
             </Link>
           </p>

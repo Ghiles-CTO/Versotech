@@ -56,6 +56,8 @@ export async function POST(request: NextRequest) {
       .from('introducers')
       .insert({
         ...cleanedData,
+        account_approval_status: 'pending_onboarding',
+        onboarding_status: 'pending',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })

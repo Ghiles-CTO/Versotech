@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { getDocumentTypeLabel, getIndividualDocumentTypes, getEntityDocumentTypes } from '@/constants/kyc-document-types'
-import { resolvePrimaryInvestorLink } from '@/lib/kyc/investor-link'
+import { resolveActiveInvestorLinkFromCookies } from '@/lib/kyc/active-investor-link'
 import { z } from 'zod'
 
 // Allowed document types for KYC submissions - SIMPLIFIED
@@ -58,22 +59,22 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get investor IDs for this user
-    // Note: We check investor_users link rather than profile.role to support hybrid personas
-    // (e.g., partner_investor, introducer_investor, commercial_partner_investor)
-    const { data: investorUsers } = await supabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
+    const cookieStore = await cookies()
+    const { link: investorUser } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
+      supabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id',
+    })
 
-    if (!investorUsers || investorUsers.length === 0) {
+    if (!investorUser?.investor_id) {
       return NextResponse.json(
         { error: 'No investor profile found' },
         { status: 404 }
       )
     }
-
-    const investorIds = investorUsers.map(iu => iu.investor_id)
 
     // Get ALL KYC submissions (investor KYC only, not entity KYC)
     const { data: submissions, error: submissionsError } = await supabase
@@ -84,7 +85,7 @@ export async function GET(request: NextRequest) {
         reviewer:reviewed_by(display_name, email),
         investor_member:investor_member_id(id, full_name, role)
       `)
-      .in('investor_id', investorIds)
+      .eq('investor_id', investorUser.investor_id)
       .is('counterparty_entity_id', null) // Only investor KYC, not entity KYC
       .order('created_at', { ascending: false })
 
@@ -97,21 +98,22 @@ export async function GET(request: NextRequest) {
     }
 
     // Get investor type to provide relevant document suggestions
-    const { data: investors } = await supabase
+    const { data: investor } = await supabase
       .from('investors')
       .select('id, type')
-      .in('id', investorIds)
+      .eq('id', investorUser.investor_id)
+      .maybeSingle()
 
-    const investorType = investors?.[0]?.type || 'individual'
+    const investorType = investor?.type || 'individual'
     const isEntityInvestor = investorType !== 'individual'
 
     // Get investor members if entity-type investor
     let investorMembers: any[] = []
-    if (isEntityInvestor && investorIds.length > 0) {
+    if (isEntityInvestor) {
       const { data: members } = await supabase
         .from('investor_members')
         .select('id, full_name, role, linked_user_id')
-        .eq('investor_id', investorIds[0])
+        .eq('investor_id', investorUser.investor_id)
         .eq('is_active', true)
         .order('full_name')
 
@@ -121,14 +123,14 @@ export async function GET(request: NextRequest) {
 
       // Only add pseudo-member if the user has no linked member record
       if (!alreadyLinked) {
-        const { data: currentUserLink } = await supabase
-          .from('investor_users')
-          .select('role, can_sign, is_primary')
-          .eq('user_id', user.id)
-          .eq('investor_id', investorIds[0])
-          .order('is_primary', { ascending: false })
-          .order('created_at', { ascending: true })
-          .limit(1)
+          const { data: currentUserLink } = await supabase
+            .from('investor_users')
+            .select('role, can_sign, is_primary')
+            .eq('user_id', user.id)
+            .eq('investor_id', investorUser.investor_id)
+            .order('is_primary', { ascending: false })
+            .order('created_at', { ascending: true })
+            .limit(1)
           .maybeSingle()
 
         if (currentUserLink && (currentUserLink.can_sign || currentUserLink.role === 'admin' || currentUserLink.is_primary)) {
@@ -200,13 +202,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Get investor ID
-    const { link: investorUsers } = await resolvePrimaryInvestorLink(
+    const cookieStore = await cookies()
+    const { link: investorUser } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
       supabase,
-      user.id,
-      'investor_id'
-    )
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id',
+    })
 
-    if (!investorUsers) {
+    if (!investorUser?.investor_id) {
       return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
     }
 
@@ -231,7 +237,7 @@ export async function POST(request: NextRequest) {
     let previousQuery = supabase
       .from('kyc_submissions')
       .select('id, version')
-      .eq('investor_id', investorUsers.investor_id)
+      .eq('investor_id', investorUser.investor_id)
       .eq('document_type', document_type)
       .is('counterparty_entity_id', null) // Only investor KYC
       .order('version', { ascending: false })
@@ -255,7 +261,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from('kyc_submissions')
       .insert({
-        investor_id: investorUsers.investor_id,
+        investor_id: investorUser.investor_id,
         document_type,
         custom_label: custom_label || null,
         metadata: metadata || null,

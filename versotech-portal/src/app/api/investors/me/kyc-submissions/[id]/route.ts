@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
+import { resolveActiveInvestorLinkFromCookies } from '@/lib/kyc/active-investor-link'
 import { z } from 'zod'
 
 // Allowed document types for KYC submissions
@@ -50,17 +52,19 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get investor IDs for this user
-    const { data: investorUsers } = await supabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
+    const cookieStore = await cookies()
+    const { link: investorUser } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
+      supabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id',
+    })
 
-    if (!investorUsers || investorUsers.length === 0) {
+    if (!investorUser?.investor_id) {
       return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
     }
-
-    const investorIds = investorUsers.map(iu => iu.investor_id)
 
     // Get the submission
     const { data: submission, error: submissionError } = await supabase
@@ -71,7 +75,7 @@ export async function GET(
         reviewer:reviewed_by(display_name, email)
       `)
       .eq('id', id)
-      .in('investor_id', investorIds)
+      .eq('investor_id', investorUser.investor_id)
       .single()
 
     if (submissionError || !submission) {
@@ -99,24 +103,26 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get investor IDs for this user
-    const { data: investorUsers } = await supabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
+    const cookieStore = await cookies()
+    const { link: investorUser } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
+      supabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id',
+    })
 
-    if (!investorUsers || investorUsers.length === 0) {
+    if (!investorUser?.investor_id) {
       return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
     }
-
-    const investorIds = investorUsers.map(iu => iu.investor_id)
 
     // Verify the submission belongs to this investor
     const { data: existingSubmission } = await supabase
       .from('kyc_submissions')
       .select('id, status, investor_id, document_type')
       .eq('id', id)
-      .in('investor_id', investorIds)
+      .eq('investor_id', investorUser.investor_id)
       .single()
 
     if (!existingSubmission) {
@@ -215,24 +221,26 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get investor IDs for this user
-    const { data: investorUsers } = await supabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
+    const cookieStore = await cookies()
+    const { link: investorUser } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
+      supabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id',
+    })
 
-    if (!investorUsers || investorUsers.length === 0) {
+    if (!investorUser?.investor_id) {
       return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
     }
-
-    const investorIds = investorUsers.map(iu => iu.investor_id)
 
     // Verify the submission belongs to this investor and is deletable
     const { data: existingSubmission } = await supabase
       .from('kyc_submissions')
       .select('id, status, investor_id')
       .eq('id', id)
-      .in('investor_id', investorIds)
+      .eq('investor_id', investorUser.investor_id)
       .single()
 
     if (!existingSubmission) {

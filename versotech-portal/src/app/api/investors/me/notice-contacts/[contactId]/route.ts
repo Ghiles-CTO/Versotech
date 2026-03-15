@@ -1,6 +1,8 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import { cookies } from 'next/headers'
+import { resolveActiveInvestorLinkFromCookies } from '@/lib/kyc/active-investor-link'
 
 const updateNoticeContactSchema = z.object({
   contact_type: z.enum(['legal', 'tax', 'compliance', 'accounting', 'general', 'other']).optional(),
@@ -38,18 +40,20 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get investor ID for this user
-    const { data: investorLinks, error: linksError } = await serviceSupabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
-      .limit(1)
+    const cookieStore = await cookies()
+    const { link: investorLink, error: investorLinkError } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id',
+    })
 
-    if (linksError || !investorLinks || investorLinks.length === 0) {
+    if (investorLinkError || !investorLink?.investor_id) {
       return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
     }
-
-    const investorId = investorLinks[0].investor_id
+    const investorId = investorLink.investor_id
 
     // Verify contact belongs to this investor
     const { data: existingContact, error: fetchError } = await serviceSupabase
@@ -129,18 +133,20 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get investor ID for this user
-    const { data: investorLinks, error: linksError } = await serviceSupabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
-      .limit(1)
+    const cookieStore = await cookies()
+    const { link: investorLink, error: investorLinkError } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore,
+      select: 'investor_id',
+    })
 
-    if (linksError || !investorLinks || investorLinks.length === 0) {
+    if (investorLinkError || !investorLink?.investor_id) {
       return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
     }
-
-    const investorId = investorLinks[0].investor_id
+    const investorId = investorLink.investor_id
 
     // Soft-delete the contact
     const { error: deleteError } = await serviceSupabase

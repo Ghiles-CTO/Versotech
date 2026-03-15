@@ -57,7 +57,7 @@ export async function GET() {
 
     const { data: introducer, error: introducerError } = await serviceSupabase
       .from('introducers')
-      .select('account_approval_status')
+      .select('account_approval_status, onboarding_status')
       .eq('id', introducerUser.introducer_id)
       .single()
 
@@ -82,7 +82,7 @@ export async function GET() {
       submitEndpoint: '/api/introducers/me/submit-account-approval',
       accountApprovalStatus:
         introducer.account_approval_status || readiness.accountApprovalStatus || 'pending_onboarding',
-      onboardingStatus: null,
+      onboardingStatus: introducer.onboarding_status || 'pending',
       isReady: readiness.isReady,
       hasPendingApproval: readiness.hasPendingApproval,
       canSubmitAccountApproval:

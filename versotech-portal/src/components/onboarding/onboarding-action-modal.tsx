@@ -53,6 +53,25 @@ function getReadyToSubmitDescription(personaType?: string) {
     : 'All your information and documents are complete. Submit your account for approval to unlock access to investment opportunities.'
 }
 
+function getSubmitPermissionCopy(personaType?: string) {
+  return personaType === 'introducer'
+    ? 'Only primary contacts or introducer admins can submit for approval.'
+    : 'Only primary account holders or admins can submit for approval.'
+}
+
+function getStageChipLabel(stage: ReturnType<typeof resolveInvestorDashboardOnboardingStage>) {
+  switch (stage) {
+    case 'under_review':
+      return 'Under review'
+    case 'ready_to_submit':
+      return 'Ready to submit'
+    case 'action_required':
+      return 'Action required'
+    default:
+      return 'Continue setup'
+  }
+}
+
 /* ─── Resolved action with exact specificity ─── */
 
 type OnboardingAction = {
@@ -366,6 +385,10 @@ export function OnboardingActionModal() {
   const stage = resolveInvestorDashboardOnboardingStage(state)
   const action = resolveNextAction(state)
   const isUnderReview = stage === 'under_review'
+  const fallbackProfileHref =
+    state.personaType === 'introducer'
+      ? (state.profileHref || '/versotech_main/introducer-profile?tab=profile')
+      : (state.profileHref || '/versotech_main/profile?tab=overview')
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) dismiss() }}>
@@ -398,7 +421,7 @@ export function OnboardingActionModal() {
                 'text-[11px] font-semibold uppercase tracking-[0.15em]',
                 isDark ? 'text-white/50' : 'text-slate-400'
               )}>
-                {isUnderReview ? 'Under review' : 'Action required'}
+                {getStageChipLabel(stage)}
               </span>
             </div>
 
@@ -476,7 +499,7 @@ export function OnboardingActionModal() {
           {action.isSubmitAction && !state.canSubmitAccountApproval && (
             <>
               <button
-                onClick={() => handleCTAClick('/versotech_main/profile?tab=overview')}
+                onClick={() => handleCTAClick(fallbackProfileHref)}
                 className={cn(
                   'group w-full flex items-center justify-between rounded-xl px-4 py-3.5 text-sm font-medium transition-all duration-200',
                   isDark
@@ -491,7 +514,7 @@ export function OnboardingActionModal() {
                 'text-center text-[11px]',
                 isDark ? 'text-white/30' : 'text-slate-400'
               )}>
-                Only primary account holders can submit for approval.
+                {getSubmitPermissionCopy(state.personaType)}
               </p>
             </>
           )}
