@@ -167,7 +167,7 @@ function buildIntroducerReminderCopy(params: {
     return {
       title: 'Submit your account for approval',
       message: `Your onboarding is complete. Submit your account for approval to activate ${params.introducerName} for introductions, agreements, and commissions.`,
-      link: '/versotech_main/introducer-profile?tab=profile',
+      link: '/versotech_main/introducer-profile?tab=overview',
     }
   }
 

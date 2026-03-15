@@ -250,7 +250,7 @@ async function getAccountActivationRecipients(
 function resolveAccountActivationProfileLink(entityTable: string) {
   switch (entityTable) {
     case 'introducers':
-      return '/versotech_main/introducer-profile?tab=profile'
+      return '/versotech_main/introducer-profile?tab=overview'
     case 'partners':
       return '/versotech_main/partner-profile?tab=overview'
     case 'lawyers':

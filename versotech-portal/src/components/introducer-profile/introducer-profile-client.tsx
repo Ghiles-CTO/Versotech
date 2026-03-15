@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { getCountryName } from '@/components/kyc/country-select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -48,6 +48,7 @@ import Image from 'next/image'
 import { PasswordChangeForm } from '@/components/profile/password-change-form'
 import { PreferencesEditor } from '@/components/profile/preferences-editor'
 import { GDPRControls } from '@/components/profile/gdpr-controls'
+import { ProfileImageUpload } from '@/components/profile/profile-image-upload'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { IntroducerKYCDocumentsTab } from '@/components/profile/introducer-kyc-documents-tab'
 import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
@@ -140,6 +141,8 @@ type ActiveAgreement = {
 }
 
 type Profile = {
+  id?: string | null
+  display_name?: string | null
   full_name: string | null
   email: string
   avatar_url: string | null
@@ -148,6 +151,7 @@ type Profile = {
 interface IntroducerProfileClientProps {
   defaultTab?: string
   defaultAction?: string | null
+  defaultMemberId?: string | null
   userEmail: string
   profile: Profile | null
   introducerInfo: IntroducerInfo | null
@@ -266,8 +270,9 @@ function EditableField({
 }
 
 export function IntroducerProfileClient({
-  defaultTab = 'profile',
+  defaultTab = 'overview',
   defaultAction,
+  defaultMemberId,
   userEmail,
   profile,
   introducerInfo,
@@ -283,6 +288,7 @@ export function IntroducerProfileClient({
   const [isSubmittingAccountApproval, setIsSubmittingAccountApproval] = useState(false)
   const [showRequestInfoDetails, setShowRequestInfoDetails] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [profileData, setProfileData] = useState(profile)
 
   // KYC Edit Dialog state
   const [showKycDialog, setShowKycDialog] = useState(false)
@@ -295,6 +301,10 @@ export function IntroducerProfileClient({
   const hasPendingAccountApproval = readiness?.hasPendingApproval || false
   const latestAccountRequestInfo = readiness?.latestRequestInfo || null
   const isAccountApprovalReady = readiness?.isReady || false
+
+  useEffect(() => {
+    setProfileData(profile)
+  }, [profile])
 
   // Edit state
   const [editData, setEditData] = useState({
@@ -450,6 +460,23 @@ export function IntroducerProfileClient({
     return `${(bps / 100).toFixed(2)}%`
   }
 
+  const normalizedDefaultTab = useMemo(() => {
+    if (defaultTab === 'profile') return 'overview'
+    if (defaultTab === 'members') return 'team'
+    return defaultTab
+  }, [defaultTab])
+
+  const handleAvatarUpdate = (newAvatarUrl: string) => {
+    setProfileData((prev) =>
+      prev
+        ? {
+            ...prev,
+            avatar_url: newAvatarUrl,
+          }
+        : prev
+    )
+  }
+
   useEffect(() => {
     if (!defaultAction) return
 
@@ -483,171 +510,63 @@ export function IntroducerProfileClient({
     hasPendingAccountApproval ||
     !isAccountApprovalReady
 
+  const activeAgreementStatus = activeAgreement ? 'Active' : 'No Active Agreement'
+  const profileDisplayName =
+    profileData?.display_name ||
+    profileData?.full_name ||
+    userEmail ||
+    'Introducer User'
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
-          {/* Logo */}
-          <div className="relative">
-            <div className="h-20 w-20 rounded-lg border-2 border-gray-200 overflow-hidden bg-gray-50 flex items-center justify-center">
-              {introducerInfo?.logo_url ? (
-                <Image
-                  src={introducerInfo.logo_url}
-                  alt={introducerInfo.legal_name || 'Logo'}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <UserPlus className="h-8 w-8 text-gray-400" />
-              )}
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleLogoUpload}
-              disabled={!canEditEntityProfile || isUploadingLogo}
-            />
-            {canEditEntityProfile && (
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute -bottom-2 -right-2 h-7 w-7 rounded-full"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploadingLogo}
-              >
-                {isUploadingLogo ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <Camera className="h-3 w-3" />
-                )}
-              </Button>
-            )}
-          </div>
+          <ProfileImageUpload
+            currentAvatarUrl={profileData?.avatar_url}
+            userName={profileDisplayName}
+            onAvatarUpdate={handleAvatarUpdate}
+            compact
+          />
 
           <div>
-            <h1 className="text-2xl font-bold">{introducerInfo?.legal_name || 'Introducer Profile'}</h1>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge variant="outline" className={cn(
-                'text-xs',
-                STATUS_STYLES[introducerInfo?.status || 'inactive']
-              )}>
-                {introducerInfo?.status || 'Unknown'}
-              </Badge>
-              <span className="text-sm text-muted-foreground">
-                {introducerUserInfo.role} {introducerUserInfo.is_primary && '(Primary)'}
-              </span>
-            </div>
+            <h1 className="text-2xl font-bold">
+              {introducerInfo?.legal_name || 'Introducer Profile'}
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Manage your introducer profile, documents, and team
+            </p>
           </div>
         </div>
 
         {introducerInfo && (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 justify-end">
+            <Badge
+              variant="outline"
+              className={cn('text-xs capitalize', STATUS_STYLES[introducerInfo?.status || 'inactive'])}
+            >
+              {introducerInfo?.status || 'Unknown'}
+            </Badge>
             <Badge className={accountApprovalBadge.className}>{accountApprovalBadge.label}</Badge>
             <Badge className={kycBadge.className}>{kycBadge.label}</Badge>
           </div>
         )}
-
-        <div className="flex gap-2">
-          {canEditEntityProfile && isEditing ? (
-            <>
-              <Button variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
-                <X className="h-4 w-4 mr-2" />
-                Cancel
-              </Button>
-              <Button onClick={handleSave} disabled={isSaving}>
-                {isSaving ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
-                Save Changes
-              </Button>
-            </>
-          ) : canEditEntityProfile ? (
-            <Button variant="outline" onClick={() => setIsEditing(true)}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Profile
-            </Button>
-          ) : null}
-        </div>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <UserPlus className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Introductions</p>
-                <p className="text-2xl font-bold">{introductionCount}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <DollarSign className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Commission Rate</p>
-                <p className="text-2xl font-bold">
-                  {formatCommission(activeAgreement?.commission_bps || introducerInfo?.default_commission_bps)}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <FileText className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Agreement Status</p>
-                <div className="flex items-center gap-2">
-                  {activeAgreement ? (
-                    <>
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-600">Active</span>
-                    </>
-                  ) : (
-                    <>
-                      <AlertTriangle className="h-4 w-4 text-amber-600" />
-                      <span className="text-sm font-medium text-amber-600">No Active Agreement</span>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue={defaultTab} className="space-y-4" id="introducer-profile-tabs">
+      <Tabs defaultValue={normalizedDefaultTab} className="space-y-6" id="introducer-profile-tabs">
         <TabsList>
-          <TabsTrigger value="profile" className="flex items-center gap-2">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
             <Building2 className="h-4 w-4" />
-            Profile
+            Overview
           </TabsTrigger>
           <TabsTrigger value="agreement" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Agreement
           </TabsTrigger>
-          <TabsTrigger value="members" className="flex items-center gap-2">
+          <TabsTrigger value="team" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Members
+            Team
           </TabsTrigger>
           {introducerInfo?.type === 'entity' && (
             <TabsTrigger value="entity-members" className="flex items-center gap-2">
@@ -657,7 +576,7 @@ export function IntroducerProfileClient({
           )}
           <TabsTrigger value="kyc" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
-            KYC Documents
+            KYC
           </TabsTrigger>
           <TabsTrigger value="security" className="flex items-center gap-2">
             <Lock className="h-4 w-4" />
@@ -673,16 +592,140 @@ export function IntroducerProfileClient({
           </TabsTrigger>
         </TabsList>
 
-        {/* Profile Tab */}
-        <TabsContent value="profile" className="space-y-4">
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-4">
           <ProfileOverviewShell>
+          <div className="rounded-lg border bg-card px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <UserPlus className="h-5 w-5 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold truncate">{profileDisplayName}</p>
+                <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5">
+                  <Mail className="h-3 w-3" />
+                  {profileData?.email || userEmail}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className="capitalize text-xs">
+                {introducerUserInfo.role}
+              </Badge>
+              {introducerUserInfo.is_primary && (
+                <Badge variant="secondary" className="text-xs">Primary Contact</Badge>
+              )}
+              {introducerUserInfo.can_sign && (
+                <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs">
+                  Signatory
+                </Badge>
+              )}
+            </div>
+          </div>
+
           <OverviewSectionCard
-            title="Introducer Information"
-            description="Your introducer entity details"
+            title="Introducer Overview"
+            description="Legal details, contact information, and introducer settings"
             icon={Building2}
             contentClassName="space-y-6"
+            action={
+              canEditEntityProfile && isEditing ? (
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={handleCancelEdit} disabled={isSaving}>
+                    <X className="h-4 w-4 mr-2" />
+                    Cancel
+                  </Button>
+                  <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                    {isSaving ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4 mr-2" />
+                    )}
+                    Save
+                  </Button>
+                </div>
+              ) : canEditEntityProfile ? (
+                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              ) : undefined
+            }
           >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <section className="rounded-lg border border-border/70 bg-muted/20 p-4">
+                <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                  Entity Information
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+                  <div className="rounded-md border border-border/70 bg-background p-3 xl:col-span-2">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Entity Logo</p>
+                    <div className="mt-3 flex items-center gap-4">
+                      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border bg-muted">
+                        {introducerInfo?.logo_url ? (
+                          <Image
+                            src={introducerInfo.logo_url}
+                            alt={introducerInfo.legal_name || 'Logo'}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center">
+                            <Building2 className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          This logo appears on introducer records and shared documents.
+                        </p>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleLogoUpload}
+                          disabled={!canEditEntityProfile || isUploadingLogo}
+                        />
+                        {canEditEntityProfile ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isUploadingLogo}
+                          >
+                            {isUploadingLogo ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                              <Camera className="h-4 w-4 mr-2" />
+                            )}
+                            {introducerInfo?.logo_url ? 'Update Logo' : 'Upload Logo'}
+                          </Button>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="rounded-md border border-border/70 bg-background p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Legal Name</p>
+                    <p className="mt-1 text-sm font-medium">{introducerInfo?.legal_name || '-'}</p>
+                  </div>
+                  <div className="rounded-md border border-border/70 bg-background p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Type</p>
+                    <div className="mt-1">
+                      <Badge variant="outline" className="capitalize font-medium">
+                        {(introducerInfo?.type || 'introducer').replace(/_/g, ' ')}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-lg border border-border/70 bg-muted/20 p-4">
+                <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  Contact And Commercial Information
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">Legal Name</p>
                   <p className="text-sm font-medium">{introducerInfo?.legal_name || '-'}</p>
@@ -726,8 +769,14 @@ export function IntroducerProfileClient({
                   </p>
                 </div>
               </div>
+              </section>
 
-              <div className="pt-4 border-t">
+              <section className="rounded-lg border border-border/70 bg-muted/20 p-4">
+                <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Info className="h-4 w-4 text-muted-foreground" />
+                  Notes
+                </h4>
+
                 <EditableField
                   label="Notes"
                   value={introducerInfo?.notes}
@@ -737,7 +786,7 @@ export function IntroducerProfileClient({
                   onEditChange={handleEditChange}
                   type="textarea"
                 />
-              </div>
+              </section>
           </OverviewSectionCard>
 
           <OverviewSectionCard
@@ -752,6 +801,65 @@ export function IntroducerProfileClient({
               <OverviewField label="Can Sign Documents" value={introducerUserInfo.can_sign ? 'Yes' : 'No'} />
             </OverviewFieldGrid>
           </OverviewSectionCard>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <UserPlus className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Introductions</p>
+                    <p className="text-2xl font-bold">{introductionCount}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <DollarSign className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Commission Rate</p>
+                    <p className="text-2xl font-bold">
+                      {formatCommission(activeAgreement?.commission_bps || introducerInfo?.default_commission_bps)}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <FileText className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Agreement Status</p>
+                    <div className="flex items-center gap-2">
+                      {activeAgreement ? (
+                        <>
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium text-green-600">{activeAgreementStatus}</span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertTriangle className="h-4 w-4 text-amber-600" />
+                          <span className="text-sm font-medium text-amber-600">{activeAgreementStatus}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Address & Contact Card */}
           <OverviewSectionCard
             title="Address & Contact"
@@ -801,8 +909,8 @@ export function IntroducerProfileClient({
               entityType="introducer"
               entityId={introducerInfo.id}
               onRefresh={() => window.location.reload()}
-              profileEmail={profile?.email || userEmail}
-              profileName={profile?.full_name}
+              profileEmail={profileData?.email || userEmail}
+              profileName={profileData?.full_name || profileData?.display_name || null}
               autoOpenEdit={defaultAction === 'edit-personal-kyc'}
             />
           )}
@@ -1055,14 +1163,15 @@ export function IntroducerProfileClient({
           </Card>
         </TabsContent>
 
-        {/* Members Tab */}
-        <TabsContent value="members" className="space-y-4">
+        {/* Team Tab */}
+        <TabsContent value="team" className="space-y-4">
           {introducerInfo && (
             <MembersManagementTab
               entityType="introducer"
               entityId={introducerInfo.id}
               entityName={introducerInfo.legal_name || 'Introducer'}
               showSignatoryOption={true}
+              canManageMembers={introducerUserInfo.role === 'admin' || introducerUserInfo.is_primary}
             />
           )}
         </TabsContent>
@@ -1078,6 +1187,7 @@ export function IntroducerProfileClient({
               canManage={introducerUserInfo.role === 'admin' || introducerUserInfo.is_primary}
               title="Directors, UBOs & Signatories"
               description="Manage directors, beneficial owners (>25% ownership), and authorized signatories with full KYC information. Click on a member to edit their complete KYC profile."
+              autoEditMemberId={defaultAction === 'edit-member' ? defaultMemberId : null}
             />
           </TabsContent>
         )}
@@ -1113,6 +1223,7 @@ export function IntroducerProfileClient({
               introducerName={introducerInfo.legal_name || undefined}
               kycStatus={introducerInfo.kyc_status || undefined}
               entityType={introducerInfo.type}
+              autoOpenUpload={defaultAction === 'upload-doc'}
             />
           )}
         </TabsContent>

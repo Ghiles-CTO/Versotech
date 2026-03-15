@@ -387,7 +387,7 @@ export function OnboardingActionModal() {
   const isUnderReview = stage === 'under_review'
   const fallbackProfileHref =
     state.personaType === 'introducer'
-      ? (state.profileHref || '/versotech_main/introducer-profile?tab=profile')
+      ? (state.profileHref || '/versotech_main/introducer-profile?tab=overview')
       : (state.profileHref || '/versotech_main/profile?tab=overview')
 
   return (

@@ -71,13 +71,15 @@ interface IntroducerKYCDocumentsTabProps {
   introducerName?: string
   kycStatus?: string
   entityType?: string | null
+  autoOpenUpload?: boolean
 }
 
 export function IntroducerKYCDocumentsTab({
   introducerId,
   introducerName,
   kycStatus,
-  entityType
+  entityType,
+  autoOpenUpload = false,
 }: IntroducerKYCDocumentsTabProps) {
   const [documents, setDocuments] = useState<Document[]>([])
   const [members, setMembers] = useState<IntroducerMember[]>([])
@@ -93,6 +95,7 @@ export function IntroducerKYCDocumentsTab({
   const currentKycStatus = kycStatus
   const isIndividualEntity = entityType === 'individual'
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
+  const autoOpenHandledRef = useRef(false)
 
   const fetchDocuments = useCallback(async () => {
     if (!introducerId) return
@@ -116,6 +119,54 @@ export function IntroducerKYCDocumentsTab({
   useEffect(() => {
     fetchDocuments()
   }, [fetchDocuments])
+
+  useEffect(() => {
+    if (!autoOpenUpload || loading || autoOpenHandledRef.current) return
+
+    const findFirstMissingKey = () => {
+      if (isIndividualEntity) {
+        const hasIdDocument = documents.some((d) => MEMBER_ID_DOCUMENT_TYPES.includes(d.type))
+        if (!hasIdDocument) return MEMBER_DOCUMENTS[0]?.value || null
+
+        const hasProofOfAddress = documents.some((d) => MEMBER_PROOF_OF_ADDRESS_TYPES.includes(d.type))
+        if (!hasProofOfAddress) return MEMBER_DOCUMENTS[1]?.value || null
+
+        return null
+      }
+
+      const missingEntityDocument = REQUIRED_DOCUMENTS.find(
+        (docType) => !documents.some((d) => d.type === docType.value)
+      )
+      if (missingEntityDocument) return missingEntityDocument.value
+
+      for (const member of members) {
+        const memberDocs = documents.filter((d) => d.introducer_member_id === member.id)
+        for (const docType of MEMBER_DOCUMENTS) {
+          const hasMemberDocument = memberDocs.some((d) => d.type === docType.value)
+          if (!hasMemberDocument) {
+            return `${docType.value}_${member.id}`
+          }
+        }
+      }
+
+      return null
+    }
+
+    const targetKey = findFirstMissingKey()
+    if (!targetKey) {
+      autoOpenHandledRef.current = true
+      return
+    }
+
+    const targetInput = fileInputRefs.current[targetKey]
+    if (!targetInput) return
+
+    autoOpenHandledRef.current = true
+    requestAnimationFrame(() => {
+      targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      targetInput.click()
+    })
+  }, [autoOpenUpload, documents, isIndividualEntity, loading, members])
 
   const handleUpload = async (
     file: File,

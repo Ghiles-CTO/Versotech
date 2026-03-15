@@ -72,13 +72,13 @@ export async function GET() {
       entityId: readiness.introducerId,
       entityType: readiness.introducerType,
       investorType: readiness.introducerType,
-      profileHref: '/versotech_main/introducer-profile?tab=profile',
+      profileHref: '/versotech_main/introducer-profile?tab=overview',
       kycHref: '/versotech_main/introducer-profile?tab=kyc',
       membersHref:
         readiness.introducerType === 'entity'
           ? '/versotech_main/introducer-profile?tab=entity-members'
-          : '/versotech_main/introducer-profile?tab=profile',
-      submitHref: '/versotech_main/introducer-profile?tab=profile&action=submit-approval',
+          : '/versotech_main/introducer-profile?tab=overview',
+      submitHref: '/versotech_main/introducer-profile?tab=overview&action=submit-approval',
       submitEndpoint: '/api/introducers/me/submit-account-approval',
       accountApprovalStatus:
         introducer.account_approval_status || readiness.accountApprovalStatus || 'pending_onboarding',

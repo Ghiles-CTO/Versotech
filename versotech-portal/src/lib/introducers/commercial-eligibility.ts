@@ -74,7 +74,7 @@ export function evaluateIntroducerCommercialEligibility(
     reasonCode,
     message,
     staffHref: `/versotech_main/introducers/${introducer.id}`,
-    profileHref: '/versotech_main/introducer-profile?tab=profile',
+    profileHref: '/versotech_main/introducer-profile?tab=overview',
   }
 }
 

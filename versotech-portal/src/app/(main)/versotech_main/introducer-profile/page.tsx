@@ -18,8 +18,10 @@ export default async function IntroducerProfilePage({
   searchParams: Promise<{ tab?: string; action?: string; memberId?: string }>
 }) {
   const resolvedSearchParams = await searchParams
-  const defaultTab = resolvedSearchParams.tab || 'profile'
+  const requestedTab = resolvedSearchParams.tab || 'overview'
+  const defaultTab = requestedTab === 'profile' ? 'overview' : requestedTab
   const defaultAction = resolvedSearchParams.action || null
+  const defaultMemberId = resolvedSearchParams.memberId || null
   const clientSupabase = await createClient()
   const { data: { user }, error: userError } = await clientSupabase.auth.getUser()
 
@@ -106,7 +108,7 @@ export default async function IntroducerProfilePage({
   // Get user profile info
   const { data: profile } = await serviceSupabase
     .from('profiles')
-    .select('display_name, email, avatar_url')
+    .select('id, display_name, email, avatar_url')
     .eq('id', user.id)
     .maybeSingle()
 
@@ -186,8 +188,11 @@ export default async function IntroducerProfilePage({
     <IntroducerProfileClient
       defaultTab={defaultTab}
       defaultAction={defaultAction}
+      defaultMemberId={defaultMemberId}
       userEmail={user.email || ''}
       profile={profile ? {
+        id: profile.id,
+        display_name: profile.display_name,
         full_name: profile.display_name,
         email: profile.email || user.email || '',
         avatar_url: profile.avatar_url
