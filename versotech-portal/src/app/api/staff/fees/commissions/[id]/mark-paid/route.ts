@@ -11,6 +11,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+import { createInvestorNotification } from '@/lib/notifications';
+import { getEntityPrimaryAndAdminRecipients } from '@/lib/notifications/entity-recipient-groups';
 
 const markPaidSchema = z.object({
   payment_reference: z.string().optional(),
@@ -277,6 +279,7 @@ export async function POST(
       link: string;
       type: string;
     }> = [];
+    let entityNotificationCount = 0;
 
     // Use entity-specific notification type for proper categorization
     const entityNotificationType = entityType === 'commercial_partner'
@@ -292,15 +295,42 @@ export async function POST(
       .eq(config.entityIdField, commissionData[config.entityIdField]);
 
     if (entityUsers && entityUsers.length > 0) {
-      for (const eu of entityUsers) {
-        notifications.push({
-          user_id: (eu as { user_id: string }).user_id,
-          investor_id: null,
-          title: 'Payment Confirmed',
-          message: `Your commission payment of ${formattedAmount} has been processed.${payment_reference ? ` Reference: ${payment_reference}` : ''}`,
-          link: config.commissionLink,
-          type: entityNotificationType,
+      const rawEntityUserIds = Array.from(
+        new Set(entityUsers.map((eu) => (eu as { user_id: string }).user_id).filter(Boolean))
+      );
+
+      if (entityType === 'introducer') {
+        const recipientGroup = await getEntityPrimaryAndAdminRecipients({
+          supabase: serviceSupabase,
+          entityType: 'introducer',
+          entityId: commissionData[config.entityIdField],
         });
+        const introducerRecipientIds =
+          recipientGroup.userIds.length > 0 ? recipientGroup.userIds : rawEntityUserIds;
+
+        for (const recipientUserId of introducerRecipientIds) {
+          await createInvestorNotification({
+            userId: recipientUserId,
+            title: 'Payment Confirmed',
+            message: `Your commission payment of ${formattedAmount} has been processed.${payment_reference ? ` Reference: ${payment_reference}` : ''}`,
+            link: config.commissionLink,
+            type: 'introducer_payment_confirmed',
+            sendEmailNotification: true,
+            createdBy: user.id,
+          });
+          entityNotificationCount += 1;
+        }
+      } else {
+        for (const recipientUserId of rawEntityUserIds) {
+          notifications.push({
+            user_id: recipientUserId,
+            investor_id: null,
+            title: 'Payment Confirmed',
+            message: `Your commission payment of ${formattedAmount} has been processed.${payment_reference ? ` Reference: ${payment_reference}` : ''}`,
+            link: config.commissionLink,
+            type: entityNotificationType,
+          });
+        }
       }
     }
 
@@ -328,6 +358,7 @@ export async function POST(
       await serviceSupabase.from('investor_notifications').insert(notifications);
       console.log(`[mark-paid] Sent ${notifications.length} payment confirmation notifications`);
     }
+    const notificationsSent = notifications.length + entityNotificationCount;
 
     // Create audit log
     await serviceSupabase.from('audit_logs').insert({
@@ -342,7 +373,7 @@ export async function POST(
         amount: commissionData.accrual_amount,
         currency: commissionData.currency,
         payment_reference: payment_reference || null,
-        notifications_sent: notifications.length,
+        notifications_sent: notificationsSent,
         introduction_id: createdIntroductionId,
       },
       timestamp: new Date().toISOString(),
@@ -351,7 +382,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       message: 'Commission marked as paid',
-      notifications_sent: notifications.length,
+      notifications_sent: notificationsSent,
       introduction_id: createdIntroductionId,
     });
   } catch (error) {

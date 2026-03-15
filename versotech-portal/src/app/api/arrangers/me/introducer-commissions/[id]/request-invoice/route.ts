@@ -8,6 +8,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createInvestorNotification } from '@/lib/notifications'
+import { getEntityPrimaryAndAdminRecipients } from '@/lib/notifications/entity-recipient-groups'
 
 /**
  * POST /api/arrangers/me/introducer-commissions/[id]/request-invoice
@@ -96,55 +98,43 @@ export async function POST(
     const introducer = Array.isArray(commission.introducer) ? commission.introducer[0] : commission.introducer
     const deal = Array.isArray(commission.deal) ? commission.deal[0] : commission.deal
 
-    // Send notification to introducer if they have a user_id
-    if (introducer?.user_id) {
-      const formattedAmount = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: commission.currency || 'USD',
-      }).format(commission.accrual_amount)
+    const formattedAmount = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: commission.currency || 'USD',
+    }).format(commission.accrual_amount)
 
-      const dealText = deal?.name ? ` for ${deal.name}` : ''
-      const arrangerText = arrangerEntity?.legal_name ? ` from ${arrangerEntity.legal_name}` : ''
+    const dealText = deal?.name ? ` for ${deal.name}` : ''
+    const arrangerText = arrangerEntity?.legal_name ? ` from ${arrangerEntity.legal_name}` : ''
 
-      await serviceSupabase.from('investor_notifications').insert({
-        user_id: introducer.user_id,
-        investor_id: null, // Not an investor notification
-        title: 'Invoice Requested',
-        message: `Please submit your invoice for commission of ${formattedAmount}${dealText}${arrangerText}.`,
-        link: '/versotech_main/my-commissions',
-        type: 'action_required',
-      })
+    const recipientGroup = await getEntityPrimaryAndAdminRecipients({
+      supabase: serviceSupabase,
+      entityType: 'introducer',
+      entityId: commission.introducer_id,
+    })
 
-      console.log('[request-invoice] Notification sent to introducer:', introducer.legal_name)
+    const recipientUserIds = recipientGroup.userIds.length > 0
+      ? recipientGroup.userIds
+      : typeof introducer?.user_id === 'string'
+        ? [introducer.user_id]
+        : []
+
+    if (recipientUserIds.length === 0) {
+      console.warn('[request-invoice] No user found for introducer:', commission.introducer_id)
     } else {
-      // If no user_id, try to find via introducer_users table
-      const { data: introducerUsers } = await serviceSupabase
-        .from('introducer_users')
-        .select('user_id')
-        .eq('introducer_id', commission.introducer_id)
-        .limit(1)
-
-      if (introducerUsers && introducerUsers.length > 0) {
-        const formattedAmount = new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: commission.currency || 'USD',
-        }).format(commission.accrual_amount)
-
-        const dealText = deal?.name ? ` for ${deal.name}` : ''
-
-        await serviceSupabase.from('investor_notifications').insert({
-          user_id: introducerUsers[0].user_id,
-          investor_id: null,
+      for (const recipientUserId of recipientUserIds) {
+        await createInvestorNotification({
+          userId: recipientUserId,
           title: 'Invoice Requested',
-          message: `Please submit your invoice for commission of ${formattedAmount}${dealText}.`,
+          message: `Please submit your invoice for commission of ${formattedAmount}${dealText}${arrangerText}.`,
           link: '/versotech_main/my-commissions',
-          type: 'action_required',
+          type: 'introducer_invoice_requested',
+          sendEmailNotification: true,
+          createdBy: user.id,
+          dealId: commission.deal_id,
         })
-
-        console.log('[request-invoice] Notification sent via introducer_users table')
-      } else {
-        console.warn('[request-invoice] No user found for introducer:', commission.introducer_id)
       }
+
+      console.log('[request-invoice] Notification sent to introducer recipients:', recipientUserIds.length)
     }
 
     // Create audit log

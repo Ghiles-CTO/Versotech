@@ -6,13 +6,37 @@
  */
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { updateMemberSchema, prepareMemberData } from '@/lib/schemas/member-kyc-schema'
 import { MEMBER_KYC_PROFILE_FIELDS } from '@/lib/kyc/member-kyc-fields'
 import { syncUserSignatoryFromMember } from '@/lib/kyc/member-signatory-sync'
+import {
+  readActivePersonaCookieValues,
+  resolveActiveIntroducerLink,
+} from '@/lib/kyc/active-introducer-link'
+import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 
 interface RouteParams {
   params: Promise<{ memberId: string }>
+}
+
+async function resolveCurrentIntroducerUser(serviceSupabase: ReturnType<typeof createServiceClient>, userId: string) {
+  const cookieStore = await cookies()
+  const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(cookieStore)
+
+  return resolveActiveIntroducerLink<{
+    introducer_id: string
+    role: string
+    is_primary: boolean
+    can_sign: boolean
+  }>({
+    supabase: serviceSupabase,
+    userId,
+    cookiePersonaType,
+    cookiePersonaId,
+    select: 'introducer_id, role, is_primary, can_sign',
+  })
 }
 
 export async function GET(request: Request, { params }: RouteParams) {
@@ -26,11 +50,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: introducerUser } = await serviceSupabase
-      .from('introducer_users')
-      .select('introducer_id')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { link: introducerUser } = await resolveCurrentIntroducerUser(serviceSupabase, user.id)
 
     if (!introducerUser?.introducer_id) {
       return NextResponse.json({ error: 'No introducer profile found' }, { status: 404 })
@@ -65,11 +85,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: introducerUser } = await serviceSupabase
-      .from('introducer_users')
-      .select('introducer_id, role, is_primary')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { link: introducerUser } = await resolveCurrentIntroducerUser(serviceSupabase, user.id)
 
     if (!introducerUser?.introducer_id) {
       return NextResponse.json({ error: 'No introducer profile found' }, { status: 404 })
@@ -77,7 +93,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     const { data: existingMember } = await serviceSupabase
       .from('introducer_members')
-      .select('id, email, kyc_status')
+      .select('id, email, kyc_status, phone_mobile')
       .eq('id', memberId)
       .eq('introducer_id', introducerUser.introducer_id)
       .single()
@@ -111,6 +127,20 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     const hasKycProfileFieldEdit = MEMBER_KYC_PROFILE_FIELDS.some((field) =>
       Object.prototype.hasOwnProperty.call(body, field)
     )
+
+    if (hasKycProfileFieldEdit) {
+      const effectivePhoneMobile =
+        parsed.data.phone_mobile !== undefined
+          ? parsed.data.phone_mobile
+          : existingMember.phone_mobile
+      const mobilePhoneError = getMobilePhoneValidationError(effectivePhoneMobile, true)
+      if (mobilePhoneError) {
+        return NextResponse.json(
+          { error: mobilePhoneError, details: { fieldErrors: { phone_mobile: [mobilePhoneError] } } },
+          { status: 400 }
+        )
+      }
+    }
 
     const updateData = prepareMemberData(parsed.data, {
       computeFullName: true,
@@ -163,11 +193,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: introducerUser } = await serviceSupabase
-      .from('introducer_users')
-      .select('introducer_id, role, is_primary')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { link: introducerUser } = await resolveCurrentIntroducerUser(serviceSupabase, user.id)
 
     if (!introducerUser?.introducer_id) {
       return NextResponse.json({ error: 'No introducer profile found' }, { status: 404 })

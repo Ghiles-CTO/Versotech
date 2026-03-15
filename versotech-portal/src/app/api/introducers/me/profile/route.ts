@@ -6,9 +6,14 @@
  */
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
+import {
+  readActivePersonaCookieValues,
+  resolveActiveIntroducerLink,
+} from '@/lib/kyc/active-introducer-link'
 
 // Schema for introducer self-service profile updates
 // Note: Commission rates, caps, and payment terms are managed by arrangers (read-only for introducers)
@@ -79,6 +84,24 @@ const profileUpdateSchema = z.object({
   tax_id_number: z.string().max(50).optional().nullable(),
 })
 
+async function resolveCurrentIntroducerUser(serviceSupabase: ReturnType<typeof createServiceClient>, userId: string) {
+  const cookieStore = await cookies()
+  const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(cookieStore)
+
+  return resolveActiveIntroducerLink<{
+    introducer_id: string
+    role: string
+    is_primary: boolean
+    can_sign: boolean
+  }>({
+    supabase: serviceSupabase,
+    userId,
+    cookiePersonaType,
+    cookiePersonaId,
+    select: 'introducer_id, role, is_primary, can_sign',
+  })
+}
+
 /**
  * GET /api/introducers/me/profile
  * Returns the current introducer's profile including entity details and active agreement
@@ -94,11 +117,10 @@ export async function GET() {
     }
 
     // Find introducer entity for current user via introducer_users bridge table
-    const { data: introducerUser, error: introducerUserError } = await serviceSupabase
-      .from('introducer_users')
-      .select('introducer_id, role, is_primary, can_sign')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { link: introducerUser, error: introducerUserError } = await resolveCurrentIntroducerUser(
+      serviceSupabase,
+      user.id
+    )
 
     if (introducerUserError || !introducerUser?.introducer_id) {
       return NextResponse.json({ error: 'Introducer profile not found' }, { status: 404 })
@@ -201,11 +223,10 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Find introducer entity for current user
-    const { data: introducerUser, error: introducerUserError } = await serviceSupabase
-      .from('introducer_users')
-      .select('introducer_id, role, is_primary')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { link: introducerUser, error: introducerUserError } = await resolveCurrentIntroducerUser(
+      serviceSupabase,
+      user.id
+    )
 
     if (introducerUserError || !introducerUser?.introducer_id) {
       return NextResponse.json({ error: 'Introducer profile not found' }, { status: 404 })
@@ -325,11 +346,10 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: introducerUser, error: introducerUserError } = await serviceSupabase
-      .from('introducer_users')
-      .select('introducer_id, role, is_primary')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { link: introducerUser, error: introducerUserError } = await resolveCurrentIntroducerUser(
+      serviceSupabase,
+      user.id
+    )
 
     if (introducerUserError || !introducerUser?.introducer_id) {
       return NextResponse.json({ error: 'Introducer profile not found' }, { status: 404 })

@@ -15,6 +15,7 @@ import { SupabaseClient } from '@supabase/supabase-js'
 import { triggerCertificateGeneration } from '@/lib/subscription/certificate-trigger'
 import { createInvestorNotification } from '@/lib/notifications'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
+import { getEntityPrimaryAndAdminRecipients } from '@/lib/notifications/entity-recipient-groups'
 
 export interface DealCloseResult {
   success: boolean
@@ -642,18 +643,30 @@ async function sendDealCloseNotification(
     return
   }
 
-  // Get users linked to this entity
-  const { data: entityUsers, error: usersError } = await supabase
-    .from(userTable)
-    .select('user_id')
-    .eq(`${entityType}_id`, entityId)
+  const recipientGroup = await getEntityPrimaryAndAdminRecipients({
+    supabase,
+    entityType: entityType as 'introducer' | 'partner' | 'commercial_partner',
+    entityId,
+  })
 
-  if (usersError) {
-    console.error(`[deal-close] Failed to fetch ${entityType} users:`, usersError)
-    return
+  let recipientUserIds = recipientGroup.userIds
+  if (recipientUserIds.length === 0) {
+    const { data: entityUsers, error: usersError } = await supabase
+      .from(userTable)
+      .select('user_id')
+      .eq(`${entityType}_id`, entityId)
+
+    if (usersError) {
+      console.error(`[deal-close] Failed to fetch ${entityType} users:`, usersError)
+      return
+    }
+
+    recipientUserIds = Array.from(
+      new Set((entityUsers || []).map((row: { user_id: string | null }) => row.user_id).filter(Boolean) as string[])
+    )
   }
 
-  if (!entityUsers || entityUsers.length === 0) {
+  if (recipientUserIds.length === 0) {
     console.warn(`[deal-close] No users found for ${entityType} ${entityId}`)
     return
   }
@@ -661,10 +674,10 @@ async function sendDealCloseNotification(
   const dealName = deal.company_name || deal.name
   const title = 'Deal Closed - Invoice Requests Available'
   const message = `The deal "${dealName}" has reached its closing date. You can now submit invoice requests for your fee agreement "${feePlan.name}".`
-  const link = '/versotech_main/fee-plans'
+  const link = '/versotech_main/my-commissions'
 
   // Send notification to all users linked to this entity
-  for (const { user_id } of entityUsers) {
+  for (const user_id of recipientUserIds) {
     try {
       await createInvestorNotification({
         userId: user_id,
@@ -1259,21 +1272,34 @@ async function sendTermsheetCloseNotification(
     return
   }
 
-  const { data: entityUsers } = await supabase
-    .from(userTable)
-    .select('user_id')
-    .eq(`${entityType}_id`, entityId)
+  const recipientGroup = await getEntityPrimaryAndAdminRecipients({
+    supabase,
+    entityType: entityType as 'introducer' | 'partner' | 'commercial_partner',
+    entityId,
+  })
 
-  if (!entityUsers || entityUsers.length === 0) {
+  let recipientUserIds = recipientGroup.userIds
+  if (recipientUserIds.length === 0) {
+    const { data: entityUsers } = await supabase
+      .from(userTable)
+      .select('user_id')
+      .eq(`${entityType}_id`, entityId)
+
+    recipientUserIds = Array.from(
+      new Set((entityUsers || []).map((row: { user_id: string | null }) => row.user_id).filter(Boolean) as string[])
+    )
+  }
+
+  if (recipientUserIds.length === 0) {
     return
   }
 
   const dealName = deal.company_name || deal.name
   const title = 'Termsheet Closed - Invoice Requests Available'
   const message = `The termsheet v${termsheetVersion} for "${dealName}" has reached its completion date. You can now submit invoice requests for your fee agreement "${feePlan.name}".`
-  const link = '/versotech_main/fee-plans'
+  const link = '/versotech_main/my-commissions'
 
-  for (const { user_id } of entityUsers) {
+  for (const user_id of recipientUserIds) {
     try {
       await createInvestorNotification({
         userId: user_id,

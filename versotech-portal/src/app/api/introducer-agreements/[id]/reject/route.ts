@@ -7,6 +7,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
+import {
+  readActivePersonaCookieValues,
+  resolveActiveIntroducerLink,
+} from '@/lib/kyc/active-introducer-link'
+import { createInvestorNotification } from '@/lib/notifications'
 
 const rejectSchema = z.object({
   reason: z.string().min(1).max(1000).optional(),
@@ -63,12 +68,21 @@ export async function POST(
       return NextResponse.json({ error: 'Agreement not found' }, { status: 404 })
     }
 
-    // Check if user is the introducer for this agreement
-    const { data: introducerUser } = await serviceSupabase
-      .from('introducer_users')
-      .select('introducer_id')
-      .eq('user_id', user.id)
-      .single()
+    const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(request.cookies)
+    const { link: introducerUser, error: introducerUserError } = await resolveActiveIntroducerLink<{
+      introducer_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookiePersonaType,
+      cookiePersonaId,
+      select: 'introducer_id',
+    })
+
+    if (introducerUserError) {
+      console.error('[introducer-agreements/reject] Failed to resolve introducer link:', introducerUserError)
+      return NextResponse.json({ error: 'Failed to resolve introducer account' }, { status: 500 })
+    }
 
     if (!introducerUser || introducerUser.introducer_id !== agreement.introducer_id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
@@ -125,15 +139,21 @@ export async function POST(
     // Create notifications for CEO/staff_admin users
     const introducer = agreement.introducer as any
     if (ceoUsers && ceoUsers.length > 0) {
-      const notifications = ceoUsers.map((ceo: any) => ({
-        user_id: ceo.id,
-        investor_id: null, // Staff notification, not investor
-        title: 'Agreement Rejected',
-        message: `${introducer?.legal_name || 'Introducer'} rejected their fee agreement.${reason ? ` Reason: ${reason}` : ''}`,
-        link: `/versotech_main/introducers/${agreement.introducer_id}?tab=agreements`,
-      }))
-
-      await serviceSupabase.from('investor_notifications').insert(notifications)
+      for (const ceo of ceoUsers as Array<{ id: string }>) {
+        try {
+          await createInvestorNotification({
+            userId: ceo.id,
+            title: 'Agreement Rejected',
+            message: `${introducer?.legal_name || 'Introducer'} rejected their fee agreement.${reason ? ` Reason: ${reason}` : ''}`,
+            link: `/versotech_main/introducers/${agreement.introducer_id}?tab=agreements`,
+            type: 'introducer_agreement_rejected',
+            createdBy: user.id,
+            sendEmailNotification: true,
+          })
+        } catch (notificationError) {
+          console.error('[introducer-agreements/reject] Failed to notify staff recipient:', notificationError)
+        }
+      }
     }
 
     // Notify arranger if this agreement is linked to one
@@ -145,15 +165,21 @@ export async function POST(
         .limit(5)
 
       if (arrangerUsers && arrangerUsers.length > 0) {
-        const arrangerNotifications = arrangerUsers.map((au: any) => ({
-          user_id: au.user_id,
-          investor_id: null,
-          title: 'Introducer Agreement Rejected',
-          message: `${introducer?.legal_name || 'Introducer'} rejected the fee agreement.${reason ? ` Reason: ${reason}` : ''}`,
-          link: `/versotech_main/my-introducers`,
-        }))
-
-        await serviceSupabase.from('investor_notifications').insert(arrangerNotifications)
+        for (const arrangerUser of arrangerUsers as Array<{ user_id: string }>) {
+          try {
+            await createInvestorNotification({
+              userId: arrangerUser.user_id,
+              title: 'Introducer Agreement Rejected',
+              message: `${introducer?.legal_name || 'Introducer'} rejected the fee agreement.${reason ? ` Reason: ${reason}` : ''}`,
+              link: '/versotech_main/my-introducers',
+              type: 'introducer_agreement_rejected',
+              createdBy: user.id,
+              sendEmailNotification: true,
+            })
+          } catch (notificationError) {
+            console.error('[introducer-agreements/reject] Failed to notify arranger recipient:', notificationError)
+          }
+        }
       }
     }
 

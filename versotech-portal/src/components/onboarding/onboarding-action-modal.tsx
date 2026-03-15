@@ -22,6 +22,7 @@ import type {
 import {
   resolveInvestorDashboardOnboardingStage,
 } from '@/components/dashboard/investor-dashboard-onboarding-card'
+import { usePersona } from '@/contexts/persona-context'
 
 const SESSION_KEY = 'verso_onboarding_action_dismissed'
 
@@ -40,6 +41,18 @@ function parseItemSuffix(raw: string): { label: string; status: 'missing' | 'rej
   return { label: raw.trim(), status: 'missing' }
 }
 
+function getContinueSetupDescription(personaType?: string) {
+  return personaType === 'introducer'
+    ? 'Complete your account setup to activate your introducer workspace.'
+    : 'Complete your account setup to access investment opportunities.'
+}
+
+function getReadyToSubmitDescription(personaType?: string) {
+  return personaType === 'introducer'
+    ? 'All your information and documents are complete. Submit your account for approval to activate your introducer workspace.'
+    : 'All your information and documents are complete. Submit your account for approval to unlock access to investment opportunities.'
+}
+
 /* ─── Resolved action with exact specificity ─── */
 
 type OnboardingAction = {
@@ -53,8 +66,12 @@ type OnboardingAction = {
 
 function resolveNextAction(state: DashboardOnboardingState): OnboardingAction {
   const stage = resolveInvestorDashboardOnboardingStage(state)
-  const investorType = (state.investorType || 'entity').toLowerCase().trim()
-  const isEntity = investorType !== 'individual'
+  const entityType = (state.entityType || state.investorType || 'entity').toLowerCase().trim()
+  const profileHref = state.profileHref || '/versotech_main/profile?tab=overview'
+  const kycHref = state.kycHref || '/versotech_main/profile?tab=kyc'
+  const membersHref = state.membersHref || '/versotech_main/profile?tab=entity-members'
+  const submitHref = state.submitHref || `${profileHref}${profileHref.includes('?') ? '&' : '?'}action=submit-approval`
+  const isEntity = entityType !== 'individual'
 
   if (stage === 'under_review') {
     return {
@@ -70,28 +87,39 @@ function resolveNextAction(state: DashboardOnboardingState): OnboardingAction {
       title: 'Action required on your account',
       description: state.latestRequestInfo?.details || 'Our review team has flagged items that require your attention. Please review and update the flagged items.',
       ctaLabel: 'Review flagged items',
-      href: '/versotech_main/profile?tab=overview',
+      href: profileHref,
     }
   }
 
   if (stage === 'ready_to_submit') {
     return {
       title: 'Ready for submission',
-      description: 'All your information and documents are complete. Submit your account for approval to unlock access to investment opportunities.',
+      description: getReadyToSubmitDescription(state.personaType),
       ctaLabel: 'Submit account for approval',
-      href: '/versotech_main/profile?tab=overview&action=submit-approval',
+      href: submitHref,
       isSubmitAction: true,
     }
   }
 
   // stage === 'in_progress' — find the FIRST specific missing item
   if (isEntity) {
-    return resolveEntityAction(state.missingItems)
+    return resolveEntityAction(state.missingItems, {
+      profileHref,
+      kycHref,
+      membersHref,
+    }, state.personaType)
   }
-  return resolveIndividualAction(state.missingItems)
+  return resolveIndividualAction(state.missingItems, {
+    profileHref,
+    kycHref,
+  }, state.personaType)
 }
 
-function resolveEntityAction(items: DashboardOnboardingMissingItem[]): OnboardingAction {
+function resolveEntityAction(
+  items: DashboardOnboardingMissingItem[],
+  hrefs: { profileHref: string; kycHref: string; membersHref: string },
+  personaType?: string
+): OnboardingAction {
   const entityGroup = items.find((i) => i.scope === 'entity')
   const memberGroups = items.filter((i) => i.scope === 'member')
   // The user's own member is the first member group (API builds it first)
@@ -108,7 +136,7 @@ function resolveEntityAction(items: DashboardOnboardingMissingItem[]): Onboardin
           title: `${verb} your personal details`,
           description: 'Fill in your personal information to continue setting up your account.',
           ctaLabel: `${verb} personal details`,
-          href: '/versotech_main/profile?tab=overview&action=edit-personal-kyc',
+          href: `${hrefs.profileHref}${hrefs.profileHref.includes('?') ? '&' : '?'}action=edit-personal-kyc`,
         }
       }
     }
@@ -126,7 +154,7 @@ function resolveEntityAction(items: DashboardOnboardingMissingItem[]): Onboardin
             ? 'Your company information was rejected during review. Please update and resubmit your entity details.'
             : 'Fill in your company information to continue setting up your account.',
           ctaLabel: `${verb} company details`,
-          href: '/versotech_main/profile?tab=overview&action=edit-entity-overview',
+          href: hrefs.profileHref,
         }
       }
     }
@@ -144,7 +172,7 @@ function resolveEntityAction(items: DashboardOnboardingMissingItem[]): Onboardin
         description: 'The following documents are required:',
         documentList: missingDocs,
         ctaLabel: 'Upload personal KYC documents',
-        href: '/versotech_main/profile?tab=kyc&action=upload-doc',
+        href: hrefs.kycHref,
       }
     }
   }
@@ -161,7 +189,7 @@ function resolveEntityAction(items: DashboardOnboardingMissingItem[]): Onboardin
         description: 'The following documents are required:',
         documentList: missingEntityDocs,
         ctaLabel: 'Upload company KYC documents',
-        href: '/versotech_main/profile?tab=kyc&action=upload-doc',
+        href: hrefs.kycHref,
       }
     }
   }
@@ -174,31 +202,38 @@ function resolveEntityAction(items: DashboardOnboardingMissingItem[]): Onboardin
       title: 'Members require KYC information',
       description: `We are missing KYC information for ${names}. Please review and complete their details.`,
       ctaLabel: 'Review members',
-      href: '/versotech_main/profile?tab=entity-members',
+      href: hrefs.membersHref,
     }
   }
 
   return {
     title: 'Continue account setup',
-    description: 'Complete your account setup to access investment opportunities.',
+    description: getContinueSetupDescription(personaType),
     ctaLabel: 'Go to profile',
-    href: '/versotech_main/profile?tab=overview',
+    href: hrefs.profileHref,
   }
 }
 
-function resolveIndividualAction(items: DashboardOnboardingMissingItem[]): OnboardingAction {
+function resolveIndividualAction(
+  items: DashboardOnboardingMissingItem[],
+  hrefs: { profileHref: string; kycHref: string },
+  personaType?: string
+): OnboardingAction {
   const entityGroup = items.find((i) => i.scope === 'entity')
-  if (!entityGroup) {
+  const memberGroup = items.find((i) => i.scope === 'member')
+  const sourceGroup = memberGroup || entityGroup
+
+  if (!sourceGroup) {
     return {
       title: 'Continue account setup',
-      description: 'Complete your account setup to access investment opportunities.',
+      description: getContinueSetupDescription(personaType),
       ctaLabel: 'Go to profile',
-      href: '/versotech_main/profile?tab=overview',
+      href: hrefs.profileHref,
     }
   }
 
   // Priority 1: Personal Information
-  for (const raw of entityGroup.missingItems) {
+  for (const raw of sourceGroup.missingItems) {
     const parsed = parseItemSuffix(raw)
     if (parsed.label === 'Personal Information') {
       const verb = parsed.status === 'rejected' ? 'Resubmit' : 'Complete'
@@ -206,13 +241,13 @@ function resolveIndividualAction(items: DashboardOnboardingMissingItem[]): Onboa
         title: `${verb} your personal details`,
         description: 'Fill in your personal information to continue setting up your account.',
         ctaLabel: `${verb} personal details`,
-        href: '/versotech_main/profile?tab=overview&action=edit-individual-kyc',
+        href: `${hrefs.profileHref}${hrefs.profileHref.includes('?') ? '&' : '?'}action=edit-individual-kyc`,
       }
     }
   }
 
   // Priority 2: Personal documents (combined — list each missing doc)
-  const missingDocs = entityGroup.missingItems
+  const missingDocs = sourceGroup.missingItems
     .map((raw) => parseItemSuffix(raw))
     .filter((p) => p.label !== 'Personal Information')
     .map((p) => p.label)
@@ -222,15 +257,15 @@ function resolveIndividualAction(items: DashboardOnboardingMissingItem[]): Onboa
       description: 'The following documents are required:',
       documentList: missingDocs,
       ctaLabel: 'Upload personal KYC documents',
-      href: '/versotech_main/profile?tab=kyc&action=upload-doc',
+      href: hrefs.kycHref,
     }
   }
 
   return {
     title: 'Continue account setup',
-    description: 'Complete your account setup to access investment opportunities.',
+    description: getContinueSetupDescription(personaType),
     ctaLabel: 'Go to profile',
-    href: '/versotech_main/profile?tab=overview',
+    href: hrefs.profileHref,
   }
 }
 
@@ -239,11 +274,19 @@ function resolveIndividualAction(items: DashboardOnboardingMissingItem[]): Onboa
 export function OnboardingActionModal() {
   const router = useRouter()
   const { theme } = useTheme()
+  const { activePersona, personas, isLoading: personaLoading } = usePersona()
   const isDark = theme === 'staff-dark'
   const [open, setOpen] = useState(false)
   const [state, setState] = useState<DashboardOnboardingState | null>(null)
   const [loading, setLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const onboardingPersona =
+    (activePersona?.persona_type === 'investor' || activePersona?.persona_type === 'introducer')
+      ? activePersona
+      : (personas || []).find((persona) =>
+          persona?.persona_type === 'investor' || persona?.persona_type === 'introducer'
+        ) || null
 
   useEffect(() => {
     if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(SESSION_KEY) === '1') {
@@ -251,7 +294,21 @@ export function OnboardingActionModal() {
       return
     }
 
-    fetch('/api/investors/me/dashboard-onboarding', { credentials: 'same-origin' })
+    if (personaLoading) {
+      return
+    }
+
+    if (!onboardingPersona) {
+      setLoading(false)
+      return
+    }
+
+    const endpoint =
+      onboardingPersona.persona_type === 'introducer'
+        ? '/api/introducers/me/dashboard-onboarding'
+        : '/api/investors/me/dashboard-onboarding'
+
+    fetch(endpoint, { credentials: 'same-origin' })
       .then(async (res) => {
         if (!res.ok) return null
         return (await res.json()) as DashboardOnboardingState
@@ -265,7 +322,7 @@ export function OnboardingActionModal() {
       })
       .catch(() => null)
       .finally(() => setLoading(false))
-  }, [])
+  }, [onboardingPersona, personaLoading])
 
   function dismiss() {
     try { sessionStorage.setItem(SESSION_KEY, '1') } catch { /* ignore */ }
@@ -275,7 +332,13 @@ export function OnboardingActionModal() {
   async function handleSubmitForApproval() {
     setIsSubmitting(true)
     try {
-      const response = await fetch('/api/investors/me/submit-account-approval', {
+      const submitEndpoint =
+        state?.submitEndpoint ||
+        (state?.personaType === 'introducer'
+          ? '/api/introducers/me/submit-account-approval'
+          : '/api/investors/me/submit-account-approval')
+
+      const response = await fetch(submitEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       })

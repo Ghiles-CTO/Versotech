@@ -37,6 +37,9 @@ export type DashboardOnboardingRequestInfo = {
 
 export type DashboardOnboardingState = {
   investorId: string
+  personaType?: 'investor' | 'introducer'
+  entityId?: string
+  entityType?: string | null
   investorType?: string | null
   accountApprovalStatus: string | null
   onboardingStatus: string | null
@@ -45,6 +48,11 @@ export type DashboardOnboardingState = {
   canSubmitAccountApproval: boolean
   missingItems: DashboardOnboardingMissingItem[]
   latestRequestInfo: DashboardOnboardingRequestInfo | null
+  profileHref?: string
+  kycHref?: string
+  membersHref?: string
+  submitHref?: string
+  submitEndpoint?: string
 }
 
 export type InvestorDashboardOnboardingStage =

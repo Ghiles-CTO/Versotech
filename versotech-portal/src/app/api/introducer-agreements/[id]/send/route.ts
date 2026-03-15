@@ -6,6 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
+import { createInvestorNotification } from '@/lib/notifications'
+import { getEntityPrimaryAndAdminRecipients } from '@/lib/notifications/entity-recipient-groups'
 
 /**
  * POST /api/introducer-agreements/[id]/send
@@ -98,15 +100,29 @@ export async function POST(
       }
     })
 
-    // Create notification for introducer if they have a user account
+    // Create notification for the introducer's primary/admin users
     const introducer = agreement.introducer as any
-    if (introducer?.user_id) {
-      await serviceSupabase.from('investor_notifications').insert({
-        user_id: introducer.user_id,
-        investor_id: null, // Introducer notification, not investor
+    const recipientGroup = await getEntityPrimaryAndAdminRecipients({
+      supabase: serviceSupabase,
+      entityType: 'introducer',
+      entityId: agreement.introducer_id,
+    })
+
+    const recipientUserIds = recipientGroup.userIds.length > 0
+      ? recipientGroup.userIds
+      : typeof introducer?.user_id === 'string'
+        ? [introducer.user_id]
+        : []
+
+    for (const recipientUserId of recipientUserIds) {
+      await createInvestorNotification({
+        userId: recipientUserId,
         title: 'New Fee Agreement',
         message: 'You have received a new fee agreement for review.',
         link: `/versotech_main/introducer-agreements/${id}`,
+        type: 'introducer_agreement_pending',
+        createdBy: user.id,
+        sendEmailNotification: true,
       })
     }
 

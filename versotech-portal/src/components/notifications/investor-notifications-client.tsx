@@ -35,6 +35,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { usePersona } from '@/contexts/persona-context'
 import { ComplianceAlerts } from '@/components/audit/compliance-alerts'
+import { notificationMatchesPersona } from '@/lib/notifications/persona-filter'
 
 interface Notification {
   id: string
@@ -95,12 +96,18 @@ const NOTIFICATION_TYPE_CONFIG: Record<string, { label: string; icon: React.Comp
   signature_required: { label: 'Signature', icon: FileText, color: 'bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300' },
   introducer_agreement_pending: { label: 'Agreement', icon: FileText, color: 'bg-pink-100 dark:bg-pink-950 text-pink-800 dark:text-pink-300' },
   introducer_agreement_signed: { label: 'Agreement', icon: FileText, color: 'bg-pink-100 dark:bg-pink-950 text-pink-800 dark:text-pink-300' },
+  introducer_agreement_rejected: { label: 'Agreement', icon: AlertCircle, color: 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300' },
   approval_granted: { label: 'Approval', icon: CheckCircle2, color: 'bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-300' },
+  approval_rejected: { label: 'Approval', icon: AlertCircle, color: 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300' },
+  account_more_info_requested: { label: 'Account', icon: AlertCircle, color: 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300' },
   certificate_issued: { label: 'Certificate', icon: FileText, color: 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300' },
   introducer_payment_confirmed: { label: 'Commission', icon: Briefcase, color: 'bg-violet-100 dark:bg-violet-950 text-violet-800 dark:text-violet-300' },
+  introducer_payment_sent: { label: 'Commission', icon: Briefcase, color: 'bg-violet-100 dark:bg-violet-950 text-violet-800 dark:text-violet-300' },
   introducer_commission_accrued: { label: 'Commission', icon: Briefcase, color: 'bg-violet-100 dark:bg-violet-950 text-violet-800 dark:text-violet-300' },
+  introducer_invoice_requested: { label: 'Commission', icon: Briefcase, color: 'bg-violet-100 dark:bg-violet-950 text-violet-800 dark:text-violet-300' },
   introducer_invoice_sent: { label: 'Commission', icon: Briefcase, color: 'bg-violet-100 dark:bg-violet-950 text-violet-800 dark:text-violet-300' },
   introducer_invoice_approved: { label: 'Commission', icon: Briefcase, color: 'bg-violet-100 dark:bg-violet-950 text-violet-800 dark:text-violet-300' },
+  introducer_invoice_rejected: { label: 'Commission', icon: AlertCircle, color: 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300' },
   payment_confirmed: { label: 'Payment', icon: Briefcase, color: 'bg-violet-100 dark:bg-violet-950 text-violet-800 dark:text-violet-300' },
   investment_activated: { label: 'Investment', icon: Briefcase, color: 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300' },
   compliance_question: { label: 'Compliance', icon: AlertCircle, color: 'bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300' },
@@ -108,6 +115,7 @@ const NOTIFICATION_TYPE_CONFIG: Record<string, { label: string; icon: React.Comp
   subscription_pack_ready: { label: 'Subscription', icon: FileText, color: 'bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-300' },
   nda_modification_request: { label: 'NDA', icon: FileText, color: 'bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300' },
   profile_approved: { label: 'Profile', icon: Users, color: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300' },
+  action_required: { label: 'Action', icon: AlertCircle, color: 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300' },
   info: { label: 'Info', icon: Bell, color: 'bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300' },
   general: { label: 'General', icon: Bell, color: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300' },
 }
@@ -116,74 +124,6 @@ const NOTIFICATION_TYPE_CONFIG: Record<string, { label: string; icon: React.Comp
 function getTypeLabel(type: string): string {
   return NOTIFICATION_TYPE_CONFIG[type]?.label ?? type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
-
-const PERSONA_ROUTE_PREFIXES: Record<string, string[]> = {
-  investor: [
-    '/versotech_main/opportunities',
-    '/versotech_main/portfolio',
-    '/versotech_main/documents',
-    '/versotech_main/inbox',
-    '/versotech_main/profile',
-    '/versotech_main/versosign',
-    '/versotech_main/subscription-packs',
-    '/versotech_main/deals',
-  ],
-  arranger: [
-    '/versotech_main/my-mandates',
-    '/versotech_main/subscription-packs',
-    '/versotech_main/escrow',
-    '/versotech_main/arranger-reconciliation',
-    '/versotech_main/fee-plans',
-    '/versotech_main/payment-requests',
-    '/versotech_main/my-partners',
-    '/versotech_main/my-introducers',
-    '/versotech_main/my-commercial-partners',
-    '/versotech_main/my-lawyers',
-    '/versotech_main/versosign',
-    '/versotech_main/arranger-profile',
-  ],
-  introducer: [
-    '/versotech_main/introductions',
-    '/versotech_main/introducer-agreements',
-    '/versotech_main/my-commissions',
-    '/versotech_main/versosign',
-    '/versotech_main/introducer-profile',
-  ],
-  partner: [
-    '/versotech_main/opportunities',
-    '/versotech_main/partner-transactions',
-    '/versotech_main/my-commissions',
-    '/versotech_main/shared-transactions',
-    '/versotech_main/versosign',
-    '/versotech_main/partner-profile',
-  ],
-  commercial_partner: [
-    '/versotech_main/opportunities',
-    '/versotech_main/client-transactions',
-    '/versotech_main/my-commissions',
-    '/versotech_main/portfolio',
-    '/versotech_main/placement-agreements',
-    '/versotech_main/commercial-partner-profile',
-    '/versotech_main/notifications',
-    '/versotech_main/messages',
-  ],
-  lawyer: [
-    '/versotech_main/assigned-deals',
-    '/versotech_main/escrow',
-    '/versotech_main/subscription-packs',
-    '/versotech_main/versosign',
-    '/versotech_main/lawyer-reconciliation',
-    '/versotech_main/lawyer-profile',
-  ],
-}
-
-const SHARED_ROUTE_PREFIXES = [
-  '/versotech_main/notifications',
-  '/versotech_main/versosign',
-  '/versotech_main/documents',
-  '/versotech_main/inbox',
-  '/versotech_main/messages',
-]
 
 function formatTimeAgo(dateString: string): string {
   const date = new Date(dateString)
@@ -291,25 +231,18 @@ export default function InvestorNotificationsClient({
     if (!selectedPersona) return filteredNotifications
 
     const personaType = selectedPersona.persona_type
-    if (personaType === 'ceo' || personaType === 'staff') {
-      return filteredNotifications
-    }
-
-    const allowedPrefixes = PERSONA_ROUTE_PREFIXES[personaType] || []
 
     return filteredNotifications.filter((notification) => {
-      if (notification.investor_id) {
-        if (personaType !== 'investor') return false
-        return notification.investor_id === selectedPersona.entity_id
-      }
-
-      if (!notification.link) return true
-
-      if (SHARED_ROUTE_PREFIXES.some(prefix => notification.link!.startsWith(prefix))) {
-        return true
-      }
-
-      return allowedPrefixes.some(prefix => notification.link!.startsWith(prefix))
+      return notificationMatchesPersona(
+        {
+          link: notification.link,
+          investor_id: notification.investor_id,
+        },
+        {
+          personaType: personaType as any,
+          entityId: selectedPersona.entity_id,
+        }
+      )
     })
   }, [filteredNotifications, selectedPersona])
 

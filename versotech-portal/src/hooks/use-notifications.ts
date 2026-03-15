@@ -56,12 +56,12 @@ export function useNotifications(userRole: string, userId?: string) {
       }
 
       try {
-        const response = await fetch('/api/notifications/counts', {
+        const activeResponse = await fetch('/api/notifications/counts?use_active_persona=true', {
           cache: 'no-store',
           signal: AbortSignal.timeout(10000), // 10s timeout
         })
 
-        if (response.status === 401) {
+        if (activeResponse.status === 401) {
           if (isMounted) {
             setCounts(INITIAL_COUNTS)
             if (!silent) {
@@ -71,15 +71,15 @@ export function useNotifications(userRole: string, userId?: string) {
           return
         }
 
-        if (!response.ok) {
+        if (!activeResponse.ok) {
           // Don't throw on 404 or other errors during dev server restarts
           if (!silent) {
-            console.warn(`Failed to load notification counts (${response.status})`)
+            console.warn(`Failed to load notification counts (${activeResponse.status})`)
           }
           return
         }
 
-        const payload = await response.json()
+        const payload = await activeResponse.json()
         if (isMounted && payload?.counts) {
           setCounts(payload.counts as NotificationCounts)
         }

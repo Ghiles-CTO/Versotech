@@ -1,5 +1,8 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { notificationMatchesPersona } from '@/lib/notifications/persona-filter'
+import { readActivePersonaCookieValues } from '@/lib/kyc/active-investor-link'
+import { resolveActivePersona } from '@/lib/persona/active-persona'
 
 const TASK_STATUSES = ['pending', 'in_progress'] as const
 const REQUEST_STATUSES = ['open', 'assigned', 'in_progress', 'awaiting_info'] as const
@@ -15,7 +18,7 @@ function chunkArray<T>(items: T[], size: number): T[][] {
   return chunks
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
     const serviceSupabase = createServiceClient()
@@ -39,8 +42,22 @@ export async function GET() {
       profile?.role ??
       (typeof user.user_metadata?.role === 'string' ? user.user_metadata.role : 'investor')
 
+    const useActivePersona = request.nextUrl.searchParams.get('use_active_persona') === 'true'
     const { data: personas } = await serviceSupabase.rpc('get_user_personas', { p_user_id: user.id })
     const isLawyerPersona = personas?.some((p: { persona_type: string }) => p.persona_type === 'lawyer') || false
+    const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(request.cookies)
+    const activePersona = useActivePersona
+      ? resolveActivePersona((personas || []) as Array<{ persona_type: any; entity_id: string }>, {
+          cookiePersonaType,
+          cookiePersonaId,
+        })
+      : null
+    const includeLawyerNotifications =
+      isLawyerPersona &&
+      (!activePersona ||
+        activePersona.persona_type === 'lawyer' ||
+        activePersona.persona_type === 'ceo' ||
+        activePersona.persona_type === 'staff')
 
     const [
       notificationsResult,
@@ -49,12 +66,18 @@ export async function GET() {
       membershipResult,
       investorLinksResult
     ] = await Promise.all([
-      serviceSupabase
-        .from('investor_notifications')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .is('read_at', null),
-      isLawyerPersona
+      useActivePersona && activePersona && activePersona.persona_type !== 'ceo' && activePersona.persona_type !== 'staff'
+        ? serviceSupabase
+            .from('investor_notifications')
+            .select('id, link, investor_id')
+            .eq('user_id', user.id)
+            .is('read_at', null)
+        : serviceSupabase
+            .from('investor_notifications')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .is('read_at', null),
+      includeLawyerNotifications
         ? serviceSupabase
             .from('notifications')
             .select('id', { count: 'exact', head: true })
@@ -91,32 +114,62 @@ export async function GET() {
       console.error('[notifications/counts] Investor link error:', investorLinksResult.error)
     }
 
-    const investorIds =
+    const linkedInvestorIds =
       investorLinksResult.data?.map((row) => row.investor_id).filter(Boolean) ?? []
+    const investorIds =
+      useActivePersona && activePersona?.persona_type === 'investor'
+        ? linkedInvestorIds.filter((investorId) => investorId === activePersona.entity_id)
+        : useActivePersona && activePersona && activePersona.persona_type !== 'ceo' && activePersona.persona_type !== 'staff'
+          ? []
+          : linkedInvestorIds
 
     let taskCount = 0
-    let taskCountQuery = serviceSupabase
-      .from('tasks')
-      .select('id', { count: 'exact', head: true })
-      .in('status', TASK_STATUSES)
+    if (!activePersona || activePersona.persona_type === 'investor' || activePersona.persona_type === 'ceo' || activePersona.persona_type === 'staff') {
+      let taskCountQuery = serviceSupabase
+        .from('tasks')
+        .select('id', { count: 'exact', head: true })
+        .in('status', TASK_STATUSES)
 
-    if (investorIds.length > 0) {
-      taskCountQuery = taskCountQuery.or(
-        `owner_user_id.eq.${user.id},owner_investor_id.in.(${investorIds.join(',')})`
-      )
-    } else {
-      taskCountQuery = taskCountQuery.eq('owner_user_id', user.id)
+      if (investorIds.length > 0) {
+        taskCountQuery = taskCountQuery.or(
+          `owner_user_id.eq.${user.id},owner_investor_id.in.(${investorIds.join(',')})`
+        )
+      } else {
+        taskCountQuery = taskCountQuery.eq('owner_user_id', user.id)
+      }
+
+      const taskResult = await taskCountQuery
+
+      if (taskResult.error) {
+        console.error('[notifications/counts] Task count error:', taskResult.error)
+      } else {
+        taskCount = taskResult.count ?? 0
+      }
     }
 
-    const taskResult = await taskCountQuery
-
-    if (taskResult.error) {
-      console.error('[notifications/counts] Task count error:', taskResult.error)
+    let notificationCount = 0
+    if (
+      useActivePersona &&
+      activePersona &&
+      activePersona.persona_type !== 'ceo' &&
+      activePersona.persona_type !== 'staff' &&
+      Array.isArray(notificationsResult.data)
+    ) {
+      const personaNotificationRows = notificationsResult.data as Array<{
+        id: string
+        link?: string | null
+        investor_id?: string | null
+      }>
+      notificationCount =
+        personaNotificationRows.filter((notification) =>
+          notificationMatchesPersona(notification, {
+            personaType: activePersona.persona_type as any,
+            entityId: activePersona.entity_id,
+          })
+        ).length + (lawyerNotificationsResult.count ?? 0)
     } else {
-      taskCount = taskResult.count ?? 0
+      notificationCount = (notificationsResult.count ?? 0) + (lawyerNotificationsResult.count ?? 0)
     }
-
-    const notificationCount = (notificationsResult.count ?? 0) + (lawyerNotificationsResult.count ?? 0)
 
     const conversationIds =
       participantResult.data?.map((row) => row.conversation_id).filter(Boolean) ?? []
@@ -143,7 +196,10 @@ export async function GET() {
     }
 
     let dealCount = 0
-    if (userRole === 'investor') {
+    if (
+      userRole === 'investor' &&
+      (!activePersona || activePersona.persona_type === 'investor' || activePersona.persona_type === 'ceo' || activePersona.persona_type === 'staff')
+    ) {
       const accessibleDealIds = new Set<string>()
       const membershipIds =
         membershipResult.data?.map((row) => row.deal_id).filter(Boolean) ?? []

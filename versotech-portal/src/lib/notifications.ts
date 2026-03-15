@@ -98,8 +98,10 @@ const EMAIL_NOTIFICATION_TYPES: NotificationType[] = [
   'kyc_status',
   // GAP-13 FIX: Add introducer notification types for email delivery
   'introducer_agreement_signed',
+  'introducer_agreement_rejected',
   'introducer_agreement_pending',
   'introducer_commission_accrued',
+  'introducer_invoice_requested',
   'introducer_invoice_sent',
   'introducer_payment_confirmed',
   // Partner notification types

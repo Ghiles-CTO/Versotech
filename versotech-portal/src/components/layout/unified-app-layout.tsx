@@ -135,7 +135,9 @@ function UnifiedAppLayoutInner({ children, profile }: UnifiedAppLayoutProps) {
     }).catch(() => null)
   }, [isLoading, personas, profile.id])
 
-  const hasInvestorPersona = !isLoading && (personas || []).some((p) => p?.persona_type === 'investor')
+  const hasOnboardingPersona = !isLoading && (personas || []).some((p) =>
+    p?.persona_type === 'investor' || p?.persona_type === 'introducer'
+  )
 
   if (isLoading) {
     // Use CSS classes that respond to .staff-dark - prevents SSR flash
@@ -152,8 +154,8 @@ function UnifiedAppLayoutInner({ children, profile }: UnifiedAppLayoutProps) {
       {/* Global Keyboard Shortcuts */}
       <GlobalKeyboardShortcuts brand="versotech" role={profile.role} />
 
-      {/* Onboarding action modal — investors only */}
-      {hasInvestorPersona && <OnboardingActionModal />}
+      {/* Onboarding action modal — investor and introducer personas */}
+      {hasOnboardingPersona && <OnboardingActionModal />}
 
       {/* Persona-aware Sidebar */}
       <PersonaSidebar />

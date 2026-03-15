@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { logBlacklistMatches, screenAgainstBlacklist } from '@/lib/compliance/blacklist'
 import { SignatoryEntityType, syncMemberSignatoryFromUserLink } from '@/lib/kyc/member-signatory-sync'
+import { sendWelcomeSetupEmail } from '@/lib/email/resend-service'
 import {
   enrichMemberRecordFromInvitation,
   isExternalInvitationEntityType,
@@ -96,6 +97,31 @@ function getInvitationStatusError(status: string | null | undefined) {
   return {
     error: `This invitation has already been ${normalizedStatus || 'used'}`,
     status: normalizedStatus || 'used',
+  }
+}
+
+function getWelcomeSetupContent(entityType: string, entityName: string) {
+  switch (entityType) {
+    case 'introducer':
+      return {
+        headline: 'Your introducer account is ready.',
+        body: `You can now access ${entityName} in VERSO to finish onboarding, review agreements, and manage commissions.`,
+      }
+    case 'investor':
+      return {
+        headline: 'Your investor account is ready.',
+        body: `You can now access ${entityName} in VERSO to continue onboarding, review documents, and access your investor workspace.`,
+      }
+    case 'staff':
+      return {
+        headline: 'Your internal account is ready.',
+        body: `You can now access ${entityName || 'VERSO'} in VERSO and continue with your internal workspace setup.`,
+      }
+    default:
+      return {
+        headline: 'Your VERSO account is ready.',
+        body: `You can now access ${entityName} in VERSO and continue with your workspace setup.`,
+      }
   }
 }
 
@@ -548,6 +574,22 @@ export async function POST(
       },
       timestamp: new Date().toISOString()
     })
+
+    try {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
+      const redirectUrl = REDIRECT_URLS[invitation.entity_type] || '/versotech_main/dashboard'
+      const welcomeCopy = getWelcomeSetupContent(invitation.entity_type, invitation.entity_name || 'your account')
+
+      await sendWelcomeSetupEmail({
+        email: invitation.email,
+        displayName: resolvedDisplayName,
+        accessUrl: `${appUrl}${redirectUrl}`,
+        headline: welcomeCopy.headline,
+        body: welcomeCopy.body,
+      })
+    } catch (welcomeEmailError) {
+      console.error('Failed to send welcome/setup email after invitation acceptance:', welcomeEmailError)
+    }
 
     // Return success with redirect info
     const redirectUrl = REDIRECT_URLS[invitation.entity_type] || '/versotech_main/dashboard'

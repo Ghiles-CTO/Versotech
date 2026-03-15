@@ -12,6 +12,7 @@ import { handleDealClose, handleTermsheetClose, type TermsheetCloseMode } from '
 import { buildSubscriptionPackPayload } from '@/lib/subscription-pack/payload-builder'
 import { assertSubscriptionPackPdfIsA4 } from '@/lib/subscription-pack/pdf-format-guard'
 import { applySubscriptionPackPageNumbers } from '@/lib/subscription/page-numbering'
+import { getEntityPrimaryAndAdminRecipients } from '@/lib/notifications/entity-recipient-groups'
 
 const ACCOUNT_ACTIVATION_ENTITY_TABLES = [
   'investors',
@@ -172,6 +173,23 @@ async function getAccountActivationRecipients(
   entityTable: string,
   entityId: string
 ) {
+  if (entityTable === 'introducers') {
+    try {
+      const recipients = await getEntityPrimaryAndAdminRecipients({
+        supabase,
+        entityType: 'introducer',
+        entityId,
+      })
+
+      return {
+        userIds: recipients.userIds,
+        primaryProfile: recipients.primaryProfile,
+      }
+    } catch (error) {
+      console.error('[AccountActivation] Failed to resolve introducer recipients:', error)
+    }
+  }
+
   const mapping = ACCOUNT_ACTIVATION_USER_TABLES[entityTable]
   if (!mapping) {
     return {
@@ -226,6 +244,23 @@ async function getAccountActivationRecipients(
   return {
     userIds,
     primaryProfile,
+  }
+}
+
+function resolveAccountActivationProfileLink(entityTable: string) {
+  switch (entityTable) {
+    case 'introducers':
+      return '/versotech_main/introducer-profile?tab=profile'
+    case 'partners':
+      return '/versotech_main/partner-profile?tab=overview'
+    case 'lawyers':
+      return '/versotech_main/lawyer-profile'
+    case 'commercial_partners':
+      return '/versotech_main/commercial-partner-profile'
+    case 'arranger_entities':
+      return '/versotech_main/arranger-profile'
+    default:
+      return '/versotech_main/profile?tab=overview'
   }
 }
 
@@ -397,6 +432,7 @@ async function handleAccountActivationRequestInfo(params: {
   }
 
   const recipients = await getAccountActivationRecipients(supabase, entityTable, approval.entity_id)
+  const profileLink = resolveAccountActivationProfileLink(entityTable)
   if (recipients.userIds.length > 0) {
     await supabase
       .from('investor_notifications')
@@ -406,7 +442,7 @@ async function handleAccountActivationRequestInfo(params: {
           title: 'More Information Requested',
           message: detailsMessage,
           type: 'account_more_info_requested',
-          link: '/versotech_main/profile?tab=overview',
+          link: profileLink,
           metadata: {
             approval_id: approval.id,
             entity_type: approval.entity_type,
@@ -425,7 +461,7 @@ async function handleAccountActivationRequestInfo(params: {
         displayName: recipients.primaryProfile.display_name || recipients.primaryProfile.email,
         status: 'more_info',
         reasons: detailsMessage,
-        dealLink: `${getAppUrl()}/versotech_main/profile?tab=overview`,
+        dealLink: `${getAppUrl()}${profileLink}`,
       })
     } catch (emailError) {
       console.error('[AccountActivation] Failed sending more-info email:', emailError)

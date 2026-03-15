@@ -5,10 +5,34 @@
  */
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createMemberSchema, prepareMemberData } from '@/lib/schemas/member-kyc-schema'
 import { syncUserSignatoryFromMember } from '@/lib/kyc/member-signatory-sync'
 import { getMemberOverallKycStatusMap } from '@/lib/kyc/member-kyc-overall-status'
+import {
+  readActivePersonaCookieValues,
+  resolveActiveIntroducerLink,
+} from '@/lib/kyc/active-introducer-link'
+import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
+
+async function resolveCurrentIntroducerUser(serviceSupabase: ReturnType<typeof createServiceClient>, userId: string) {
+  const cookieStore = await cookies()
+  const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(cookieStore)
+
+  return resolveActiveIntroducerLink<{
+    introducer_id: string
+    role: string
+    is_primary: boolean
+    can_sign: boolean
+  }>({
+    supabase: serviceSupabase,
+    userId,
+    cookiePersonaType,
+    cookiePersonaId,
+    select: 'introducer_id, role, is_primary, can_sign',
+  })
+}
 
 /**
  * GET /api/introducers/me/members
@@ -23,11 +47,10 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: introducerUser, error: linkError } = await serviceSupabase
-      .from('introducer_users')
-      .select('introducer_id')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { link: introducerUser, error: linkError } = await resolveCurrentIntroducerUser(
+      serviceSupabase,
+      user.id
+    )
 
     if (linkError || !introducerUser?.introducer_id) {
       return NextResponse.json({ error: 'No introducer profile found' }, { status: 404 })
@@ -109,11 +132,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: introducerUser, error: linkError } = await serviceSupabase
-      .from('introducer_users')
-      .select('introducer_id, role, is_primary')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { link: introducerUser, error: linkError } = await resolveCurrentIntroducerUser(
+      serviceSupabase,
+      user.id
+    )
 
     if (linkError || !introducerUser?.introducer_id) {
       return NextResponse.json({ error: 'No introducer profile found' }, { status: 404 })
@@ -159,6 +181,14 @@ export async function POST(request: Request) {
       computeFullName: true,
       entityType: 'introducer',
     })
+
+    const mobilePhoneError = getMobilePhoneValidationError(memberData.phone_mobile, true)
+    if (mobilePhoneError) {
+      return NextResponse.json(
+        { error: mobilePhoneError, details: { fieldErrors: { phone_mobile: [mobilePhoneError] } } },
+        { status: 400 }
+      )
+    }
 
     const { data: newMember, error: insertError } = await serviceSupabase
       .from('introducer_members')

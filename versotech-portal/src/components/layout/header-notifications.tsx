@@ -70,7 +70,7 @@ export function HeaderNotifications({ href, userId, userRole }: HeaderNotificati
 
   const refreshCounts = async () => {
     try {
-      const response = await fetch('/api/notifications/counts')
+      const response = await fetch('/api/notifications/counts?use_active_persona=true')
       if (!response.ok) return
       const data = await response.json()
       const nextCount = Number(data?.counts?.notifications ?? 0)
@@ -83,7 +83,7 @@ export function HeaderNotifications({ href, userId, userRole }: HeaderNotificati
   const refreshItems = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/notifications?limit=5&include_tasks=true&task_limit=2')
+      const response = await fetch('/api/notifications?limit=5&include_tasks=true&task_limit=2&use_active_persona=true')
       if (!response.ok) {
         setItems([])
         setTasks([])

@@ -74,7 +74,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
 
     setLoading(true)
     try {
-      const response = await fetch('/api/notifications?limit=8&include_tasks=true&task_limit=2')
+      const response = await fetch('/api/notifications?limit=8&include_tasks=true&task_limit=2&use_active_persona=true')
       if (!response.ok) {
         setNotifications([])
         setSignatureTasks([])

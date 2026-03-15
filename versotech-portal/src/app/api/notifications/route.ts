@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { readActivePersonaCookieValues } from '@/lib/kyc/active-investor-link'
+import { notificationMatchesPersona } from '@/lib/notifications/persona-filter'
+import { resolveActivePersona } from '@/lib/persona/active-persona'
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient()
@@ -16,19 +19,34 @@ export async function GET(request: NextRequest) {
   const createdByMe = request.nextUrl.searchParams.get('created_by_me') === 'true'
   const dealId = request.nextUrl.searchParams.get('deal_id')
   const includeTasks = request.nextUrl.searchParams.get('include_tasks') === 'true'
+  const useActivePersona = request.nextUrl.searchParams.get('use_active_persona') === 'true'
   const taskLimitRaw = Number(request.nextUrl.searchParams.get('task_limit') ?? 2)
   const taskLimit = Number.isFinite(taskLimitRaw) ? Math.min(Math.max(taskLimitRaw, 1), 20) : 2
 
   // Check if user is a lawyer (lawyers use 'notifications' table, others use 'investor_notifications')
   const { data: personas } = await serviceSupabase.rpc('get_user_personas', { p_user_id: user.id })
   const isLawyer = personas?.some((p: { persona_type: string }) => p.persona_type === 'lawyer') || false
+  const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(request.cookies)
+  const activePersona = useActivePersona
+    ? resolveActivePersona((personas || []) as Array<{ persona_type: any; entity_id: string }>, {
+        cookiePersonaType,
+        cookiePersonaId,
+      })
+    : null
+  const includeLawyerNotifications =
+    isLawyer &&
+    (!activePersona ||
+      activePersona.persona_type === 'lawyer' ||
+      activePersona.persona_type === 'ceo' ||
+      activePersona.persona_type === 'staff')
 
   let data: any[] = []
   let uniqueTypes: string[] = []
   let tasks: any[] = []
+  const personaAwareFetchSize = useActivePersona ? Math.max(offset + limit, 100) : offset + limit
 
   if (isLawyer) {
-    const maxFetch = offset + limit
+    const maxFetch = personaAwareFetchSize
     let notificationsQuery = serviceSupabase
       .from('notifications')
       .select('id, user_id, title, message, link, read, created_at, type, agent_id, agent:agent_id (id, name, avatar_url)')
@@ -38,7 +56,9 @@ export async function GET(request: NextRequest) {
       notificationsQuery = notificationsQuery.eq('type', type)
     }
 
-    const notificationsPromise = createdByMe
+    const notificationsPromise = !includeLawyerNotifications
+      ? Promise.resolve({ data: [] as any[], error: null })
+      : createdByMe
       ? Promise.resolve({ data: [] as any[], error: null })
       : notificationsQuery
           .order('created_at', { ascending: false })
@@ -98,7 +118,7 @@ export async function GET(request: NextRequest) {
 
     const typeSets = new Set<string>()
 
-    if (!createdByMe) {
+    if (!createdByMe && includeLawyerNotifications) {
       const { data: typesData } = await serviceSupabase
         .from('notifications')
         .select('type')
@@ -147,7 +167,7 @@ export async function GET(request: NextRequest) {
 
     const { data: notifData, error: notificationsError } = await query
       .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1)
+      .range(useActivePersona ? 0 : offset, useActivePersona ? personaAwareFetchSize - 1 : offset + limit - 1)
 
     if (notificationsError) {
       console.error('Failed to fetch notifications:', notificationsError)
@@ -169,7 +189,39 @@ export async function GET(request: NextRequest) {
     uniqueTypes = [...new Set((typesData || []).map(t => t.type).filter(Boolean))]
   }
 
+  if (activePersona && activePersona.persona_type !== 'ceo' && activePersona.persona_type !== 'staff') {
+    data = data.filter((notification: any) =>
+      notificationMatchesPersona(
+        {
+          link: notification.link,
+          investor_id: notification.investor_id,
+        },
+        {
+          personaType: activePersona.persona_type as any,
+          entityId: activePersona.entity_id,
+        }
+      )
+    )
+
+    data = data.slice(offset, offset + limit)
+
+    uniqueTypes = [...new Set(data.map((row: any) => row.type).filter(Boolean))]
+  }
+
   if (includeTasks) {
+    if (
+      activePersona &&
+      activePersona.persona_type !== 'investor' &&
+      activePersona.persona_type !== 'ceo' &&
+      activePersona.persona_type !== 'staff'
+    ) {
+      return NextResponse.json({
+        notifications: data,
+        types: uniqueTypes,
+        tasks
+      })
+    }
+
     const { data: investorLinks, error: investorLinksError } = await serviceSupabase
       .from('investor_users')
       .select('investor_id')
@@ -179,9 +231,13 @@ export async function GET(request: NextRequest) {
       console.error('Failed to fetch investor links for tasks:', investorLinksError)
     }
 
-    const investorIds = (investorLinks || [])
+    let investorIds = (investorLinks || [])
       .map((link: { investor_id: string | null }) => link.investor_id)
       .filter(Boolean) as string[]
+
+    if (activePersona?.persona_type === 'investor') {
+      investorIds = investorIds.filter((investorId) => investorId === activePersona.entity_id)
+    }
 
     let tasksQuery = serviceSupabase
       .from('tasks')

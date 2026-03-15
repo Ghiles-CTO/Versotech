@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { getCountryName } from '@/components/kyc/country-select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -35,6 +35,9 @@ import {
   Users,
   Bell,
   Send,
+  Info,
+  ArrowRight,
+  XCircle,
 } from 'lucide-react'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -68,6 +71,7 @@ type IntroducerInfo = {
   created_at: string | null
   logo_url: string | null
   kyc_status: string | null
+  account_approval_status: string | null
   // Entity type
   type: 'individual' | 'entity' | 'sole_proprietor' | null
   // Address fields
@@ -142,6 +146,8 @@ type Profile = {
 }
 
 interface IntroducerProfileClientProps {
+  defaultTab?: string
+  defaultAction?: string | null
   userEmail: string
   profile: Profile | null
   introducerInfo: IntroducerInfo | null
@@ -149,12 +155,52 @@ interface IntroducerProfileClientProps {
   activeAgreement: ActiveAgreement | null
   introductionCount: number
   memberInfo: MemberKYCData | null
+  introducerAccountApprovalReadiness?: {
+    introducerId: string
+    introducerName: string
+    introducerType: string
+    accountApprovalStatus: string | null
+    isKycApproved: boolean
+    isReady: boolean
+    hasPendingApproval: boolean
+    pendingApprovalId: string | null
+    missingItems: Array<{
+      scope: 'entity' | 'member'
+      name: string
+      email?: string | null
+      missingItems: string[]
+      memberId?: string | null
+    }>
+    latestRequestInfo: {
+      details: string
+      reason: string | null
+      requestedAt: string | null
+    } | null
+  } | null
 }
 
 const STATUS_STYLES: Record<string, string> = {
   active: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700',
   inactive: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-300 dark:border-gray-700',
   suspended: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700',
+}
+
+const KYC_BADGES: Record<string, { label: string; className: string }> = {
+  approved: { label: 'KYC Approved', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+  pending: { label: 'KYC Pending', className: 'bg-amber-100 text-amber-800 border-amber-200' },
+  pending_review: { label: 'KYC Under Review', className: 'bg-blue-100 text-blue-800 border-blue-200' },
+  submitted: { label: 'KYC Submitted', className: 'bg-blue-100 text-blue-800 border-blue-200' },
+  under_review: { label: 'KYC Under Review', className: 'bg-blue-100 text-blue-800 border-blue-200' },
+  rejected: { label: 'KYC Rejected', className: 'bg-red-100 text-red-800 border-red-200' },
+}
+
+const ACCOUNT_APPROVAL_BADGES: Record<string, { label: string; className: string }> = {
+  approved: { label: 'Account Approved', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+  pending_onboarding: { label: 'Onboarding Required', className: 'bg-amber-100 text-amber-800 border-amber-200' },
+  pending_approval: { label: 'Awaiting Approval', className: 'bg-amber-100 text-amber-800 border-amber-200' },
+  incomplete: { label: 'Account Incomplete', className: 'bg-gray-100 text-gray-800 border-gray-200' },
+  unauthorized: { label: 'Account Restricted', className: 'bg-red-100 text-red-800 border-red-200' },
+  rejected: { label: 'Account Rejected', className: 'bg-red-100 text-red-800 border-red-200' },
 }
 
 // Editable field component
@@ -220,6 +266,8 @@ function EditableField({
 }
 
 export function IntroducerProfileClient({
+  defaultTab = 'profile',
+  defaultAction,
   userEmail,
   profile,
   introducerInfo,
@@ -227,10 +275,13 @@ export function IntroducerProfileClient({
   activeAgreement,
   introductionCount,
   memberInfo,
+  introducerAccountApprovalReadiness,
 }: IntroducerProfileClientProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
+  const [isSubmittingAccountApproval, setIsSubmittingAccountApproval] = useState(false)
+  const [showRequestInfoDetails, setShowRequestInfoDetails] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // KYC Edit Dialog state
@@ -238,6 +289,12 @@ export function IntroducerProfileClient({
   const [showAddressDialog, setShowAddressDialog] = useState(false)
   const [isSubmittingEntityKyc, setIsSubmittingEntityKyc] = useState(false)
   const canEditEntityProfile = introducerUserInfo.role === 'admin' || introducerUserInfo.is_primary
+  const canSubmitAccountApproval = canEditEntityProfile
+  const readiness = introducerAccountApprovalReadiness || null
+  const missingAccountKycItems = readiness?.missingItems || []
+  const hasPendingAccountApproval = readiness?.hasPendingApproval || false
+  const latestAccountRequestInfo = readiness?.latestRequestInfo || null
+  const isAccountApprovalReady = readiness?.isReady || false
 
   // Edit state
   const [editData, setEditData] = useState({
@@ -303,6 +360,41 @@ export function IntroducerProfileClient({
     }
   }
 
+  const handleSubmitAccountForApproval = async () => {
+    setIsSubmittingAccountApproval(true)
+    try {
+      const response = await fetch('/api/introducers/me/submit-account-approval', {
+        method: 'POST',
+      })
+
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        if (Array.isArray(data?.missing) && data.missing.length > 0) {
+          const firstMissing = data.missing[0]
+          const firstLine =
+            firstMissing && typeof firstMissing === 'object'
+              ? `${String((firstMissing as { name?: string }).name || 'KYC')}: ${
+                  Array.isArray((firstMissing as { missingItems?: unknown[] }).missingItems)
+                    ? (firstMissing as { missingItems: string[] }).missingItems.join(', ')
+                    : 'missing information'
+                }`
+              : 'Missing KYC information'
+          throw new Error(firstLine)
+        }
+
+        throw new Error(data?.error || 'Failed to submit account for approval')
+      }
+
+      toast.success('Account submitted for approval')
+      window.location.reload()
+    } catch (error) {
+      console.error('[introducer-profile] Failed to submit account approval:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to submit account for approval')
+    } finally {
+      setIsSubmittingAccountApproval(false)
+    }
+  }
+
   const handleCancelEdit = () => {
     setEditData({
       contact_name: introducerInfo?.contact_name || '',
@@ -357,6 +449,39 @@ export function IntroducerProfileClient({
     if (bps === null || bps === undefined) return '-'
     return `${(bps / 100).toFixed(2)}%`
   }
+
+  useEffect(() => {
+    if (!defaultAction) return
+
+    if (defaultAction === 'edit-individual-kyc') {
+      setShowKycDialog(true)
+    } else if (defaultAction === 'edit-entity-overview') {
+      setIsEditing(true)
+    }
+
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('action')
+      url.searchParams.delete('memberId')
+      window.history.replaceState({}, '', url.toString())
+    }
+  }, [defaultAction])
+
+  const accountApprovalStatusKey = (introducerInfo?.account_approval_status || 'pending_onboarding').toLowerCase()
+  const accountApprovalBadge = ACCOUNT_APPROVAL_BADGES[accountApprovalStatusKey] || {
+    label: 'Account Pending',
+    className: 'bg-gray-100 text-gray-800 border-gray-200',
+  }
+  const kycBadge = KYC_BADGES[introducerInfo?.kyc_status || 'pending'] || KYC_BADGES.pending
+  const hideAccountApprovalSection =
+    accountApprovalStatusKey === 'approved' || accountApprovalStatusKey === 'rejected'
+  const showRequestInfoBadge =
+    !!latestAccountRequestInfo && !hasPendingAccountApproval && !hideAccountApprovalSection
+  const accountApprovalSubmitDisabled =
+    isSubmittingAccountApproval ||
+    !canSubmitAccountApproval ||
+    hasPendingAccountApproval ||
+    !isAccountApprovalReady
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -417,6 +542,13 @@ export function IntroducerProfileClient({
             </div>
           </div>
         </div>
+
+        {introducerInfo && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge className={accountApprovalBadge.className}>{accountApprovalBadge.label}</Badge>
+            <Badge className={kycBadge.className}>{kycBadge.label}</Badge>
+          </div>
+        )}
 
         <div className="flex gap-2">
           {canEditEntityProfile && isEditing ? (
@@ -503,7 +635,7 @@ export function IntroducerProfileClient({
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="profile" className="space-y-4" id="introducer-profile-tabs">
+      <Tabs defaultValue={defaultTab} className="space-y-4" id="introducer-profile-tabs">
         <TabsList>
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <Building2 className="h-4 w-4" />
@@ -669,6 +801,9 @@ export function IntroducerProfileClient({
               entityType="introducer"
               entityId={introducerInfo.id}
               onRefresh={() => window.location.reload()}
+              profileEmail={profile?.email || userEmail}
+              profileName={profile?.full_name}
+              autoOpenEdit={defaultAction === 'edit-personal-kyc'}
             />
           )}
 
@@ -706,6 +841,138 @@ export function IntroducerProfileClient({
               showEditButton={canEditEntityProfile}
               title="Personal KYC Information"
             />
+          )}
+
+          {!hideAccountApprovalSection && (
+            <Card className="overflow-hidden">
+              <div className={`px-6 py-2.5 flex items-center gap-2 ${
+                hasPendingAccountApproval
+                  ? 'bg-blue-50 border-b border-blue-100'
+                  : isAccountApprovalReady
+                    ? 'bg-emerald-50 border-b border-emerald-100'
+                    : showRequestInfoBadge
+                      ? 'bg-red-50 border-b border-red-100'
+                      : 'bg-amber-50 border-b border-amber-100'
+              }`}>
+                {hasPendingAccountApproval ? (
+                  <>
+                    <Clock className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-800">Under Review</span>
+                  </>
+                ) : isAccountApprovalReady ? (
+                  <>
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    <span className="text-sm font-medium text-emerald-800">Ready to Submit</span>
+                  </>
+                ) : showRequestInfoBadge ? (
+                  <>
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                    <span className="text-sm font-medium text-red-800">Action Required</span>
+                  </>
+                ) : (
+                  <>
+                    <Info className="h-4 w-4 text-amber-600" />
+                    <span className="text-sm font-medium text-amber-800">Onboarding In Progress</span>
+                  </>
+                )}
+              </div>
+
+              <CardHeader>
+                <CardTitle className="text-base">Submit Account for Approval</CardTitle>
+                <CardDescription>
+                  Complete your profile and KYC documents so your introducer account can be activated.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  {introducerInfo?.type === 'entity'
+                    ? 'We require your entity information, entity KYC documents, and the KYC for all relevant members before your introducer account can be approved.'
+                    : 'We require your personal information, proof of identification, and proof of address before your introducer account can be approved.'}
+                </p>
+
+                {showRequestInfoBadge && latestAccountRequestInfo && (
+                  <div className="rounded-lg border border-red-200 bg-red-50/80 p-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowRequestInfoDetails((prev) => !prev)}
+                      className="flex w-full items-start gap-3 text-left"
+                    >
+                      <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-100">
+                        <AlertCircle className="h-3.5 w-3.5 text-red-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-red-900">Latest request for information</p>
+                        <p className="mt-0.5 text-xs text-red-700">
+                          The review team has requested additional information. Tap to {showRequestInfoDetails ? 'hide' : 'view'} details.
+                        </p>
+                      </div>
+                      <ArrowRight className={`h-4 w-4 text-red-400 shrink-0 mt-0.5 transition-transform ${showRequestInfoDetails ? 'rotate-90' : ''}`} />
+                    </button>
+                    {showRequestInfoDetails && (
+                      <div className="mt-3 ml-9 rounded-md bg-white/60 border border-red-100 p-3">
+                        <p className="text-sm text-red-800">{latestAccountRequestInfo.details}</p>
+                        {latestAccountRequestInfo.requestedAt && (
+                          <p className="mt-2 text-xs text-red-600">
+                            Requested on {new Date(latestAccountRequestInfo.requestedAt).toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {missingAccountKycItems.length > 0 ? (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      Outstanding KYC requirements
+                    </p>
+                    <div className="divide-y divide-border rounded-lg border bg-muted/30">
+                      {missingAccountKycItems.map((item, index) => (
+                        <div
+                          key={`${item.scope}-${item.memberId || item.name}-${index}`}
+                          className="flex items-start gap-3 px-3 py-2.5"
+                        >
+                          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-100">
+                            <XCircle className="h-3 w-3 text-amber-600" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium">{item.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {item.missingItems.join(', ')}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 px-4 py-3 text-sm text-emerald-800">
+                    Your introducer KYC file is complete and ready for account activation review.
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-sm text-muted-foreground">
+                    {hasPendingAccountApproval
+                      ? 'Your account is currently under review.'
+                      : canSubmitAccountApproval
+                        ? 'Primary or admin users can submit the account once everything is complete.'
+                        : 'Only primary or admin users can submit the account for approval.'}
+                  </div>
+                  <Button
+                    onClick={handleSubmitAccountForApproval}
+                    disabled={accountApprovalSubmitDisabled}
+                  >
+                    {isSubmittingAccountApproval ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4 mr-2" />
+                    )}
+                    Submit for Approval
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           )}
           </ProfileOverviewShell>
         </TabsContent>

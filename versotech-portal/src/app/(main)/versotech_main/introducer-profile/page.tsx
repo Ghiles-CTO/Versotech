@@ -1,12 +1,25 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 import { AlertCircle } from 'lucide-react'
 import { IntroducerProfileClient } from '@/components/introducer-profile/introducer-profile-client'
 import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
-import { resolvePrimaryPersonaLink } from '@/lib/kyc/persona-link'
+import {
+  readActivePersonaCookieValues,
+  resolveActiveIntroducerLink,
+} from '@/lib/kyc/active-introducer-link'
+import { getIntroducerAccountApprovalReadiness } from '@/lib/kyc/introducer-account-approval-readiness'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
-export default async function IntroducerProfilePage() {
+export default async function IntroducerProfilePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string; action?: string; memberId?: string }>
+}) {
+  const resolvedSearchParams = await searchParams
+  const defaultTab = resolvedSearchParams.tab || 'profile'
+  const defaultAction = resolvedSearchParams.action || null
   const clientSupabase = await createClient()
   const { data: { user }, error: userError } = await clientSupabase.auth.getUser()
 
@@ -27,6 +40,8 @@ export default async function IntroducerProfilePage() {
   }
 
   const serviceSupabase = createServiceClient()
+  const cookieStore = await cookies()
+  const { cookiePersonaType, cookiePersonaId } = readActivePersonaCookieValues(cookieStore)
 
   // Check if user is an introducer
   const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
@@ -52,15 +67,16 @@ export default async function IntroducerProfilePage() {
   }
 
   // Get introducer user info
-  const { link: introducerUser } = await resolvePrimaryPersonaLink<{
+  const { link: introducerUser } = await resolveActiveIntroducerLink<{
     introducer_id: string
     role: string
     is_primary: boolean
     can_sign: boolean
   }>({
     supabase: serviceSupabase,
-    config: { userTable: 'introducer_users', entityIdColumn: 'introducer_id' },
     userId: user.id,
+    cookiePersonaType,
+    cookiePersonaId,
     select: 'introducer_id, role, is_primary, can_sign',
   })
 
@@ -160,8 +176,16 @@ export default async function IntroducerProfilePage() {
     console.error('[IntroducerProfilePage] Error fetching member:', memberError)
   }
 
+  const introducerAccountApprovalReadiness = await getIntroducerAccountApprovalReadiness({
+    supabase: serviceSupabase,
+    introducerId: introducerUser.introducer_id,
+    linkedUserId: user.id,
+  })
+
   return (
     <IntroducerProfileClient
+      defaultTab={defaultTab}
+      defaultAction={defaultAction}
       userEmail={user.email || ''}
       profile={profile ? {
         full_name: profile.display_name,
@@ -181,6 +205,7 @@ export default async function IntroducerProfilePage() {
         created_at: introducer.created_at,
         logo_url: introducer.logo_url,
         kyc_status: introducer.kyc_status,
+        account_approval_status: introducer.account_approval_status,
         // Entity type
         type: introducer.type,
         // Address fields
@@ -247,6 +272,7 @@ export default async function IntroducerProfilePage() {
       } : null}
       introductionCount={introductionCount || 0}
       memberInfo={memberData || null}
+      introducerAccountApprovalReadiness={introducerAccountApprovalReadiness}
     />
   )
 }

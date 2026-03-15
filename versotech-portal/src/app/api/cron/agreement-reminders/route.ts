@@ -11,6 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { getEntityPrimaryAndAdminRecipients } from '@/lib/notifications/entity-recipient-groups'
 
 // Verify cron secret to prevent unauthorized calls
 const CRON_SECRET = process.env.CRON_SECRET
@@ -145,7 +146,7 @@ export async function POST(request: NextRequest) {
     } else if (expiringSignatures && expiringSignatures.length > 0) {
       for (const sig of expiringSignatures) {
         // Find the user to notify based on signer role
-        let userId: string | null = null
+        let userIds: string[] = []
         let link = '/versotech_main/versosign'
 
         if (sig.signer_role === 'introducer' && sig.introducer_agreement_id) {
@@ -157,13 +158,13 @@ export async function POST(request: NextRequest) {
             .single()
 
           if (introducerAgreement) {
-            const { data: introducerUser } = await supabase
-              .from('introducer_users')
-              .select('user_id')
-              .eq('introducer_id', introducerAgreement.introducer_id)
-              .maybeSingle()
+            const recipientGroup = await getEntityPrimaryAndAdminRecipients({
+              supabase,
+              entityType: 'introducer',
+              entityId: introducerAgreement.introducer_id,
+            })
 
-            userId = introducerUser?.user_id || null
+            userIds = recipientGroup.userIds
             link = `/versotech_main/introducer-agreements/${sig.introducer_agreement_id}`
           }
         } else if (sig.signer_role === 'commercial_partner' && sig.placement_agreement_id) {
@@ -181,7 +182,7 @@ export async function POST(request: NextRequest) {
               .eq('commercial_partner_id', placementAgreement.commercial_partner_id)
               .maybeSingle()
 
-            userId = cpUser?.user_id || null
+            userIds = cpUser?.user_id ? [cpUser.user_id] : []
             link = `/versotech_main/placement-agreements/${sig.placement_agreement_id}`
           }
         } else if (sig.signer_role === 'admin' || sig.signer_role === 'arranger') {
@@ -192,22 +193,24 @@ export async function POST(request: NextRequest) {
             .eq('email', sig.signer_email)
             .maybeSingle()
 
-          userId = staffUser?.id || null
+          userIds = staffUser?.id ? [staffUser.id] : []
         }
 
-        if (userId) {
+        if (userIds.length > 0) {
           const expiresAt = new Date(sig.token_expires_at)
           const hoursRemaining = Math.round((expiresAt.getTime() - now.getTime()) / (60 * 60 * 1000))
 
-          await supabase.from('investor_notifications').insert({
-            user_id: userId,
-            investor_id: null,
-            title: 'Signature Request Expiring Soon',
-            message: `Your signature request for ${sig.document_type.replace('_', ' ')} will expire in ${hoursRemaining} hours. Please sign before it expires.`,
-            link,
-          })
+          await supabase.from('investor_notifications').insert(
+            userIds.map((userId) => ({
+              user_id: userId,
+              investor_id: null,
+              title: 'Signature Request Expiring Soon',
+              message: `Your signature request for ${sig.document_type.replace('_', ' ')} will expire in ${hoursRemaining} hours. Please sign before it expires.`,
+              link,
+            }))
+          )
 
-          results.expiringSignatures++
+          results.expiringSignatures += userIds.length
         }
       }
     }

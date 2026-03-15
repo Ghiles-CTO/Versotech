@@ -519,17 +519,49 @@ export async function sendInvitationEmail(params: {
   const firstName = nameParts[0] || displayName
   const fullName = nameParts.length > 1 ? `${nameParts[0]} ${nameParts.slice(1).join(' ')}` : firstName
   const inviterName = (params.inviterName || 'A VERSO team member').trim()
+  const normalizedRole = (params.role || '').replace(/_/g, ' ').trim()
+  const formattedRole = normalizedRole.length > 0
+    ? normalizedRole.replace(/\b\w/g, (char) => char.toUpperCase())
+    : 'Member'
+  const personaLabelMap: Record<string, string> = {
+    investor: 'investor account',
+    introducer: 'introducer account',
+    partner: 'partner account',
+    commercial_partner: 'commercial partner account',
+    lawyer: 'lawyer account',
+    arranger: 'arranger account',
+    staff: 'internal team account',
+  }
+  const accessLabelMap: Record<string, string> = {
+    investor: 'review opportunities, documents, and onboarding requirements',
+    introducer: 'manage introductions, agreements, commissions, and onboarding requirements',
+    partner: 'manage referrals, commissions, and shared deal activity',
+    commercial_partner: 'manage client transactions, commissions, and platform access',
+    lawyer: 'manage assigned deals, signatures, and reconciliation work',
+    arranger: 'manage mandates, subscription packs, and counterparty relationships',
+    staff: 'access your internal dashboard and operational tools',
+  }
+  const personaLabel = personaLabelMap[params.entityType] || 'platform account'
+  const accessCopy = accessLabelMap[params.entityType] || 'access your VERSO workspace'
+  const expiresOn = new Date(params.expiresAt)
+  const formattedExpiry = Number.isNaN(expiresOn.getTime())
+    ? null
+    : expiresOn.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      })
 
-  const passwordSetupBody = `
+  const inviteBody = `
     <div class="content">
       <p>Hello ${fullName},</p>
-      <p>You've been invited to join <strong>VERSOTECH</strong> - your gateway to exclusive investment opportunities.</p>
-      <p>You have been invited by <strong>${inviterName}</strong> to join the <strong>VERSO Portal</strong>.</p>
-      <p>You're almost signed up for VERSOTECH. To change your password immediately, please click the button below:</p>
+      <p><strong>${inviterName}</strong> has invited you to join <strong>VERSOTECH</strong> as a <strong>${formattedRole}</strong> for <strong>${params.entityName}</strong>.</p>
+      <p>This invitation gives you access to your ${personaLabel}, where you can ${accessCopy}.</p>
+      ${formattedExpiry ? `<p>This invitation expires on <strong>${formattedExpiry}</strong>.</p>` : ''}
     </div>
 
     <div class="button-container">
-      <a href="${params.acceptUrl}" class="button">Change Your Password</a>
+      <a href="${params.acceptUrl}" class="button">${isStaff ? 'Set Up Your Account' : 'Accept Invitation'}</a>
     </div>
 
     <div class="content">
@@ -538,24 +570,35 @@ export async function sendInvitationEmail(params: {
     </div>
   `
 
-  const accountSetupBody = `
+  return sendEmail({
+    to: params.email,
+    subject: isStaff ? 'Set up your VERSO account' : 'You have been invited to VERSOTECH',
+    html: emailShell(inviteBody, {
+      footerCopy: FOOTER_COPY,
+    }),
+  })
+}
+
+/**
+ * Welcome/setup email for users whose accounts are already active.
+ * This is intentionally separate from invitation delivery.
+ */
+export async function sendWelcomeSetupEmail(params: {
+  email: string
+  displayName: string
+  accessUrl: string
+  headline?: string
+  body?: string
+}): Promise<EmailResult> {
+  const body = `
     <div class="content">
-      <p>Hello ${fullName},</p>
-      <p>Thank you for creating your account.</p>
-      <p>VERSOTECH is a secure platform that provides you with comprehensive access to your investment portfolio, performance analytics, and exclusive deal opportunities.</p>
-      <p>Through your personalized dashboard, you'll be able to:</p>
-      <ul style="margin: 0 0 20px 20px; padding: 0; color: #333333;">
-        <li style="margin-bottom: 8px;">Monitor your portfolio performance in real-time</li>
-        <li style="margin-bottom: 8px;">Access quarterly statements and K-1 documents</li>
-        <li style="margin-bottom: 8px;">Review and participate in new investment opportunities</li>
-        <li style="margin-bottom: 8px;">Communicate directly with your relationship manager</li>
-        <li style="margin-bottom: 8px;">Complete required compliance documentation</li>
-      </ul>
-      <p>Click the button below to set up your account and access VERSO portal.</p>
+      <p>Hello ${params.displayName},</p>
+      <p>${params.headline || 'Your VERSO account is ready.'}</p>
+      <p>${params.body || 'Use the button below to access your account and continue in the platform.'}</p>
     </div>
 
     <div class="button-container">
-      <a href="${params.acceptUrl}" class="button">Access VERSO Portal</a>
+      <a href="${params.accessUrl}" class="button">Access VERSO Portal</a>
     </div>
 
     <div class="content">
@@ -563,14 +606,10 @@ export async function sendInvitationEmail(params: {
     </div>
   `
 
-  const body = isStaff ? passwordSetupBody : accountSetupBody
-
   return sendEmail({
     to: params.email,
     subject: 'Welcome to VERSOTECH',
-    html: emailShell(body, {
-      footerCopy: FOOTER_COPY,
-    }),
+    html: emailShell(body),
   })
 }
 
