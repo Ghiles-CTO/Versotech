@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { sendInvitationEmail } from '@/lib/email/resend-service'
 import { getAppUrl } from '@/lib/signature/token'
+import { resolveInvitationInviteeName } from '@/lib/invitations/entity-invitation'
 
 const CRON_SECRET = process.env.CRON_SECRET
 
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
   try {
     const { data: invitations, error } = await supabase
       .from('member_invitations')
-      .select('id, email, entity_name, entity_type, role, invited_by_name, expires_at, sent_at, last_reminded_at, reminder_count, invitation_token, created_at')
+      .select('id, email, entity_name, entity_type, role, invited_by_name, expires_at, sent_at, last_reminded_at, reminder_count, invitation_token, created_at, metadata')
       .eq('status', 'pending')
       .gt('expires_at', now.toISOString())
 
@@ -61,7 +62,10 @@ export async function POST(request: NextRequest) {
 
         const emailResult = await sendInvitationEmail({
           email: invite.email,
-          inviteeName: undefined,
+          inviteeName: resolveInvitationInviteeName({
+            email: invite.email,
+            metadata: invite.metadata,
+          }),
           entityName: invite.entity_name || 'the organization',
           entityType: invite.entity_type,
           role: invite.role,

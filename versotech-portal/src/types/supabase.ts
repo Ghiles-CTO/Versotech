@@ -7767,6 +7767,7 @@ export type Database = {
           invited_by_name: string | null
           is_signatory: boolean
           last_reminded_at: string | null
+          metadata: Json | null
           role: string
           reminder_count: number
           sent_at: string | null
@@ -7787,6 +7788,7 @@ export type Database = {
           invited_by_name?: string | null
           is_signatory?: boolean
           last_reminded_at?: string | null
+          metadata?: Json | null
           role?: string
           reminder_count?: number
           sent_at?: string | null
@@ -7807,6 +7809,7 @@ export type Database = {
           invited_by_name?: string | null
           is_signatory?: boolean
           last_reminded_at?: string | null
+          metadata?: Json | null
           role?: string
           reminder_count?: number
           sent_at?: string | null

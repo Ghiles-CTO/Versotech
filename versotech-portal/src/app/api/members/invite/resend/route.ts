@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { sendInvitationEmail } from '@/lib/email/resend-service'
+import { resolveInvitationInviteeName } from '@/lib/invitations/entity-invitation'
 
 /**
  * POST /api/members/invite/resend
@@ -86,7 +87,10 @@ export async function POST(request: NextRequest) {
     // Resend invitation email
     const emailResult = await sendInvitationEmail({
       email: invitation.email,
-      inviteeName: undefined, // Will use email prefix
+      inviteeName: resolveInvitationInviteeName({
+        email: invitation.email,
+        metadata: invitation.metadata,
+      }),
       entityName: invitation.entity_name,
       entityType: invitation.entity_type,
       role: invitation.role,

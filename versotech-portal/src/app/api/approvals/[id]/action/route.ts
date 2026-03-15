@@ -7,6 +7,7 @@ import { createSignatureRequest } from '@/lib/signature/client'
 import { getCeoSigner } from '@/lib/staff/ceo-signer'
 import { sendAccountStatusEmail, sendInvitationEmail } from '@/lib/email/resend-service'
 import { getAppUrl } from '@/lib/signature/token'
+import { resolveInvitationInviteeName } from '@/lib/invitations/entity-invitation'
 import { handleDealClose, handleTermsheetClose, type TermsheetCloseMode } from '@/lib/deals/deal-close-handler'
 import { buildSubscriptionPackPayload } from '@/lib/subscription-pack/payload-builder'
 import { assertSubscriptionPackPdfIsA4 } from '@/lib/subscription-pack/pdf-format-guard'
@@ -2513,7 +2514,10 @@ async function handleEntityApproval(
 
         const emailResult = await sendInvitationEmail({
           email: invitation.email,
-          inviteeName: undefined,
+          inviteeName: resolveInvitationInviteeName({
+            email: invitation.email,
+            metadata: invitation.metadata,
+          }),
           entityName: invitation.entity_name || metadata.entity_name || 'the organization',
           entityType: invitation.entity_type,
           role: invitation.role,

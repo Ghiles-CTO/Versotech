@@ -3,6 +3,11 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { getAppUrl } from '@/lib/signature/token'
 import { sendInvitationEmail } from '@/lib/email/resend-service'
+import { SignatoryEntityType, syncMemberSignatoryFromUserLink } from '@/lib/kyc/member-signatory-sync'
+import {
+  enrichMemberRecordFromInvitation,
+  rollbackMemberRecordEnrichment,
+} from '@/lib/invitations/entity-invitation'
 
 // Entity type to junction table mapping
 const JUNCTION_TABLES: Record<string, string> = {
@@ -62,13 +67,33 @@ const PROFILE_ROLE_BY_ENTITY: Record<string, string> = {
   commercial_partner: 'commercial_partner',
 }
 
+const ENTITY_NAME_COLUMNS: Record<string, { select: string; primary: string; fallback?: string }> = {
+  investor: { select: 'legal_name', primary: 'legal_name' },
+  arranger: { select: 'legal_name', primary: 'legal_name' },
+  lawyer: { select: 'firm_name, display_name', primary: 'firm_name', fallback: 'display_name' },
+  introducer: { select: 'legal_name, display_name', primary: 'legal_name', fallback: 'display_name' },
+  partner: { select: 'legal_name, name', primary: 'legal_name', fallback: 'name' },
+  commercial_partner: { select: 'legal_name, name', primary: 'legal_name', fallback: 'name' },
+}
+
+const SIGNATORY_ENTITY_TYPES = new Set<SignatoryEntityType>([
+  'investor',
+  'partner',
+  'introducer',
+  'lawyer',
+  'commercial_partner',
+  'arranger',
+])
+
 // Single invite schema
 const inviteSchema = z.object({
   email: z.string().email('Invalid email address'),
   display_name: z.string().min(2, 'Display name must be at least 2 characters'),
+  entity_name: z.string().optional(),
   title: z.string().optional(),
   role: z.string().optional(),
   is_primary: z.boolean().default(false),
+  is_signatory: z.boolean().default(false),
 })
 
 // Batch invite schema
@@ -132,18 +157,35 @@ export async function POST(request: NextRequest) {
     const validatedData = batchInviteSchema.parse(body)
     const { entity_type, entity_id, create_entities, invites } = validatedData
 
+    let sharedEntityName: string | null = null
+
     // If linking to existing entity, verify it exists
     if (entity_id && !create_entities) {
       const entityTable = ENTITY_TABLES[entity_type]
+      const nameConfig = ENTITY_NAME_COLUMNS[entity_type]
       const { data: entity, error: entityError } = await supabase
         .from(entityTable)
-        .select('id')
+        .select(`id, ${nameConfig.select}`)
         .eq('id', entity_id)
         .single()
 
       if (entityError || !entity) {
         return NextResponse.json({ error: `${entity_type} entity not found` }, { status: 404 })
       }
+
+      const entityRecord = entity as unknown as Record<string, unknown>
+      const primaryNameValue = entityRecord[nameConfig.primary]
+      const fallbackNameValue = nameConfig.fallback ? entityRecord[nameConfig.fallback] : null
+      const primaryName =
+        typeof primaryNameValue === 'string' && primaryNameValue.trim().length > 0
+          ? primaryNameValue
+          : null
+      const fallbackName =
+        typeof fallbackNameValue === 'string' && fallbackNameValue.trim().length > 0
+          ? fallbackNameValue
+          : null
+
+      sharedEntityName = primaryName || fallbackName || null
     }
 
     const results: InviteResult[] = []
@@ -152,8 +194,13 @@ export async function POST(request: NextRequest) {
     // Process each invite
     for (const invite of invites) {
       try {
-        const role = invite.role || DEFAULT_ROLE_BY_ENTITY[entity_type]
+        const role = (invite.role || DEFAULT_ROLE_BY_ENTITY[entity_type]).trim().toLowerCase()
         const validRoles = VALID_ROLES_BY_ENTITY[entity_type]
+        const normalizedEmail = invite.email.trim().toLowerCase()
+        const normalizedDisplayName = invite.display_name.trim()
+        const normalizedEntityName = invite.entity_name?.trim() || null
+        const normalizedTitle = invite.title?.trim() || null
+        const linkCanSign = Boolean(invite.is_signatory)
 
         if (!validRoles.includes(role)) {
           results.push({
@@ -165,9 +212,19 @@ export async function POST(request: NextRequest) {
         }
 
         let targetEntityId = entity_id
+        let targetEntityName = sharedEntityName || normalizedDisplayName
 
         // Create new entity if requested
         if (create_entities || !entity_id) {
+          if (!normalizedEntityName || normalizedEntityName.length < 2) {
+            results.push({
+              email: invite.email,
+              success: false,
+              error: 'Entity name is required when creating a new entity',
+            })
+            continue
+          }
+
           const entityTable = ENTITY_TABLES[entity_type]
 
           // Build entity data based on type
@@ -178,23 +235,45 @@ export async function POST(request: NextRequest) {
 
           // Set entity-specific fields
           if (entity_type === 'investor') {
-            entityData.legal_name = invite.display_name
-            entityData.display_name = invite.display_name
-            entityData.status = 'pending_kyc'
-            entityData.type = 'individual'
+            entityData.legal_name = normalizedEntityName
+            entityData.display_name = normalizedEntityName
+            entityData.status = 'active'
+            entityData.type = 'entity'
+            targetEntityName = normalizedEntityName
           } else if (entity_type === 'partner') {
-            entityData.legal_name = invite.display_name
-            entityData.display_name = invite.display_name
+            entityData.legal_name = normalizedEntityName
+            entityData.name = normalizedEntityName
+            entityData.type = 'entity'
             entityData.status = 'active'
-            entityData.partner_type = 'co-investor'
+            entityData.partner_type = 'co_investor'
+            targetEntityName = normalizedEntityName
           } else if (entity_type === 'introducer') {
-            entityData.legal_name = invite.display_name
-            entityData.display_name = invite.display_name
+            entityData.legal_name = normalizedEntityName
+            entityData.display_name = normalizedEntityName
             entityData.status = 'active'
+            entityData.type = 'entity'
+            targetEntityName = normalizedEntityName
+          } else if (entity_type === 'lawyer') {
+            entityData.firm_name = normalizedEntityName
+            entityData.display_name = normalizedEntityName
+            entityData.status = 'active'
+            targetEntityName = normalizedEntityName
+          } else if (entity_type === 'commercial_partner') {
+            entityData.legal_name = normalizedEntityName
+            entityData.name = normalizedEntityName
+            entityData.type = 'entity'
+            entityData.cp_type = 'other'
+            entityData.status = 'active'
+            targetEntityName = normalizedEntityName
+          } else if (entity_type === 'arranger') {
+            entityData.legal_name = normalizedEntityName
+            entityData.status = 'active'
+            targetEntityName = normalizedEntityName
           } else {
             // Generic fields for other entity types
-            entityData.name = invite.display_name
+            entityData.name = normalizedEntityName
             entityData.status = 'active'
+            targetEntityName = normalizedEntityName
           }
 
           const { data: newEntity, error: createError } = await supabase
@@ -218,8 +297,8 @@ export async function POST(request: NextRequest) {
         // Check if user already exists
         const { data: existingProfile } = await supabase
           .from('profiles')
-          .select('id, email, role')
-          .eq('email', invite.email)
+          .select('id, email, role, display_name, title')
+          .eq('email', normalizedEmail)
           .maybeSingle()
 
         if (existingProfile) {
@@ -271,6 +350,10 @@ export async function POST(request: NextRequest) {
             [entityIdColumn]: targetEntityId,
             role: role,
             is_primary: invite.is_primary,
+            can_sign: linkCanSign,
+            ceo_approval_status: 'approved',
+            ceo_approved_at: new Date().toISOString(),
+            created_by: user.id,
             created_at: new Date().toISOString(),
           }
 
@@ -283,6 +366,65 @@ export async function POST(request: NextRequest) {
               email: invite.email,
               success: false,
               error: `Failed to link user: ${linkError.message}`,
+            })
+            continue
+          }
+
+          let memberRollback = null
+          try {
+            const enrichmentResult = await enrichMemberRecordFromInvitation({
+              supabase,
+              entityType: entity_type as SignatoryEntityType,
+              entityId: targetEntityId!,
+              userId: existingProfile.id,
+              userEmail: normalizedEmail,
+              displayName: normalizedDisplayName || existingProfile.display_name || normalizedEmail,
+              title: normalizedTitle || existingProfile.title || null,
+              canSign: linkCanSign,
+              createdBy: user.id,
+            })
+
+            memberRollback = enrichmentResult.rollback
+
+            if (SIGNATORY_ENTITY_TYPES.has(entity_type as SignatoryEntityType)) {
+              await syncMemberSignatoryFromUserLink({
+                supabase,
+                entityType: entity_type as SignatoryEntityType,
+                entityId: targetEntityId!,
+                userId: existingProfile.id,
+                canSign: linkCanSign,
+                userEmail: normalizedEmail,
+              })
+            }
+          } catch (linkFinalizeError) {
+            if (memberRollback) {
+              try {
+                await rollbackMemberRecordEnrichment({
+                  supabase,
+                  rollback: memberRollback,
+                })
+              } catch (rollbackError) {
+                console.error('Failed to rollback member record during batch invite:', rollbackError)
+              }
+            }
+
+            const { error: rollbackLinkError } = await supabase
+              .from(junctionTable)
+              .delete()
+              .eq('user_id', existingProfile.id)
+              .eq(entityIdColumn, targetEntityId)
+
+            if (rollbackLinkError) {
+              console.error('Failed to rollback user link during batch invite:', rollbackLinkError)
+            }
+
+            results.push({
+              email: invite.email,
+              success: false,
+              error:
+                linkFinalizeError instanceof Error
+                  ? `Failed to finish linking user: ${linkFinalizeError.message}`
+                  : 'Failed to finish linking user',
             })
             continue
           }
@@ -303,16 +445,33 @@ export async function POST(request: NextRequest) {
           // Check for existing pending invitation
           const { data: existingInv } = await supabase
             .from('member_invitations')
-            .select('id')
+            .select('id, status')
             .eq('entity_type', entity_type)
             .eq('entity_id', targetEntityId)
-            .eq('email', invite.email.toLowerCase())
-            .eq('status', 'pending')
+            .eq('email', normalizedEmail)
+            .in('status', ['pending', 'pending_approval'])
             .maybeSingle()
 
           if (existingInv) {
-            results.push({ email: invite.email, success: false, error: 'Pending invitation already exists' })
+            results.push({
+              email: invite.email,
+              success: false,
+              error:
+                existingInv.status === 'pending_approval'
+                  ? 'An invitation is already awaiting approval for this email'
+                  : 'Pending invitation already exists',
+            })
             continue
+          }
+
+          const invitationMetadata: Record<string, unknown> = {
+            display_name: normalizedDisplayName,
+            is_primary: Boolean(invite.is_primary),
+            can_sign: linkCanSign,
+          }
+
+          if (normalizedTitle) {
+            invitationMetadata.title = normalizedTitle
           }
 
           // Create invitation record
@@ -321,17 +480,18 @@ export async function POST(request: NextRequest) {
             .insert({
               entity_type,
               entity_id: targetEntityId,
-              entity_name: invite.display_name,
-              email: invite.email.toLowerCase(),
+              entity_name: targetEntityName,
+              email: normalizedEmail,
               role: role,
-              is_signatory: false,
+              is_signatory: linkCanSign,
               invited_by: user.id,
               invited_by_name: inviterName,
               status: 'pending',
               expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
               sent_at: new Date().toISOString(),
               reminder_count: 0,
-              last_reminded_at: null
+              last_reminded_at: null,
+              metadata: invitationMetadata,
             })
             .select()
             .single()
@@ -345,9 +505,9 @@ export async function POST(request: NextRequest) {
           // Send custom email via Resend
           const acceptUrl = `${appUrl}/invitation/accept?token=${invitation.invitation_token}`
           await sendInvitationEmail({
-            email: invite.email,
-            inviteeName: invite.display_name,
-            entityName: invite.display_name,
+            email: normalizedEmail,
+            inviteeName: normalizedDisplayName,
+            entityName: targetEntityName,
             entityType: entity_type,
             role: role,
             inviterName: inviterName,

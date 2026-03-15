@@ -1,11 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { sendInvitationEmail } from '@/lib/email/resend-service'
+import { z } from 'zod'
 
 // Valid entity types for member invitations
 const VALID_ENTITY_TYPES = ['partner', 'investor', 'introducer', 'commercial_partner', 'lawyer', 'arranger'] as const
 type EntityType = typeof VALID_ENTITY_TYPES[number]
-const VALID_MEMBER_ROLES = ['admin', 'member', 'viewer', 'owner'] as const
+
+const VALID_ROLES_BY_ENTITY: Record<EntityType, string[]> = {
+  investor: ['admin', 'member', 'viewer'],
+  arranger: ['admin', 'member', 'viewer'],
+  lawyer: ['admin', 'member', 'viewer'],
+  partner: ['admin', 'member', 'viewer'],
+  introducer: ['admin', 'contact', 'payment_contact', 'legal_contact'],
+  commercial_partner: ['admin', 'contact', 'billing_contact', 'technical_contact'],
+}
+
+const DEFAULT_ROLE_BY_ENTITY: Record<EntityType, string> = {
+  investor: 'member',
+  arranger: 'member',
+  lawyer: 'member',
+  partner: 'member',
+  introducer: 'contact',
+  commercial_partner: 'contact',
+}
+
+const inviteMemberSchema = z.object({
+  entity_type: z.enum(VALID_ENTITY_TYPES),
+  entity_id: z.string().uuid('Invalid entity ID'),
+  email: z.string().email('Invalid email address'),
+  display_name: z.string().min(2, 'Display name must be at least 2 characters'),
+  title: z.string().nullable().optional(),
+  role: z.string().nullable().optional(),
+  is_primary: z.boolean().default(false),
+  is_signatory: z.boolean().default(false),
+})
 
 // Entity table mapping
 const ENTITY_TABLES: Record<EntityType, string> = {
@@ -61,37 +89,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { entity_type, entity_id, email, role: rawRole, is_signatory = false } = body
-    const normalizedRole = typeof rawRole === 'string' && rawRole.trim().length > 0
-      ? rawRole.trim().toLowerCase()
-      : 'member'
+    const validatedData = inviteMemberSchema.parse(body)
+    const { entity_type, entity_id, display_name, title, is_primary, is_signatory } = validatedData
+    const email = validatedData.email.trim().toLowerCase()
+    const normalizedRole = (validatedData.role || DEFAULT_ROLE_BY_ENTITY[entity_type]).trim().toLowerCase()
+    const validRoles = VALID_ROLES_BY_ENTITY[entity_type]
 
-    // Validate required fields
-    if (!entity_type || !entity_id || !email) {
+    if (!validRoles.includes(normalizedRole)) {
       return NextResponse.json(
-        { error: 'Missing required fields: entity_type, entity_id, email' },
-        { status: 400 }
-      )
-    }
-
-    // Validate entity type
-    if (!VALID_ENTITY_TYPES.includes(entity_type)) {
-      return NextResponse.json(
-        { error: `Invalid entity_type. Must be one of: ${VALID_ENTITY_TYPES.join(', ')}` },
-        { status: 400 }
-      )
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      return NextResponse.json({ error: 'Invalid email format' }, { status: 400 })
-    }
-
-    // Validate role value
-    if (!VALID_MEMBER_ROLES.includes(normalizedRole as (typeof VALID_MEMBER_ROLES)[number])) {
-      return NextResponse.json(
-        { error: `Invalid role. Must be one of: ${VALID_MEMBER_ROLES.join(', ')}` },
+        { error: `Invalid role for ${entity_type}. Valid roles: ${validRoles.join(', ')}` },
         { status: 400 }
       )
     }
@@ -163,7 +169,7 @@ export async function POST(request: NextRequest) {
     const { data: existingUser } = await serviceSupabase
       .from('profiles')
       .select('id')
-      .eq('email', email.toLowerCase())
+      .eq('email', email)
       .maybeSingle()
 
     if (existingUser) {
@@ -190,7 +196,7 @@ export async function POST(request: NextRequest) {
       .select('id, status')
       .eq('entity_type', entity_type)
       .eq('entity_id', entity_id)
-      .eq('email', email.toLowerCase())
+      .eq('email', email)
       .in('status', ['pending', 'pending_approval'])
       .maybeSingle()
 
@@ -204,6 +210,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const invitationMetadata: Record<string, unknown> = {
+      display_name: display_name.trim(),
+      is_primary,
+      can_sign: Boolean(is_signatory),
+    }
+
+    if (typeof title === 'string' && title.trim().length > 0) {
+      invitationMetadata.title = title.trim()
+    }
+
     // Create the invitation with 'pending_approval' status
     // The database trigger will automatically create a CEO approval request
     const { data: invitation, error: insertError } = await serviceSupabase
@@ -212,13 +228,14 @@ export async function POST(request: NextRequest) {
         entity_type,
         entity_id,
         entity_name: entityName,
-        email: email.toLowerCase(),
+        email: email,
         role: normalizedRole,
         is_signatory,
         invited_by: user.id,
         invited_by_name: inviterName,
         status: 'pending_approval', // Changed: requires CEO approval before email is sent
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from approval
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from approval
+        metadata: invitationMetadata,
       })
       .select()
       .single()
@@ -237,6 +254,7 @@ export async function POST(request: NextRequest) {
       invitation: {
         id: invitation.id,
         email: invitation.email,
+        display_name: display_name.trim(),
         role: normalizedRole,
         is_signatory: invitation.is_signatory,
         status: 'pending_approval'
@@ -247,6 +265,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in POST /api/members/invite:', error)
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.issues[0].message }, { status: 400 })
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -303,7 +324,7 @@ export async function GET(request: NextRequest) {
     // Get invitations
     const { data: invitations, error: fetchError } = await serviceSupabase
       .from('member_invitations')
-      .select('id, email, role, is_signatory, status, invited_by_name, expires_at, created_at, accepted_at, invitation_token')
+      .select('id, email, role, is_signatory, status, invited_by_name, expires_at, created_at, accepted_at, invitation_token, metadata')
       .eq('entity_type', entity_type)
       .eq('entity_id', entity_id)
       .order('created_at', { ascending: false })

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Users,
   UserPlus,
@@ -75,6 +75,12 @@ interface Member {
 interface Invitation {
   id: string
   email: string
+  metadata?: {
+    display_name?: string | null
+    title?: string | null
+    is_primary?: boolean
+    can_sign?: boolean
+  } | null
   role: string
   is_signatory: boolean
   status: string
@@ -97,11 +103,49 @@ interface MembersManagementTabProps {
   onMembersChange?: () => void
 }
 
-const ROLE_OPTIONS = [
-  { value: 'admin', label: 'Administrator' },
-  { value: 'member', label: 'Member' },
-  { value: 'viewer', label: 'Viewer' },
-]
+const ROLE_OPTIONS_BY_ENTITY: Record<EntityType, { value: string; label: string }[]> = {
+  investor: [
+    { value: 'admin', label: 'Administrator' },
+    { value: 'member', label: 'Member' },
+    { value: 'viewer', label: 'Viewer' },
+  ],
+  arranger: [
+    { value: 'admin', label: 'Administrator' },
+    { value: 'member', label: 'Member' },
+    { value: 'viewer', label: 'Viewer' },
+  ],
+  lawyer: [
+    { value: 'admin', label: 'Administrator' },
+    { value: 'member', label: 'Member' },
+    { value: 'viewer', label: 'Viewer' },
+  ],
+  partner: [
+    { value: 'admin', label: 'Administrator' },
+    { value: 'member', label: 'Member' },
+    { value: 'viewer', label: 'Viewer' },
+  ],
+  introducer: [
+    { value: 'admin', label: 'Administrator' },
+    { value: 'contact', label: 'Contact' },
+    { value: 'payment_contact', label: 'Payment Contact' },
+    { value: 'legal_contact', label: 'Legal Contact' },
+  ],
+  commercial_partner: [
+    { value: 'admin', label: 'Administrator' },
+    { value: 'contact', label: 'Contact' },
+    { value: 'billing_contact', label: 'Billing Contact' },
+    { value: 'technical_contact', label: 'Technical Contact' },
+  ],
+}
+
+const DEFAULT_ROLE_BY_ENTITY: Record<EntityType, string> = {
+  investor: 'member',
+  arranger: 'member',
+  lawyer: 'member',
+  partner: 'member',
+  introducer: 'contact',
+  commercial_partner: 'contact',
+}
 
 const ENTITY_TYPE_LABELS: Record<EntityType, string> = {
   partner: 'Partner',
@@ -137,7 +181,10 @@ export function MembersManagementTab({
 
   // Invite form state
   const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState('member')
+  const [inviteDisplayName, setInviteDisplayName] = useState('')
+  const [inviteTitle, setInviteTitle] = useState('')
+  const [inviteRole, setInviteRole] = useState(DEFAULT_ROLE_BY_ENTITY[entityType])
+  const [inviteIsPrimary, setInviteIsPrimary] = useState(false)
   const [isSignatory, setIsSignatory] = useState(false)
 
   // Edit member state
@@ -148,12 +195,7 @@ export function MembersManagementTab({
   const [editIsPrimary, setEditIsPrimary] = useState(false)
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    fetchMembers()
-    fetchInvitations()
-  }, [entityType, entityId])
-
-  const fetchMembers = async () => {
+  const fetchMembers = useCallback(async () => {
     try {
       const response = await fetch(`/api/members?entity_type=${entityType}&entity_id=${entityId}`)
       if (response.ok) {
@@ -166,9 +208,9 @@ export function MembersManagementTab({
     } catch (error) {
       console.error('Error fetching members:', error)
     }
-  }
+  }, [entityId, entityType])
 
-  const fetchInvitations = async () => {
+  const fetchInvitations = useCallback(async () => {
     try {
       const response = await fetch(`/api/members/invite?entity_type=${entityType}&entity_id=${entityId}`)
       if (response.ok) {
@@ -180,7 +222,16 @@ export function MembersManagementTab({
     } finally {
       setLoading(false)
     }
-  }
+  }, [entityId, entityType])
+
+  useEffect(() => {
+    fetchMembers()
+    fetchInvitations()
+  }, [fetchInvitations, fetchMembers])
+
+  useEffect(() => {
+    setInviteRole(DEFAULT_ROLE_BY_ENTITY[entityType])
+  }, [entityType])
 
   // Open edit dialog with member data
   const handleEditMember = (member: Member) => {
@@ -259,6 +310,11 @@ export function MembersManagementTab({
       return
     }
 
+    if (!inviteDisplayName.trim()) {
+      toast.error('Please enter the invitee name')
+      return
+    }
+
     setSending(true)
 
     try {
@@ -268,8 +324,11 @@ export function MembersManagementTab({
         body: JSON.stringify({
           entity_type: entityType,
           entity_id: entityId,
-          email: inviteEmail,
+          email: inviteEmail.trim(),
+          display_name: inviteDisplayName.trim(),
+          title: inviteTitle.trim() || null,
           role: inviteRole,
+          is_primary: inviteIsPrimary,
           is_signatory: isSignatory
         })
       })
@@ -292,7 +351,10 @@ export function MembersManagementTab({
       }
       setInviteDialogOpen(false)
       setInviteEmail('')
-      setInviteRole('member')
+      setInviteDisplayName('')
+      setInviteTitle('')
+      setInviteRole(DEFAULT_ROLE_BY_ENTITY[entityType])
+      setInviteIsPrimary(false)
       setIsSignatory(false)
       fetchInvitations()
 
@@ -364,6 +426,7 @@ export function MembersManagementTab({
 
   const pendingInvitations = invitations.filter(i => ['pending', 'pending_approval'].includes(i.status))
   const pastInvitations = invitations.filter(i => !['pending', 'pending_approval'].includes(i.status))
+  const roleOptions = ROLE_OPTIONS_BY_ENTITY[entityType]
 
   return (
     <div className="space-y-6">
@@ -544,7 +607,7 @@ export function MembersManagementTab({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Email</TableHead>
+                      <TableHead>Invitee</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead>Invited By</TableHead>
                       <TableHead>Expires</TableHead>
@@ -555,15 +618,37 @@ export function MembersManagementTab({
                     {pendingInvitations.map((invitation) => (
                       <TableRow key={invitation.id}>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Mail className="h-4 w-4 text-muted-foreground" />
-                            <span>{invitation.email}</span>
-                            {invitation.is_signatory && (
-                              <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/30">
-                                <PenTool className="w-3 h-3 mr-1" />
-                                Signatory
-                              </Badge>
-                            )}
+                          <div className="flex items-start gap-3">
+                            <Mail className="h-4 w-4 text-muted-foreground mt-0.5" />
+                            <div className="space-y-1">
+                              <div>
+                                <p className="font-medium">
+                                  {invitation.metadata?.display_name || invitation.email}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  {invitation.email}
+                                </p>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                {invitation.metadata?.title && (
+                                  <Badge variant="secondary">
+                                    {invitation.metadata.title}
+                                  </Badge>
+                                )}
+                                {invitation.metadata?.is_primary && (
+                                  <Badge variant="secondary">
+                                    <Shield className="w-3 h-3 mr-1" />
+                                    Primary
+                                  </Badge>
+                                )}
+                                {invitation.is_signatory && (
+                                  <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/30">
+                                    <PenTool className="w-3 h-3 mr-1" />
+                                    Signatory
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -626,7 +711,7 @@ export function MembersManagementTab({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Email</TableHead>
+                      <TableHead>Invitee</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Date</TableHead>
                     </TableRow>
@@ -634,7 +719,16 @@ export function MembersManagementTab({
                   <TableBody>
                     {pastInvitations.slice(0, 10).map((invitation) => (
                       <TableRow key={invitation.id}>
-                        <TableCell>{invitation.email}</TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">
+                              {invitation.metadata?.display_name || invitation.email}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {invitation.email}
+                            </p>
+                          </div>
+                        </TableCell>
                         <TableCell>{getStatusBadge(invitation.status)}</TableCell>
                         <TableCell className="text-muted-foreground">
                           {formatDate(invitation.accepted_at || invitation.created_at)}
@@ -672,19 +766,51 @@ export function MembersManagementTab({
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="display-name">Display Name</Label>
+              <Input
+                id="display-name"
+                placeholder="Jane Doe"
+                value={inviteDisplayName}
+                onChange={(e) => setInviteDisplayName(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="title">Title</Label>
+              <Input
+                id="title"
+                placeholder="Managing Director"
+                value={inviteTitle}
+                onChange={(e) => setInviteTitle(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="role">Role</Label>
               <Select value={inviteRole} onValueChange={setInviteRole}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
-                  {ROLE_OPTIONS.map((option) => (
+                  {roleOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="flex items-center space-x-2 pt-2">
+              <Checkbox
+                id="invite-primary"
+                checked={inviteIsPrimary}
+                onCheckedChange={(checked) => setInviteIsPrimary(checked === true)}
+              />
+              <Label htmlFor="invite-primary" className="flex items-center gap-2 cursor-pointer">
+                <Shield className="h-4 w-4" />
+                Primary Contact
+              </Label>
             </div>
 
             {showSignatoryOption && (
@@ -711,7 +837,7 @@ export function MembersManagementTab({
             >
               Cancel
             </Button>
-            <Button onClick={handleInvite} disabled={sending || !inviteEmail}>
+            <Button onClick={handleInvite} disabled={sending || !inviteEmail.trim() || !inviteDisplayName.trim()}>
               {sending ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -747,7 +873,7 @@ export function MembersManagementTab({
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
-                  {ROLE_OPTIONS.map(option => (
+                  {roleOptions.map(option => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>

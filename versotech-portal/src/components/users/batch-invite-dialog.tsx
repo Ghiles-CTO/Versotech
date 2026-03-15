@@ -46,9 +46,11 @@ export type EntityType = 'investor' | 'arranger' | 'lawyer' | 'introducer' | 'pa
 const inviteSchema = z.object({
   email: z.string().email('Invalid email'),
   display_name: z.string().min(2, 'Name required'),
+  entity_name: z.string().optional(),
   title: z.string().optional(),
   role: z.string().optional(),
   is_primary: z.boolean().optional().default(false),
+  is_signatory: z.boolean().optional().default(false),
 })
 
 const batchInviteFormSchema = z.object({
@@ -56,6 +58,18 @@ const batchInviteFormSchema = z.object({
   entity_id: z.string().optional(),
   create_entities: z.boolean().optional().default(true),
   invites: z.array(inviteSchema).min(1, 'At least one invite required'),
+}).superRefine((data, ctx) => {
+  if (!data.create_entities && data.entity_id) return
+
+  data.invites.forEach((invite, index) => {
+    if (!invite.entity_name || invite.entity_name.trim().length < 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Entity name required',
+        path: ['invites', index, 'entity_name'],
+      })
+    }
+  })
 })
 
 type BatchInviteFormData = {
@@ -65,9 +79,11 @@ type BatchInviteFormData = {
   invites: {
     email: string
     display_name: string
+    entity_name?: string
     title?: string
     role?: string
     is_primary: boolean
+    is_signatory: boolean
   }[]
 }
 
@@ -102,27 +118,44 @@ const ROLE_OPTIONS_BY_ENTITY: Record<EntityType, { value: string; label: string 
   investor: [
     { value: 'admin', label: 'Admin' },
     { value: 'member', label: 'Member' },
+    { value: 'viewer', label: 'Viewer' },
   ],
   arranger: [
     { value: 'admin', label: 'Admin' },
     { value: 'member', label: 'Member' },
+    { value: 'viewer', label: 'Viewer' },
   ],
   lawyer: [
     { value: 'admin', label: 'Admin' },
     { value: 'member', label: 'Member' },
+    { value: 'viewer', label: 'Viewer' },
   ],
   partner: [
     { value: 'admin', label: 'Admin' },
     { value: 'member', label: 'Member' },
+    { value: 'viewer', label: 'Viewer' },
   ],
   introducer: [
     { value: 'admin', label: 'Admin' },
     { value: 'contact', label: 'Contact' },
+    { value: 'payment_contact', label: 'Payment Contact' },
+    { value: 'legal_contact', label: 'Legal Contact' },
   ],
   commercial_partner: [
     { value: 'admin', label: 'Admin' },
     { value: 'contact', label: 'Contact' },
+    { value: 'billing_contact', label: 'Billing Contact' },
+    { value: 'technical_contact', label: 'Technical Contact' },
   ],
+}
+
+const DEFAULT_ROLE_BY_ENTITY: Record<EntityType, string> = {
+  investor: 'member',
+  arranger: 'member',
+  lawyer: 'member',
+  partner: 'member',
+  introducer: 'contact',
+  commercial_partner: 'contact',
 }
 
 export function BatchInviteDialog({
@@ -151,7 +184,15 @@ export function BatchInviteDialog({
       entity_type: defaultEntityType,
       entity_id: existingEntityId,
       create_entities: !existingEntityId,
-      invites: [{ email: '', display_name: '', title: '', is_primary: true }],
+      invites: [{
+        email: '',
+        display_name: '',
+        entity_name: '',
+        title: '',
+        role: DEFAULT_ROLE_BY_ENTITY[defaultEntityType],
+        is_primary: true,
+        is_signatory: false,
+      }],
     },
   })
 
@@ -165,7 +206,15 @@ export function BatchInviteDialog({
 
   const parseCsvInput = useCallback(() => {
     const lines = csvInput.trim().split('\n').filter(line => line.trim())
-    const newInvites: { email: string; display_name: string; title?: string; is_primary: boolean }[] = []
+    const newInvites: {
+      email: string
+      display_name: string
+      entity_name?: string
+      title?: string
+      role?: string
+      is_primary: boolean
+      is_signatory: boolean
+    }[] = []
 
     for (const line of lines) {
       const parts = line.split(',').map(p => p.trim())
@@ -173,14 +222,18 @@ export function BatchInviteDialog({
         const email = parts[0]
         const display_name = parts[1]
         const title = parts[2] || undefined
+        const entity_name = parts[3] || undefined
 
         // Basic email validation
         if (email.includes('@') && display_name.length >= 2) {
           newInvites.push({
             email,
             display_name,
+            entity_name,
             title,
+            role: DEFAULT_ROLE_BY_ENTITY[entityType],
             is_primary: newInvites.length === 0,
+            is_signatory: false,
           })
         }
       }
@@ -190,9 +243,9 @@ export function BatchInviteDialog({
       setValue('invites', newInvites)
       toast.success(`Parsed ${newInvites.length} invites from CSV`)
     } else {
-      toast.error('No valid invites found. Format: email, name, title (optional)')
+      toast.error('No valid invites found. Format: email, name, title, entity name')
     }
-  }, [csvInput, setValue])
+  }, [csvInput, entityType, setValue])
 
   const onSubmit = async (data: BatchInviteFormData) => {
     setIsSubmitting(true)
@@ -236,7 +289,15 @@ export function BatchInviteDialog({
   }
 
   const addInvite = () => {
-    append({ email: '', display_name: '', title: '', is_primary: false })
+    append({
+      email: '',
+      display_name: '',
+      entity_name: '',
+      title: '',
+      role: DEFAULT_ROLE_BY_ENTITY[entityType],
+      is_primary: false,
+      is_signatory: false,
+    })
   }
 
   // Show results view if we have results
@@ -340,14 +401,14 @@ export function BatchInviteDialog({
             <div className="space-y-2">
               <Label>Paste CSV Data</Label>
               <Textarea
-                placeholder="email@example.com, John Smith, Managing Director&#10;another@example.com, Jane Doe, Partner&#10;..."
+                placeholder="email@example.com, John Smith, Managing Director, Acme Capital&#10;another@example.com, Jane Doe, Partner, Northbridge Legal&#10;..."
                 value={csvInput}
                 onChange={(e) => setCsvInput(e.target.value)}
                 rows={6}
                 className="font-mono text-sm"
               />
               <p className="text-xs text-muted-foreground">
-                Format: email, display_name, title (optional) - one per line
+                Format: email, display_name, title (optional), entity/company name (required when creating new entities)
               </p>
             </div>
             <Button type="button" onClick={parseCsvInput} variant="secondary">
@@ -416,65 +477,111 @@ export function BatchInviteDialog({
                     {fields.map((field, index) => (
                       <div
                         key={field.id}
-                        className="grid grid-cols-[1fr,1fr,auto,auto] gap-2 items-start"
+                        className="space-y-3 rounded-lg border p-3"
                         role="group"
                         aria-label={`Invite ${index + 1}`}
                       >
-                        <div>
-                          <label htmlFor={`invite-email-${index}`} className="sr-only">
-                            Email address for invite {index + 1}
-                          </label>
-                          <Input
-                            id={`invite-email-${index}`}
-                            placeholder="email@example.com"
-                            {...register(`invites.${index}.email`)}
-                            className={errors.invites?.[index]?.email ? 'border-red-500' : ''}
-                            aria-invalid={!!errors.invites?.[index]?.email}
-                            aria-describedby={errors.invites?.[index]?.email ? `email-error-${index}` : undefined}
-                          />
-                          {errors.invites?.[index]?.email && (
-                            <p id={`email-error-${index}`} className="text-xs text-red-500 mt-1" role="alert">
-                              {errors.invites[index]?.email?.message}
-                            </p>
-                          )}
+                        <div className="grid grid-cols-[1fr,1fr,auto] gap-2 items-start">
+                          <div>
+                            <label htmlFor={`invite-email-${index}`} className="sr-only">
+                              Email address for invite {index + 1}
+                            </label>
+                            <Input
+                              id={`invite-email-${index}`}
+                              placeholder="email@example.com"
+                              {...register(`invites.${index}.email`)}
+                              className={errors.invites?.[index]?.email ? 'border-red-500' : ''}
+                              aria-invalid={!!errors.invites?.[index]?.email}
+                              aria-describedby={errors.invites?.[index]?.email ? `email-error-${index}` : undefined}
+                            />
+                            {errors.invites?.[index]?.email && (
+                              <p id={`email-error-${index}`} className="text-xs text-red-500 mt-1" role="alert">
+                                {errors.invites[index]?.email?.message}
+                              </p>
+                            )}
+                          </div>
+                          <div>
+                            <label htmlFor={`invite-name-${index}`} className="sr-only">
+                              Display name for invite {index + 1}
+                            </label>
+                            <Input
+                              id={`invite-name-${index}`}
+                              placeholder="Display Name"
+                              {...register(`invites.${index}.display_name`)}
+                              className={errors.invites?.[index]?.display_name ? 'border-red-500' : ''}
+                              aria-invalid={!!errors.invites?.[index]?.display_name}
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => remove(index)}
+                            disabled={fields.length === 1}
+                            aria-label={`Remove invite ${index + 1}`}
+                          >
+                            <Trash2 className="h-4 w-4 text-muted-foreground" />
+                          </Button>
                         </div>
-                        <div>
-                          <label htmlFor={`invite-name-${index}`} className="sr-only">
-                            Display name for invite {index + 1}
-                          </label>
-                          <Input
-                            id={`invite-name-${index}`}
-                            placeholder="Display Name"
-                            {...register(`invites.${index}.display_name`)}
-                            className={errors.invites?.[index]?.display_name ? 'border-red-500' : ''}
-                            aria-invalid={!!errors.invites?.[index]?.display_name}
-                          />
+
+                        {createEntities && (
+                          <div>
+                            <label htmlFor={`invite-entity-name-${index}`} className="sr-only">
+                              Entity name for invite {index + 1}
+                            </label>
+                            <Input
+                              id={`invite-entity-name-${index}`}
+                              placeholder="Entity / Company Name"
+                              {...register(`invites.${index}.entity_name`)}
+                              className={errors.invites?.[index]?.entity_name ? 'border-red-500' : ''}
+                              aria-invalid={!!errors.invites?.[index]?.entity_name}
+                            />
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-[1fr,160px,auto,auto] gap-3 items-center">
+                          <div>
+                            <label htmlFor={`invite-title-${index}`} className="sr-only">
+                              Title for invite {index + 1}
+                            </label>
+                            <Input
+                              id={`invite-title-${index}`}
+                              placeholder="Title"
+                              {...register(`invites.${index}.title`)}
+                            />
+                          </div>
+                          <Select
+                            value={watch(`invites.${index}.role`) || DEFAULT_ROLE_BY_ENTITY[entityType]}
+                            onValueChange={(value) => setValue(`invites.${index}.role`, value)}
+                          >
+                            <SelectTrigger className="w-full" aria-label={`Role for invite ${index + 1}`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {ROLE_OPTIONS_BY_ENTITY[entityType].map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <div className="flex items-center gap-2 rounded-md border px-3 py-2">
+                            <Switch
+                              checked={watch(`invites.${index}.is_primary`) || false}
+                              onCheckedChange={(checked) => setValue(`invites.${index}.is_primary`, checked)}
+                              aria-label={`Primary contact for invite ${index + 1}`}
+                            />
+                            <span className="text-xs text-muted-foreground">Primary</span>
+                          </div>
+                          <div className="flex items-center gap-2 rounded-md border px-3 py-2">
+                            <Switch
+                              checked={watch(`invites.${index}.is_signatory`) || false}
+                              onCheckedChange={(checked) => setValue(`invites.${index}.is_signatory`, checked)}
+                              aria-label={`Signatory for invite ${index + 1}`}
+                            />
+                            <span className="text-xs text-muted-foreground">Signatory</span>
+                          </div>
                         </div>
-                        <Select
-                          value={watch(`invites.${index}.role`) || 'member'}
-                          onValueChange={(value) => setValue(`invites.${index}.role`, value)}
-                        >
-                          <SelectTrigger className="w-[100px]" aria-label={`Role for invite ${index + 1}`}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {ROLE_OPTIONS_BY_ENTITY[entityType].map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => remove(index)}
-                          disabled={fields.length === 1}
-                          aria-label={`Remove invite ${index + 1}`}
-                        >
-                          <Trash2 className="h-4 w-4 text-muted-foreground" />
-                        </Button>
                       </div>
                     ))}
                   </div>

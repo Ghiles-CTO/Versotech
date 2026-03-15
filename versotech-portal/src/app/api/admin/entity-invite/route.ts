@@ -5,6 +5,10 @@ import { z } from 'zod'
 import { getAppUrl } from '@/lib/signature/token'
 import { sendInvitationEmail } from '@/lib/email/resend-service'
 import { SignatoryEntityType, syncMemberSignatoryFromUserLink } from '@/lib/kyc/member-signatory-sync'
+import {
+  enrichMemberRecordFromInvitation,
+  rollbackMemberRecordEnrichment,
+} from '@/lib/invitations/entity-invitation'
 
 // Entity type to junction table mapping
 const JUNCTION_TABLES: Record<string, string> = {
@@ -121,10 +125,13 @@ export async function POST(request: NextRequest) {
 
     const { entity_type, entity_id, email, display_name, title, is_primary, is_signatory, can_sign } = validatedData
     const normalizedEmail = email.trim().toLowerCase()
+    const normalizedDisplayName = display_name.trim()
+    const normalizedTitle =
+      typeof title === 'string' && title.trim().length > 0 ? title.trim() : null
     const linkCanSign = Boolean(is_signatory || can_sign)
 
     // Use entity-specific default role if not provided, and validate
-    const role = validatedData.role || DEFAULT_ROLE_BY_ENTITY[entity_type]
+    const role = (validatedData.role || DEFAULT_ROLE_BY_ENTITY[entity_type]).trim().toLowerCase()
     const validRoles = VALID_ROLES_BY_ENTITY[entity_type]
     if (!validRoles.includes(role)) {
       return NextResponse.json({
@@ -147,7 +154,7 @@ export async function POST(request: NextRequest) {
     // Check if email already exists in profiles
     const { data: existingProfile } = await supabase
       .from('profiles')
-      .select('id, role')
+      .select('id, role, display_name, title')
       .eq('email', normalizedEmail)
       .maybeSingle()
 
@@ -206,15 +213,56 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to link user to entity' }, { status: 500 })
       }
 
-      if (SIGNATORY_ENTITY_TYPES.has(entity_type as SignatoryEntityType)) {
-        await syncMemberSignatoryFromUserLink({
-          supabase,
-          entityType: entity_type as SignatoryEntityType,
-          entityId: entity_id,
-          userId: existingProfile.id,
-          canSign: linkCanSign,
-          userEmail: normalizedEmail,
-        })
+      let memberRollback = null
+      try {
+        if (SIGNATORY_ENTITY_TYPES.has(entity_type as SignatoryEntityType)) {
+          const enrichmentResult = await enrichMemberRecordFromInvitation({
+            supabase,
+            entityType: entity_type as SignatoryEntityType,
+            entityId: entity_id,
+            userId: existingProfile.id,
+            userEmail: normalizedEmail,
+            displayName: normalizedDisplayName || existingProfile.display_name || normalizedEmail,
+            title: normalizedTitle || existingProfile.title || null,
+            canSign: linkCanSign,
+            createdBy: user.id,
+          })
+
+          memberRollback = enrichmentResult.rollback
+
+          await syncMemberSignatoryFromUserLink({
+            supabase,
+            entityType: entity_type as SignatoryEntityType,
+            entityId: entity_id,
+            userId: existingProfile.id,
+            canSign: linkCanSign,
+            userEmail: normalizedEmail,
+          })
+        }
+      } catch (linkFinalizeError) {
+        console.error('Link finalization error:', linkFinalizeError)
+        try {
+          if (memberRollback) {
+            await rollbackMemberRecordEnrichment({
+              supabase,
+              rollback: memberRollback,
+            })
+          }
+
+          const { error: rollbackLinkError } = await supabase
+            .from(junctionTable)
+            .delete()
+            .eq('user_id', existingProfile.id)
+            .eq(entityIdColumn, entity_id)
+
+          if (rollbackLinkError) {
+            console.error('Failed to rollback entity link after link finalization error:', rollbackLinkError)
+          }
+        } catch (rollbackError) {
+          console.error('Failed to rollback entity link state:', rollbackError)
+        }
+
+        return NextResponse.json({ error: 'Failed to finish linking user to entity' }, { status: 500 })
       }
 
       // Log the action
@@ -278,25 +326,28 @@ export async function POST(request: NextRequest) {
       .eq('entity_type', entity_type)
       .eq('entity_id', entity_id)
       .eq('email', normalizedEmail)
-      .eq('status', 'pending')
+      .in('status', ['pending', 'pending_approval'])
       .maybeSingle()
 
     if (existingInvitation) {
       return NextResponse.json({
-        error: 'A pending invitation already exists for this email. Use resend to send again.',
+        error:
+          existingInvitation.status === 'pending_approval'
+            ? 'An invitation is already awaiting approval for this email.'
+            : 'A pending invitation already exists for this email. Use resend to send again.',
         existing_invitation_id: existingInvitation.id
       }, { status: 400 })
     }
 
     // Create invitation record (user account will be created when they accept)
     const invitationMetadata: Record<string, unknown> = {
-      display_name,
+      display_name: normalizedDisplayName,
       is_primary,
       can_sign: linkCanSign,
     }
 
-    if (typeof title === 'string' && title.trim().length > 0) {
-      invitationMetadata.title = title.trim()
+    if (normalizedTitle) {
+      invitationMetadata.title = normalizedTitle
     }
 
     const { data: invitation, error: invitationError } = await supabase
@@ -331,7 +382,7 @@ export async function POST(request: NextRequest) {
     // Send invitation email via Resend
     const emailResult = await sendInvitationEmail({
       email: normalizedEmail,
-      inviteeName: display_name,
+      inviteeName: normalizedDisplayName,
       entityName: entityName,
       entityType: entity_type,
       role: role,
@@ -363,7 +414,7 @@ export async function POST(request: NextRequest) {
       action_details: {
         invitation_id: invitation.id,
         email: normalizedEmail,
-        display_name: display_name,
+        display_name: normalizedDisplayName,
         role: role,
         is_primary: is_primary,
         is_signatory: linkCanSign,

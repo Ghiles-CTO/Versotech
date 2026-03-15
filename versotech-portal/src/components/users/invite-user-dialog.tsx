@@ -58,6 +58,15 @@ const ENTITY_TYPE_LABELS: Record<EntityType, string> = {
   commercial_partner: 'Commercial Partner',
 }
 
+const SIGNATORY_HELP_TEXT: Record<EntityType, string> = {
+  investor: 'Enable if this user can sign on behalf of the investor',
+  arranger: 'Enable if this user can sign on behalf of the arranger',
+  lawyer: 'Has authority to sign on behalf of the law firm',
+  introducer: 'Enable if this user can sign on behalf of the introducer',
+  partner: 'Enable if this user can sign on behalf of the partner',
+  commercial_partner: 'Enable if this user can sign on behalf of the commercial partner',
+}
+
 // Role options per entity type (from database constraints)
 const ROLE_OPTIONS_BY_ENTITY: Record<EntityType, { value: string; label: string }[]> = {
   investor: [
@@ -275,28 +284,24 @@ export function InviteUserDialog({
             />
           </div>
 
-          {(entityType === 'lawyer' || entityType === 'investor') && (
-            <div className="flex items-center justify-between rounded-lg border p-3">
-              <div className="space-y-0.5">
-                <Label htmlFor="is_signatory" className="text-sm font-medium">
-                  Can Sign Documents
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  {entityType === 'investor'
-                    ? 'Enable if this user can sign on behalf of the investor'
-                    : 'Has authority to sign on behalf of the law firm'}
-                </p>
-              </div>
-              <Switch
-                id="is_signatory"
-                checked={isSignatory}
-                onCheckedChange={(checked) => {
-                  setValue('is_signatory', checked)
-                  setValue('can_sign', checked)
-                }}
-              />
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="space-y-0.5">
+              <Label htmlFor="is_signatory" className="text-sm font-medium">
+                Can Sign Documents
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {SIGNATORY_HELP_TEXT[entityType]}
+              </p>
             </div>
-          )}
+            <Switch
+              id="is_signatory"
+              checked={isSignatory}
+              onCheckedChange={(checked) => {
+                setValue('is_signatory', checked)
+                setValue('can_sign', checked)
+              }}
+            />
+          </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
             <Button type="button" variant="outline" onClick={handleClose}>

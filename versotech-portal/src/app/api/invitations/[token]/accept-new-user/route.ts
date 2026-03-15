@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { logBlacklistMatches, screenAgainstBlacklist } from '@/lib/compliance/blacklist'
 import { SignatoryEntityType, syncMemberSignatoryFromUserLink } from '@/lib/kyc/member-signatory-sync'
+import {
+  enrichMemberRecordFromInvitation,
+  isExternalInvitationEntityType,
+  normalizeInvitationMetadata,
+  rollbackMemberRecordEnrichment,
+} from '@/lib/invitations/entity-invitation'
 import { z } from 'zod'
 
 // User-entity junction table mapping
@@ -160,6 +166,12 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid invitation role configuration' }, { status: 400 })
     }
 
+    const invitationMetadata = normalizeInvitationMetadata(invitation.metadata, {
+      canSign: Boolean(invitation.is_signatory),
+    })
+    const invitationCanSign = invitationMetadata.canSign || Boolean(invitation.is_signatory)
+    const resolvedDisplayName = display_name.trim() || invitationMetadata.displayName || invitation.email
+
     // Check if email already has an account
     const { data: existingProfile } = await serviceSupabase
       .from('profiles')
@@ -180,8 +192,9 @@ export async function POST(
       password: password,
       email_confirm: true, // Auto-confirm since they clicked invitation link
       user_metadata: {
-        display_name: display_name,
-        role: invitedProfileRole
+        display_name: resolvedDisplayName,
+        role: invitedProfileRole,
+        title: invitationMetadata.title,
       }
     })
 
@@ -192,12 +205,29 @@ export async function POST(
       }, { status: 500 })
     }
 
+    const rollbackSteps: Array<() => Promise<void>> = []
     const rollbackNewUser = async () => {
-      await serviceSupabase
+      for (const rollbackStep of [...rollbackSteps].reverse()) {
+        try {
+          await rollbackStep()
+        } catch (rollbackError) {
+          console.error('Failed to rollback new invitation acceptance step:', rollbackError)
+        }
+      }
+
+      const { error: deleteProfileError } = await serviceSupabase
         .from('profiles')
         .delete()
         .eq('id', authData.user.id)
-      await serviceSupabase.auth.admin.deleteUser(authData.user.id)
+
+      if (deleteProfileError) {
+        console.error('Failed to rollback profile for new invitation acceptance:', deleteProfileError)
+      }
+
+      const { error: deleteUserError } = await serviceSupabase.auth.admin.deleteUser(authData.user.id)
+      if (deleteUserError) {
+        console.error('Failed to rollback auth user for new invitation acceptance:', deleteUserError)
+      }
     }
 
     // Create profile record
@@ -206,7 +236,8 @@ export async function POST(
       .upsert({
         id: authData.user.id,
         email: invitation.email.toLowerCase(),
-        display_name: display_name,
+        display_name: resolvedDisplayName,
+        title: invitationMetadata.title,
         role: invitedProfileRole,
         password_set: true,
         created_at: new Date().toISOString(),
@@ -229,12 +260,11 @@ export async function POST(
     const entityIdColumn = ENTITY_ID_COLUMNS[invitation.entity_type]
 
     // Handle staff entity type separately - they don't have a junction table
-    const invitationMetadata = (invitation.metadata as Record<string, any> | null) || {}
-    const invitationIsPrimary = Boolean(invitationMetadata.is_primary)
+    const invitationIsPrimary = invitationMetadata.isPrimary
 
     if (invitation.entity_type === 'staff') {
       // Staff: Update profile with staff role and create permissions
-      const metadata = invitationMetadata
+      const metadata = (invitation.metadata as Record<string, any> | null) || {}
 
       // Build update object - only include is_super_admin if explicitly set in metadata
       const profileUpdate: Record<string, any> = {
@@ -279,6 +309,17 @@ export async function POST(
         if (permError) {
           console.error('Error creating staff permissions:', permError)
           // Continue - staff can still be granted permissions manually
+        } else {
+          rollbackSteps.push(async () => {
+            const { error: rollbackPermissionsError } = await serviceSupabase
+              .from('staff_permissions')
+              .delete()
+              .eq('user_id', authData.user.id)
+
+            if (rollbackPermissionsError) {
+              console.error('Failed to rollback staff permissions for new invitation acceptance:', rollbackPermissionsError)
+            }
+          })
         }
       }
 
@@ -320,6 +361,19 @@ export async function POST(
             error: 'Failed to configure your staff access. Please ask support to resend your invitation.'
           }, { status: 500 })
         }
+
+        if (!ceoUserError) {
+          rollbackSteps.push(async () => {
+            const { error: rollbackCeoUserError } = await serviceSupabase
+              .from('ceo_users')
+              .delete()
+              .eq('user_id', authData.user.id)
+
+            if (rollbackCeoUserError) {
+              console.error('Failed to rollback ceo_users link for new staff invitation acceptance:', rollbackCeoUserError)
+            }
+          })
+        }
       }
     } else {
       // Non-staff entity types - create junction table records
@@ -331,7 +385,7 @@ export async function POST(
           user_id: authData.user.id,
           role: invitation.role,
           is_primary: invitationIsPrimary,
-          can_sign: invitation.is_signatory || false,
+          can_sign: invitationCanSign,
           title: invitation.role === 'admin' ? 'Administrator' : invitation.role
         }
       } else {
@@ -348,9 +402,7 @@ export async function POST(
         }
 
         // Add signatory fields if applicable
-        if (invitation.is_signatory) {
-          insertData.can_sign = true
-        }
+        insertData.can_sign = invitationCanSign
       }
 
       const { error: junctionError } = await serviceSupabase
@@ -367,15 +419,70 @@ export async function POST(
         }, { status: 500 })
       }
 
+      rollbackSteps.push(async () => {
+        let deleteQuery = serviceSupabase
+          .from(userTable)
+          .delete()
+          .eq('user_id', authData.user.id)
+
+        if (invitation.entity_type !== 'ceo') {
+          deleteQuery = deleteQuery.eq(entityIdColumn, invitation.entity_id)
+        }
+
+        const { error: rollbackMembershipError } = await deleteQuery
+        if (rollbackMembershipError) {
+          console.error('Failed to rollback membership link for new invitation acceptance:', rollbackMembershipError)
+        }
+      })
+
+      if (isExternalInvitationEntityType(invitation.entity_type)) {
+        try {
+          const enrichmentResult = await enrichMemberRecordFromInvitation({
+            supabase: serviceSupabase,
+            entityType: invitation.entity_type,
+            entityId: invitation.entity_id,
+            userId: authData.user.id,
+            userEmail: invitation.email,
+            displayName: resolvedDisplayName,
+            title: invitationMetadata.title,
+            canSign: invitationCanSign,
+            createdBy: invitation.invited_by,
+          })
+
+          if (enrichmentResult.rollback) {
+            rollbackSteps.push(async () => {
+              await rollbackMemberRecordEnrichment({
+                supabase: serviceSupabase,
+                rollback: enrichmentResult.rollback,
+              })
+            })
+          }
+        } catch (enrichmentError) {
+          console.error('Error enriching member record for new invitation acceptance:', enrichmentError)
+          await rollbackNewUser()
+          return NextResponse.json({
+            error: 'Failed to complete your account setup. Please ask support to resend your invitation.'
+          }, { status: 500 })
+        }
+      }
+
       if (SIGNATORY_ENTITY_TYPES.has(invitation.entity_type as SignatoryEntityType)) {
-        await syncMemberSignatoryFromUserLink({
-          supabase: serviceSupabase,
-          entityType: invitation.entity_type as SignatoryEntityType,
-          entityId: invitation.entity_id,
-          userId: authData.user.id,
-          canSign: Boolean(invitation.is_signatory),
-          userEmail: invitation.email,
-        })
+        try {
+          await syncMemberSignatoryFromUserLink({
+            supabase: serviceSupabase,
+            entityType: invitation.entity_type as SignatoryEntityType,
+            entityId: invitation.entity_id,
+            userId: authData.user.id,
+            canSign: invitationCanSign,
+            userEmail: invitation.email,
+          })
+        } catch (signatorySyncError) {
+          console.error('Error syncing signatory status for new invitation acceptance:', signatorySyncError)
+          await rollbackNewUser()
+          return NextResponse.json({
+            error: 'Failed to complete your account setup. Please ask support to resend your invitation.'
+          }, { status: 500 })
+        }
       }
     }
 
@@ -383,7 +490,7 @@ export async function POST(
     try {
       const matches = await screenAgainstBlacklist(serviceSupabase, {
         email: invitation.email,
-        fullName: display_name,
+        fullName: resolvedDisplayName,
         entityName: invitation.entity_name || null
       })
 
@@ -393,10 +500,10 @@ export async function POST(
         context: 'signup',
         input: {
           email: invitation.email,
-          fullName: display_name,
+          fullName: resolvedDisplayName,
           entityName: invitation.entity_name || null
         },
-        subjectLabel: display_name || invitation.email,
+        subjectLabel: resolvedDisplayName || invitation.email,
         matchedUserId: authData.user.id,
         matchedInvestorId: invitation.entity_type === 'investor' ? invitation.entity_id : null,
         relatedInvestorId: invitation.entity_type === 'investor' ? invitation.entity_id : null,
@@ -408,7 +515,7 @@ export async function POST(
     }
 
     // Update invitation status
-    await serviceSupabase
+    const { error: invitationStatusError } = await serviceSupabase
       .from('member_invitations')
       .update({
         status: 'accepted',
@@ -416,6 +523,14 @@ export async function POST(
         accepted_by_user_id: authData.user.id
       })
       .eq('id', invitation.id)
+
+    if (invitationStatusError) {
+      console.error('Error finalizing invitation status for new invitation acceptance:', invitationStatusError)
+      await rollbackNewUser()
+      return NextResponse.json({
+        error: 'Failed to finalize your invitation. Please ask support to resend it.'
+      }, { status: 500 })
+    }
 
     // Log the event
     await serviceSupabase.from('audit_logs').insert({
@@ -432,16 +547,6 @@ export async function POST(
         invited_by: invitation.invited_by
       },
       timestamp: new Date().toISOString()
-    })
-
-    // Generate session for the new user
-    // Note: We need to sign in the user to get session tokens
-    const { data: signInData, error: signInError } = await serviceSupabase.auth.admin.generateLink({
-      type: 'magiclink',
-      email: invitation.email,
-      options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?portal=main`
-      }
     })
 
     // Return success with redirect info
