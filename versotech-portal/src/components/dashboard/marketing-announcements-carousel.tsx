@@ -402,7 +402,7 @@ export function MarketingAnnouncementsCarousel({
               <Card
                 key={card.id}
                 className={cn(
-                  'group overflow-hidden rounded-2xl border transition-all duration-300',
+                  'group gap-0 overflow-hidden rounded-2xl border py-0 transition-all duration-300',
                   isDark
                     ? 'border-white/[0.06] bg-card hover:border-white/[0.12] hover:shadow-lg hover:shadow-black/20'
                     : 'border-slate-200/60 bg-white hover:border-slate-300 hover:shadow-lg hover:shadow-slate-200/50'
@@ -428,7 +428,7 @@ export function MarketingAnnouncementsCarousel({
                           <img
                             src={card.image_url}
                             alt={card.title}
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                            className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
                           />
                         ) : (
                           <div
@@ -453,7 +453,7 @@ export function MarketingAnnouncementsCarousel({
                           <img
                             src={card.image_url}
                             alt={card.title}
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                            className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
                           />
                           <div
                             className={cn(
@@ -524,7 +524,7 @@ export function MarketingAnnouncementsCarousel({
                   </div>
                 </div>
 
-                <CardContent className="flex flex-col gap-3 p-5 pt-4">
+                <CardContent className="flex flex-1 flex-col gap-3 p-5 pt-4">
                   {/* Source attribution */}
                   {(card.link_domain || sourceDate) && (
                     <div
@@ -600,7 +600,7 @@ export function MarketingAnnouncementsCarousel({
                   </div>
 
                   {/* CTA buttons — pill-shaped */}
-                  <div className="mt-auto flex flex-wrap items-center gap-3 pt-1">
+                  <div className="mt-auto flex flex-wrap items-center justify-center gap-3 pt-1">
                     {isInterestCard && (
                       <Button
                         type="button"
@@ -608,7 +608,7 @@ export function MarketingAnnouncementsCarousel({
                         onClick={() => handleInterestClick(card)}
                         disabled={isCtaDisabled}
                         className={cn(
-                          'rounded-full px-5 text-xs font-medium',
+                          'min-w-[160px] rounded-full px-5 text-xs font-medium',
                           isSubmitted && 'bg-emerald-600 hover:bg-emerald-600'
                         )}
                       >
@@ -629,10 +629,9 @@ export function MarketingAnnouncementsCarousel({
                       <Button
                         asChild
                         type="button"
-                        variant="outline"
                         size="sm"
                         disabled={previewMode}
-                        className="rounded-full px-5 text-xs font-medium"
+                        className="min-w-[160px] rounded-full px-5 text-xs font-medium"
                       >
                         <Link
                           href={card.external_url}
