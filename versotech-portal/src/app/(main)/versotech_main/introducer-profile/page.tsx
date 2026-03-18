@@ -19,7 +19,12 @@ export default async function IntroducerProfilePage({
 }) {
   const resolvedSearchParams = await searchParams
   const requestedTab = resolvedSearchParams.tab || 'overview'
-  const defaultTab = requestedTab === 'profile' ? 'overview' : requestedTab
+  const defaultTab =
+    requestedTab === 'profile' || requestedTab === 'agreement'
+      ? 'overview'
+      : requestedTab === 'members'
+        ? 'team'
+        : requestedTab
   const defaultAction = resolvedSearchParams.action || null
   const defaultMemberId = resolvedSearchParams.memberId || null
   const clientSupabase = await createClient()
@@ -112,20 +117,6 @@ export default async function IntroducerProfilePage({
     .eq('id', user.id)
     .maybeSingle()
 
-  // Get active agreement for this introducer
-  const { data: activeAgreement } = await serviceSupabase
-    .from('introducer_agreements')
-    .select('id, agreement_type, default_commission_bps, territory, status, effective_date, expiry_date')
-    .eq('introducer_id', introducerUser.introducer_id)
-    .eq('status', 'active')
-    .maybeSingle()
-
-  // Get introduction count for this introducer
-  const { count: introductionCount } = await serviceSupabase
-    .from('introductions')
-    .select('id', { count: 'exact', head: true })
-    .eq('introducer_id', introducerUser.introducer_id)
-
   // Fetch the user's member record for personal KYC (linked via linked_user_id)
   const { member: memberData, error: memberError } = await fetchMemberWithAutoLink({
     supabase: serviceSupabase,
@@ -142,6 +133,7 @@ export default async function IntroducerProfilePage({
       full_name,
       first_name,
       middle_name,
+      middle_initial,
       last_name,
       name_suffix,
       role,
@@ -168,6 +160,8 @@ export default async function IntroducerProfilePage({
       id_issue_date,
       id_expiry_date,
       id_issuing_country,
+      proof_of_address_date,
+      proof_of_address_expiry,
       kyc_status,
       kyc_approved_at,
       kyc_notes
@@ -211,6 +205,9 @@ export default async function IntroducerProfilePage({
         logo_url: introducer.logo_url,
         kyc_status: introducer.kyc_status,
         account_approval_status: introducer.account_approval_status,
+        account_rejection_reason: introducer.account_rejection_reason,
+        onboarding_status: introducer.onboarding_status,
+        display_name: introducer.display_name,
         // Entity type
         type: introducer.type,
         // Address fields
@@ -255,7 +252,6 @@ export default async function IntroducerProfilePage({
         registration_number: introducer.registration_number,
         tax_id: introducer.tax_id,
         // Additional KYC fields
-        residential_line_2: introducer.residential_line_2,
         middle_initial: introducer.middle_initial,
         proof_of_address_date: introducer.proof_of_address_date,
         proof_of_address_expiry: introducer.proof_of_address_expiry,
@@ -266,16 +262,6 @@ export default async function IntroducerProfilePage({
         is_primary: introducerUser.is_primary,
         can_sign: introducerUser.can_sign || false,
       }}
-      activeAgreement={activeAgreement ? {
-        id: activeAgreement.id,
-        agreement_type: activeAgreement.agreement_type,
-        commission_bps: activeAgreement.default_commission_bps,
-        territory: activeAgreement.territory,
-        status: activeAgreement.status,
-        effective_date: activeAgreement.effective_date,
-        expiry_date: activeAgreement.expiry_date,
-      } : null}
-      introductionCount={introductionCount || 0}
       memberInfo={memberData || null}
       introducerAccountApprovalReadiness={introducerAccountApprovalReadiness}
     />

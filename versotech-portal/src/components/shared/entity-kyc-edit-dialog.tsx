@@ -129,6 +129,7 @@ interface EntityKYCEditDialogProps {
   onSuccess?: () => void | Promise<void>
   showPersonalInfo?: boolean
   showAddress?: boolean
+  showResidentialLine2?: boolean
   showTaxInfo?: boolean
   showIdentification?: boolean
 }
@@ -169,6 +170,7 @@ export function EntityKYCEditDialog({
   onSuccess,
   showPersonalInfo = true,
   showAddress = true,
+  showResidentialLine2 = true,
   showTaxInfo = true,
   showIdentification = false,
 }: EntityKYCEditDialogProps) {
@@ -219,6 +221,9 @@ export function EntityKYCEditDialog({
         showTaxInfo,
         showIdentification,
       })
+      if (!showResidentialLine2) {
+        delete normalizedPayload.residential_line_2
+      }
 
       const response = await fetch(apiEndpoint, {
         method: 'PATCH',
@@ -551,24 +556,26 @@ export function EntityKYCEditDialog({
                   />
 
                   {/* Apt/Suite - full width */}
-                  <FormField
-                    control={form.control}
-                    name="residential_line_2"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Apartment / Suite / Unit</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value || ''}
-                            placeholder="Apt 4B"
-                            className="h-10"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {showResidentialLine2 ? (
+                    <FormField
+                      control={form.control}
+                      name="residential_line_2"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Apartment / Suite / Unit</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ''}
+                              placeholder="Apt 4B"
+                              className="h-10"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ) : null}
 
                   {/* City, State, Postal, Country */}
                   <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">

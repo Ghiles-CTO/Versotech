@@ -1,62 +1,43 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import Link from 'next/link'
+import { useEffect, useMemo, useState } from 'react'
 import { getCountryName } from '@/components/kyc/country-select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { PhoneInput } from '@/components/ui/phone-input'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Building2,
   Mail,
   Phone,
-  UserPlus,
-  FileText,
+  User,
   Shield,
   CheckCircle2,
   Clock,
-  AlertTriangle,
-  DollarSign,
   Edit,
   Loader2,
   Lock,
-  Settings,
-  Save,
-  X,
-  Camera,
   Globe,
-  Calendar,
   AlertCircle,
   Users,
-  Bell,
   Send,
   Info,
   ArrowRight,
   XCircle,
 } from 'lucide-react'
-import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
-import Image from 'next/image'
 
 // Import profile components
 import { PasswordChangeForm } from '@/components/profile/password-change-form'
-import { PreferencesEditor } from '@/components/profile/preferences-editor'
-import { GDPRControls } from '@/components/profile/gdpr-controls'
 import { ProfileImageUpload } from '@/components/profile/profile-image-upload'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { IntroducerKYCDocumentsTab } from '@/components/profile/introducer-kyc-documents-tab'
 import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
-import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
-import { ProfileOverviewShell, OverviewSectionCard, OverviewField, OverviewFieldGrid } from '@/components/profile/overview'
+import { ProfileOverviewShell, OverviewSectionCard } from '@/components/profile/overview'
 
 // Import shared KYC dialog components
-import { EntityKYCEditDialog, EntityAddressEditDialog, IndividualKycDisplay } from '@/components/shared'
+import { EntityKYCEditDialog, EntityOverviewEditDialog, IndividualKycDisplay } from '@/components/shared'
 import { PersonalKYCSection, MemberKYCData } from '@/components/profile/personal-kyc-section'
 
 type IntroducerInfo = {
@@ -73,6 +54,9 @@ type IntroducerInfo = {
   logo_url: string | null
   kyc_status: string | null
   account_approval_status: string | null
+  account_rejection_reason: string | null
+  onboarding_status: string | null
+  display_name: string | null
   // Entity type
   type: 'individual' | 'entity' | 'sole_proprietor' | null
   // Address fields
@@ -117,7 +101,6 @@ type IntroducerInfo = {
   registration_number: string | null
   tax_id: string | null
   // Additional KYC fields
-  residential_line_2: string | null
   middle_initial: string | null
   proof_of_address_date: string | null
   proof_of_address_expiry: string | null
@@ -128,16 +111,6 @@ type IntroducerUserInfo = {
   role: string
   is_primary: boolean
   can_sign: boolean
-}
-
-type ActiveAgreement = {
-  id: string
-  agreement_type: string
-  commission_bps: number
-  territory: string
-  status: string
-  effective_date: string | null
-  expiry_date: string | null
 }
 
 type Profile = {
@@ -156,8 +129,6 @@ interface IntroducerProfileClientProps {
   profile: Profile | null
   introducerInfo: IntroducerInfo | null
   introducerUserInfo: IntroducerUserInfo
-  activeAgreement: ActiveAgreement | null
-  introductionCount: number
   memberInfo: MemberKYCData | null
   introducerAccountApprovalReadiness?: {
     introducerId: string
@@ -183,6 +154,13 @@ interface IntroducerProfileClientProps {
   } | null
 }
 
+type SaveFollowUpResult = {
+  level?: 'success' | 'info' | 'error'
+  message?: string
+  closeDialog?: boolean
+  refresh?: boolean
+}
+
 const STATUS_STYLES: Record<string, string> = {
   active: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700',
   inactive: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-300 dark:border-gray-700',
@@ -206,67 +184,10 @@ const ACCOUNT_APPROVAL_BADGES: Record<string, { label: string; className: string
   unauthorized: { label: 'Account Restricted', className: 'bg-red-100 text-red-800 border-red-200' },
   rejected: { label: 'Account Rejected', className: 'bg-red-100 text-red-800 border-red-200' },
 }
-
-// Editable field component
-function EditableField({
-  label,
-  value,
-  field,
-  isEditing,
-  editValue,
-  onEditChange,
-  type = 'text',
-  disabled = false,
-}: {
-  label: string
-  value: string | null | undefined
-  field: string
-  isEditing: boolean
-  editValue: string
-  onEditChange: (field: string, value: string) => void
-  type?: 'text' | 'email' | 'tel' | 'textarea'
-  disabled?: boolean
-}) {
-  if (isEditing && !disabled) {
-    if (type === 'textarea') {
-      return (
-        <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">{label}</Label>
-          <Textarea
-            value={editValue}
-            onChange={(e) => onEditChange(field, e.target.value)}
-            className="text-sm min-h-[80px]"
-          />
-        </div>
-      )
-    }
-    return (
-      <div className="space-y-1">
-        <Label className="text-xs text-muted-foreground">{label}</Label>
-        {type === 'tel' ? (
-          <PhoneInput
-            value={editValue}
-            onChange={(val) => onEditChange(field, val || '')}
-            className="text-sm"
-          />
-        ) : (
-          <Input
-            type={type}
-            value={editValue}
-            onChange={(e) => onEditChange(field, e.target.value)}
-            className="text-sm"
-          />
-        )}
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-1">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-sm font-medium">{value || '-'}</p>
-    </div>
-  )
+const ONBOARDING_BADGES: Record<string, { label: string; className: string }> = {
+  completed: { label: 'Onboarding Complete', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+  pending: { label: 'Onboarding Pending', className: 'bg-amber-100 text-amber-800 border-amber-200' },
+  in_progress: { label: 'Onboarding In Progress', className: 'bg-blue-100 text-blue-800 border-blue-200' },
 }
 
 export function IntroducerProfileClient({
@@ -277,23 +198,16 @@ export function IntroducerProfileClient({
   profile,
   introducerInfo,
   introducerUserInfo,
-  activeAgreement,
-  introductionCount,
   memberInfo,
   introducerAccountApprovalReadiness,
 }: IntroducerProfileClientProps) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const [isSubmittingAccountApproval, setIsSubmittingAccountApproval] = useState(false)
   const [showRequestInfoDetails, setShowRequestInfoDetails] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const [profileData, setProfileData] = useState(profile)
 
   // KYC Edit Dialog state
   const [showKycDialog, setShowKycDialog] = useState(false)
-  const [showAddressDialog, setShowAddressDialog] = useState(false)
-  const [isSubmittingEntityKyc, setIsSubmittingEntityKyc] = useState(false)
+  const [showEntityOverviewDialog, setShowEntityOverviewDialog] = useState(false)
   const canEditEntityProfile = introducerUserInfo.role === 'admin' || introducerUserInfo.is_primary
   const canSubmitAccountApproval = canEditEntityProfile
   const readiness = introducerAccountApprovalReadiness || null
@@ -306,45 +220,14 @@ export function IntroducerProfileClient({
     setProfileData(profile)
   }, [profile])
 
-  // Edit state
-  const [editData, setEditData] = useState({
-    contact_name: introducerInfo?.contact_name || '',
-    email: introducerInfo?.email || '',
-    notes: introducerInfo?.notes || '',
-  })
-
-  const handleEditChange = (field: string, value: string) => {
-    setEditData(prev => ({ ...prev, [field]: value }))
-  }
-
-  const handleSave = async () => {
-    setIsSaving(true)
-    try {
-      const response = await fetch('/api/introducers/me/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editData),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to save profile')
+  const submitEntityKycAfterSave = async (): Promise<SaveFollowUpResult> => {
+    if (!introducerInfo?.id) {
+      return {
+        level: 'error',
+        message: 'Changes saved, but entity KYC could not be updated.',
       }
-
-      toast.success('Profile updated successfully')
-      setIsEditing(false)
-      // Refresh the page to show updated data
-      window.location.reload()
-    } catch {
-      toast.error('Failed to save profile')
-    } finally {
-      setIsSaving(false)
     }
-  }
 
-  const handleSubmitEntityKyc = async () => {
-    if (!introducerInfo?.id) return
-
-    setIsSubmittingEntityKyc(true)
     try {
       const response = await fetch('/api/me/entity-kyc/submit', {
         method: 'POST',
@@ -355,18 +238,53 @@ export function IntroducerProfileClient({
         }),
       })
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to submit entity KYC')
+      const data = await response.json().catch(() => ({}))
+      if (response.ok) {
+        return { level: 'success', message: 'Entity KYC saved' }
       }
 
-      toast.success('Entity KYC saved')
-      window.location.reload()
+      if (Array.isArray(data?.missing) && data.missing.length > 0) {
+        return {
+          level: 'info',
+          message: `Changes saved. Complete ${data.missing.join(', ')}.`,
+          closeDialog: false,
+          refresh: false,
+        }
+      }
+
+      if (Array.isArray(data?.invalid) && data.invalid.length > 0) {
+        return {
+          level: 'info',
+          message: `Changes saved. Fix ${data.invalid.join(', ')}.`,
+          closeDialog: false,
+          refresh: false,
+        }
+      }
+
+      if (
+        typeof data?.error === 'string' &&
+        (
+          data.error.includes('already submitted') ||
+          data.error.includes('already approved') ||
+          data.error.includes('Entity KYC information already submitted')
+        )
+      ) {
+        return {
+          level: 'info',
+          message: 'Changes saved.',
+        }
+      }
+
+      return {
+        level: 'error',
+        message: data?.error || 'Changes saved, but entity KYC could not be updated.',
+      }
     } catch (error) {
-      console.error('[introducer-profile] Failed to submit entity KYC:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to submit entity KYC')
-    } finally {
-      setIsSubmittingEntityKyc(false)
+      console.error('[introducer-profile] Failed to submit entity KYC after save:', error)
+      return {
+        level: 'error',
+        message: 'Changes saved, but entity KYC could not be updated.',
+      }
     }
   }
 
@@ -405,64 +323,12 @@ export function IntroducerProfileClient({
     }
   }
 
-  const handleCancelEdit = () => {
-    setEditData({
-      contact_name: introducerInfo?.contact_name || '',
-      email: introducerInfo?.email || '',
-      notes: introducerInfo?.notes || '',
-    })
-    setIsEditing(false)
-  }
-
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file')
-      return
-    }
-
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image must be less than 2MB')
-      return
-    }
-
-    setIsUploadingLogo(true)
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('type', 'logo')
-
-      const response = await fetch('/api/introducers/me/profile', {
-        method: 'PUT',
-        body: formData,
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || 'Failed to upload logo')
-      }
-
-      toast.success('Logo updated successfully')
-      window.location.reload()
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to upload logo')
-    } finally {
-      setIsUploadingLogo(false)
-    }
-  }
-
-  const formatCommission = (bps: number | null | undefined) => {
-    if (bps === null || bps === undefined) return '-'
-    return `${(bps / 100).toFixed(2)}%`
-  }
-
   const normalizedDefaultTab = useMemo(() => {
     if (defaultTab === 'profile') return 'overview'
+    if (defaultTab === 'agreement') return 'overview'
     if (defaultTab === 'members') return 'team'
+    if (defaultTab === 'preferences') return 'overview'
+    if (defaultTab === 'notices') return 'overview'
     return defaultTab
   }, [defaultTab])
 
@@ -483,7 +349,7 @@ export function IntroducerProfileClient({
     if (defaultAction === 'edit-individual-kyc') {
       setShowKycDialog(true)
     } else if (defaultAction === 'edit-entity-overview') {
-      setIsEditing(true)
+      setShowEntityOverviewDialog(true)
     }
 
     if (typeof window !== 'undefined') {
@@ -495,30 +361,35 @@ export function IntroducerProfileClient({
   }, [defaultAction])
 
   const accountApprovalStatusKey = (introducerInfo?.account_approval_status || 'pending_onboarding').toLowerCase()
+  const onboardingStatusKey = (introducerInfo?.onboarding_status || 'pending').toLowerCase()
   const accountApprovalBadge = ACCOUNT_APPROVAL_BADGES[accountApprovalStatusKey] || {
     label: 'Account Pending',
     className: 'bg-gray-100 text-gray-800 border-gray-200',
   }
+  const onboardingBadge = ONBOARDING_BADGES[onboardingStatusKey] || {
+    label: 'Onboarding Pending',
+    className: 'bg-gray-100 text-gray-800 border-gray-200',
+  }
   const kycBadge = KYC_BADGES[introducerInfo?.kyc_status || 'pending'] || KYC_BADGES.pending
-  const hideAccountApprovalSection =
-    accountApprovalStatusKey === 'approved' || accountApprovalStatusKey === 'rejected'
   const showRequestInfoBadge =
-    !!latestAccountRequestInfo && !hasPendingAccountApproval && !hideAccountApprovalSection
+    !!latestAccountRequestInfo && !hasPendingAccountApproval && accountApprovalStatusKey !== 'approved'
+  const hideAccountApprovalSection = accountApprovalStatusKey === 'approved'
   const accountApprovalSubmitDisabled =
     isSubmittingAccountApproval ||
     !canSubmitAccountApproval ||
     hasPendingAccountApproval ||
     !isAccountApprovalReady
 
-  const activeAgreementStatus = activeAgreement ? 'Active' : 'No Active Agreement'
   const profileDisplayName =
     profileData?.display_name ||
     profileData?.full_name ||
     userEmail ||
     'Introducer User'
+  const isIndividualIntroducer = introducerInfo?.type === 'individual'
+  const showRejectedAccountState = accountApprovalStatusKey === 'rejected'
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
@@ -531,7 +402,7 @@ export function IntroducerProfileClient({
 
           <div>
             <h1 className="text-2xl font-bold">
-              {introducerInfo?.legal_name || 'Introducer Profile'}
+              {introducerInfo?.display_name || introducerInfo?.legal_name || 'Introducer Profile'}
             </h1>
             <p className="text-muted-foreground mt-1">
               Manage your introducer profile, documents, and team
@@ -548,6 +419,7 @@ export function IntroducerProfileClient({
               {introducerInfo?.status || 'Unknown'}
             </Badge>
             <Badge className={accountApprovalBadge.className}>{accountApprovalBadge.label}</Badge>
+            <Badge className={onboardingBadge.className}>{onboardingBadge.label}</Badge>
             <Badge className={kycBadge.className}>{kycBadge.label}</Badge>
           </div>
         )}
@@ -560,9 +432,9 @@ export function IntroducerProfileClient({
             <Building2 className="h-4 w-4" />
             Overview
           </TabsTrigger>
-          <TabsTrigger value="agreement" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Agreement
+          <TabsTrigger value="kyc" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            KYC
           </TabsTrigger>
           <TabsTrigger value="team" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
@@ -574,408 +446,39 @@ export function IntroducerProfileClient({
               Directors/UBOs
             </TabsTrigger>
           )}
-          <TabsTrigger value="kyc" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            KYC
-          </TabsTrigger>
           <TabsTrigger value="security" className="flex items-center gap-2">
             <Lock className="h-4 w-4" />
             Security
           </TabsTrigger>
-          <TabsTrigger value="preferences" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Preferences
-          </TabsTrigger>
-          <TabsTrigger value="notices" className="flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            Notices
-          </TabsTrigger>
         </TabsList>
 
-        {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-4">
           <ProfileOverviewShell>
-          <div className="rounded-lg border bg-card px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <UserPlus className="h-5 w-5 text-primary" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold truncate">{profileDisplayName}</p>
-                <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5">
-                  <Mail className="h-3 w-3" />
-                  {profileData?.email || userEmail}
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline" className="capitalize text-xs">
-                {introducerUserInfo.role}
-              </Badge>
-              {introducerUserInfo.is_primary && (
-                <Badge variant="secondary" className="text-xs">Primary Contact</Badge>
-              )}
-              {introducerUserInfo.can_sign && (
-                <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs">
-                  Signatory
-                </Badge>
-              )}
-            </div>
-          </div>
-
-          <OverviewSectionCard
-            title="Introducer Overview"
-            description="Legal details, contact information, and introducer settings"
-            icon={Building2}
-            contentClassName="space-y-6"
-            action={
-              canEditEntityProfile && isEditing ? (
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={handleCancelEdit} disabled={isSaving}>
-                    <X className="h-4 w-4 mr-2" />
-                    Cancel
-                  </Button>
-                  <Button size="sm" onClick={handleSave} disabled={isSaving}>
-                    {isSaving ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Save className="h-4 w-4 mr-2" />
-                    )}
-                    Save
-                  </Button>
-                </div>
-              ) : canEditEntityProfile ? (
-                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-              ) : undefined
-            }
-          >
-              <section className="rounded-lg border border-border/70 bg-muted/20 p-4">
-                <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <Building2 className="h-4 w-4 text-muted-foreground" />
-                  Entity Information
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-                  <div className="rounded-md border border-border/70 bg-background p-3 xl:col-span-2">
-                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Entity Logo</p>
-                    <div className="mt-3 flex items-center gap-4">
-                      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border bg-muted">
-                        {introducerInfo?.logo_url ? (
-                          <Image
-                            src={introducerInfo.logo_url}
-                            alt={introducerInfo.legal_name || 'Logo'}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center">
-                            <Building2 className="h-6 w-6 text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">
-                          This logo appears on introducer records and shared documents.
-                        </p>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleLogoUpload}
-                          disabled={!canEditEntityProfile || isUploadingLogo}
-                        />
-                        {canEditEntityProfile ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isUploadingLogo}
-                          >
-                            {isUploadingLogo ? (
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            ) : (
-                              <Camera className="h-4 w-4 mr-2" />
-                            )}
-                            {introducerInfo?.logo_url ? 'Update Logo' : 'Upload Logo'}
-                          </Button>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="rounded-md border border-border/70 bg-background p-3">
-                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Legal Name</p>
-                    <p className="mt-1 text-sm font-medium">{introducerInfo?.legal_name || '-'}</p>
-                  </div>
-                  <div className="rounded-md border border-border/70 bg-background p-3">
-                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Type</p>
-                    <div className="mt-1">
-                      <Badge variant="outline" className="capitalize font-medium">
-                        {(introducerInfo?.type || 'introducer').replace(/_/g, ' ')}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              <section className="rounded-lg border border-border/70 bg-muted/20 p-4">
-                <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  Contact And Commercial Information
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Legal Name</p>
-                  <p className="text-sm font-medium">{introducerInfo?.legal_name || '-'}</p>
-                </div>
-
-                <EditableField
-                  label="Contact Person"
-                  value={introducerInfo?.contact_name}
-                  field="contact_name"
-                  isEditing={isEditing}
-                  editValue={editData.contact_name}
-                  onEditChange={handleEditChange}
-                />
-
-                <EditableField
-                  label="Email"
-                  value={introducerInfo?.email}
-                  field="email"
-                  isEditing={isEditing}
-                  editValue={editData.email}
-                  onEditChange={handleEditChange}
-                  type="email"
-                />
-
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Default Commission</p>
-                  <p className="text-sm font-medium">
-                    {formatCommission(introducerInfo?.default_commission_bps)}
-                  </p>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Payment Terms</p>
-                  <p className="text-sm font-medium">{introducerInfo?.payment_terms || '-'}</p>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Member Since</p>
-                  <p className="text-sm font-medium">
-                    {introducerInfo?.created_at ? formatDate(introducerInfo.created_at) : '-'}
-                  </p>
-                </div>
-              </div>
-              </section>
-
-              <section className="rounded-lg border border-border/70 bg-muted/20 p-4">
-                <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <Info className="h-4 w-4 text-muted-foreground" />
-                  Notes
-                </h4>
-
-                <EditableField
-                  label="Notes"
-                  value={introducerInfo?.notes}
-                  field="notes"
-                  isEditing={isEditing}
-                  editValue={editData.notes}
-                  onEditChange={handleEditChange}
-                  type="textarea"
-                />
-              </section>
-          </OverviewSectionCard>
-
-          <OverviewSectionCard
-            title="Your Account"
-            description="Your personal account linked to this introducer"
-            icon={Mail}
-          >
-            <OverviewFieldGrid>
-              <OverviewField label="Name" value={profile?.full_name || '-'} />
-              <OverviewField label="Email" value={userEmail} />
-              <OverviewField label="Role" value={introducerUserInfo.role} valueClassName="capitalize" />
-              <OverviewField label="Can Sign Documents" value={introducerUserInfo.can_sign ? 'Yes' : 'No'} />
-            </OverviewFieldGrid>
-          </OverviewSectionCard>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <UserPlus className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Introductions</p>
-                    <p className="text-2xl font-bold">{introductionCount}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <DollarSign className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Commission Rate</p>
-                    <p className="text-2xl font-bold">
-                      {formatCommission(activeAgreement?.commission_bps || introducerInfo?.default_commission_bps)}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <FileText className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Agreement Status</p>
-                    <div className="flex items-center gap-2">
-                      {activeAgreement ? (
-                        <>
-                          <CheckCircle2 className="h-4 w-4 text-green-600" />
-                          <span className="text-sm font-medium text-green-600">{activeAgreementStatus}</span>
-                        </>
-                      ) : (
-                        <>
-                          <AlertTriangle className="h-4 w-4 text-amber-600" />
-                          <span className="text-sm font-medium text-amber-600">{activeAgreementStatus}</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Address & Contact Card */}
-          <OverviewSectionCard
-            title="Address & Contact"
-            description="Registered address and communication details"
-            icon={Globe}
-            action={
-              canEditEntityProfile ? (
-                <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-              ) : undefined
-            }
-          >
-            <OverviewFieldGrid>
-              <OverviewField label="Address" value={introducerInfo?.address_line_1 || '-'} />
-              <OverviewField label="Address (Optional)" value={introducerInfo?.address_line_2 || '-'} />
-              <OverviewField label="City" value={introducerInfo?.city || '-'} />
-              <OverviewField label="State / Province" value={introducerInfo?.state_province || '-'} />
-              <OverviewField label="Postal Code" value={introducerInfo?.postal_code || '-'} />
-              <OverviewField label="Country" value={getCountryName(introducerInfo?.country) || '-'} />
-              <OverviewField label="Phone" value={introducerInfo?.phone || introducerInfo?.phone_mobile || '-'} />
-              <OverviewField
-                label="Website"
-                value={
-                  introducerInfo?.website ? (
-                    <a
-                      href={introducerInfo.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline"
-                    >
-                      {introducerInfo.website}
-                    </a>
-                  ) : (
-                    '-'
-                  )
-                }
-              />
-            </OverviewFieldGrid>
-          </OverviewSectionCard>
-
-          {/* Personal KYC Section - For the logged-in user's member record */}
-          {introducerInfo && (
-            <PersonalKYCSection
-              memberData={memberInfo}
-              entityType="introducer"
-              entityId={introducerInfo.id}
-              onRefresh={() => window.location.reload()}
-              profileEmail={profileData?.email || userEmail}
-              profileName={profileData?.full_name || profileData?.display_name || null}
-              autoOpenEdit={defaultAction === 'edit-personal-kyc'}
-            />
-          )}
-
-          {/* Individual KYC Card (only for individual introducers) - Full Display */}
-          {introducerInfo?.type === 'individual' && (
-            <IndividualKycDisplay
-              data={{
-                first_name: introducerInfo?.first_name,
-                middle_name: introducerInfo?.middle_name,
-                last_name: introducerInfo?.last_name,
-                name_suffix: introducerInfo?.name_suffix,
-                date_of_birth: introducerInfo?.date_of_birth,
-                country_of_birth: introducerInfo?.country_of_birth,
-                nationality: introducerInfo?.nationality,
-                email: introducerInfo?.email,
-                phone_mobile: introducerInfo?.phone_mobile,
-                phone_office: introducerInfo?.phone_office,
-                residential_street: introducerInfo?.residential_street,
-                residential_city: introducerInfo?.residential_city,
-                residential_state: introducerInfo?.residential_state,
-                residential_postal_code: introducerInfo?.residential_postal_code,
-                residential_country: introducerInfo?.residential_country,
-                is_us_citizen: introducerInfo?.is_us_citizen,
-                is_us_taxpayer: introducerInfo?.is_us_taxpayer,
-                us_taxpayer_id: introducerInfo?.us_taxpayer_id,
-                country_of_tax_residency: introducerInfo?.country_of_tax_residency,
-                tax_id_number: introducerInfo?.tax_id,
-                id_type: introducerInfo?.id_type,
-                id_number: introducerInfo?.id_number,
-                id_issue_date: introducerInfo?.id_issue_date,
-                id_expiry_date: introducerInfo?.id_expiry_date,
-                id_issuing_country: introducerInfo?.id_issuing_country,
-              }}
-              onEdit={() => setShowKycDialog(true)}
-              showEditButton={canEditEntityProfile}
-              title="Personal KYC Information"
-            />
-          )}
-
-          {!hideAccountApprovalSection && (
+            {!hideAccountApprovalSection && (
             <Card className="overflow-hidden">
               <div className={`px-6 py-2.5 flex items-center gap-2 ${
                 hasPendingAccountApproval
                   ? 'bg-blue-50 border-b border-blue-100'
-                  : isAccountApprovalReady
-                    ? 'bg-emerald-50 border-b border-emerald-100'
-                    : showRequestInfoBadge
+                  : showRejectedAccountState || showRequestInfoBadge
                       ? 'bg-red-50 border-b border-red-100'
-                      : 'bg-amber-50 border-b border-amber-100'
+                      : isAccountApprovalReady
+                        ? 'bg-emerald-50 border-b border-emerald-100'
+                        : 'bg-amber-50 border-b border-amber-100'
               }`}>
                 {hasPendingAccountApproval ? (
                   <>
                     <Clock className="h-4 w-4 text-blue-600" />
                     <span className="text-sm font-medium text-blue-800">Under Review</span>
                   </>
+                ) : showRejectedAccountState || showRequestInfoBadge ? (
+                  <>
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                    <span className="text-sm font-medium text-red-800">Action Required</span>
+                  </>
                 ) : isAccountApprovalReady ? (
                   <>
                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                     <span className="text-sm font-medium text-emerald-800">Ready to Submit</span>
-                  </>
-                ) : showRequestInfoBadge ? (
-                  <>
-                    <AlertCircle className="h-4 w-4 text-red-600" />
-                    <span className="text-sm font-medium text-red-800">Action Required</span>
                   </>
                 ) : (
                   <>
@@ -988,179 +491,369 @@ export function IntroducerProfileClient({
               <CardHeader>
                 <CardTitle className="text-base">Submit Account for Approval</CardTitle>
                 <CardDescription>
-                  Complete your profile and KYC documents so your introducer account can be activated.
+                  Submit your completed account file to the CEO for activation review.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  {introducerInfo?.type === 'entity'
-                    ? 'We require your entity information, entity KYC documents, and the KYC for all relevant members before your introducer account can be approved.'
-                    : 'We require your personal information, proof of identification, and proof of address before your introducer account can be approved.'}
-                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Badge className={accountApprovalBadge.className}>{accountApprovalBadge.label}</Badge>
+                  <Badge className={onboardingBadge.className}>{onboardingBadge.label}</Badge>
+                  <Badge className={kycBadge.className}>{kycBadge.label}</Badge>
+                </div>
 
-                {showRequestInfoBadge && latestAccountRequestInfo && (
-                  <div className="rounded-lg border border-red-200 bg-red-50/80 p-4">
-                    <button
-                      type="button"
-                      onClick={() => setShowRequestInfoDetails((prev) => !prev)}
-                      className="flex w-full items-start gap-3 text-left"
-                    >
-                      <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-100">
-                        <AlertCircle className="h-3.5 w-3.5 text-red-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-red-900">Latest request for information</p>
-                        <p className="mt-0.5 text-xs text-red-700">
-                          The review team has requested additional information. Tap to {showRequestInfoDetails ? 'hide' : 'view'} details.
-                        </p>
-                      </div>
-                      <ArrowRight className={`h-4 w-4 text-red-400 shrink-0 mt-0.5 transition-transform ${showRequestInfoDetails ? 'rotate-90' : ''}`} />
-                    </button>
-                    {showRequestInfoDetails && (
-                      <div className="mt-3 ml-9 rounded-md bg-white/60 border border-red-100 p-3">
-                        <p className="text-sm text-red-800">{latestAccountRequestInfo.details}</p>
-                        {latestAccountRequestInfo.requestedAt && (
-                          <p className="mt-2 text-xs text-red-600">
-                            Requested on {new Date(latestAccountRequestInfo.requestedAt).toLocaleString()}
-                          </p>
+                {showRejectedAccountState ? (
+                  <div className="rounded-lg border border-red-200 bg-red-50/80 p-4 text-sm text-red-800">
+                    {introducerInfo?.account_rejection_reason || 'This introducer account needs changes before it can be approved.'}
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm text-muted-foreground">
+                      {introducerInfo?.type === 'entity'
+                        ? 'Complete your entity profile, entity KYC documents, and the KYC for all required members before submitting the account for approval.'
+                        : 'Complete your personal information, proof of identification, and proof of address before submitting the account for approval.'}
+                    </p>
+
+                    {showRequestInfoBadge && latestAccountRequestInfo && (
+                      <div className="rounded-lg border border-red-200 bg-red-50/80 p-4">
+                        <button
+                          type="button"
+                          onClick={() => setShowRequestInfoDetails((prev) => !prev)}
+                          className="flex w-full items-start gap-3 text-left"
+                        >
+                          <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-100">
+                            <AlertCircle className="h-3.5 w-3.5 text-red-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-red-900">Latest request for information</p>
+                            <p className="mt-0.5 text-xs text-red-700">
+                              The review team has requested additional information. Tap to {showRequestInfoDetails ? 'hide' : 'view'} details.
+                            </p>
+                          </div>
+                          <ArrowRight className={`h-4 w-4 text-red-400 shrink-0 mt-0.5 transition-transform ${showRequestInfoDetails ? 'rotate-90' : ''}`} />
+                        </button>
+                        {showRequestInfoDetails && (
+                          <div className="mt-3 ml-9 rounded-md bg-white/60 border border-red-100 p-3">
+                            <p className="text-sm text-red-800">{latestAccountRequestInfo.details}</p>
+                            {latestAccountRequestInfo.requestedAt && (
+                              <p className="mt-2 text-xs text-red-600">
+                                Requested on {new Date(latestAccountRequestInfo.requestedAt).toLocaleString()}
+                              </p>
+                            )}
+                          </div>
                         )}
                       </div>
                     )}
-                  </div>
-                )}
 
-                {missingAccountKycItems.length > 0 ? (
-                  <div className="space-y-2">
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Outstanding KYC requirements
-                    </p>
-                    <div className="divide-y divide-border rounded-lg border bg-muted/30">
-                      {missingAccountKycItems.map((item, index) => (
-                        <div
-                          key={`${item.scope}-${item.memberId || item.name}-${index}`}
-                          className="flex items-start gap-3 px-3 py-2.5"
-                        >
-                          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-100">
-                            <XCircle className="h-3 w-3 text-amber-600" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium">{item.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {item.missingItems.join(', ')}
-                            </p>
-                          </div>
+                    {missingAccountKycItems.length > 0 ? (
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                          Outstanding KYC requirements
+                        </p>
+                        <div className="divide-y divide-border rounded-lg border bg-muted/30">
+                          {missingAccountKycItems.map((item, index) => (
+                            <div
+                              key={`${item.scope}-${item.memberId || item.name}-${index}`}
+                              className="flex items-start gap-3 px-3 py-2.5"
+                            >
+                              <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-100">
+                                <XCircle className="h-3 w-3 text-amber-600" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium text-foreground leading-tight">{item.name}</p>
+                                {item.scope === 'member' && item.email && (
+                                  <p className="text-xs text-muted-foreground">{item.email}</p>
+                                )}
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  Outstanding: {item.missingItems.join(' · ')}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 px-4 py-3 text-sm text-emerald-800">
-                    Your introducer KYC file is complete and ready for account activation review.
-                  </div>
-                )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50/50 px-4 py-3">
+                        <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+                        <p className="text-sm text-muted-foreground">
+                          All required KYC items are complete.
+                        </p>
+                      </div>
+                    )}
 
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="text-sm text-muted-foreground">
-                    {hasPendingAccountApproval
-                      ? 'Your account is currently under review.'
-                      : canSubmitAccountApproval
-                        ? 'Primary contacts or introducer admins can submit the account once everything is complete.'
-                        : 'Only primary contacts or introducer admins can submit the account for approval.'}
-                  </div>
-                  {hasPendingAccountApproval ? (
-                    <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50/50 px-4 py-3">
-                      <Loader2 className="h-4 w-4 text-blue-600 animate-spin shrink-0" />
-                      <p className="text-sm text-muted-foreground">
-                        Under review by the CEO.
-                      </p>
-                    </div>
-                  ) : (
-                    <Button
-                      onClick={handleSubmitAccountForApproval}
-                      disabled={accountApprovalSubmitDisabled}
-                      className={isAccountApprovalReady && canSubmitAccountApproval ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}
-                    >
-                      {isSubmittingAccountApproval ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <div className="pt-1">
+                      {hasPendingAccountApproval ? (
+                        <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50/50 px-4 py-3">
+                          <Loader2 className="h-4 w-4 text-blue-600 animate-spin shrink-0" />
+                          <p className="text-sm text-muted-foreground">
+                            Under review by the CEO.
+                          </p>
+                        </div>
                       ) : (
-                        <Send className="h-4 w-4 mr-2" />
+                        <>
+                          <Button
+                            onClick={handleSubmitAccountForApproval}
+                            disabled={accountApprovalSubmitDisabled}
+                            className={isAccountApprovalReady && canSubmitAccountApproval ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}
+                            size="sm"
+                          >
+                            {isSubmittingAccountApproval ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Submitting...
+                              </>
+                            ) : (
+                              <>
+                                <Send className="h-4 w-4 mr-2" />
+                                Submit Account for Approval
+                              </>
+                            )}
+                          </Button>
+
+                          {!canSubmitAccountApproval && (
+                            <p className="mt-2 text-xs text-muted-foreground">
+                              Only primary contacts or admins can submit account approval.
+                            </p>
+                          )}
+                          {canSubmitAccountApproval && !hasPendingAccountApproval && !isAccountApprovalReady && (
+                            <p className="mt-2 text-xs text-muted-foreground">
+                              Complete all required KYC items before submitting for approval.
+                            </p>
+                          )}
+                        </>
                       )}
-                      Submit for Approval
-                    </Button>
-                  )}
-                </div>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
-          )}
-          </ProfileOverviewShell>
-        </TabsContent>
+            )}
 
-        {/* Agreement Tab */}
-        <TabsContent value="agreement" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Active Agreement
-              </CardTitle>
-              <CardDescription>
-                Your current fee agreement with the arranger
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {activeAgreement ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Agreement Type</p>
-                    <p className="text-sm font-medium capitalize">{activeAgreement.agreement_type}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Commission Rate</p>
-                    <p className="text-sm font-medium">{formatCommission(activeAgreement.commission_bps)}</p>
-                  </div>
-                  <div className="space-y-1 flex items-start gap-2">
-                    <Globe className="h-4 w-4 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Territory</p>
-                      <p className="text-sm font-medium">{activeAgreement.territory}</p>
+            <div className="rounded-lg border bg-card px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <User className="h-5 w-5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold truncate">{profileDisplayName}</p>
+                  <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5">
+                    <Mail className="h-3 w-3" />
+                    {profileData?.email || userEmail}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline" className="capitalize text-xs">
+                  {introducerUserInfo.role}
+                </Badge>
+                {introducerUserInfo.is_primary && (
+                  <Badge variant="secondary" className="text-xs">Primary Contact</Badge>
+                )}
+                {introducerUserInfo.can_sign && (
+                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs">
+                    Signatory
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            {!isIndividualIntroducer && (
+              <OverviewSectionCard
+                title="Entity Overview"
+                description="Legal details, contact information, and registered address"
+                icon={Building2}
+                contentClassName="space-y-4"
+                action={
+                  canEditEntityProfile ? (
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setShowEntityOverviewDialog(true)}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                    </div>
+                  ) : undefined
+                }
+              >
+              <section className="rounded-lg border border-border/70 bg-muted/20 p-4">
+                <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                  Entity Information
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="rounded-md border border-border/70 bg-background p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Type</p>
+                    <div className="mt-1">
+                      <Badge variant="outline" className="capitalize font-medium">
+                        {(introducerInfo?.type || 'entity').replace(/_/g, ' ')}
+                      </Badge>
                     </div>
                   </div>
-                  <div className="space-y-1 flex items-start gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Effective Date</p>
-                      <p className="text-sm font-medium">
-                        {activeAgreement.effective_date ? formatDate(activeAgreement.effective_date) : '-'}
-                      </p>
-                    </div>
+                  <div className="rounded-md border border-border/70 bg-background p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Display Name</p>
+                    <p className="mt-1 text-sm font-medium">{introducerInfo?.display_name || '-'}</p>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Expiry Date</p>
-                    <p className="text-sm font-medium">
-                      {activeAgreement.expiry_date ? formatDate(activeAgreement.expiry_date) : 'No expiry'}
+                  <div className="rounded-md border border-border/70 bg-background p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Legal Name</p>
+                    <p className="mt-1 text-sm font-medium">{introducerInfo?.legal_name || '-'}</p>
+                  </div>
+                  <div className="rounded-md border border-border/70 bg-background p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Country of Incorporation</p>
+                    <p className="mt-1 text-sm font-medium">{getCountryName(introducerInfo?.country_of_incorporation) || '-'}</p>
+                  </div>
+                  <div className="rounded-md border border-border/70 bg-background p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Registration Number</p>
+                    <p className="mt-1 text-sm font-medium">{introducerInfo?.registration_number || '-'}</p>
+                  </div>
+                  <div className="rounded-md border border-border/70 bg-background p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Tax ID</p>
+                    <p className="mt-1 text-sm font-medium">{introducerInfo?.tax_id_number || introducerInfo?.tax_id || '-'}</p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-lg border border-border/70 bg-muted/20 p-4">
+                <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  Contact Information
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="rounded-md border border-border/70 bg-background p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Contact Person</p>
+                    <p className="mt-1 text-sm font-medium">{introducerInfo?.contact_name || '-'}</p>
+                  </div>
+                  <div className="rounded-md border border-border/70 bg-background p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Email</p>
+                    <p className="mt-1 text-sm font-medium inline-flex items-center gap-2">
+                      <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                      {introducerInfo?.email || '-'}
                     </p>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Status</p>
-                    <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
-                      {activeAgreement.status}
-                    </Badge>
+                  <div className="rounded-md border border-border/70 bg-background p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Phone</p>
+                    <p className="mt-1 text-sm font-medium inline-flex items-center gap-2">
+                      <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                      {introducerInfo?.phone || '-'}
+                    </p>
+                  </div>
+                  <div className="rounded-md border border-border/70 bg-background p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Mobile</p>
+                    <p className="mt-1 text-sm font-medium inline-flex items-center gap-2">
+                      <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                      {introducerInfo?.phone_mobile || '-'}
+                    </p>
+                  </div>
+                  <div className="rounded-md border border-border/70 bg-background p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Office Phone</p>
+                    <p className="mt-1 text-sm font-medium inline-flex items-center gap-2">
+                      <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                      {introducerInfo?.phone_office || '-'}
+                    </p>
+                  </div>
+                  <div className="rounded-md border border-border/70 bg-background p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Website</p>
+                    <div className="mt-1 text-sm font-medium inline-flex items-center gap-2">
+                      <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+                      {introducerInfo?.website ? (
+                        <a
+                          href={introducerInfo.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          {introducerInfo.website}
+                        </a>
+                      ) : (
+                        '-'
+                      )}
+                    </div>
                   </div>
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No Active Agreement</h3>
-                  <p className="text-muted-foreground mb-4">
-                    You don&apos;t have an active fee agreement. Please contact the arranger to set one up.
-                  </p>
-                  <Button variant="outline" asChild>
-                    <Link href="/versotech_main/introducer-agreements">View All Agreements</Link>
-                  </Button>
+              </section>
+
+              <section className="rounded-lg border border-border/70 bg-muted/20 p-4">
+                <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                  Registered Address
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="rounded-md border border-border/70 bg-background p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Address</p>
+                    <p className="mt-1 text-sm font-medium">{introducerInfo?.address_line_1 || '-'}</p>
+                  </div>
+                  <div className="rounded-md border border-border/70 bg-background p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Address (Optional)</p>
+                    <p className="mt-1 text-sm font-medium">{introducerInfo?.address_line_2 || '-'}</p>
+                  </div>
+                  <div className="rounded-md border border-border/70 bg-background p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">City</p>
+                    <p className="mt-1 text-sm font-medium">{introducerInfo?.city || '-'}</p>
+                  </div>
+                  <div className="rounded-md border border-border/70 bg-background p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">State / Province</p>
+                    <p className="mt-1 text-sm font-medium">{introducerInfo?.state_province || '-'}</p>
+                  </div>
+                  <div className="rounded-md border border-border/70 bg-background p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Postal Code</p>
+                    <p className="mt-1 text-sm font-medium">{introducerInfo?.postal_code || '-'}</p>
+                  </div>
+                  <div className="rounded-md border border-border/70 bg-background p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Country</p>
+                    <p className="mt-1 text-sm font-medium">{getCountryName(introducerInfo?.country) || '-'}</p>
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </section>
+              </OverviewSectionCard>
+            )}
+
+            {!isIndividualIntroducer && introducerInfo && (
+              <PersonalKYCSection
+                memberData={memberInfo}
+                entityType="introducer"
+                entityId={introducerInfo.id}
+                onRefresh={() => window.location.reload()}
+                profileEmail={profileData?.email || userEmail}
+                profileName={profileData?.full_name || profileData?.display_name || null}
+                autoOpenEdit={defaultAction === 'edit-personal-kyc'}
+              />
+            )}
+
+            {isIndividualIntroducer && (
+              <IndividualKycDisplay
+                data={{
+                  first_name: introducerInfo?.first_name,
+                  middle_name: introducerInfo?.middle_name,
+                  middle_initial: introducerInfo?.middle_initial,
+                  last_name: introducerInfo?.last_name,
+                  name_suffix: introducerInfo?.name_suffix,
+                  date_of_birth: introducerInfo?.date_of_birth,
+                  country_of_birth: introducerInfo?.country_of_birth,
+                  nationality: introducerInfo?.nationality,
+                  email: introducerInfo?.email,
+                  phone_mobile: introducerInfo?.phone_mobile,
+                  phone_office: introducerInfo?.phone_office,
+                  residential_street: introducerInfo?.residential_street,
+                  residential_city: introducerInfo?.residential_city,
+                  residential_state: introducerInfo?.residential_state,
+                  residential_postal_code: introducerInfo?.residential_postal_code,
+                  residential_country: introducerInfo?.residential_country,
+                  is_us_citizen: introducerInfo?.is_us_citizen,
+                  is_us_taxpayer: introducerInfo?.is_us_taxpayer,
+                  us_taxpayer_id: introducerInfo?.us_taxpayer_id,
+                  country_of_tax_residency: introducerInfo?.country_of_tax_residency,
+                  tax_id_number: introducerInfo?.tax_id_number || introducerInfo?.tax_id,
+                  id_type: introducerInfo?.id_type,
+                  id_number: introducerInfo?.id_number,
+                  id_issue_date: introducerInfo?.id_issue_date,
+                  id_expiry_date: introducerInfo?.id_expiry_date,
+                  id_issuing_country: introducerInfo?.id_issuing_country,
+                  proof_of_address_date: introducerInfo?.proof_of_address_date,
+                }}
+                onEdit={() => setShowKycDialog(true)}
+                showEditButton={canEditEntityProfile}
+                title="Personal KYC Information"
+                addressDisplay="combined"
+              />
+            )}
+          </ProfileOverviewShell>
         </TabsContent>
 
         {/* Team Tab */}
@@ -1193,30 +886,13 @@ export function IntroducerProfileClient({
         )}
 
         {/* KYC Documents Tab */}
-        <TabsContent value="kyc" className="space-y-4">
-          {introducerInfo?.type !== 'individual' &&
-            !['approved', 'submitted', 'pending_review'].includes(introducerInfo?.kyc_status || '') && (
-            <Card>
-              <CardContent className="pt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="font-medium text-foreground">Submit company information</p>
-                  <p className="text-sm text-muted-foreground">
-                    Required to complete company KYC and prepare the account for approval.
-                  </p>
-                </div>
-                {(introducerUserInfo.role === 'admin' || introducerUserInfo.is_primary) ? (
-                  <Button onClick={handleSubmitEntityKyc} disabled={isSubmittingEntityKyc} size="sm">
-                    <Send className="h-4 w-4 mr-2" />
-                    {isSubmittingEntityKyc ? 'Submitting...' : 'Submit company information'}
-                  </Button>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Only primary contacts or introducer admins can submit company information for review.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          )}
+        <TabsContent value="kyc" className="space-y-6">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">KYC Documents</h2>
+            <p className="text-muted-foreground">
+              Upload required identity and verification documents.
+            </p>
+          </div>
           {introducerInfo && (
             <IntroducerKYCDocumentsTab
               introducerId={introducerInfo.id}
@@ -1232,18 +908,6 @@ export function IntroducerProfileClient({
         <TabsContent value="security" className="space-y-4">
           <PasswordChangeForm />
         </TabsContent>
-
-        {/* Preferences Tab */}
-        <TabsContent value="preferences" className="space-y-4">
-          <PreferencesEditor />
-          <GDPRControls />
-        </TabsContent>
-
-
-        {/* Notices Tab */}
-        <TabsContent value="notices" className="space-y-4">
-          <NoticeContactsTab apiEndpoint="/api/introducers/me/notice-contacts" />
-        </TabsContent>
       </Tabs>
 
       {/* KYC Edit Dialogs */}
@@ -1257,16 +921,21 @@ export function IntroducerProfileClient({
           initialData={{
             first_name: introducerInfo?.first_name ?? undefined,
             middle_name: introducerInfo?.middle_name ?? undefined,
+            middle_initial: introducerInfo?.middle_initial ?? undefined,
             last_name: introducerInfo?.last_name ?? undefined,
             name_suffix: introducerInfo?.name_suffix ?? undefined,
             date_of_birth: introducerInfo?.date_of_birth ?? undefined,
             nationality: introducerInfo?.nationality ?? undefined,
             country_of_birth: introducerInfo?.country_of_birth ?? undefined,
+            email: introducerInfo?.email ?? profileData?.email ?? userEmail ?? undefined,
+            phone_mobile: introducerInfo?.phone_mobile ?? undefined,
+            phone_office: introducerInfo?.phone_office ?? undefined,
             is_us_citizen: introducerInfo?.is_us_citizen === true,
             is_us_taxpayer: introducerInfo?.is_us_taxpayer === true,
             us_taxpayer_id: introducerInfo?.us_taxpayer_id ?? undefined,
             country_of_tax_residency: introducerInfo?.country_of_tax_residency ?? undefined,
-            id_type: introducerInfo?.id_type as 'passport' | 'national_id' | 'drivers_license' | 'residence_permit' | undefined,
+            tax_id_number: introducerInfo?.tax_id_number ?? introducerInfo?.tax_id ?? undefined,
+            id_type: introducerInfo?.id_type ?? undefined,
             id_number: introducerInfo?.id_number ?? undefined,
             id_issue_date: introducerInfo?.id_issue_date ?? undefined,
             id_expiry_date: introducerInfo?.id_expiry_date ?? undefined,
@@ -1276,33 +945,44 @@ export function IntroducerProfileClient({
             residential_state: introducerInfo?.residential_state ?? undefined,
             residential_postal_code: introducerInfo?.residential_postal_code ?? undefined,
             residential_country: introducerInfo?.residential_country ?? undefined,
+            proof_of_address_date: introducerInfo?.proof_of_address_date ?? undefined,
           }}
           apiEndpoint="/api/introducers/me/profile"
           onSuccess={() => window.location.reload()}
         />
       )}
 
-      <EntityAddressEditDialog
-        open={showAddressDialog}
-        onOpenChange={setShowAddressDialog}
-        entityType="introducer"
-        entityName={introducerInfo?.legal_name || introducerInfo?.contact_name || undefined}
-        initialData={{
-          address: introducerInfo?.address_line_1 ?? undefined,
-          address_2: introducerInfo?.address_line_2 ?? undefined,
-          city: introducerInfo?.city ?? undefined,
-          state_province: introducerInfo?.state_province ?? undefined,
-          postal_code: introducerInfo?.postal_code ?? undefined,
-          country: introducerInfo?.country ?? undefined,
-          email: introducerInfo?.email ?? undefined,
-          phone: introducerInfo?.phone ?? undefined,
-          phone_mobile: introducerInfo?.phone_mobile ?? undefined,
-          phone_office: introducerInfo?.phone_office ?? undefined,
-          website: introducerInfo?.website ?? undefined,
-        }}
-        apiEndpoint="/api/introducers/me/profile"
-        onSuccess={() => window.location.reload()}
-      />
+      {introducerInfo && !isIndividualIntroducer && (
+        <EntityOverviewEditDialog
+          open={showEntityOverviewDialog}
+          onOpenChange={setShowEntityOverviewDialog}
+          entityName={introducerInfo.legal_name || introducerInfo.contact_name || undefined}
+          initialData={{
+            display_name: introducerInfo.display_name ?? undefined,
+            legal_name: introducerInfo.legal_name ?? undefined,
+            contact_name: introducerInfo.contact_name ?? undefined,
+            country_of_incorporation: introducerInfo.country_of_incorporation ?? undefined,
+            registration_number: introducerInfo.registration_number ?? undefined,
+            tax_id_number: introducerInfo.tax_id_number ?? introducerInfo.tax_id ?? undefined,
+            email: introducerInfo.email ?? undefined,
+            phone: introducerInfo.phone ?? undefined,
+            phone_mobile: introducerInfo.phone_mobile ?? undefined,
+            phone_office: introducerInfo.phone_office ?? undefined,
+            website: introducerInfo.website ?? undefined,
+            address: introducerInfo.address_line_1 ?? undefined,
+            address_2: introducerInfo.address_line_2 ?? undefined,
+            city: introducerInfo.city ?? undefined,
+            state_province: introducerInfo.state_province ?? undefined,
+            postal_code: introducerInfo.postal_code ?? undefined,
+            country: introducerInfo.country ?? undefined,
+          }}
+          apiEndpoint="/api/introducers/me/profile"
+          afterSave={submitEntityKycAfterSave}
+          showContactName
+          showRegistrationFields
+          onSuccess={() => window.location.reload()}
+        />
+      )}
     </div>
   )
 }

@@ -65,6 +65,7 @@ type InvestorInfo = {
   onboarding_status: string | null
   country: string | null
   country_of_incorporation: string | null
+  registration_number: string | null
   tax_residency: string | null
   email: string | null
   phone: string | null
@@ -478,14 +479,15 @@ export function ProfilePageClient({
     label: 'Account Pending',
     className: 'bg-gray-100 text-gray-800 border-gray-200',
   }
-  const hideAccountApprovalSection =
-    accountApprovalStatusKey === 'approved' || accountApprovalStatusKey === 'rejected'
+  const hideAccountApprovalSection = accountApprovalStatusKey === 'approved'
   const showRequestInfoBadge = !!latestAccountRequestInfo && !hasPendingAccountApproval && !hideAccountApprovalSection
   const accountApprovalSubmitDisabled =
     isSubmittingAccountApproval ||
     !canSubmitAccountApproval ||
     hasPendingAccountApproval ||
     !isAccountApprovalReady
+
+  const normalizedInvestorDefaultTab = !isStaff && defaultTab === 'preferences' ? 'overview' : defaultTab
 
   // Staff layout - keep the original grid layout
   if (isStaff) {
@@ -621,7 +623,7 @@ export function ProfilePageClient({
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue={defaultTab} className="space-y-6">
+      <Tabs defaultValue={normalizedInvestorDefaultTab} className="space-y-6">
         <TabsList>
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Building2 className="h-4 w-4" />
@@ -656,10 +658,6 @@ export function ProfilePageClient({
           <TabsTrigger value="security" className="flex items-center gap-2">
             <Lock className="h-4 w-4" />
             Security
-          </TabsTrigger>
-          <TabsTrigger value="preferences" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Preferences
           </TabsTrigger>
         </TabsList>
 
@@ -737,6 +735,14 @@ export function ProfilePageClient({
                     <div className="rounded-md border border-border/70 bg-background p-3">
                       <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Country of Incorporation</p>
                       <p className="mt-1 text-sm font-medium">{getCountryName(investorInfo.country_of_incorporation) || '-'}</p>
+                    </div>
+                    <div className="rounded-md border border-border/70 bg-background p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Registration Number</p>
+                      <p className="mt-1 text-sm font-medium">{investorInfo.registration_number || '-'}</p>
+                    </div>
+                    <div className="rounded-md border border-border/70 bg-background p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Tax ID</p>
+                      <p className="mt-1 text-sm font-medium">{investorInfo.tax_id_number || '-'}</p>
                     </div>
                   </div>
                 </section>
@@ -872,6 +878,7 @@ export function ProfilePageClient({
                   is_us_taxpayer: investorInfo.is_us_taxpayer,
                   us_taxpayer_id: investorInfo.us_taxpayer_id,
                   country_of_tax_residency: investorInfo.country_of_tax_residency,
+                  tax_id_number: investorInfo.tax_id_number,
                   id_type: approvedDocMetadata?.id_type || investorInfo.id_type,
                   id_number: approvedDocMetadata?.id_number || investorInfo.id_number,
                   id_issue_date: approvedDocMetadata?.id_issue_date || investorInfo.id_issue_date,
@@ -1140,10 +1147,6 @@ export function ProfilePageClient({
           <PasswordChangeForm />
         </TabsContent>
 
-        {/* Preferences Tab */}
-        <TabsContent value="preferences" className="space-y-4">
-          <PreferencesEditor variant="investor" />
-        </TabsContent>
       </Tabs>
 
       {/* KYC Edit Dialog for Individual Investors */}
@@ -1170,12 +1173,19 @@ export function ProfilePageClient({
             is_us_taxpayer: investorInfo.is_us_taxpayer === true,
             us_taxpayer_id: investorInfo.us_taxpayer_id ?? undefined,
             country_of_tax_residency: investorInfo.country_of_tax_residency ?? undefined,
+            tax_id_number: investorInfo.tax_id_number ?? undefined,
+            id_type: investorInfo.id_type ?? undefined,
+            id_number: investorInfo.id_number ?? undefined,
+            id_issue_date: investorInfo.id_issue_date ?? undefined,
+            id_expiry_date: investorInfo.id_expiry_date ?? undefined,
+            id_issuing_country: investorInfo.id_issuing_country ?? undefined,
             residential_street: investorInfo.residential_street ?? undefined,
             residential_line_2: investorInfo.residential_line_2 ?? undefined,
             residential_city: investorInfo.residential_city ?? undefined,
             residential_state: investorInfo.residential_state ?? undefined,
             residential_postal_code: investorInfo.residential_postal_code ?? undefined,
             residential_country: investorInfo.residential_country ?? undefined,
+            proof_of_address_date: investorInfo.proof_of_address_date ?? undefined,
           }}
           apiEndpoint="/api/investors/me"
           afterSave={submitPersonalKycAfterSave}
@@ -1192,6 +1202,8 @@ export function ProfilePageClient({
             display_name: investorInfo.display_name,
             legal_name: investorInfo.legal_name,
             country_of_incorporation: investorInfo.country_of_incorporation,
+            registration_number: investorInfo.registration_number,
+            tax_id_number: investorInfo.tax_id_number,
             email: investorInfo.email,
             phone: investorInfo.phone,
             phone_mobile: investorInfo.phone_mobile,
@@ -1205,6 +1217,7 @@ export function ProfilePageClient({
             country: investorInfo.registered_country,
           }}
           apiEndpoint="/api/investors/me"
+          showRegistrationFields
           afterSave={canSubmitEntityInfo ? submitEntityKycAfterSave : undefined}
           onSuccess={() => window.location.reload()}
         />

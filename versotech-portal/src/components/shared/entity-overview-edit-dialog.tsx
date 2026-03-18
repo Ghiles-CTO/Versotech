@@ -24,7 +24,10 @@ import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 const entityOverviewSchema = z.object({
   display_name: z.string().max(200).optional().nullable(),
   legal_name: z.string().max(200).optional().nullable(),
+  contact_name: z.string().max(200).optional().nullable(),
   country_of_incorporation: z.string().optional().nullable(),
+  registration_number: z.string().max(100).optional().nullable(),
+  tax_id_number: z.string().max(50).optional().nullable(),
 
   email: z.string().email('Invalid email').optional().nullable().or(z.literal('')),
   phone: z.string().max(30).optional().nullable(),
@@ -65,10 +68,16 @@ interface EntityOverviewEditDialogProps {
   initialData?: Partial<EntityOverviewForm> & {
     address_line_1?: string | null
     address_line_2?: string | null
+    tax_id?: string | null
   }
   apiEndpoint: string
   afterSave?: () => Promise<SaveFollowUpResult | void> | SaveFollowUpResult | void
   onSuccess?: () => void | Promise<void>
+  showRegistrationFields?: boolean
+  showTaxIdField?: boolean
+  taxIdLabel?: string
+  contactNameLabel?: string
+  showContactName?: boolean
 }
 
 const toNullable = (value: string | null | undefined): string | null => {
@@ -85,6 +94,11 @@ export function EntityOverviewEditDialog({
   apiEndpoint,
   afterSave,
   onSuccess,
+  showRegistrationFields = false,
+  showTaxIdField = showRegistrationFields,
+  taxIdLabel = 'Tax ID',
+  contactNameLabel = 'Contact Person',
+  showContactName = false,
 }: EntityOverviewEditDialogProps) {
   const [isSaving, setIsSaving] = useState(false)
 
@@ -93,7 +107,10 @@ export function EntityOverviewEditDialog({
     defaultValues: {
       display_name: initialData?.display_name || '',
       legal_name: initialData?.legal_name || '',
+      contact_name: initialData?.contact_name || '',
       country_of_incorporation: initialData?.country_of_incorporation || '',
+      registration_number: initialData?.registration_number || '',
+      tax_id_number: initialData?.tax_id_number || initialData?.tax_id || '',
       email: initialData?.email || '',
       phone: initialData?.phone || '',
       phone_mobile: initialData?.phone_mobile || '',
@@ -113,7 +130,10 @@ export function EntityOverviewEditDialog({
     form.reset({
       display_name: initialData?.display_name || '',
       legal_name: initialData?.legal_name || '',
+      contact_name: initialData?.contact_name || '',
       country_of_incorporation: initialData?.country_of_incorporation || '',
+      registration_number: initialData?.registration_number || '',
+      tax_id_number: initialData?.tax_id_number || initialData?.tax_id || '',
       email: initialData?.email || '',
       phone: initialData?.phone || '',
       phone_mobile: initialData?.phone_mobile || '',
@@ -134,7 +154,11 @@ export function EntityOverviewEditDialog({
       const payload = {
         display_name: toNullable(data.display_name),
         legal_name: toNullable(data.legal_name),
+        contact_name: toNullable(data.contact_name),
         country_of_incorporation: toNullable(data.country_of_incorporation),
+        registration_number: toNullable(data.registration_number),
+        tax_id_number: toNullable(data.tax_id_number),
+        tax_id: toNullable(data.tax_id_number),
         email: toNullable(data.email),
         phone: toNullable(data.phone),
         phone_mobile: toNullable(data.phone_mobile),
@@ -217,7 +241,7 @@ export function EntityOverviewEditDialog({
                       <FormMessage />
                     </FormItem>
                   )}
-                />
+                  />
 
                 <FormField
                   control={form.control}
@@ -230,9 +254,25 @@ export function EntityOverviewEditDialog({
                       </FormControl>
                       <FormMessage />
                     </FormItem>
+                    )}
+                  />
+              </div>
+
+              {showContactName ? (
+                <FormField
+                  control={form.control}
+                  name="contact_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{contactNameLabel}</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ''} placeholder="Primary contact name" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
                 />
-              </div>
+              ) : null}
 
               <FormField
                 control={form.control}
@@ -247,6 +287,42 @@ export function EntityOverviewEditDialog({
                   </FormItem>
                 )}
               />
+
+              {showRegistrationFields || showTaxIdField ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {showRegistrationFields ? (
+                    <FormField
+                      control={form.control}
+                      name="registration_number"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Registration Number</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value || ''} placeholder="Company registration number" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ) : null}
+
+                  {showTaxIdField ? (
+                    <FormField
+                      control={form.control}
+                      name="tax_id_number"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{taxIdLabel}</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value || ''} placeholder="Tax identification number" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ) : null}
+                </div>
+              ) : null}
             </section>
 
             <section className="space-y-4 border-t pt-6">

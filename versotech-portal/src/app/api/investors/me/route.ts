@@ -60,6 +60,7 @@ const updateInvestorSchema = z.object({
   display_name: z.string().max(200).optional().nullable(),
   legal_name: z.string().max(200).optional().nullable(),
   country_of_incorporation: z.string().optional().nullable(),
+  registration_number: z.string().max(100).optional().nullable(),
 
   // Personal Info (for individual investors)
   first_name: z.string().max(100).optional().nullable(),
@@ -245,6 +246,10 @@ export async function PATCH(request: Request) {
     // Map form field → DB column (country_of_tax_residency → tax_residency)
     if (parsed.data.country_of_tax_residency !== undefined) {
       updateData.tax_residency = parsed.data.country_of_tax_residency
+    }
+
+    if (parsed.data.registration_number !== undefined) {
+      updateData.entity_identifier = parsed.data.registration_number
     }
 
     // Handle address fields from EntityAddressEditDialog

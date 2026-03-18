@@ -20,10 +20,12 @@ import {
 const profileUpdateSchema = z.object({
   // Entity type
   type: z.enum(['individual', 'entity']).optional(),
+  display_name: z.string().max(255).optional().nullable(),
+  legal_name: z.string().max(255).optional().nullable(),
 
   // Contact fields (self-editable)
-  contact_name: z.string().min(1).max(255).optional(),
-  email: z.string().email().max(255).optional(),
+  contact_name: z.string().max(255).optional().nullable(),
+  email: z.string().email().max(255).optional().nullable().or(z.literal('')),
   notes: z.string().max(2000).optional().nullable(),
   logo_url: z.string().url().max(500).optional().nullable(),
 
@@ -64,7 +66,7 @@ const profileUpdateSchema = z.object({
   country_of_tax_residency: z.string().max(2).optional().nullable(),
 
   // ID Document
-  id_type: z.enum(['passport', 'national_id', 'drivers_license', 'residence_permit']).optional().nullable(),
+  id_type: z.enum(['passport', 'national_id', 'drivers_license', 'residence_permit', 'other_government_id', 'other']).optional().nullable().or(z.literal('')),
   id_number: z.string().max(50).optional().nullable(),
   id_issue_date: z.string().optional().nullable(),
   id_expiry_date: z.string().optional().nullable(),
@@ -301,10 +303,35 @@ export async function PATCH(request: NextRequest) {
       updateFields.address_line_2 = normalizedAddressLine2 === '' ? null : normalizedAddressLine2
     }
 
+    if (updateFields.tax_id_number !== undefined && updateFields.tax_id === undefined) {
+      updateFields.tax_id = updateFields.tax_id_number
+    }
+
+    const dateFields = [
+      'date_of_birth',
+      'id_issue_date',
+      'id_expiry_date',
+      'proof_of_address_date',
+      'proof_of_address_expiry',
+    ]
+    for (const field of dateFields) {
+      if (field in updateFields && updateFields[field] === '') {
+        updateFields[field] = null
+      }
+    }
+
+    if (updateFields.id_type === '') {
+      updateFields.id_type = null
+    } else if (updateFields.id_type === 'other') {
+      updateFields.id_type = 'other_government_id'
+    }
+
     // Check there's something to update
     if (Object.keys(updateFields).length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
     }
+
+    updateFields.updated_at = new Date().toISOString()
 
     // Directly update the introducer entity
     const { data: updatedIntroducer, error: updateError } = await serviceSupabase
