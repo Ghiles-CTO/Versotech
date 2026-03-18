@@ -299,38 +299,32 @@ export async function getIntroducerAccountApprovalReadiness(params: {
   const introducerName = getIntroducerName(introducer)
 
   if (isIndividual) {
-    const primaryMember = activeMembers[0] || null
     const missing: string[] = []
 
     const personalIssue = toOutstandingRequirementLabel(
       'Personal Information',
-      getLatestSubmissionForType(submissions, 'personal_info', primaryMember?.id || null)
+      getLatestSubmissionForType(submissions, 'personal_info', null)
     )
     if (personalIssue) missing.push(personalIssue)
 
     const idIssue = toOutstandingRequirementLabel(
       'Proof of Identification',
-      getLatestIdDocumentSubmission(submissions, primaryMember?.id || null)
+      getLatestIdDocumentSubmission(submissions, null)
     )
     if (idIssue) missing.push(idIssue)
 
     const addressIssue = toOutstandingRequirementLabel(
       'Proof of Address',
-      getLatestProofOfAddressSubmission(submissions, primaryMember?.id || null)
+      getLatestProofOfAddressSubmission(submissions, null)
     )
     if (addressIssue) missing.push(addressIssue)
 
-    if (!primaryMember) {
-      missing.push('At least one active member')
-    }
-
     if (missing.length > 0) {
       missingItems.push({
-        scope: primaryMember ? 'member' : 'entity',
-        name: primaryMember ? getMemberName(primaryMember, 0) : introducerName,
-        email: primaryMember?.email || null,
+        scope: 'entity',
+        name: introducerName,
         missingItems: missing,
-        memberId: primaryMember?.id || null,
+        memberId: null,
       })
     }
   } else {

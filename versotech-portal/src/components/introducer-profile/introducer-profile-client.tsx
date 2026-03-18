@@ -39,6 +39,7 @@ import { ProfileOverviewShell, OverviewSectionCard } from '@/components/profile/
 // Import shared KYC dialog components
 import { EntityKYCEditDialog, EntityOverviewEditDialog, IndividualKycDisplay } from '@/components/shared'
 import { PersonalKYCSection, MemberKYCData } from '@/components/profile/personal-kyc-section'
+import { type ApprovedKycDocumentMetadata } from '@/lib/kyc/approved-document-metadata'
 
 type IntroducerInfo = {
   id: string
@@ -92,6 +93,7 @@ type IntroducerInfo = {
   id_issuing_country: string | null
   // Residential Address
   residential_street: string | null
+  residential_line_2: string | null
   residential_city: string | null
   residential_state: string | null
   residential_postal_code: string | null
@@ -130,6 +132,7 @@ interface IntroducerProfileClientProps {
   introducerInfo: IntroducerInfo | null
   introducerUserInfo: IntroducerUserInfo
   memberInfo: MemberKYCData | null
+  approvedDocMetadata?: ApprovedKycDocumentMetadata | null
   introducerAccountApprovalReadiness?: {
     introducerId: string
     introducerName: string
@@ -199,6 +202,7 @@ export function IntroducerProfileClient({
   introducerInfo,
   introducerUserInfo,
   memberInfo,
+  approvedDocMetadata,
   introducerAccountApprovalReadiness,
 }: IntroducerProfileClientProps) {
   const [isSubmittingAccountApproval, setIsSubmittingAccountApproval] = useState(false)
@@ -831,6 +835,7 @@ export function IntroducerProfileClient({
                   phone_mobile: introducerInfo?.phone_mobile,
                   phone_office: introducerInfo?.phone_office,
                   residential_street: introducerInfo?.residential_street,
+                  residential_line_2: introducerInfo?.residential_line_2,
                   residential_city: introducerInfo?.residential_city,
                   residential_state: introducerInfo?.residential_state,
                   residential_postal_code: introducerInfo?.residential_postal_code,
@@ -840,12 +845,12 @@ export function IntroducerProfileClient({
                   us_taxpayer_id: introducerInfo?.us_taxpayer_id,
                   country_of_tax_residency: introducerInfo?.country_of_tax_residency,
                   tax_id_number: introducerInfo?.tax_id_number || introducerInfo?.tax_id,
-                  id_type: introducerInfo?.id_type,
-                  id_number: introducerInfo?.id_number,
-                  id_issue_date: introducerInfo?.id_issue_date,
-                  id_expiry_date: introducerInfo?.id_expiry_date,
-                  id_issuing_country: introducerInfo?.id_issuing_country,
-                  proof_of_address_date: introducerInfo?.proof_of_address_date,
+                  id_type: approvedDocMetadata?.id_type || introducerInfo?.id_type,
+                  id_number: approvedDocMetadata?.id_number || introducerInfo?.id_number,
+                  id_issue_date: approvedDocMetadata?.id_issue_date || introducerInfo?.id_issue_date,
+                  id_expiry_date: approvedDocMetadata?.id_expiry_date || introducerInfo?.id_expiry_date,
+                  id_issuing_country: approvedDocMetadata?.id_issuing_country || introducerInfo?.id_issuing_country,
+                  proof_of_address_date: approvedDocMetadata?.proof_of_address_date || introducerInfo?.proof_of_address_date,
                 }}
                 onEdit={() => setShowKycDialog(true)}
                 showEditButton={canEditEntityProfile}

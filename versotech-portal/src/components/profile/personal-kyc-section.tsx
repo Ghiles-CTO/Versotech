@@ -18,7 +18,6 @@ import {
   Flag,
   Building2,
   CheckCircle,
-  Shield,
   XCircle,
 } from 'lucide-react'
 import { MemberKYCEditDialog } from '@/components/shared/member-kyc-edit-dialog'
@@ -175,15 +174,6 @@ const MEMBER_API_ENDPOINTS: Record<PersonalKYCSectionProps['entityType'], string
   lawyer: '/api/lawyers/me/members',
   commercial_partner: '/api/commercial-partners/me/members',
   arranger: '/api/arrangers/me/members',
-}
-
-const ID_TYPE_LABELS: Record<string, string> = {
-  passport: 'Passport',
-  national_id: 'National ID Card',
-  drivers_license: "Driver's License",
-  residence_permit: 'Residence Permit',
-  other_government_id: 'Other Government ID',
-  other: 'Other Government ID',
 }
 
 export function PersonalKYCSection({
@@ -378,25 +368,6 @@ export function PersonalKYCSection({
               )}
             </div>
           </Section>
-
-          <Section icon={Shield} title="Proof of Identification">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Field label="Document Type" value={memberData.id_type ? (ID_TYPE_LABELS[memberData.id_type] || memberData.id_type) : null} />
-              <Field label="Document Number" value={memberData.id_number} />
-              <Field icon={Calendar} label="Issue Date" value={formatDate(memberData.id_issue_date)} />
-              <Field icon={Calendar} label="Expiry Date" value={formatDate(memberData.id_expiry_date)} />
-              <Field icon={Globe} label="Issuing Country" value={getCountryName(memberData.id_issuing_country)} />
-            </div>
-          </Section>
-
-          <Section icon={MapPin} title="Proof of Address">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Field icon={Calendar} label="Document Date" value={formatDate(memberData.proof_of_address_date || null)} />
-              {memberData.proof_of_address_expiry ? (
-                <Field icon={Calendar} label="Expiry" value={formatDate(memberData.proof_of_address_expiry)} />
-              ) : null}
-            </div>
-          </Section>
           {/* KYC Notes (if rejected) */}
           {memberData.kyc_status === 'rejected' && memberData.kyc_notes && (
             <div className="pt-4 border-t">
@@ -444,12 +415,6 @@ export function PersonalKYCSection({
           us_taxpayer_id: memberData.us_taxpayer_id,
           country_of_tax_residency: memberData.country_of_tax_residency,
           tax_id_number: memberData.tax_id_number,
-          id_type: memberData.id_type,
-          id_number: memberData.id_number,
-          id_issue_date: memberData.id_issue_date,
-          id_expiry_date: memberData.id_expiry_date,
-          id_issuing_country: memberData.id_issuing_country,
-          proof_of_address_date: memberData.proof_of_address_date,
           ownership_percentage: memberData.ownership_percentage ?? undefined,
         }}
         apiEndpoint={MEMBER_API_ENDPOINTS[entityType]}

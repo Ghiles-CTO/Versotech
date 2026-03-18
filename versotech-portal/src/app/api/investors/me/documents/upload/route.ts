@@ -266,6 +266,9 @@ export async function POST(request: NextRequest) {
         name: file.name,
         file_size_bytes: file.size,
         mime_type: file.type,
+        document_date: documentMetadata.submission.document_date,
+        document_issue_date: documentMetadata.submission.document_valid_from,
+        document_expiry_date: documentMetadata.submission.document_valid_to,
         is_published: true,
         created_by: user.id,
         watermark: {

@@ -4,6 +4,10 @@ import { AlertCircle } from 'lucide-react'
 import { IntroducerProfileClient } from '@/components/introducer-profile/introducer-profile-client'
 import { fetchMemberWithAutoLink } from '@/lib/kyc/member-linking'
 import {
+  extractApprovedKycDocumentMetadata,
+  type ApprovedKycDocumentMetadata,
+} from '@/lib/kyc/approved-document-metadata'
+import {
   readActivePersonaCookieValues,
   resolveActiveIntroducerLink,
 } from '@/lib/kyc/active-introducer-link'
@@ -178,6 +182,37 @@ export default async function IntroducerProfilePage({
     linkedUserId: user.id,
   })
 
+  let approvedDocMetadata: ApprovedKycDocumentMetadata | null = null
+  if (introducer?.type === 'individual') {
+    const { data: approvedSubmissions, error: approvedSubmissionsError } = await serviceSupabase
+      .from('kyc_submissions')
+      .select(`
+        status,
+        document_type,
+        created_at,
+        submitted_at,
+        reviewed_at,
+        introducer_member_id,
+        document_date,
+        document_valid_from,
+        document_valid_to,
+        expiry_date,
+        metadata
+      `)
+      .eq('introducer_id', introducerUser.introducer_id)
+      .eq('status', 'approved')
+      .order('reviewed_at', { ascending: false })
+
+    if (approvedSubmissionsError) {
+      console.error('[IntroducerProfilePage] Error fetching approved KYC document metadata:', approvedSubmissionsError)
+    } else {
+      approvedDocMetadata = extractApprovedKycDocumentMetadata(approvedSubmissions || [], {
+        memberColumn: 'introducer_member_id',
+        memberId: null,
+      })
+    }
+  }
+
   return (
     <IntroducerProfileClient
       defaultTab={defaultTab}
@@ -243,6 +278,7 @@ export default async function IntroducerProfilePage({
         id_issuing_country: introducer.id_issuing_country,
         // Residential Address
         residential_street: introducer.residential_street,
+        residential_line_2: introducer.residential_line_2,
         residential_city: introducer.residential_city,
         residential_state: introducer.residential_state,
         residential_postal_code: introducer.residential_postal_code,
@@ -263,6 +299,7 @@ export default async function IntroducerProfilePage({
         can_sign: introducerUser.can_sign || false,
       }}
       memberInfo={memberData || null}
+      approvedDocMetadata={approvedDocMetadata}
       introducerAccountApprovalReadiness={introducerAccountApprovalReadiness}
     />
   )

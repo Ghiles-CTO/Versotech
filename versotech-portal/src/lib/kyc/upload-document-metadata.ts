@@ -18,6 +18,9 @@ export type UploadDocumentMetadataResult = {
   metadataFields: {
     document_number: string | null
     issuing_country: string | null
+    document_date: string | null
+    document_issue_date: string | null
+    document_expiry_date: string | null
   }
 }
 
@@ -107,6 +110,9 @@ export function buildUploadDocumentMetadata(
     metadataFields: {
       document_number: isId ? documentNumber : null,
       issuing_country: isId ? documentIssuingCountry : null,
+      document_date: isPoa ? documentDate : null,
+      document_issue_date: isId ? documentIssueDate : null,
+      document_expiry_date: isId ? documentExpiryDate : null,
     },
   }
 }
