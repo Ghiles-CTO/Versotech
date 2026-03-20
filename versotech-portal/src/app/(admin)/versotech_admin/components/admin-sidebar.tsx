@@ -16,6 +16,7 @@ import {
   LayoutDashboard,
   Users,
   TrendingUp,
+  Workflow,
   Bell,
   Bot,
   Settings,
@@ -62,6 +63,11 @@ const adminNavItems: NavItem[] = [
       { name: 'Funnels', href: '/versotech_admin/growth/funnel', icon: TrendingUp },
       { name: 'Cohorts', href: '/versotech_admin/growth/cohorts', icon: TrendingUp },
     ],
+  },
+  {
+    name: 'Processes',
+    href: '/versotech_admin/processes',
+    icon: Workflow,
   },
   {
     name: 'Marketing',

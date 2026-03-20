@@ -98,7 +98,6 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     // Operations
     { name: 'Requests', href: '/versotech_main/requests', icon: ClipboardList, description: 'Service requests' },
     { name: 'Calendar', href: '/versotech_main/calendar', icon: Calendar, description: 'Schedule' },
-    { name: 'Processes', href: '/versotech_main/processes', icon: Workflow, description: 'Workflows' },
     // Admin (always last)
     { name: 'Admin', href: '/versotech_main/admin', icon: Database, description: 'System settings' },
   ],
