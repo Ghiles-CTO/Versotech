@@ -65,20 +65,40 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient()
-    const { user, error: authError } = await getAuthenticatedUser(supabase)
+    const regularSupabase = await createClient()
+    const serviceSupabase = createServiceClient()
+    const { user, error: authError } = await getAuthenticatedUser(regularSupabase)
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const isStaff = await isStaffUser(serviceSupabase, user)
+    if (!isStaff) {
+      return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
+    }
+
     const { id: dealId } = await params
 
-    // Fetch members with referrer, fee plan, and term sheet info
-    const { data: members, error } = await supabase
+    const { data: members, error } = await serviceSupabase
       .from('deal_memberships')
       .select(`
-        *,
+        deal_id,
+        user_id,
+        investor_id,
+        role,
+        invited_at,
+        accepted_at,
+        dispatched_at,
+        viewed_at,
+        interest_confirmed_at,
+        nda_signed_at,
+        data_room_granted_at,
+        invited_by,
+        referred_by_entity_id,
+        referred_by_entity_type,
+        assigned_fee_plan_id,
+        term_sheet_id,
         profiles:user_id (
           id,
           display_name,
@@ -92,22 +112,6 @@ export async function GET(
         invited_by_profile:invited_by (
           display_name,
           email
-        ),
-        assigned_fee_plan:assigned_fee_plan_id (
-          id,
-          name,
-          status,
-          introducer:introducer_id (id, legal_name, display_name),
-          partner:partner_id (id, name, legal_name),
-          commercial_partner:commercial_partner_id (id, name, legal_name)
-        ),
-        assigned_term_sheet:term_sheet_id (
-          id,
-          version,
-          status,
-          subscription_fee_percent,
-          management_fee_percent,
-          carried_interest_percent
         )
       `)
       .eq('deal_id', dealId)
@@ -121,7 +125,185 @@ export async function GET(
       )
     }
 
-    return NextResponse.json({ members: members || [] })
+    const memberships = members || []
+    const feePlanIds = Array.from(
+      new Set(memberships.map((member: any) => member.assigned_fee_plan_id).filter(Boolean))
+    ) as string[]
+
+    const feePlansResult = feePlanIds.length
+      ? await serviceSupabase
+          .from('fee_plans')
+          .select(`
+            id,
+            name,
+            status,
+            term_sheet_id,
+            introducer_id,
+            partner_id,
+            commercial_partner_id
+          `)
+          .in('id', feePlanIds)
+      : { data: [], error: null }
+
+    if (feePlansResult.error) {
+      console.error('Fetch related member fee plans error:', feePlansResult.error)
+      return NextResponse.json(
+        { error: 'Failed to fetch member fee plans' },
+        { status: 500 }
+      )
+    }
+
+    const rawFeePlans = (feePlansResult.data || []) as any[]
+    const termSheetIds = Array.from(
+      new Set([
+        ...memberships.map((member: any) => member.term_sheet_id).filter(Boolean),
+        ...rawFeePlans.map((feePlan: any) => feePlan.term_sheet_id).filter(Boolean),
+      ])
+    ) as string[]
+    const partnerIds = Array.from(
+      new Set([
+        ...memberships
+          .filter((member: any) => member.referred_by_entity_type === 'partner')
+          .map((member: any) => member.referred_by_entity_id)
+          .filter(Boolean),
+        ...rawFeePlans.map((feePlan: any) => feePlan.partner_id).filter(Boolean),
+      ])
+    ) as string[]
+    const introducerIds = Array.from(
+      new Set([
+        ...memberships
+          .filter((member: any) => member.referred_by_entity_type === 'introducer')
+          .map((member: any) => member.referred_by_entity_id)
+          .filter(Boolean),
+        ...rawFeePlans.map((feePlan: any) => feePlan.introducer_id).filter(Boolean),
+      ])
+    ) as string[]
+    const commercialPartnerIds = Array.from(
+      new Set([
+        ...memberships
+          .filter((member: any) => member.referred_by_entity_type === 'commercial_partner')
+          .map((member: any) => member.referred_by_entity_id)
+          .filter(Boolean),
+        ...rawFeePlans.map((feePlan: any) => feePlan.commercial_partner_id).filter(Boolean),
+      ])
+    ) as string[]
+
+    const [termSheetsResult, partnersResult, introducersResult, commercialPartnersResult] = await Promise.all([
+      termSheetIds.length
+        ? serviceSupabase
+            .from('deal_fee_structures')
+            .select(`
+              id,
+              version,
+              status,
+              term_sheet_date,
+              published_at,
+              issuer,
+              vehicle,
+              transaction_type,
+              product_description,
+              subscription_fee_percent,
+              management_fee_percent,
+              carried_interest_percent
+            `)
+            .in('id', termSheetIds)
+        : Promise.resolve({ data: [], error: null }),
+      partnerIds.length
+        ? serviceSupabase
+            .from('partners')
+            .select('id, name, legal_name, contact_name, contact_email')
+            .in('id', partnerIds)
+        : Promise.resolve({ data: [], error: null }),
+      introducerIds.length
+        ? serviceSupabase
+            .from('introducers')
+            .select('id, display_name, legal_name, email')
+            .in('id', introducerIds)
+        : Promise.resolve({ data: [], error: null }),
+      commercialPartnerIds.length
+        ? serviceSupabase
+            .from('commercial_partners')
+            .select('id, name, legal_name, contact_name, contact_email')
+            .in('id', commercialPartnerIds)
+        : Promise.resolve({ data: [], error: null }),
+    ])
+
+    if (termSheetsResult.error || partnersResult.error || introducersResult.error || commercialPartnersResult.error) {
+      console.error('Fetch related member data error:', {
+        termSheetsError: termSheetsResult.error,
+        partnersError: partnersResult.error,
+        introducersError: introducersResult.error,
+        commercialPartnersError: commercialPartnersResult.error,
+      })
+      return NextResponse.json(
+        { error: 'Failed to fetch member details' },
+        { status: 500 }
+      )
+    }
+
+    const partnersById = new Map(
+      ((partnersResult.data || []) as any[]).map(partner => [partner.id, partner])
+    )
+    const introducersById = new Map(
+      ((introducersResult.data || []) as any[]).map(introducer => [introducer.id, introducer])
+    )
+    const commercialPartnersById = new Map(
+      ((commercialPartnersResult.data || []) as any[]).map(partner => [partner.id, partner])
+    )
+    const termSheetsById = new Map(
+      ((termSheetsResult.data || []) as any[]).map(termSheet => [termSheet.id, termSheet])
+    )
+
+    const feePlansById = new Map(
+      rawFeePlans.map(feePlan => [
+        feePlan.id,
+        {
+          ...feePlan,
+          term_sheet: feePlan.term_sheet_id ? termSheetsById.get(feePlan.term_sheet_id) || null : null,
+          introducer: feePlan.introducer_id ? introducersById.get(feePlan.introducer_id) || null : null,
+          partner: feePlan.partner_id ? partnersById.get(feePlan.partner_id) || null : null,
+          commercial_partner: feePlan.commercial_partner_id
+            ? commercialPartnersById.get(feePlan.commercial_partner_id) || null
+            : null,
+        }
+      ])
+    )
+
+    const enrichedMembers = memberships.map((member: any) => {
+      const assignedFeePlan = member.assigned_fee_plan_id
+        ? feePlansById.get(member.assigned_fee_plan_id) || null
+        : null
+      let referrerEntity = null
+
+      if (member.referred_by_entity_type === 'partner' && member.referred_by_entity_id) {
+        referrerEntity = partnersById.get(member.referred_by_entity_id) || null
+      }
+      if (member.referred_by_entity_type === 'introducer' && member.referred_by_entity_id) {
+        referrerEntity = introducersById.get(member.referred_by_entity_id) || null
+      }
+      if (member.referred_by_entity_type === 'commercial_partner' && member.referred_by_entity_id) {
+        referrerEntity = commercialPartnersById.get(member.referred_by_entity_id) || null
+      }
+
+      if (!referrerEntity && assignedFeePlan) {
+        referrerEntity =
+          assignedFeePlan.introducer ||
+          assignedFeePlan.partner ||
+          assignedFeePlan.commercial_partner ||
+          null
+      }
+
+      return {
+        ...member,
+        assigned_fee_plan: assignedFeePlan,
+        assigned_term_sheet: member.term_sheet_id
+          ? termSheetsById.get(member.term_sheet_id) || null
+          : assignedFeePlan?.term_sheet || null,
+        referrer_entity: referrerEntity,
+      }
+    })
+
+    return NextResponse.json({ members: enrichedMembers })
 
   } catch (error) {
     console.error('API /deals/[id]/members GET error:', error)

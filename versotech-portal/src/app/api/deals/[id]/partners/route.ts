@@ -37,12 +37,18 @@ export async function GET(request: NextRequest, context: RouteContext) {
         is_active,
         status,
         created_at,
+        term_sheet_id,
+        generated_agreement_id,
+        generated_placement_agreement_id,
         partner_id,
         introducer_id,
         commercial_partner_id,
         partner:partners(id, name, legal_name, status, contact_email),
         introducer:introducers(id, legal_name, status, email, account_approval_status, onboarding_status),
         commercial_partner:commercial_partners(id, name, legal_name, status, contact_email),
+        term_sheet:term_sheet_id(id, version, status, term_sheet_date, published_at, issuer, vehicle, transaction_type, product_description, subscription_fee_percent, management_fee_percent, carried_interest_percent),
+        introducer_agreement:generated_agreement_id(id, reference_number, status, signed_date, effective_date, expiry_date),
+        placement_agreement:generated_placement_agreement_id(id, reference_number, status, sent_at, approved_at, signed_date, effective_date, expiry_date),
         fee_components(id, kind, rate_bps, flat_amount, calc_method, frequency)
       `)
       .eq('deal_id', dealId)
@@ -52,6 +58,60 @@ export async function GET(request: NextRequest, context: RouteContext) {
     if (error) {
       console.error('[GET /api/deals/[id]/partners] Error:', error)
       return NextResponse.json({ error: 'Failed to fetch partners' }, { status: 500 })
+    }
+
+    const feePlanIds = (feePlans || []).map(fp => fp.id).filter(Boolean)
+    const { data: linkedMemberships, error: linkedMembershipsError } = feePlanIds.length
+      ? await serviceSupabase
+          .from('deal_memberships')
+          .select(`
+            assigned_fee_plan_id,
+            user_id,
+            investor_id,
+            profiles:user_id (
+              display_name,
+              email
+            ),
+            investors:investor_id (
+              legal_name
+            )
+          `)
+          .eq('deal_id', dealId)
+          .in('assigned_fee_plan_id', feePlanIds)
+      : { data: [], error: null }
+
+    if (linkedMembershipsError) {
+      console.error('[GET /api/deals/[id]/partners] Linked memberships error:', linkedMembershipsError)
+      return NextResponse.json({ error: 'Failed to fetch linked investors' }, { status: 500 })
+    }
+
+    const linkedInvestorsByFeePlanId = new Map<string, Array<{
+      user_id: string
+      investor_id: string | null
+      name: string
+      email: string | null
+    }>>()
+
+    for (const membership of (linkedMemberships || []) as any[]) {
+      if (!membership.assigned_fee_plan_id) continue
+
+      const profile = Array.isArray(membership.profiles) ? membership.profiles[0] : membership.profiles
+      const investor = Array.isArray(membership.investors) ? membership.investors[0] : membership.investors
+      const existing = linkedInvestorsByFeePlanId.get(membership.assigned_fee_plan_id) || []
+      const identityKey = membership.investor_id || membership.user_id
+
+      if (existing.some(entry => (entry.investor_id || entry.user_id) === identityKey)) {
+        continue
+      }
+
+      existing.push({
+        user_id: membership.user_id,
+        investor_id: membership.investor_id || null,
+        name: investor?.legal_name || profile?.display_name || 'Unknown investor',
+        email: profile?.email || null,
+      })
+
+      linkedInvestorsByFeePlanId.set(membership.assigned_fee_plan_id, existing)
     }
 
     // Transform the data to a cleaner format
@@ -79,6 +139,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
         fee_plan_status: fp.status || 'draft',
         is_active: fp.is_active,
         created_at: fp.created_at,
+        term_sheet_id: fp.term_sheet_id || null,
+        term_sheet: Array.isArray(fp.term_sheet) ? fp.term_sheet[0] : fp.term_sheet,
+        introducer_agreement: Array.isArray(fp.introducer_agreement) ? fp.introducer_agreement[0] : fp.introducer_agreement,
+        placement_agreement: Array.isArray(fp.placement_agreement) ? fp.placement_agreement[0] : fp.placement_agreement,
         entity_type: entityType,
         entity_id: entity?.id,
         entity_name: entity?.name || entity?.legal_name || 'Unknown',
@@ -88,6 +152,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
           entityType === 'introducer' && entity
             ? evaluateIntroducerCommercialEligibility(entity)
             : null,
+        linked_investors: linkedInvestorsByFeePlanId.get(fp.id) || [],
         fee_components: fp.fee_components || [],
       }
     }).filter(Boolean)

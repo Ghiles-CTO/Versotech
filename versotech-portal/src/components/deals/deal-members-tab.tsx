@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { format } from 'date-fns'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -44,13 +44,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
 import { AddParticipantModal } from './add-participant-modal'
 
 // Partner assignment types
@@ -60,11 +53,50 @@ interface PartnerAssignment {
   fee_plan_status: string
   is_active: boolean
   created_at: string
+  term_sheet_id: string | null
+  term_sheet?: {
+    id: string
+    version: number
+    status: string
+    term_sheet_date: string | null
+    published_at: string | null
+    issuer?: string | null
+    vehicle?: string | null
+    transaction_type?: string | null
+    product_description?: string | null
+    subscription_fee_percent: number | null
+    management_fee_percent: number | null
+    carried_interest_percent: number | null
+  } | null
+  introducer_agreement?: {
+    id: string
+    reference_number?: string | null
+    status?: string | null
+    signed_date?: string | null
+    effective_date?: string | null
+    expiry_date?: string | null
+  } | null
+  placement_agreement?: {
+    id: string
+    reference_number?: string | null
+    status?: string | null
+    sent_at?: string | null
+    approved_at?: string | null
+    signed_date?: string | null
+    effective_date?: string | null
+    expiry_date?: string | null
+  } | null
   entity_type: 'partner' | 'introducer' | 'commercial_partner'
   entity_id: string
   entity_name: string
   entity_status: string
   entity_email: string | null
+  linked_investors: Array<{
+    user_id: string
+    investor_id: string | null
+    name: string
+    email: string | null
+  }>
   fee_components: Array<{
     id: string
     kind: string
@@ -165,13 +197,16 @@ export function DealMembersTab({ dealId, dealStatus, members: initialMembers, su
   const [assignmentsError, setAssignmentsError] = useState<string | null>(null)
   const [removingId, setRemovingId] = useState<string | null>(null)
 
-  // Fee plan filter state
-  const [feePlanFilter, setFeePlanFilter] = useState<string>('all')
-
   // Create subscription map for quick lookup
   const subscriptionMap = new Map(
     subscriptions.map(s => [s.investor_id, s])
   )
+
+  const getAssignedFeePlan = (member: any) =>
+    Array.isArray(member.assigned_fee_plan) ? member.assigned_fee_plan[0] : member.assigned_fee_plan
+
+  const getAssignedTermSheet = (member: any) =>
+    Array.isArray(member.assigned_term_sheet) ? member.assigned_term_sheet[0] : member.assigned_term_sheet
 
   const visibleMembers = members.filter(member => !['lawyer', 'arranger'].includes(member.role))
   // Enhance members with subscription data
@@ -180,26 +215,89 @@ export function DealMembersTab({ dealId, dealStatus, members: initialMembers, su
     subscription: m.investor_id ? subscriptionMap.get(m.investor_id) : null
   }))
 
-  // Extract unique fee plans from members for the filter dropdown
-  const uniqueFeePlans = enhancedMembers.reduce((acc, member) => {
-    const feePlan = member.assigned_fee_plan
-    if (feePlan && !acc.find((fp: { id: string; name: string }) => fp.id === feePlan.id)) {
-      acc.push({ id: feePlan.id, name: feePlan.name })
-    }
-    return acc
-  }, [] as { id: string; name: string }[])
-
-  // Apply fee plan filter to members
-  const filteredMembers = feePlanFilter === 'all'
-    ? enhancedMembers
-    : feePlanFilter === 'none'
-      ? enhancedMembers.filter(m => !m.assigned_fee_plan)
-      : enhancedMembers.filter(m => m.assigned_fee_plan?.id === feePlanFilter)
-
   const formatFlatAmount = (amount: number | null, currency?: string | null) => {
     if (amount === null || amount === undefined) return '—'
     const code = currency ? String(currency).toUpperCase() : ''
     return `${code ? `${code} ` : ''}${Number(amount).toLocaleString()}`
+  }
+
+  const formatStatusLabel = (value?: string | null) => {
+    if (!value) return '—'
+    return value
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, character => character.toUpperCase())
+  }
+
+  const formatDateLabel = (value?: string | null) => value ? format(new Date(value), 'MMM d, yyyy') : null
+
+  const getTermSheetLabel = (termSheet: any) => {
+    if (!termSheet) return 'Term Sheet'
+
+    if (termSheet.product_description) return termSheet.product_description
+
+    const parts = [
+      termSheet.issuer,
+      termSheet.vehicle,
+      termSheet.transaction_type ? formatStatusLabel(termSheet.transaction_type) : null
+    ].filter(Boolean)
+
+    return parts.join(' • ') || 'Term Sheet'
+  }
+
+  const getTermSheetSummary = (termSheet: any) => {
+    if (!termSheet) return []
+
+    const summary = []
+    if (termSheet.subscription_fee_percent !== null && termSheet.subscription_fee_percent !== undefined) {
+      summary.push(`Sub ${termSheet.subscription_fee_percent}%`)
+    }
+    if (termSheet.management_fee_percent !== null && termSheet.management_fee_percent !== undefined) {
+      summary.push(`Mgmt ${termSheet.management_fee_percent}%`)
+    }
+    if (termSheet.carried_interest_percent !== null && termSheet.carried_interest_percent !== undefined) {
+      summary.push(`Carry ${termSheet.carried_interest_percent}%`)
+    }
+    return summary
+  }
+
+  const getAgreementInfo = (assignment: PartnerAssignment) => {
+    if (assignment.entity_type === 'introducer') {
+      return assignment.introducer_agreement || null
+    }
+    if (assignment.entity_type === 'commercial_partner') {
+      return assignment.placement_agreement || null
+    }
+    return null
+  }
+
+  const getAgreementLabel = (assignment: PartnerAssignment) => {
+    if (assignment.entity_type === 'introducer') return 'Agreement'
+    if (assignment.entity_type === 'commercial_partner') return 'Placement Agreement'
+    return null
+  }
+
+  const getAgreementDateDetails = (agreement: any) => {
+    if (!agreement) return []
+
+    const details = []
+    const signedDate = formatDateLabel(agreement.signed_date)
+    const approvedDate = formatDateLabel(agreement.approved_at)
+    const sentDate = formatDateLabel(agreement.sent_at)
+    const effectiveDate = formatDateLabel(agreement.effective_date)
+    const expiryDate = formatDateLabel(agreement.expiry_date)
+
+    if (signedDate) {
+      details.push(`Signed ${signedDate}`)
+    } else if (approvedDate) {
+      details.push(`Approved ${approvedDate}`)
+    } else if (sentDate) {
+      details.push(`Sent ${sentDate}`)
+    }
+
+    if (effectiveDate) details.push(`Effective ${effectiveDate}`)
+    if (expiryDate) details.push(`Expiry ${expiryDate}`)
+
+    return details
   }
 
   // Update local state when server data changes
@@ -208,7 +306,7 @@ export function DealMembersTab({ dealId, dealStatus, members: initialMembers, su
   }, [initialMembers])
 
   // Fetch partner assignments
-  const fetchAssignments = async () => {
+  const fetchAssignments = useCallback(async () => {
     setLoadingAssignments(true)
     setAssignmentsError(null)
     try {
@@ -218,18 +316,23 @@ export function DealMembersTab({ dealId, dealStatus, members: initialMembers, su
         throw new Error(errorData.error || 'Failed to load partner assignments')
       }
       const data = await response.json()
-      setPartnerAssignments(data.data || [])
+      setPartnerAssignments(
+        (data.data || []).map((assignment: PartnerAssignment) => ({
+          ...assignment,
+          linked_investors: Array.isArray(assignment.linked_investors) ? assignment.linked_investors : [],
+        }))
+      )
     } catch (err) {
       console.error('Failed to fetch partner assignments:', err)
       setAssignmentsError(err instanceof Error ? err.message : 'Failed to load partner assignments')
     } finally {
       setLoadingAssignments(false)
     }
-  }
+  }, [dealId])
 
   useEffect(() => {
-    fetchAssignments()
-  }, [dealId])
+    void fetchAssignments()
+  }, [fetchAssignments])
 
   const handleRemoveAssignment = async (feePlanId: string) => {
     if (!confirm('Are you sure you want to remove this partner from this deal?')) {
@@ -295,35 +398,91 @@ export function DealMembersTab({ dealId, dealStatus, members: initialMembers, su
 
   // Get referrer info from member's assigned_fee_plan
   const getReferrerInfo = (member: any) => {
-    const feePlan = member.assigned_fee_plan
-    if (!feePlan) return null
+    const getEntityName = (entity: any) =>
+      entity?.display_name ||
+      entity?.legal_name ||
+      entity?.company_name ||
+      entity?.name ||
+      entity?.contact_name ||
+      null
+
+    if (member.referrer_entity) {
+      if (member.referred_by_entity_type === 'introducer') {
+        return {
+          type: 'Introducer',
+          name: getEntityName(member.referrer_entity) || 'Introducer',
+          icon: Users
+        }
+      }
+      if (member.referred_by_entity_type === 'partner') {
+        return {
+          type: 'Partner',
+          name: getEntityName(member.referrer_entity) || 'Partner',
+          icon: Building2
+        }
+      }
+      if (member.referred_by_entity_type === 'commercial_partner') {
+        return {
+          type: 'Commercial Partner',
+          name: getEntityName(member.referrer_entity) || 'Commercial Partner',
+          icon: Briefcase
+        }
+      }
+    }
+
+    const feePlan = getAssignedFeePlan(member)
+
+    if (!feePlan) {
+      if (member.referred_by_entity_type === 'introducer') {
+        return {
+          type: 'Introducer',
+          name: 'Introducer linked',
+          icon: Users
+        }
+      }
+      if (member.referred_by_entity_type === 'partner') {
+        return {
+          type: 'Partner',
+          name: 'Partner linked',
+          icon: Building2
+        }
+      }
+      if (member.referred_by_entity_type === 'commercial_partner') {
+        return {
+          type: 'Commercial Partner',
+          name: 'Commercial partner linked',
+          icon: Briefcase
+        }
+      }
+      return null
+    }
 
     // The referrer is the entity linked to the fee plan
     if (feePlan.introducer) {
       return {
         type: 'Introducer',
-        name: feePlan.introducer.company_name || feePlan.introducer.name,
+        name: getEntityName(feePlan.introducer) || 'Introducer',
         icon: Users
       }
     }
     if (feePlan.partner) {
       return {
         type: 'Partner',
-        name: feePlan.partner.company_name || feePlan.partner.name,
+        name: getEntityName(feePlan.partner) || 'Partner',
         icon: Building2
       }
     }
     if (feePlan.commercial_partner) {
       return {
         type: 'Commercial Partner',
-        name: feePlan.commercial_partner.company_name || feePlan.commercial_partner.name,
+        name: getEntityName(feePlan.commercial_partner) || 'Commercial Partner',
         icon: Briefcase
       }
     }
     return null
   }
 
-  const refreshMembers = async () => {
+  const refreshMembers = useCallback(async () => {
     try {
       const response = await fetch(`/api/deals/${dealId}/members`)
       if (response.ok) {
@@ -333,7 +492,11 @@ export function DealMembersTab({ dealId, dealStatus, members: initialMembers, su
     } catch (err) {
       console.error('Failed to refresh members:', err)
     }
-  }
+  }, [dealId])
+
+  useEffect(() => {
+    void refreshMembers()
+  }, [refreshMembers])
 
   const handleRemoveMember = async (userId: string) => {
     if (!confirm('Are you sure you want to remove this member from the deal?')) {
@@ -355,19 +518,6 @@ export function DealMembersTab({ dealId, dealStatus, members: initialMembers, su
       console.error('Failed to remove member:', err)
       alert('Failed to remove member. Please try again.')
     }
-  }
-
-  const roleColors: Record<string, string> = {
-    investor: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-200',
-    co_investor: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-200',
-    partner_investor: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-200',
-    introducer_investor: 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-200',
-    commercial_partner_investor: 'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-200',
-    advisor: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-200',
-    banker: 'bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-200',
-    introducer: 'bg-pink-100 dark:bg-pink-500/20 text-pink-700 dark:text-pink-200',
-    verso_staff: 'bg-muted text-muted-foreground',
-    viewer: 'bg-muted text-muted-foreground'
   }
 
   // Dispatch is only allowed when deal is open or allocation_pending
@@ -471,55 +621,40 @@ export function DealMembersTab({ dealId, dealStatus, members: initialMembers, su
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <UserCircle className="h-4 w-4" />
-                Investors ({filteredMembers.length}{feePlanFilter !== 'all' ? ` of ${enhancedMembers.length}` : ''})
+                Investors ({enhancedMembers.length})
               </h3>
-              {/* Fee Plan Filter Dropdown */}
-              {uniqueFeePlans.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Filter by Fee Plan:</span>
-                  <Select value={feePlanFilter} onValueChange={setFeePlanFilter}>
-                    <SelectTrigger className="w-[200px] h-8 text-sm">
-                      <SelectValue placeholder="All Fee Plans" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Fee Plans</SelectItem>
-                      <SelectItem value="none">No Fee Plan (Direct)</SelectItem>
-                      {uniqueFeePlans.map((fp: { id: string; name: string }) => (
-                        <SelectItem key={fp.id} value={fp.id}>
-                          {fp.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
             </div>
-          {filteredMembers.length === 0 ? (
+          {enhancedMembers.length === 0 ? (
             <div className="text-center py-6 text-muted-foreground border border-dashed border-border rounded-lg">
-              {feePlanFilter !== 'all'
-                ? 'No investors match the selected fee plan filter.'
-                : 'No investors added yet. Click "Add Participant" to invite investors.'}
+              No investors added yet. Click "Add Participant" to invite investors.
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Member</TableHead>
-                  <TableHead>Role</TableHead>
                   <TableHead>Referred By</TableHead>
-                  <TableHead>Fee Plan</TableHead>
+                  <TableHead>Term Sheet</TableHead>
                   <TableHead>Journey Progress</TableHead>
                   <TableHead>Current Stage</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredMembers.map((member) => {
+                {enhancedMembers.map((member) => {
                   const profile = Array.isArray(member.profiles) ? member.profiles[0] : member.profiles
                   const investor = Array.isArray(member.investors) ? member.investors[0] : member.investors
                   const { stage } = getCurrentStage(member)
                   const referrer = getReferrerInfo(member)
-                  const feePlan = member.assigned_fee_plan
+                  const assignedTermSheet = getAssignedTermSheet(member) || getAssignedFeePlan(member)?.term_sheet
+                  const termSheetDate = formatDateLabel(
+                    assignedTermSheet?.term_sheet_date || assignedTermSheet?.published_at
+                  )
+                  const termSheetSummary = getTermSheetSummary(assignedTermSheet)
+                  const termSheetMeta = [
+                    assignedTermSheet?.version ? `Version ${assignedTermSheet.version}` : null,
+                    assignedTermSheet?.transaction_type ? formatStatusLabel(assignedTermSheet.transaction_type) : null
+                  ].filter(Boolean)
 
                   return (
                     <TableRow key={member.user_id}>
@@ -548,26 +683,42 @@ export function DealMembersTab({ dealId, dealStatus, members: initialMembers, su
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={roleColors[member.role] || 'bg-muted text-foreground'}>
-                          {member.role?.replace(/_/g, ' ')}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
                         {referrer ? (
-                          <div className="flex items-center gap-1.5 text-sm">
-                            <referrer.icon className="h-3.5 w-3.5 text-muted-foreground" />
-                            <span className="text-muted-foreground">{referrer.name}</span>
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1.5 text-sm">
+                              <referrer.icon className="h-3.5 w-3.5 text-muted-foreground" />
+                              <span className="text-foreground">{referrer.name}</span>
+                            </div>
+                            <span className="text-[11px] text-muted-foreground">{referrer.type}</span>
                           </div>
                         ) : (
                           <span className="text-xs text-muted-foreground/60">Direct</span>
                         )}
                       </TableCell>
                       <TableCell>
-                        {feePlan ? (
+                        {assignedTermSheet ? (
                           <div className="flex flex-col gap-1">
-                            <span className="text-sm">{feePlan.name}</span>
-                            <Badge className={`text-[10px] w-fit ${feePlanStatusClasses[feePlan.status] || 'bg-muted text-muted-foreground'}`}>
-                              {feePlan.status}
+                            <div className="flex items-center gap-1.5 text-sm">
+                              <FileCheck className="h-3.5 w-3.5 text-muted-foreground" />
+                              <span className="text-foreground">{getTermSheetLabel(assignedTermSheet)}</span>
+                            </div>
+                            {termSheetMeta.length > 0 && (
+                              <span className="text-xs text-muted-foreground">
+                                {termSheetMeta.join(' • ')}
+                              </span>
+                            )}
+                            {termSheetDate && (
+                              <span className="text-xs text-muted-foreground">
+                                {termSheetDate}
+                              </span>
+                            )}
+                            {termSheetSummary.length > 0 && (
+                              <span className="text-xs text-muted-foreground">
+                                {termSheetSummary.join(' • ')}
+                              </span>
+                            )}
+                            <Badge variant="outline" className="text-[10px] w-fit capitalize">
+                              {formatStatusLabel(assignedTermSheet.status || 'assigned')}
                             </Badge>
                           </div>
                         ) : (
@@ -651,7 +802,23 @@ export function DealMembersTab({ dealId, dealStatus, members: initialMembers, su
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {partnerAssignments.map((assignment) => (
+                {partnerAssignments.map((assignment) => {
+                  const agreement = getAgreementInfo(assignment)
+                  const agreementLabel = getAgreementLabel(assignment)
+                  const agreementDateDetails = getAgreementDateDetails(agreement)
+                  const linkedInvestors = Array.isArray(assignment.linked_investors) ? assignment.linked_investors : []
+                  const termSheetDate = formatDateLabel(
+                    assignment.term_sheet?.term_sheet_date || assignment.term_sheet?.published_at
+                  )
+                  const termSheetSummary = getTermSheetSummary(assignment.term_sheet)
+                  const termSheetMeta = [
+                    assignment.term_sheet?.version ? `Version ${assignment.term_sheet.version}` : null,
+                    assignment.term_sheet?.transaction_type
+                      ? formatStatusLabel(assignment.term_sheet.transaction_type)
+                      : null
+                  ].filter(Boolean)
+
+                  return (
                   <div
                     key={assignment.fee_plan_id}
                     className="p-3 rounded-lg border border-border bg-muted/50"
@@ -667,7 +834,82 @@ export function DealMembersTab({ dealId, dealStatus, members: initialMembers, su
                             <Badge variant="outline" className="text-xs">
                               {getEntityTypeLabel(assignment.entity_type)}
                             </Badge>
+                            <Badge className={`text-[10px] ${feePlanStatusClasses[assignment.fee_plan_status] || 'bg-muted text-muted-foreground'}`}>
+                              {formatStatusLabel(assignment.fee_plan_status)}
+                            </Badge>
+                            <Badge variant="outline" className="text-[10px]">
+                              {assignment.is_active ? 'Active' : 'Inactive'}
+                            </Badge>
                           </div>
+                          <div className="text-xs text-muted-foreground mt-2">
+                            <span className="font-medium text-foreground">Fee Plan:</span> {assignment.fee_plan_name}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            <div className="flex flex-col gap-1">
+                              <span className="font-medium text-foreground">Linked Investors:</span>
+                              {linkedInvestors.length > 0 ? (
+                                <>
+                                  {linkedInvestors.slice(0, 3).map((linkedInvestor) => (
+                                    <span key={linkedInvestor.investor_id || linkedInvestor.user_id}>
+                                      {linkedInvestor.name}
+                                      {linkedInvestor.email ? ` • ${linkedInvestor.email}` : ''}
+                                    </span>
+                                  ))}
+                                  {linkedInvestors.length > 3 && (
+                                    <span>+{linkedInvestors.length - 3} more</span>
+                                  )}
+                                </>
+                              ) : (
+                                <span>—</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {assignment.term_sheet ? (
+                              <div className="flex flex-col gap-1">
+                                <span>
+                                  <span className="font-medium text-foreground">Term Sheet:</span>{' '}
+                                  {getTermSheetLabel(assignment.term_sheet)}
+                                </span>
+                                {termSheetMeta.length > 0 && (
+                                  <span>{termSheetMeta.join(' • ')}</span>
+                                )}
+                                {termSheetDate && <span>{termSheetDate}</span>}
+                                {termSheetSummary.length > 0 && (
+                                  <span>{termSheetSummary.join(' • ')}</span>
+                                )}
+                                <Badge variant="outline" className="text-[10px] w-fit">
+                                  {formatStatusLabel(assignment.term_sheet.status)}
+                                </Badge>
+                              </div>
+                            ) : (
+                              <>
+                                <span className="font-medium text-foreground">Term Sheet:</span> —
+                              </>
+                            )}
+                          </div>
+                          {agreementLabel && (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {agreement ? (
+                              <div className="flex flex-col gap-1">
+                                <span>
+                                  <span className="font-medium text-foreground">{agreementLabel}:</span>{' '}
+                                  {agreement.reference_number || 'Generated'}
+                                </span>
+                                {agreementDateDetails.length > 0 && (
+                                  <span>{agreementDateDetails.join(' • ')}</span>
+                                )}
+                                <Badge variant="outline" className="text-[10px] w-fit">
+                                  {formatStatusLabel(agreement.status || 'pending')}
+                                </Badge>
+                              </div>
+                              ) : (
+                              <>
+                                <span className="font-medium text-foreground">{agreementLabel}:</span> —
+                              </>
+                              )}
+                            </div>
+                          )}
                           <div className="text-xs text-muted-foreground mt-1">
                             {assignment.fee_components.length > 0 ? (
                               assignment.fee_components.map((fc) => (
@@ -696,7 +938,8 @@ export function DealMembersTab({ dealId, dealStatus, members: initialMembers, su
                       </Button>
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>
