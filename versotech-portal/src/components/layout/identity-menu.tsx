@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { usePersona } from '@/contexts/persona-context'
 import { useTheme } from '@/components/theme-provider'
 import { Button } from '@/components/ui/button'
@@ -53,6 +53,12 @@ const PERSONA_LABELS: Record<string, string> = {
   lawyer: 'Lawyer',
 }
 
+const ADMIN_PORTAL_SHORTCUT_EMAILS = new Set([
+  'fdemargne@versoholdings.com',
+  'cto@versoholdings.com',
+  'jmachot@versoholdings.com',
+])
+
 interface IdentityMenuProps {
   profile: Profile
   className?: string
@@ -65,8 +71,14 @@ export function IdentityMenu({ profile, className }: IdentityMenuProps) {
   const { personas, activePersona, switchPersona, hasMultiplePersonas } = usePersona()
   const { theme } = useTheme()
   const router = useRouter()
+  const pathname = usePathname()
   const avatarSrc = profile.avatar || undefined
   const avatarAlt = profile.displayName
+  const normalizedEmail = profile.email?.trim().toLowerCase() || ''
+  const showAdminPortalShortcut =
+    activePersona?.persona_type === 'ceo' &&
+    ADMIN_PORTAL_SHORTCUT_EMAILS.has(normalizedEmail) &&
+    !pathname.startsWith('/versotech_admin')
 
   // Hydration fix: Only apply theme after component mounts to avoid SSR mismatch
   useEffect(() => {
@@ -108,6 +120,11 @@ export function IdentityMenu({ profile, className }: IdentityMenuProps) {
       ? profileRoutes[activePersona.persona_type] || '/versotech_main/profile'
       : '/versotech_main/profile'
     router.push(route)
+  }
+
+  const handleAdminPortalClick = () => {
+    setOpen(false)
+    router.push('/versotech_admin/dashboard')
   }
 
   const getInitials = (name: string | null | undefined) => {
@@ -335,6 +352,22 @@ export function IdentityMenu({ profile, className }: IdentityMenuProps) {
                   {activePersona.entity_name}
                 </div>
               </div>
+            </div>
+          </>
+        )}
+
+        {showAdminPortalShortcut && (
+          <>
+            <DropdownMenuSeparator className={isDark ? "bg-white/10" : "bg-gray-100"} />
+            <div className="px-3 py-2">
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleAdminPortalClick}
+                className="w-full justify-center"
+              >
+                Open Admin Portal
+              </Button>
             </div>
           </>
         )}
