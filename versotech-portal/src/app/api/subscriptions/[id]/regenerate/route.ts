@@ -7,6 +7,7 @@ import { getCeoSigner } from '@/lib/staff/ceo-signer'
 import { buildSubscriptionPackPayload } from '@/lib/subscription-pack/payload-builder'
 import { assertSubscriptionPackPdfIsA4 } from '@/lib/subscription-pack/pdf-format-guard'
 import { applySubscriptionPackPageNumbers } from '@/lib/subscription/page-numbering'
+import { updateDealInvestmentCycleProgress } from '@/lib/deals/investment-cycles'
 
 const STAFF_ROLES = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo']
 
@@ -186,11 +187,20 @@ export async function POST(
 
     // Fetch counterparty entity if linked via original submission
     let counterpartyEntity = null
-    const { data: originalSubmission } = await serviceSupabase
+    let originalSubmissionQuery = serviceSupabase
       .from('deal_subscription_submissions')
       .select('id, subscription_type, counterparty_entity_id, submitted_at')
-      .eq('formal_subscription_id', subscriptionId)
-      .single()
+
+    if ((subscription as any).cycle_id) {
+      originalSubmissionQuery = originalSubmissionQuery
+        .eq('cycle_id', (subscription as any).cycle_id)
+        .order('submitted_at', { ascending: false })
+        .limit(1)
+    } else {
+      originalSubmissionQuery = originalSubmissionQuery.eq('formal_subscription_id', subscriptionId)
+    }
+
+    const { data: originalSubmission } = await originalSubmissionQuery.maybeSingle()
 
     if (originalSubmission?.subscription_type === 'entity' && originalSubmission?.counterparty_entity_id) {
       const { data: entityData } = await serviceSupabase
@@ -286,19 +296,25 @@ export async function POST(
 	                Name: ${s.name}${s.title ? `<br>Title: ${s.title}` : ''}
 	            </div>`).join('')
 
-    // Fetch fee structure for the deal (get most recent published one)
-    const { data: feeStructure } = await serviceSupabase
+    // Fetch the fee structure tied to this subscription/cycle.
+    let feeStructureQuery = serviceSupabase
       .from('deal_fee_structures')
       .select('*')
-      .eq('deal_id', subscription.deal_id)
-      .eq('status', 'published')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
+
+    if ((subscription as any).term_sheet_id) {
+      feeStructureQuery = feeStructureQuery.eq('id', (subscription as any).term_sheet_id)
+    } else {
+      return NextResponse.json(
+        { error: 'Subscription is missing an assigned term sheet' },
+        { status: 400 }
+      )
+    }
+
+    const { data: feeStructure } = await feeStructureQuery.maybeSingle()
 
     if (!feeStructure) {
       return NextResponse.json(
-        { error: 'No published fee structure found for this deal' },
+        { error: 'No fee structure found for this subscription term sheet' },
         { status: 400 }
       )
     }
@@ -638,10 +654,26 @@ export async function POST(
         }
 
         // Update subscription pack_generated_at (use service client to bypass RLS)
+        const regeneratedAt = new Date().toISOString()
         await serviceSupabase
           .from('subscriptions')
-          .update({ pack_generated_at: new Date().toISOString() })
+          .update({ pack_generated_at: regeneratedAt })
           .eq('id', subscriptionId)
+
+        if ((subscription as any).cycle_id) {
+          try {
+            await updateDealInvestmentCycleProgress({
+              supabase: serviceSupabase,
+              cycleId: (subscription as any).cycle_id,
+              status: 'pack_generated',
+              timestamps: {
+                pack_generated_at: regeneratedAt,
+              },
+            })
+          } catch (cycleError) {
+            console.error('Failed to update cycle after regeneration:', cycleError)
+          }
+        }
 
         // Audit log
         await auditLogger.log({

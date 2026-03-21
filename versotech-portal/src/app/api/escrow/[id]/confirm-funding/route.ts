@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { z } from 'zod'
+import { updateDealInvestmentCycleProgress } from '@/lib/deals/investment-cycles'
 
 const confirmFundingSchema = z.object({
   amount: z.number().positive('Amount must be positive'),
@@ -48,6 +49,7 @@ export async function POST(
         id,
         deal_id,
         investor_id,
+        cycle_id,
         commitment,
         currency,
         status,
@@ -153,6 +155,21 @@ export async function POST(
     if (updateError) {
       console.error('Failed to update subscription:', updateError)
       return NextResponse.json({ error: 'Failed to confirm funding' }, { status: 500 })
+    }
+
+    if ((subscription as any).cycle_id && newStatus === 'funded') {
+      try {
+        await updateDealInvestmentCycleProgress({
+          supabase,
+          cycleId: (subscription as any).cycle_id,
+          status: 'funded',
+          timestamps: {
+            funded_at: new Date().toISOString(),
+          },
+        })
+      } catch (cycleError) {
+        console.error('Failed to update funding cycle:', cycleError)
+      }
     }
 
     // === UPDATE VERIFICATION RECORDS ===

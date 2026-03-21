@@ -1,5 +1,11 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import {
+  getCycleStage,
+  getLatestActiveOrRecentCycle,
+  LIVE_CYCLE_STATUSES,
+  updateDealInvestmentCycleProgress,
+} from '@/lib/deals/investment-cycles'
 interface RouteParams {
   params: Promise<{ id: string }>
 }
@@ -22,6 +28,7 @@ export async function GET(request: Request, { params }: RouteParams) {
   // Get client_investor_id from query params for MODE 2 proxy access
   const url = new URL(request.url)
   const clientInvestorId = url.searchParams.get('client_investor_id')
+  const requestedCycleId = url.searchParams.get('cycle_id')
 
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -156,10 +163,92 @@ export async function GET(request: Request, { params }: RouteParams) {
       .limit(1)
       .maybeSingle()
 
+    let investmentCycles: any[] = []
+    let cycleSubscriptionsById = new Map<string, any>()
+    let cycleSubmissionsById = new Map<string, any>()
+    let termSheetsById = new Map<string, any>()
+
+    if (effectiveInvestorId) {
+      const { data: rawCycles } = await serviceSupabase
+        .from('deal_investment_cycles' as any)
+        .select('*')
+        .eq('deal_id', dealId)
+        .eq('investor_id', effectiveInvestorId)
+        .order('sequence_number', { ascending: false })
+        .order('created_at', { ascending: false })
+
+      investmentCycles = rawCycles || []
+
+      const cycleIds = investmentCycles.map(cycle => cycle.id).filter(Boolean)
+      const cycleTermSheetIds = investmentCycles.map(cycle => cycle.term_sheet_id).filter(Boolean)
+
+      if (cycleTermSheetIds.length > 0) {
+        const { data: termSheets } = await serviceSupabase
+          .from('deal_fee_structures')
+          .select('*')
+          .in('id', cycleTermSheetIds)
+
+        termSheetsById = new Map((termSheets || []).map(termSheet => [termSheet.id, termSheet]))
+      }
+
+      if (cycleIds.length > 0) {
+        const [{ data: cycleSubscriptions }, { data: cycleSubmissions }] = await Promise.all([
+          serviceSupabase
+            .from('subscriptions')
+            .select(`
+              id,
+              cycle_id,
+              term_sheet_id,
+              status,
+              commitment,
+              currency,
+              funded_amount,
+              pack_generated_at,
+              pack_sent_at,
+              signed_at,
+              funded_at,
+              activated_at,
+              created_at
+            `)
+            .in('cycle_id', cycleIds)
+            .order('created_at', { ascending: false }),
+          serviceSupabase
+            .from('deal_subscription_submissions')
+            .select('id, cycle_id, status, submitted_at, payload_json, formal_subscription_id')
+            .in('cycle_id', cycleIds)
+            .order('submitted_at', { ascending: false }),
+        ])
+
+        for (const sub of cycleSubscriptions || []) {
+          if (sub.cycle_id && !cycleSubscriptionsById.has(sub.cycle_id)) {
+            cycleSubscriptionsById.set(sub.cycle_id, sub)
+          }
+        }
+
+        for (const submission of cycleSubmissions || []) {
+          if (submission.cycle_id && !cycleSubmissionsById.has(submission.cycle_id)) {
+            cycleSubmissionsById.set(submission.cycle_id, submission)
+          }
+        }
+      }
+    }
+
+    const selectedCycle =
+      investmentCycles.find(cycle => cycle.id === requestedCycleId) ||
+      investmentCycles.find(cycle => LIVE_CYCLE_STATUSES.includes(cycle.status)) ||
+      investmentCycles[0] ||
+      null
+
     // Get subscription if exists (use maybeSingle as subscription might not exist)
     const vehicleId = deal.vehicle_id
-    let subscription = null
-    let subscriptionSubmission: { id: string; status: string; submitted_at: string | null } | null = null
+    let subscription = selectedCycle ? cycleSubscriptionsById.get(selectedCycle.id) || null : null
+    let subscriptionSubmission: {
+      id: string
+      status: string
+      submitted_at: string | null
+      payload_json?: Record<string, any>
+      formal_subscription_id?: string | null
+    } | null = selectedCycle ? cycleSubmissionsById.get(selectedCycle.id) || null : null
     let subscriptionDocuments: {
       nda: {
         status: string
@@ -192,7 +281,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     // Query subscription by deal_id (NOT vehicle_id) to ensure deal-specific data
     // Multiple deals can share the same vehicle_id, so using vehicle_id would
     // return subscriptions from wrong deals (e.g., both Anthropic deals share a vehicle)
-    if (dealId) {
+    if (!subscription && dealId && !selectedCycle) {
       const { data: sub } = await serviceSupabase
         .from('subscriptions')
         .select(`
@@ -215,9 +304,10 @@ export async function GET(request: Request, { params }: RouteParams) {
         .maybeSingle()
 
       subscription = sub
+    }
 
-      // Fetch signature documents for this subscription
-      if (sub) {
+    // Fetch signature documents for this subscription
+    if (subscription) {
         // Get NDA signature requests for this deal/investor
         const { data: ndaSignatures } = await serviceSupabase
           .from('signature_requests')
@@ -231,7 +321,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         const { data: subPackSignatures } = await serviceSupabase
           .from('signature_requests')
           .select('id, signer_name, signer_email, status, signature_timestamp, unsigned_pdf_path, signed_pdf_path')
-          .eq('subscription_id', sub.id)
+          .eq('subscription_id', subscription.id)
           .eq('document_type', 'subscription')
           .order('created_at', { ascending: true })
 
@@ -278,13 +368,13 @@ export async function GET(request: Request, { params }: RouteParams) {
           },
           // Certificate - lookup from documents table if subscription is activated
           certificate: await (async () => {
-            if (!sub.activated_at) return null
+            if (!subscription.activated_at) return null
 
             // Check for actual certificate document
             const { data: certDoc } = await serviceSupabase
               .from('documents')
               .select('id, file_key')
-              .eq('subscription_id', sub.id)
+              .eq('subscription_id', subscription.id)
               .eq('type', 'certificate')
               .maybeSingle()
 
@@ -305,9 +395,8 @@ export async function GET(request: Request, { params }: RouteParams) {
           })()
         }
       }
-    }
 
-    if (effectiveInvestorId) {
+    if (effectiveInvestorId && !subscriptionSubmission && !selectedCycle) {
       const { data: submission } = await serviceSupabase
         .from('deal_subscription_submissions')
         .select('id, status, submitted_at')
@@ -336,8 +425,12 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     let feeStructures: any[] = []
     if (!isRestrictedFromTermSheet) {
-      // Check if investor has an assigned term sheet (from dispatch)
-      if (membership?.term_sheet_id) {
+      if (selectedCycle?.term_sheet_id) {
+        const selectedTermSheet = termSheetsById.get(selectedCycle.term_sheet_id)
+        if (selectedTermSheet) {
+          feeStructures = [selectedTermSheet]
+        }
+      } else if (membership?.term_sheet_id) {
         // Fetch ONLY the assigned term sheet - this ensures different investor classes
         // see their specific fee structure based on how they were dispatched
         const { data: assignedTermSheet } = await serviceSupabase
@@ -351,12 +444,13 @@ export async function GET(request: Request, { params }: RouteParams) {
         }
       }
 
-      // Fallback: If no assigned term sheet or it wasn't found, get first published
-      // This handles backward compatibility for existing memberships
-      if (feeStructures.length === 0) {
-        const { data: fallbackTermSheet } = await serviceSupabase
-          .from('deal_fee_structures')
-          .select('*')
+	      // Only show a default published term sheet for a fresh/public opportunity view.
+	      // Once an investor already has a membership or cycle, we should never silently
+	      // swap in another term sheet because that can display the wrong economics.
+	      if (feeStructures.length === 0 && !selectedCycle && !membership?.term_sheet_id) {
+	        const { data: fallbackTermSheet } = await serviceSupabase
+	          .from('deal_fee_structures')
+	          .select('*')
           .eq('deal_id', dealId)
           .eq('status', 'published')
           .order('created_at', { ascending: true })
@@ -559,20 +653,105 @@ export async function GET(request: Request, { params }: RouteParams) {
     // Use actual document completion for signed stage, not subscription.signed_at
     // which may be set prematurely in multi-signatory flows
     const subPackComplete = subscriptionDocuments?.subscription_pack.status === 'complete'
-    let currentStage = 0
-    if (subscription?.activated_at || subscription?.status === 'active') currentStage = 10
-    else if (subscription?.funded_at || subscription?.status === 'funded') currentStage = 9
-    else if (subPackComplete && subscription?.signed_at) currentStage = 8
-    else if (subscription?.pack_sent_at) currentStage = 7
-    else if (subscription?.pack_generated_at) currentStage = 6
-    else if (membership?.data_room_granted_at) currentStage = 5
-    else if (membership?.nda_signed_at) currentStage = 4
-    else if (membership?.interest_confirmed_at) currentStage = 3
-    else if (membership?.viewed_at) currentStage = 2
-    else if (membership?.dispatched_at) currentStage = 1
+    const currentStage = selectedCycle
+      ? getCycleStage({
+          ...selectedCycle,
+          pack_generated_at: subscription?.pack_generated_at || selectedCycle.pack_generated_at,
+          pack_sent_at: subscription?.pack_sent_at || selectedCycle.pack_sent_at,
+          signed_at: (subPackComplete ? subscription?.signed_at : null) || selectedCycle.signed_at,
+          funded_at: subscription?.funded_at || selectedCycle.funded_at,
+          activated_at: subscription?.activated_at || selectedCycle.activated_at,
+        })
+      : (() => {
+          if (subscription?.activated_at || subscription?.status === 'active') return 10
+          if (subscription?.funded_at || subscription?.status === 'funded') return 9
+          if (subPackComplete && subscription?.signed_at) return 8
+          if (subscription?.pack_sent_at) return 7
+          if (subscription?.pack_generated_at) return 6
+          if (membership?.data_room_granted_at) return 5
+          if (membership?.nda_signed_at) return 4
+          if (membership?.interest_confirmed_at) return 3
+          if (membership?.viewed_at) return 2
+          if (membership?.dispatched_at) return 1
+          return 0
+        })()
 
     // Build the response
     const hasPendingSubmission = subscriptionSubmission?.status === 'pending_review'
+    const canInvestWithMembershipRole =
+      !membership?.role ||
+      ['investor', 'partner_investor', 'introducer_investor', 'commercial_partner_investor', 'co_investor'].includes(membership.role)
+    const canInvestInCurrentContext =
+      canInvestWithMembershipRole ||
+      (isProxyMode && membership?.role === 'commercial_partner_proxy')
+    const selectedCycleIsLive = selectedCycle ? LIVE_CYCLE_STATUSES.includes(selectedCycle.status) : false
+
+    const cycleCards = investmentCycles.map(cycle => {
+      const cycleSubscription = cycleSubscriptionsById.get(cycle.id) || null
+      const cycleSubmission = cycleSubmissionsById.get(cycle.id) || null
+      const cycleTermSheet = termSheetsById.get(cycle.term_sheet_id) || null
+      const latestAmount =
+        cycleSubscription?.commitment ??
+        cycleSubmission?.payload_json?.amount ??
+        cycleSubmission?.payload_json?.subscription_amount ??
+        null
+      const cycleStage = getCycleStage({
+        ...cycle,
+        pack_generated_at: cycleSubscription?.pack_generated_at || cycle.pack_generated_at,
+        pack_sent_at: cycleSubscription?.pack_sent_at || cycle.pack_sent_at,
+        signed_at: cycleSubscription?.signed_at || cycle.signed_at,
+        funded_at: cycleSubscription?.funded_at || cycle.funded_at,
+        activated_at: cycleSubscription?.activated_at || cycle.activated_at,
+      })
+      const canInvestMore =
+        isDealOpen &&
+        isAccountApproved === true &&
+        canInvestInCurrentContext &&
+        ['funded', 'active'].includes(cycle.status) &&
+        cycleTermSheet?.status === 'published'
+
+      return {
+        id: cycle.id,
+        sequence_number: cycle.sequence_number,
+        status: cycle.status,
+        stage: cycleStage,
+        term_sheet_id: cycle.term_sheet_id,
+        term_sheet: cycleTermSheet
+          ? {
+              id: cycleTermSheet.id,
+              version: cycleTermSheet.version,
+              status: cycleTermSheet.status,
+              minimum_ticket: cycleTermSheet.minimum_ticket,
+              maximum_ticket: cycleTermSheet.maximum_ticket,
+              subscription_fee_percent: cycleTermSheet.subscription_fee_percent,
+            }
+          : null,
+        latest_amount: latestAmount,
+        submission: cycleSubmission
+          ? {
+              id: cycleSubmission.id,
+              status: cycleSubmission.status,
+              submitted_at: cycleSubmission.submitted_at,
+            }
+          : null,
+        subscription: cycleSubscription
+          ? {
+              id: cycleSubscription.id,
+              status: cycleSubscription.status,
+              commitment: cycleSubscription.commitment,
+              currency: cycleSubscription.currency || deal.currency || 'USD',
+              funded_amount: cycleSubscription.funded_amount,
+              pack_generated_at: cycleSubscription.pack_generated_at,
+              pack_sent_at: cycleSubscription.pack_sent_at,
+              signed_at: cycleSubscription.signed_at,
+              funded_at: cycleSubscription.funded_at,
+              activated_at: cycleSubscription.activated_at,
+            }
+          : null,
+        can_continue: isAccountApproved === true && canInvestInCurrentContext && !cycleSubscription && cycleSubmission?.status !== 'pending_review' && LIVE_CYCLE_STATUSES.includes(cycle.status),
+        can_invest_more: canInvestMore,
+      }
+    })
 
     const opportunity = {
       id: deal.id,
@@ -618,16 +797,16 @@ export async function GET(request: Request, { params }: RouteParams) {
         current_stage: currentStage,
         stages: journeyStages || [],
         summary: {
-          received: membership?.dispatched_at || null,
-          viewed: membership?.viewed_at || null,
-          interest_confirmed: membership?.interest_confirmed_at || null,
+          received: selectedCycle?.dispatched_at || membership?.dispatched_at || null,
+          viewed: selectedCycle?.viewed_at || membership?.viewed_at || null,
+          interest_confirmed: selectedCycle?.interest_confirmed_at || membership?.interest_confirmed_at || null,
           nda_signed: membership?.nda_signed_at || null,
           data_room_access: membership?.data_room_granted_at || null,
-          pack_generated: subscription?.pack_generated_at || null,
-          pack_sent: subscription?.pack_sent_at || null,
-          signed: (subscriptionDocuments?.subscription_pack.status === 'complete' ? subscription?.signed_at : null) || null,
-          funded: subscription?.funded_at || null,
-          active: subscription?.activated_at || null
+          pack_generated: subscription?.pack_generated_at || selectedCycle?.pack_generated_at || null,
+          pack_sent: subscription?.pack_sent_at || selectedCycle?.pack_sent_at || null,
+          signed: (subscriptionDocuments?.subscription_pack.status === 'complete' ? subscription?.signed_at : null) || selectedCycle?.signed_at || null,
+          funded: subscription?.funded_at || selectedCycle?.funded_at || null,
+          active: subscription?.activated_at || selectedCycle?.activated_at || null
         }
       },
 
@@ -674,6 +853,8 @@ export async function GET(request: Request, { params }: RouteParams) {
         documents: subscriptionDocuments
       } : null,
       subscription_submission: subscriptionSubmission,
+      active_cycle_id: selectedCycle?.id || null,
+      cycles: cycleCards,
 
       // Fee structures
       fee_structures: feeStructures || [],
@@ -693,10 +874,14 @@ export async function GET(request: Request, { params }: RouteParams) {
       // SECURITY FIX: Only allow subscription for roles that permit investing
       // commercial_partner_proxy has its own endpoint at /api/commercial-partners/proxy-subscribe
       // Must have an investor profile (effectiveInvestorId) to be able to subscribe
-      can_subscribe: effectiveInvestorId !== null && isAccountApproved === true && !subscription && !hasPendingSubmission && isDealOpen && (
-        !membership?.role || // Public deal without membership (user still needs investor profile - checked above)
-        ['investor', 'partner_investor', 'introducer_investor', 'commercial_partner_investor', 'co_investor'].includes(membership.role)
-      ),
+      can_subscribe:
+        effectiveInvestorId !== null &&
+        isAccountApproved === true &&
+        !subscription &&
+        !hasPendingSubmission &&
+        isDealOpen &&
+        canInvestInCurrentContext &&
+        (!selectedCycle || selectedCycleIsLive),
       // Indicate if user is tracking-only (cannot invest)
       is_tracking_only: !!membership?.role && !['investor', 'partner_investor', 'introducer_investor', 'commercial_partner_investor', 'co_investor'].includes(membership.role),
       can_sign_subscription: subscription?.pack_sent_at && !subscription?.signed_at,
@@ -751,6 +936,7 @@ export async function POST(request: Request, { params }: RouteParams) {
 
     const body = await request.json()
     const action = body.action as string
+    const cycleId = typeof body.cycle_id === 'string' ? body.cycle_id : null
 
     // Validate action
     const validActions = ['view', 'express_interest']
@@ -779,6 +965,23 @@ export async function POST(request: Request, { params }: RouteParams) {
       .single()
 
     if (action === 'view') {
+      let cycleToMark = null as { id: string; viewed_at: string | null } | null
+
+      if (cycleId) {
+        const { data: explicitCycle } = await serviceSupabase
+          .from('deal_investment_cycles' as any)
+          .select('id, viewed_at')
+          .eq('id', cycleId)
+          .eq('deal_id', dealId)
+          .eq('investor_id', investorId)
+          .maybeSingle()
+
+        cycleToMark = explicitCycle ?? null
+      } else {
+        const latestCycle = await getLatestActiveOrRecentCycle(serviceSupabase, dealId, investorId)
+        cycleToMark = latestCycle ? { id: latestCycle.id, viewed_at: latestCycle.viewed_at } : null
+      }
+
       if (existingMembership) {
         // Update viewed_at if not already set
         if (!existingMembership.viewed_at) {
@@ -799,6 +1002,17 @@ export async function POST(request: Request, { params }: RouteParams) {
             role: 'investor',
             viewed_at: new Date().toISOString()
           })
+      }
+
+      if (cycleToMark && !cycleToMark.viewed_at) {
+        await updateDealInvestmentCycleProgress({
+          supabase: serviceSupabase,
+          cycleId: cycleToMark.id,
+          status: 'viewed',
+          timestamps: {
+            viewed_at: new Date().toISOString(),
+          },
+        })
       }
 
       return NextResponse.json({ success: true, action: 'viewed' })

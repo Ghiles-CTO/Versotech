@@ -6,6 +6,7 @@ import { createSignatureRequest } from '@/lib/signature/client'
 import { maybeReleaseIntroducerAgreementCounterpartyRequests } from '@/lib/signature/introducer-agreement-flow'
 import { maybeReleaseDeferredInvestorRequests } from '@/lib/signature/staged-release'
 import { getIntroducerCommercialEligibility } from '@/lib/introducers/commercial-eligibility'
+import { updateDealInvestmentCycleProgress } from '@/lib/deals/investment-cycles'
 import crypto from 'crypto'
 
 function normalizeWebhookSignature(rawSignature: string): string | null {
@@ -634,7 +635,7 @@ async function handleSubscriptionCompletion(
       committed_at: now
     })
     .eq('id', subscriptionId)
-    .select('id, investor_id, deal_id, commitment, currency, vehicle_id')
+    .select('id, investor_id, deal_id, commitment, currency, vehicle_id, cycle_id')
     .single()
 
   if (updateError) {
@@ -643,6 +644,21 @@ async function handleSubscriptionCompletion(
   }
 
   console.log('✅ [SUBSCRIPTION] Subscription committed:', subscriptionId)
+
+  if ((subscription as any)?.cycle_id) {
+    try {
+      await updateDealInvestmentCycleProgress({
+        supabase,
+        cycleId: (subscription as any).cycle_id,
+        status: 'signed',
+        timestamps: {
+          signed_at: now,
+        },
+      })
+    } catch (cycleError) {
+      console.error('Failed to mark cycle signed:', cycleError)
+    }
+  }
 
   // Create notification for investor
   if (subscription) {

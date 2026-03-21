@@ -186,17 +186,10 @@ async function buildTermsheetCloseMetadata(
   // Get funded subscriptions linked to this termsheet
   const { data: fundedSubs } = await supabase
     .from('subscriptions')
-    .select(`
-      id,
-      funded_amount,
-      investor_id,
-      deal_memberships!inner (
-        term_sheet_id
-      )
-    `)
+    .select('id, funded_amount, investor_id')
     .eq('deal_id', dealId)
     .eq('status', 'funded')
-    .eq('deal_memberships.term_sheet_id', termsheet.id)
+    .eq('term_sheet_id', termsheet.id)
 
   const fundedCount = fundedSubs?.length || 0
   const fundedTotal = (fundedSubs || []).reduce(

@@ -7,6 +7,7 @@ import {
   buildIntroducerCommercialBlockPayload,
   getIntroducerCommercialEligibility,
 } from '@/lib/introducers/commercial-eligibility'
+import { LIVE_CYCLE_STATUSES } from '@/lib/deals/investment-cycles'
 
 const patchSchema = z.object({
   referred_by_entity_id: z.string().uuid(),
@@ -168,7 +169,7 @@ export async function PATCH(
       }
     }
 
-    // Fetch current membership to get term_sheet_id
+    // Fetch current membership to resolve the investor and provide a legacy fallback.
     const { data: membership, error: membershipError } = await supabase
       .from('deal_memberships')
       .select('deal_id, user_id, investor_id, role, term_sheet_id, referred_by_entity_id')
@@ -180,13 +181,6 @@ export async function PATCH(
       return NextResponse.json(
         { error: 'Membership not found' },
         { status: 404 }
-      )
-    }
-
-    if (membership.referred_by_entity_id) {
-      return NextResponse.json(
-        { error: 'This investor is already linked to a referrer' },
-        { status: 400 }
       )
     }
 
@@ -218,10 +212,38 @@ export async function PATCH(
       )
     }
 
+    const { data: cycle, error: cycleError } = await supabase
+      .from('deal_investment_cycles' as any)
+      .select('id, term_sheet_id, referred_by_entity_id, role')
+      .eq('deal_id', dealId)
+      .eq('investor_id', membership.investor_id)
+      .eq('term_sheet_id', feePlan.term_sheet_id)
+      .in('status', [...LIVE_CYCLE_STATUSES])
+      .order('sequence_number', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (cycleError) {
+      console.error('Error fetching live cycle for member linking:', cycleError)
+      return NextResponse.json(
+        { error: 'Failed to resolve investor term sheet cycle' },
+        { status: 500 }
+      )
+    }
+
+    const targetTermSheetId = cycle?.term_sheet_id || membership.term_sheet_id
+
     // Validate term sheet match
-    if (feePlan.term_sheet_id !== membership.term_sheet_id) {
+    if (!targetTermSheetId || feePlan.term_sheet_id !== targetTermSheetId) {
       return NextResponse.json(
         { error: 'Fee plan term sheet does not match investor term sheet' },
+        { status: 400 }
+      )
+    }
+
+    if (cycle?.referred_by_entity_id || (!cycle && membership.referred_by_entity_id)) {
+      return NextResponse.json(
+        { error: 'This investor is already linked to a referrer' },
         { status: 400 }
       )
     }
@@ -272,16 +294,43 @@ export async function PATCH(
       'commercial_partner_investor'
     )
 
-    // Update the membership
+    const updateTimestamp = new Date().toISOString()
+    const cycleUpdate =
+      cycle
+        ? await supabase
+            .from('deal_investment_cycles' as any)
+            .update({
+              referred_by_entity_id,
+              referred_by_entity_type,
+              assigned_fee_plan_id,
+              role: newRole,
+            })
+            .eq('id', cycle.id)
+        : null
+
+    if (cycleUpdate?.error) {
+      console.error('Update cycle referrer error:', cycleUpdate.error)
+      return NextResponse.json(
+        { error: 'Failed to update active investment cycle' },
+        { status: 500 }
+      )
+    }
+
+    const membershipPatch: Record<string, unknown> = {
+      dispatched_at: updateTimestamp,
+    }
+
+    if (!membership.referred_by_entity_id) {
+      membershipPatch.referred_by_entity_id = referred_by_entity_id
+      membershipPatch.referred_by_entity_type = referred_by_entity_type
+      membershipPatch.assigned_fee_plan_id = assigned_fee_plan_id
+      membershipPatch.role = newRole
+    }
+
+    // Update the membership only as a compatibility fallback. The live cycle is now canonical.
     const { error: updateError } = await supabase
       .from('deal_memberships')
-      .update({
-        referred_by_entity_id,
-        referred_by_entity_type,
-        assigned_fee_plan_id,
-        role: newRole,
-        dispatched_at: new Date().toISOString()
-      })
+      .update(membershipPatch)
       .eq('deal_id', dealId)
       .eq('user_id', userId)
 

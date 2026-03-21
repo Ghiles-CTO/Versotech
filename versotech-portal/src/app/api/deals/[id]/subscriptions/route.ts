@@ -4,13 +4,16 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { trackDealEvent } from '@/lib/analytics'
 import { canEntityInvest, getEligibilityBlockersSummary } from '@/lib/entities/entity-investment-eligibility'
+import { getOrCreateSubmissionCycle, updateDealInvestmentCycleProgress } from '@/lib/deals/investment-cycles'
 
 const submissionSchema = z.object({
   investor_id: z.string().uuid().optional(),
   payload: z.record(z.string(), z.any()).optional().default({}),
   notes: z.string().max(4000).optional().nullable(),
   subscription_type: z.enum(['personal', 'entity']).optional(),
-  counterparty_entity_id: z.string().uuid().optional().nullable()
+  counterparty_entity_id: z.string().uuid().optional().nullable(),
+  cycle_id: z.string().uuid().optional().nullable(),
+  term_sheet_id: z.string().uuid().optional().nullable(),
 })
 
 export async function GET(
@@ -144,7 +147,7 @@ export async function POST(
     )
   }
 
-  const { investor_id, payload, notes, subscription_type, counterparty_entity_id } = parsed.data
+  const { investor_id, payload, notes, subscription_type, counterparty_entity_id, cycle_id, term_sheet_id } = parsed.data
 
   // Validate entity selection
   if (subscription_type === 'entity' && !counterparty_entity_id) {
@@ -268,13 +271,84 @@ export async function POST(
   // Note: Data room access check removed - investors can now subscribe directly
   // without requiring data room access first (per client request Dec 2025)
 
+  const { data: membership } = await serviceSupabase
+    .from('deal_memberships')
+    .select(`
+      deal_id,
+      user_id,
+      investor_id,
+      role,
+      referred_by_entity_id,
+      referred_by_entity_type,
+      assigned_fee_plan_id,
+      term_sheet_id
+    `)
+    .eq('deal_id', dealId)
+    .eq('investor_id', resolvedInvestorId)
+    .maybeSingle()
+
+  let effectiveTermSheetId = term_sheet_id || null
+
+  if (!effectiveTermSheetId && cycle_id) {
+    const { data: selectedCycle } = await serviceSupabase
+      .from('deal_investment_cycles' as any)
+      .select('term_sheet_id')
+      .eq('id', cycle_id)
+      .maybeSingle()
+    effectiveTermSheetId = selectedCycle?.term_sheet_id || null
+  }
+
+  if (!effectiveTermSheetId && membership?.term_sheet_id) {
+    effectiveTermSheetId = membership.term_sheet_id
+  }
+
+  if (!effectiveTermSheetId) {
+    const { data: fallbackTermSheet } = await serviceSupabase
+      .from('deal_fee_structures')
+      .select('id')
+      .eq('deal_id', dealId)
+      .eq('status', 'published')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    effectiveTermSheetId = fallbackTermSheet?.id || null
+  }
+
+  if (!effectiveTermSheetId && !cycle_id) {
+    return NextResponse.json(
+      { error: 'No active term sheet available for this subscription' },
+      { status: 400 }
+    )
+  }
+
+  let cycle
+  try {
+    cycle = await getOrCreateSubmissionCycle(serviceSupabase, {
+      dealId,
+      investorId: resolvedInvestorId,
+      userId: membership?.user_id || user.id,
+      role: membership?.role || 'investor',
+      cycleId: cycle_id || null,
+      termSheetId: effectiveTermSheetId,
+      createdBy: user.id,
+      referredByEntityId: membership?.referred_by_entity_id || null,
+      referredByEntityType: membership?.referred_by_entity_type || null,
+      assignedFeePlanId: membership?.assigned_fee_plan_id || null,
+    })
+  } catch (cycleError) {
+    console.error('Failed to resolve submission cycle:', cycleError)
+    return NextResponse.json(
+      { error: cycleError instanceof Error ? cycleError.message : 'Failed to resolve investment cycle' },
+      { status: 400 }
+    )
+  }
+
   // Auto-cancel any existing pending submissions before creating new one
   // This prevents duplicate pending submissions and maintains clean workflow state
   await serviceSupabase
     .from('deal_subscription_submissions')
     .update({ status: 'cancelled' })
-    .eq('deal_id', dealId)
-    .eq('investor_id', resolvedInvestorId)
+    .eq('cycle_id', cycle.id)
     .eq('status', 'pending_review')
 
   const { data: submission, error: insertError } = await serviceSupabase
@@ -282,6 +356,8 @@ export async function POST(
     .insert({
       deal_id: dealId,
       investor_id: resolvedInvestorId,
+      cycle_id: cycle.id,
+      term_sheet_id: cycle.term_sheet_id,
       payload_json: payload ?? {},
       status: 'pending_review',
       created_by: user.id,
@@ -315,6 +391,21 @@ export async function POST(
     .eq('investor_id', resolvedInvestorId)
     .is('interest_confirmed_at', null)
 
+  try {
+    await updateDealInvestmentCycleProgress({
+      supabase: serviceSupabase,
+      cycleId: cycle.id,
+      status: 'submission_pending_review',
+      timestamps: {
+        viewed_at: cycle.viewed_at || new Date().toISOString(),
+        interest_confirmed_at: cycle.interest_confirmed_at || new Date().toISOString(),
+        submission_pending_at: new Date().toISOString(),
+      },
+    })
+  } catch (cycleProgressError) {
+    console.error('Failed to update cycle submission progress:', cycleProgressError)
+  }
+
   await trackDealEvent({
     supabase: serviceSupabase,
     dealId,
@@ -336,6 +427,8 @@ export async function POST(
       type: 'subscription_submission',
       deal_id: dealId,
       investor_id: resolvedInvestorId,
+      cycle_id: cycle.id,
+      term_sheet_id: cycle.term_sheet_id,
       notes,
       payload
     }
@@ -346,6 +439,7 @@ export async function POST(
 
   return NextResponse.json({
     success: true,
-    submission
+    submission,
+    cycle,
   })
 }

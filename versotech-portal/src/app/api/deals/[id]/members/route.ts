@@ -8,6 +8,11 @@ import {
   buildIntroducerCommercialBlockPayload,
   getIntroducerCommercialEligibility,
 } from '@/lib/introducers/commercial-eligibility'
+import {
+  createOrResumeDealInvestmentCycle,
+  getLatestCycleForInvestorTermSheet,
+  LIVE_CYCLE_STATUSES,
+} from '@/lib/deals/investment-cycles'
 
 const addMemberSchema = z.object({
   user_id: z.string().uuid().optional(),
@@ -269,20 +274,69 @@ export async function GET(
       ])
     )
 
+    const investorIds = Array.from(
+      new Set(memberships.map((member: any) => member.investor_id).filter(Boolean))
+    ) as string[]
+
+    const memberCyclesResult = investorIds.length
+      ? await serviceSupabase
+          .from('deal_investment_cycles' as any)
+          .select(`
+            id,
+            deal_id,
+            investor_id,
+            term_sheet_id,
+            role,
+            status,
+            referred_by_entity_id,
+            referred_by_entity_type,
+            assigned_fee_plan_id,
+            sequence_number
+          `)
+          .eq('deal_id', dealId)
+          .in('investor_id', investorIds)
+          .order('sequence_number', { ascending: false })
+          .order('created_at', { ascending: false })
+      : { data: [], error: null }
+
+    if (memberCyclesResult.error) {
+      console.error('Fetch member cycles error:', memberCyclesResult.error)
+      return NextResponse.json(
+        { error: 'Failed to fetch member cycle details' },
+        { status: 500 }
+      )
+    }
+
+    const cyclesByInvestorId = new Map<string, any[]>()
+    for (const cycle of (memberCyclesResult.data || []) as any[]) {
+      const existing = cyclesByInvestorId.get(cycle.investor_id) || []
+      existing.push(cycle)
+      cyclesByInvestorId.set(cycle.investor_id, existing)
+    }
+
     const enrichedMembers = memberships.map((member: any) => {
-      const assignedFeePlan = member.assigned_fee_plan_id
-        ? feePlansById.get(member.assigned_fee_plan_id) || null
+      const investorCycles = member.investor_id ? cyclesByInvestorId.get(member.investor_id) || [] : []
+      const selectedCycle =
+        investorCycles.find(cycle => LIVE_CYCLE_STATUSES.includes(cycle.status)) ||
+        investorCycles[0] ||
+        null
+      const resolvedFeePlanId = selectedCycle?.assigned_fee_plan_id || member.assigned_fee_plan_id
+      const resolvedTermSheetId = selectedCycle?.term_sheet_id || member.term_sheet_id
+      const resolvedReferrerType = selectedCycle?.referred_by_entity_type || member.referred_by_entity_type
+      const resolvedReferrerId = selectedCycle?.referred_by_entity_id || member.referred_by_entity_id
+      const assignedFeePlan = resolvedFeePlanId
+        ? feePlansById.get(resolvedFeePlanId) || null
         : null
       let referrerEntity = null
 
-      if (member.referred_by_entity_type === 'partner' && member.referred_by_entity_id) {
-        referrerEntity = partnersById.get(member.referred_by_entity_id) || null
+      if (resolvedReferrerType === 'partner' && resolvedReferrerId) {
+        referrerEntity = partnersById.get(resolvedReferrerId) || null
       }
-      if (member.referred_by_entity_type === 'introducer' && member.referred_by_entity_id) {
-        referrerEntity = introducersById.get(member.referred_by_entity_id) || null
+      if (resolvedReferrerType === 'introducer' && resolvedReferrerId) {
+        referrerEntity = introducersById.get(resolvedReferrerId) || null
       }
-      if (member.referred_by_entity_type === 'commercial_partner' && member.referred_by_entity_id) {
-        referrerEntity = commercialPartnersById.get(member.referred_by_entity_id) || null
+      if (resolvedReferrerType === 'commercial_partner' && resolvedReferrerId) {
+        referrerEntity = commercialPartnersById.get(resolvedReferrerId) || null
       }
 
       if (!referrerEntity && assignedFeePlan) {
@@ -295,9 +349,10 @@ export async function GET(
 
       return {
         ...member,
+        active_cycle: selectedCycle,
         assigned_fee_plan: assignedFeePlan,
-        assigned_term_sheet: member.term_sheet_id
-          ? termSheetsById.get(member.term_sheet_id) || null
+        assigned_term_sheet: resolvedTermSheetId
+          ? termSheetsById.get(resolvedTermSheetId) || null
           : assignedFeePlan?.term_sheet || null,
         referrer_entity: referrerEntity,
       }
@@ -527,18 +582,173 @@ export async function POST(
       }
     }
 
+    const dispatchTimestamp = new Date().toISOString()
+
     // Check if membership already exists
     const { data: existingMember } = await supabase
       .from('deal_memberships')
-      .select('deal_id, user_id')
+      .select(`
+        deal_id,
+        user_id,
+        investor_id,
+        role,
+        referred_by_entity_id,
+        referred_by_entity_type,
+        assigned_fee_plan_id,
+        term_sheet_id
+      `)
       .eq('deal_id', dealId)
       .eq('user_id', resolvedUserId)
-      .single()
+      .maybeSingle()
 
     if (existingMember) {
+      if (!validatedData.term_sheet_id || !resolvedInvestorId) {
+        return NextResponse.json(
+          { error: 'User is already a member of this deal' },
+          { status: 409 }
+        )
+      }
+
+      const membershipPatch: Record<string, unknown> = {
+        investor_id: resolvedInvestorId,
+        role: validatedData.role,
+        dispatched_at: dispatchTimestamp,
+      }
+
+      if (!existingMember.term_sheet_id) {
+        membershipPatch.term_sheet_id = validatedData.term_sheet_id
+      }
+
+      if (!existingMember.assigned_fee_plan_id && validatedData.assigned_fee_plan_id) {
+        membershipPatch.assigned_fee_plan_id = validatedData.assigned_fee_plan_id
+      }
+
+      if (!existingMember.referred_by_entity_id && validatedData.referred_by_entity_id) {
+        membershipPatch.referred_by_entity_id = validatedData.referred_by_entity_id
+      }
+
+      if (!existingMember.referred_by_entity_type && validatedData.referred_by_entity_type) {
+        membershipPatch.referred_by_entity_type = validatedData.referred_by_entity_type
+      }
+
+      const { data: updatedMembership, error: updateMembershipError } = await supabase
+        .from('deal_memberships')
+        .update(membershipPatch)
+        .eq('deal_id', dealId)
+        .eq('user_id', resolvedUserId)
+        .select(`
+          *,
+          profiles:user_id (
+            id,
+            display_name,
+            email
+          ),
+          investors:investor_id (
+            id,
+            legal_name
+          )
+        `)
+        .single()
+
+      if (updateMembershipError || !updatedMembership) {
+        console.error('Update membership error:', updateMembershipError)
+        return NextResponse.json(
+          { error: 'Failed to update existing member' },
+          { status: 500 }
+        )
+      }
+
+      let cycle = null
+      try {
+        const cycleResult = await createOrResumeDealInvestmentCycle({
+          supabase,
+          dealId,
+          userId: resolvedUserId,
+          investorId: resolvedInvestorId,
+          termSheetId: validatedData.term_sheet_id,
+          role: validatedData.role,
+          createdBy: user.id,
+          referredByEntityId: validatedData.referred_by_entity_id || null,
+          referredByEntityType: validatedData.referred_by_entity_type || null,
+          assignedFeePlanId: validatedData.assigned_fee_plan_id || null,
+          dispatchTimestamp,
+        })
+        cycle = cycleResult.cycle
+      } catch (cycleError) {
+        console.error('Create/resume cycle error:', cycleError)
+        if (cycleError instanceof Error && cycleError.message.includes('active term sheet workflow')) {
+          return NextResponse.json(
+            { error: cycleError.message },
+            { status: 409 }
+          )
+        }
+        return NextResponse.json(
+          { error: 'Failed to create investment cycle for member' },
+          { status: 500 }
+        )
+      }
+
+      if (validatedData.referred_by_entity_id && validatedData.term_sheet_id) {
+        try {
+          const liveCycle = await getLatestCycleForInvestorTermSheet(
+            supabase,
+            dealId,
+            resolvedInvestorId,
+            validatedData.term_sheet_id
+          )
+
+          cycle = liveCycle || cycle
+        } catch (cycleLookupError) {
+          console.error('Failed to reload live cycle after redispatch:', cycleLookupError)
+        }
+      }
+
+      if (validatedData.send_notification && resolvedUserId) {
+        try {
+          const { data: currentDeal } = await supabase
+            .from('deals')
+            .select('name')
+            .eq('id', dealId)
+            .single()
+
+          const fanout = await sendDealDispatchFanout({
+            supabase,
+            dealId,
+            dealName: currentDeal?.name || 'a deal',
+            seedUserIds: [resolvedUserId],
+            investorIds: [resolvedInvestorId],
+            initiatedByUserId: user.id,
+            role: validatedData.role,
+          })
+
+          if (!fanout.success) {
+            console.warn('[deal-members] Notification/email fanout completed with warnings:', fanout.errors)
+          }
+        } catch (notificationError) {
+          console.error('[deal-members] Failed to send notification/email fanout:', notificationError)
+        }
+      }
+
+      await auditLogger.log({
+        actor_user_id: user.id,
+        action: AuditActions.UPDATE,
+        entity: 'deal_memberships',
+        entity_id: dealId,
+        metadata: {
+          updated_user_id: resolvedUserId,
+          role: validatedData.role,
+          investor_id: resolvedInvestorId,
+          referred_by_entity_id: validatedData.referred_by_entity_id || null,
+          referred_by_entity_type: validatedData.referred_by_entity_type || null,
+          assigned_fee_plan_id: validatedData.assigned_fee_plan_id || null,
+          term_sheet_id: validatedData.term_sheet_id,
+          cycle_id: cycle?.id || null,
+        }
+      })
+
       return NextResponse.json(
-        { error: 'User is already a member of this deal' },
-        { status: 409 }
+        { membership: updatedMembership, cycle, created: false, resumed: true },
+        { status: 200 }
       )
     }
 
@@ -553,6 +763,7 @@ export async function POST(
         role: validatedData.role,
         invited_by: user.id,
         accepted_at: new Date().toISOString(), // Auto-accept for staff-added members
+        dispatched_at: validatedData.term_sheet_id ? dispatchTimestamp : null,
         // Referral tracking - who referred this investor to the deal
         referred_by_entity_id: validatedData.referred_by_entity_id || null,
         referred_by_entity_type: validatedData.referred_by_entity_type || null,
@@ -581,6 +792,32 @@ export async function POST(
         { error: 'Failed to add member' },
         { status: 500 }
       )
+    }
+
+    let cycle = null
+    if (validatedData.term_sheet_id && resolvedInvestorId) {
+      try {
+        const cycleResult = await createOrResumeDealInvestmentCycle({
+          supabase,
+          dealId,
+          userId: resolvedUserId,
+          investorId: resolvedInvestorId,
+          termSheetId: validatedData.term_sheet_id,
+          role: validatedData.role,
+          createdBy: user.id,
+          referredByEntityId: validatedData.referred_by_entity_id || null,
+          referredByEntityType: validatedData.referred_by_entity_type || null,
+          assignedFeePlanId: validatedData.assigned_fee_plan_id || null,
+          dispatchTimestamp,
+        })
+        cycle = cycleResult.cycle
+      } catch (cycleError) {
+        console.error('Create cycle error:', cycleError)
+        return NextResponse.json(
+          { error: 'Failed to create investment cycle for member' },
+          { status: 500 }
+        )
+      }
     }
 
     // Send notification/email fanout if requested
@@ -626,11 +863,12 @@ export async function POST(
         referred_by_entity_id: validatedData.referred_by_entity_id || null,
         referred_by_entity_type: validatedData.referred_by_entity_type || null,
         assigned_fee_plan_id: validatedData.assigned_fee_plan_id || null,
-        term_sheet_id: validatedData.term_sheet_id || null
+        term_sheet_id: validatedData.term_sheet_id || null,
+        cycle_id: cycle?.id || null,
       }
     })
 
-    return NextResponse.json({ membership }, { status: 201 })
+    return NextResponse.json({ membership, cycle }, { status: 201 })
 
   } catch (error) {
     if (error instanceof z.ZodError) {

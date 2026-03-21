@@ -1,5 +1,6 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { getCycleStage, LIVE_CYCLE_STATUSES } from '@/lib/deals/investment-cycles'
 
 /**
  * GET /api/investors/me/opportunities
@@ -103,38 +104,76 @@ export async function GET() {
       }
     }
 
-    // Get subscription status for each deal's vehicle
-    const vehicleIds = (memberDeals || [])
-      .map(m => (m.deals as any)?.vehicles?.id)
-      .filter(Boolean)
-
-    let subscriptionMap: Record<string, any> = {}
-    if (vehicleIds.length > 0) {
-      const { data: subscriptions } = await serviceSupabase
-        .from('subscriptions')
+    let selectedCycleMap: Record<string, any> = {}
+    let subscriptionByCycleId: Record<string, any> = {}
+    if (dealIds.length > 0) {
+      const { data: cycles } = await serviceSupabase
+        .from('deal_investment_cycles' as any)
         .select(`
           id,
-          vehicle_id,
+          deal_id,
           investor_id,
           status,
-          commitment,
+          sequence_number,
+          dispatched_at,
+          viewed_at,
+          interest_confirmed_at,
+          submission_pending_at,
+          approved_at,
           pack_generated_at,
           pack_sent_at,
           signed_at,
           funded_at,
           activated_at
         `)
+        .in('deal_id', dealIds)
         .in('investor_id', investorIdsForLookup)
-        .in('vehicle_id', vehicleIds)
+        .order('sequence_number', { ascending: false })
+        .order('created_at', { ascending: false })
 
-      if (subscriptions) {
-        subscriptionMap = subscriptions.reduce((acc, sub) => {
-          if (sub.investor_id && sub.vehicle_id) {
-            acc[`${sub.investor_id}:${sub.vehicle_id}`] = sub
-          }
-          return acc
-        }, {} as Record<string, any>)
+      const cycleIds = (cycles || []).map((cycle: any) => cycle.id).filter(Boolean)
+
+      if (cycleIds.length > 0) {
+        const { data: subscriptions } = await serviceSupabase
+          .from('subscriptions')
+          .select(`
+            id,
+            cycle_id,
+            deal_id,
+            investor_id,
+            status,
+            commitment,
+            pack_generated_at,
+            pack_sent_at,
+            signed_at,
+            funded_at,
+            activated_at
+          `)
+          .in('cycle_id', cycleIds)
+          .order('created_at', { ascending: false })
+
+        if (subscriptions) {
+          subscriptionByCycleId = subscriptions.reduce((acc, sub: any) => {
+            if (sub.cycle_id && !acc[sub.cycle_id]) {
+              acc[sub.cycle_id] = sub
+            }
+            return acc
+          }, {} as Record<string, any>)
+        }
       }
+
+      const cyclesByKey = new Map<string, any[]>()
+      for (const cycle of cycles || []) {
+        const key = `${cycle.investor_id}:${cycle.deal_id}`
+        const existing = cyclesByKey.get(key) || []
+        existing.push(cycle)
+        cyclesByKey.set(key, existing)
+      }
+
+      selectedCycleMap = Array.from(cyclesByKey.entries()).reduce((acc, [key, cycleList]) => {
+        acc[key] = cycleList.find(cycle => LIVE_CYCLE_STATUSES.includes(cycle.status)) || cycleList[0] || null
+        return acc
+      }, {} as Record<string, any>)
     }
 
     // Build opportunities response with journey stage data
@@ -142,23 +181,33 @@ export async function GET() {
       const deal = membership.deals as any
       if (!deal) return null
 
-      const vehicleId = deal.vehicles?.id
       const membershipInvestorId = membership.investor_id || investorId
-      const subscription = vehicleId ? subscriptionMap[`${membershipInvestorId}:${vehicleId}`] : null
+      const selectedCycle = selectedCycleMap[`${membershipInvestorId}:${membership.deal_id}`] || null
+      const subscription = selectedCycle?.id ? subscriptionByCycleId[selectedCycle.id] || null : null
       const dataRoomAccess = dataRoomAccessMap[`${membership.deal_id}:${membershipInvestorId}`]
 
-      // Calculate current journey stage (1-10)
-      let currentStage = 0
-      if (subscription?.activated_at) currentStage = 10
-      else if (subscription?.funded_at) currentStage = 9
-      else if (subscription?.signed_at) currentStage = 8
-      else if (subscription?.pack_sent_at) currentStage = 7
-      else if (subscription?.pack_generated_at) currentStage = 6
-      else if (membership.data_room_granted_at) currentStage = 5
-      else if (membership.nda_signed_at) currentStage = 4
-      else if (membership.interest_confirmed_at) currentStage = 3
-      else if (membership.viewed_at) currentStage = 2
-      else if (membership.dispatched_at) currentStage = 1
+      const currentStage = selectedCycle
+        ? getCycleStage({
+            ...selectedCycle,
+            pack_generated_at: subscription?.pack_generated_at || selectedCycle.pack_generated_at,
+            pack_sent_at: subscription?.pack_sent_at || selectedCycle.pack_sent_at,
+            signed_at: subscription?.signed_at || selectedCycle.signed_at,
+            funded_at: subscription?.funded_at || selectedCycle.funded_at,
+            activated_at: subscription?.activated_at || selectedCycle.activated_at,
+          })
+        : (() => {
+            if (subscription?.activated_at) return 10
+            if (subscription?.funded_at) return 9
+            if (subscription?.signed_at) return 8
+            if (subscription?.pack_sent_at) return 7
+            if (subscription?.pack_generated_at) return 6
+            if (membership.data_room_granted_at) return 5
+            if (membership.nda_signed_at) return 4
+            if (membership.interest_confirmed_at) return 3
+            if (membership.viewed_at) return 2
+            if (membership.dispatched_at) return 1
+            return 0
+          })()
 
       return {
         id: deal.id,
@@ -183,16 +232,16 @@ export async function GET() {
         journey: {
           current_stage: currentStage,
           stages: {
-            received: membership.dispatched_at,
-            viewed: membership.viewed_at,
-            interest_confirmed: membership.interest_confirmed_at,
+            received: selectedCycle?.dispatched_at || membership.dispatched_at,
+            viewed: selectedCycle?.viewed_at || membership.viewed_at,
+            interest_confirmed: selectedCycle?.interest_confirmed_at || membership.interest_confirmed_at,
             nda_signed: membership.nda_signed_at,
             data_room_access: membership.data_room_granted_at,
-            pack_generated: subscription?.pack_generated_at || null,
-            pack_sent: subscription?.pack_sent_at || null,
-            signed: subscription?.signed_at || null,
-            funded: subscription?.funded_at || null,
-            active: subscription?.activated_at || null
+            pack_generated: subscription?.pack_generated_at || selectedCycle?.pack_generated_at || null,
+            pack_sent: subscription?.pack_sent_at || selectedCycle?.pack_sent_at || null,
+            signed: subscription?.signed_at || selectedCycle?.signed_at || null,
+            funded: subscription?.funded_at || selectedCycle?.funded_at || null,
+            active: subscription?.activated_at || selectedCycle?.activated_at || null
           }
         },
         // Data room access

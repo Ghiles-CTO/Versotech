@@ -189,18 +189,29 @@ export async function POST(request: NextRequest) {
     }
 
     if (derivedAmount) {
-      const holdingStatus = allocation_amount ? 'funded' : 'pending_funding'
+      const { data: existingHolding } = await serviceSupabase
+        .from('investor_deal_holdings')
+        .select('id, subscribed_amount, status, funded_at')
+        .eq('investor_id', investor_id)
+        .eq('deal_id', deal_id)
+        .maybeSingle()
+
+      const holdingStatus = existingHolding?.status === 'active'
+        ? 'active'
+        : existingHolding?.status === 'funded' || allocation_amount
+          ? 'funded'
+          : 'pending_funding'
       const payload = {
         investor_id,
         deal_id,
         subscription_submission_id: subscription_id ?? null,
         approval_id: approval_id ?? null,
         status: holdingStatus,
-        subscribed_amount: derivedAmount,
+        subscribed_amount: Number(existingHolding?.subscribed_amount || 0) + derivedAmount,
         currency: derivedCurrency ?? 'USD',
         effective_date: new Date().toISOString().slice(0, 10),
         funding_due_at: allocation_amount ? null : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        funded_at: allocation_amount ? new Date().toISOString() : null,
+        funded_at: existingHolding?.funded_at || (allocation_amount ? new Date().toISOString() : null),
         updated_at: new Date().toISOString()
       }
 

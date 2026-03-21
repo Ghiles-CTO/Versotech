@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { useCallback, useEffect, useState } from 'react'
+import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { DealLogo } from '@/components/deals/deal-logo'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -148,6 +148,42 @@ interface Signatory {
   role: string
 }
 
+interface OpportunityCycle {
+  id: string
+  sequence_number: number
+  status: string
+  stage: number
+  term_sheet_id: string | null
+  term_sheet: {
+    id: string
+    version: number | null
+    status: string
+    minimum_ticket: number | null
+    maximum_ticket: number | null
+    subscription_fee_percent: number | null
+  } | null
+  latest_amount: number | null
+  submission: {
+    id: string
+    status: string
+    submitted_at: string | null
+  } | null
+  subscription: {
+    id: string
+    status: string
+    commitment: number | null
+    currency: string
+    funded_amount: number | null
+    pack_generated_at: string | null
+    pack_sent_at: string | null
+    signed_at: string | null
+    funded_at: string | null
+    activated_at: string | null
+  } | null
+  can_continue: boolean
+  can_invest_more: boolean
+}
+
 interface Opportunity {
   id: string
   name: string
@@ -266,6 +302,8 @@ interface Opportunity {
     status: string
     submitted_at: string | null
   } | null
+  active_cycle_id: string | null
+  cycles: OpportunityCycle[]
   fee_structures: FeeStructure[]
   faqs: FAQ[]
   signatories: Signatory[]
@@ -348,6 +386,33 @@ function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function formatCycleStatus(status: string): string {
+  return status
+    .split('_')
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+}
+
+function getCycleStatusClassName(status: string): string {
+  switch (status) {
+    case 'active':
+      return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200 border-0'
+    case 'funded':
+      return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200 border-0'
+    case 'signed':
+    case 'pack_sent':
+    case 'pack_generated':
+    case 'approved':
+    case 'submission_pending_review':
+      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200 border-0'
+    case 'rejected':
+    case 'cancelled':
+      return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-200 border-0'
+    default:
+      return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 border-0'
+  }
 }
 
 function getDocIcon(fileName: string, fileType: string, isExternal: boolean) {
@@ -478,11 +543,13 @@ function FeaturedDocRow({ doc, dealId, onPreview, canDownload }: {
 
 export default function OpportunityDetailPage() {
   const params = useParams()
+  const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
   const dealId = params.id as string
   const actionParam = searchParams.get('action')
   const fromParam = searchParams.get('from') // Track where user came from
+  const selectedCycleParam = searchParams.get('cycle')
 
   const { hasAnyPersona, isLoading: personaLoading, activePersona, error: personaError, isStaff, isCEO } = usePersona()
   const [opportunity, setOpportunity] = useState<Opportunity | null>(null)
@@ -513,6 +580,30 @@ export default function OpportunityDetailPage() {
   const [previewWatermark, setPreviewWatermark] = useState<Record<string, any> | null>(null)
   const { isProxyMode, selectedClient } = useProxyMode()
 
+  const buildOpportunityApiUrl = (targetCycleId?: string | null) => {
+    const query = new URLSearchParams()
+    query.set('_t', Date.now().toString())
+
+    if (isProxyMode && selectedClient?.id) {
+      query.set('client_investor_id', selectedClient.id)
+    }
+
+    const cycleId = targetCycleId ?? selectedCycleParam
+    if (cycleId) {
+      query.set('cycle_id', cycleId)
+    }
+
+    return `/api/investors/me/opportunities/${dealId}?${query.toString()}`
+  }
+
+  const updateCycleSelection = useCallback((cycleId: string) => {
+    if (cycleId === selectedCycleParam) return
+    const nextSearch = new URLSearchParams(searchParams.toString())
+    nextSearch.set('cycle', cycleId)
+    const nextQuery = nextSearch.toString()
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname)
+  }, [pathname, router, searchParams, selectedCycleParam])
+
   useEffect(() => {
     // CRITICAL: AbortController prevents race conditions when navigating between deals
     // Without this, if you navigate A→B quickly, fetch A might complete AFTER fetch B
@@ -529,20 +620,19 @@ export default function OpportunityDetailPage() {
       try {
         console.log(`[OpportunityDetail] Starting fetch for dealId: ${dealId}`)
 
-        // Record view (fire and forget, don't block on this)
-        fetch(`/api/investors/me/opportunities/${dealId}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'view' }),
-          cache: 'no-store'
-        }).catch(() => {}) // Ignore errors from view recording
-
         // Fetch opportunity data with abort signal
-        const timestamp = Date.now()
-        const proxyParam = isProxyMode && selectedClient?.id
-          ? `&client_investor_id=${selectedClient.id}`
-          : ''
-        const response = await fetch(`/api/investors/me/opportunities/${dealId}?_t=${timestamp}${proxyParam}`, {
+        const requestQuery = new URLSearchParams()
+        requestQuery.set('_t', Date.now().toString())
+
+        if (isProxyMode && selectedClient?.id) {
+          requestQuery.set('client_investor_id', selectedClient.id)
+        }
+
+        if (selectedCycleParam) {
+          requestQuery.set('cycle_id', selectedCycleParam)
+        }
+
+        const response = await fetch(`/api/investors/me/opportunities/${dealId}?${requestQuery.toString()}`, {
           cache: 'no-store',
           signal: abortController.signal,
           headers: {
@@ -574,10 +664,35 @@ export default function OpportunityDetailPage() {
           console.error(`[OpportunityDetail] ⚠️ MISMATCH! URL has ${dealId} but API returned ${data.opportunity?.id}`)
         }
 
-        setOpportunity(data.opportunity)
-        const trackingOnlyForPersona = data.opportunity.is_tracking_only || (isPartnerPersona && !data.opportunity.membership?.role)
+        const resolvedCycleId = data.opportunity?.active_cycle_id ?? null
 
-        if (actionParam === 'subscribe' && data.opportunity.can_subscribe && !trackingOnlyForPersona) {
+        if (resolvedCycleId && resolvedCycleId !== selectedCycleParam) {
+          updateCycleSelection(resolvedCycleId)
+        }
+
+        setOpportunity(data.opportunity)
+
+        if (!isProxyMode) {
+          fetch(`/api/investors/me/opportunities/${dealId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'view',
+              cycle_id: resolvedCycleId,
+            }),
+            cache: 'no-store'
+          }).catch(() => {})
+        }
+
+        const trackingOnlyForPersona = data.opportunity.is_tracking_only || (isPartnerPersona && !data.opportunity.membership?.role)
+        const selectedCycleFromResponse =
+          data.opportunity.cycles?.find((cycle: OpportunityCycle) => cycle.id === data.opportunity.active_cycle_id) || null
+        const canOpenSubscribe =
+          data.opportunity.can_subscribe ||
+          selectedCycleFromResponse?.can_continue === true ||
+          selectedCycleFromResponse?.can_invest_more === true
+
+        if (actionParam === 'subscribe' && canOpenSubscribe && !trackingOnlyForPersona) {
           setShowSubscribeDialog(true)
         }
       } catch (err: any) {
@@ -606,7 +721,7 @@ export default function OpportunityDetailPage() {
       isCancelled = true
       abortController.abort()
     }
-  }, [hasAnyPersona, dealId, actionParam, isPartnerPersona, isProxyMode, selectedClient?.id])
+  }, [hasAnyPersona, dealId, actionParam, isPartnerPersona, isProxyMode, selectedClient?.id, selectedCycleParam, updateCycleSelection])
 
   const handleExpressInterest = async () => {
     try {
@@ -623,10 +738,7 @@ export default function OpportunityDetailPage() {
       }
 
       // Refresh data
-      const proxyParam = isProxyMode && selectedClient?.id
-        ? `?client_investor_id=${selectedClient.id}`
-        : ''
-      const refreshResponse = await fetch(`/api/investors/me/opportunities/${dealId}${proxyParam}`)
+      const refreshResponse = await fetch(buildOpportunityApiUrl())
       const data = await refreshResponse.json()
       setOpportunity(data.opportunity)
       setShowInterestDialog(false)
@@ -657,6 +769,12 @@ export default function OpportunityDetailPage() {
   const handleSubscribe = async () => {
     if (!subscribeAmount || !opportunity) return
 
+    const selectedCycle =
+      opportunity.cycles.find(cycle => cycle.id === opportunity.active_cycle_id) ||
+      opportunity.cycles[0] ||
+      null
+    const shouldCreateNewCycle = selectedCycle?.can_invest_more === true
+
     try {
       setActionLoading(true)
 
@@ -670,7 +788,9 @@ export default function OpportunityDetailPage() {
             client_investor_id: selectedClient.id,
             commitment: parseDisplayAmount(subscribeAmount),
             stock_type: opportunity.stock_type || 'common',
-            notes: `Submitted in proxy mode by commercial partner`
+            notes: `Submitted in proxy mode by commercial partner`,
+            ...(selectedCycle?.term_sheet_id ? { term_sheet_id: selectedCycle.term_sheet_id } : {}),
+            ...(!shouldCreateNewCycle && selectedCycle?.id ? { cycle_id: selectedCycle.id } : {}),
           })
         })
       } else {
@@ -685,7 +805,9 @@ export default function OpportunityDetailPage() {
               bank_confirmation: subscribeBankConfirm,
               notes: subscribeNotes.trim() || null
             },
-            subscription_type: 'personal'
+            subscription_type: 'personal',
+            ...(selectedCycle?.term_sheet_id ? { term_sheet_id: selectedCycle.term_sheet_id } : {}),
+            ...(!shouldCreateNewCycle && selectedCycle?.id ? { cycle_id: selectedCycle.id } : {}),
           })
         })
       }
@@ -695,13 +817,15 @@ export default function OpportunityDetailPage() {
         throw new Error(err.error || 'Failed to submit subscription')
       }
 
-      await response.json()
+      const result = await response.json()
+      const nextCycleId = result?.cycle?.id || (shouldCreateNewCycle ? null : selectedCycle?.id) || null
+
+      if (nextCycleId) {
+        updateCycleSelection(nextCycleId)
+      }
 
       // Refresh data
-      const proxyParam = isProxyMode && selectedClient?.id
-        ? `?client_investor_id=${selectedClient.id}`
-        : ''
-      const refreshResponse = await fetch(`/api/investors/me/opportunities/${dealId}${proxyParam}`)
+      const refreshResponse = await fetch(buildOpportunityApiUrl(nextCycleId))
       const data = await refreshResponse.json()
       setOpportunity(data.opportunity)
       setShowSubscribeDialog(false)
@@ -837,20 +961,49 @@ export default function OpportunityDetailPage() {
   const approvalStatusLabel = accountStatusCopy.label
   const kycStatusLabel = formatKycStatusLabel(opportunity.kyc_status)
   const isBlacklisted = opportunity.account_approval_status === 'unauthorized'
-  const subscriptionSubmittedAt = opportunity.subscription_submission?.submitted_at ?? null
+  const selectedCycle =
+    opportunity.cycles.find(cycle => cycle.id === opportunity.active_cycle_id) ||
+    opportunity.cycles[0] ||
+    null
+  const selectedCycleLabel = selectedCycle?.term_sheet?.version
+    ? `Term Sheet v${selectedCycle.term_sheet.version}`
+    : selectedCycle?.term_sheet_id
+      ? 'Assigned Term Sheet'
+      : 'Current Opportunity'
+  const canContinueSelectedCycle = !!selectedCycle?.can_continue && !isTrackingOnly && isAccountApproved
+  const canInvestMore = !!selectedCycle?.can_invest_more && !isTrackingOnly && isAccountApproved
   const canSubscribe = opportunity.can_subscribe && !isTrackingOnly && isAccountApproved
   const canExpressInterest = opportunity.can_express_interest && !isTrackingOnly && isAccountApproved
 
   // Derive subscription limits from termsheet (fee_structures), falling back to deal-level fields
-  const publishedTermSheet = opportunity.fee_structures.find(ts => ts.status === 'published') || opportunity.fee_structures[0] || null
-  const subscribeMinAmount = publishedTermSheet?.minimum_ticket ?? null
-  const subscribeMaxAmount = publishedTermSheet?.allocation_up_to ?? null
+  const selectedTermSheet = opportunity.fee_structures[0] || null
+  const subscribeMinAmount = selectedTermSheet?.minimum_ticket ?? null
+  const subscribeMaxAmount = selectedTermSheet?.allocation_up_to ?? null
   const canSignNda = opportunity.can_sign_nda && !isTrackingOnly && isAccountApproved
   const showActionChoices =
     !isBlacklisted &&
     opportunity.status !== 'closed' &&
-    !opportunity.subscription &&
-    (canSubscribe || canExpressInterest)
+    (canContinueSelectedCycle || canSubscribe || canExpressInterest || canInvestMore)
+  const subscribeButtonTitle = canInvestMore
+    ? 'Invest More'
+    : canContinueSelectedCycle
+      ? 'Continue Subscription'
+      : 'Subscribe to Investment'
+  const subscribeButtonDescription = canInvestMore
+    ? `Create a new subscription pack on ${selectedCycleLabel}`
+    : canContinueSelectedCycle
+      ? `Continue your current cycle on ${selectedCycleLabel}`
+      : 'Submit for review • Subscription pack'
+  const subscribeDialogTitle = canInvestMore
+    ? 'Invest More in This Opportunity'
+    : canContinueSelectedCycle
+      ? 'Continue Subscription'
+      : 'Subscribe to Investment Opportunity'
+  const subscribeDialogDescription = canInvestMore
+    ? `Enter the additional amount you want to allocate on ${selectedCycleLabel}. Your previous subscriptions remain available in history.`
+    : canContinueSelectedCycle
+      ? `Enter your commitment amount to continue ${selectedCycleLabel} for ${opportunity.name}. Once reviewed, you&apos;ll receive the subscription documents to sign.`
+      : `Enter your commitment amount to submit a subscription request for ${opportunity.name}. Once reviewed, you&apos;ll receive the subscription documents to sign.`
   const journeySummary = showAccountBlock ? {
     ...opportunity.journey.summary,
     interest_confirmed: null,
@@ -916,6 +1069,77 @@ export default function OpportunityDetailPage() {
         </Card>
       )}
 
+      {opportunity.cycles.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Investment Cycles</CardTitle>
+            <CardDescription>
+              Switch between current and prior subscription tracks without losing signed documents or status history.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {opportunity.cycles.map((cycle) => {
+              const isSelectedCycle = cycle.id === opportunity.active_cycle_id
+              const cycleAmount = cycle.subscription?.commitment ?? cycle.latest_amount
+              const cycleDate =
+                cycle.subscription?.activated_at ??
+                cycle.subscription?.funded_at ??
+                cycle.subscription?.signed_at ??
+                cycle.submission?.submitted_at ??
+                null
+
+              return (
+                <button
+                  key={cycle.id}
+                  type="button"
+                  onClick={() => updateCycleSelection(cycle.id)}
+                  className={cn(
+                    'rounded-xl border p-4 text-left transition-colors',
+                    isSelectedCycle
+                      ? 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/20'
+                      : 'border-border hover:border-emerald-300 hover:bg-muted/40'
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold">Cycle {cycle.sequence_number}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {cycle.term_sheet?.version ? `Term Sheet v${cycle.term_sheet.version}` : 'Assigned term sheet'}
+                      </p>
+                    </div>
+                    <Badge className={getCycleStatusClassName(cycle.status)}>
+                      {formatCycleStatus(cycle.status)}
+                    </Badge>
+                  </div>
+
+                  <div className="mt-4 space-y-1.5 text-xs text-muted-foreground">
+                    <p>Stage {Math.max(cycle.stage, 1)} of 10</p>
+                    {cycleAmount !== null && (
+                      <p>Amount: {formatCurrency(cycleAmount, cycle.subscription?.currency || opportunity.currency)}</p>
+                    )}
+                    {cycleDate && (
+                      <p>Latest update: {formatDate(cycleDate)}</p>
+                    )}
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {isSelectedCycle && (
+                      <Badge variant="outline">Viewing</Badge>
+                    )}
+                    {cycle.can_continue && (
+                      <Badge variant="outline">Continue</Badge>
+                    )}
+                    {cycle.can_invest_more && (
+                      <Badge variant="outline">Top-up available</Badge>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Deal Timeline */}
       <DealTimelineCard
         openAt={opportunity.open_at}
@@ -961,6 +1185,11 @@ export default function OpportunityDetailPage() {
                   : opportunity.stock_type.replace(/_/g, ' ')}
               </Badge>
             )}
+            {selectedCycle && (
+              <Badge variant="outline" className="border-emerald-300 text-emerald-700 dark:text-emerald-300">
+                {selectedCycleLabel}
+              </Badge>
+            )}
           </div>
         </div>
 
@@ -979,7 +1208,7 @@ export default function OpportunityDetailPage() {
           {showActionChoices && (
             <div className="space-y-3">
               {/* Primary: Subscribe Directly */}
-              {canSubscribe && (
+              {(canContinueSelectedCycle || canSubscribe || canInvestMore) && (
                 <div className="relative">
                   <Button
                     className="w-full bg-emerald-600 hover:bg-emerald-700 h-auto py-3"
@@ -988,8 +1217,8 @@ export default function OpportunityDetailPage() {
                     <div className="flex items-center gap-2">
                       <TrendingUp className="w-5 h-5" />
                       <div className="text-left">
-                        <div className="font-semibold">Subscribe to Investment</div>
-                        <div className="text-xs opacity-90 font-normal">Submit for review • Subscription pack</div>
+                        <div className="font-semibold">{subscribeButtonTitle}</div>
+                        <div className="text-xs opacity-90 font-normal">{subscribeButtonDescription}</div>
                       </div>
                     </div>
                   </Button>
@@ -997,7 +1226,7 @@ export default function OpportunityDetailPage() {
               )}
 
               {/* OR Divider */}
-              {canSubscribe && canExpressInterest && (
+              {(canContinueSelectedCycle || canSubscribe || canInvestMore) && canExpressInterest && (
                 <div className="relative flex items-center gap-3">
                   <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
                   <span className="text-xs text-muted-foreground font-medium px-2">OR</span>
@@ -1755,11 +1984,11 @@ export default function OpportunityDetailPage() {
               <div className="min-w-0 flex-1">
                 <DialogHeader className="pb-0 space-y-0">
                   <DialogTitle className="text-lg font-semibold tracking-tight leading-tight">
-                    Subscribe to Investment Opportunity
+                    {subscribeDialogTitle}
                   </DialogTitle>
                 </DialogHeader>
                 <DialogDescription className="text-[13px] text-muted-foreground/80 leading-relaxed mt-1.5">
-                  Enter your commitment amount to submit a subscription request for {opportunity.name}. Once reviewed, you&apos;ll receive the subscription documents to sign.
+                  {subscribeDialogDescription}
                 </DialogDescription>
               </div>
             </div>
@@ -1920,7 +2149,7 @@ export default function OpportunityDetailPage() {
                 </>
               ) : (
                 <>
-                  Confirm Interest
+                  {canInvestMore ? 'Create New Subscription Pack' : 'Confirm Interest'}
                   <ArrowUpRight className="h-4 w-4" />
                 </>
               )}

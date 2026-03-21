@@ -9,6 +9,7 @@ import { sendAccountStatusEmail, sendInvitationEmail } from '@/lib/email/resend-
 import { getAppUrl } from '@/lib/signature/token'
 import { resolveInvitationInviteeName } from '@/lib/invitations/entity-invitation'
 import { handleDealClose, handleTermsheetClose, type TermsheetCloseMode } from '@/lib/deals/deal-close-handler'
+import { updateDealInvestmentCycleProgress } from '@/lib/deals/investment-cycles'
 import { buildSubscriptionPackPayload } from '@/lib/subscription-pack/payload-builder'
 import { assertSubscriptionPackPdfIsA4 } from '@/lib/subscription-pack/pdf-format-guard'
 import { applySubscriptionPackPageNumbers } from '@/lib/subscription/page-numbering'
@@ -1569,22 +1570,49 @@ async function handleEntityApproval(
           .eq('id', entityId)
           .single()
 
-        if (submission && submission.deal?.vehicle_id) {
-          // Extract amount from payload_json
-          const amount = submission.payload_json?.amount || submission.payload_json?.subscription_amount || 0
+	        if (submission && submission.deal?.vehicle_id) {
+	          // Extract amount from payload_json
+	          const amount = submission.payload_json?.amount || submission.payload_json?.subscription_amount || 0
 
-          // Check if subscription already exists
-          const { data: existingSub } = await supabase
-            .from('subscriptions')
-            .select('id')
-            .eq('investor_id', submission.investor_id)
-            .eq('vehicle_id', submission.deal.vehicle_id)
-            .eq('deal_id', submission.deal_id)
-            .single()
+	          const cycleId = submission.cycle_id || null
+	          let subscriptionId = submission.formal_subscription_id || null
 
-          let subscriptionId = existingSub?.id
+	          const { data: cycle } = cycleId
+	            ? await supabase
+	                .from('deal_investment_cycles' as any)
+	                .select('*')
+	                .eq('id', cycleId)
+	                .maybeSingle()
+	            : { data: null }
 
-	          // Fetch deal's default fee plan to auto-link
+	          const { data: membership } = await supabase
+	            .from('deal_memberships')
+	            .select('assigned_fee_plan_id, referred_by_entity_id, referred_by_entity_type, term_sheet_id')
+	            .eq('deal_id', submission.deal_id)
+	            .eq('investor_id', submission.investor_id)
+	            .maybeSingle()
+
+		          const resolvedTermSheetId =
+		            submission.term_sheet_id ||
+		            cycle?.term_sheet_id ||
+		            null
+
+		          const assignedFeePlanId =
+		            cycle?.assigned_fee_plan_id ||
+	            membership?.assigned_fee_plan_id ||
+	            null
+
+	          const referralEntityId =
+	            cycle?.referred_by_entity_id ||
+	            membership?.referred_by_entity_id ||
+	            null
+
+	          const referralEntityType =
+	            cycle?.referred_by_entity_type ||
+	            membership?.referred_by_entity_type ||
+	            null
+
+	          // Fetch deal's default fee plan to auto-link when no cycle-specific fee plan exists.
 	          const { data: defaultFeePlan } = await supabase
 	            .from('fee_plans')
 	            .select('id')
@@ -1593,15 +1621,29 @@ async function handleEntityApproval(
 	            .eq('is_active', true)
 	            .single()
 
-	          // Fetch fee structure before insert/update to keep subscription fields in sync
-	          const { data: feeStructureForSub } = await supabase
+	          const resolvedFeePlanId = assignedFeePlanId || defaultFeePlan?.id || null
+
+	          // Fetch fee structure before insert/update to keep subscription fields in sync.
+	          const feeStructureQuery = supabase
 	            .from('deal_fee_structures')
-	            .select('subscription_fee_percent, management_fee_percent, carried_interest_percent, price_per_share_text, price_per_share, cost_per_share, payment_deadline_days')
-	            .eq('deal_id', submission.deal_id)
-	            .eq('status', 'published')
-	            .order('created_at', { ascending: false })
-	            .limit(1)
-	            .single()
+	            .select('id, subscription_fee_percent, management_fee_percent, carried_interest_percent, price_per_share_text, price_per_share, cost_per_share, payment_deadline_days')
+
+		          let feeStructureForSub: any = null
+		          if (resolvedTermSheetId) {
+		            const { data } = await feeStructureQuery
+		              .eq('id', resolvedTermSheetId)
+		              .maybeSingle()
+		            feeStructureForSub = data
+		          }
+
+		          if (!resolvedTermSheetId || !feeStructureForSub) {
+		            console.error('Approval missing canonical term sheet for submission', {
+		              submissionId: submission.id,
+		              cycleId,
+		              resolvedTermSheetId,
+		            })
+		            return { success: false, error: 'No valid term sheet is attached to this subscription cycle' }
+		          }
 
 	          // Get latest valuation for fallback price_per_share
 	          const { data: latestValuation } = await supabase
@@ -1615,11 +1657,11 @@ async function handleEntityApproval(
 	          // Get fee components for management_fee_frequency and performance threshold
 	          let managementFeeFrequency: string | null = null
 	          let performanceFeeThreshold: number | null = null
-	          if (defaultFeePlan?.id) {
+	          if (resolvedFeePlanId) {
 	            const { data: feeComponents } = await supabase
 	              .from('fee_components')
 	              .select('kind, frequency, hurdle_rate_bps')
-	              .eq('fee_plan_id', defaultFeePlan.id)
+	              .eq('fee_plan_id', resolvedFeePlanId)
 	              .in('kind', ['management', 'performance'])
 
 	            if (feeComponents) {
@@ -1682,8 +1724,10 @@ async function handleEntityApproval(
 	            submission.deal.vehicle?.currency ||
 	            'USD'
 
-	          const subscriptionPatch = {
-	            fee_plan_id: defaultFeePlan?.id || null,
+		          const subscriptionPatch = {
+		            cycle_id: cycleId,
+	            term_sheet_id: resolvedTermSheetId,
+	            fee_plan_id: resolvedFeePlanId,
 	            commitment: amount,
 	            currency: subscriptionCurrency,
 	            effective_date: submission.effective_date || new Date().toISOString(),
@@ -1702,14 +1746,30 @@ async function handleEntityApproval(
 	            management_fee_frequency: managementFeeFrequency,
 	            performance_fee_tier1_threshold: performanceFeeThreshold,
 	            funding_due_at: fundingDueAt,
-	            introducer_id: introduction?.introducer_id || null,
-	            introduction_id: introduction?.id || null,
-	          }
+	            introducer_id:
+	              referralEntityType === 'introducer'
+	                ? referralEntityId
+	                : introduction?.introducer_id || null,
+		            introduction_id:
+		              referralEntityType === 'introducer'
+		                ? introduction?.id || null
+		                : introduction?.id || null,
+		          }
 
-	          if (!existingSub) {
-	            const { data: newSubscription, error: createSubError } = await supabase
-	              .from('subscriptions')
-	              .insert({
+		          if (subscriptionId) {
+		            const { error: updateSubscriptionError } = await supabase
+		              .from('subscriptions')
+		              .update(subscriptionPatch)
+		              .eq('id', subscriptionId)
+
+		            if (updateSubscriptionError) {
+		              console.error('Error updating existing subscription:', updateSubscriptionError)
+		              return { success: false, error: 'Failed to update subscription' }
+		            }
+		          } else {
+		            const { data: newSubscription, error: createSubError } = await supabase
+		              .from('subscriptions')
+		              .insert({
 	                investor_id: submission.investor_id,
 	                vehicle_id: submission.deal.vehicle_id,
 	                deal_id: submission.deal_id,
@@ -1726,30 +1786,32 @@ async function handleEntityApproval(
 	            }
 
 	            subscriptionId = newSubscription.id
-	          } else {
-	            const { data: updatedSubscription, error: updateSubError } = await supabase
-	              .from('subscriptions')
-	              .update({
-	                status: 'pending',
-	                ...subscriptionPatch,
-	              })
-	              .eq('id', existingSub.id)
-	              .select('id')
-	              .single()
-
-	            if (updateSubError || !updatedSubscription) {
-	              console.error('Error refreshing existing subscription:', updateSubError)
-	              return { success: false, error: 'Failed to update existing subscription' }
-	            }
-
-	            subscriptionId = updatedSubscription.id
 	          }
 
 	          // Link subscription back to submission for easy lookup
 	          await supabase
 	            .from('deal_subscription_submissions')
-	            .update({ formal_subscription_id: subscriptionId })
+	            .update({
+	              formal_subscription_id: subscriptionId,
+	              cycle_id: cycleId,
+	              term_sheet_id: resolvedTermSheetId,
+	            })
 	            .eq('id', submission.id)
+
+	          if (cycleId) {
+	            try {
+	              await updateDealInvestmentCycleProgress({
+	                supabase,
+	                cycleId,
+	                status: 'approved',
+	                timestamps: {
+	                  approved_at: new Date().toISOString(),
+	                },
+	              })
+	            } catch (cycleUpdateError) {
+	              console.error('Failed to update cycle after approval:', cycleUpdateError)
+	            }
+	          }
 
             // AUTO-TRIGGER SUBSCRIPTION PACK WORKFLOW
             try {
@@ -1883,17 +1945,13 @@ async function handleEntityApproval(
                 .eq('id', submission.deal.vehicle_id)
                 .single()
 
-              // NOTE: Use order().limit(1) instead of .maybeSingle() because deals can have multiple published fee structures
-              const { data: feeStructure } = await supabase
-                .from('deal_fee_structures')
-                .select('*')
-                .eq('deal_id', submission.deal_id)
-                .eq('status', 'published')
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .single()
+	              const { data: feeStructure } = await supabase
+	                .from('deal_fee_structures')
+	                .select('*')
+	                .eq('id', resolvedTermSheetId)
+	                .maybeSingle()
 
-              if (normalizedSubscriptionInvestor && vehicleData && feeStructure && user) {
+	              if (normalizedSubscriptionInvestor && vehicleData && feeStructure && user) {
                 // Get CEO signer dynamically (instead of hardcoded fallback)
                 const ceoSigner = await getCeoSigner(supabase)
                 const issuerName = ceoSigner?.displayName || feeStructure.issuer_signatory_name || 'Julien Machot'
@@ -2163,11 +2221,26 @@ async function handleEntityApproval(
                           console.log('✅ Subscription pack document created:', docRecord.id)
 
                           const packGeneratedAt = new Date().toISOString()
-                          await supabase
-                            .from('subscriptions')
-                            .update({ pack_generated_at: packGeneratedAt })
-                            .eq('id', subscriptionId)
-                            .is('pack_generated_at', null)
+	                          await supabase
+	                            .from('subscriptions')
+	                            .update({ pack_generated_at: packGeneratedAt })
+	                            .eq('id', subscriptionId)
+	                            .is('pack_generated_at', null)
+
+	                          if (cycleId) {
+	                            try {
+	                              await updateDealInvestmentCycleProgress({
+	                                supabase,
+	                                cycleId,
+	                                status: 'pack_generated',
+	                                timestamps: {
+	                                  pack_generated_at: packGeneratedAt,
+	                                },
+	                              })
+	                            } catch (cycleUpdateError) {
+	                              console.error('Failed to mark cycle pack_generated:', cycleUpdateError)
+	                            }
+	                          }
 
                           // Update workflow_run with status completed and document reference
                           await supabase
@@ -2690,16 +2763,39 @@ async function handleEntityRejection(
         .eq('id', entityId)
     }
 
-    if (entityType === 'deal_subscription') {
-      await supabase
-        .from('deal_subscription_submissions')
-        .update({
-          status: 'rejected',
-          rejection_reason: reason,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', entityId)
-    }
+	    if (entityType === 'deal_subscription') {
+	      const now = new Date().toISOString()
+	      const { data: rejectedSubmission } = await supabase
+	        .from('deal_subscription_submissions')
+	        .select('cycle_id')
+	        .eq('id', entityId)
+	        .maybeSingle()
+
+	      await supabase
+	        .from('deal_subscription_submissions')
+	        .update({
+	          status: 'rejected',
+	          rejection_reason: reason,
+	          updated_at: now
+	        })
+	        .eq('id', entityId)
+
+	      if (rejectedSubmission?.cycle_id) {
+	        try {
+	          await updateDealInvestmentCycleProgress({
+	            supabase,
+	            cycleId: rejectedSubmission.cycle_id,
+	            status: 'rejected',
+	            rejectionReason: reason,
+	            timestamps: {
+	              rejected_at: now,
+	            },
+	          })
+	        } catch (cycleError) {
+	          console.error('Failed to reject investment cycle:', cycleError)
+	        }
+	      }
+	    }
 
     if (entityType === 'investor_onboarding') {
       await supabase

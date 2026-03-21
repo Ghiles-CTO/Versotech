@@ -16,6 +16,7 @@ import { triggerCertificateGeneration } from '@/lib/subscription/certificate-tri
 import { createInvestorNotification } from '@/lib/notifications'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { getEntityPrimaryAndAdminRecipients } from '@/lib/notifications/entity-recipient-groups'
+import { updateDealInvestmentCycleProgress } from '@/lib/deals/investment-cycles'
 
 export interface DealCloseResult {
   success: boolean
@@ -177,6 +178,9 @@ export async function handleDealClose(
         currency,
         num_shares,
         units,
+        fee_plan_id,
+        cycle_id,
+        term_sheet_id,
         price_per_share,
         cost_per_share,
         status,
@@ -248,6 +252,21 @@ export async function handleDealClose(
           result.subscriptionsActivated++
           console.log(`[deal-close] Activated subscription ${sub.id}`)
 
+          if ((sub as any).cycle_id) {
+            try {
+              await updateDealInvestmentCycleProgress({
+                supabase,
+                cycleId: (sub as any).cycle_id,
+                status: 'active',
+                timestamps: {
+                  activated_at: new Date().toISOString(),
+                },
+              })
+            } catch (cycleError) {
+              result.errors.push(`Failed to activate cycle for subscription ${sub.id}: ${cycleError instanceof Error ? cycleError.message : 'Unknown error'}`)
+            }
+          }
+
           // Step 1b: Create position for this subscription
           const fundedAmount = Number(sub.funded_amount) || 0
           const pricePerShareForUnits = Number(sub.price_per_share) || Number(sub.cost_per_share) || 0
@@ -262,47 +281,45 @@ export async function handleDealClose(
           const initialNav = sub.price_per_share || sub.cost_per_share
 
           if (positionUnits && positionUnits > 0) {
-            // Check if position already exists
-            const { data: existingPosition } = await supabase
-              .from('positions')
-              .select('id')
-              .eq('investor_id', sub.investor_id)
-              .eq('vehicle_id', sub.vehicle_id || deal.vehicle_id)
-              .maybeSingle()
-
-            if (!existingPosition) {
-              const { error: positionError } = await supabase
-                .from('positions')
-                .insert({
-                  investor_id: sub.investor_id,
-                  vehicle_id: sub.vehicle_id || deal.vehicle_id,
-                  units: positionUnits,
-                  cost_basis: fundedAmount,
-                  last_nav: initialNav,
-                  as_of_date: new Date().toISOString(),
-                })
-
-              if (positionError) {
-                result.errors.push(`Failed to create position for subscription ${sub.id}: ${positionError.message}`)
-              } else {
-                result.positionsCreated++
-                console.log(`[deal-close] Created position for subscription ${sub.id}: ${positionUnits} units`)
-              }
-            } else {
-              console.log(`[deal-close] Position already exists for subscription ${sub.id}`)
+            try {
+              const positionResult = await upsertPositionForActivatedSubscription(supabase, {
+                investorId: sub.investor_id,
+                vehicleId: sub.vehicle_id || deal.vehicle_id,
+                units: positionUnits,
+                fundedAmount,
+                nav: initialNav,
+              })
+              result.positionsCreated++
+              console.log(`[deal-close] ${positionResult.created ? 'Created' : 'Updated'} position for subscription ${sub.id}: ${positionUnits} units`)
+            } catch (positionError) {
+              result.errors.push(`Failed to upsert position for subscription ${sub.id}: ${positionError instanceof Error ? positionError.message : 'Unknown error'}`)
             }
           }
 
           // Step 1c: Create introducer/partner/commercial partner commissions (based on assigned fee plan)
           try {
-            const { data: dealMembership } = await supabase
-              .from('deal_memberships')
-              .select('referred_by_entity_id, referred_by_entity_type, assigned_fee_plan_id')
-              .eq('deal_id', dealId)
-              .eq('investor_id', sub.investor_id)
-              .order('dispatched_at', { ascending: false })
-              .limit(1)
-              .maybeSingle()
+            let dealMembership: any = null
+
+            if ((sub as any).cycle_id) {
+              const { data: cycleRef } = await supabase
+                .from('deal_investment_cycles' as any)
+                .select('referred_by_entity_id, referred_by_entity_type, assigned_fee_plan_id')
+                .eq('id', (sub as any).cycle_id)
+                .maybeSingle()
+              dealMembership = cycleRef
+            }
+
+            if (!dealMembership) {
+              const { data: membershipRef } = await supabase
+                .from('deal_memberships')
+                .select('referred_by_entity_id, referred_by_entity_type, assigned_fee_plan_id')
+                .eq('deal_id', dealId)
+                .eq('investor_id', sub.investor_id)
+                .order('dispatched_at', { ascending: false })
+                .limit(1)
+                .maybeSingle()
+              dealMembership = membershipRef
+            }
 
             let canProcess =
               !!dealMembership?.referred_by_entity_type && !!dealMembership.referred_by_entity_id
@@ -312,7 +329,7 @@ export async function handleDealClose(
             }
 
             if (canProcess && dealMembership) {
-              const feePlanId = dealMembership.assigned_fee_plan_id
+              const feePlanId = (sub as any).fee_plan_id || dealMembership.assigned_fee_plan_id
               if (!feePlanId) {
                 result.errors.push(`Commission skipped for subscription ${sub.id}: no assigned fee plan`)
                 canProcess = false
@@ -384,13 +401,13 @@ export async function handleDealClose(
                     .from('introducer_commissions')
                     .select('id')
                     .eq('introducer_id', dealMembership.referred_by_entity_id)
-                    .eq('deal_id', dealId)
-                    .eq('investor_id', sub.investor_id)
+                    .eq('subscription_id', sub.id)
                     .maybeSingle()
 
                   if (!existingCommission) {
                     const { data: newCommission } = await supabase.from('introducer_commissions').insert({
                       introducer_id: dealMembership.referred_by_entity_id,
+                      subscription_id: sub.id,
                       deal_id: dealId,
                       investor_id: sub.investor_id,
                       arranger_id: deal.arranger_entity_id || null,
@@ -427,13 +444,13 @@ export async function handleDealClose(
                   .from('partner_commissions')
                   .select('id')
                   .eq('partner_id', dealMembership.referred_by_entity_id)
-                  .eq('deal_id', dealId)
-                  .eq('investor_id', sub.investor_id)
+                  .eq('subscription_id', sub.id)
                   .maybeSingle()
 
                 if (!existingCommission) {
                   const { data: newCommission } = await supabase.from('partner_commissions').insert({
                     partner_id: dealMembership.referred_by_entity_id,
+                    subscription_id: sub.id,
                     deal_id: dealId,
                     investor_id: sub.investor_id,
                     arranger_id: deal.arranger_entity_id || null,
@@ -472,13 +489,13 @@ export async function handleDealClose(
                     .from('commercial_partner_commissions')
                     .select('id')
                     .eq('commercial_partner_id', dealMembership.referred_by_entity_id)
-                    .eq('deal_id', dealId)
-                    .eq('investor_id', sub.investor_id)
+                    .eq('subscription_id', sub.id)
                     .maybeSingle()
 
                   if (!existingCommission) {
                     const { data: newCommission } = await supabase.from('commercial_partner_commissions').insert({
                       commercial_partner_id: dealMembership.referred_by_entity_id,
+                      subscription_id: sub.id,
                       deal_id: dealId,
                       investor_id: sub.investor_id,
                       arranger_id: deal.arranger_entity_id,
@@ -744,6 +761,61 @@ export interface TermsheetCloseResult {
   errors: string[]
 }
 
+async function upsertPositionForActivatedSubscription(
+  supabase: SupabaseClient,
+  params: {
+    investorId: string
+    vehicleId: string
+    units: number
+    fundedAmount: number
+    nav: number | null
+  }
+): Promise<{ created: boolean }> {
+  const { data: existingPosition } = await supabase
+    .from('positions')
+    .select('id, units, cost_basis')
+    .eq('investor_id', params.investorId)
+    .eq('vehicle_id', params.vehicleId)
+    .maybeSingle()
+
+  const asOfDate = new Date().toISOString()
+
+  if (!existingPosition) {
+    const { error: insertError } = await supabase
+      .from('positions')
+      .insert({
+        investor_id: params.investorId,
+        vehicle_id: params.vehicleId,
+        units: params.units,
+        cost_basis: params.fundedAmount,
+        last_nav: params.nav,
+        as_of_date: asOfDate,
+      })
+
+    if (insertError) {
+      throw insertError
+    }
+
+    return { created: true }
+  }
+
+  const { error: updateError } = await supabase
+    .from('positions')
+    .update({
+      units: Number(existingPosition.units || 0) + params.units,
+      cost_basis: Number(existingPosition.cost_basis || 0) + params.fundedAmount,
+      last_nav: params.nav,
+      as_of_date: asOfDate,
+    })
+    .eq('id', existingPosition.id)
+
+  if (updateError) {
+    throw updateError
+  }
+
+  return { created: false }
+}
+
 export type TermsheetCloseMode = 'manual' | 'automatic' | 'unknown'
 
 interface TermsheetCloseOptions {
@@ -833,65 +905,40 @@ export async function handleTermsheetClose(
 
     console.log(`[termsheet-close] Processing termsheet ${termsheetId} (${deal?.name} v${termsheet.version})`)
 
-    // Step 1: Get investor IDs linked to THIS termsheet via deal_memberships
-    // Then fetch their funded subscriptions separately (no FK between tables)
-    const { data: linkedMemberships, error: membershipError } = await supabase
-      .from('deal_memberships')
-      .select('investor_id, referred_by_entity_id, referred_by_entity_type, assigned_fee_plan_id')
-      .eq('deal_id', termsheet.deal_id)
-      .eq('term_sheet_id', termsheetId)
-
-    if (membershipError) {
-      result.errors.push(`Failed to fetch deal memberships: ${membershipError.message}`)
-      return result
-    }
-
-    const linkedInvestorIds = (linkedMemberships || []).map(m => m.investor_id).filter(Boolean)
-
-    if (linkedInvestorIds.length === 0) {
-      console.log(`[termsheet-close] No investors linked to termsheet ${termsheetId}`)
-    }
-
-    // Step 1b: Get funded subscriptions for those investors
+    // Step 1: Get funded subscriptions that belong to THIS termsheet.
     let subscriptions: any[] = []
     let subError: any = null
-
-    if (linkedInvestorIds.length > 0) {
-      const { data: subs, error: fetchError } = await supabase
-        .from('subscriptions')
-        .select(`
+    const { data: subs, error: fetchError } = await supabase
+      .from('subscriptions')
+      .select(`
+        id,
+        investor_id,
+        vehicle_id,
+        commitment,
+        funded_amount,
+        currency,
+        num_shares,
+        units,
+        fee_plan_id,
+        cycle_id,
+        term_sheet_id,
+        price_per_share,
+        cost_per_share,
+        status,
+        activated_at,
+        investor:investors(
           id,
-          investor_id,
-          vehicle_id,
-          commitment,
-          funded_amount,
-          currency,
-          num_shares,
-          units,
-          price_per_share,
-          cost_per_share,
-          status,
-          activated_at,
-          investor:investors(
-            id,
-            display_name,
-            legal_name
-          )
-        `)
-        .eq('deal_id', termsheet.deal_id)
-        .eq('status', 'funded')
-        .is('activated_at', null)
-        .in('investor_id', linkedInvestorIds)
+          display_name,
+          legal_name
+        )
+      `)
+      .eq('deal_id', termsheet.deal_id)
+      .eq('status', 'funded')
+      .is('activated_at', null)
+      .eq('term_sheet_id', termsheetId)
 
-      subscriptions = subs || []
-      subError = fetchError
-
-      // Attach membership data to each subscription for commission processing
-      subscriptions = subscriptions.map(sub => ({
-        ...sub,
-        deal_membership: linkedMemberships?.find(m => m.investor_id === sub.investor_id) || null
-      }))
-    }
+    subscriptions = subs || []
+    subError = fetchError
 
     if (subError) {
       result.errors.push(`Failed to fetch subscriptions: ${subError.message}`)
@@ -915,8 +962,28 @@ export async function handleTermsheetClose(
       }
 
       for (const sub of subscriptions) {
-        // deal_membership was attached during the two-step query above
-        const dealMembership = sub.deal_membership
+        let dealMembership: any = null
+        if ((sub as any).cycle_id) {
+          const { data: cycleRef } = await supabase
+            .from('deal_investment_cycles' as any)
+            .select('referred_by_entity_id, referred_by_entity_type, assigned_fee_plan_id')
+            .eq('id', (sub as any).cycle_id)
+            .maybeSingle()
+          dealMembership = cycleRef
+        }
+
+        if (!dealMembership) {
+          const { data: membershipRef } = await supabase
+            .from('deal_memberships')
+            .select('referred_by_entity_id, referred_by_entity_type, assigned_fee_plan_id')
+            .eq('deal_id', termsheet.deal_id)
+            .eq('investor_id', sub.investor_id)
+            .eq('term_sheet_id', termsheetId)
+            .order('dispatched_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+          dealMembership = membershipRef
+        }
 
         try {
           // Step 1a: Calculate and lock spread values if not already set
@@ -953,6 +1020,21 @@ export async function handleTermsheetClose(
           result.subscriptionsActivated++
           console.log(`[termsheet-close] Activated subscription ${sub.id}`)
 
+          if ((sub as any).cycle_id) {
+            try {
+              await updateDealInvestmentCycleProgress({
+                supabase,
+                cycleId: (sub as any).cycle_id,
+                status: 'active',
+                timestamps: {
+                  activated_at: new Date().toISOString(),
+                },
+              })
+            } catch (cycleError) {
+              result.errors.push(`Failed to activate cycle for subscription ${sub.id}: ${cycleError instanceof Error ? cycleError.message : 'Unknown error'}`)
+            }
+          }
+
           // Step 1b: Create position for this subscription
           const fundedAmount = Number(sub.funded_amount) || 0
           const pricePerShareForUnits = Number(sub.price_per_share) || Number(sub.cost_per_share) || 0
@@ -965,37 +1047,24 @@ export async function handleTermsheetClose(
           }
 
           if (positionUnits && positionUnits > 0) {
-            const { data: existingPosition } = await supabase
-              .from('positions')
-              .select('id')
-              .eq('investor_id', sub.investor_id)
-              .eq('vehicle_id', sub.vehicle_id || deal.vehicle_id)
-              .maybeSingle()
-
-            if (!existingPosition) {
-              const { error: positionError } = await supabase
-                .from('positions')
-                .insert({
-                  investor_id: sub.investor_id,
-                  vehicle_id: sub.vehicle_id || deal.vehicle_id,
-                  units: positionUnits,
-                  cost_basis: fundedAmount,
-                  last_nav: sub.price_per_share || sub.cost_per_share,
-                  as_of_date: new Date().toISOString(),
-                })
-
-              if (positionError) {
-                result.errors.push(`Failed to create position for subscription ${sub.id}: ${positionError.message}`)
-              } else {
-                result.positionsCreated++
-                console.log(`[termsheet-close] Created position for subscription ${sub.id}: ${positionUnits} units`)
-              }
+            try {
+              const positionResult = await upsertPositionForActivatedSubscription(supabase, {
+                investorId: sub.investor_id,
+                vehicleId: sub.vehicle_id || deal.vehicle_id,
+                units: positionUnits,
+                fundedAmount,
+                nav: sub.price_per_share || sub.cost_per_share,
+              })
+              result.positionsCreated++
+              console.log(`[termsheet-close] ${positionResult.created ? 'Created' : 'Updated'} position for subscription ${sub.id}: ${positionUnits} units`)
+            } catch (positionError) {
+              result.errors.push(`Failed to upsert position for subscription ${sub.id}: ${positionError instanceof Error ? positionError.message : 'Unknown error'}`)
             }
           }
 
           // Step 1c: Create commissions (based on fee plan linked to this termsheet)
           if (dealMembership?.referred_by_entity_type && dealMembership.referred_by_entity_id) {
-            const feePlanId = dealMembership.assigned_fee_plan_id
+            const feePlanId = (sub as any).fee_plan_id || dealMembership.assigned_fee_plan_id
             if (feePlanId) {
               const { data: feePlan } = await supabase
                 .from('fee_plans')
@@ -1023,13 +1092,13 @@ export async function handleTermsheetClose(
                       .from('introducer_commissions')
                       .select('id')
                       .eq('introducer_id', dealMembership.referred_by_entity_id)
-                      .eq('deal_id', termsheet.deal_id)
-                      .eq('investor_id', sub.investor_id)
+                      .eq('subscription_id', sub.id)
                       .maybeSingle()
 
                     if (!existingCommission) {
                       const { data: newCommission } = await supabase.from('introducer_commissions').insert({
                         introducer_id: dealMembership.referred_by_entity_id,
+                        subscription_id: sub.id,
                         deal_id: termsheet.deal_id,
                         investor_id: sub.investor_id,
                         arranger_id: deal.arranger_entity_id || null,
@@ -1064,13 +1133,13 @@ export async function handleTermsheetClose(
                       .from('partner_commissions')
                       .select('id')
                       .eq('partner_id', dealMembership.referred_by_entity_id)
-                      .eq('deal_id', termsheet.deal_id)
-                      .eq('investor_id', sub.investor_id)
+                      .eq('subscription_id', sub.id)
                       .maybeSingle()
 
                     if (!existingCommission) {
                       const { data: newCommission } = await supabase.from('partner_commissions').insert({
                         partner_id: dealMembership.referred_by_entity_id,
+                        subscription_id: sub.id,
                         deal_id: termsheet.deal_id,
                         investor_id: sub.investor_id,
                         arranger_id: deal.arranger_entity_id || null,
@@ -1105,13 +1174,13 @@ export async function handleTermsheetClose(
                       .from('commercial_partner_commissions')
                       .select('id')
                       .eq('commercial_partner_id', dealMembership.referred_by_entity_id)
-                      .eq('deal_id', termsheet.deal_id)
-                      .eq('investor_id', sub.investor_id)
+                      .eq('subscription_id', sub.id)
                       .maybeSingle()
 
                     if (!existingCommission) {
                       const { data: newCommission } = await supabase.from('commercial_partner_commissions').insert({
                         commercial_partner_id: dealMembership.referred_by_entity_id,
+                        subscription_id: sub.id,
                         deal_id: termsheet.deal_id,
                         investor_id: sub.investor_id,
                         arranger_id: deal.arranger_entity_id,

@@ -409,6 +409,7 @@ export async function triggerCertificateGeneration({
         units,
         num_shares,
         deal_id,
+        term_sheet_id,
         investor:investors!subscriptions_investor_id_fkey (
           id,
           legal_name,
@@ -486,20 +487,14 @@ export async function triggerCertificateGeneration({
     let termsheetCompletionDate: Date | null = null
 
     if (subscription.deal_id) {
-      // First, try to get the termsheet linked to this subscription via deal_memberships
-      const { data: membership } = await supabase
-        .from('deal_memberships')
-        .select('term_sheet_id')
-        .eq('deal_id', subscription.deal_id)
-        .eq('investor_id', investorId)
-        .maybeSingle()
+      const resolvedTermSheetId = (subscription as any).term_sheet_id || null
 
-      if (membership?.term_sheet_id) {
+      if (resolvedTermSheetId) {
         // Get the termsheet completion date and product description
         const { data: termsheet } = await supabase
           .from('deal_fee_structures')
           .select('product_description, structure, completion_date')
-          .eq('id', membership.term_sheet_id)
+          .eq('id', resolvedTermSheetId)
           .single()
 
         if (termsheet) {
@@ -514,25 +509,14 @@ export async function triggerCertificateGeneration({
         }
       }
 
-      // Fallback: if no termsheet found, get any published fee structure
-      if (!productDescription) {
-        const { data: feeStructure } = await supabase
-          .from('deal_fee_structures')
-          .select('product_description, structure, completion_date')
-          .eq('deal_id', subscription.deal_id)
-          .eq('status', 'published')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
+      if (!resolvedTermSheetId) {
+        console.error(`❌ Subscription ${subscriptionId} is missing term_sheet_id; aborting certificate generation`)
+        return false
+      }
 
-        if (feeStructure?.product_description) {
-          productDescription = feeStructure.product_description
-        } else if (feeStructure?.structure) {
-          productDescription = feeStructure.structure
-        }
-        if (!termsheetCompletionDate && feeStructure?.completion_date) {
-          termsheetCompletionDate = new Date(feeStructure.completion_date)
-        }
+      if (!productDescription) {
+        console.error(`❌ Term sheet ${resolvedTermSheetId} missing certificate data for subscription ${subscriptionId}`)
+        return false
       }
     }
 

@@ -1,6 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import { LIVE_CYCLE_STATUSES } from '@/lib/deals/investment-cycles'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -15,8 +16,8 @@ const querySchema = z.object({
  *
  * Fetches investors eligible to be linked to an introducer.
  * An investor is linkable if:
- * 1. They have a deal_membership with the specified term_sheet_id
- * 2. They don't already have a referred_by_entity_id set (not already linked to an introducer/partner)
+ * 1. They have a live investment cycle on the specified term sheet
+ * 2. That cycle doesn't already have a referred_by_entity_id set
  *
  * Query params:
  * - term_sheet_id (required): Only show investors on this term sheet
@@ -75,9 +76,11 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     const { term_sheet_id } = validation.data
 
-    // Query deal memberships for investors on this term sheet who aren't already linked
-    const { data: memberships, error: membershipsError } = await serviceSupabase
-      .from('deal_memberships')
+    // Query live investment cycles for investors on this term sheet who aren't already linked.
+    // This keeps introducer / partner linking aligned with the active dispatch cycle instead of
+    // the legacy membership row, which can now have historical cycles behind it.
+    const { data: cycles, error: cyclesError } = await serviceSupabase
+      .from('deal_investment_cycles' as any)
       .select(`
         user_id,
         investor_id,
@@ -100,11 +103,12 @@ export async function GET(request: Request, { params }: RouteParams) {
       `)
       .eq('deal_id', dealId)
       .eq('term_sheet_id', term_sheet_id)
+      .in('status', [...LIVE_CYCLE_STATUSES])
       .is('referred_by_entity_id', null) // Not already linked to an introducer/partner
       .in('role', ['investor', 'co_investor']) // Only base investor roles can be linked
 
-    if (membershipsError) {
-      console.error('Error fetching linkable investors:', membershipsError)
+    if (cyclesError) {
+      console.error('Error fetching linkable investors:', cyclesError)
       return NextResponse.json(
         { error: 'Failed to fetch linkable investors' },
         { status: 500 }
@@ -114,28 +118,28 @@ export async function GET(request: Request, { params }: RouteParams) {
     // DEBUG: Log raw query results
     console.log('🔍 [LINKABLE-INVESTORS] Deal ID:', dealId)
     console.log('🔍 [LINKABLE-INVESTORS] Term Sheet ID:', term_sheet_id)
-    console.log('🔍 [LINKABLE-INVESTORS] Raw memberships:', JSON.stringify(memberships, null, 2))
+    console.log('🔍 [LINKABLE-INVESTORS] Raw cycles:', JSON.stringify(cycles, null, 2))
 
     // Transform to response shape
-    const investors = (memberships || [])
-      .filter(membership => {
-        const investor = membership.investor as any
+    const investors = (cycles || [])
+      .filter(cycle => {
+        const investor = cycle.investor as any
         const investorStatus = investor?.status?.toLowerCase()
         const approvalStatus = investor?.account_approval_status?.toLowerCase()
         return investorStatus !== 'unauthorized' &&
           investorStatus !== 'blacklisted' &&
           approvalStatus !== 'unauthorized'
       })
-      .map(membership => {
-      const investor = membership.investor as any
-      const userProfile = membership.user as any
+      .map(cycle => {
+      const investor = cycle.investor as any
+      const userProfile = cycle.user as any
 
       return {
-        user_id: membership.user_id,
-        investor_id: membership.investor_id,
+        user_id: cycle.user_id,
+        investor_id: cycle.investor_id,
         display_name: investor?.display_name || investor?.legal_name || 'Unknown Investor',
         email: investor?.email || userProfile?.email || '',
-        current_role: membership.role
+        current_role: cycle.role
       }
     })
 

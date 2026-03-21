@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { updateDealInvestmentCycleProgress } from '@/lib/deals/investment-cycles'
 
 export async function POST(
   request: NextRequest,
@@ -47,7 +48,7 @@ export async function POST(
   const serviceSupabase = createServiceClient()
   const { data: subscription } = await serviceSupabase
     .from('subscriptions')
-    .select('*, deal:deals(id), vehicle_id, investor_id, deal_id')
+    .select('*, deal:deals(id), vehicle_id, investor_id, deal_id, cycle_id')
     .eq('id', subscriptionId)
     .single()
 
@@ -60,9 +61,7 @@ export async function POST(
   const { data: submission } = await serviceSupabase
     .from('deal_subscription_submissions')
     .select('id')
-    .eq('investor_id', subscription.investor_id)
-    .eq('deal_id', subscription.deal_id)
-    .eq('status', 'approved')
+    .eq('cycle_id', (subscription as any).cycle_id)
     .order('submitted_at', { ascending: false })
     .limit(1)
     .maybeSingle()
@@ -136,6 +135,21 @@ export async function POST(
       .update({ pack_generated_at: now })
       .eq('id', subscriptionId)
       .is('pack_generated_at', null)
+
+    if ((subscription as any).cycle_id) {
+      try {
+        await updateDealInvestmentCycleProgress({
+          supabase: serviceSupabase,
+          cycleId: (subscription as any).cycle_id,
+          status: 'pack_generated',
+          timestamps: {
+            pack_generated_at: now,
+          },
+        })
+      } catch (cycleError) {
+        console.error('Failed to update pack_generated cycle:', cycleError)
+      }
+    }
   }
 
   console.log('✅ Final subscription pack uploaded:', document.id)

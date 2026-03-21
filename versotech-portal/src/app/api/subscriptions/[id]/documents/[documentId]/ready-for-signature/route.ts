@@ -5,6 +5,7 @@ import { getCeoSigner } from '@/lib/staff/ceo-signer'
 import { convertDocxToPdf } from '@/lib/gotenberg/convert'
 import { applySubscriptionPackPageNumbers } from '@/lib/subscription/page-numbering'
 import type { SignaturePosition, SubscriptionSignatureWorkflowConfig } from '@/lib/signature/types'
+import { updateDealInvestmentCycleProgress } from '@/lib/deals/investment-cycles'
 
 // Schema for multi-signatory support with optional arranger countersigning
 const requestSchema = z.object({
@@ -782,6 +783,22 @@ export async function POST(
       .update({ pack_generated_at: now })
       .eq('id', subscriptionId)
       .is('pack_generated_at', null)
+
+    if ((subscription as any).cycle_id) {
+      try {
+        await updateDealInvestmentCycleProgress({
+          supabase: serviceSupabase,
+          cycleId: (subscription as any).cycle_id,
+          status: 'pack_sent',
+          timestamps: {
+            pack_generated_at: now,
+            pack_sent_at: now,
+          },
+        })
+      } catch (cycleError) {
+        console.error('Failed to update cycle after sending subscription pack:', cycleError)
+      }
+    }
 
     if (subscription.deal_id) {
       const { data: deal } = await serviceSupabase
