@@ -1,6 +1,8 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import {
+  assertPublishedDealTermSheet,
   getOrCreateSubmissionCycle,
+  type SubmissionCycleIntent,
   updateDealInvestmentCycleProgress,
 } from '@/lib/deals/investment-cycles'
 import { NextResponse } from 'next/server'
@@ -12,6 +14,7 @@ const proxySubscribeSchema = z.object({
   commitment: z.number().positive(),
   stock_type: z.enum(['common', 'preferred', 'convertible', 'warrant', 'bond', 'note', 'other']).optional().default('common'),
   notes: z.string().optional(),
+  intent: z.enum(['continue_cycle', 'start_new_cycle']).optional().nullable(),
   cycle_id: z.string().uuid().optional().nullable(),
   term_sheet_id: z.string().uuid().optional().nullable(),
   proxy_authorization_doc_id: z.string().uuid().optional() // Optional reference to authorization document
@@ -85,6 +88,7 @@ export async function POST(request: Request) {
       commitment,
       stock_type,
       notes,
+      intent,
       cycle_id,
       term_sheet_id,
       proxy_authorization_doc_id,
@@ -93,7 +97,7 @@ export async function POST(request: Request) {
     // Verify deal exists and is open
     const { data: deal, error: dealError } = await serviceSupabase
       .from('deals')
-      .select('id, name, status, vehicle_id')
+      .select('id, name, status, vehicle_id, currency')
       .eq('id', deal_id)
       .single()
 
@@ -155,9 +159,26 @@ export async function POST(request: Request) {
       }, { status: 400 })
     }
 
+    const resolvedIntent: SubmissionCycleIntent | null =
+      intent || (cycle_id ? 'continue_cycle' : term_sheet_id ? 'start_new_cycle' : null)
+
+    if (!resolvedIntent) {
+      return NextResponse.json({
+        error: 'Subscription intent is required',
+        message: 'Specify whether this proxy action is continuing a round or starting a new one.'
+      }, { status: 400 })
+    }
+
+    if (resolvedIntent === 'continue_cycle' && !cycle_id) {
+      return NextResponse.json({
+        error: 'cycle_id is required',
+        message: 'Continuing a proxy round requires an existing cycle.'
+      }, { status: 400 })
+    }
+
     let effectiveTermSheetId = term_sheet_id || null
 
-    if (!effectiveTermSheetId && cycle_id) {
+    if (resolvedIntent === 'continue_cycle' && cycle_id) {
       const { data: selectedCycle } = await serviceSupabase
         .from('deal_investment_cycles' as any)
         .select('term_sheet_id')
@@ -166,22 +187,24 @@ export async function POST(request: Request) {
       effectiveTermSheetId = selectedCycle?.term_sheet_id || null
     }
 
-    if (!effectiveTermSheetId) {
-      const { data: clientMembership } = await serviceSupabase
-        .from('deal_memberships')
-        .select('term_sheet_id')
-        .eq('deal_id', deal_id)
-        .eq('investor_id', client_investor_id)
-        .maybeSingle()
-
-      effectiveTermSheetId = clientMembership?.term_sheet_id || null
-    }
-
-    if (!effectiveTermSheetId) {
+    if (resolvedIntent === 'start_new_cycle' && !effectiveTermSheetId) {
       return NextResponse.json({
         error: 'No term sheet assigned',
-        message: 'Dispatch the client to a published term sheet before creating a proxy subscription.'
+        message: 'Starting a proxy round requires an explicit published term sheet.'
       }, { status: 400 })
+    }
+
+    if (resolvedIntent === 'start_new_cycle' && effectiveTermSheetId) {
+      try {
+        await assertPublishedDealTermSheet(serviceSupabase, deal_id, effectiveTermSheetId)
+      } catch (termSheetError) {
+        return NextResponse.json({
+          error: 'Invalid term sheet',
+          message: termSheetError instanceof Error
+            ? termSheetError.message
+            : 'Starting a proxy round requires a published term sheet for this deal.'
+        }, { status: 400 })
+      }
     }
 
     const cycle = await getOrCreateSubmissionCycle(serviceSupabase, {
@@ -194,135 +217,61 @@ export async function POST(request: Request) {
       createdBy: user.id,
       referredByEntityId: cpLink.commercial_partner_id,
       referredByEntityType: 'commercial_partner',
+      intent: resolvedIntent,
     })
 
-    // Check if a non-terminal subscription already exists for this exact cycle.
-    const { data: existingSub } = await serviceSupabase
-      .from('subscriptions')
-      .select('id, status')
-      .eq('cycle_id', cycle.id)
-      .not('status', 'in', '(cancelled,rejected)')
-      .maybeSingle()
-
-    if (existingSub) {
-      return NextResponse.json({
-        error: 'Subscription already exists',
-        message: 'Client already has an active subscription for this investment cycle.',
-        subscription_id: existingSub.id,
-        status: existingSub.status
-      }, { status: 400 })
-    }
-
-    // Create the subscription as proxy
     const now = new Date().toISOString()
-    const { data: subscription, error: subError } = await serviceSupabase
-      .from('subscriptions')
+    const { data: submission, error: subError } = await serviceSupabase
+      .from('deal_subscription_submissions')
       .insert({
         deal_id,
-        vehicle_id: deal.vehicle_id,
         investor_id: client_investor_id,
         cycle_id: cycle.id,
         term_sheet_id: cycle.term_sheet_id,
-        commitment,
-        funded_amount: 0,
-        status: 'pending',
-        // Note: stock_type removed - column doesn't exist in subscriptions table
-        // Use acknowledgement_notes instead of notes (correct column name)
-        acknowledgement_notes: notes,
-        // Proxy-specific fields
-        submitted_by_proxy: true,
-        proxy_user_id: user.id,
-        proxy_commercial_partner_id: cpLink.commercial_partner_id,
-        fee_plan_id: cycle.assigned_fee_plan_id || null,
-        introducer_id: cycle.referred_by_entity_type === 'introducer' ? cycle.referred_by_entity_id : null,
-        proxy_authorization_doc_id,
-        created_at: now
+        payload_json: {
+          amount: commitment,
+          currency: deal.currency || 'USD',
+          bank_confirmation: true,
+          notes: notes || null,
+          proxy_submitted: true,
+          proxy_user_id: user.id,
+          proxy_commercial_partner_id: cpLink.commercial_partner_id,
+          proxy_authorization_doc_id: proxy_authorization_doc_id || null,
+          stock_type,
+        },
+        status: 'pending_review',
+        created_by: user.id,
+        subscription_type: 'personal',
       })
       .select()
       .single()
 
     if (subError) {
       console.error('Error creating proxy subscription:', subError)
-      // Check if it's a missing column error
-      if (subError.message?.includes('submitted_by_proxy')) {
-        // Fallback without proxy fields if columns don't exist yet
-        const { data: fallbackSub, error: fallbackError } = await serviceSupabase
-          .from('subscriptions')
-          .insert({
-            deal_id,
-            vehicle_id: deal.vehicle_id,
-            investor_id: client_investor_id,
-            cycle_id: cycle.id,
-            term_sheet_id: cycle.term_sheet_id,
-            commitment,
-            funded_amount: 0,
-            status: 'pending',
-            acknowledgement_notes: `${notes || ''}\n[Submitted by proxy: ${commercialPartner?.name} via ${user.email}]`.trim(),
-            created_at: now
-          })
-          .select()
-          .single()
-
-        if (fallbackError) {
-          return NextResponse.json({ error: 'Failed to create subscription' }, { status: 500 })
-        }
-
-        // Log audit event with proxy info
-        await serviceSupabase.from('audit_logs').insert({
-          user_id: user.id,
-          action: 'proxy_subscription_created',
-          entity_type: 'subscription',
-          entity_id: fallbackSub.id,
-          details: {
-            deal_id,
-            deal_name: deal.name,
-            client_investor_id,
-            client_name: clientInvestor.legal_name,
-            commitment,
-            commercial_partner_id: cpLink.commercial_partner_id,
-            commercial_partner_name: commercialPartner?.name
-          },
-          created_at: now
-        })
-
-        return NextResponse.json({
-          success: true,
-          subscription_id: fallbackSub.id,
-          message: `Subscription submitted on behalf of ${clientInvestor.legal_name}`,
-          proxy_mode: true,
-          client: {
-            id: client_investor_id,
-            name: clientInvestor.legal_name
-          },
-          deal: {
-            id: deal_id,
-            name: deal.name
-          },
-          commitment
-        })
-      }
-      return NextResponse.json({ error: 'Failed to create subscription' }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to create subscription request' }, { status: 500 })
     }
 
     try {
       await updateDealInvestmentCycleProgress({
         supabase: serviceSupabase,
         cycleId: cycle.id,
-        status: 'approved',
+        status: 'submission_pending_review',
         timestamps: {
-          approved_at: now,
+          viewed_at: cycle.viewed_at || now,
+          interest_confirmed_at: cycle.interest_confirmed_at || now,
+          submission_pending_at: now,
         },
       })
     } catch (cycleUpdateError) {
-      console.error('Failed to update proxy cycle after subscription creation:', cycleUpdateError)
+      console.error('Failed to update proxy cycle after submission creation:', cycleUpdateError)
     }
 
     // Log audit event
     await serviceSupabase.from('audit_logs').insert({
       user_id: user.id,
       action: 'proxy_subscription_created',
-      entity_type: 'subscription',
-      entity_id: subscription.id,
+      entity_type: 'subscription_submission',
+      entity_id: submission.id,
       details: {
         deal_id,
         deal_name: deal.name,
@@ -346,12 +295,12 @@ export async function POST(request: Request) {
       const notifications = clientUsers.map(u => ({
         user_id: u.user_id,
         investor_id: client_investor_id,
-        title: 'Subscription Submitted',
-        message: `${commercialPartner?.name} has submitted a subscription of ${commitment.toLocaleString()} for ${deal.name} on your behalf.`,
-        link: '/versotech_main/tasks',
+        title: 'Subscription Request Submitted',
+        message: `${commercialPartner?.name} has submitted a subscription request of ${commitment.toLocaleString()} for ${deal.name} on your behalf.`,
+        link: `/versotech_main/opportunities/${deal_id}?cycle=${cycle.id}`,
         metadata: {
           type: 'proxy_subscription',
-          subscription_id: subscription.id,
+          submission_id: submission.id,
           deal_id,
           commercial_partner_id: cpLink.commercial_partner_id
         }
@@ -362,8 +311,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      subscription_id: subscription.id,
-      message: `Subscription submitted on behalf of ${clientInvestor.legal_name}`,
+      submission_id: submission.id,
+      cycle,
+      message: `Subscription request submitted on behalf of ${clientInvestor.legal_name}`,
       proxy_mode: true,
       client: {
         id: client_investor_id,

@@ -214,7 +214,7 @@ export async function PATCH(
 
     const { data: cycle, error: cycleError } = await supabase
       .from('deal_investment_cycles' as any)
-      .select('id, term_sheet_id, referred_by_entity_id, role')
+      .select('id, term_sheet_id, referred_by_entity_id, role, status')
       .eq('deal_id', dealId)
       .eq('investor_id', membership.investor_id)
       .eq('term_sheet_id', feePlan.term_sheet_id)
@@ -245,6 +245,17 @@ export async function PATCH(
       return NextResponse.json(
         { error: 'This investor is already linked to a referrer' },
         { status: 400 }
+      )
+    }
+
+    if (cycle && !['dispatched', 'viewed', 'interest_confirmed'].includes(cycle.status)) {
+      return NextResponse.json(
+        {
+          error: 'This investor already has an active workflow on this term sheet.',
+          message: 'Commercial changes are only allowed before subscription review starts.',
+          reasonCode: 'active_workflow_blocked',
+        },
+        { status: 409 }
       )
     }
 

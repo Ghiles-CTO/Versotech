@@ -9,7 +9,10 @@ import { sendAccountStatusEmail, sendInvitationEmail } from '@/lib/email/resend-
 import { getAppUrl } from '@/lib/signature/token'
 import { resolveInvitationInviteeName } from '@/lib/invitations/entity-invitation'
 import { handleDealClose, handleTermsheetClose, type TermsheetCloseMode } from '@/lib/deals/deal-close-handler'
-import { updateDealInvestmentCycleProgress } from '@/lib/deals/investment-cycles'
+import {
+  getExistingFormalSubscriptionForCycle,
+  updateDealInvestmentCycleProgress,
+} from '@/lib/deals/investment-cycles'
 import { buildSubscriptionPackPayload } from '@/lib/subscription-pack/payload-builder'
 import { assertSubscriptionPackPdfIsA4 } from '@/lib/subscription-pack/pdf-format-guard'
 import { applySubscriptionPackPageNumbers } from '@/lib/subscription/page-numbering'
@@ -1529,21 +1532,6 @@ async function handleEntityApproval(
         break
 
       case 'deal_subscription':
-        // Update subscription submission status
-        const { error: subError } = await supabase
-          .from('deal_subscription_submissions')
-          .update({
-            status: 'approved',
-            approved_by: actorId,
-            approved_at: new Date().toISOString()
-          })
-          .eq('id', entityId)
-
-        if (subError) {
-          console.error('Error approving subscription submission:', subError)
-          return { success: false, error: 'Failed to approve subscription submission' }
-        }
-
         // Create formal subscription from submission
         const { data: submission } = await supabase
           .from('deal_subscription_submissions')
@@ -1577,20 +1565,36 @@ async function handleEntityApproval(
 	          const cycleId = submission.cycle_id || null
 	          let subscriptionId = submission.formal_subscription_id || null
 
-	          const { data: cycle } = cycleId
-	            ? await supabase
-	                .from('deal_investment_cycles' as any)
-	                .select('*')
-	                .eq('id', cycleId)
-	                .maybeSingle()
-	            : { data: null }
+	          if (!cycleId) {
+	            console.error('Approval missing investment cycle for submission', {
+	              submissionId: submission.id,
+	              dealId: submission.deal_id,
+	              investorId: submission.investor_id,
+	            })
+	            return {
+	              success: false,
+	              error: 'This submission is missing its investment cycle. Recreate it from the deal workflow before approval.',
+	            }
+	          }
 
-	          const { data: membership } = await supabase
-	            .from('deal_memberships')
-	            .select('assigned_fee_plan_id, referred_by_entity_id, referred_by_entity_type, term_sheet_id')
-	            .eq('deal_id', submission.deal_id)
-	            .eq('investor_id', submission.investor_id)
+	          const { data: cycle } = await supabase
+	            .from('deal_investment_cycles' as any)
+	            .select('*')
+	            .eq('id', cycleId)
 	            .maybeSingle()
+
+	          const existingCycleSubscription = await getExistingFormalSubscriptionForCycle(supabase, cycleId)
+	          if (
+	            existingCycleSubscription &&
+	            existingCycleSubscription.id !== subscriptionId
+	          ) {
+	            return {
+	              success: false,
+	              error: 'This investment cycle already has a formal subscription. Start a new round to invest more.',
+	            }
+	          }
+
+	          subscriptionId = subscriptionId || existingCycleSubscription?.id || null
 
 		          const resolvedTermSheetId =
 		            submission.term_sheet_id ||
@@ -1599,17 +1603,14 @@ async function handleEntityApproval(
 
 		          const assignedFeePlanId =
 		            cycle?.assigned_fee_plan_id ||
-	            membership?.assigned_fee_plan_id ||
 	            null
 
 	          const referralEntityId =
 	            cycle?.referred_by_entity_id ||
-	            membership?.referred_by_entity_id ||
 	            null
 
 	          const referralEntityType =
 	            cycle?.referred_by_entity_type ||
-	            membership?.referred_by_entity_type ||
 	            null
 
 	          // Fetch deal's default fee plan to auto-link when no cycle-specific fee plan exists.
@@ -1788,15 +1789,23 @@ async function handleEntityApproval(
 	            subscriptionId = newSubscription.id
 	          }
 
-	          // Link subscription back to submission for easy lookup
-	          await supabase
+	          // Mark submission approved only after the formal subscription work succeeded.
+	          const { error: submissionUpdateError } = await supabase
 	            .from('deal_subscription_submissions')
 	            .update({
+	              status: 'approved',
+	              approved_by: actorId,
+	              approved_at: new Date().toISOString(),
 	              formal_subscription_id: subscriptionId,
 	              cycle_id: cycleId,
 	              term_sheet_id: resolvedTermSheetId,
 	            })
 	            .eq('id', submission.id)
+
+	          if (submissionUpdateError) {
+	            console.error('Error approving subscription submission:', submissionUpdateError)
+	            return { success: false, error: 'Failed to approve subscription submission' }
+	          }
 
 	          if (cycleId) {
 	            try {

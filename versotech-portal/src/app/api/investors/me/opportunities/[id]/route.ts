@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import {
   getCycleStage,
   getLatestActiveOrRecentCycle,
+  isDealClosedForInvestmentRounds,
+  isTermSheetClosedForInvestmentRounds,
   LIVE_CYCLE_STATUSES,
   updateDealInvestmentCycleProgress,
 } from '@/lib/deals/investment-cycles'
@@ -146,6 +148,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     }
 
     const isDealOpen = deal.status === 'open' || deal.status === 'allocation_pending'
+    const isDealRoundOpen = !isDealClosedForInvestmentRounds(deal)
 
     // Security: Only allow access if membership exists or deal is explicitly public
     if (!membership && !isDealOpen) {
@@ -236,6 +239,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     const selectedCycle =
       investmentCycles.find(cycle => cycle.id === requestedCycleId) ||
       investmentCycles.find(cycle => LIVE_CYCLE_STATUSES.includes(cycle.status)) ||
+      investmentCycles.find(cycle => cycle.status === 'funded' || cycle.status === 'active') ||
       investmentCycles[0] ||
       null
 
@@ -685,6 +689,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       canInvestWithMembershipRole ||
       (isProxyMode && membership?.role === 'commercial_partner_proxy')
     const selectedCycleIsLive = selectedCycle ? LIVE_CYCLE_STATUSES.includes(selectedCycle.status) : false
+    const hasAnyLiveCycle = investmentCycles.some(cycle => LIVE_CYCLE_STATUSES.includes(cycle.status))
 
     const cycleCards = investmentCycles.map(cycle => {
       const cycleSubscription = cycleSubscriptionsById.get(cycle.id) || null
@@ -703,12 +708,43 @@ export async function GET(request: Request, { params }: RouteParams) {
         funded_at: cycleSubscription?.funded_at || cycle.funded_at,
         activated_at: cycleSubscription?.activated_at || cycle.activated_at,
       })
+      const canContinue =
+        isAccountApproved === true &&
+        canInvestInCurrentContext &&
+        !cycleSubscription &&
+        cycleSubmission?.status !== 'pending_review' &&
+        LIVE_CYCLE_STATUSES.includes(cycle.status) &&
+        isDealRoundOpen &&
+        !isTermSheetClosedForInvestmentRounds(cycleTermSheet)
       const canInvestMore =
-        isDealOpen &&
+        isDealRoundOpen &&
         isAccountApproved === true &&
         canInvestInCurrentContext &&
         ['funded', 'active'].includes(cycle.status) &&
-        cycleTermSheet?.status === 'published'
+        cycleTermSheet?.status === 'published' &&
+        !isTermSheetClosedForInvestmentRounds(cycleTermSheet) &&
+        !hasAnyLiveCycle
+      const primaryAction =
+        canContinue
+          ? {
+              type: 'continue_cycle' as const,
+              label: 'Continue Subscription',
+              cycle_id: cycle.id,
+              term_sheet_id: cycle.term_sheet_id,
+            }
+          : canInvestMore
+            ? {
+                type: 'start_new_cycle' as const,
+                label: 'Invest More',
+                cycle_id: null,
+                term_sheet_id: cycle.term_sheet_id,
+              }
+            : {
+                type: 'none' as const,
+                label: null,
+                cycle_id: null,
+                term_sheet_id: cycle.term_sheet_id,
+              }
 
       return {
         id: cycle.id,
@@ -748,8 +784,9 @@ export async function GET(request: Request, { params }: RouteParams) {
               activated_at: cycleSubscription.activated_at,
             }
           : null,
-        can_continue: isAccountApproved === true && canInvestInCurrentContext && !cycleSubscription && cycleSubmission?.status !== 'pending_review' && LIVE_CYCLE_STATUSES.includes(cycle.status),
+        can_continue: canContinue,
         can_invest_more: canInvestMore,
+        primary_action: primaryAction,
       }
     })
 
@@ -879,7 +916,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         isAccountApproved === true &&
         !subscription &&
         !hasPendingSubmission &&
-        isDealOpen &&
+        isDealRoundOpen &&
         canInvestInCurrentContext &&
         (!selectedCycle || selectedCycleIsLive),
       // Indicate if user is tracking-only (cannot invest)

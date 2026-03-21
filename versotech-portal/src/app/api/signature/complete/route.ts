@@ -609,7 +609,7 @@ async function handleSubscriptionCompletion(
 
   const { data: existingSubscriptionState } = await supabase
     .from('subscriptions')
-    .select('id, status, signed_at')
+    .select('id, deal_id, status, signed_at, cycle_id')
     .eq('id', subscriptionId)
     .maybeSingle()
 
@@ -619,6 +619,20 @@ async function handleSubscriptionCompletion(
 
   if (alreadyCommitted) {
     console.log('⏭️ [SUBSCRIPTION] Duplicate completion webhook - subscription already committed')
+    if ((existingSubscriptionState as any)?.cycle_id) {
+      try {
+        await updateDealInvestmentCycleProgress({
+          supabase,
+          cycleId: (existingSubscriptionState as any).cycle_id,
+          status: 'signed',
+          timestamps: {
+            signed_at: existingSubscriptionState?.signed_at || new Date().toISOString(),
+          },
+        })
+      } catch (cycleError) {
+        console.error('Failed to repair cycle signed state after duplicate webhook:', cycleError)
+      }
+    }
     await checkAndPublishSubscriptionDocument(supabase, subscriptionId)
     return
   }
@@ -680,11 +694,14 @@ async function handleSubscriptionCompletion(
         investor_id: subscription.investor_id,
         title: 'Investment Commitment Confirmed',
         message: `Your subscription for ${vehicle?.name || 'the investment'} of ${subscription.commitment} ${subscription.currency} is now confirmed.`,
-        link: '/versotech_main/portfolio',
+        link: subscription.deal_id
+          ? `/versotech_main/opportunities/${subscription.deal_id}${(subscription as any).cycle_id ? `?cycle=${(subscription as any).cycle_id}` : ''}`
+          : '/versotech_main/portfolio',
         metadata: {
           type: 'subscription_committed',
           subscription_id: subscriptionId,
-          deal_id: subscription.deal_id
+          deal_id: subscription.deal_id,
+          cycle_id: (subscription as any).cycle_id || null,
         }
       })
       console.log('✅ [SUBSCRIPTION] Investor notification created')

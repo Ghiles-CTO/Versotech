@@ -22,6 +22,20 @@ export type DealInvestmentCycleStatus =
   | (typeof LIVE_CYCLE_STATUSES)[number]
   | (typeof TERMINAL_CYCLE_STATUSES)[number]
 
+export type SubmissionCycleIntent = 'continue_cycle' | 'start_new_cycle'
+
+type DealRoundScope = {
+  status?: string | null
+  close_at?: string | null
+  closed_processed_at?: string | null
+}
+
+type TermSheetRoundScope = {
+  status?: string | null
+  completion_date?: string | null
+  closed_processed_at?: string | null
+}
+
 export type DealInvestmentCycleRow = {
   id: string
   deal_id: string
@@ -56,6 +70,8 @@ export type CreateOrResumeCycleResult = {
   cycle: DealInvestmentCycleRow
   created: boolean
   resumed: boolean
+  action: 'created' | 'resumed' | 'replaced'
+  replacedCycleId?: string | null
 }
 
 type CycleCreateArgs = {
@@ -100,6 +116,132 @@ function isCycleStatusLive(status: string | null | undefined): boolean {
 
 function canReplaceLiveCycle(status: string | null | undefined): boolean {
   return status === 'dispatched' || status === 'viewed' || status === 'interest_confirmed'
+}
+
+function hasDatePassed(value: string | null | undefined): boolean {
+  if (!value) return false
+  const timestamp = new Date(value).getTime()
+  return Number.isFinite(timestamp) && timestamp <= Date.now()
+}
+
+export function isDealClosedForInvestmentRounds(deal: DealRoundScope | null | undefined): boolean {
+  if (!deal) return true
+  if (deal.closed_processed_at) return true
+  if (deal.status === 'closed' || deal.status === 'cancelled') return true
+  return hasDatePassed(deal.close_at)
+}
+
+export function isTermSheetClosedForInvestmentRounds(termSheet: TermSheetRoundScope | null | undefined): boolean {
+  if (!termSheet) return true
+  if (termSheet.closed_processed_at) return true
+  if (termSheet.status === 'closed' || termSheet.status === 'cancelled') return true
+  return hasDatePassed(termSheet.completion_date)
+}
+
+export async function assertInvestmentCycleScopeAvailable(
+  supabase: SupabaseClient,
+  dealId: string,
+  termSheetId: string,
+  options: { requirePublishedTermSheet?: boolean } = {}
+): Promise<void> {
+  const { data: deal, error: dealError } = await supabase
+    .from('deals')
+    .select('id, status, close_at, closed_processed_at')
+    .eq('id', dealId)
+    .maybeSingle()
+
+  if (dealError) {
+    throw dealError
+  }
+
+  if (!deal) {
+    throw new Error('Deal not found.')
+  }
+
+  if (isDealClosedForInvestmentRounds(deal)) {
+    throw new Error('This opportunity is no longer open for investment actions.')
+  }
+
+  const { data: termSheet, error: termSheetError } = await supabase
+    .from('deal_fee_structures')
+    .select('id, status, completion_date, closed_processed_at')
+    .eq('id', termSheetId)
+    .eq('deal_id', dealId)
+    .maybeSingle()
+
+  if (termSheetError) {
+    throw termSheetError
+  }
+
+  if (!termSheet) {
+    throw new Error('The selected term sheet does not exist for this deal.')
+  }
+
+  if (options.requirePublishedTermSheet && termSheet.status !== 'published') {
+    throw new Error('Only published term sheets can be used to start a new investment round.')
+  }
+
+  if (isTermSheetClosedForInvestmentRounds(termSheet)) {
+    throw new Error('This term sheet is no longer open for investment actions.')
+  }
+}
+
+function commercialConfigChanged(
+  cycle: DealInvestmentCycleRow,
+  config: {
+    role: string
+    referredByEntityId?: string | null
+    referredByEntityType?: string | null
+    assignedFeePlanId?: string | null
+  }
+): boolean {
+  return (
+    cycle.role !== config.role ||
+    (cycle.referred_by_entity_id || null) !== (config.referredByEntityId || null) ||
+    (cycle.referred_by_entity_type || null) !== (config.referredByEntityType || null) ||
+    (cycle.assigned_fee_plan_id || null) !== (config.assignedFeePlanId || null)
+  )
+}
+
+async function getNextCycleSequenceNumber(
+  supabase: SupabaseClient,
+  dealId: string,
+  investorId: string
+): Promise<number> {
+  const { data: latestCycle, error: latestCycleError } = await supabase
+    .from('deal_investment_cycles' as any)
+    .select('sequence_number')
+    .eq('deal_id', dealId)
+    .eq('investor_id', investorId)
+    .order('sequence_number', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (latestCycleError) {
+    throw latestCycleError
+  }
+
+  return (latestCycle?.sequence_number ?? 0) + 1
+}
+
+export async function getExistingFormalSubscriptionForCycle(
+  supabase: SupabaseClient,
+  cycleId: string
+): Promise<{ id: string; status: string } | null> {
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .select('id, status')
+    .eq('cycle_id', cycleId)
+    .not('status', 'in', '(cancelled,rejected)')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) {
+    throw error
+  }
+
+  return data ?? null
 }
 
 export function getCycleStage(cycle: Partial<DealInvestmentCycleRow> | null | undefined): number {
@@ -158,6 +300,16 @@ export async function getLatestCycleForInvestorTermSheet(
   return (data as DealInvestmentCycleRow | null) ?? null
 }
 
+export async function assertPublishedDealTermSheet(
+  supabase: SupabaseClient,
+  dealId: string,
+  termSheetId: string
+): Promise<void> {
+  await assertInvestmentCycleScopeAvailable(supabase, dealId, termSheetId, {
+    requirePublishedTermSheet: true,
+  })
+}
+
 export async function createOrResumeDealInvestmentCycle({
   supabase,
   dealId,
@@ -191,16 +343,40 @@ export async function createOrResumeDealInvestmentCycle({
   const conflictingLiveCycle = liveCycleList.find(cycle => cycle.term_sheet_id !== termSheetId) || null
 
   if (liveCycle) {
-    const patch: Record<string, unknown> = {
-      user_id: userId,
+    const shouldPatchCommercialConfig = commercialConfigChanged(liveCycle, {
       role,
-      referred_by_entity_id: referredByEntityId,
-      referred_by_entity_type: referredByEntityType,
-      assigned_fee_plan_id: assignedFeePlanId,
+      referredByEntityId,
+      referredByEntityType,
+      assignedFeePlanId,
+    })
+
+    if (shouldPatchCommercialConfig && !canReplaceLiveCycle(liveCycle.status)) {
+      throw new Error(
+        'Investor already has an active workflow on this term sheet. Commercial changes are only allowed before subscription review starts.'
+      )
     }
 
+    const patch: Record<string, unknown> = {}
+    if ((liveCycle.user_id || null) !== userId) {
+      patch.user_id = userId
+    }
     if (!liveCycle.dispatched_at) {
       patch.dispatched_at = now
+    }
+    if (shouldPatchCommercialConfig) {
+      patch.role = role
+      patch.referred_by_entity_id = referredByEntityId
+      patch.referred_by_entity_type = referredByEntityType
+      patch.assigned_fee_plan_id = assignedFeePlanId
+    }
+
+    if (Object.keys(patch).length === 0) {
+      return {
+        cycle: liveCycle,
+        created: false,
+        resumed: true,
+        action: 'resumed',
+      }
     }
 
     const { data: updatedCycle, error: updateError } = await supabase
@@ -218,6 +394,7 @@ export async function createOrResumeDealInvestmentCycle({
       cycle: updatedCycle as DealInvestmentCycleRow,
       created: false,
       resumed: true,
+      action: 'resumed',
     }
   }
 
@@ -226,60 +403,27 @@ export async function createOrResumeDealInvestmentCycle({
       throw new Error('Investor already has an active term sheet workflow for this opportunity')
     }
 
-    const { data: replacedCycle, error: replaceError } = await supabase
+    const { error: replaceError } = await supabase
       .from('deal_investment_cycles' as any)
       .update({
-        user_id: userId,
-        term_sheet_id: termSheetId,
-        role,
-        referred_by_entity_id: referredByEntityId,
-        referred_by_entity_type: referredByEntityType,
-        assigned_fee_plan_id: assignedFeePlanId,
-        status: 'dispatched',
-        dispatched_at: now,
-        viewed_at: null,
-        interest_confirmed_at: null,
-        submission_pending_at: null,
-        approved_at: null,
-        pack_generated_at: null,
-        pack_sent_at: null,
-        signed_at: null,
-        funded_at: null,
-        activated_at: null,
-        cancelled_at: null,
-        rejected_at: null,
-        rejection_reason: null,
+        status: 'cancelled',
+        cancelled_at: now,
+        rejection_reason: 'Replaced before subscription review by dispatch to a different term sheet.',
+        metadata: {
+          ...(conflictingLiveCycle.metadata || {}),
+          replacement_kind: 'term_sheet_switch',
+          replacement_term_sheet_id: termSheetId,
+          replacement_triggered_at: now,
+        },
       })
       .eq('id', conflictingLiveCycle.id)
-      .select('*')
-      .single()
 
-    if (replaceError || !replacedCycle) {
+    if (replaceError) {
       throw replaceError
     }
-
-    return {
-      cycle: replacedCycle as DealInvestmentCycleRow,
-      created: false,
-      resumed: true,
-    }
   }
 
-  const { data: latestCycle, error: latestCycleError } = await supabase
-    .from('deal_investment_cycles' as any)
-    .select('sequence_number')
-    .eq('deal_id', dealId)
-    .eq('investor_id', investorId)
-    .eq('term_sheet_id', termSheetId)
-    .order('sequence_number', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  if (latestCycleError) {
-    throw latestCycleError
-  }
-
-  const nextSequence = (latestCycle?.sequence_number ?? 0) + 1
+  const nextSequence = await getNextCycleSequenceNumber(supabase, dealId, investorId)
 
   const { data: insertedCycle, error: insertError } = await supabase
     .from('deal_investment_cycles' as any)
@@ -308,6 +452,8 @@ export async function createOrResumeDealInvestmentCycle({
     cycle: insertedCycle as DealInvestmentCycleRow,
     created: true,
     resumed: false,
+    action: conflictingLiveCycle ? 'replaced' : 'created',
+    replacedCycleId: conflictingLiveCycle?.id || null,
   }
 }
 
@@ -357,9 +503,14 @@ export async function getOrCreateSubmissionCycle(
     referredByEntityId?: string | null
     referredByEntityType?: string | null
     assignedFeePlanId?: string | null
+    intent: SubmissionCycleIntent
   }
 ): Promise<DealInvestmentCycleRow> {
-  if (args.cycleId) {
+  if (args.intent === 'continue_cycle') {
+    if (!args.cycleId) {
+      throw new Error('cycleId is required to continue an existing investment cycle')
+    }
+
     const cycle = await getCycleById(supabase, args.cycleId)
     if (!cycle) {
       throw new Error('Investment cycle not found')
@@ -370,32 +521,80 @@ export async function getOrCreateSubmissionCycle(
     if (!isCycleStatusLive(cycle.status)) {
       throw new Error('Investment cycle is already closed')
     }
+
+    await assertInvestmentCycleScopeAvailable(supabase, cycle.deal_id, cycle.term_sheet_id)
+
+    const existingSubscription = await getExistingFormalSubscriptionForCycle(supabase, cycle.id)
+    if (existingSubscription) {
+      throw new Error('This investment cycle already has a subscription. Start a new round to invest more.')
+    }
+
+    const { data: openSubmission, error: openSubmissionError } = await supabase
+      .from('deal_subscription_submissions')
+      .select('id')
+      .eq('cycle_id', cycle.id)
+      .in('status', ['pending_review', 'approved'])
+      .limit(1)
+      .maybeSingle()
+
+    if (openSubmissionError) {
+      throw openSubmissionError
+    }
+
+    if (openSubmission) {
+      throw new Error('This investment cycle already has a submission in review.')
+    }
+
     return cycle
   }
 
   if (!args.termSheetId) {
-    throw new Error('termSheetId is required when cycleId is not provided')
+    throw new Error('termSheetId is required to start a new investment cycle')
   }
 
-  const existingCycle = await getLatestCycleForInvestorTermSheet(
-    supabase,
-    args.dealId,
-    args.investorId,
-    args.termSheetId
-  )
+  const { data: liveCycle, error: liveCycleError } = await supabase
+    .from('deal_investment_cycles' as any)
+    .select('id, term_sheet_id, status')
+    .eq('deal_id', args.dealId)
+    .eq('investor_id', args.investorId)
+    .in('status', [...LIVE_CYCLE_STATUSES])
+    .order('sequence_number', { ascending: false })
+    .limit(1)
+    .maybeSingle()
 
-  if (existingCycle && isCycleStatusLive(existingCycle.status)) {
-    return existingCycle
+  if (liveCycleError) {
+    throw liveCycleError
   }
 
-  if (
-    existingCycle &&
-    existingCycle.status !== 'funded' &&
-    existingCycle.status !== 'active' &&
-    existingCycle.status !== 'cancelled' &&
-    existingCycle.status !== 'rejected'
-  ) {
-    return existingCycle
+  if (liveCycle) {
+    if (liveCycle.term_sheet_id === args.termSheetId) {
+      throw new Error('A live workflow already exists for this term sheet. Continue the current cycle instead.')
+    }
+    throw new Error('Investor already has an active workflow for this opportunity.')
+  }
+
+  await assertInvestmentCycleScopeAvailable(supabase, args.dealId, args.termSheetId, {
+    requirePublishedTermSheet: true,
+  })
+
+  const { data: previousCycleForTermSheet, error: previousCycleError } = await supabase
+    .from('deal_investment_cycles' as any)
+    .select('*')
+    .eq('deal_id', args.dealId)
+    .eq('investor_id', args.investorId)
+    .eq('term_sheet_id', args.termSheetId)
+    .in('status', ['funded', 'active'])
+    .order('sequence_number', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (previousCycleError) {
+    throw previousCycleError
+  }
+
+  if (!previousCycleForTermSheet) {
+    throw new Error('A new round can only be started from an existing funded term-sheet history.')
   }
 
   const created = await createOrResumeDealInvestmentCycle({

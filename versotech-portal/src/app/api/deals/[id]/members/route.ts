@@ -10,7 +10,6 @@ import {
 } from '@/lib/introducers/commercial-eligibility'
 import {
   createOrResumeDealInvestmentCycle,
-  getLatestCycleForInvestorTermSheet,
   LIVE_CYCLE_STATUSES,
 } from '@/lib/deals/investment-cycles'
 
@@ -609,26 +608,55 @@ export async function POST(
         )
       }
 
+      let cycle = null
+      let cycleResult = null
+      try {
+        cycleResult = await createOrResumeDealInvestmentCycle({
+          supabase,
+          dealId,
+          userId: resolvedUserId,
+          investorId: resolvedInvestorId,
+          termSheetId: validatedData.term_sheet_id,
+          role: validatedData.role,
+          createdBy: user.id,
+          referredByEntityId: validatedData.referred_by_entity_id || null,
+          referredByEntityType: validatedData.referred_by_entity_type || null,
+          assignedFeePlanId: validatedData.assigned_fee_plan_id || null,
+          dispatchTimestamp,
+        })
+        cycle = cycleResult.cycle
+      } catch (cycleError) {
+        console.error('Create/resume cycle error:', cycleError)
+        if (
+          cycleError instanceof Error &&
+          (
+            cycleError.message.includes('active term sheet workflow') ||
+            cycleError.message.includes('Commercial changes are only allowed')
+          )
+        ) {
+          return NextResponse.json(
+            {
+              error: cycleError.message,
+              message: cycleError.message,
+              reasonCode: 'active_workflow_blocked',
+            },
+            { status: 409 }
+          )
+        }
+        return NextResponse.json(
+          { error: 'Failed to create investment cycle for member' },
+          { status: 500 }
+        )
+      }
+
       const membershipPatch: Record<string, unknown> = {
         investor_id: resolvedInvestorId,
-        role: validatedData.role,
+        role: cycle?.role || validatedData.role,
         dispatched_at: dispatchTimestamp,
-      }
-
-      if (!existingMember.term_sheet_id) {
-        membershipPatch.term_sheet_id = validatedData.term_sheet_id
-      }
-
-      if (!existingMember.assigned_fee_plan_id && validatedData.assigned_fee_plan_id) {
-        membershipPatch.assigned_fee_plan_id = validatedData.assigned_fee_plan_id
-      }
-
-      if (!existingMember.referred_by_entity_id && validatedData.referred_by_entity_id) {
-        membershipPatch.referred_by_entity_id = validatedData.referred_by_entity_id
-      }
-
-      if (!existingMember.referred_by_entity_type && validatedData.referred_by_entity_type) {
-        membershipPatch.referred_by_entity_type = validatedData.referred_by_entity_type
+        term_sheet_id: cycle?.term_sheet_id || validatedData.term_sheet_id,
+        assigned_fee_plan_id: cycle?.assigned_fee_plan_id || null,
+        referred_by_entity_id: cycle?.referred_by_entity_id || null,
+        referred_by_entity_type: cycle?.referred_by_entity_type || null,
       }
 
       const { data: updatedMembership, error: updateMembershipError } = await supabase
@@ -658,51 +686,6 @@ export async function POST(
         )
       }
 
-      let cycle = null
-      try {
-        const cycleResult = await createOrResumeDealInvestmentCycle({
-          supabase,
-          dealId,
-          userId: resolvedUserId,
-          investorId: resolvedInvestorId,
-          termSheetId: validatedData.term_sheet_id,
-          role: validatedData.role,
-          createdBy: user.id,
-          referredByEntityId: validatedData.referred_by_entity_id || null,
-          referredByEntityType: validatedData.referred_by_entity_type || null,
-          assignedFeePlanId: validatedData.assigned_fee_plan_id || null,
-          dispatchTimestamp,
-        })
-        cycle = cycleResult.cycle
-      } catch (cycleError) {
-        console.error('Create/resume cycle error:', cycleError)
-        if (cycleError instanceof Error && cycleError.message.includes('active term sheet workflow')) {
-          return NextResponse.json(
-            { error: cycleError.message },
-            { status: 409 }
-          )
-        }
-        return NextResponse.json(
-          { error: 'Failed to create investment cycle for member' },
-          { status: 500 }
-        )
-      }
-
-      if (validatedData.referred_by_entity_id && validatedData.term_sheet_id) {
-        try {
-          const liveCycle = await getLatestCycleForInvestorTermSheet(
-            supabase,
-            dealId,
-            resolvedInvestorId,
-            validatedData.term_sheet_id
-          )
-
-          cycle = liveCycle || cycle
-        } catch (cycleLookupError) {
-          console.error('Failed to reload live cycle after redispatch:', cycleLookupError)
-        }
-      }
-
       if (validatedData.send_notification && resolvedUserId) {
         try {
           const { data: currentDeal } = await supabase
@@ -719,6 +702,7 @@ export async function POST(
             investorIds: [resolvedInvestorId],
             initiatedByUserId: user.id,
             role: validatedData.role,
+            notificationLink: cycle ? `/versotech_main/opportunities/${dealId}?cycle=${cycle.id}` : undefined,
           })
 
           if (!fanout.success) {
@@ -747,7 +731,14 @@ export async function POST(
       })
 
       return NextResponse.json(
-        { membership: updatedMembership, cycle, created: false, resumed: true },
+        {
+          membership: updatedMembership,
+          cycle,
+          created: cycleResult?.created ?? false,
+          resumed: cycleResult?.resumed ?? true,
+          dispatch_action: cycleResult?.action ?? 'resumed',
+          replaced_cycle_id: cycleResult?.replacedCycleId ?? null,
+        },
         { status: 200 }
       )
     }
@@ -813,9 +804,22 @@ export async function POST(
         cycle = cycleResult.cycle
       } catch (cycleError) {
         console.error('Create cycle error:', cycleError)
+        await supabase
+          .from('deal_memberships')
+          .delete()
+          .eq('deal_id', dealId)
+          .eq('user_id', resolvedUserId)
         return NextResponse.json(
-          { error: 'Failed to create investment cycle for member' },
-          { status: 500 }
+          {
+            error: cycleError instanceof Error ? cycleError.message : 'Failed to create investment cycle for member',
+          },
+          {
+            status:
+              cycleError instanceof Error &&
+              cycleError.message.includes('active term sheet workflow')
+                ? 409
+                : 500,
+          }
         )
       }
     }
@@ -840,6 +844,7 @@ export async function POST(
           investorIds: [resolvedInvestorId ?? null],
           initiatedByUserId: user.id,
           role: validatedData.role,
+          notificationLink: cycle ? `/versotech_main/opportunities/${dealId}?cycle=${cycle.id}` : undefined,
         })
 
         if (!fanout.success) {

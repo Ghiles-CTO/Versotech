@@ -27,6 +27,7 @@ import { DealFaqSection } from '@/components/deals/deal-faq-section'
 import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { readActivePersonaCookieValues, resolveActiveInvestorLink } from '@/lib/kyc/active-investor-link'
+import { getLatestActiveOrRecentCycle } from '@/lib/deals/investment-cycles'
 
 export const dynamic = 'force-dynamic'
 
@@ -145,15 +146,25 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
     notFound()
   }
 
-  // Get fee structure
-  const { data: feeStructure } = await serviceSupabase
-    .from('deal_fee_structures')
-    .select('*')
+  const latestCycle = await getLatestActiveOrRecentCycle(serviceSupabase, dealId, primaryInvestorId)
+  const { data: membership } = await serviceSupabase
+    .from('deal_memberships')
+    .select('term_sheet_id')
     .eq('deal_id', dealId)
-    .eq('status', 'published')
-    .order('version', { ascending: false })
-    .limit(1)
-    .single()
+    .eq('investor_id', primaryInvestorId)
+    .maybeSingle()
+
+  const resolvedTermSheetId = latestCycle?.term_sheet_id || membership?.term_sheet_id || null
+
+  let feeStructure = null
+  if (resolvedTermSheetId) {
+    const { data } = await serviceSupabase
+      .from('deal_fee_structures')
+      .select('*')
+      .eq('id', resolvedTermSheetId)
+      .maybeSingle()
+    feeStructure = data
+  }
 
   // Get documents
   const { data: documents } = await serviceSupabase
@@ -167,12 +178,18 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
   const docs = (documents ?? []) as DataRoomDocument[]
 
   // Get submissions
-  const { data: submissions } = await serviceSupabase
+  let submissionsQuery = serviceSupabase
     .from('deal_subscription_submissions')
     .select('id, status, submitted_at, payload_json')
     .eq('deal_id', dealId)
     .eq('investor_id', primaryInvestorId)
     .order('submitted_at', { ascending: false })
+
+  if (latestCycle?.id) {
+    submissionsQuery = submissionsQuery.eq('cycle_id', latestCycle.id)
+  }
+
+  const { data: submissions } = await submissionsQuery
 
   const latestSubmission = submissions?.[0] ?? null
   const daysRemaining = daysUntil(accessData.expires_at)

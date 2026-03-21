@@ -187,20 +187,23 @@ export async function POST(
 
     // Fetch counterparty entity if linked via original submission
     let counterpartyEntity = null
-    let originalSubmissionQuery = serviceSupabase
+    const baseOriginalSubmissionQuery = serviceSupabase
       .from('deal_subscription_submissions')
       .select('id, subscription_type, counterparty_entity_id, submitted_at')
+    const { data: linkedSubmission } = await baseOriginalSubmissionQuery
+      .eq('formal_subscription_id', subscriptionId)
+      .maybeSingle()
 
-    if ((subscription as any).cycle_id) {
-      originalSubmissionQuery = originalSubmissionQuery
+    let originalSubmission = linkedSubmission
+
+    if (!originalSubmission && (subscription as any).cycle_id) {
+      const { data: cycleSubmission } = await baseOriginalSubmissionQuery
         .eq('cycle_id', (subscription as any).cycle_id)
         .order('submitted_at', { ascending: false })
         .limit(1)
-    } else {
-      originalSubmissionQuery = originalSubmissionQuery.eq('formal_subscription_id', subscriptionId)
+        .maybeSingle()
+      originalSubmission = cycleSubmission
     }
-
-    const { data: originalSubmission } = await originalSubmissionQuery.maybeSingle()
 
     if (originalSubmission?.subscription_type === 'entity' && originalSubmission?.counterparty_entity_id) {
       const { data: entityData } = await serviceSupabase

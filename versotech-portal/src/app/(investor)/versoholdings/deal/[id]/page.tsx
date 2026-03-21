@@ -30,6 +30,7 @@ import { DealFaqSection } from '@/components/deals/deal-faq-section'
 import { getAccountStatusCopy, formatKycStatusLabel } from '@/lib/account-approval-status'
 import { cookies } from 'next/headers'
 import { readActivePersonaCookieValues, resolveActiveInvestorLink } from '@/lib/kyc/active-investor-link'
+import { getLatestActiveOrRecentCycle } from '@/lib/deals/investment-cycles'
 
 export const dynamic = 'force-dynamic'
 
@@ -118,16 +119,19 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
     )
   }
 
-  // Fetch fee structure
-  const { data: feeStructures } = await serviceSupabase
-    .from('deal_fee_structures')
-    .select('*')
-    .eq('deal_id', dealId)
-    .eq('status', 'published')
-    .order('effective_at', { ascending: false })
-    .limit(1)
+  const latestCycle = await getLatestActiveOrRecentCycle(serviceSupabase, dealId, investorId)
+  const resolvedTermSheetId = latestCycle?.term_sheet_id || null
 
-  const feeStructure = feeStructures?.[0] ?? null
+  // Fetch fee structure
+  let feeStructure = null
+  if (resolvedTermSheetId) {
+    const { data } = await serviceSupabase
+      .from('deal_fee_structures')
+      .select('*')
+      .eq('id', resolvedTermSheetId)
+      .maybeSingle()
+    feeStructure = data
+  }
 
   // Fetch investor's interest
   const { data: interests } = await serviceSupabase
@@ -153,13 +157,19 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
   const hasDataRoomAccess = dataRoomAccess && dataRoomAccess.length > 0
 
   // Fetch subscription
-  const { data: subscriptions } = await serviceSupabase
+  let subscriptionsQuery = serviceSupabase
     .from('deal_subscription_submissions')
     .select('*')
     .eq('deal_id', dealId)
     .eq('investor_id', investorId)
     .order('submitted_at', { ascending: false })
     .limit(1)
+
+  if (latestCycle?.id) {
+    subscriptionsQuery = subscriptionsQuery.eq('cycle_id', latestCycle.id)
+  }
+
+  const { data: subscriptions } = await subscriptionsQuery
 
   const subscription = subscriptions?.[0] ?? null
 

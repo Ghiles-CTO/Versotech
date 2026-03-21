@@ -870,6 +870,25 @@ export function InvestorDealsListClient({
     if (!subscribeAmount || !subscribeDealId) return
     try {
       setSubscribeLoading(true)
+      const opportunityResponse = await fetch(`/api/investors/me/opportunities/${subscribeDealId}?_t=${Date.now()}`, {
+        cache: 'no-store',
+      })
+      const opportunityData = await opportunityResponse.json()
+      if (!opportunityResponse.ok) {
+        throw new Error(opportunityData.error || 'Failed to resolve the current investment round')
+      }
+
+      const selectedCycle =
+        opportunityData.opportunity?.cycles?.find((cycle: any) => cycle.id === opportunityData.opportunity?.active_cycle_id) ||
+        opportunityData.opportunity?.cycles?.find((cycle: any) => cycle.primary_action?.type && cycle.primary_action.type !== 'none') ||
+        opportunityData.opportunity?.cycles?.[0] ||
+        null
+      const selectedAction = selectedCycle?.primary_action
+
+      if (!selectedAction || selectedAction.type === 'none') {
+        throw new Error('No subscription action is currently available for this opportunity.')
+      }
+
       const response = await fetch(`/api/deals/${subscribeDealId}/subscriptions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -880,7 +899,10 @@ export function InvestorDealsListClient({
             bank_confirmation: subscribeBankConfirm,
             notes: subscribeNotes.trim() || null
           },
-          subscription_type: 'personal'
+          subscription_type: 'personal',
+          intent: selectedAction.type,
+          ...(selectedAction.term_sheet_id ? { term_sheet_id: selectedAction.term_sheet_id } : {}),
+          ...(selectedAction.cycle_id ? { cycle_id: selectedAction.cycle_id } : {}),
         })
       })
       if (!response.ok) {

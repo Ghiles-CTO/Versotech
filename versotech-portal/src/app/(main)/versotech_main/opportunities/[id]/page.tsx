@@ -182,6 +182,12 @@ interface OpportunityCycle {
   } | null
   can_continue: boolean
   can_invest_more: boolean
+  primary_action: {
+    type: 'continue_cycle' | 'start_new_cycle' | 'none'
+    label: string | null
+    cycle_id: string | null
+    term_sheet_id: string | null
+  }
 }
 
 interface Opportunity {
@@ -689,8 +695,8 @@ export default function OpportunityDetailPage() {
           data.opportunity.cycles?.find((cycle: OpportunityCycle) => cycle.id === data.opportunity.active_cycle_id) || null
         const canOpenSubscribe =
           data.opportunity.can_subscribe ||
-          selectedCycleFromResponse?.can_continue === true ||
-          selectedCycleFromResponse?.can_invest_more === true
+          selectedCycleFromResponse?.primary_action?.type === 'continue_cycle' ||
+          selectedCycleFromResponse?.primary_action?.type === 'start_new_cycle'
 
         if (actionParam === 'subscribe' && canOpenSubscribe && !trackingOnlyForPersona) {
           setShowSubscribeDialog(true)
@@ -773,7 +779,12 @@ export default function OpportunityDetailPage() {
       opportunity.cycles.find(cycle => cycle.id === opportunity.active_cycle_id) ||
       opportunity.cycles[0] ||
       null
-    const shouldCreateNewCycle = selectedCycle?.can_invest_more === true
+    const selectedAction = selectedCycle?.primary_action
+
+    if (!selectedAction || selectedAction.type === 'none') {
+      toast.error('No subscription action is currently available for this cycle.')
+      return
+    }
 
     try {
       setActionLoading(true)
@@ -789,8 +800,9 @@ export default function OpportunityDetailPage() {
             commitment: parseDisplayAmount(subscribeAmount),
             stock_type: opportunity.stock_type || 'common',
             notes: `Submitted in proxy mode by commercial partner`,
-            ...(selectedCycle?.term_sheet_id ? { term_sheet_id: selectedCycle.term_sheet_id } : {}),
-            ...(!shouldCreateNewCycle && selectedCycle?.id ? { cycle_id: selectedCycle.id } : {}),
+            intent: selectedAction.type,
+            ...(selectedAction.term_sheet_id ? { term_sheet_id: selectedAction.term_sheet_id } : {}),
+            ...(selectedAction.cycle_id ? { cycle_id: selectedAction.cycle_id } : {}),
           })
         })
       } else {
@@ -806,8 +818,9 @@ export default function OpportunityDetailPage() {
               notes: subscribeNotes.trim() || null
             },
             subscription_type: 'personal',
-            ...(selectedCycle?.term_sheet_id ? { term_sheet_id: selectedCycle.term_sheet_id } : {}),
-            ...(!shouldCreateNewCycle && selectedCycle?.id ? { cycle_id: selectedCycle.id } : {}),
+            intent: selectedAction.type,
+            ...(selectedAction.term_sheet_id ? { term_sheet_id: selectedAction.term_sheet_id } : {}),
+            ...(selectedAction.cycle_id ? { cycle_id: selectedAction.cycle_id } : {}),
           })
         })
       }
@@ -818,7 +831,7 @@ export default function OpportunityDetailPage() {
       }
 
       const result = await response.json()
-      const nextCycleId = result?.cycle?.id || (shouldCreateNewCycle ? null : selectedCycle?.id) || null
+      const nextCycleId = result?.cycle?.id || selectedAction?.cycle_id || null
 
       if (nextCycleId) {
         updateCycleSelection(nextCycleId)

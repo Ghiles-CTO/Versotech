@@ -89,7 +89,6 @@ async function resolveDispatchRecipients(params: {
       .from('investor_users')
       .select('user_id, investor_id')
       .in('investor_id', investorIds)
-      .eq('is_active', true)
 
     if (investorUsersError) {
       throw new Error(`Failed loading investor users: ${investorUsersError.message}`)
@@ -114,7 +113,6 @@ async function resolveDispatchRecipients(params: {
       .from('investor_users')
       .select('user_id, investor_id, is_primary')
       .in('user_id', unresolvedUserIds)
-      .eq('is_active', true)
       .order('is_primary', { ascending: false })
 
     if (userInvestorError) {
@@ -284,4 +282,3 @@ export async function sendDealDispatchFanout(params: DealDispatchFanoutParams): 
     }
   }
 }
-

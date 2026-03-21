@@ -13,6 +13,107 @@ const payloadSchema = z.object({
   allocation_amount: z.number().optional().nullable()
 })
 
+async function recomputeInvestorDealHolding(args: {
+  serviceSupabase: ReturnType<typeof createServiceClient>
+  dealId: string
+  investorId: string
+  subscriptionSubmissionId?: string | null
+  approvalId?: string | null
+  fallbackAmount?: number | null
+  fallbackCurrency?: string | null
+  allocationAmount?: number | null
+}) {
+  const {
+    serviceSupabase,
+    dealId,
+    investorId,
+    subscriptionSubmissionId = null,
+    approvalId = null,
+    fallbackAmount = null,
+    fallbackCurrency = null,
+    allocationAmount = null,
+  } = args
+
+  const [{ data: subscriptions, error: subscriptionsError }, { data: existingHolding, error: existingHoldingError }] =
+    await Promise.all([
+      serviceSupabase
+        .from('subscriptions')
+        .select('id, commitment, currency, status, funded_at, activated_at, created_at')
+        .eq('deal_id', dealId)
+        .eq('investor_id', investorId)
+        .not('status', 'in', '(cancelled,rejected)'),
+      serviceSupabase
+        .from('investor_deal_holdings')
+        .select('id, subscription_submission_id, approval_id, status, funded_at, effective_date, currency')
+        .eq('investor_id', investorId)
+        .eq('deal_id', dealId)
+        .maybeSingle(),
+    ])
+
+  if (subscriptionsError) {
+    throw subscriptionsError
+  }
+
+  if (existingHoldingError) {
+    throw existingHoldingError
+  }
+
+  const activeSubscriptions = (subscriptions || []).filter((subscription: any) => subscription.status !== 'cancelled' && subscription.status !== 'rejected')
+  const subscribedAmount = activeSubscriptions.reduce((total: number, subscription: any) => {
+    return total + Number(subscription.commitment || 0)
+  }, 0)
+
+  const aggregateAmount = subscribedAmount || fallbackAmount || 0
+  if (!aggregateAmount) {
+    return
+  }
+
+  const aggregateCurrency =
+    activeSubscriptions.find((subscription: any) => !!subscription.currency)?.currency ||
+    existingHolding?.currency ||
+    fallbackCurrency ||
+    'USD'
+
+  const latestFundedAt = activeSubscriptions
+    .map((subscription: any) => subscription.funded_at)
+    .filter((value: string | null | undefined): value is string => !!value)
+    .sort()
+    .at(-1) || null
+
+  const hasActiveSubscription = activeSubscriptions.some((subscription: any) =>
+    subscription.status === 'active' || !!subscription.activated_at
+  )
+  const hasFundedSubscription = activeSubscriptions.some((subscription: any) =>
+    subscription.status === 'funded' || !!subscription.funded_at
+  )
+
+  const holdingStatus = hasActiveSubscription
+    ? 'active'
+    : hasFundedSubscription
+      ? 'funded'
+      : allocationAmount
+        ? 'funded'
+        : 'pending_funding'
+
+  await serviceSupabase
+    .from('investor_deal_holdings')
+    .upsert({
+      investor_id: investorId,
+      deal_id: dealId,
+      subscription_submission_id: subscriptionSubmissionId ?? existingHolding?.subscription_submission_id ?? null,
+      approval_id: approvalId ?? existingHolding?.approval_id ?? null,
+      status: holdingStatus,
+      subscribed_amount: aggregateAmount,
+      currency: aggregateCurrency,
+      effective_date: existingHolding?.effective_date ?? new Date().toISOString().slice(0, 10),
+      funding_due_at: holdingStatus === 'pending_funding'
+        ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        : null,
+      funded_at: latestFundedAt || existingHolding?.funded_at || (allocationAmount ? new Date().toISOString() : null),
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'investor_id,deal_id' })
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null)
   const parsed = payloadSchema.safeParse(body ?? {})
@@ -188,37 +289,16 @@ export async function POST(request: NextRequest) {
       derivedCurrency = dealRow?.currency ?? 'USD'
     }
 
-    if (derivedAmount) {
-      const { data: existingHolding } = await serviceSupabase
-        .from('investor_deal_holdings')
-        .select('id, subscribed_amount, status, funded_at')
-        .eq('investor_id', investor_id)
-        .eq('deal_id', deal_id)
-        .maybeSingle()
-
-      const holdingStatus = existingHolding?.status === 'active'
-        ? 'active'
-        : existingHolding?.status === 'funded' || allocation_amount
-          ? 'funded'
-          : 'pending_funding'
-      const payload = {
-        investor_id,
-        deal_id,
-        subscription_submission_id: subscription_id ?? null,
-        approval_id: approval_id ?? null,
-        status: holdingStatus,
-        subscribed_amount: Number(existingHolding?.subscribed_amount || 0) + derivedAmount,
-        currency: derivedCurrency ?? 'USD',
-        effective_date: new Date().toISOString().slice(0, 10),
-        funding_due_at: allocation_amount ? null : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        funded_at: existingHolding?.funded_at || (allocation_amount ? new Date().toISOString() : null),
-        updated_at: new Date().toISOString()
-      }
-
-      await serviceSupabase
-        .from('investor_deal_holdings')
-        .upsert(payload, { onConflict: 'investor_id,deal_id' })
-    }
+    await recomputeInvestorDealHolding({
+      serviceSupabase,
+      dealId: deal_id,
+      investorId: investor_id,
+      subscriptionSubmissionId: subscription_id ?? null,
+      approvalId: approval_id ?? null,
+      fallbackAmount: derivedAmount,
+      fallbackCurrency: derivedCurrency,
+      allocationAmount: allocation_amount ?? null,
+    })
   } catch (holdingError) {
     console.error('Failed to upsert investor deal holding', holdingError)
   }

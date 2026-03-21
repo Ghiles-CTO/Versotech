@@ -4,7 +4,12 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { trackDealEvent } from '@/lib/analytics'
 import { canEntityInvest, getEligibilityBlockersSummary } from '@/lib/entities/entity-investment-eligibility'
-import { getOrCreateSubmissionCycle, updateDealInvestmentCycleProgress } from '@/lib/deals/investment-cycles'
+import {
+  assertPublishedDealTermSheet,
+  getOrCreateSubmissionCycle,
+  type SubmissionCycleIntent,
+  updateDealInvestmentCycleProgress,
+} from '@/lib/deals/investment-cycles'
 
 const submissionSchema = z.object({
   investor_id: z.string().uuid().optional(),
@@ -12,6 +17,7 @@ const submissionSchema = z.object({
   notes: z.string().max(4000).optional().nullable(),
   subscription_type: z.enum(['personal', 'entity']).optional(),
   counterparty_entity_id: z.string().uuid().optional().nullable(),
+  intent: z.enum(['continue_cycle', 'start_new_cycle']).optional().nullable(),
   cycle_id: z.string().uuid().optional().nullable(),
   term_sheet_id: z.string().uuid().optional().nullable(),
 })
@@ -147,7 +153,16 @@ export async function POST(
     )
   }
 
-  const { investor_id, payload, notes, subscription_type, counterparty_entity_id, cycle_id, term_sheet_id } = parsed.data
+  const {
+    investor_id,
+    payload,
+    notes,
+    subscription_type,
+    counterparty_entity_id,
+    intent,
+    cycle_id,
+    term_sheet_id,
+  } = parsed.data
 
   // Validate entity selection
   if (subscription_type === 'entity' && !counterparty_entity_id) {
@@ -232,6 +247,26 @@ export async function POST(
     ? 'unauthorized'
     : investorRecord.account_approval_status
 
+  const { data: dealRecord, error: dealError } = await serviceSupabase
+    .from('deals')
+    .select('id, status')
+    .eq('id', dealId)
+    .maybeSingle()
+
+  if (dealError || !dealRecord) {
+    return NextResponse.json(
+      { error: 'Deal not found' },
+      { status: 404 }
+    )
+  }
+
+  if (!['open', 'allocation_pending'].includes(dealRecord.status)) {
+    return NextResponse.json(
+      { error: `Deal is not open for subscriptions. Current status: ${dealRecord.status}` },
+      { status: 400 }
+    )
+  }
+
   if (normalizedAccountStatus !== 'approved') {
     return NextResponse.json(
       {
@@ -287,9 +322,26 @@ export async function POST(
     .eq('investor_id', resolvedInvestorId)
     .maybeSingle()
 
+  const resolvedIntent: SubmissionCycleIntent | null =
+    intent || (cycle_id ? 'continue_cycle' : term_sheet_id ? 'start_new_cycle' : null)
+
+  if (!resolvedIntent) {
+    return NextResponse.json(
+      { error: 'Subscription intent is required. Specify whether you are continuing a round or starting a new one.' },
+      { status: 400 }
+    )
+  }
+
+  if (resolvedIntent === 'continue_cycle' && !cycle_id) {
+    return NextResponse.json(
+      { error: 'cycle_id is required when continuing an investment cycle' },
+      { status: 400 }
+    )
+  }
+
   let effectiveTermSheetId = term_sheet_id || null
 
-  if (!effectiveTermSheetId && cycle_id) {
+  if (resolvedIntent === 'continue_cycle' && cycle_id) {
     const { data: selectedCycle } = await serviceSupabase
       .from('deal_investment_cycles' as any)
       .select('term_sheet_id')
@@ -298,27 +350,22 @@ export async function POST(
     effectiveTermSheetId = selectedCycle?.term_sheet_id || null
   }
 
-  if (!effectiveTermSheetId && membership?.term_sheet_id) {
-    effectiveTermSheetId = membership.term_sheet_id
-  }
-
-  if (!effectiveTermSheetId) {
-    const { data: fallbackTermSheet } = await serviceSupabase
-      .from('deal_fee_structures')
-      .select('id')
-      .eq('deal_id', dealId)
-      .eq('status', 'published')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-    effectiveTermSheetId = fallbackTermSheet?.id || null
-  }
-
-  if (!effectiveTermSheetId && !cycle_id) {
+  if (resolvedIntent === 'start_new_cycle' && !effectiveTermSheetId) {
     return NextResponse.json(
-      { error: 'No active term sheet available for this subscription' },
+      { error: 'term_sheet_id is required when starting a new investment cycle' },
       { status: 400 }
     )
+  }
+
+  if (resolvedIntent === 'start_new_cycle' && effectiveTermSheetId) {
+    try {
+      await assertPublishedDealTermSheet(serviceSupabase, dealId, effectiveTermSheetId)
+    } catch (termSheetError) {
+      return NextResponse.json(
+        { error: termSheetError instanceof Error ? termSheetError.message : 'Invalid term sheet selection' },
+        { status: 400 }
+      )
+    }
   }
 
   let cycle
@@ -334,6 +381,7 @@ export async function POST(
       referredByEntityId: membership?.referred_by_entity_id || null,
       referredByEntityType: membership?.referred_by_entity_type || null,
       assignedFeePlanId: membership?.assigned_fee_plan_id || null,
+      intent: resolvedIntent,
     })
   } catch (cycleError) {
     console.error('Failed to resolve submission cycle:', cycleError)
@@ -342,14 +390,6 @@ export async function POST(
       { status: 400 }
     )
   }
-
-  // Auto-cancel any existing pending submissions before creating new one
-  // This prevents duplicate pending submissions and maintains clean workflow state
-  await serviceSupabase
-    .from('deal_subscription_submissions')
-    .update({ status: 'cancelled' })
-    .eq('cycle_id', cycle.id)
-    .eq('status', 'pending_review')
 
   const { data: submission, error: insertError } = await serviceSupabase
     .from('deal_subscription_submissions')

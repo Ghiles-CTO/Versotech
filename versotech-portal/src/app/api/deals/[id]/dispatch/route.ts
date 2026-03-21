@@ -3,6 +3,10 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { sendDealDispatchFanout } from '@/lib/deals/dispatch-fanout'
 import {
+  assertPublishedDealTermSheet,
+  createOrResumeDealInvestmentCycle,
+} from '@/lib/deals/investment-cycles'
+import {
   buildIntroducerCommercialBlockPayload,
   evaluateIntroducerCommercialEligibility,
   getIntroducerCommercialEligibility,
@@ -22,6 +26,7 @@ const dispatchSchema = z.object({
     'commercial_partner_investor',
     'commercial_partner_proxy'
   ]).default('investor'),
+  term_sheet_id: z.string().uuid().optional(),
   // Fee plan fields - required when dispatching investors through an entity
   referred_by_entity_id: z.string().uuid().optional(),
   referred_by_entity_type: z.enum(['partner', 'introducer', 'commercial_partner']).optional(),
@@ -37,6 +42,15 @@ const dispatchSchema = z.object({
   {
     message: 'assigned_fee_plan_id is required when dispatching through an introducer/partner',
     path: ['assigned_fee_plan_id']
+  }
+).refine(
+  (data) => {
+    const roleRequiresTermSheet = data.role !== 'commercial_partner_proxy'
+    return !roleRequiresTermSheet || !!data.term_sheet_id
+  },
+  {
+    message: 'term_sheet_id is required when dispatching an investor workflow',
+    path: ['term_sheet_id']
   }
 )
 
@@ -82,7 +96,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       )
     }
 
-    const { user_ids, role, referred_by_entity_id, referred_by_entity_type, assigned_fee_plan_id } = validation.data
+    const { user_ids, role, term_sheet_id, referred_by_entity_id, referred_by_entity_type, assigned_fee_plan_id } = validation.data
 
     if (referred_by_entity_type === 'introducer' && referred_by_entity_id) {
       const eligibility = await getIntroducerCommercialEligibility({
@@ -261,6 +275,19 @@ export async function POST(request: Request, { params }: RouteParams) {
       )
     }
 
+    if (term_sheet_id) {
+      try {
+        await assertPublishedDealTermSheet(serviceSupabase, dealId, term_sheet_id)
+      } catch (termSheetError) {
+        return NextResponse.json({
+          error: 'Invalid term sheet',
+          message: termSheetError instanceof Error
+            ? termSheetError.message
+            : 'Only published term sheets can be used for dispatch.'
+        }, { status: 400 })
+      }
+    }
+
     // Get existing memberships to avoid duplicates
     const { data: existingMemberships } = await serviceSupabase
       .from('deal_memberships')
@@ -428,6 +455,20 @@ export async function POST(request: Request, { params }: RouteParams) {
       ? newUserIds.filter(id => !blockedUserIds.includes(id))
       : newUserIds
 
+    const usersMissingInvestorProfile = term_sheet_id
+      ? dispatchUserIds.filter(userId => !investorIdMap.has(userId))
+      : []
+
+    if (usersMissingInvestorProfile.length > 0) {
+      return NextResponse.json(
+        {
+          error: 'All investor dispatches require a linked investor profile before a term sheet can be assigned.',
+          users_blocked: usersMissingInvestorProfile,
+        },
+        { status: 400 }
+      )
+    }
+
     if (dispatchUserIds.length === 0) {
       return NextResponse.json(
         {
@@ -451,7 +492,8 @@ export async function POST(request: Request, { params }: RouteParams) {
       // Fee plan linkage - set when dispatching through an introducer/partner
       referred_by_entity_id: referred_by_entity_id || null,
       referred_by_entity_type: referred_by_entity_type || null,
-      assigned_fee_plan_id: assigned_fee_plan_id || null
+      assigned_fee_plan_id: assigned_fee_plan_id || null,
+      term_sheet_id: term_sheet_id || null,
     }))
 
     const { data: createdMemberships, error: createError } = await serviceSupabase
@@ -465,6 +507,43 @@ export async function POST(request: Request, { params }: RouteParams) {
         { error: 'Failed to dispatch users to deal' },
         { status: 500 }
       )
+    }
+
+    if (term_sheet_id) {
+      const dispatchTimestamp = now
+      try {
+        for (const userId of dispatchUserIds) {
+          const investorId = investorIdMap.get(userId)
+          if (!investorId) continue
+
+          await createOrResumeDealInvestmentCycle({
+            supabase: serviceSupabase,
+            dealId,
+            userId,
+            investorId,
+            termSheetId: term_sheet_id,
+            role,
+            createdBy: user.id,
+            referredByEntityId: referred_by_entity_id || null,
+            referredByEntityType: referred_by_entity_type || null,
+            assignedFeePlanId: assigned_fee_plan_id || null,
+            dispatchTimestamp,
+          })
+        }
+      } catch (cycleError) {
+        console.error('Error creating investment cycles during bulk dispatch:', cycleError)
+        await serviceSupabase
+          .from('deal_memberships')
+          .delete()
+          .eq('deal_id', dealId)
+          .in('user_id', dispatchUserIds)
+        return NextResponse.json(
+          {
+            error: cycleError instanceof Error ? cycleError.message : 'Failed to create investment cycle during dispatch',
+          },
+          { status: 400 }
+        )
+      }
     }
 
     // Log audit event
@@ -481,6 +560,7 @@ export async function POST(request: Request, { params }: RouteParams) {
           skipped_existing: user_ids.length - newUserIds.length,
           skipped_blacklisted: blockedUserIds,
           deal_name: deal.name,
+          term_sheet_id: term_sheet_id || null,
           // Fee plan linkage audit trail
           referred_by_entity_id: referred_by_entity_id || null,
           referred_by_entity_type: referred_by_entity_type || null,
