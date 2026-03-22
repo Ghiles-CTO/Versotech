@@ -34,6 +34,20 @@ const statusColors: Record<string, string> = {
   cancelled: 'bg-slate-100 dark:bg-slate-500/20 text-slate-700 dark:text-slate-300'
 }
 
+function isReinvestmentApproval(approval: Approval): boolean {
+  return approval.entity_type === 'deal_subscription' && approval.entity_metadata?.payload?.flow_kind === 'reinvestment'
+}
+
+function getApprovalTypeLabel(approval: Approval): string {
+  if (approval.entity_type === 'deal_interest' || approval.entity_type === 'deal_interest_nda') {
+    return 'DATA ROOM ACCESS REQUEST'
+  }
+  if (isReinvestmentApproval(approval)) {
+    return 'REINVESTMENT REQUEST'
+  }
+  return approval.entity_type.replace(/_/g, ' ').toUpperCase()
+}
+
 export function ApprovalsListView({
   approvals,
   onApprovalClick,
@@ -74,9 +88,7 @@ export function ApprovalsListView({
           <div className="flex-1 space-y-4">
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="outline">
-                {approval.entity_type === 'deal_interest' || approval.entity_type === 'deal_interest_nda'
-                  ? 'DATA ROOM ACCESS REQUEST'
-                  : approval.entity_type.replace(/_/g, ' ').toUpperCase()}
+                {getApprovalTypeLabel(approval)}
               </Badge>
               <Badge className={statusColors[approval.status]}>
                 {approval.status.replace(/_/g, ' ').toUpperCase()}
@@ -96,6 +108,12 @@ export function ApprovalsListView({
             {(approval.entity_type === 'deal_interest' || approval.entity_type === 'deal_interest_nda') && (
               <p className="text-sm text-muted-foreground">
                 Deal: {approval.related_deal?.name || 'Unknown'} • Requested by {approval.requested_by_profile?.display_name || 'Unknown'}
+              </p>
+            )}
+
+            {isReinvestmentApproval(approval) && (
+              <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                Additional investment request
               </p>
             )}
 

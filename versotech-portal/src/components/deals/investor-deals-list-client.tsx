@@ -277,6 +277,15 @@ interface InvestorDealsListClientProps {
   accessByDeal: Map<string, DataRoomAccess>
   subscriptionByDeal: Map<string, SubscriptionSubmission>
   subscriptionProgressByDeal: Map<string, SubscriptionProgress>
+  cycleStateByDeal?: Record<string, {
+    can_invest_more: boolean
+    reinvestment_branch: {
+      visible: boolean
+      confirmed: boolean
+      signed: boolean
+      funded: boolean
+    } | null
+  }>
   primaryInvestorId: string | null
   accountApprovalStatus?: string | null
   kycStatus?: string | null
@@ -534,6 +543,57 @@ function formatDeadlineCopy(
   return `Closes ${closeDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}`
 }
 
+function ReinvestmentMiniProgress({
+  branch,
+}: {
+  branch: {
+    visible: boolean
+    confirmed: boolean
+    signed: boolean
+    funded: boolean
+  }
+}) {
+  const steps = [
+    { key: 'confirmed', label: 'Confirmed', done: branch.confirmed },
+    { key: 'signed', label: 'Pack Signed', done: branch.signed },
+    { key: 'funded', label: 'Funded', done: branch.funded },
+  ] as const
+
+  return (
+    <div className="rounded-lg border border-emerald-200/70 bg-emerald-50/60 dark:border-emerald-900/40 dark:bg-emerald-950/20 px-4 py-3">
+      <div className="mb-2 text-xs font-medium uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+        Additional investment
+      </div>
+      <div className="flex items-start gap-2">
+        {steps.map((step, index) => (
+          <div key={step.key} className="flex flex-1 items-start gap-2">
+            <div className="flex flex-col items-center">
+              <div
+                className={cn(
+                  'flex h-5 w-5 items-center justify-center rounded-full border text-[10px] font-semibold',
+                  step.done
+                    ? 'border-emerald-500 bg-emerald-500 text-white'
+                    : 'border-border bg-background text-muted-foreground'
+                )}
+              >
+                {step.done ? '✓' : index + 1}
+              </div>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className={cn('text-xs font-medium', step.done ? 'text-emerald-700 dark:text-emerald-300' : 'text-muted-foreground')}>
+                {step.label}
+              </p>
+              {index < steps.length - 1 ? (
+                <div className={cn('mt-2 h-0.5 w-full', step.done ? 'bg-emerald-400' : 'bg-border')} />
+              ) : null}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function InvestorDealsListClient({
   dealsData,
   feeStructureMap,
@@ -541,6 +601,7 @@ export function InvestorDealsListClient({
   accessByDeal,
   subscriptionByDeal,
   subscriptionProgressByDeal,
+  cycleStateByDeal = {},
   primaryInvestorId,
   accountApprovalStatus = null,
   kycStatus = null,
@@ -629,6 +690,7 @@ export function InvestorDealsListClient({
   const [subscribeDealMin, setSubscribeDealMin] = useState<number | null>(null)
   const [subscribeDealMax, setSubscribeDealMax] = useState<number | null>(null)
   const [subscribeDealLogo, setSubscribeDealLogo] = useState<string | null>(null)
+  const [subscribeMode, setSubscribeMode] = useState<'default' | 'reinvest'>('default')
   const [subscribeAmount, setSubscribeAmount] = useState('')
   const [subscribeBankConfirm, setSubscribeBankConfirm] = useState(true)
   const [subscribeNotes, setSubscribeNotes] = useState('')
@@ -914,6 +976,7 @@ export function InvestorDealsListClient({
       setSubscribeAmount('')
       setSubscribeBankConfirm(true)
       setSubscribeNotes('')
+      setSubscribeMode('default')
       setSubscribeDealId(null)
       toast.success('Subscription submitted for review', {
         description: 'The VERSO team will follow up shortly.'
@@ -1467,6 +1530,7 @@ export function InvestorDealsListClient({
             const interest = interestByDeal.get(deal.id) ?? null
             const ndaAccess = accessByDeal.get(deal.id) ?? null
             const subscription = subscriptionByDeal.get(deal.id) ?? null
+            const cycleState = cycleStateByDeal[deal.id] ?? null
             const membershipRole = deal.deal_memberships?.[0]?.role ?? null
             const roleAllowsInvest = isInvestorEligibleRole(membershipRole)
             const isTrackingOnly = !!membershipRole && !roleAllowsInvest
@@ -1746,6 +1810,9 @@ export function InvestorDealsListClient({
                           )}
                         </div>
                       </div>
+                      {cycleState?.reinvestment_branch?.visible ? (
+                        <ReinvestmentMiniProgress branch={cycleState.reinvestment_branch} />
+                      ) : null}
                     </div>
                   )}
 
@@ -1806,10 +1873,30 @@ export function InvestorDealsListClient({
                             setSubscribeDealMin(feeStructure?.minimum_ticket ?? null)
                             setSubscribeDealMax(feeStructure?.allocation_up_to ?? null)
                             setSubscribeDealLogo(deal.company_logo_url ?? null)
+                            setSubscribeMode('default')
                             setShowSubscribeDialog(true)
                           }}
                         >
-                          Subscribe to Investment Opportunity
+                          Confirm Interest
+                          <ArrowUpRight className="h-4 w-4" />
+                        </Button>
+                      )}
+
+                      {!isClosed && primaryInvestorId && canInvest && cycleState?.can_invest_more && (
+                        <Button
+                          className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+                          onClick={() => {
+                            setSubscribeDealId(deal.id)
+                            setSubscribeDealName(deal.name)
+                            setSubscribeDealCurrency(deal.currency)
+                            setSubscribeDealMin(feeStructure?.minimum_ticket ?? null)
+                            setSubscribeDealMax(feeStructure?.allocation_up_to ?? null)
+                            setSubscribeDealLogo(deal.company_logo_url ?? null)
+                            setSubscribeMode('reinvest')
+                            setShowSubscribeDialog(true)
+                          }}
+                        >
+                          I would like to invest more
                           <ArrowUpRight className="h-4 w-4" />
                         </Button>
                       )}
@@ -1854,7 +1941,15 @@ export function InvestorDealsListClient({
       )}
 
       {/* ═══════ Subscribe to Investment Dialog ═══════ */}
-      <Dialog open={showSubscribeDialog} onOpenChange={setShowSubscribeDialog}>
+      <Dialog
+        open={showSubscribeDialog}
+        onOpenChange={(open) => {
+          setShowSubscribeDialog(open)
+          if (!open) {
+            setSubscribeMode('default')
+          }
+        }}
+      >
         <DialogContent
           className="sm:max-w-[480px] p-0 gap-0 border-0 shadow-[0_25px_60px_-12px_rgba(0,0,0,0.35)] dark:shadow-[0_25px_60px_-12px_rgba(0,0,0,0.7)]"
           showCloseButton={false}
@@ -1878,11 +1973,13 @@ export function InvestorDealsListClient({
               <div className="min-w-0 flex-1">
                 <DialogHeader className="pb-0 space-y-0">
                   <DialogTitle className="text-lg font-semibold tracking-tight leading-tight">
-                    Subscribe to Investment Opportunity
+                    {subscribeMode === 'reinvest' ? 'I would like to invest more' : 'Confirm Interest'}
                   </DialogTitle>
                 </DialogHeader>
                 <DialogDescription className="text-[13px] text-muted-foreground/80 leading-relaxed mt-1.5">
-                  Enter your commitment amount to submit a subscription request for {subscribeDealName}. Once reviewed, you&apos;ll receive the subscription documents to sign.
+                  {subscribeMode === 'reinvest'
+                    ? `Enter the additional amount you would like to invest in ${subscribeDealName}.`
+                    : `Enter the amount you would like to invest in ${subscribeDealName}.`}
                 </DialogDescription>
               </div>
             </div>
@@ -2033,7 +2130,10 @@ export function InvestorDealsListClient({
           <div className="px-6 py-5 border-t border-border/60 bg-muted/30 dark:bg-black/15 flex items-center justify-between gap-3">
             <Button
               variant="ghost"
-              onClick={() => setShowSubscribeDialog(false)}
+              onClick={() => {
+                setShowSubscribeDialog(false)
+                setSubscribeMode('default')
+              }}
               className="text-muted-foreground hover:text-foreground h-11 px-5 rounded-lg"
             >
               Cancel

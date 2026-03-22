@@ -220,6 +220,39 @@ export async function POST(request: Request) {
       intent: resolvedIntent,
     })
 
+    const { data: priorSubscriptions } = await serviceSupabase
+      .from('subscriptions')
+      .select('id, commitment, currency, cycle_id, status')
+      .eq('deal_id', deal_id)
+      .eq('investor_id', client_investor_id)
+      .neq('cycle_id', cycle.id)
+      .in('status', ['committed', 'funded', 'partially_funded', 'active'])
+
+    const priorSubscriptionCount = priorSubscriptions?.length || 0
+    const priorCommittedAmount = (priorSubscriptions || []).reduce(
+      (sum, subscription) => sum + Number(subscription.commitment || 0),
+      0
+    )
+    const reinvestmentRequest = resolvedIntent === 'start_new_cycle' && priorSubscriptionCount > 0
+    const payloadWithBusinessContext = {
+      amount: commitment,
+      currency: deal.currency || 'USD',
+      bank_confirmation: true,
+      notes: notes || null,
+      proxy_submitted: true,
+      proxy_user_id: user.id,
+      proxy_commercial_partner_id: cpLink.commercial_partner_id,
+      proxy_authorization_doc_id: proxy_authorization_doc_id || null,
+      stock_type,
+      flow_kind: reinvestmentRequest ? 'reinvestment' : 'initial_subscription',
+      previous_subscription_count: priorSubscriptionCount,
+      previous_committed_amount: priorCommittedAmount || null,
+      previous_currency:
+        priorSubscriptions?.find(subscription => subscription.currency)?.currency ||
+        deal.currency ||
+        null,
+    }
+
     const now = new Date().toISOString()
     const { data: submission, error: subError } = await serviceSupabase
       .from('deal_subscription_submissions')
@@ -228,17 +261,7 @@ export async function POST(request: Request) {
         investor_id: client_investor_id,
         cycle_id: cycle.id,
         term_sheet_id: cycle.term_sheet_id,
-        payload_json: {
-          amount: commitment,
-          currency: deal.currency || 'USD',
-          bank_confirmation: true,
-          notes: notes || null,
-          proxy_submitted: true,
-          proxy_user_id: user.id,
-          proxy_commercial_partner_id: cpLink.commercial_partner_id,
-          proxy_authorization_doc_id: proxy_authorization_doc_id || null,
-          stock_type,
-        },
+        payload_json: payloadWithBusinessContext,
         status: 'pending_review',
         created_by: user.id,
         subscription_type: 'personal',

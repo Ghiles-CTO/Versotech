@@ -32,6 +32,11 @@ export interface JourneySummary {
 interface InvestorJourneyBarProps {
   stages?: JourneyStage[]
   summary?: JourneySummary
+  reinvestmentBranch?: {
+    confirmed_at: string | null
+    signed_at: string | null
+    funded_at: string | null
+  } | null
   currentStage?: number
   subscriptionSubmittedAt?: string | null
   className?: string
@@ -68,6 +73,7 @@ function formatDate(dateString: string | null): string {
 export function InvestorJourneyBar({
   stages,
   summary,
+  reinvestmentBranch,
   className,
   compact = false,
 }: InvestorJourneyBarProps) {
@@ -104,6 +110,21 @@ export function InvestorJourneyBar({
     if (idx === currentIndex) return 'current'
     return 'pending'
   }
+
+  const reinvestmentStages = reinvestmentBranch ? [
+    { key: 'confirmed_at', label: 'Confirm reinvestment' },
+    { key: 'signed_at', label: 'Subscription pack signed' },
+    { key: 'funded_at', label: 'Funded' },
+  ] as const : []
+
+  let lastCompletedBranch = -1
+  reinvestmentStages.forEach((stage, idx) => {
+    if (reinvestmentBranch?.[stage.key]) lastCompletedBranch = idx
+  })
+  const branchCurrentIndex =
+    lastCompletedBranch === -1 ? 0
+    : lastCompletedBranch >= reinvestmentStages.length - 1 ? reinvestmentStages.length - 1
+    : lastCompletedBranch + 1
 
   return (
     <TooltipProvider>
@@ -180,6 +201,96 @@ export function InvestorJourneyBar({
             )
           })}
         </div>
+
+        {reinvestmentBranch ? (
+          <div className="mt-4 grid grid-cols-5">
+            <div className="col-start-4 col-span-2 pl-2">
+              <div className="ml-3 h-4 w-px bg-border" />
+              <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
+                <div className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Additional Investment
+                </div>
+                <div className="flex items-start">
+                  {reinvestmentStages.map((stage, idx) => {
+                    const completedAt = reinvestmentBranch[stage.key]
+                    const status: StageStatus =
+                      completedAt ? 'completed'
+                      : lastCompletedBranch > idx
+                        ? 'completed'
+                        : idx === branchCurrentIndex
+                          ? 'current'
+                          : 'pending'
+                    const isLast = idx === reinvestmentStages.length - 1
+
+                    return (
+                      <div key={stage.key} className={cn('flex items-start', !isLast && 'flex-1')}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex flex-col items-center shrink-0">
+                              <div
+                                className={cn(
+                                  'flex h-7 w-7 items-center justify-center rounded-full transition-all duration-300',
+                                  status === 'completed' && 'bg-emerald-500 text-white',
+                                  status === 'current' && 'bg-blue-500 text-white ring-4 ring-blue-200 dark:ring-blue-900',
+                                  status === 'pending' && 'border border-border bg-muted/60 text-muted-foreground'
+                                )}
+                              >
+                                {status === 'completed' ? (
+                                  <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+                                ) : (
+                                  <span className="text-[10px] font-semibold">{idx + 1}</span>
+                                )}
+                              </div>
+                              {!compact ? (
+                                <span
+                                  className={cn(
+                                    'mt-2 max-w-[84px] text-center text-[11px] font-medium leading-snug',
+                                    status === 'completed' && 'text-emerald-600 dark:text-emerald-400',
+                                    status === 'current' && 'text-blue-600 dark:text-blue-400',
+                                    status === 'pending' && 'text-muted-foreground'
+                                  )}
+                                >
+                                  {stage.label}
+                                </span>
+                              ) : null}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="max-w-[200px]">
+                            <div className="text-sm">
+                              <div className="font-medium">{stage.label}</div>
+                              {status === 'completed' && completedAt ? (
+                                <div className="mt-1 text-xs text-muted-foreground">
+                                  Completed: {formatDate(completedAt)}
+                                </div>
+                              ) : null}
+                              {status === 'current' ? (
+                                <div className="mt-1 text-xs text-blue-600">In Progress</div>
+                              ) : null}
+                              {status === 'pending' ? (
+                                <div className="mt-1 text-xs text-muted-foreground">Pending</div>
+                              ) : null}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+
+                        {!isLast ? (
+                          <div className="mt-3.5 flex-1 h-0.5">
+                            <div
+                              className={cn(
+                                'h-full w-full transition-colors duration-300',
+                                completedAt ? 'bg-emerald-400' : 'bg-border'
+                              )}
+                            />
+                          </div>
+                        ) : null}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </TooltipProvider>
   )

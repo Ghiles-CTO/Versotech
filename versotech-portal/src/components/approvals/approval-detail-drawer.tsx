@@ -82,6 +82,17 @@ const entityTypeLabels: Record<string, string> = {
   account_activation: 'Account Activation'
 }
 
+function isReinvestmentApproval(approval: Approval): boolean {
+  return approval.entity_type === 'deal_subscription' && approval.entity_metadata?.payload?.flow_kind === 'reinvestment'
+}
+
+function getApprovalTypeLabel(approval: Approval): string {
+  if (isReinvestmentApproval(approval)) {
+    return 'Reinvestment Request'
+  }
+  return entityTypeLabels[approval.entity_type] || approval.entity_type
+}
+
 function getMessagePresets(approval: Approval): { title: string; message: string } {
   const displayName = approval.requested_by_profile?.display_name || 'Investor'
   const dealName = approval.related_deal?.name
@@ -101,8 +112,10 @@ function getMessagePresets(approval: Approval): { title: string; message: string
       }
     case 'deal_subscription':
       return {
-        title: `Subscription - ${dealName || 'Deal'}`,
-        message: `Regarding your subscription for ${dealName || 'the deal'}.`
+        title: `${isReinvestmentApproval(approval) ? 'Reinvestment Request' : 'Subscription'} - ${dealName || 'Deal'}`,
+        message: isReinvestmentApproval(approval)
+          ? `Regarding your additional investment request for ${dealName || 'the deal'}.`
+          : `Regarding your subscription for ${dealName || 'the deal'}.`
       }
     case 'deal_close':
       return {
@@ -110,7 +123,7 @@ function getMessagePresets(approval: Approval): { title: string; message: string
         message: `Regarding the deal close for ${dealName || 'the deal'}.`
       }
     default: {
-      const approvalType = entityTypeLabels[approval.entity_type] || approval.entity_type
+      const approvalType = getApprovalTypeLabel(approval)
       const context = dealName || entityName || ''
       return {
         title: context ? `${approvalType} - ${context}` : approvalType,
@@ -248,6 +261,10 @@ export function ApprovalDetailDrawer({
 
   const slaBreachDate = approval.sla_breach_at ? new Date(approval.sla_breach_at) : null
   const isOverdue = slaBreachDate && slaBreachDate < new Date()
+  const approvalTypeLabel = getApprovalTypeLabel(approval)
+  const previousSubscriptionCount = Number(approval.entity_metadata?.payload?.previous_subscription_count || 0)
+  const previousCommittedAmount = Number(approval.entity_metadata?.payload?.previous_committed_amount || 0)
+  const previousCurrency = approval.entity_metadata?.payload?.previous_currency || approval.entity_metadata?.payload?.currency || 'USD'
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -257,7 +274,7 @@ export function ApprovalDetailDrawer({
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="text-sm text-foreground border-border">
-                  {entityTypeLabels[approval.entity_type] || approval.entity_type}
+                  {approvalTypeLabel}
                 </Badge>
                 <Badge className={statusColors[approval.status]}>
                   {approval.status.replace('_', ' ').toUpperCase()}
@@ -705,6 +722,27 @@ export function ApprovalDetailDrawer({
                       {approval.entity_metadata.payload?.currency || 'USD'}{' '}
                       {approval.entity_metadata.derived_amount.toLocaleString()}
                     </p>
+                  </div>
+                )}
+
+                {isReinvestmentApproval(approval) && (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Request Type</p>
+                      <p className="font-medium text-foreground">Additional investment</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Previous Subscriptions</p>
+                      <p className="font-medium text-foreground">{previousSubscriptionCount}</p>
+                    </div>
+                    {previousCommittedAmount > 0 && (
+                      <div className="md:col-span-2">
+                        <p className="text-sm text-muted-foreground">Already Invested</p>
+                        <p className="font-medium text-foreground">
+                          {previousCurrency} {previousCommittedAmount.toLocaleString()}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 

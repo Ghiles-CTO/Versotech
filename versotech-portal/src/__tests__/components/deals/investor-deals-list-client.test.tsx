@@ -1,8 +1,17 @@
 // @vitest-environment happy-dom
 import type { ReactNode, ImgHTMLAttributes } from 'react'
-import { describe, it, expect, vi } from 'vitest'
+import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { InvestorDealsListClient } from '../../../components/deals/investor-deals-list-client'
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+}))
 
 vi.mock('next/link', () => ({
   default: ({ href, children }: { href: string; children: ReactNode }) => (
@@ -67,6 +76,17 @@ const baseProps = {
 }
 
 describe('InvestorDealsListClient', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ members: [] }),
+    })) as unknown as typeof fetch)
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it('hides investment CTAs for tracking-only roles', () => {
     render(
       <InvestorDealsListClient
@@ -75,7 +95,7 @@ describe('InvestorDealsListClient', () => {
       />
     )
 
-    expect(screen.queryByText('Subscribe to Investment Opportunity')).toBeNull()
+    expect(screen.queryByText('Confirm Interest')).toBeNull()
     expect(screen.queryByText('Request Data Room Access')).toBeNull()
     expect(screen.getByText('Tracking only')).toBeTruthy()
   })
@@ -99,7 +119,44 @@ describe('InvestorDealsListClient', () => {
       />
     )
 
-    expect(screen.getByText('Subscribe to Investment Opportunity')).toBeTruthy()
+    expect(screen.getByText('Confirm Interest')).toBeTruthy()
+    expect(screen.queryByText('Subscribe to Investment Opportunity')).toBeNull()
     expect(screen.getByText('Request Data Room Access')).toBeTruthy()
+  })
+
+  it('shows the reinvest CTA and mini progress when an additional investment is in motion', () => {
+    const investableDeal = {
+      ...baseDeal,
+      deal_memberships: [
+        {
+          role: 'investor',
+          accepted_at: null,
+          dispatched_at: '2026-03-01T00:00:00.000Z'
+        }
+      ]
+    }
+
+    render(
+      <InvestorDealsListClient
+        dealsData={[investableDeal]}
+        {...baseProps}
+        cycleStateByDeal={{
+          'deal-1': {
+            can_invest_more: true,
+            reinvestment_branch: {
+              visible: true,
+              confirmed: true,
+              signed: false,
+              funded: false,
+            },
+          },
+        }}
+      />
+    )
+
+    expect(screen.getByText('I would like to invest more')).toBeInTheDocument()
+    expect(screen.getByText('Additional investment')).toBeInTheDocument()
+    expect(screen.getByText('Confirmed')).toBeInTheDocument()
+    expect(screen.getByText('Pack Signed')).toBeInTheDocument()
   })
 })

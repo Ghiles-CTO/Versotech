@@ -31,7 +31,7 @@ import { DataRoomViewer, type DataRoomDocument } from '@/components/deals/data-r
 import { DealTimelineCard } from '@/components/deals/deal-timeline-card'
 import { DealKeyDetailsCard } from '@/components/deals/deal-key-details-card'
 import { InterestStatusCard } from '@/components/deals/interest-status-card'
-import { SubscriptionStatusCard } from '@/components/deals/subscription-status-card'
+import { SubscriptionStatusCard, type SubscriptionStatusEntry } from '@/components/deals/subscription-status-card'
 import {
   ArrowLeft,
   Building2,
@@ -310,6 +310,12 @@ interface Opportunity {
   } | null
   active_cycle_id: string | null
   cycles: OpportunityCycle[]
+  subscription_entries: SubscriptionStatusEntry[]
+  reinvestment_branch: {
+    confirmed_at: string | null
+    signed_at: string | null
+    funded_at: string | null
+  } | null
   fee_structures: FeeStructure[]
   faqs: FAQ[]
   signatories: Signatory[]
@@ -392,33 +398,6 @@ function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-
-function formatCycleStatus(status: string): string {
-  return status
-    .split('_')
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ')
-}
-
-function getCycleStatusClassName(status: string): string {
-  switch (status) {
-    case 'active':
-      return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200 border-0'
-    case 'funded':
-      return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200 border-0'
-    case 'signed':
-    case 'pack_sent':
-    case 'pack_generated':
-    case 'approved':
-    case 'submission_pending_review':
-      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200 border-0'
-    case 'rejected':
-    case 'cancelled':
-      return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-200 border-0'
-    default:
-      return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 border-0'
-  }
 }
 
 function getDocIcon(fileName: string, fileType: string, isExternal: boolean) {
@@ -776,7 +755,11 @@ export default function OpportunityDetailPage() {
     if (!subscribeAmount || !opportunity) return
 
     const selectedCycle =
-      opportunity.cycles.find(cycle => cycle.id === opportunity.active_cycle_id) ||
+      opportunity.cycles.find(
+        cycle => cycle.id === opportunity.active_cycle_id && cycle.primary_action?.type !== 'none'
+      ) ||
+      opportunity.cycles.find(cycle => cycle.primary_action?.type === 'continue_cycle') ||
+      opportunity.cycles.find(cycle => cycle.primary_action?.type === 'start_new_cycle') ||
       opportunity.cycles[0] ||
       null
     const selectedAction = selectedCycle?.primary_action
@@ -978,18 +961,30 @@ export default function OpportunityDetailPage() {
     opportunity.cycles.find(cycle => cycle.id === opportunity.active_cycle_id) ||
     opportunity.cycles[0] ||
     null
-  const selectedCycleLabel = selectedCycle?.term_sheet?.version
-    ? `Term Sheet v${selectedCycle.term_sheet.version}`
-    : selectedCycle?.term_sheet_id
-      ? 'Assigned Term Sheet'
-      : 'Current Opportunity'
-  const canContinueSelectedCycle = !!selectedCycle?.can_continue && !isTrackingOnly && isAccountApproved
-  const canInvestMore = !!selectedCycle?.can_invest_more && !isTrackingOnly && isAccountApproved
+  const actionableCycle =
+    (selectedCycle?.primary_action?.type && selectedCycle.primary_action.type !== 'none' ? selectedCycle : null) ||
+    opportunity.cycles.find(cycle => cycle.primary_action?.type === 'continue_cycle') ||
+    opportunity.cycles.find(cycle => cycle.primary_action?.type === 'start_new_cycle') ||
+    null
+  const actionableSubscription = actionableCycle?.primary_action || null
+  const canContinueSelectedCycle =
+    actionableSubscription?.type === 'continue_cycle' &&
+    !isTrackingOnly &&
+    isAccountApproved
+  const canInvestMore =
+    actionableSubscription?.type === 'start_new_cycle' &&
+    !isTrackingOnly &&
+    isAccountApproved
   const canSubscribe = opportunity.can_subscribe && !isTrackingOnly && isAccountApproved
   const canExpressInterest = opportunity.can_express_interest && !isTrackingOnly && isAccountApproved
+  const subscriptionEntries = opportunity.subscription_entries || []
+  const subscriptionSectionTitle = subscriptionEntries.length > 1 ? 'Your Subscriptions' : 'Your Subscription'
 
   // Derive subscription limits from termsheet (fee_structures), falling back to deal-level fields
-  const selectedTermSheet = opportunity.fee_structures[0] || null
+  const selectedTermSheet =
+    opportunity.fee_structures.find(termSheet => termSheet.id === actionableSubscription?.term_sheet_id) ||
+    opportunity.fee_structures[0] ||
+    null
   const subscribeMinAmount = selectedTermSheet?.minimum_ticket ?? null
   const subscribeMaxAmount = selectedTermSheet?.allocation_up_to ?? null
   const canSignNda = opportunity.can_sign_nda && !isTrackingOnly && isAccountApproved
@@ -997,26 +992,13 @@ export default function OpportunityDetailPage() {
     !isBlacklisted &&
     opportunity.status !== 'closed' &&
     (canContinueSelectedCycle || canSubscribe || canExpressInterest || canInvestMore)
-  const subscribeButtonTitle = canInvestMore
-    ? 'Invest More'
-    : canContinueSelectedCycle
-      ? 'Continue Subscription'
-      : 'Subscribe to Investment'
-  const subscribeButtonDescription = canInvestMore
-    ? `Create a new subscription pack on ${selectedCycleLabel}`
-    : canContinueSelectedCycle
-      ? `Continue your current cycle on ${selectedCycleLabel}`
-      : 'Submit for review • Subscription pack'
+  const subscribeButtonTitle = canInvestMore ? 'I would like to invest more' : 'Confirm Interest'
   const subscribeDialogTitle = canInvestMore
-    ? 'Invest More in This Opportunity'
-    : canContinueSelectedCycle
-      ? 'Continue Subscription'
-      : 'Subscribe to Investment Opportunity'
+    ? 'I would like to invest more'
+    : 'Confirm Interest'
   const subscribeDialogDescription = canInvestMore
-    ? `Enter the additional amount you want to allocate on ${selectedCycleLabel}. Your previous subscriptions remain available in history.`
-    : canContinueSelectedCycle
-      ? `Enter your commitment amount to continue ${selectedCycleLabel} for ${opportunity.name}. Once reviewed, you&apos;ll receive the subscription documents to sign.`
-      : `Enter your commitment amount to submit a subscription request for ${opportunity.name}. Once reviewed, you&apos;ll receive the subscription documents to sign.`
+    ? `Enter the additional amount you would like to invest in ${opportunity.name}.`
+    : `Enter the amount you want to invest in ${opportunity.name}.`
   const journeySummary = showAccountBlock ? {
     ...opportunity.journey.summary,
     interest_confirmed: null,
@@ -1033,6 +1015,30 @@ export default function OpportunityDetailPage() {
     // Navigate to tasks page where all signature tasks are listed
     // This handles multiple signatories properly and works for investors
     router.push('/versotech_main/tasks')
+  }
+
+  const handleViewSignedPack = async (signedPackPath: string) => {
+    try {
+      const response = await fetch(
+        `/api/storage/signed-url?bucket=signatures&path=${encodeURIComponent(signedPackPath)}`
+      )
+      const data = await response.json()
+      if (!response.ok || !data.signedUrl) {
+        throw new Error(data.error || 'Unable to open the signed subscription pack.')
+      }
+      window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+    } catch (error) {
+      console.error('Failed to open signed subscription pack:', error)
+      toast.error(error instanceof Error ? error.message : 'Unable to open the signed subscription pack.')
+    }
+  }
+
+  const handleViewNdas = () => {
+    if (!opportunity.vehicle?.id) {
+      toast.error('NDA documents are not available for this investment yet.')
+      return
+    }
+    router.push(`/versotech_main/documents?holding=${opportunity.vehicle.id}&category=ndas`)
   }
 
   return (
@@ -1062,6 +1068,7 @@ export default function OpportunityDetailPage() {
           <CardContent>
             <InvestorJourneyBar
               summary={journeySummary}
+              reinvestmentBranch={opportunity.reinvestment_branch}
               currentStage={opportunity.journey.current_stage}
             />
           </CardContent>
@@ -1078,77 +1085,6 @@ export default function OpportunityDetailPage() {
                 This deal is available for tracking only. Contact your relationship manager for investor access.
               </span>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {opportunity.cycles.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Investment Cycles</CardTitle>
-            <CardDescription>
-              Switch between current and prior subscription tracks without losing signed documents or status history.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {opportunity.cycles.map((cycle) => {
-              const isSelectedCycle = cycle.id === opportunity.active_cycle_id
-              const cycleAmount = cycle.subscription?.commitment ?? cycle.latest_amount
-              const cycleDate =
-                cycle.subscription?.activated_at ??
-                cycle.subscription?.funded_at ??
-                cycle.subscription?.signed_at ??
-                cycle.submission?.submitted_at ??
-                null
-
-              return (
-                <button
-                  key={cycle.id}
-                  type="button"
-                  onClick={() => updateCycleSelection(cycle.id)}
-                  className={cn(
-                    'rounded-xl border p-4 text-left transition-colors',
-                    isSelectedCycle
-                      ? 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/20'
-                      : 'border-border hover:border-emerald-300 hover:bg-muted/40'
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <p className="text-sm font-semibold">Cycle {cycle.sequence_number}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {cycle.term_sheet?.version ? `Term Sheet v${cycle.term_sheet.version}` : 'Assigned term sheet'}
-                      </p>
-                    </div>
-                    <Badge className={getCycleStatusClassName(cycle.status)}>
-                      {formatCycleStatus(cycle.status)}
-                    </Badge>
-                  </div>
-
-                  <div className="mt-4 space-y-1.5 text-xs text-muted-foreground">
-                    <p>Stage {Math.max(cycle.stage, 1)} of 10</p>
-                    {cycleAmount !== null && (
-                      <p>Amount: {formatCurrency(cycleAmount, cycle.subscription?.currency || opportunity.currency)}</p>
-                    )}
-                    {cycleDate && (
-                      <p>Latest update: {formatDate(cycleDate)}</p>
-                    )}
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {isSelectedCycle && (
-                      <Badge variant="outline">Viewing</Badge>
-                    )}
-                    {cycle.can_continue && (
-                      <Badge variant="outline">Continue</Badge>
-                    )}
-                    {cycle.can_invest_more && (
-                      <Badge variant="outline">Top-up available</Badge>
-                    )}
-                  </div>
-                </button>
-              )
-            })}
           </CardContent>
         </Card>
       )}
@@ -1198,11 +1134,6 @@ export default function OpportunityDetailPage() {
                   : opportunity.stock_type.replace(/_/g, ' ')}
               </Badge>
             )}
-            {selectedCycle && (
-              <Badge variant="outline" className="border-emerald-300 text-emerald-700 dark:text-emerald-300">
-                {selectedCycleLabel}
-              </Badge>
-            )}
           </div>
         </div>
 
@@ -1229,10 +1160,7 @@ export default function OpportunityDetailPage() {
                   >
                     <div className="flex items-center gap-2">
                       <TrendingUp className="w-5 h-5" />
-                      <div className="text-left">
-                        <div className="font-semibold">{subscribeButtonTitle}</div>
-                        <div className="text-xs opacity-90 font-normal">{subscribeButtonDescription}</div>
-                      </div>
+                      <span className="font-semibold">{subscribeButtonTitle}</span>
                     </div>
                   </Button>
                 </div>
@@ -1275,20 +1203,6 @@ export default function OpportunityDetailPage() {
             </Button>
           )}
 
-          {/* Subscription Status Badges - only show pre-funding states */}
-          {opportunity.subscription && !opportunity.subscription.is_active && !opportunity.subscription.is_funded && (
-            <Badge className="justify-center py-2" variant="outline">
-              <Clock className="w-4 h-4 mr-2" />
-              {opportunity.subscription.is_signed ? 'Awaiting Funding' : 'Awaiting Signature'}
-            </Badge>
-          )}
-          {opportunity.subscription?.is_active && (
-            <Badge className="justify-center py-2 bg-emerald-500 text-white">
-              <CheckCircle2 className="w-4 h-4 mr-2" />
-              Active Investment
-            </Badge>
-          )}
-
           {/* Ask Question - always available */}
           <Button
             variant="ghost"
@@ -1322,33 +1236,20 @@ export default function OpportunityDetailPage() {
         <TabsContent value="overview" className="space-y-6">
           {/* Subscription Status OR Interest Status + Key Details Row */}
           <div className="grid gap-6 lg:grid-cols-3">
-            {/* Show SubscriptionStatusCard when subscription exists, otherwise show InterestStatusCard */}
-            {opportunity.subscription ? (
-              <SubscriptionStatusCard
-                subscription={opportunity.subscription}
-                dealCurrency={opportunity.currency}
-                dealId={opportunity.id}
-                dealName={opportunity.name}
-              />
-            ) : opportunity.subscription_submission ? (
-              <Card className="border-2 border-dashed border-amber-200 bg-amber-50">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base flex items-center gap-2 text-amber-900">
-                      <Clock className="h-5 w-5 text-amber-600" />
-                      Subscription Under Review
-                    </CardTitle>
-                    <Badge className="bg-amber-200 text-amber-900 border-0">
-                      Pending Review
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="text-sm text-amber-800">
-                  {opportunity.subscription_submission.submitted_at
-                    ? `Submitted on ${formatDate(opportunity.subscription_submission.submitted_at)}.`
-                    : 'Submitted and awaiting CEO approval.'}
-                </CardContent>
-              </Card>
+            {subscriptionEntries.length > 0 ? (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <h2 className="text-base font-semibold text-foreground">{subscriptionSectionTitle}</h2>
+                </div>
+                {subscriptionEntries.map((entry) => (
+                  <SubscriptionStatusCard
+                    key={entry.id}
+                    entry={entry}
+                    onViewNdas={opportunity.vehicle?.id ? handleViewNdas : undefined}
+                    onViewSignedPack={handleViewSignedPack}
+                  />
+                ))}
+              </div>
             ) : (
               <InterestStatusCard
                 currentStage={opportunity.journey.current_stage}
@@ -2162,7 +2063,7 @@ export default function OpportunityDetailPage() {
                 </>
               ) : (
                 <>
-                  {canInvestMore ? 'Create New Subscription Pack' : 'Confirm Interest'}
+                  Confirm Interest
                   <ArrowUpRight className="h-4 w-4" />
                 </>
               )}

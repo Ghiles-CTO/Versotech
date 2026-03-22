@@ -18,7 +18,11 @@ export const dynamic = 'force-dynamic'
  * - Investors: Full categorized document experience (agreements, statements, NDAs, reports)
  * - Lawyers/Partners/CPs/Introducers: Same categorized view based on their investor links
  */
-export default async function DocumentsPage() {
+export default async function DocumentsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}) {
   const clientSupabase = await createClient()
   const { data: { user }, error: userError } = await clientSupabase.auth.getUser()
 
@@ -118,11 +122,21 @@ export default async function DocumentsPage() {
   }
 
   // Render full categorized document experience
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const selectedHolding = typeof resolvedSearchParams?.holding === 'string'
+    ? resolvedSearchParams.holding
+    : null
+  const selectedCategory = typeof resolvedSearchParams?.category === 'string'
+    ? resolvedSearchParams.category
+    : null
+
   return (
     <div>
       <CategorizedDocumentsClient
         initialDocuments={documentsData.documents}
         vehicles={documentsData.vehicles}
+        initialSelectedHolding={selectedHolding}
+        initialCategory={selectedCategory === 'ndas' ? 'ndas' : null}
       />
     </div>
   )

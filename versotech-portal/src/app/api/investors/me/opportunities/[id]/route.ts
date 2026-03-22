@@ -170,6 +170,10 @@ export async function GET(request: Request, { params }: RouteParams) {
     let cycleSubscriptionsById = new Map<string, any>()
     let cycleSubmissionsById = new Map<string, any>()
     let termSheetsById = new Map<string, any>()
+    let subscriptionSignatureSummaryById = new Map<string, {
+      status: 'not_started' | 'pending' | 'complete'
+      signedPath: string | null
+    }>()
 
     if (effectiveInvestorId) {
       const { data: rawCycles } = await serviceSupabase
@@ -233,8 +237,43 @@ export async function GET(request: Request, { params }: RouteParams) {
             cycleSubmissionsById.set(submission.cycle_id, submission)
           }
         }
+
+        const subscriptionIds = (cycleSubscriptions || []).map(sub => sub.id).filter(Boolean)
+        if (subscriptionIds.length > 0) {
+          const { data: subscriptionSignatures } = await serviceSupabase
+            .from('signature_requests')
+            .select('subscription_id, status, signed_pdf_path, unsigned_pdf_path')
+            .in('subscription_id', subscriptionIds)
+            .eq('document_type', 'subscription')
+            .order('created_at', { ascending: false })
+
+          const signaturesBySubscriptionId = new Map<string, any[]>()
+          for (const signature of subscriptionSignatures || []) {
+            if (!signature.subscription_id) continue
+            const existing = signaturesBySubscriptionId.get(signature.subscription_id) || []
+            existing.push(signature)
+            signaturesBySubscriptionId.set(signature.subscription_id, existing)
+          }
+
+          for (const [subscriptionId, signatures] of signaturesBySubscriptionId.entries()) {
+            const allSigned = signatures.length > 0 && signatures.every(signature => signature.status === 'signed')
+            subscriptionSignatureSummaryById.set(subscriptionId, {
+              status: allSigned ? 'complete' : signatures.length > 0 ? 'pending' : 'not_started',
+              signedPath: allSigned
+                ? signatures.find(signature => signature.signed_pdf_path)?.signed_pdf_path || null
+                : null,
+            })
+          }
+        }
       }
     }
+
+    const chronologicalCycles = [...investmentCycles].sort((left, right) => {
+      const leftSequence = Number(left.sequence_number || 0)
+      const rightSequence = Number(right.sequence_number || 0)
+      if (leftSequence !== rightSequence) return leftSequence - rightSequence
+      return new Date(left.created_at).getTime() - new Date(right.created_at).getTime()
+    })
 
     const selectedCycle =
       investmentCycles.find(cycle => cycle.id === requestedCycleId) ||
@@ -242,6 +281,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       investmentCycles.find(cycle => cycle.status === 'funded' || cycle.status === 'active') ||
       investmentCycles[0] ||
       null
+    const primaryJourneyCycle = chronologicalCycles[0] || selectedCycle || null
 
     // Get subscription if exists (use maybeSingle as subscription might not exist)
     const vehicleId = deal.vehicle_id
@@ -653,18 +693,26 @@ export async function GET(request: Request, { params }: RouteParams) {
       }
     }
 
+    const primaryJourneySubscription = primaryJourneyCycle
+      ? cycleSubscriptionsById.get(primaryJourneyCycle.id) || null
+      : null
+    const primaryJourneySignatureSummary = primaryJourneySubscription?.id
+      ? subscriptionSignatureSummaryById.get(primaryJourneySubscription.id) || null
+      : null
+    const subPackComplete = subscriptionDocuments?.subscription_pack.status === 'complete'
+    const primarySubPackComplete = primaryJourneySignatureSummary?.status === 'complete'
+
     // Calculate current journey stage
     // Use actual document completion for signed stage, not subscription.signed_at
     // which may be set prematurely in multi-signatory flows
-    const subPackComplete = subscriptionDocuments?.subscription_pack.status === 'complete'
-    const currentStage = selectedCycle
+    const currentStage = primaryJourneyCycle
       ? getCycleStage({
-          ...selectedCycle,
-          pack_generated_at: subscription?.pack_generated_at || selectedCycle.pack_generated_at,
-          pack_sent_at: subscription?.pack_sent_at || selectedCycle.pack_sent_at,
-          signed_at: (subPackComplete ? subscription?.signed_at : null) || selectedCycle.signed_at,
-          funded_at: subscription?.funded_at || selectedCycle.funded_at,
-          activated_at: subscription?.activated_at || selectedCycle.activated_at,
+          ...primaryJourneyCycle,
+          pack_generated_at: primaryJourneySubscription?.pack_generated_at || primaryJourneyCycle.pack_generated_at,
+          pack_sent_at: primaryJourneySubscription?.pack_sent_at || primaryJourneyCycle.pack_sent_at,
+          signed_at: (primarySubPackComplete ? primaryJourneySubscription?.signed_at : null) || primaryJourneyCycle.signed_at,
+          funded_at: primaryJourneySubscription?.funded_at || primaryJourneyCycle.funded_at,
+          activated_at: primaryJourneySubscription?.activated_at || primaryJourneyCycle.activated_at,
         })
       : (() => {
           if (subscription?.activated_at || subscription?.status === 'active') return 10
@@ -690,11 +738,21 @@ export async function GET(request: Request, { params }: RouteParams) {
       (isProxyMode && membership?.role === 'commercial_partner_proxy')
     const selectedCycleIsLive = selectedCycle ? LIVE_CYCLE_STATUSES.includes(selectedCycle.status) : false
     const hasAnyLiveCycle = investmentCycles.some(cycle => LIVE_CYCLE_STATUSES.includes(cycle.status))
+    const latestEligibleReinvestmentCycleId = !hasAnyLiveCycle
+      ? investmentCycles.find(cycle => {
+          if (!['funded', 'active'].includes(cycle.status)) return false
+          const cycleTermSheet = termSheetsById.get(cycle.term_sheet_id) || null
+          return cycleTermSheet?.status === 'published' && !isTermSheetClosedForInvestmentRounds(cycleTermSheet)
+        })?.id || null
+      : null
 
     const cycleCards = investmentCycles.map(cycle => {
       const cycleSubscription = cycleSubscriptionsById.get(cycle.id) || null
       const cycleSubmission = cycleSubmissionsById.get(cycle.id) || null
       const cycleTermSheet = termSheetsById.get(cycle.term_sheet_id) || null
+      const signatureSummary = cycleSubscription?.id
+        ? subscriptionSignatureSummaryById.get(cycleSubscription.id) || null
+        : null
       const latestAmount =
         cycleSubscription?.commitment ??
         cycleSubmission?.payload_json?.amount ??
@@ -704,7 +762,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         ...cycle,
         pack_generated_at: cycleSubscription?.pack_generated_at || cycle.pack_generated_at,
         pack_sent_at: cycleSubscription?.pack_sent_at || cycle.pack_sent_at,
-        signed_at: cycleSubscription?.signed_at || cycle.signed_at,
+        signed_at: (signatureSummary?.status === 'complete' ? cycleSubscription?.signed_at : null) || cycle.signed_at,
         funded_at: cycleSubscription?.funded_at || cycle.funded_at,
         activated_at: cycleSubscription?.activated_at || cycle.activated_at,
       })
@@ -723,7 +781,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         ['funded', 'active'].includes(cycle.status) &&
         cycleTermSheet?.status === 'published' &&
         !isTermSheetClosedForInvestmentRounds(cycleTermSheet) &&
-        !hasAnyLiveCycle
+        cycle.id === latestEligibleReinvestmentCycleId
       const primaryAction =
         canContinue
           ? {
@@ -790,6 +848,103 @@ export async function GET(request: Request, { params }: RouteParams) {
       }
     })
 
+    const subscriptionEntries = cycleCards
+      .map(cycle => {
+        if (!cycle.subscription && !cycle.submission) return null
+
+        const signatureSummary = cycle.subscription?.id
+          ? subscriptionSignatureSummaryById.get(cycle.subscription.id) || null
+          : null
+        const isSigned = signatureSummary?.status === 'complete'
+        const isFunded = !!cycle.subscription?.funded_at || cycle.status === 'funded' || cycle.status === 'active'
+        const isActive = !!cycle.subscription?.activated_at || cycle.status === 'active'
+
+        let statusKey: 'pending_review' | 'awaiting_signature' | 'awaiting_funding' | 'funded' | 'active' = 'pending_review'
+        let statusLabel = 'Pending Review'
+
+        if (isActive) {
+          statusKey = 'active'
+          statusLabel = 'Active Investment'
+        } else if (isFunded) {
+          statusKey = 'funded'
+          statusLabel = 'Funded'
+        } else if (isSigned) {
+          statusKey = 'awaiting_funding'
+          statusLabel = 'Awaiting Funding'
+        } else if (cycle.subscription) {
+          statusKey = 'awaiting_signature'
+          statusLabel = 'Awaiting Signature'
+        }
+
+        return {
+          id: cycle.id,
+          sequence_number: cycle.sequence_number,
+          amount: cycle.latest_amount,
+          currency: cycle.subscription?.currency || deal.currency || 'USD',
+          submitted_at: cycle.submission?.submitted_at || null,
+          created_at: cycle.subscription?.pack_generated_at || cycle.submission?.submitted_at || null,
+          status: statusKey,
+          status_label: statusLabel,
+          is_reinvestment: cycle.sequence_number > 1,
+          milestones: {
+            confirmed: !!cycle.submission || !!cycle.subscription || cycle.stage >= 4,
+            signed: isSigned || isFunded || isActive,
+            funded: isFunded || isActive,
+            active: isActive,
+          },
+          documents: {
+            signed_pack_available: !!signatureSummary?.signedPath,
+            signed_pack_path: signatureSummary?.signedPath || null,
+          },
+          can_invest_more: !!cycle.can_invest_more,
+        }
+      })
+      .filter(Boolean)
+
+    const latestReinvestmentCycle = [...chronologicalCycles]
+      .reverse()
+      .find(cycle => {
+        if (!primaryJourneyCycle || cycle.id === primaryJourneyCycle.id) return false
+        const cycleSubscription = cycleSubscriptionsById.get(cycle.id) || null
+        const cycleSignatureSummary = cycleSubscription?.id
+          ? subscriptionSignatureSummaryById.get(cycleSubscription.id) || null
+          : null
+        const cycleStage = getCycleStage({
+          ...cycle,
+          pack_generated_at: cycleSubscription?.pack_generated_at || cycle.pack_generated_at,
+          pack_sent_at: cycleSubscription?.pack_sent_at || cycle.pack_sent_at,
+          signed_at: (cycleSignatureSummary?.status === 'complete' ? cycleSubscription?.signed_at : null) || cycle.signed_at,
+          funded_at: cycleSubscription?.funded_at || cycle.funded_at,
+          activated_at: cycleSubscription?.activated_at || cycle.activated_at,
+        })
+        return cycleStage >= 4
+      }) || null
+
+    const latestReinvestmentSubscription = latestReinvestmentCycle
+      ? cycleSubscriptionsById.get(latestReinvestmentCycle.id) || null
+      : null
+    const latestReinvestmentSignatureSummary = latestReinvestmentSubscription?.id
+      ? subscriptionSignatureSummaryById.get(latestReinvestmentSubscription.id) || null
+      : null
+    const reinvestmentBranch = latestReinvestmentCycle && primaryJourneyCycle && ['funded', 'active'].includes(primaryJourneyCycle.status)
+      ? {
+          confirmed_at:
+            latestReinvestmentCycle.submission_pending_at ||
+            latestReinvestmentCycle.approved_at ||
+            cycleSubmissionsById.get(latestReinvestmentCycle.id)?.submitted_at ||
+            null,
+          signed_at:
+            (latestReinvestmentSignatureSummary?.status === 'complete'
+              ? latestReinvestmentSubscription?.signed_at
+              : null) || latestReinvestmentCycle.signed_at || null,
+          funded_at:
+            latestReinvestmentSubscription?.funded_at ||
+            latestReinvestmentCycle.funded_at ||
+            latestReinvestmentCycle.activated_at ||
+            null,
+        }
+      : null
+
     const opportunity = {
       id: deal.id,
       name: deal.name,
@@ -834,16 +989,16 @@ export async function GET(request: Request, { params }: RouteParams) {
         current_stage: currentStage,
         stages: journeyStages || [],
         summary: {
-          received: selectedCycle?.dispatched_at || membership?.dispatched_at || null,
-          viewed: selectedCycle?.viewed_at || membership?.viewed_at || null,
-          interest_confirmed: selectedCycle?.interest_confirmed_at || membership?.interest_confirmed_at || null,
+          received: primaryJourneyCycle?.dispatched_at || selectedCycle?.dispatched_at || membership?.dispatched_at || null,
+          viewed: primaryJourneyCycle?.viewed_at || selectedCycle?.viewed_at || membership?.viewed_at || null,
+          interest_confirmed: primaryJourneyCycle?.interest_confirmed_at || selectedCycle?.interest_confirmed_at || membership?.interest_confirmed_at || null,
           nda_signed: membership?.nda_signed_at || null,
           data_room_access: membership?.data_room_granted_at || null,
-          pack_generated: subscription?.pack_generated_at || selectedCycle?.pack_generated_at || null,
-          pack_sent: subscription?.pack_sent_at || selectedCycle?.pack_sent_at || null,
-          signed: (subscriptionDocuments?.subscription_pack.status === 'complete' ? subscription?.signed_at : null) || selectedCycle?.signed_at || null,
-          funded: subscription?.funded_at || selectedCycle?.funded_at || null,
-          active: subscription?.activated_at || selectedCycle?.activated_at || null
+          pack_generated: primaryJourneySubscription?.pack_generated_at || primaryJourneyCycle?.pack_generated_at || null,
+          pack_sent: primaryJourneySubscription?.pack_sent_at || primaryJourneyCycle?.pack_sent_at || null,
+          signed: (primarySubPackComplete ? primaryJourneySubscription?.signed_at : null) || primaryJourneyCycle?.signed_at || null,
+          funded: primaryJourneySubscription?.funded_at || primaryJourneyCycle?.funded_at || null,
+          active: primaryJourneySubscription?.activated_at || primaryJourneyCycle?.activated_at || null
         }
       },
 
@@ -892,6 +1047,8 @@ export async function GET(request: Request, { params }: RouteParams) {
       subscription_submission: subscriptionSubmission,
       active_cycle_id: selectedCycle?.id || null,
       cycles: cycleCards,
+      subscription_entries: subscriptionEntries,
+      reinvestment_branch: reinvestmentBranch,
 
       // Fee structures
       fee_structures: feeStructures || [],

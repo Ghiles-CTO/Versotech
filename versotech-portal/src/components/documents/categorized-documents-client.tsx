@@ -28,6 +28,8 @@ import {
 interface CategorizedDocumentsClientProps {
   initialDocuments: Document[]
   vehicles: Vehicle[]
+  initialSelectedHolding?: string | null
+  initialCategory?: CategoryId | null
 }
 
 // Document category configuration (excluding KYC - that stays in Profile)
@@ -108,10 +110,14 @@ function getCategoryIconColor(color: string) {
 
 export function CategorizedDocumentsClient({
   initialDocuments,
-  vehicles
+  vehicles,
+  initialSelectedHolding = null,
+  initialCategory = null
 }: CategorizedDocumentsClientProps) {
-  const [selectedHolding, setSelectedHolding] = useState<string | null>(null)
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
+  const [selectedHolding, setSelectedHolding] = useState<string | null>(initialSelectedHolding)
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    initialCategory ? new Set([initialCategory]) : new Set()
+  )
   const [filters, setFilters] = useState<DocumentFilters>({})
   const documentViewer = useDocumentViewer()
 

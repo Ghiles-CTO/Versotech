@@ -391,6 +391,40 @@ export async function POST(
     )
   }
 
+  const { data: priorSubscriptions } = await serviceSupabase
+    .from('subscriptions')
+    .select('id, commitment, currency, cycle_id, status')
+    .eq('deal_id', dealId)
+    .eq('investor_id', resolvedInvestorId)
+    .neq('cycle_id', cycle.id)
+    .in('status', ['committed', 'funded', 'partially_funded', 'active'])
+
+  const priorSubscriptionCount = priorSubscriptions?.length || 0
+  const priorCommittedAmount = (priorSubscriptions || []).reduce(
+    (sum, subscription) => sum + Number(subscription.commitment || 0),
+    0
+  )
+  const reinvestmentRequest = resolvedIntent === 'start_new_cycle' && priorSubscriptionCount > 0
+  const submittedAmount = Number(
+    payload?.amount ??
+    payload?.subscription_amount ??
+    0
+  ) || null
+  const submittedCurrency =
+    typeof payload?.currency === 'string'
+      ? payload.currency
+      : null
+  const payloadWithBusinessContext = {
+    ...(payload ?? {}),
+    flow_kind: reinvestmentRequest ? 'reinvestment' : 'initial_subscription',
+    previous_subscription_count: priorSubscriptionCount,
+    previous_committed_amount: priorCommittedAmount || null,
+    previous_currency:
+      priorSubscriptions?.find(subscription => subscription.currency)?.currency ||
+      payload?.currency ||
+      null,
+  }
+
   const { data: submission, error: insertError } = await serviceSupabase
     .from('deal_subscription_submissions')
     .insert({
@@ -398,7 +432,7 @@ export async function POST(
       investor_id: resolvedInvestorId,
       cycle_id: cycle.id,
       term_sheet_id: cycle.term_sheet_id,
-      payload_json: payload ?? {},
+      payload_json: payloadWithBusinessContext,
       status: 'pending_review',
       created_by: user.id,
       subscription_type: subscription_type || 'personal',
@@ -453,8 +487,8 @@ export async function POST(
     eventType: 'data_room_submit',
     payload: {
       submission_id: submission.id,
-      amount: payload?.amount ?? payload?.subscription_amount ?? null,
-      currency: payload?.currency ?? null
+      amount: submittedAmount,
+      currency: submittedCurrency
     }
   })
 
@@ -470,7 +504,7 @@ export async function POST(
       cycle_id: cycle.id,
       term_sheet_id: cycle.term_sheet_id,
       notes,
-      payload
+      payload: payloadWithBusinessContext
     }
   })
 

@@ -50,6 +50,10 @@ function SortIcon({ field, sortField, sortDirection }: { field: SortField; sortF
   return sortDirection === 'asc' ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />
 }
 
+function isReinvestmentApproval(approval: Approval): boolean {
+  return approval.entity_type === 'deal_subscription' && approval.entity_metadata?.payload?.flow_kind === 'reinvestment'
+}
+
 export function ApprovalsTableView({
   approvals,
   selectedIds,
@@ -216,6 +220,12 @@ export function ApprovalsTableView({
                           )
                         )}
                         {(() => {
+                          const reinvestmentLabel = isReinvestmentApproval(approval) ? (
+                            <div className="text-xs font-medium text-emerald-700 dark:text-emerald-300 mt-1">
+                              Additional investment
+                            </div>
+                          ) : null
+
                           if (approval.entity_type === 'deal_subscription') {
                             const derivedAmount = approval.entity_metadata?.derived_amount
                             if (derivedAmount) {
@@ -223,9 +233,12 @@ export function ApprovalsTableView({
                               const numeric = parseFloat(derivedAmount)
                               if (!Number.isNaN(numeric)) {
                                 return (
-                                  <div className="text-xs text-muted-foreground mt-1">
-                                    {currency} {numeric.toLocaleString()}
-                                  </div>
+                                  <>
+                                    {reinvestmentLabel}
+                                    <div className="text-xs text-muted-foreground mt-1">
+                                      {currency} {numeric.toLocaleString()}
+                                    </div>
+                                  </>
                                 )
                               }
                             }
@@ -249,10 +262,13 @@ export function ApprovalsTableView({
                           }
 
                           return formattedAmount ? (
-                            <div className="text-xs text-muted-foreground mt-1">
-                              {formattedAmount}
-                            </div>
-                          ) : null
+                            <>
+                              {reinvestmentLabel}
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {formattedAmount}
+                              </div>
+                            </>
+                          ) : reinvestmentLabel
                         })()}
                       </div>
                     </TableCell>

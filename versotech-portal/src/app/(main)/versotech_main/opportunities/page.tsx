@@ -1,6 +1,11 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { AlertCircle } from 'lucide-react'
 import { InvestorDealsListClient } from '@/components/deals/investor-deals-list-client'
+import {
+  getCycleStage,
+  isTermSheetClosedForInvestmentRounds,
+  LIVE_CYCLE_STATUSES,
+} from '@/lib/deals/investment-cycles'
 
 export const dynamic = 'force-dynamic'
 
@@ -155,6 +160,16 @@ interface SubscriptionSubmission {
   investor_id: string
   status: string
   submitted_at: string
+}
+
+interface DealCycleState {
+  can_invest_more: boolean
+  reinvestment_branch: {
+    visible: boolean
+    confirmed: boolean
+    signed: boolean
+    funded: boolean
+  } | null
 }
 
 function groupByDealId<T extends { deal_id: string }>(
@@ -439,6 +454,7 @@ export default async function OpportunitiesPage() {
   let investorInterests: DealInterest[] = []
   let ndaAccessRecords: DataRoomAccess[] = []
   let subscriptionRecords: SubscriptionSubmission[] = []
+  const cycleStateByDeal = new Map<string, DealCycleState>()
   const subscriptionProgressMap = new Map<string, {
     deal_id: string
     pack_generated_at: string | null
@@ -626,6 +642,187 @@ export default async function OpportunitiesPage() {
           }
         }
       }
+
+      const { data: cycleRows } = await serviceSupabase
+        .from('deal_investment_cycles' as any)
+        .select(`
+          id,
+          deal_id,
+          investor_id,
+          term_sheet_id,
+          status,
+          sequence_number,
+          created_at,
+          dispatched_at,
+          viewed_at,
+          interest_confirmed_at,
+          submission_pending_at,
+          approved_at,
+          pack_generated_at,
+          pack_sent_at,
+          signed_at,
+          funded_at,
+          activated_at
+        `)
+        .in('deal_id', dealIds)
+        .in('investor_id', investorIds)
+        .order('sequence_number', { ascending: false })
+        .order('created_at', { ascending: false })
+
+      const cycleIds = (cycleRows ?? []).map(cycle => cycle.id).filter(Boolean)
+      const cycleTermSheetIds = Array.from(
+        new Set((cycleRows ?? []).map(cycle => cycle.term_sheet_id).filter(Boolean))
+      ) as string[]
+
+      const [cycleSubscriptionsResult, cycleTermSheetsResult] = await Promise.all([
+        cycleIds.length > 0
+          ? serviceSupabase
+              .from('subscriptions')
+              .select(`
+                id,
+                cycle_id,
+                status,
+                pack_generated_at,
+                pack_sent_at,
+                signed_at,
+                funded_at,
+                activated_at
+              `)
+              .in('cycle_id', cycleIds)
+              .order('created_at', { ascending: false })
+          : Promise.resolve({ data: [] as any[] }),
+        cycleTermSheetIds.length > 0
+          ? serviceSupabase
+              .from('deal_fee_structures')
+              .select('id, status, completion_date, closed_processed_at')
+              .in('id', cycleTermSheetIds)
+          : Promise.resolve({ data: [] as any[] }),
+      ])
+
+      const cycleSubscriptionsById = new Map<string, any>()
+      for (const subscription of cycleSubscriptionsResult.data || []) {
+        if (subscription.cycle_id && !cycleSubscriptionsById.has(subscription.cycle_id)) {
+          cycleSubscriptionsById.set(subscription.cycle_id, subscription)
+        }
+      }
+
+      const cycleSubscriptionIds = (cycleSubscriptionsResult.data || [])
+        .map((subscription: any) => subscription.id)
+        .filter(Boolean)
+
+      const cycleSubscriptionSignatureSummaryById = new Map<string, {
+        status: 'not_started' | 'pending' | 'complete'
+        signedPath: string | null
+      }>()
+
+      if (cycleSubscriptionIds.length > 0) {
+        const { data: cycleSignatureRequests } = await serviceSupabase
+          .from('signature_requests')
+          .select('subscription_id, status, signed_document_path')
+          .in('subscription_id', cycleSubscriptionIds)
+          .eq('document_type', 'subscription_pack')
+          .in('status', ['pending', 'in_progress', 'signed'])
+
+        const requestsBySubscription = new Map<string, Array<{ status: string; signed_document_path: string | null }>>()
+        for (const request of cycleSignatureRequests || []) {
+          const existing = requestsBySubscription.get(request.subscription_id) || []
+          existing.push(request)
+          requestsBySubscription.set(request.subscription_id, existing)
+        }
+
+        for (const subscriptionId of cycleSubscriptionIds) {
+          const requests = requestsBySubscription.get(subscriptionId) || []
+          const allSigned = requests.length > 0 && requests.every(request => request.status === 'signed')
+          const signedPath = requests.find(request => request.signed_document_path)?.signed_document_path || null
+
+          cycleSubscriptionSignatureSummaryById.set(subscriptionId, {
+            status: allSigned ? 'complete' : requests.length > 0 ? 'pending' : 'not_started',
+            signedPath,
+          })
+        }
+      }
+
+      const termSheetsById = new Map(
+        (cycleTermSheetsResult.data || []).map((termSheet: any) => [termSheet.id, termSheet])
+      )
+
+      const cyclesByDeal = new Map<string, any[]>()
+      for (const cycle of cycleRows || []) {
+        const existing = cyclesByDeal.get(cycle.deal_id) || []
+        existing.push(cycle)
+        cyclesByDeal.set(cycle.deal_id, existing)
+      }
+
+      for (const [dealId, dealCycles] of cyclesByDeal.entries()) {
+        const chronologicalCycles = [...dealCycles].sort((left, right) => {
+          const leftSequence = Number(left.sequence_number || 0)
+          const rightSequence = Number(right.sequence_number || 0)
+          if (leftSequence !== rightSequence) return leftSequence - rightSequence
+          return new Date(left.created_at).getTime() - new Date(right.created_at).getTime()
+        })
+
+        const primaryCycle = chronologicalCycles[0] || null
+        const hasLiveCycle = dealCycles.some(cycle => LIVE_CYCLE_STATUSES.includes(cycle.status))
+        const latestEligibleReinvestmentCycle = !hasLiveCycle
+          ? dealCycles.find(cycle => {
+              if (!['funded', 'active'].includes(cycle.status)) return false
+              const termSheet = termSheetsById.get(cycle.term_sheet_id) || null
+              return termSheet?.status === 'published' && !isTermSheetClosedForInvestmentRounds(termSheet)
+            }) || null
+          : null
+
+        const latestReinvestmentCycle = [...chronologicalCycles]
+          .reverse()
+          .find(cycle => {
+            if (!primaryCycle || cycle.id === primaryCycle.id) return false
+            const cycleSubscription = cycleSubscriptionsById.get(cycle.id) || null
+            const cycleSignatureSummary = cycleSubscription?.id
+              ? cycleSubscriptionSignatureSummaryById.get(cycleSubscription.id) || null
+              : null
+            return getCycleStage({
+              ...cycle,
+              pack_generated_at: cycleSubscription?.pack_generated_at || cycle.pack_generated_at,
+              pack_sent_at: cycleSubscription?.pack_sent_at || cycle.pack_sent_at,
+              signed_at:
+                (cycleSignatureSummary?.status === 'complete' ? cycleSubscription?.signed_at : null) ||
+                cycle.signed_at,
+              funded_at: cycleSubscription?.funded_at || cycle.funded_at,
+              activated_at: cycleSubscription?.activated_at || cycle.activated_at,
+            }) >= 4
+          }) || null
+
+        const latestReinvestmentSubscription = latestReinvestmentCycle
+          ? cycleSubscriptionsById.get(latestReinvestmentCycle.id) || null
+          : null
+        const latestReinvestmentSignatureSummary = latestReinvestmentSubscription?.id
+          ? cycleSubscriptionSignatureSummaryById.get(latestReinvestmentSubscription.id) || null
+          : null
+        const reinvestmentStage = latestReinvestmentCycle
+          ? getCycleStage({
+              ...latestReinvestmentCycle,
+              pack_generated_at: latestReinvestmentSubscription?.pack_generated_at || latestReinvestmentCycle.pack_generated_at,
+              pack_sent_at: latestReinvestmentSubscription?.pack_sent_at || latestReinvestmentCycle.pack_sent_at,
+              signed_at:
+                (latestReinvestmentSignatureSummary?.status === 'complete'
+                  ? latestReinvestmentSubscription?.signed_at
+                  : null) || latestReinvestmentCycle.signed_at,
+              funded_at: latestReinvestmentSubscription?.funded_at || latestReinvestmentCycle.funded_at,
+              activated_at: latestReinvestmentSubscription?.activated_at || latestReinvestmentCycle.activated_at,
+            })
+          : 0
+
+        cycleStateByDeal.set(dealId, {
+          can_invest_more: !!latestEligibleReinvestmentCycle,
+          reinvestment_branch: latestReinvestmentCycle && primaryCycle && ['funded', 'active'].includes(primaryCycle.status)
+            ? {
+                visible: true,
+                confirmed: reinvestmentStage >= 4,
+                signed: reinvestmentStage >= 8,
+                funded: reinvestmentStage >= 9,
+              }
+            : null,
+        })
+      }
     }
   }
 
@@ -662,6 +859,7 @@ export default async function OpportunitiesPage() {
       accessByDeal={accessByDeal}
       subscriptionByDeal={subscriptionByDeal}
       subscriptionProgressByDeal={subscriptionProgressMap}
+      cycleStateByDeal={Object.fromEntries(cycleStateByDeal)}
       primaryInvestorId={primaryInvestorId}
       accountApprovalStatus={accountApprovalStatus}
       kycStatus={investorKycStatus}
