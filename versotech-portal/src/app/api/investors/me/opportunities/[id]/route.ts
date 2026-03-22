@@ -949,6 +949,9 @@ export async function GET(request: Request, { params }: RouteParams) {
           status: statusKey,
           status_label: statusLabel,
           is_reinvestment: cycle.sequence_number > 1,
+          signed_at: (isSigned ? cycle.subscription?.signed_at : null) || null,
+          funded_at: cycle.subscription?.funded_at || null,
+          activated_at: cycle.subscription?.activated_at || null,
           milestones: {
             confirmed: !!cycle.submission || !!cycle.subscription || cycle.stage >= 4,
             signed: isSigned || isFunded || isActive,

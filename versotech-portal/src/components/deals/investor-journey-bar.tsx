@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Check } from 'lucide-react'
 import {
@@ -33,11 +32,12 @@ export interface JourneySummary {
 interface InvestorJourneyBarProps {
   stages?: JourneyStage[]
   summary?: JourneySummary
-  reinvestmentBranch?: {
+  reinvestments?: Array<{
     confirmed_at: string | null
     signed_at: string | null
     funded_at: string | null
-  } | null
+    completed_at: string | null
+  }>
   currentStage?: number
   subscriptionSubmittedAt?: string | null
   className?: string
@@ -74,14 +74,10 @@ function formatDate(dateString: string | null): string {
 export function InvestorJourneyBar({
   stages,
   summary,
-  reinvestmentBranch,
+  reinvestments,
   className,
   compact = false,
 }: InvestorJourneyBarProps) {
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const fundedStageRef = useRef<HTMLDivElement | null>(null)
-  const [branchLeftOffset, setBranchLeftOffset] = useState<number | null>(null)
-
   const effectiveSummary: JourneySummary = summary || (stages ? {
     received:           stages.find(s => s.stage_number === 1)?.completed_at  || null,
     viewed:             stages.find(s => s.stage_number === 2)?.completed_at  || null,
@@ -111,54 +107,22 @@ export function InvestorJourneyBar({
 
   const getStatus = (stage: StageDefinition, idx: number): StageStatus => {
     if (effectiveSummary[stage.key]) return 'completed'
-    if (lastCompleted > idx) return 'completed' // a later step is done, so treat this as done too
+    if (lastCompleted > idx) return 'completed'
     if (idx === currentIndex) return 'current'
     return 'pending'
   }
 
-  const reinvestmentStages = reinvestmentBranch ? [
-    { key: 'confirmed_at', label: 'Confirm reinvestment' },
-    { key: 'signed_at', label: 'Subscription pack signed' },
+  const REINVESTMENT_STAGES = [
+    { key: 'confirmed_at', label: 'Confirm Interest' },
+    { key: 'signed_at', label: 'Subscription Pack Signed' },
     { key: 'funded_at', label: 'Funded' },
-  ] as const : []
-
-  let lastCompletedBranch = -1
-  reinvestmentStages.forEach((stage, idx) => {
-    if (reinvestmentBranch?.[stage.key]) lastCompletedBranch = idx
-  })
-  const branchCurrentIndex =
-    lastCompletedBranch === -1 ? 0
-    : lastCompletedBranch >= reinvestmentStages.length - 1 ? reinvestmentStages.length - 1
-    : lastCompletedBranch + 1
-
-  useEffect(() => {
-    if (!reinvestmentBranch) {
-      setBranchLeftOffset(null)
-      return
-    }
-
-    const updateBranchOffset = () => {
-      const container = containerRef.current
-      const fundedStage = fundedStageRef.current
-
-      if (!container || !fundedStage) {
-        setBranchLeftOffset(null)
-        return
-      }
-
-      const containerRect = container.getBoundingClientRect()
-      const fundedRect = fundedStage.getBoundingClientRect()
-      setBranchLeftOffset(Math.max(fundedRect.left - containerRect.left, 0))
-    }
-
-    updateBranchOffset()
-    window.addEventListener('resize', updateBranchOffset)
-    return () => window.removeEventListener('resize', updateBranchOffset)
-  }, [reinvestmentBranch, compact, summary, stages])
+    { key: 'completed_at', label: 'Completed' },
+  ] as const
 
   return (
     <TooltipProvider>
-      <div ref={containerRef} className={cn('w-full', className)}>
+      <div className={cn('w-full space-y-5', className)}>
+        {/* Main journey bar */}
         <div className="flex items-start">
           {LINEAR_STAGES.map((stage, idx) => {
             const isLast = idx === LINEAR_STAGES.length - 1
@@ -168,13 +132,9 @@ export function InvestorJourneyBar({
 
             return (
               <div key={stage.key} className={cn('flex items-start', !isLast && 'flex-1')}>
-                {/* Node */}
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div
-                      ref={stage.key === 'funded' ? fundedStageRef : undefined}
-                      className="flex flex-col items-center shrink-0"
-                    >
+                    <div className="flex flex-col items-center shrink-0">
                       <div
                         className={cn(
                           'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300',
@@ -221,7 +181,6 @@ export function InvestorJourneyBar({
                   </TooltipContent>
                 </Tooltip>
 
-                {/* Connector line to next node — sits at bubble centre height */}
                 {!isLast && (
                   <div className="flex-1 mt-4 h-0.5">
                     <div className={cn(
@@ -235,101 +194,96 @@ export function InvestorJourneyBar({
           })}
         </div>
 
-        {reinvestmentBranch ? (
-          <div
-            className="mt-1"
-            style={
-              branchLeftOffset !== null
-                ? {
-                    marginLeft: `${branchLeftOffset}px`,
-                    width: `calc(100% - ${branchLeftOffset}px)`,
-                  }
-                : undefined
-            }
-          >
-            <div className="relative pt-3">
-              <div className="absolute left-4 top-0 h-3 w-px bg-border" />
-              <div className="absolute left-4 top-3 h-0.5 w-6 bg-border" />
-                <div className="flex items-start">
-                  {reinvestmentStages.map((stage, idx) => {
-                    const completedAt = reinvestmentBranch[stage.key]
-                    const status: StageStatus =
-                      completedAt ? 'completed'
-                      : lastCompletedBranch > idx
-                        ? 'completed'
-                        : idx === branchCurrentIndex
-                          ? 'current'
-                          : 'pending'
-                    const isLast = idx === reinvestmentStages.length - 1
+        {/* Reinvestment bars — one per additional investment, only when they exist */}
+        {reinvestments && reinvestments.length > 0 && reinvestments.map((ri, riIdx) => {
+          let lastDone = -1
+          REINVESTMENT_STAGES.forEach((s, i) => { if (ri[s.key]) lastDone = i })
+          const currentIdx = lastDone === -1 ? 0
+            : lastDone >= REINVESTMENT_STAGES.length - 1 ? REINVESTMENT_STAGES.length - 1
+            : lastDone + 1
 
-                    return (
-                      <div key={stage.key} className={cn('flex items-start', !isLast && 'flex-1')}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="flex flex-col items-center shrink-0">
-                              <div
-                                className={cn(
-                                  'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300',
-                                  status === 'completed' && 'bg-emerald-500 text-white',
-                                  status === 'current' && 'bg-blue-500 text-white ring-4 ring-blue-200 dark:ring-blue-900',
-                                  status === 'pending' && 'bg-muted/60 text-muted-foreground border border-border'
-                                )}
-                              >
-                                {status === 'completed' ? (
-                                  <Check className="w-4 h-4" strokeWidth={2.5} />
-                                ) : (
-                                  <span className="text-xs font-semibold">{idx + 1}</span>
-                                )}
-                              </div>
-                              {!compact ? (
-                                <span
-                                  className={cn(
-                                    'mt-2 text-[11px] font-medium text-center leading-snug whitespace-normal break-words max-w-[84px]',
-                                    status === 'completed' && 'text-emerald-600 dark:text-emerald-400',
-                                    status === 'current' && 'text-blue-600 dark:text-blue-400',
-                                    status === 'pending' && 'text-muted-foreground'
-                                  )}
-                                >
-                                  {stage.label}
-                                </span>
-                              ) : null}
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom" className="max-w-[200px]">
-                            <div className="text-sm">
-                              <div className="font-medium">{stage.label}</div>
-                              {status === 'completed' && completedAt ? (
-                                <div className="mt-1 text-xs text-muted-foreground">
-                                  Completed: {formatDate(completedAt)}
-                                </div>
-                              ) : null}
-                              {status === 'current' ? (
-                                <div className="mt-1 text-xs text-blue-600">In Progress</div>
-                              ) : null}
-                              {status === 'pending' ? (
-                                <div className="mt-1 text-xs text-muted-foreground">Pending</div>
-                              ) : null}
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
+          return (
+            <div key={riIdx}>
+              <div className="text-[11px] font-medium text-muted-foreground mb-2">
+                Additional Investment{reinvestments.length > 1 ? ` #${riIdx + 1}` : ''}
+              </div>
+              <div className="flex items-start">
+                {REINVESTMENT_STAGES.map((stage, idx) => {
+                  const completedAt = ri[stage.key]
+                  const status: StageStatus =
+                    completedAt ? 'completed'
+                    : lastDone > idx ? 'completed'
+                    : idx === currentIdx ? 'current'
+                    : 'pending'
+                  const isLast = idx === REINVESTMENT_STAGES.length - 1
+                  const prevDone = idx > 0 && !!ri[REINVESTMENT_STAGES[idx - 1].key]
 
-                        {!isLast ? (
-                          <div className="flex-1 mt-4 h-0.5">
+                  return (
+                    <div key={stage.key} className={cn('flex items-start', !isLast && 'flex-1')}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex flex-col items-center shrink-0">
                             <div
                               className={cn(
-                                'h-full w-full transition-colors duration-300',
-                                completedAt ? 'bg-emerald-400' : 'bg-border'
+                                'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300',
+                                status === 'completed' && 'bg-emerald-500 text-white',
+                                status === 'current' && 'bg-blue-500 text-white ring-4 ring-blue-200 dark:ring-blue-900',
+                                status === 'pending' && 'bg-muted/60 text-muted-foreground border border-border'
                               )}
-                            />
+                            >
+                              {status === 'completed' ? (
+                                <Check className="w-4 h-4" strokeWidth={2.5} />
+                              ) : (
+                                <span className="text-xs font-semibold">{idx + 1}</span>
+                              )}
+                            </div>
+                            {!compact && (
+                              <span
+                                className={cn(
+                                  'mt-2 text-[11px] font-medium text-center leading-snug whitespace-normal break-words max-w-[84px]',
+                                  status === 'completed' && 'text-emerald-600 dark:text-emerald-400',
+                                  status === 'current' && 'text-blue-600 dark:text-blue-400',
+                                  status === 'pending' && 'text-muted-foreground'
+                                )}
+                              >
+                                {stage.label}
+                              </span>
+                            )}
                           </div>
-                        ) : null}
-                      </div>
-                    )
-                  })}
-                </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="max-w-[200px]">
+                          <div className="text-sm">
+                            <div className="font-medium">{stage.label}</div>
+                            {status === 'completed' && completedAt && (
+                              <div className="mt-1 text-xs text-muted-foreground">
+                                Completed: {formatDate(completedAt)}
+                              </div>
+                            )}
+                            {status === 'current' && (
+                              <div className="mt-1 text-xs text-blue-600">In Progress</div>
+                            )}
+                            {status === 'pending' && (
+                              <div className="mt-1 text-xs text-muted-foreground">Pending</div>
+                            )}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+
+                      {!isLast && (
+                        <div className="flex-1 mt-4 h-0.5">
+                          <div className={cn(
+                            'h-full w-full transition-colors duration-300',
+                            prevDone ? 'bg-emerald-400' : 'bg-border'
+                          )} />
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
-          </div>
-        ) : null}
+          )
+        })}
       </div>
     </TooltipProvider>
   )

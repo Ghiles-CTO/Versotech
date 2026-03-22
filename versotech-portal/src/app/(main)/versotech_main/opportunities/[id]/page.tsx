@@ -31,7 +31,7 @@ import { DataRoomViewer, type DataRoomDocument } from '@/components/deals/data-r
 import { DealTimelineCard } from '@/components/deals/deal-timeline-card'
 import { DealKeyDetailsCard } from '@/components/deals/deal-key-details-card'
 import { InterestStatusCard } from '@/components/deals/interest-status-card'
-import { SubscriptionStatusCard, type SubscriptionStatusEntry } from '@/components/deals/subscription-status-card'
+import { SubscriptionStatusCard, DocumentRow, type SubscriptionStatusEntry } from '@/components/deals/subscription-status-card'
 import {
   ArrowLeft,
   Building2,
@@ -1089,7 +1089,15 @@ export default function OpportunityDetailPage() {
           <CardContent>
             <InvestorJourneyBar
               summary={journeySummary}
-              reinvestmentBranch={opportunity.reinvestment_branch}
+              reinvestments={subscriptionEntries
+                .filter(e => e.is_reinvestment)
+                .map(e => ({
+                  confirmed_at: e.submitted_at || null,
+                  signed_at: e.signed_at || null,
+                  funded_at: e.funded_at || null,
+                  completed_at: e.activated_at || null,
+                }))
+              }
               currentStage={opportunity.journey.current_stage}
             />
           </CardContent>
@@ -1258,20 +1266,55 @@ export default function OpportunityDetailPage() {
           {/* Subscription Status OR Interest Status + Key Details Row */}
           <div className="grid gap-6 lg:grid-cols-3">
             {showMultipleSubscriptions ? (
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <h2 className="text-base font-semibold text-foreground">Your Subscriptions</h2>
-                </div>
-                {subscriptionEntries.map((entry) => (
-                  <SubscriptionStatusCard
-                    key={entry.id}
-                    entry={entry}
-                    heading={null}
-                    onViewNdas={opportunity.vehicle?.id ? handleViewNdas : undefined}
-                    onViewSignedPack={handleViewSignedPack}
-                  />
-                ))}
-              </div>
+              <Card className="border-2 border-dashed border-gray-200 dark:border-gray-800 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-950">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <DollarSign className="h-5 w-5 text-emerald-500" />
+                      Your Subscriptions
+                    </CardTitle>
+                    <span className="text-sm tabular-nums text-muted-foreground font-medium">
+                      {formatCurrency(
+                        subscriptionEntries.reduce((sum, e) => sum + (e.amount || 0), 0),
+                        opportunity.currency
+                      )} total
+                    </span>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Shared NDA — deal-level, shown once */}
+                  {(() => {
+                    const sharedNda = subscriptionEntries.find(e => e.documents.nda)?.documents.nda
+                    if (!sharedNda) return null
+                    return (
+                      <div className="rounded-lg border bg-card/50">
+                        <DocumentRow
+                          icon={FileSignature}
+                          iconColor="text-blue-500"
+                          label="NDA"
+                          doc={sharedNda}
+                          onPreview={opportunity.vehicle?.id ? handleViewNdas : undefined}
+                        />
+                      </div>
+                    )
+                  })()}
+
+                  {/* Per-subscription blocks, inline within this card */}
+                  {subscriptionEntries.map((entry, idx) => (
+                    <div key={entry.id}>
+                      {idx > 0 && <div className="border-t my-4" />}
+                      <SubscriptionStatusCard
+                        entry={entry}
+                        heading={null}
+                        hideNda
+                        variant="inline"
+                        onViewNdas={opportunity.vehicle?.id ? handleViewNdas : undefined}
+                        onViewSignedPack={handleViewSignedPack}
+                      />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
             ) : opportunity.subscription ? (
               <SubscriptionStatusCard
                 subscription={opportunity.subscription}

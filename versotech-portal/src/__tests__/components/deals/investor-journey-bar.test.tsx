@@ -41,16 +41,19 @@ describe('InvestorJourneyBar', () => {
           funded: '2026-03-22T00:00:00.000Z',
           active: null,
         }}
-        reinvestmentBranch={{
+        reinvestments={[{
           confirmed_at: '2026-03-22T10:00:00.000Z',
           signed_at: null,
           funded_at: null,
-        }}
+          completed_at: null,
+        }]}
       />
     )
 
-    expect(screen.getByText('Confirm reinvestment')).toBeInTheDocument()
-    expect(screen.getByText('Subscription pack signed')).toBeInTheDocument()
-    expect(screen.getAllByText('Funded').length).toBeGreaterThan(0)
+    expect(screen.getByText('Additional Investment')).toBeInTheDocument()
+    expect(screen.getAllByText('Confirm Interest').length).toBeGreaterThan(1)
+    expect(screen.getAllByText('Subscription Pack Signed').length).toBeGreaterThan(1)
+    expect(screen.getAllByText('Funded').length).toBeGreaterThan(1)
+    expect(screen.getAllByText('Completed').length).toBeGreaterThan(0)
   })
 })

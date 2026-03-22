@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
 import {
   Clock,
   CheckCircle2,
@@ -29,6 +28,10 @@ export interface SubscriptionStatusEntry {
   status: 'pending_review' | 'awaiting_signature' | 'awaiting_funding' | 'funded' | 'active'
   status_label: string
   is_reinvestment: boolean
+  signed_at?: string | null
+  funded_at?: string | null
+  activated_at?: string | null
+  submitted_at?: string | null
   milestones: {
     confirmed: boolean
     signed: boolean
@@ -89,6 +92,8 @@ interface SubscriptionStatusCardProps {
   entry?: SubscriptionStatusEntry | null
   heading?: string | null
   dealCurrency?: string
+  hideNda?: boolean
+  variant?: 'card' | 'inline'
   onViewNdas?: () => void
   onViewSignedPack?: (path: string) => void
 }
@@ -126,7 +131,7 @@ function formatDateShort(dateString: string | null): string {
   })
 }
 
-function DocumentRow({
+export function DocumentRow({
   icon: Icon,
   iconColor,
   label,
@@ -242,6 +247,8 @@ export function SubscriptionStatusCard({
   entry,
   heading,
   dealCurrency,
+  hideNda,
+  variant = 'card',
   onViewNdas,
   onViewSignedPack,
 }: SubscriptionStatusCardProps) {
@@ -293,8 +300,125 @@ export function SubscriptionStatusCard({
         { key: 'funded', done: isFunded },
         { key: 'active', done: isActive }
       ]
-  const completedSteps = steps.filter(s => s.done).length
-  const progressPercent = (completedSteps / steps.length) * 100
+  // Build milestone rows with dates — show all stages that have data
+  const milestoneRows = entry
+    ? [
+        { label: 'Submitted', done: entry.milestones.confirmed, date: entry.submitted_at },
+        { label: 'Signed', done: entry.milestones.signed, date: entry.signed_at },
+        { label: 'Funded', done: entry.milestones.funded, date: entry.funded_at },
+        { label: 'Active', done: entry.milestones.active, date: entry.activated_at },
+      ]
+    : [
+        { label: 'Submitted', done: isGenerated, date: subscription?.created_at },
+        { label: 'Pack Prepared', done: isGenerated, date: subscription?.pack_generated_at },
+        { label: 'Pack Sent', done: isSent, date: subscription?.pack_sent_at },
+        { label: 'Signed', done: isSigned, date: subscription?.signed_at },
+        { label: 'Funded', done: isFunded, date: subscription?.funded_at },
+        { label: 'Active', done: isActive, date: subscription?.activated_at },
+      ].filter(m => m.done || m.date)
+
+  const content = (
+    <div className="space-y-4">
+      {/* Amount + status header */}
+      <div className="flex items-center gap-3">
+        <div className={cn('p-2.5 rounded-xl', statusConfig.bg)}>
+          <DollarSign className={cn('w-5 h-5', statusConfig.color)} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-xl font-bold tracking-tight">
+            {formatCurrency(entry?.amount ?? subscription?.commitment ?? null, currency)}
+          </div>
+          {entry?.is_reinvestment && (
+            <div className="text-xs text-muted-foreground">
+              Additional investment
+            </div>
+          )}
+          {!entry && fundedAmount !== null && fundedAmount > 0 && (
+            <div className="text-xs text-muted-foreground">
+              Funded: {formatCurrency(fundedAmount, currency)}
+            </div>
+          )}
+        </div>
+        <Badge className={cn(statusConfig.bg, statusConfig.color, 'border-0')}>
+          <StatusIcon className="w-3 h-3 mr-1" />
+          {statusLabel}
+        </Badge>
+      </div>
+
+      {/* Milestone rows with dates */}
+      <div className="rounded-lg border divide-y bg-card/50">
+        {milestoneRows.map((m) => (
+          <div key={m.label} className="flex items-center gap-2.5 py-1.5 px-2.5">
+            {m.done ? (
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+            ) : (
+              <Clock className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
+            )}
+            <span className={cn('text-sm flex-1', m.done ? 'text-foreground' : 'text-muted-foreground/50')}>
+              {m.label}
+            </span>
+            {m.done && m.date && (
+              <span className="text-xs tabular-nums text-muted-foreground">
+                {formatDateShort(m.date)}
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Documents */}
+      {docs && (
+        <div className="rounded-lg border divide-y bg-card/50">
+          {!hideNda && (
+            <DocumentRow
+              icon={FileSignature}
+              iconColor="text-blue-500"
+              label="NDA"
+              doc={docs.nda}
+              onPreview={onViewNdas}
+            />
+          )}
+          <DocumentRow
+            icon={FileText}
+            iconColor="text-purple-500"
+            label="Subscription Pack"
+            doc={docs.subscription_pack}
+            onPreview={signedPackPath && onViewSignedPack ? () => onViewSignedPack(signedPackPath) : undefined}
+          />
+          {(docs.certificate || isActive) && (
+            <div className="flex items-center gap-2.5 py-2 px-2.5">
+              <Award className={cn('w-4 h-4', docs.certificate?.status === 'available' ? 'text-amber-500' : 'text-muted-foreground')} />
+              <span className="text-sm font-medium flex-1">Certificate</span>
+              {docs.certificate?.status === 'available' ? (
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  {docs.certificate.url && (
+                    <Button size="sm" variant="ghost" className="h-5 px-1.5" onClick={() => window.open(docs.certificate!.url!, '_blank')}>
+                      <Download className="w-3 h-3" />
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <span className="text-xs text-muted-foreground">Pending</span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {isActive && (
+        <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
+          <Rocket className="w-4 h-4 text-emerald-600" />
+          <div className="flex-1">
+            <div className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Investment Active</div>
+            <div className="text-xs text-emerald-600 dark:text-emerald-400">Track in Portfolio</div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
+  if (variant === 'inline') return content
 
   return (
     <Card className="border-2 border-dashed border-gray-200 dark:border-gray-800 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-950">
@@ -312,84 +436,7 @@ export function SubscriptionStatusCard({
           </Badge>
         </div>
       </CardHeader>
-
-      <CardContent className="space-y-4">
-        <div className="flex items-center gap-3">
-          <div className={cn('p-2.5 rounded-xl', statusConfig.bg)}>
-            <DollarSign className={cn('w-5 h-5', statusConfig.color)} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-xl font-bold tracking-tight">
-              {formatCurrency(entry?.amount ?? subscription?.commitment ?? null, currency)}
-            </div>
-            {entry?.is_reinvestment && (
-              <div className="text-xs text-muted-foreground">
-                Additional investment
-              </div>
-            )}
-            {!entry && fundedAmount !== null && fundedAmount > 0 && (
-              <div className="text-xs text-muted-foreground">
-                Funded: {formatCurrency(fundedAmount, currency)}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-1.5">
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Progress</span>
-            <span>{completedSteps}/{steps.length}</span>
-          </div>
-          <Progress value={progressPercent} className="h-1.5" />
-        </div>
-
-        {docs && (
-          <div className="rounded-lg border divide-y bg-card/50">
-            <DocumentRow
-              icon={FileSignature}
-              iconColor="text-blue-500"
-              label="NDA"
-              doc={docs.nda}
-              onPreview={onViewNdas}
-            />
-            <DocumentRow
-              icon={FileText}
-              iconColor="text-purple-500"
-              label="Subscription Pack"
-              doc={docs.subscription_pack}
-              onPreview={signedPackPath && onViewSignedPack ? () => onViewSignedPack(signedPackPath) : undefined}
-            />
-            {(docs.certificate || isActive) && (
-              <div className="flex items-center gap-2.5 py-2 px-2.5">
-                <Award className={cn('w-4 h-4', docs.certificate?.status === 'available' ? 'text-amber-500' : 'text-muted-foreground')} />
-                <span className="text-sm font-medium flex-1">Certificate</span>
-                {docs.certificate?.status === 'available' ? (
-                  <div className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    {docs.certificate.url && (
-                      <Button size="sm" variant="ghost" className="h-5 px-1.5" onClick={() => window.open(docs.certificate!.url!, '_blank')}>
-                        <Download className="w-3 h-3" />
-                      </Button>
-                    )}
-                  </div>
-                ) : (
-                  <span className="text-xs text-muted-foreground">Pending</span>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {isActive && (
-          <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
-            <Rocket className="w-4 h-4 text-emerald-600" />
-            <div className="flex-1">
-              <div className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Investment Active</div>
-              <div className="text-xs text-emerald-600 dark:text-emerald-400">Track in Portfolio</div>
-            </div>
-          </div>
-        )}
-      </CardContent>
+      <CardContent>{content}</CardContent>
     </Card>
   )
 }
