@@ -8,6 +8,18 @@ import {
   LIVE_CYCLE_STATUSES,
   updateDealInvestmentCycleProgress,
 } from '@/lib/deals/investment-cycles'
+
+type SubscriptionDocumentSummary = {
+  status: string
+  signatories: Array<{
+    name: string
+    email: string
+    status: string
+    signed_at: string | null
+  }>
+  unsigned_url: string | null
+  signed_url: string | null
+}
 interface RouteParams {
   params: Promise<{ id: string }>
 }
@@ -174,6 +186,17 @@ export async function GET(request: Request, { params }: RouteParams) {
       status: 'not_started' | 'pending' | 'complete'
       signedPath: string | null
     }>()
+    let subscriptionPackDocumentsBySubscriptionId = new Map<string, SubscriptionDocumentSummary>()
+    let certificateDocumentsBySubscriptionId = new Map<string, {
+      status: string
+      url: string | null
+    } | null>()
+    let ndaDocumentSummary: SubscriptionDocumentSummary = {
+      status: 'not_started',
+      signatories: [],
+      unsigned_url: null,
+      signed_url: null,
+    }
 
     if (effectiveInvestorId) {
       const { data: rawCycles } = await serviceSupabase
@@ -240,12 +263,27 @@ export async function GET(request: Request, { params }: RouteParams) {
 
         const subscriptionIds = (cycleSubscriptions || []).map(sub => sub.id).filter(Boolean)
         if (subscriptionIds.length > 0) {
-          const { data: subscriptionSignatures } = await serviceSupabase
-            .from('signature_requests')
-            .select('subscription_id, status, signed_pdf_path, unsigned_pdf_path')
-            .in('subscription_id', subscriptionIds)
-            .eq('document_type', 'subscription')
-            .order('created_at', { ascending: false })
+          const [{ data: subscriptionSignatures }, { data: subscriptionPackDocuments }, { data: certificateDocuments }] = await Promise.all([
+            serviceSupabase
+              .from('signature_requests')
+              .select('subscription_id, status, signed_pdf_path, unsigned_pdf_path, signer_name, signer_email, signature_timestamp')
+              .in('subscription_id', subscriptionIds)
+              .eq('document_type', 'subscription')
+              .order('created_at', { ascending: false }),
+            serviceSupabase
+              .from('documents')
+              .select('subscription_id, file_key, signature_status, created_at')
+              .in('subscription_id', subscriptionIds)
+              .eq('type', 'subscription_pack')
+              .eq('is_published', true)
+              .order('created_at', { ascending: false }),
+            serviceSupabase
+              .from('documents')
+              .select('subscription_id, file_key, created_at')
+              .in('subscription_id', subscriptionIds)
+              .eq('type', 'certificate')
+              .order('created_at', { ascending: false }),
+          ])
 
           const signaturesBySubscriptionId = new Map<string, any[]>()
           for (const signature of subscriptionSignatures || []) {
@@ -253,6 +291,15 @@ export async function GET(request: Request, { params }: RouteParams) {
             const existing = signaturesBySubscriptionId.get(signature.subscription_id) || []
             existing.push(signature)
             signaturesBySubscriptionId.set(signature.subscription_id, existing)
+          }
+
+          const packDocumentBySubscriptionId = new Map<string, { file_key: string | null; signature_status: string | null }>()
+          for (const document of subscriptionPackDocuments || []) {
+            if (!document.subscription_id || packDocumentBySubscriptionId.has(document.subscription_id)) continue
+            packDocumentBySubscriptionId.set(document.subscription_id, {
+              file_key: document.file_key,
+              signature_status: document.signature_status,
+            })
           }
 
           for (const [subscriptionId, signatures] of signaturesBySubscriptionId.entries()) {
@@ -264,7 +311,98 @@ export async function GET(request: Request, { params }: RouteParams) {
                 : null,
             })
           }
+
+          for (const [subscriptionId, document] of packDocumentBySubscriptionId.entries()) {
+            const existing = subscriptionSignatureSummaryById.get(subscriptionId)
+            if (existing?.signedPath) continue
+            const isComplete = document.signature_status === 'complete' && !!document.file_key
+            subscriptionSignatureSummaryById.set(subscriptionId, {
+              status: isComplete ? 'complete' : existing?.status || 'not_started',
+              signedPath: isComplete ? document.file_key : existing?.signedPath || null,
+            })
+          }
+
+          for (const subscriptionId of subscriptionIds) {
+            const signatures = signaturesBySubscriptionId.get(subscriptionId) || []
+            const allSigned = signatures.length > 0 && signatures.every(signature => signature.status === 'signed')
+            const someSigned = signatures.some(signature => signature.status === 'signed')
+            const publishedDocument = packDocumentBySubscriptionId.get(subscriptionId)
+            const hasPublishedSignedPack = publishedDocument?.signature_status === 'complete' && !!publishedDocument.file_key
+
+            subscriptionPackDocumentsBySubscriptionId.set(subscriptionId, {
+              status: allSigned
+                ? 'complete'
+                : hasPublishedSignedPack
+                  ? 'complete'
+                  : someSigned
+                    ? 'partial'
+                    : signatures.length > 0
+                      ? 'pending'
+                      : 'not_started',
+              signatories: signatures.map(signature => ({
+                name: signature.signer_name,
+                email: signature.signer_email,
+                status: signature.status,
+                signed_at: signature.signature_timestamp,
+              })),
+              unsigned_url: signatures.find(signature => signature.unsigned_pdf_path)?.unsigned_pdf_path || null,
+              signed_url: allSigned
+                ? signatures.find(signature => signature.signed_pdf_path)?.signed_pdf_path || null
+                : hasPublishedSignedPack
+                  ? publishedDocument?.file_key || null
+                  : null,
+            })
+          }
+
+          const latestCertificateBySubscriptionId = new Map<string, string | null>()
+          for (const document of certificateDocuments || []) {
+            if (!document.subscription_id || latestCertificateBySubscriptionId.has(document.subscription_id)) continue
+            latestCertificateBySubscriptionId.set(document.subscription_id, document.file_key || null)
+          }
+
+          for (const sub of cycleSubscriptions || []) {
+            if (!sub?.id) continue
+            if (!sub.activated_at) {
+              certificateDocumentsBySubscriptionId.set(sub.id, null)
+              continue
+            }
+
+            const certificatePath = latestCertificateBySubscriptionId.get(sub.id) || null
+            certificateDocumentsBySubscriptionId.set(sub.id, certificatePath ? {
+              status: 'available',
+              url: certificatePath,
+            } : {
+              status: 'generating',
+              url: null,
+            })
+          }
         }
+      }
+    }
+
+    if (effectiveInvestorId) {
+      const { data: ndaSignatures } = await serviceSupabase
+        .from('signature_requests')
+        .select('signer_name, signer_email, status, signature_timestamp, unsigned_pdf_path, signed_pdf_path')
+        .eq('deal_id', dealId)
+        .eq('investor_id', effectiveInvestorId)
+        .eq('document_type', 'nda')
+        .order('created_at', { ascending: true })
+
+      const ndaSigs = ndaSignatures || []
+      const ndaAllSigned = ndaSigs.length > 0 && ndaSigs.every(signature => signature.status === 'signed')
+      const ndaSomeSigned = ndaSigs.some(signature => signature.status === 'signed')
+
+      ndaDocumentSummary = {
+        status: ndaAllSigned ? 'complete' : ndaSomeSigned ? 'partial' : ndaSigs.length > 0 ? 'pending' : 'not_started',
+        signatories: ndaSigs.map(signature => ({
+          name: signature.signer_name,
+          email: signature.signer_email,
+          status: signature.status,
+          signed_at: signature.signature_timestamp,
+        })),
+        unsigned_url: ndaSigs.find(signature => signature.unsigned_pdf_path)?.unsigned_pdf_path || null,
+        signed_url: ndaAllSigned ? ndaSigs.find(signature => signature.signed_pdf_path)?.signed_pdf_path || null : null,
       }
     }
 
@@ -352,93 +490,17 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     // Fetch signature documents for this subscription
     if (subscription) {
-        // Get NDA signature requests for this deal/investor
-        const { data: ndaSignatures } = await serviceSupabase
-          .from('signature_requests')
-          .select('id, signer_name, signer_email, status, signature_timestamp, unsigned_pdf_path, signed_pdf_path')
-          .eq('deal_id', dealId)
-          .eq('investor_id', effectiveInvestorId)
-          .eq('document_type', 'nda')
-          .order('created_at', { ascending: true })
-
-        // Get subscription pack signature requests
-        const { data: subPackSignatures } = await serviceSupabase
-          .from('signature_requests')
-          .select('id, signer_name, signer_email, status, signature_timestamp, unsigned_pdf_path, signed_pdf_path')
-          .eq('subscription_id', subscription.id)
-          .eq('document_type', 'subscription')
-          .order('created_at', { ascending: true })
-
-        // Calculate NDA status
-        const ndaSigs = ndaSignatures || []
-        const ndaAllSigned = ndaSigs.length > 0 && ndaSigs.every(s => s.status === 'signed')
-        const ndaSomeSigned = ndaSigs.some(s => s.status === 'signed')
-        const ndaStatus = ndaAllSigned ? 'complete' : ndaSomeSigned ? 'partial' : ndaSigs.length > 0 ? 'pending' : 'not_started'
-
-        // Calculate subscription pack status
-        const subSigs = subPackSignatures || []
-        const subAllSigned = subSigs.length > 0 && subSigs.every(s => s.status === 'signed')
-        const subSomeSigned = subSigs.some(s => s.status === 'signed')
-        const subStatus = subAllSigned ? 'complete' : subSomeSigned ? 'partial' : subSigs.length > 0 ? 'pending' : 'not_started'
-
-        // Get the first available PDF paths (they're the same for all signatories of same doc type)
-        const ndaUnsignedPath = ndaSigs.find(s => s.unsigned_pdf_path)?.unsigned_pdf_path || null
-        const ndaSignedPath = ndaAllSigned ? ndaSigs.find(s => s.signed_pdf_path)?.signed_pdf_path : null
-        const subUnsignedPath = subSigs.find(s => s.unsigned_pdf_path)?.unsigned_pdf_path || null
-        const subSignedPath = subAllSigned ? subSigs.find(s => s.signed_pdf_path)?.signed_pdf_path : null
-
-        subscriptionDocuments = {
-          nda: {
-            status: ndaStatus,
-            signatories: ndaSigs.map(s => ({
-              name: s.signer_name,
-              email: s.signer_email,
-              status: s.status,
-              signed_at: s.signature_timestamp
-            })),
-            unsigned_url: ndaUnsignedPath,
-            signed_url: ndaSignedPath
-          },
-          subscription_pack: {
-            status: subStatus,
-            signatories: subSigs.map(s => ({
-              name: s.signer_name,
-              email: s.signer_email,
-              status: s.status,
-              signed_at: s.signature_timestamp
-            })),
-            unsigned_url: subUnsignedPath,
-            signed_url: subSignedPath
-          },
-          // Certificate - lookup from documents table if subscription is activated
-          certificate: await (async () => {
-            if (!subscription.activated_at) return null
-
-            // Check for actual certificate document
-            const { data: certDoc } = await serviceSupabase
-              .from('documents')
-              .select('id, file_key')
-              .eq('subscription_id', subscription.id)
-              .eq('type', 'certificate')
-              .maybeSingle()
-
-            if (certDoc) {
-              return {
-                status: 'available',
-                document_id: certDoc.id,
-                url: certDoc.file_key
-              }
-            }
-
-            // Certificate not yet generated
-            return {
-              status: 'generating',
-              document_id: null,
-              url: null
-            }
-          })()
-        }
+      subscriptionDocuments = {
+        nda: ndaDocumentSummary,
+        subscription_pack: subscriptionPackDocumentsBySubscriptionId.get(subscription.id) || {
+          status: 'not_started',
+          signatories: [],
+          unsigned_url: null,
+          signed_url: null,
+        },
+        certificate: certificateDocumentsBySubscriptionId.get(subscription.id) || null,
       }
+    }
 
     if (effectiveInvestorId && !subscriptionSubmission && !selectedCycle) {
       const { data: submission } = await serviceSupabase
@@ -881,6 +943,7 @@ export async function GET(request: Request, { params }: RouteParams) {
           sequence_number: cycle.sequence_number,
           amount: cycle.latest_amount,
           currency: cycle.subscription?.currency || deal.currency || 'USD',
+          funded_amount: cycle.subscription?.funded_amount || null,
           submitted_at: cycle.submission?.submitted_at || null,
           created_at: cycle.subscription?.pack_generated_at || cycle.submission?.submitted_at || null,
           status: statusKey,
@@ -893,6 +956,23 @@ export async function GET(request: Request, { params }: RouteParams) {
             active: isActive,
           },
           documents: {
+            nda: ndaDocumentSummary,
+            subscription_pack: cycle.subscription?.id
+              ? subscriptionPackDocumentsBySubscriptionId.get(cycle.subscription.id) || {
+                  status: 'not_started',
+                  signatories: [],
+                  unsigned_url: null,
+                  signed_url: null,
+                }
+              : {
+                  status: 'not_started',
+                  signatories: [],
+                  unsigned_url: null,
+                  signed_url: null,
+                },
+            certificate: cycle.subscription?.id
+              ? certificateDocumentsBySubscriptionId.get(cycle.subscription.id) || null
+              : null,
             signed_pack_available: !!signatureSummary?.signedPath,
             signed_pack_path: signatureSummary?.signedPath || null,
           },

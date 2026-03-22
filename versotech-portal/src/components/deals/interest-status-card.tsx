@@ -37,6 +37,7 @@ interface InterestStatusCardProps {
   canSubscribe: boolean
   isTrackingOnly: boolean
   isAccountApproved?: boolean | null
+  hideApprovalNotice?: boolean
   accountApprovalStatus?: string | null
   kycStatus?: string | null
   onExpressInterest: () => void
@@ -182,6 +183,7 @@ export function InterestStatusCard({
   canSubscribe,
   isTrackingOnly,
   isAccountApproved,
+  hideApprovalNotice = false,
   accountApprovalStatus,
   kycStatus,
   onExpressInterest,
@@ -247,7 +249,7 @@ export function InterestStatusCard({
           </div>
         </div>
 
-        {isApprovalBlocked && (
+        {isApprovalBlocked && !hideApprovalNotice && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
             <p className="text-sm font-medium">Account approval required</p>
             <p className="text-xs text-amber-700 dark:text-amber-300">

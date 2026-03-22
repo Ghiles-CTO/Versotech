@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Check } from 'lucide-react'
 import {
@@ -77,6 +78,10 @@ export function InvestorJourneyBar({
   className,
   compact = false,
 }: InvestorJourneyBarProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const fundedStageRef = useRef<HTMLDivElement | null>(null)
+  const [branchLeftOffset, setBranchLeftOffset] = useState<number | null>(null)
+
   const effectiveSummary: JourneySummary = summary || (stages ? {
     received:           stages.find(s => s.stage_number === 1)?.completed_at  || null,
     viewed:             stages.find(s => s.stage_number === 2)?.completed_at  || null,
@@ -126,9 +131,34 @@ export function InvestorJourneyBar({
     : lastCompletedBranch >= reinvestmentStages.length - 1 ? reinvestmentStages.length - 1
     : lastCompletedBranch + 1
 
+  useEffect(() => {
+    if (!reinvestmentBranch) {
+      setBranchLeftOffset(null)
+      return
+    }
+
+    const updateBranchOffset = () => {
+      const container = containerRef.current
+      const fundedStage = fundedStageRef.current
+
+      if (!container || !fundedStage) {
+        setBranchLeftOffset(null)
+        return
+      }
+
+      const containerRect = container.getBoundingClientRect()
+      const fundedRect = fundedStage.getBoundingClientRect()
+      setBranchLeftOffset(Math.max(fundedRect.left - containerRect.left, 0))
+    }
+
+    updateBranchOffset()
+    window.addEventListener('resize', updateBranchOffset)
+    return () => window.removeEventListener('resize', updateBranchOffset)
+  }, [reinvestmentBranch, compact, summary, stages])
+
   return (
     <TooltipProvider>
-      <div className={cn('w-full', className)}>
+      <div ref={containerRef} className={cn('w-full', className)}>
         <div className="flex items-start">
           {LINEAR_STAGES.map((stage, idx) => {
             const isLast = idx === LINEAR_STAGES.length - 1
@@ -141,7 +171,10 @@ export function InvestorJourneyBar({
                 {/* Node */}
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="flex flex-col items-center shrink-0">
+                    <div
+                      ref={stage.key === 'funded' ? fundedStageRef : undefined}
+                      className="flex flex-col items-center shrink-0"
+                    >
                       <div
                         className={cn(
                           'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300',
@@ -203,13 +236,20 @@ export function InvestorJourneyBar({
         </div>
 
         {reinvestmentBranch ? (
-          <div className="mt-4 grid grid-cols-5">
-            <div className="col-start-4 col-span-2 pl-2">
-              <div className="ml-3 h-4 w-px bg-border" />
-              <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
-                <div className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Additional Investment
-                </div>
+          <div
+            className="mt-1"
+            style={
+              branchLeftOffset !== null
+                ? {
+                    marginLeft: `${branchLeftOffset}px`,
+                    width: `calc(100% - ${branchLeftOffset}px)`,
+                  }
+                : undefined
+            }
+          >
+            <div className="relative pt-3">
+              <div className="absolute left-4 top-0 h-3 w-px bg-border" />
+              <div className="absolute left-4 top-3 h-0.5 w-6 bg-border" />
                 <div className="flex items-start">
                   {reinvestmentStages.map((stage, idx) => {
                     const completedAt = reinvestmentBranch[stage.key]
@@ -229,22 +269,22 @@ export function InvestorJourneyBar({
                             <div className="flex flex-col items-center shrink-0">
                               <div
                                 className={cn(
-                                  'flex h-7 w-7 items-center justify-center rounded-full transition-all duration-300',
+                                  'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300',
                                   status === 'completed' && 'bg-emerald-500 text-white',
                                   status === 'current' && 'bg-blue-500 text-white ring-4 ring-blue-200 dark:ring-blue-900',
-                                  status === 'pending' && 'border border-border bg-muted/60 text-muted-foreground'
+                                  status === 'pending' && 'bg-muted/60 text-muted-foreground border border-border'
                                 )}
                               >
                                 {status === 'completed' ? (
-                                  <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+                                  <Check className="w-4 h-4" strokeWidth={2.5} />
                                 ) : (
-                                  <span className="text-[10px] font-semibold">{idx + 1}</span>
+                                  <span className="text-xs font-semibold">{idx + 1}</span>
                                 )}
                               </div>
                               {!compact ? (
                                 <span
                                   className={cn(
-                                    'mt-2 max-w-[84px] text-center text-[11px] font-medium leading-snug',
+                                    'mt-2 text-[11px] font-medium text-center leading-snug whitespace-normal break-words max-w-[84px]',
                                     status === 'completed' && 'text-emerald-600 dark:text-emerald-400',
                                     status === 'current' && 'text-blue-600 dark:text-blue-400',
                                     status === 'pending' && 'text-muted-foreground'
@@ -274,7 +314,7 @@ export function InvestorJourneyBar({
                         </Tooltip>
 
                         {!isLast ? (
-                          <div className="mt-3.5 flex-1 h-0.5">
+                          <div className="flex-1 mt-4 h-0.5">
                             <div
                               className={cn(
                                 'h-full w-full transition-colors duration-300',
@@ -287,7 +327,6 @@ export function InvestorJourneyBar({
                     )
                   })}
                 </div>
-              </div>
             </div>
           </div>
         ) : null}

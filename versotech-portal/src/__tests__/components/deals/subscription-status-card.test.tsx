@@ -34,7 +34,7 @@ describe('SubscriptionStatusCard', () => {
     )
 
     expect(screen.getByText('Additional investment')).toBeInTheDocument()
-    expect(screen.getByText('View NDAs')).toBeInTheDocument()
-    expect(screen.getByText('Preview signed subscription pack')).toBeInTheDocument()
+    expect(screen.getByText('NDA')).toBeInTheDocument()
+    expect(screen.getByText('Subscription Pack')).toBeInTheDocument()
   })
 })

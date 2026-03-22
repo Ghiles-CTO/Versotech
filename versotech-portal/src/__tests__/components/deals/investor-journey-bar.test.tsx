@@ -49,7 +49,6 @@ describe('InvestorJourneyBar', () => {
       />
     )
 
-    expect(screen.getByText('Additional Investment')).toBeInTheDocument()
     expect(screen.getByText('Confirm reinvestment')).toBeInTheDocument()
     expect(screen.getByText('Subscription pack signed')).toBeInTheDocument()
     expect(screen.getAllByText('Funded').length).toBeGreaterThan(0)

@@ -978,7 +978,7 @@ export default function OpportunityDetailPage() {
   const canSubscribe = opportunity.can_subscribe && !isTrackingOnly && isAccountApproved
   const canExpressInterest = opportunity.can_express_interest && !isTrackingOnly && isAccountApproved
   const subscriptionEntries = opportunity.subscription_entries || []
-  const subscriptionSectionTitle = subscriptionEntries.length > 1 ? 'Your Subscriptions' : 'Your Subscription'
+  const showMultipleSubscriptions = subscriptionEntries.length > 1
 
   // Derive subscription limits from termsheet (fee_structures), falling back to deal-level fields
   const selectedTermSheet =
@@ -1019,16 +1019,37 @@ export default function OpportunityDetailPage() {
 
   const handleViewSignedPack = async (signedPackPath: string) => {
     try {
-      const response = await fetch(
-        `/api/storage/signed-url?bucket=signatures&path=${encodeURIComponent(signedPackPath)}`
-      )
-      const data = await response.json()
-      if (!response.ok || !data.signedUrl) {
-        throw new Error(data.error || 'Unable to open the signed subscription pack.')
+      const fileName = signedPackPath.split('/').pop() || 'Subscription Pack.pdf'
+      setPreviewDocument({
+        id: `subscription-pack:${signedPackPath}`,
+        file_name: fileName,
+        name: fileName,
+        mime_type: 'application/pdf',
+        type: 'subscription_pack',
+      })
+      setPreviewOpen(true)
+      setPreviewLoading(true)
+      setPreviewError(null)
+      setPreviewUrl(null)
+      setPreviewWatermark(null)
+
+      const buckets = ['signatures', 'deal-documents']
+      for (const bucket of buckets) {
+        const response = await fetch(
+          `/api/storage/signed-url?bucket=${encodeURIComponent(bucket)}&path=${encodeURIComponent(signedPackPath)}`
+        )
+        const data = await response.json()
+        if (response.ok && data.signedUrl) {
+          setPreviewUrl(data.signedUrl)
+          setPreviewLoading(false)
+          return
+        }
       }
-      window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+      throw new Error('Unable to open the signed subscription pack.')
     } catch (error) {
       console.error('Failed to open signed subscription pack:', error)
+      setPreviewError(error instanceof Error ? error.message : 'Unable to open the signed subscription pack.')
+      setPreviewLoading(false)
       toast.error(error instanceof Error ? error.message : 'Unable to open the signed subscription pack.')
     }
   }
@@ -1236,20 +1257,47 @@ export default function OpportunityDetailPage() {
         <TabsContent value="overview" className="space-y-6">
           {/* Subscription Status OR Interest Status + Key Details Row */}
           <div className="grid gap-6 lg:grid-cols-3">
-            {subscriptionEntries.length > 0 ? (
+            {showMultipleSubscriptions ? (
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <h2 className="text-base font-semibold text-foreground">{subscriptionSectionTitle}</h2>
+                  <h2 className="text-base font-semibold text-foreground">Your Subscriptions</h2>
                 </div>
                 {subscriptionEntries.map((entry) => (
                   <SubscriptionStatusCard
                     key={entry.id}
                     entry={entry}
+                    heading={null}
                     onViewNdas={opportunity.vehicle?.id ? handleViewNdas : undefined}
                     onViewSignedPack={handleViewSignedPack}
                   />
                 ))}
               </div>
+            ) : opportunity.subscription ? (
+              <SubscriptionStatusCard
+                subscription={opportunity.subscription}
+                dealCurrency={opportunity.currency}
+                onViewNdas={opportunity.vehicle?.id ? handleViewNdas : undefined}
+                onViewSignedPack={handleViewSignedPack}
+              />
+            ) : opportunity.subscription_submission ? (
+              <Card className="border-2 border-dashed border-amber-200 bg-amber-50">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base flex items-center gap-2 text-amber-900">
+                      <Clock className="h-5 w-5 text-amber-600" />
+                      Subscription Under Review
+                    </CardTitle>
+                    <Badge className="bg-amber-200 text-amber-900 border-0">
+                      Pending Review
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="text-sm text-amber-800">
+                  {opportunity.subscription_submission.submitted_at
+                    ? `Submitted on ${formatDate(opportunity.subscription_submission.submitted_at)}.`
+                    : 'Submitted and awaiting CEO approval.'}
+                </CardContent>
+              </Card>
             ) : (
               <InterestStatusCard
                 currentStage={opportunity.journey.current_stage}
@@ -1260,6 +1308,7 @@ export default function OpportunityDetailPage() {
                 canSubscribe={canSubscribe}
                 isTrackingOnly={isTrackingOnly}
                 isAccountApproved={isAccountApproved}
+                hideApprovalNotice={showAccountBlock}
                 accountApprovalStatus={opportunity.account_approval_status}
                 onExpressInterest={() => setShowInterestDialog(true)}
                 onSignNda={handleSignNda}
