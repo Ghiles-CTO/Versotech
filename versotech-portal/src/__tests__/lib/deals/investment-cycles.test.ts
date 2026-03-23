@@ -356,4 +356,55 @@ describe('investment cycle workflow rules', () => {
       })
     ).rejects.toThrow('already has a subscription')
   })
+
+  it('allows a rejected first-request cycle to be retried on the same term sheet', async () => {
+    const cycle = createCycle({
+      id: 'cycle-rejected',
+      status: 'rejected',
+      viewed_at: '2026-03-21T10:00:00.000Z',
+      interest_confirmed_at: '2026-03-21T10:05:00.000Z',
+      submission_pending_at: '2026-03-21T10:10:00.000Z',
+    })
+    const { client } = createTestSupabase({
+      deal_investment_cycles: [cycle],
+      deals: [{ id: 'deal-1', status: 'open', close_at: '2026-12-31T00:00:00.000Z', closed_processed_at: null }],
+      deal_fee_structures: [{ id: 'ts-1', deal_id: 'deal-1', status: 'published', completion_date: '2026-12-31T00:00:00.000Z', closed_processed_at: null }],
+    })
+
+    const resolved = await getOrCreateSubmissionCycle(client as any, {
+      dealId: 'deal-1',
+      investorId: 'investor-1',
+      userId: 'user-1',
+      role: 'investor',
+      cycleId: 'cycle-rejected',
+      intent: 'continue_cycle',
+    })
+
+    expect(resolved.id).toBe('cycle-rejected')
+  })
+
+  it('still blocks continuing a rejected additional-investment cycle', async () => {
+    const cycle = createCycle({
+      id: 'cycle-rejected-topup',
+      sequence_number: 2,
+      status: 'rejected',
+      funded_at: null,
+    })
+    const { client } = createTestSupabase({
+      deal_investment_cycles: [cycle],
+      deals: [{ id: 'deal-1', status: 'open', close_at: '2026-12-31T00:00:00.000Z', closed_processed_at: null }],
+      deal_fee_structures: [{ id: 'ts-1', deal_id: 'deal-1', status: 'published', completion_date: '2026-12-31T00:00:00.000Z', closed_processed_at: null }],
+    })
+
+    await expect(
+      getOrCreateSubmissionCycle(client as any, {
+        dealId: 'deal-1',
+        investorId: 'investor-1',
+        userId: 'user-1',
+        role: 'investor',
+        cycleId: 'cycle-rejected-topup',
+        intent: 'continue_cycle',
+      })
+    ).rejects.toThrow('Investment cycle is already closed')
+  })
 })

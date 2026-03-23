@@ -8,6 +8,11 @@ import {
   LIVE_CYCLE_STATUSES,
   updateDealInvestmentCycleProgress,
 } from '@/lib/deals/investment-cycles'
+import {
+  filterInvestorVisibleCycles,
+  isRetryableRejectedPrimaryCycle,
+  normalizeRejectedJourneyCycle,
+} from '@/lib/deals/investor-opportunity-visibility'
 
 type SubscriptionDocumentSummary = {
   status: string
@@ -406,7 +411,12 @@ export async function GET(request: Request, { params }: RouteParams) {
       }
     }
 
-    const chronologicalCycles = [...investmentCycles].sort((left, right) => {
+    const investorVisibleCycles = filterInvestorVisibleCycles(
+      investmentCycles,
+      cycleId => !!cycleSubscriptionsById.get(cycleId)
+    )
+
+    const chronologicalCycles = [...investorVisibleCycles].sort((left, right) => {
       const leftSequence = Number(left.sequence_number || 0)
       const rightSequence = Number(right.sequence_number || 0)
       if (leftSequence !== rightSequence) return leftSequence - rightSequence
@@ -414,12 +424,12 @@ export async function GET(request: Request, { params }: RouteParams) {
     })
 
     const selectedCycle =
-      investmentCycles.find(cycle => cycle.id === requestedCycleId) ||
-      investmentCycles.find(cycle => LIVE_CYCLE_STATUSES.includes(cycle.status)) ||
-      investmentCycles.find(cycle => cycle.status === 'funded' || cycle.status === 'active') ||
-      investmentCycles[0] ||
+      investorVisibleCycles.find(cycle => cycle.id === requestedCycleId) ||
+      investorVisibleCycles.find(cycle => LIVE_CYCLE_STATUSES.includes(cycle.status)) ||
+      investorVisibleCycles.find(cycle => cycle.status === 'funded' || cycle.status === 'active') ||
+      investorVisibleCycles[0] ||
       null
-    const primaryJourneyCycle = chronologicalCycles[0] || selectedCycle || null
+    const primaryJourneyCycle = normalizeRejectedJourneyCycle(chronologicalCycles[0] || selectedCycle || null)
 
     // Get subscription if exists (use maybeSingle as subscription might not exist)
     const vehicleId = deal.vehicle_id
@@ -430,7 +440,9 @@ export async function GET(request: Request, { params }: RouteParams) {
       submitted_at: string | null
       payload_json?: Record<string, any>
       formal_subscription_id?: string | null
-    } | null = selectedCycle ? cycleSubmissionsById.get(selectedCycle.id) || null : null
+    } | null = selectedCycle && selectedCycle.status !== 'rejected'
+      ? cycleSubmissionsById.get(selectedCycle.id) || null
+      : null
     let subscriptionDocuments: {
       nda: {
         status: string
@@ -508,6 +520,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         .select('id, status, submitted_at')
         .eq('deal_id', dealId)
         .eq('investor_id', effectiveInvestorId)
+        .in('status', ['pending_review', 'approved'])
         .order('submitted_at', { ascending: false })
         .limit(1)
         .maybeSingle()
@@ -808,9 +821,12 @@ export async function GET(request: Request, { params }: RouteParams) {
         })?.id || null
       : null
 
-    const cycleCards = investmentCycles.map(cycle => {
+    const cycleCards = investorVisibleCycles.map(cycle => {
       const cycleSubscription = cycleSubscriptionsById.get(cycle.id) || null
-      const cycleSubmission = cycleSubmissionsById.get(cycle.id) || null
+      const cycleSubmission =
+        cycle.status === 'rejected' && !cycleSubscription
+          ? null
+          : cycleSubmissionsById.get(cycle.id) || null
       const cycleTermSheet = termSheetsById.get(cycle.term_sheet_id) || null
       const signatureSummary = cycleSubscription?.id
         ? subscriptionSignatureSummaryById.get(cycleSubscription.id) || null
@@ -820,22 +836,33 @@ export async function GET(request: Request, { params }: RouteParams) {
         cycleSubmission?.payload_json?.amount ??
         cycleSubmission?.payload_json?.subscription_amount ??
         null
+      const investorDisplayCycle = normalizeRejectedJourneyCycle(cycle) || cycle
       const cycleStage = getCycleStage({
-        ...cycle,
+        ...investorDisplayCycle,
         pack_generated_at: cycleSubscription?.pack_generated_at || cycle.pack_generated_at,
         pack_sent_at: cycleSubscription?.pack_sent_at || cycle.pack_sent_at,
         signed_at: (signatureSummary?.status === 'complete' ? cycleSubscription?.signed_at : null) || cycle.signed_at,
         funded_at: cycleSubscription?.funded_at || cycle.funded_at,
         activated_at: cycleSubscription?.activated_at || cycle.activated_at,
       })
-      const canContinue =
+      const canRetryRejectedInitialCycle =
+        isRetryableRejectedPrimaryCycle(cycle, investmentCycles, cycleId => !!cycleSubscriptionsById.get(cycleId)) &&
         isAccountApproved === true &&
         canInvestInCurrentContext &&
         !cycleSubscription &&
-        cycleSubmission?.status !== 'pending_review' &&
-        LIVE_CYCLE_STATUSES.includes(cycle.status) &&
+        !cycleSubmission &&
         isDealRoundOpen &&
         !isTermSheetClosedForInvestmentRounds(cycleTermSheet)
+      const canContinue =
+        canRetryRejectedInitialCycle || (
+          isAccountApproved === true &&
+          canInvestInCurrentContext &&
+          !cycleSubscription &&
+          cycleSubmission?.status !== 'pending_review' &&
+          LIVE_CYCLE_STATUSES.includes(cycle.status) &&
+          isDealRoundOpen &&
+          !isTermSheetClosedForInvestmentRounds(cycleTermSheet)
+        )
       const canInvestMore =
         isDealRoundOpen &&
         isAccountApproved === true &&
@@ -913,6 +940,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     const subscriptionEntries = cycleCards
       .map(cycle => {
         if (!cycle.subscription && !cycle.submission) return null
+        if (!cycle.subscription && cycle.status === 'rejected') return null
 
         const signatureSummary = cycle.subscription?.id
           ? subscriptionSignatureSummaryById.get(cycle.subscription.id) || null
@@ -987,6 +1015,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     const latestReinvestmentCycle = [...chronologicalCycles]
       .reverse()
       .find(cycle => {
+        if (cycle.status === 'rejected' && !cycleSubscriptionsById.get(cycle.id)) return false
         if (!primaryJourneyCycle || cycle.id === primaryJourneyCycle.id) return false
         const cycleSubscription = cycleSubscriptionsById.get(cycle.id) || null
         const cycleSignatureSummary = cycleSubscription?.id

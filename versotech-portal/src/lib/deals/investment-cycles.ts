@@ -518,7 +518,11 @@ export async function getOrCreateSubmissionCycle(
     if (cycle.deal_id !== args.dealId || cycle.investor_id !== args.investorId) {
       throw new Error('Investment cycle does not belong to this opportunity')
     }
-    if (!isCycleStatusLive(cycle.status)) {
+    const retryableRejectedInitialCycle =
+      cycle.status === 'rejected' &&
+      cycle.sequence_number === 1
+
+    if (!isCycleStatusLive(cycle.status) && !retryableRejectedInitialCycle) {
       throw new Error('Investment cycle is already closed')
     }
 

@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:investment-flows": "vitest run src/__tests__/lib/deals/investment-cycles.test.ts src/__tests__/components/deals/investor-journey-bar.test.tsx src/__tests__/components/deals/subscription-status-card.test.tsx src/__tests__/components/deals/investor-deals-list-client.test.tsx",
+    "test:investment-flows": "vitest run src/__tests__/lib/deals/investment-cycles.test.ts src/__tests__/lib/deals/investor-opportunity-visibility.test.ts src/__tests__/components/deals/investor-journey-bar.test.tsx src/__tests__/components/deals/subscription-status-card.test.tsx src/__tests__/components/deals/investor-deals-list-client.test.tsx",
     "validate:subpack:anchors": "node scripts/check-subscription-pack-anchor-contract.mjs",
     "prepare": "husky"
   },
