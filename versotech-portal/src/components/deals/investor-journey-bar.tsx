@@ -208,6 +208,8 @@ export function InvestorJourneyBar({
                 Additional Investment{reinvestments.length > 1 ? ` #${riIdx + 1}` : ''}
               </div>
               <div className="flex items-start">
+                {/* Spacer aligns reinvestment steps under main bar's matching columns */}
+                <div className="flex-1" />
                 {REINVESTMENT_STAGES.map((stage, idx) => {
                   const completedAt = ri[stage.key]
                   const status: StageStatus =
