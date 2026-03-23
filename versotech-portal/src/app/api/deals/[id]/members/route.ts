@@ -12,6 +12,7 @@ import {
   createOrResumeDealInvestmentCycle,
   LIVE_CYCLE_STATUSES,
 } from '@/lib/deals/investment-cycles'
+import { hasInvestorAlreadyReceivedTermSheet } from '@/lib/deals/member-dispatch-rules'
 
 const addMemberSchema = z.object({
   user_id: z.string().uuid().optional(),
@@ -493,6 +494,25 @@ export async function POST(
       )
     }
 
+    let existingInvestorTermSheetCycles: Array<{ term_sheet_id: string | null }> = []
+    if (resolvedInvestorId && validatedData.term_sheet_id) {
+      const { data: priorCycles, error: priorCyclesError } = await supabase
+        .from('deal_investment_cycles' as any)
+        .select('term_sheet_id')
+        .eq('deal_id', dealId)
+        .eq('investor_id', resolvedInvestorId)
+
+      if (priorCyclesError) {
+        console.error('Fetch prior term-sheet cycles error:', priorCyclesError)
+        return NextResponse.json(
+          { error: 'Failed to verify prior term-sheet dispatch history' },
+          { status: 500 }
+        )
+      }
+
+      existingInvestorTermSheetCycles = (priorCycles as Array<{ term_sheet_id: string | null }> | null) || []
+    }
+
     // Fee plan validation: If adding through an entity, verify fee plan is accepted
     if (validatedData.referred_by_entity_id && validatedData.assigned_fee_plan_id) {
       if (validatedData.referred_by_entity_type === 'introducer') {
@@ -604,6 +624,21 @@ export async function POST(
       if (!validatedData.term_sheet_id || !resolvedInvestorId) {
         return NextResponse.json(
           { error: 'User is already a member of this deal' },
+          { status: 409 }
+        )
+      }
+
+      if (hasInvestorAlreadyReceivedTermSheet({
+        termSheetId: validatedData.term_sheet_id,
+        membershipTermSheetId: existingMember.term_sheet_id,
+        cycles: existingInvestorTermSheetCycles,
+      })) {
+        return NextResponse.json(
+          {
+            error: 'The investor has already received the term sheet',
+            message: 'The investor has already received the term sheet',
+            reasonCode: 'term_sheet_already_received',
+          },
           { status: 409 }
         )
       }
@@ -740,6 +775,25 @@ export async function POST(
           replaced_cycle_id: cycleResult?.replacedCycleId ?? null,
         },
         { status: 200 }
+      )
+    }
+
+    if (
+      validatedData.term_sheet_id &&
+      resolvedInvestorId &&
+      hasInvestorAlreadyReceivedTermSheet({
+        termSheetId: validatedData.term_sheet_id,
+        membershipTermSheetId: null,
+        cycles: existingInvestorTermSheetCycles,
+      })
+    ) {
+      return NextResponse.json(
+        {
+          error: 'The investor has already received the term sheet',
+          message: 'The investor has already received the term sheet',
+          reasonCode: 'term_sheet_already_received',
+        },
+        { status: 409 }
       )
     }
 
