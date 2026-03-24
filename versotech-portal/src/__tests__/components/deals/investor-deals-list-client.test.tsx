@@ -160,7 +160,7 @@ describe('InvestorDealsListClient', () => {
     expect(screen.getByText('Pack Signed')).toBeInTheDocument()
   })
 
-  it('does not render rejected submissions as in-progress subscriptions', () => {
+  it('ignores rejected submissions across badges, in-progress cards, and CTAs', () => {
     const investableDeal = {
       ...baseDeal,
       deal_memberships: [
@@ -189,6 +189,8 @@ describe('InvestorDealsListClient', () => {
     )
 
     expect(screen.queryByText('My Subscriptions')).toBeNull()
-    expect(screen.queryByText('Rejected')).toBeNull()
+    expect(screen.queryByText(/Subscription rejected/i)).toBeNull()
+    expect(screen.getByText('Confirm Interest')).toBeInTheDocument()
+    expect(screen.getByText('Request Data Room Access')).toBeInTheDocument()
   })
 })

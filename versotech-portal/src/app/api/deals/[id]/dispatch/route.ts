@@ -292,35 +292,49 @@ export async function POST(request: Request, { params }: RouteParams) {
     // Get existing memberships to avoid duplicates
     const { data: existingMemberships } = await serviceSupabase
       .from('deal_memberships')
-      .select('user_id')
+      .select(`
+        user_id,
+        investor_id,
+        role,
+        referred_by_entity_id,
+        referred_by_entity_type,
+        assigned_fee_plan_id,
+        term_sheet_id
+      `)
       .eq('deal_id', dealId)
       .in('user_id', user_ids)
 
-    const existingUserIds = new Set((existingMemberships || []).map(m => m.user_id))
+    const existingMembershipByUserId = new Map(
+      (existingMemberships || []).map(membership => [membership.user_id, membership])
+    )
+    const existingUserIds = new Set(existingMembershipByUserId.keys())
     const newUserIds = user_ids.filter(id => !existingUserIds.has(id))
+    const membershipActionUserIds = term_sheet_id ? user_ids : newUserIds
 
-    if (newUserIds.length === 0) {
+    if (membershipActionUserIds.length === 0) {
       return NextResponse.json(
         { error: 'All selected users are already members of this deal' },
         { status: 400 }
       )
     }
 
-    // Get user profiles and investor links for the new users
-    const { data: userProfiles } = await serviceSupabase
-      .from('profiles')
-      .select('id, email, display_name')
-      .in('id', newUserIds)
-
-    // Get investor_id for users who are investors
+    // Get investor_id for the selected users
     const { data: investorLinks } = await serviceSupabase
       .from('investor_users')
       .select('user_id, investor_id')
-      .in('user_id', newUserIds)
+      .in('user_id', membershipActionUserIds)
 
-    const investorIdMap = new Map(
-      (investorLinks || []).map(l => [l.user_id, l.investor_id])
-    )
+    const investorIdMap = new Map<string, string>()
+    for (const membership of existingMemberships || []) {
+      if (membership.user_id && membership.investor_id) {
+        investorIdMap.set(membership.user_id, membership.investor_id)
+      }
+    }
+    for (const link of investorLinks || []) {
+      if (link.user_id && link.investor_id && !investorIdMap.has(link.user_id)) {
+        investorIdMap.set(link.user_id, link.investor_id)
+      }
+    }
 
     // MODE 1: For commercial_partner_investor role, auto-create investor records if needed
     if (role === 'commercial_partner_investor') {
@@ -423,9 +437,9 @@ export async function POST(request: Request, { params }: RouteParams) {
 
     // Filter out blacklisted investors
     const blockedUserIds: string[] = []
-    const investorIdsForStatus = [...new Set((investorLinks || [])
-      .map(link => link.investor_id)
-      .filter(Boolean))]
+    const investorIdsForStatus = [...new Set(
+      Array.from(investorIdMap.values()).filter(Boolean)
+    )]
 
     if (investorIdsForStatus.length > 0) {
       const { data: investorStatuses } = await serviceSupabase
@@ -446,15 +460,16 @@ export async function POST(request: Request, { params }: RouteParams) {
       )
 
       blockedUserIds.push(
-        ...(investorLinks || [])
-          .filter(link => blockedInvestorIds.has(link.investor_id))
-          .map(link => link.user_id)
+        ...membershipActionUserIds.filter(userId => {
+          const investorId = investorIdMap.get(userId)
+          return investorId ? blockedInvestorIds.has(investorId) : false
+        })
       )
     }
 
     const dispatchUserIds = blockedUserIds.length > 0
-      ? newUserIds.filter(id => !blockedUserIds.includes(id))
-      : newUserIds
+      ? membershipActionUserIds.filter(id => !blockedUserIds.includes(id))
+      : membershipActionUserIds
 
     const usersMissingInvestorProfile = term_sheet_id
       ? dispatchUserIds.filter(userId => !investorIdMap.has(userId))
@@ -501,9 +516,10 @@ export async function POST(request: Request, { params }: RouteParams) {
         const duplicateTermSheetUserIds = dispatchUserIds.filter(userId => {
           const investorId = investorIdMap.get(userId)
           if (!investorId) return false
+          const existingMembership = existingMembershipByUserId.get(userId)
           return hasInvestorAlreadyReceivedTermSheet({
             termSheetId: term_sheet_id,
-            membershipTermSheetId: null,
+            membershipTermSheetId: existingMembership?.term_sheet_id || null,
             cycles: cyclesByInvestorId.get(investorId) || [],
           })
         })
@@ -532,35 +548,43 @@ export async function POST(request: Request, { params }: RouteParams) {
       )
     }
 
-    // Create memberships
+    const newDispatchUserIds = dispatchUserIds.filter(userId => !existingUserIds.has(userId))
+
+    // Create memberships for newly dispatched users
     const now = new Date().toISOString()
-    const membershipsToCreate = dispatchUserIds.map(userId => ({
-      deal_id: dealId,
-      user_id: userId,
-      investor_id: investorIdMap.get(userId) || null,
-      role,
-      invited_by: user.id,
-      invited_at: now,
-      dispatched_at: now, // Key field that authorizes entity users
-      // Fee plan linkage - set when dispatching through an introducer/partner
-      referred_by_entity_id: referred_by_entity_id || null,
-      referred_by_entity_type: referred_by_entity_type || null,
-      assigned_fee_plan_id: assigned_fee_plan_id || null,
-      term_sheet_id: term_sheet_id || null,
-    }))
+    let createdMemberships: any[] = []
+    if (newDispatchUserIds.length > 0) {
+      const membershipsToCreate = newDispatchUserIds.map(userId => ({
+        deal_id: dealId,
+        user_id: userId,
+        investor_id: investorIdMap.get(userId) || null,
+        role,
+        invited_by: user.id,
+        invited_at: now,
+        dispatched_at: now,
+        referred_by_entity_id: referred_by_entity_id || null,
+        referred_by_entity_type: referred_by_entity_type || null,
+        assigned_fee_plan_id: assigned_fee_plan_id || null,
+        term_sheet_id: term_sheet_id || null,
+      }))
 
-    const { data: createdMemberships, error: createError } = await serviceSupabase
-      .from('deal_memberships')
-      .insert(membershipsToCreate)
-      .select()
+      const { data: insertedMemberships, error: createError } = await serviceSupabase
+        .from('deal_memberships')
+        .insert(membershipsToCreate)
+        .select()
 
-    if (createError) {
-      console.error('Error creating memberships:', createError)
-      return NextResponse.json(
-        { error: 'Failed to dispatch users to deal' },
-        { status: 500 }
-      )
+      if (createError) {
+        console.error('Error creating memberships:', createError)
+        return NextResponse.json(
+          { error: 'Failed to dispatch users to deal' },
+          { status: 500 }
+        )
+      }
+
+      createdMemberships = insertedMemberships || []
     }
+
+    const updatedMemberships: any[] = []
 
     if (term_sheet_id) {
       const dispatchTimestamp = now
@@ -569,7 +593,7 @@ export async function POST(request: Request, { params }: RouteParams) {
           const investorId = investorIdMap.get(userId)
           if (!investorId) continue
 
-          await createOrResumeDealInvestmentCycle({
+          const cycleResult = await createOrResumeDealInvestmentCycle({
             supabase: serviceSupabase,
             dealId,
             userId,
@@ -582,6 +606,36 @@ export async function POST(request: Request, { params }: RouteParams) {
             assignedFeePlanId: assigned_fee_plan_id || null,
             dispatchTimestamp,
           })
+
+          if (existingUserIds.has(userId)) {
+            const membershipPatch: Record<string, unknown> = {
+              investor_id: investorId,
+              role: cycleResult.cycle.role || role,
+              dispatched_at: dispatchTimestamp,
+              term_sheet_id: cycleResult.cycle.term_sheet_id || term_sheet_id,
+              assigned_fee_plan_id: cycleResult.cycle.assigned_fee_plan_id || null,
+              referred_by_entity_id: cycleResult.cycle.referred_by_entity_id || null,
+              referred_by_entity_type: cycleResult.cycle.referred_by_entity_type || null,
+            }
+
+            const { data: updatedMembership, error: updateMembershipError } = await serviceSupabase
+              .from('deal_memberships')
+              .update(membershipPatch)
+              .eq('deal_id', dealId)
+              .eq('user_id', userId)
+              .select()
+              .single()
+
+            if (updateMembershipError || !updatedMembership) {
+              console.error('Error updating existing membership during bulk dispatch:', updateMembershipError)
+              return NextResponse.json(
+                { error: 'Failed to update existing member during dispatch' },
+                { status: 500 }
+              )
+            }
+
+            updatedMemberships.push(updatedMembership)
+          }
         }
       } catch (cycleError) {
         console.error('Error creating investment cycles during bulk dispatch:', cycleError)
@@ -589,7 +643,7 @@ export async function POST(request: Request, { params }: RouteParams) {
           .from('deal_memberships')
           .delete()
           .eq('deal_id', dealId)
-          .in('user_id', dispatchUserIds)
+          .in('user_id', newDispatchUserIds)
         return NextResponse.json(
           {
             error: cycleError instanceof Error ? cycleError.message : 'Failed to create investment cycle during dispatch',
@@ -610,7 +664,7 @@ export async function POST(request: Request, { params }: RouteParams) {
         details: {
           dispatched_users: dispatchUserIds,
           role,
-          skipped_existing: user_ids.length - newUserIds.length,
+          skipped_existing: term_sheet_id ? 0 : user_ids.length - newUserIds.length,
           skipped_blacklisted: blockedUserIds,
           deal_name: deal.name,
           term_sheet_id: term_sheet_id || null,
@@ -649,10 +703,10 @@ export async function POST(request: Request, { params }: RouteParams) {
     return NextResponse.json({
       success: true,
       dispatched_count: dispatchUserIds.length,
-      skipped_count: user_ids.length - newUserIds.length,
+      skipped_count: term_sheet_id ? 0 : user_ids.length - newUserIds.length,
       blocked_count: blockedUserIds.length,
       users_blocked: blockedUserIds,
-      memberships: createdMemberships
+      memberships: [...createdMemberships, ...updatedMemberships]
     })
   } catch (error) {
     console.error('Unexpected error in POST /api/deals/:id/dispatch:', error)

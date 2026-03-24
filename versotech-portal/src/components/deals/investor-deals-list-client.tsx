@@ -747,6 +747,19 @@ export function InvestorDealsListClient({
     return Array.from(locations).sort()
   }, [dealsData])
 
+  const visibleSubscriptionByDeal = useMemo(() => {
+    const visibleSubscriptions = new Map<string, SubscriptionSubmission>()
+
+    for (const [dealId, subscription] of subscriptionByDeal.entries()) {
+      const subscriptionStatus = subscription?.status?.toLowerCase() || null
+      if (subscription && subscriptionStatus && isInvestorVisibleSubmissionStatus(subscriptionStatus)) {
+        visibleSubscriptions.set(dealId, subscription)
+      }
+    }
+
+    return visibleSubscriptions
+  }, [subscriptionByDeal])
+
   // Compute subscriptions in progress (Stages 6-9)
   // These are subscriptions that are not yet activated (Stage 10)
   const subscriptionsInProgress = useMemo(() => {
@@ -760,14 +773,9 @@ export function InvestorDealsListClient({
     const activeStatuses = ['activated', 'active', 'completed']
 
     dealsData.forEach(deal => {
-      const subscription = subscriptionByDeal.get(deal.id)
+      const subscription = visibleSubscriptionByDeal.get(deal.id)
       const subscriptionStatus = subscription?.status?.toLowerCase() || null
-      if (
-        subscription &&
-        subscriptionStatus &&
-        isInvestorVisibleSubmissionStatus(subscriptionStatus) &&
-        !activeStatuses.includes(subscriptionStatus)
-      ) {
+      if (subscription && subscriptionStatus && !activeStatuses.includes(subscriptionStatus)) {
         const stageMeta = subscriptionStageMeta[subscriptionStatus] ||
           subscriptionStageMeta.pending
         inProgress.push({ deal, subscription, stageMeta })
@@ -781,7 +789,7 @@ export function InvestorDealsListClient({
     })
 
     return inProgress
-  }, [dealsData, subscriptionByDeal])
+  }, [dealsData, visibleSubscriptionByDeal])
 
   // Filter and sort deals
   const filteredDeals = useMemo(() => {
@@ -829,7 +837,7 @@ export function InvestorDealsListClient({
       filtered = filtered.filter((deal) => {
         const interest = interestByDeal.get(deal.id)
         const ndaAccess = accessByDeal.get(deal.id)
-        const subscription = subscriptionByDeal.get(deal.id)
+        const subscription = visibleSubscriptionByDeal.get(deal.id)
 
         switch (pipelineStageFilter) {
           case 'interested':
@@ -893,7 +901,7 @@ export function InvestorDealsListClient({
     sortBy,
     interestByDeal,
     accessByDeal,
-    subscriptionByDeal,
+    visibleSubscriptionByDeal,
     accountApprovalStatus
   ])
 
@@ -1536,7 +1544,7 @@ export function InvestorDealsListClient({
             const feeStructure = feeStructureMap.get(deal.id) ?? null
             const interest = interestByDeal.get(deal.id) ?? null
             const ndaAccess = accessByDeal.get(deal.id) ?? null
-            const subscription = subscriptionByDeal.get(deal.id) ?? null
+            const subscription = visibleSubscriptionByDeal.get(deal.id) ?? null
             const cycleState = cycleStateByDeal[deal.id] ?? null
             const membershipRole = deal.deal_memberships?.[0]?.role ?? null
             const roleAllowsInvest = isInvestorEligibleRole(membershipRole)

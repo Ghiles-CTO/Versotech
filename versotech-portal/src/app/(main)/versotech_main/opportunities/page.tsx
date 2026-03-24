@@ -1,6 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { AlertCircle } from 'lucide-react'
 import { InvestorDealsListClient } from '@/components/deals/investor-deals-list-client'
+import { filterInvestorVisibleSubmissions } from '@/lib/deals/investor-opportunity-visibility'
 import {
   getCycleStage,
   isTermSheetClosedForInvestmentRounds,
@@ -576,7 +577,7 @@ export default async function OpportunitiesPage() {
         .in('investor_id', investorIds)
         .order('submitted_at', { ascending: false })
 
-      subscriptionRecords = subscriptionData ?? []
+      subscriptionRecords = filterInvestorVisibleSubmissions(subscriptionData ?? [])
 
       // Also fetch subscription progress timestamps from the subscriptions table
       // These drive the 5-step progress bar (generated → sent → signed → funded → active)
@@ -843,7 +844,7 @@ export default async function OpportunitiesPage() {
     openDeals: accountApprovalStatus === 'unauthorized' ? 0 : computedOpenDeals,
     pendingInterests: investorInterests.filter(interest => interest.status === 'pending_review').length,
     activeNdas: ndaAccessRecords.length,
-    submittedSubscriptions: subscriptionRecords.length
+    submittedSubscriptions: subscriptionRecords.filter(record => record.status === 'pending_review').length
   }
 
   // Convert Maps to serializable objects for client component
