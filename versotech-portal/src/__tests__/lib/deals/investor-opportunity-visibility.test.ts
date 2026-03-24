@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  filterInvestorVisibleSubmissions,
   filterInvestorVisibleCycles,
+  isInvestorVisibleSubmissionStatus,
   isRetryableRejectedPrimaryCycle,
   normalizeRejectedJourneyCycle,
 } from '@/lib/deals/investor-opportunity-visibility'
@@ -73,5 +75,22 @@ describe('investor opportunity visibility', () => {
     expect(
       filterInvestorVisibleCycles([fundedPrimary, rejectedAdditional], () => false).map(cycle => cycle.id)
     ).toEqual(['cycle-funded'])
+  })
+
+  it('treats only pending-review and approved submissions as investor-visible', () => {
+    expect(isInvestorVisibleSubmissionStatus('pending_review')).toBe(true)
+    expect(isInvestorVisibleSubmissionStatus('approved')).toBe(true)
+    expect(isInvestorVisibleSubmissionStatus('rejected')).toBe(false)
+    expect(isInvestorVisibleSubmissionStatus('withdrawn')).toBe(false)
+  })
+
+  it('filters rejected submissions out of investor-visible submission lists', () => {
+    expect(
+      filterInvestorVisibleSubmissions([
+        { id: 'submission-pending', status: 'pending_review' },
+        { id: 'submission-approved', status: 'approved' },
+        { id: 'submission-rejected', status: 'rejected' },
+      ]).map(submission => submission.id)
+    ).toEqual(['submission-pending', 'submission-approved'])
   })
 })

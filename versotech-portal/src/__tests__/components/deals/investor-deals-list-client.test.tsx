@@ -159,4 +159,36 @@ describe('InvestorDealsListClient', () => {
     expect(screen.getByText('Confirmed')).toBeInTheDocument()
     expect(screen.getByText('Pack Signed')).toBeInTheDocument()
   })
+
+  it('does not render rejected submissions as in-progress subscriptions', () => {
+    const investableDeal = {
+      ...baseDeal,
+      deal_memberships: [
+        {
+          role: 'investor',
+          accepted_at: null,
+          dispatched_at: '2026-03-01T00:00:00.000Z'
+        }
+      ]
+    }
+
+    render(
+      <InvestorDealsListClient
+        dealsData={[investableDeal]}
+        {...baseProps}
+        subscriptionByDeal={new Map([
+          ['deal-1', {
+            id: 'submission-1',
+            deal_id: 'deal-1',
+            investor_id: 'investor-1',
+            status: 'rejected',
+            submitted_at: '2026-03-20T10:15:00.000Z',
+          }],
+        ])}
+      />
+    )
+
+    expect(screen.queryByText('My Subscriptions')).toBeNull()
+    expect(screen.queryByText('Rejected')).toBeNull()
+  })
 })

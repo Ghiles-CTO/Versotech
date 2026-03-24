@@ -1,5 +1,6 @@
 import { AppLayout } from '@/components/layout/app-layout'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { filterInvestorVisibleSubmissions } from '@/lib/deals/investor-opportunity-visibility'
 import { AlertCircle } from 'lucide-react'
 import { InvestorDealsListClient } from '@/components/deals/investor-deals-list-client'
 
@@ -377,7 +378,7 @@ export default async function InvestorDealsPage() {
         .in('investor_id', investorIds)
         .order('submitted_at', { ascending: false })
 
-      subscriptionRecords = subscriptionData ?? []
+      subscriptionRecords = filterInvestorVisibleSubmissions(subscriptionData ?? [])
 
       // Also fetch subscription progress timestamps from the subscriptions table
       const { data: subscriptionProgressData } = await serviceSupabase
@@ -460,7 +461,7 @@ export default async function InvestorDealsPage() {
     openDeals: accountApprovalStatus === 'unauthorized' ? 0 : computedOpenDeals,
     pendingInterests: investorInterests.filter(interest => interest.status === 'pending_review').length,
     activeNdas: ndaAccessRecords.length,
-    submittedSubscriptions: subscriptionRecords.length
+    submittedSubscriptions: subscriptionRecords.filter(record => record.status === 'pending_review').length
   }
 
   return (

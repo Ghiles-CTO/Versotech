@@ -54,6 +54,7 @@ import { InterestModal } from '@/components/deals/interest-modal'
 // import { SubscribeNowDialog } from '@/components/deals/subscribe-now-dialog'
 import { ShareDealDialog } from '@/components/deals/share-deal-dialog'
 import { getAccountStatusCopy, formatKycStatusLabel } from '@/lib/account-approval-status'
+import { isInvestorVisibleSubmissionStatus } from '@/lib/deals/investor-opportunity-visibility'
 
 type Nullable<T> = T | null
 
@@ -760,8 +761,14 @@ export function InvestorDealsListClient({
 
     dealsData.forEach(deal => {
       const subscription = subscriptionByDeal.get(deal.id)
-      if (subscription && !activeStatuses.includes(subscription.status.toLowerCase())) {
-        const stageMeta = subscriptionStageMeta[subscription.status.toLowerCase()] ||
+      const subscriptionStatus = subscription?.status?.toLowerCase() || null
+      if (
+        subscription &&
+        subscriptionStatus &&
+        isInvestorVisibleSubmissionStatus(subscriptionStatus) &&
+        !activeStatuses.includes(subscriptionStatus)
+      ) {
+        const stageMeta = subscriptionStageMeta[subscriptionStatus] ||
           subscriptionStageMeta.pending
         inProgress.push({ deal, subscription, stageMeta })
       }

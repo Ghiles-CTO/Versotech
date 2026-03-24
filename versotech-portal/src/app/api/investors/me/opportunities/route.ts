@@ -1,6 +1,10 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { getCycleStage, LIVE_CYCLE_STATUSES } from '@/lib/deals/investment-cycles'
+import {
+  filterInvestorVisibleCycles,
+  normalizeRejectedJourneyCycle,
+} from '@/lib/deals/investor-opportunity-visibility'
 
 /**
  * GET /api/investors/me/opportunities
@@ -171,7 +175,17 @@ export async function GET() {
       }
 
       selectedCycleMap = Array.from(cyclesByKey.entries()).reduce((acc, [key, cycleList]) => {
-        acc[key] = cycleList.find(cycle => LIVE_CYCLE_STATUSES.includes(cycle.status)) || cycleList[0] || null
+        const visibleCycles = filterInvestorVisibleCycles(
+          cycleList,
+          cycleId => Boolean(subscriptionByCycleId[cycleId])
+        )
+        const selectedCycle =
+          visibleCycles.find(cycle => LIVE_CYCLE_STATUSES.includes(cycle.status)) ||
+          visibleCycles.find(cycle => cycle.status === 'funded' || cycle.status === 'active') ||
+          visibleCycles[0] ||
+          null
+
+        acc[key] = normalizeRejectedJourneyCycle(selectedCycle) || selectedCycle
         return acc
       }, {} as Record<string, any>)
     }

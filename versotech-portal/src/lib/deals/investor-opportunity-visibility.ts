@@ -14,6 +14,11 @@ type RejectedJourneyCycle = {
   activated_at?: string | null
 }
 
+const INVESTOR_VISIBLE_SUBMISSION_STATUSES = new Set([
+  'pending_review',
+  'approved',
+])
+
 export function normalizeRejectedJourneyCycle<T extends RejectedJourneyCycle>(cycle: T | null): T | null {
   if (!cycle || cycle.status !== 'rejected') return cycle
 
@@ -54,4 +59,15 @@ export function filterInvestorVisibleCycles<T extends RejectedJourneyCycle>(
     if (cycleHasFormalSubscription(cycle.id)) return true
     return isRetryableRejectedPrimaryCycle(cycle, cycles, cycleHasFormalSubscription)
   })
+}
+
+export function isInvestorVisibleSubmissionStatus(status?: string | null): boolean {
+  if (!status) return false
+  return INVESTOR_VISIBLE_SUBMISSION_STATUSES.has(status.toLowerCase())
+}
+
+export function filterInvestorVisibleSubmissions<T extends { status?: string | null }>(
+  submissions: T[]
+): T[] {
+  return submissions.filter(submission => isInvestorVisibleSubmissionStatus(submission.status))
 }

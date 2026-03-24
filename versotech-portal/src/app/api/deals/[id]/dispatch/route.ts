@@ -6,6 +6,7 @@ import {
   assertPublishedDealTermSheet,
   createOrResumeDealInvestmentCycle,
 } from '@/lib/deals/investment-cycles'
+import { hasInvestorAlreadyReceivedTermSheet } from '@/lib/deals/member-dispatch-rules'
 import {
   buildIntroducerCommercialBlockPayload,
   evaluateIntroducerCommercialEligibility,
@@ -467,6 +468,58 @@ export async function POST(request: Request, { params }: RouteParams) {
         },
         { status: 400 }
       )
+    }
+
+    if (term_sheet_id) {
+      const dispatchInvestorIds = dispatchUserIds
+        .map(userId => investorIdMap.get(userId))
+        .filter((value): value is string => typeof value === 'string' && value.length > 0)
+
+      if (dispatchInvestorIds.length > 0) {
+        const { data: priorCycles, error: priorCyclesError } = await serviceSupabase
+          .from('deal_investment_cycles' as any)
+          .select('investor_id, term_sheet_id')
+          .eq('deal_id', dealId)
+          .in('investor_id', dispatchInvestorIds)
+
+        if (priorCyclesError) {
+          console.error('Fetch prior term-sheet cycles error:', priorCyclesError)
+          return NextResponse.json(
+            { error: 'Failed to verify prior term-sheet dispatch history' },
+            { status: 500 }
+          )
+        }
+
+        const cyclesByInvestorId = new Map<string, Array<{ term_sheet_id: string | null }>>()
+        for (const cycle of (priorCycles as Array<{ investor_id: string; term_sheet_id: string | null }> | null) || []) {
+          if (!cycle.investor_id) continue
+          const existingCycles = cyclesByInvestorId.get(cycle.investor_id) || []
+          existingCycles.push({ term_sheet_id: cycle.term_sheet_id ?? null })
+          cyclesByInvestorId.set(cycle.investor_id, existingCycles)
+        }
+
+        const duplicateTermSheetUserIds = dispatchUserIds.filter(userId => {
+          const investorId = investorIdMap.get(userId)
+          if (!investorId) return false
+          return hasInvestorAlreadyReceivedTermSheet({
+            termSheetId: term_sheet_id,
+            membershipTermSheetId: null,
+            cycles: cyclesByInvestorId.get(investorId) || [],
+          })
+        })
+
+        if (duplicateTermSheetUserIds.length > 0) {
+          return NextResponse.json(
+            {
+              error: 'The investor has already received the term sheet',
+              message: 'The investor has already received the term sheet',
+              reasonCode: 'term_sheet_already_received',
+              users_blocked: duplicateTermSheetUserIds,
+            },
+            { status: 409 }
+          )
+        }
+      }
     }
 
     if (dispatchUserIds.length === 0) {
