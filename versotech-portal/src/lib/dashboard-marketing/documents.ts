@@ -240,6 +240,21 @@ export async function uploadMarketingDocumentAsset(args: {
     throw new Error(uploadDocumentError.message || 'Failed to upload document')
   }
 
+  const previewType = getMarketingDocumentPreviewType(fileName, mimeType)
+  const signedDocumentUrl = await createSignedUrl(
+    supabase,
+    documentStoragePath,
+    PREVIEW_SIGNED_URL_TTL_SECONDS
+  )
+  const previewUrl =
+    previewType === 'pdf'
+      ? signedDocumentUrl
+      : buildOfficePreviewUrl(signedDocumentUrl)
+
+  // Cover image generation is non-fatal — large PDFs can fail to render
+  let coverStoragePath: string | null = null
+  let coverSignedUrl: string | null = null
+
   try {
     const coverBytes = await buildDocumentCoverImage({
       bytes,
@@ -254,45 +269,36 @@ export async function uploadMarketingDocumentAsset(args: {
         upsert: false,
       })
 
-    if (uploadPreviewError) {
-      throw new Error(
-        uploadPreviewError.message || 'Failed to upload document preview'
-      )
-    }
-
-    const previewType = getMarketingDocumentPreviewType(fileName, mimeType)
-    const signedDocumentUrl = await createSignedUrl(
-      supabase,
-      documentStoragePath,
-      PREVIEW_SIGNED_URL_TTL_SECONDS
-    )
-    const previewUrl =
-      previewType === 'pdf'
-        ? signedDocumentUrl
-        : buildOfficePreviewUrl(signedDocumentUrl)
-
-    return {
-      document_storage_path: documentStoragePath,
-      document_file_name: fileName,
-      document_mime_type: mimeType,
-      document_preview_storage_path: documentPreviewStoragePath,
-      document_preview_url: previewUrl,
-      document_preview_strategy:
-        previewType === 'pdf' ? 'direct' : 'office_embed',
-      document_preview_type: previewType,
-      image_url: await createSignedUrl(
+    if (!uploadPreviewError) {
+      coverStoragePath = documentPreviewStoragePath
+      coverSignedUrl = await createSignedUrl(
         supabase,
         documentPreviewStoragePath,
         COVER_SIGNED_URL_TTL_SECONDS
-      ),
+      )
+    } else {
+      console.warn(
+        `[marketing-docs] Cover upload failed for "${fileName}":`,
+        uploadPreviewError.message
+      )
     }
-  } catch (error) {
-    await supabase.storage
-      .from(MARKETING_DOCUMENT_BUCKET)
-      .remove([documentStoragePath, documentPreviewStoragePath])
-      .catch(() => undefined)
+  } catch (coverError) {
+    console.warn(
+      `[marketing-docs] Cover generation failed for "${fileName}":`,
+      coverError instanceof Error ? coverError.message : coverError
+    )
+  }
 
-    throw error
+  return {
+    document_storage_path: documentStoragePath,
+    document_file_name: fileName,
+    document_mime_type: mimeType,
+    document_preview_storage_path: coverStoragePath,
+    document_preview_url: previewUrl,
+    document_preview_strategy:
+      previewType === 'pdf' ? 'direct' : 'office_embed',
+    document_preview_type: previewType,
+    image_url: coverSignedUrl,
   }
 }
 
