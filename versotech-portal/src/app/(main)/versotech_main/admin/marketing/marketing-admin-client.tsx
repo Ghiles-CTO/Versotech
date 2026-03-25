@@ -698,26 +698,56 @@ export function MarketingAdminClient() {
   const uploadAsset = async (file: File, field: 'image' | 'video' | 'document') => {
     setUploadingField(field)
     try {
-      const body = new FormData()
-      body.append('file', file)
-      body.append('media_kind', field)
-
-      const response = await fetch('/api/admin/marketing/upload', {
-        method: 'POST',
-        body,
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to upload asset')
-      }
-
-      const payload = await response.json()
-      if (field === 'image') {
-        updateForm({
-          image_url: payload.url ?? '',
-          image_storage_path: payload.path ?? '',
+      // Documents use the 3-step presigned upload to bypass Vercel body-size limits
+      if (field === 'document') {
+        // Step 1: Get presigned upload URL
+        const presignRes = await fetch('/api/admin/marketing/presigned-upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileName: file.name,
+            mimeType: file.type || 'application/octet-stream',
+            fileSize: file.size,
+          }),
         })
-      } else if (field === 'document') {
+
+        if (!presignRes.ok) {
+          const err = await presignRes.json().catch(() => ({}))
+          throw new Error(err.error || 'Failed to get upload URL')
+        }
+
+        const { signedUrl, fileKey, token } = await presignRes.json()
+
+        // Step 2: Upload file directly to Supabase Storage (bypasses Vercel)
+        const uploadRes = await fetch(signedUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': file.type || 'application/octet-stream',
+          },
+          body: file,
+        })
+
+        if (!uploadRes.ok) {
+          throw new Error('Failed to upload file to storage')
+        }
+
+        // Step 3: Finalize — server generates cover image & returns metadata
+        const finalizeRes = await fetch('/api/admin/marketing/presigned-upload', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileKey,
+            fileName: file.name,
+            mimeType: file.type || 'application/octet-stream',
+          }),
+        })
+
+        if (!finalizeRes.ok) {
+          const err = await finalizeRes.json().catch(() => ({}))
+          throw new Error(err.error || 'Failed to finalize document upload')
+        }
+
+        const payload = await finalizeRes.json()
         updateForm({
           image_url: payload.image_url ?? '',
           document_storage_path: payload.document_storage_path ?? '',
@@ -730,17 +760,36 @@ export function MarketingAdminClient() {
           document_preview_strategy: payload.document_preview_strategy ?? null,
           document_preview_type: payload.document_preview_type ?? null,
         })
+        toast.success('Document uploaded')
       } else {
-        updateForm({
-          video_url: payload.url ?? '',
-          video_storage_path: payload.path ?? '',
+        // Images and videos still use the FormData upload (small files)
+        const body = new FormData()
+        body.append('file', file)
+        body.append('media_kind', field)
+
+        const response = await fetch('/api/admin/marketing/upload', {
+          method: 'POST',
+          body,
         })
+
+        if (!response.ok) {
+          throw new Error('Failed to upload asset')
+        }
+
+        const payload = await response.json()
+        if (field === 'image') {
+          updateForm({
+            image_url: payload.url ?? '',
+            image_storage_path: payload.path ?? '',
+          })
+        } else {
+          updateForm({
+            video_url: payload.url ?? '',
+            video_storage_path: payload.path ?? '',
+          })
+        }
+        toast.success(`${field === 'image' ? 'Image' : 'Video'} uploaded`)
       }
-      toast.success(
-        field === 'document'
-          ? 'Document uploaded'
-          : `${field === 'image' ? 'Image' : 'Video'} uploaded`
-      )
     } catch (error) {
       console.error('[marketing-admin] Failed to upload asset:', error)
       toast.error('Failed to upload asset')

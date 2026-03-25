@@ -302,6 +302,85 @@ export async function uploadMarketingDocumentAsset(args: {
   }
 }
 
+/**
+ * Finalize a marketing document that was uploaded via presigned URL.
+ * The document is already in storage at `fileKey`; this function generates
+ * the cover image and preview metadata without re-uploading the document.
+ */
+export async function finalizePresignedMarketingDocument(args: {
+  supabase: ServiceSupabaseClient
+  fileKey: string
+  fileName: string
+  mimeType: string
+  bytes: Uint8Array
+}) {
+  const { supabase, fileKey, fileName, mimeType, bytes } = args
+  const safeFileName = sanitizeFileName(fileName)
+  const previewFileName = safeFileName.replace(/\.[^.]+$/, '') || 'document'
+  const documentPreviewStoragePath = `${MARKETING_DOCUMENT_PREVIEW_PREFIX}/${Date.now()}-${previewFileName}.jpg`
+
+  const previewType = getMarketingDocumentPreviewType(fileName, mimeType)
+  const signedDocumentUrl = await createSignedUrl(
+    supabase,
+    fileKey,
+    PREVIEW_SIGNED_URL_TTL_SECONDS
+  )
+  const previewUrl =
+    previewType === 'pdf'
+      ? signedDocumentUrl
+      : buildOfficePreviewUrl(signedDocumentUrl)
+
+  // Cover image generation is non-fatal
+  let coverStoragePath: string | null = null
+  let coverSignedUrl: string | null = null
+
+  try {
+    const coverBytes = await buildDocumentCoverImage({
+      bytes,
+      fileName,
+      mimeType,
+    })
+
+    const { error: uploadPreviewError } = await supabase.storage
+      .from(MARKETING_DOCUMENT_BUCKET)
+      .upload(documentPreviewStoragePath, coverBytes, {
+        contentType: 'image/jpeg',
+        upsert: false,
+      })
+
+    if (!uploadPreviewError) {
+      coverStoragePath = documentPreviewStoragePath
+      coverSignedUrl = await createSignedUrl(
+        supabase,
+        documentPreviewStoragePath,
+        COVER_SIGNED_URL_TTL_SECONDS
+      )
+    } else {
+      console.warn(
+        `[marketing-docs] Cover upload failed for "${fileName}":`,
+        uploadPreviewError.message
+      )
+    }
+  } catch (coverError) {
+    console.warn(
+      `[marketing-docs] Cover generation failed for "${fileName}":`,
+      coverError instanceof Error ? coverError.message : coverError
+    )
+  }
+
+  return {
+    document_storage_path: fileKey,
+    document_file_name: fileName,
+    document_mime_type: mimeType,
+    document_preview_storage_path: coverStoragePath,
+    document_preview_url: previewUrl,
+    document_preview_strategy:
+      previewType === 'pdf' ? 'direct' : 'office_embed',
+    document_preview_type: previewType,
+    image_url: coverSignedUrl,
+  }
+}
+
 export async function resolveMarketingDocumentCoverUrl(
   supabase: ServiceSupabaseClient,
   path: string | null | undefined
