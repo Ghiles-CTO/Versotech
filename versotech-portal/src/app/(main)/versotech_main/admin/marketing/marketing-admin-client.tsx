@@ -8,6 +8,7 @@ import {
   Eye,
   EyeOff,
   FileUp,
+  FileText,
   Image as ImageIcon,
   Loader2,
   PencilLine,
@@ -67,6 +68,7 @@ const TYPE_DOT_COLORS: Record<string, string> = {
   opportunity: 'bg-amber-500',
   event: 'bg-violet-500',
   news: 'bg-sky-500',
+  document: 'bg-slate-500',
 }
 
 const TYPE_BADGE_COLORS: Record<string, string> = {
@@ -75,12 +77,15 @@ const TYPE_BADGE_COLORS: Record<string, string> = {
   event:
     'border-violet-200/80 bg-violet-50 text-violet-700 dark:border-violet-800/60 dark:bg-violet-950/40 dark:text-violet-400',
   news: 'border-sky-200/80 bg-sky-50 text-sky-700 dark:border-sky-800/60 dark:bg-sky-950/40 dark:text-sky-400',
+  document:
+    'border-slate-200/80 bg-slate-50 text-slate-700 dark:border-slate-700/80 dark:bg-slate-900/50 dark:text-slate-300',
 }
 
 const TYPE_THUMB_BG: Record<string, string> = {
   opportunity: 'bg-amber-50 dark:bg-amber-950/30',
   event: 'bg-violet-50 dark:bg-violet-950/30',
   news: 'bg-sky-50 dark:bg-sky-950/30',
+  document: 'bg-slate-50 dark:bg-slate-900/50',
 }
 
 /* ── Form state helpers ───────────────────────────────────────────── */
@@ -99,6 +104,13 @@ type MarketingCardFormState = {
   external_url: string
   link_domain: string
   source_published_at: string
+  document_storage_path: string
+  document_file_name: string
+  document_mime_type: string
+  document_preview_storage_path: string
+  document_preview_url: string
+  document_preview_strategy: 'direct' | 'office_embed' | null
+  document_preview_type: string | null
   metadata_json: Record<string, unknown> | null
   cta_enabled: boolean
   cta_label: string
@@ -119,6 +131,13 @@ function createEmptyFormState(): MarketingCardFormState {
     external_url: '',
     link_domain: '',
     source_published_at: '',
+    document_storage_path: '',
+    document_file_name: '',
+    document_mime_type: '',
+    document_preview_storage_path: '',
+    document_preview_url: '',
+    document_preview_strategy: null,
+    document_preview_type: null,
     metadata_json: null,
     cta_enabled: true,
     cta_label: "I'm interested",
@@ -140,6 +159,16 @@ function createNextFormState(
     }
   }
 
+  if (current.card_type === 'document') {
+    return {
+      ...next,
+      card_type: 'document',
+      media_type: 'document',
+      cta_enabled: true,
+      cta_label: 'Preview',
+    }
+  }
+
   return {
     ...next,
     card_type: current.card_type,
@@ -149,6 +178,7 @@ function createNextFormState(
 
 function toFormState(card: MarketingCard): MarketingCardFormState {
   const isNewsCard = card.card_type === 'news'
+  const isDocumentCard = card.card_type === 'document'
 
   return {
     id: card.id,
@@ -156,7 +186,7 @@ function toFormState(card: MarketingCard): MarketingCardFormState {
     status: card.status,
     title: card.title,
     summary: card.summary,
-    media_type: isNewsCard ? 'link' : card.media_type,
+    media_type: isNewsCard ? 'link' : isDocumentCard ? 'document' : card.media_type,
     image_url: card.image_url ?? '',
     image_storage_path: card.image_storage_path ?? '',
     video_url: isNewsCard ? '' : (card.video_url ?? ''),
@@ -164,15 +194,27 @@ function toFormState(card: MarketingCard): MarketingCardFormState {
     external_url: card.external_url ?? '',
     link_domain: card.link_domain ?? '',
     source_published_at: card.source_published_at ?? '',
+    document_storage_path: card.document_storage_path ?? '',
+    document_file_name: card.document_file_name ?? '',
+    document_mime_type: card.document_mime_type ?? '',
+    document_preview_storage_path: card.document_preview_storage_path ?? '',
+    document_preview_url: card.document_preview_url ?? '',
+    document_preview_strategy: card.document_preview_strategy ?? null,
+    document_preview_type: card.document_preview_type ?? null,
     metadata_json: card.metadata_json ?? null,
-    cta_enabled: isNewsCard ? card.cta_enabled : true,
-    cta_label: isNewsCard ? (card.cta_label ?? 'Open') : "I'm interested",
+    cta_enabled: isDocumentCard ? true : isNewsCard ? card.cta_enabled : true,
+    cta_label: isDocumentCard
+      ? 'Preview'
+      : isNewsCard
+        ? (card.cta_label ?? 'Open')
+        : "I'm interested",
   }
 }
 
 function formToPayload(form: MarketingCardFormState, sortOrder: number) {
   const isNewsCard = form.card_type === 'news'
-  const mediaType = isNewsCard ? 'link' : form.media_type
+  const isDocumentCard = form.card_type === 'document'
+  const mediaType = isNewsCard ? 'link' : isDocumentCard ? 'document' : form.media_type
 
   return {
     card_type: form.card_type,
@@ -188,9 +230,15 @@ function formToPayload(form: MarketingCardFormState, sortOrder: number) {
     external_url: form.external_url || null,
     link_domain: form.link_domain || null,
     source_published_at: form.source_published_at || null,
+    document_storage_path: form.document_storage_path || null,
+    document_file_name: form.document_file_name || null,
+    document_mime_type: form.document_mime_type || null,
+    document_preview_storage_path: form.document_preview_storage_path || null,
     metadata_json: form.metadata_json,
-    cta_enabled: isNewsCard ? form.cta_enabled : true,
-    cta_label: isNewsCard
+    cta_enabled: isDocumentCard ? true : isNewsCard ? form.cta_enabled : true,
+    cta_label: isDocumentCard
+      ? 'Preview'
+      : isNewsCard
       ? form.cta_enabled
         ? form.cta_label || 'Open'
         : null
@@ -201,7 +249,8 @@ function formToPayload(form: MarketingCardFormState, sortOrder: number) {
 
 function formToPreviewCard(form: MarketingCardFormState): MarketingCard {
   const isNewsCard = form.card_type === 'news'
-  const mediaType = isNewsCard ? 'link' : form.media_type
+  const isDocumentCard = form.card_type === 'document'
+  const mediaType = isNewsCard ? 'link' : isDocumentCard ? 'document' : form.media_type
 
   return {
     id: form.id ?? 'preview-card',
@@ -218,9 +267,18 @@ function formToPreviewCard(form: MarketingCardFormState): MarketingCard {
     external_url: form.external_url || null,
     link_domain: form.link_domain || null,
     source_published_at: form.source_published_at || null,
+    document_storage_path: form.document_storage_path || null,
+    document_file_name: form.document_file_name || null,
+    document_mime_type: form.document_mime_type || null,
+    document_preview_storage_path: form.document_preview_storage_path || null,
+    document_preview_url: form.document_preview_url || null,
+    document_preview_strategy: form.document_preview_strategy,
+    document_preview_type: form.document_preview_type,
     metadata_json: form.metadata_json,
-    cta_enabled: isNewsCard ? form.cta_enabled : true,
-    cta_label: isNewsCard
+    cta_enabled: isDocumentCard ? true : isNewsCard ? form.cta_enabled : true,
+    cta_label: isDocumentCard
+      ? 'Preview'
+      : isNewsCard
       ? form.cta_enabled
         ? form.cta_label || 'Open'
         : null
@@ -241,7 +299,8 @@ function hasFormContent(form: MarketingCardFormState): boolean {
     form.summary.trim() ||
     form.image_url.trim() ||
     form.video_url.trim() ||
-    form.external_url.trim()
+    form.external_url.trim() ||
+    form.document_file_name.trim()
   )
 }
 
@@ -260,7 +319,7 @@ export function MarketingAdminClient() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploadingField, setUploadingField] = useState<
-    'image' | 'video' | null
+    'image' | 'video' | 'document' | null
   >(null)
   const [fetchingMetadata, setFetchingMetadata] = useState(false)
   const [form, setForm] = useState<MarketingCardFormState>(
@@ -272,6 +331,7 @@ export function MarketingAdminClient() {
   const isEditing = Boolean(form.id)
   const hasUnsavedChanges = !areFormsEqual(form, formBaseline)
   const isNewsCard = form.card_type === 'news'
+  const isDocumentCard = form.card_type === 'document'
 
   const publishedCards = useMemo(
     () => cards.filter((card) => card.status === 'published'),
@@ -346,15 +406,51 @@ export function MarketingAdminClient() {
       media_type:
         cardType === 'news'
           ? 'link'
+          : cardType === 'document'
+            ? 'document'
           : current.card_type === 'news' && current.media_type === 'link'
             ? 'image'
             : current.media_type,
-      video_url: cardType === 'news' ? '' : current.video_url,
-      video_storage_path: cardType === 'news' ? '' : current.video_storage_path,
-      external_url: current.external_url,
-      cta_enabled: cardType === 'news' ? current.cta_enabled : true,
-      cta_label:
+      image_url:
+        current.card_type === 'document' && cardType !== 'document'
+          ? ''
+          : current.image_url,
+      image_storage_path:
+        current.card_type === 'document' && cardType !== 'document'
+          ? ''
+          : current.image_storage_path,
+      video_url:
+        cardType === 'news' || cardType === 'document' ? '' : current.video_url,
+      video_storage_path:
+        cardType === 'news' || cardType === 'document'
+          ? ''
+          : current.video_storage_path,
+      external_url:
+        cardType === 'news' ? current.external_url : '',
+      link_domain: cardType === 'news' ? current.link_domain : '',
+      source_published_at: cardType === 'news' ? current.source_published_at : '',
+      document_storage_path:
+        cardType === 'document' ? current.document_storage_path : '',
+      document_file_name: cardType === 'document' ? current.document_file_name : '',
+      document_mime_type: cardType === 'document' ? current.document_mime_type : '',
+      document_preview_storage_path:
+        cardType === 'document' ? current.document_preview_storage_path : '',
+      document_preview_url:
+        cardType === 'document' ? current.document_preview_url : '',
+      document_preview_strategy:
+        cardType === 'document' ? current.document_preview_strategy : null,
+      document_preview_type:
+        cardType === 'document' ? current.document_preview_type : null,
+      cta_enabled:
         cardType === 'news'
+          ? current.cta_enabled
+          : cardType === 'document'
+            ? true
+            : true,
+      cta_label:
+        cardType === 'document'
+          ? 'Preview'
+          : cardType === 'news'
           ? !current.cta_label || current.cta_label === "I'm interested"
             ? 'Open'
             : current.cta_label
@@ -599,7 +695,7 @@ export function MarketingAdminClient() {
     }
   }
 
-  const uploadAsset = async (file: File, field: 'image' | 'video') => {
+  const uploadAsset = async (file: File, field: 'image' | 'video' | 'document') => {
     setUploadingField(field)
     try {
       const body = new FormData()
@@ -621,13 +717,30 @@ export function MarketingAdminClient() {
           image_url: payload.url ?? '',
           image_storage_path: payload.path ?? '',
         })
+      } else if (field === 'document') {
+        updateForm({
+          image_url: payload.image_url ?? '',
+          document_storage_path: payload.document_storage_path ?? '',
+          document_file_name: payload.document_file_name ?? file.name,
+          document_mime_type:
+            payload.document_mime_type ?? file.type ?? 'application/octet-stream',
+          document_preview_storage_path:
+            payload.document_preview_storage_path ?? '',
+          document_preview_url: payload.document_preview_url ?? '',
+          document_preview_strategy: payload.document_preview_strategy ?? null,
+          document_preview_type: payload.document_preview_type ?? null,
+        })
       } else {
         updateForm({
           video_url: payload.url ?? '',
           video_storage_path: payload.path ?? '',
         })
       }
-      toast.success(`${field === 'image' ? 'Image' : 'Video'} uploaded`)
+      toast.success(
+        field === 'document'
+          ? 'Document uploaded'
+          : `${field === 'image' ? 'Image' : 'Video'} uploaded`
+      )
     } catch (error) {
       console.error('[marketing-admin] Failed to upload asset:', error)
       toast.error('Failed to upload asset')
@@ -646,7 +759,7 @@ export function MarketingAdminClient() {
           </h1>
           <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
             Curate the investor dashboard announcement carousel with investment
-            opportunities, events, and news.
+            opportunities, events, documents, and news.
           </p>
         </div>
         <div className="flex gap-2">
@@ -734,6 +847,10 @@ export function MarketingAdminClient() {
                 const thumbBg =
                   TYPE_THUMB_BG[card.card_type] ??
                   'bg-slate-50 dark:bg-slate-800'
+                const heroImageUrl =
+                  card.card_type === 'document'
+                    ? card.image_url || null
+                    : card.image_url
 
                 return (
                   <div
@@ -748,11 +865,11 @@ export function MarketingAdminClient() {
                     {/* Top: thumbnail + info */}
                     <div className="flex gap-4 p-4">
                       <div className="relative h-20 w-32 flex-shrink-0 overflow-hidden rounded-lg">
-                        {card.image_url ? (
+                        {heroImageUrl ? (
                           <img
-                            src={card.image_url}
+                            src={heroImageUrl}
                             alt=""
-                            className="h-full w-full object-cover"
+                            className="h-full w-full object-cover object-top"
                           />
                         ) : (
                           <div
@@ -761,7 +878,11 @@ export function MarketingAdminClient() {
                               thumbBg
                             )}
                           >
-                            <ImageIcon className="h-5 w-5 text-slate-300 dark:text-slate-600" />
+                            {card.card_type === 'document' ? (
+                              <FileText className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+                            ) : (
+                              <ImageIcon className="h-5 w-5 text-slate-300 dark:text-slate-600" />
+                            )}
                           </div>
                         )}
                       </div>
@@ -952,6 +1073,12 @@ export function MarketingAdminClient() {
                         News
                       </span>
                     </SelectItem>
+                    <SelectItem value="document">
+                      <span className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-slate-500" />
+                        Document
+                      </span>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -987,6 +1114,10 @@ export function MarketingAdminClient() {
                 {isNewsCard ? (
                   <div className="rounded-md border border-sky-200/60 bg-sky-50/40 px-3 py-2 text-sm text-sky-700 dark:border-sky-800/60 dark:bg-sky-950/20 dark:text-sky-300">
                     Link preview
+                  </div>
+                ) : isDocumentCard ? (
+                  <div className="rounded-md border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:border-slate-700/80 dark:bg-slate-900/40 dark:text-slate-300">
+                    Document preview
                   </div>
                 ) : (
                   <Select
@@ -1051,6 +1182,82 @@ export function MarketingAdminClient() {
               </div>
             )}
 
+            {isDocumentCard && (
+              <div className="space-y-4 rounded-xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-700/80 dark:bg-slate-900/30">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <Label>Investor document</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Upload a PDF or Word file. The card header will
+                      automatically show a clean crop of the top of page one.
+                    </p>
+                  </div>
+                  <Label
+                    htmlFor="marketing-document-upload"
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition hover:bg-slate-100 dark:hover:bg-slate-800"
+                  >
+                    {uploadingField === 'document' ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Upload className="h-4 w-4" />
+                    )}
+                    Upload document
+                  </Label>
+                  <input
+                    id="marketing-document-upload"
+                    type="file"
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0]
+                      if (file) {
+                        void uploadAsset(file, 'document')
+                      }
+                      event.currentTarget.value = ''
+                    }}
+                  />
+                </div>
+
+                {form.document_file_name ? (
+                  <div className="grid gap-4 sm:grid-cols-[1.15fr,0.85fr]">
+                    <div className="space-y-2 rounded-xl border border-slate-200/80 bg-white p-4 dark:border-slate-700/80 dark:bg-slate-950/40">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                          <FileText className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0 space-y-1">
+                          <p className="truncate text-sm font-medium text-foreground">
+                            {form.document_file_name}
+                          </p>
+                          <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                            {form.document_mime_type || 'Document'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-slate-100 dark:border-slate-700/80 dark:bg-slate-900/60">
+                      {form.image_url ? (
+                        <img
+                          src={form.image_url}
+                          alt="Generated document cover"
+                          className="h-40 w-full object-cover object-top"
+                        />
+                      ) : (
+                        <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+                          Preview cover pending
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                    No document uploaded yet.
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>Title</Label>
               <Input
@@ -1071,7 +1278,8 @@ export function MarketingAdminClient() {
               />
             </div>
 
-            {(form.media_type === 'image' ||
+            {!isDocumentCard &&
+              (form.media_type === 'image' ||
               form.media_type === 'video' ||
               form.card_type === 'news') && (
               <div className="space-y-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80 p-4">
@@ -1127,7 +1335,7 @@ export function MarketingAdminClient() {
               </div>
             )}
 
-            {form.media_type === 'video' && (
+            {!isDocumentCard && form.media_type === 'video' && (
               <div className="space-y-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80 p-4">
                 <div className="space-y-2">
                   <Label>Video URL</Label>
@@ -1168,7 +1376,8 @@ export function MarketingAdminClient() {
               </div>
             )}
 
-            {(form.media_type === 'link' || form.card_type === 'news') && (
+            {!isDocumentCard &&
+              (form.media_type === 'link' || form.card_type === 'news') && (
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2 sm:col-span-2">
                   <Label>External URL</Label>
@@ -1208,7 +1417,15 @@ export function MarketingAdminClient() {
             )}
 
             <div className="rounded-xl border border-slate-200/80 dark:border-slate-700/80 p-4">
-              {form.card_type === 'news' ? (
+              {isDocumentCard ? (
+                <div>
+                  <Label>CTA</Label>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Document cards always use the inline CTA:{' '}
+                    <span className="font-medium text-foreground">Preview</span>
+                  </p>
+                </div>
+              ) : form.card_type === 'news' ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between gap-4">
                     <div>

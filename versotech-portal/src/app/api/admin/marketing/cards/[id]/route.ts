@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { requireMarketingAdmin } from '@/lib/dashboard-marketing/auth'
+import { buildMarketingCardsResponse } from '@/lib/dashboard-marketing/query'
 import {
   marketingCardCreateSchema,
   marketingCardPatchSchema,
@@ -73,7 +74,8 @@ export async function PATCH(
     return NextResponse.json({ error: 'Failed to update card' }, { status: 500 })
   }
 
-  return NextResponse.json(data)
+  const response = await buildMarketingCardsResponse([data], { supabase })
+  return NextResponse.json(response.items[0])
 }
 
 export async function DELETE(
@@ -92,7 +94,9 @@ export async function DELETE(
   const supabase = createServiceClient() as any
   const { data: existing, error: fetchError } = await supabase
     .from('dashboard_marketing_cards')
-    .select('id, image_storage_path, video_storage_path')
+    .select(
+      'id, image_storage_path, video_storage_path, document_storage_path, document_preview_storage_path'
+    )
     .eq('id', id)
     .maybeSingle()
 
@@ -105,6 +109,22 @@ export async function DELETE(
     const { error: removeError } = await supabase.storage.from('public-assets').remove(storagePaths)
     if (removeError) {
       console.warn('[admin/marketing/cards] Failed to remove stored assets:', removeError)
+    }
+  }
+
+  const documentStoragePaths = [
+    existing.document_storage_path,
+    existing.document_preview_storage_path,
+  ].filter(Boolean)
+  if (documentStoragePaths.length > 0) {
+    const { error: removeDocumentError } = await supabase.storage
+      .from(process.env.STORAGE_BUCKET_NAME || 'documents')
+      .remove(documentStoragePaths)
+    if (removeDocumentError) {
+      console.warn(
+        '[admin/marketing/cards] Failed to remove stored document assets:',
+        removeDocumentError
+      )
     }
   }
 

@@ -3,8 +3,22 @@ import type {
   MarketingCardsResponse,
   MarketingLead,
 } from '@/types/dashboard-marketing'
+import { resolveMarketingDocumentCoverUrl } from '@/lib/dashboard-marketing/documents'
 
-function rowToCard(row: any): MarketingCard {
+async function rowToCard(
+  row: any,
+  options?: {
+    supabase?: any
+  }
+): Promise<MarketingCard> {
+  const documentCoverUrl =
+    row.card_type === 'document' && options?.supabase
+      ? await resolveMarketingDocumentCoverUrl(
+          options.supabase,
+          row.document_preview_storage_path
+        )
+      : null
+
   return {
     id: row.id,
     card_type: row.card_type,
@@ -12,13 +26,20 @@ function rowToCard(row: any): MarketingCard {
     title: row.title,
     summary: row.summary,
     media_type: row.media_type,
-    image_url: row.image_url ?? null,
+    image_url: documentCoverUrl ?? row.image_url ?? null,
     image_storage_path: row.image_storage_path ?? null,
     video_url: row.video_url ?? null,
     video_storage_path: row.video_storage_path ?? null,
     external_url: row.external_url ?? null,
     link_domain: row.link_domain ?? null,
     source_published_at: row.source_published_at ?? null,
+    document_storage_path: row.document_storage_path ?? null,
+    document_file_name: row.document_file_name ?? null,
+    document_mime_type: row.document_mime_type ?? null,
+    document_preview_storage_path: row.document_preview_storage_path ?? null,
+    document_preview_url: null,
+    document_preview_strategy: null,
+    document_preview_type: null,
     metadata_json: row.metadata_json ?? null,
     cta_enabled: Boolean(row.cta_enabled),
     cta_label: row.cta_label ?? null,
@@ -31,12 +52,18 @@ function rowToCard(row: any): MarketingCard {
   }
 }
 
-export function buildMarketingCardsResponse(
+export async function buildMarketingCardsResponse(
   rows: any[],
-  options?: { submittedCardIds?: string[] }
-): MarketingCardsResponse {
+  options?: { submittedCardIds?: string[]; supabase?: any }
+): Promise<MarketingCardsResponse> {
   return {
-    items: (rows ?? []).map(rowToCard),
+    items: await Promise.all(
+      (rows ?? []).map((row) =>
+        rowToCard(row, {
+          supabase: options?.supabase,
+        })
+      )
+    ),
     submittedCardIds: options?.submittedCardIds ?? [],
     generatedAt: new Date().toISOString(),
   }

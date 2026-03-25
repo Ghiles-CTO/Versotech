@@ -31,7 +31,11 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to load cards' }, { status: 500 })
   }
 
-  return NextResponse.json(buildMarketingCardsResponse(data ?? []))
+  return NextResponse.json(
+    await buildMarketingCardsResponse(data ?? [], {
+      supabase,
+    })
+  )
 }
 
 export async function POST(request: NextRequest) {
@@ -68,5 +72,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to create card' }, { status: 500 })
   }
 
-  return NextResponse.json(data, { status: 201 })
+  const response = await buildMarketingCardsResponse([data], { supabase })
+  return NextResponse.json(response.items[0], { status: 201 })
 }

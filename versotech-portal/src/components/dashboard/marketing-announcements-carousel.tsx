@@ -1,19 +1,22 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  FileText,
   Loader2,
   Play,
   Sparkles,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
+import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import { useConfirmationDialog } from '@/hooks/use-confirmation-dialog'
+import { downloadFileFromUrl } from '@/lib/browser-download'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/components/theme-provider'
 import { Badge } from '@/components/ui/badge'
@@ -25,6 +28,7 @@ import {
   type MarketingCard,
   type MarketingCardsResponse,
 } from '@/types/dashboard-marketing'
+import type { DocumentReference, DocumentUrlResponse } from '@/types/document-viewer.types'
 
 /* ── Type-specific badge colours ──────────────────────────────────── */
 
@@ -40,6 +44,10 @@ const BADGE_COLORS: Record<string, { light: string; dark: string }> = {
   news: {
     light: 'border-sky-200/80 bg-sky-50 text-sky-700',
     dark: 'border-sky-400/20 bg-sky-400/10 text-sky-300',
+  },
+  document: {
+    light: 'border-slate-200/80 bg-slate-50 text-slate-700',
+    dark: 'border-slate-400/20 bg-slate-400/10 text-slate-200',
   },
 }
 
@@ -75,6 +83,26 @@ function AnnouncementsSkeleton() {
   )
 }
 
+function getDocumentMetaLabel(card: MarketingCard) {
+  const extension = card.document_file_name?.split('.').pop()?.toUpperCase()
+  if (extension) {
+    return `${extension} document`
+  }
+
+  return 'Document'
+}
+
+function toDocumentReference(card: MarketingCard): DocumentReference {
+  return {
+    id: card.id,
+    file_name: card.document_file_name,
+    name: card.document_file_name,
+    mime_type: card.document_mime_type,
+    preview_type: card.document_preview_type ?? undefined,
+    preview_strategy: card.document_preview_strategy ?? undefined,
+  }
+}
+
 /* ── Main component ───────────────────────────────────────────────── */
 
 export function MarketingAnnouncementsCarousel({
@@ -94,6 +122,16 @@ export function MarketingAnnouncementsCarousel({
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null)
   const [submittingId, setSubmittingId] = useState<string | null>(null)
   const [submittedIds, setSubmittedIds] = useState<Set<string>>(new Set())
+  const [viewerCard, setViewerCard] = useState<MarketingCard | null>(null)
+  const [viewerDocument, setViewerDocument] = useState<DocumentReference | null>(
+    null
+  )
+  const [viewerPreviewUrl, setViewerPreviewUrl] = useState<string | null>(null)
+  const [viewerLoading, setViewerLoading] = useState(false)
+  const [viewerError, setViewerError] = useState<string | null>(null)
+  const [viewerHideDownload, setViewerHideDownload] = useState(previewMode)
+  const [uniformCardHeight, setUniformCardHeight] = useState<number | null>(null)
+  const measurementCardRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   useEffect(() => {
     if (items) {
@@ -175,6 +213,29 @@ export function MarketingAnnouncementsCarousel({
     [cards, pageStartIndex, itemsPerPage]
   )
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    if (!cards.length) {
+      setUniformCardHeight(null)
+      return
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      const nextHeight = cards.reduce((maxHeight, card) => {
+        const measuredHeight =
+          measurementCardRefs.current[card.id]?.getBoundingClientRect().height ??
+          0
+
+        return Math.max(maxHeight, measuredHeight)
+      }, 0)
+
+      setUniformCardHeight(nextHeight > 0 ? Math.ceil(nextHeight) : null)
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [cards, itemsPerPage, isDark])
+
   const moveNext = () =>
     setCurrentPage((value) => Math.min(totalPages - 1, value + 1))
   const movePrevious = () => setCurrentPage((value) => Math.max(0, value - 1))
@@ -229,6 +290,468 @@ export function MarketingAnnouncementsCarousel({
     }
   }
 
+  const loadDocumentPayload = async (
+    card: MarketingCard,
+    mode: 'preview' | 'download'
+  ) => {
+    if (!card.id || card.id === 'preview-card') {
+      throw new Error('Save the document card before downloading it.')
+    }
+
+    const params = new URLSearchParams({ mode })
+    if (investorId) {
+      params.set('investor_id', investorId)
+    }
+
+    const response = await fetch(
+      `/api/dashboard-marketing/cards/${card.id}/document?${params.toString()}`,
+      {
+        cache: 'no-store',
+      }
+    )
+
+    if (!response.ok) {
+      const errorPayload = await response.json().catch(() => null)
+      throw new Error(errorPayload?.error || 'Failed to load document preview')
+    }
+
+    return (await response.json()) as DocumentUrlResponse
+  }
+
+  const closeDocumentViewer = () => {
+    setViewerCard(null)
+    setViewerDocument(null)
+    setViewerPreviewUrl(null)
+    setViewerLoading(false)
+    setViewerError(null)
+    setViewerHideDownload(previewMode)
+  }
+
+  const openDocumentPreview = async (card: MarketingCard) => {
+    setViewerCard(card)
+    setViewerDocument(toDocumentReference(card))
+    setViewerPreviewUrl(null)
+    setViewerError(null)
+    setViewerLoading(true)
+    setViewerHideDownload(previewMode)
+
+    if (card.document_preview_url) {
+      setViewerPreviewUrl(card.document_preview_url)
+      setViewerLoading(false)
+      return
+    }
+
+    try {
+      const payload = await loadDocumentPayload(card, 'preview')
+      setViewerDocument((current) =>
+        current
+          ? {
+              ...current,
+              preview_type: payload.document?.type ?? current.preview_type,
+              preview_strategy:
+                payload.preview_strategy ?? current.preview_strategy,
+            }
+          : {
+              ...toDocumentReference(card),
+              preview_type: payload.document?.type ?? null,
+              preview_strategy: payload.preview_strategy ?? null,
+            }
+      )
+      setViewerPreviewUrl(payload.download_url)
+    } catch (previewError) {
+      console.error(
+        '[marketing-carousel] Failed to open document preview:',
+        previewError
+      )
+      const message =
+        previewError instanceof Error
+          ? previewError.message
+          : 'Failed to load document preview'
+      setViewerError(message)
+      toast.error(message)
+    } finally {
+      setViewerLoading(false)
+    }
+  }
+
+  const downloadDocument = async () => {
+    if (!viewerCard || !viewerDocument?.file_name) return
+
+    try {
+      const payload = await loadDocumentPayload(viewerCard, 'download')
+      await downloadFileFromUrl(payload.download_url, viewerDocument.file_name)
+    } catch (downloadError) {
+      console.error(
+        '[marketing-carousel] Failed to download document:',
+        downloadError
+      )
+      toast.error(
+        downloadError instanceof Error
+          ? downloadError.message
+          : 'Failed to download document'
+      )
+    }
+  }
+
+  const setMeasurementCardRef =
+    (cardId: string) => (node: HTMLDivElement | null) => {
+      measurementCardRefs.current[cardId] = node
+    }
+
+  const renderCard = (card: MarketingCard, options?: { isMeasuring?: boolean }) => {
+    const isMeasuring = options?.isMeasuring ?? false
+    const isInterestCard =
+      card.card_type === 'opportunity' || card.card_type === 'event'
+    const isDocumentCard = card.card_type === 'document'
+    const isSubmitted = submittedIds.has(card.id)
+    const isInlineVideo =
+      !isMeasuring && card.media_type === 'video' && activeVideoId === card.id
+    const isCtaDisabled =
+      isMeasuring || previewMode || isSubmitted || submittingId === card.id
+    const showOpenButton =
+      card.card_type === 'news' && card.cta_enabled && card.external_url
+    const showDocumentPreviewButton = Boolean(
+      isDocumentCard && (card.document_file_name || card.document_storage_path)
+    )
+    const badgeColor = BADGE_COLORS[card.card_type] ?? BADGE_COLORS.news
+    const sourceDate = card.source_published_at
+      ? format(new Date(card.source_published_at), 'MMM d, yyyy')
+      : null
+    const heroImageUrl = card.image_url ?? null
+
+    return (
+      <Card
+        key={card.id}
+        style={
+          !isMeasuring && uniformCardHeight
+            ? { height: `${uniformCardHeight}px` }
+            : undefined
+        }
+        className={cn(
+          'group h-full gap-0 overflow-hidden rounded-2xl border py-0 transition-all duration-300',
+          isDark
+            ? 'border-white/[0.06] bg-card hover:border-white/[0.12] hover:shadow-lg hover:shadow-black/20'
+            : 'border-slate-200/60 bg-white hover:border-slate-300 hover:shadow-lg hover:shadow-slate-200/50'
+        )}
+      >
+        <div className="relative aspect-[16/10] overflow-hidden">
+          {isDocumentCard ? (
+            <>
+              {heroImageUrl ? (
+                <>
+                  <img
+                    src={heroImageUrl}
+                    alt={isMeasuring ? '' : card.title}
+                    className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                  <div
+                    className={cn(
+                      'absolute inset-0 bg-gradient-to-t',
+                      isDark
+                        ? 'from-black/45 via-black/5 to-transparent'
+                        : 'from-black/15 via-transparent to-transparent'
+                    )}
+                  />
+                </>
+              ) : (
+                <div
+                  className={cn(
+                    'flex h-full w-full items-center justify-center bg-gradient-to-br',
+                    isDark
+                      ? 'from-slate-900 via-slate-950 to-black'
+                      : 'from-slate-100 via-white to-slate-200'
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'flex h-14 w-14 items-center justify-center rounded-2xl border bg-white/90 shadow-sm backdrop-blur-sm',
+                      isDark
+                        ? 'border-white/10 text-slate-500'
+                        : 'border-slate-200 text-slate-500'
+                    )}
+                  >
+                    <FileText className="h-7 w-7" />
+                  </div>
+                </div>
+              )}
+            </>
+          ) : card.media_type === 'video' && card.video_url ? (
+            isInlineVideo ? (
+              <video
+                src={card.video_url}
+                poster={card.image_url ?? undefined}
+                controls
+                autoPlay
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={
+                  isMeasuring ? undefined : () => setActiveVideoId(card.id)
+                }
+                className="relative h-full w-full"
+                tabIndex={isMeasuring ? -1 : undefined}
+              >
+                {heroImageUrl ? (
+                  <img
+                    src={heroImageUrl}
+                    alt={isMeasuring ? '' : card.title}
+                    className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                ) : (
+                  <div
+                    className={cn(
+                      'h-full w-full',
+                      isDark ? 'bg-zinc-800' : 'bg-slate-200'
+                    )}
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-transparent" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-slate-900 shadow-xl backdrop-blur-sm transition-transform duration-300 group-hover:scale-110">
+                    <Play className="ml-0.5 h-5 w-5 fill-current" />
+                  </span>
+                </div>
+              </button>
+            )
+          ) : (
+            (() => {
+              const mediaContent = heroImageUrl ? (
+                <>
+                  <img
+                    src={heroImageUrl}
+                    alt={isMeasuring ? '' : card.title}
+                    className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                  <div
+                    className={cn(
+                      'absolute inset-0 bg-gradient-to-t',
+                      isDark
+                        ? 'from-black/50 via-black/5 to-transparent'
+                        : 'from-black/20 via-transparent to-transparent'
+                    )}
+                  />
+                </>
+              ) : (
+                <div
+                  className={cn(
+                    'flex h-full flex-col justify-between bg-gradient-to-br p-6',
+                    isDark
+                      ? 'from-zinc-800 via-zinc-900 to-black'
+                      : 'from-slate-50 via-slate-100 to-slate-200'
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'h-8 w-8 rounded-lg',
+                      isDark ? 'bg-white/[0.04]' : 'bg-black/[0.03]'
+                    )}
+                  />
+                  {card.link_domain && (
+                    <p
+                      className={cn(
+                        'text-xs font-medium uppercase tracking-[0.24em]',
+                        isDark ? 'text-zinc-500' : 'text-slate-400'
+                      )}
+                    >
+                      {card.link_domain}
+                    </p>
+                  )}
+                </div>
+              )
+
+              if (card.external_url && !previewMode && !isMeasuring) {
+                return (
+                  <Link
+                    href={card.external_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block h-full"
+                    aria-label={`Open ${card.title}`}
+                  >
+                    {mediaContent}
+                  </Link>
+                )
+              }
+
+              return mediaContent
+            })()
+          )}
+
+          <div className="absolute left-3 top-3">
+            <Badge
+              variant="outline"
+              className={cn(
+                'rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] backdrop-blur-sm',
+                isDark ? badgeColor.dark : badgeColor.light
+              )}
+            >
+              {MARKETING_BADGE_LABELS[card.card_type]}
+            </Badge>
+          </div>
+        </div>
+
+        <CardContent className="flex flex-1 flex-col gap-3 p-5 pt-4">
+          {(isDocumentCard || card.link_domain || sourceDate) && (
+            <div
+              className={cn(
+                'flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.1em]',
+                isDark ? 'text-zinc-500' : 'text-slate-400'
+              )}
+            >
+              {isDocumentCard ? (
+                <span>{getDocumentMetaLabel(card)}</span>
+              ) : (
+                card.link_domain && <span>{card.link_domain}</span>
+              )}
+              {card.link_domain && sourceDate && !isDocumentCard && (
+                <span className={isDark ? 'text-zinc-700' : 'text-slate-300'}>
+                  ·
+                </span>
+              )}
+              {sourceDate && <span>{sourceDate}</span>}
+            </div>
+          )}
+
+          <div className="space-y-2">
+            {card.external_url && !isDocumentCard && !isMeasuring ? (
+              <>
+                <Link
+                  href={card.external_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block"
+                >
+                  <h3
+                    className={cn(
+                      'text-lg font-semibold leading-snug tracking-tight transition-colors',
+                      isDark
+                        ? 'text-white hover:text-white/80'
+                        : 'text-slate-900 hover:text-slate-600'
+                    )}
+                  >
+                    {card.title}
+                  </h3>
+                </Link>
+                <p
+                  className={cn(
+                    'text-sm leading-relaxed',
+                    isDark ? 'text-zinc-400' : 'text-slate-500'
+                  )}
+                >
+                  {card.summary}
+                </p>
+              </>
+            ) : (
+              <>
+                <h3
+                  className={cn(
+                    'text-lg font-semibold leading-snug tracking-tight',
+                    isDark ? 'text-white' : 'text-slate-900'
+                  )}
+                >
+                  {card.title}
+                </h3>
+                <p
+                  className={cn(
+                    'text-sm leading-relaxed',
+                    isDark ? 'text-zinc-400' : 'text-slate-500'
+                  )}
+                >
+                  {card.summary}
+                </p>
+              </>
+            )}
+          </div>
+
+          <div className="mt-auto flex flex-wrap items-center justify-center gap-3 pt-1">
+            {isInterestCard && (
+              <Button
+                type="button"
+                size="sm"
+                onClick={
+                  isMeasuring ? undefined : () => handleInterestClick(card)
+                }
+                disabled={isCtaDisabled}
+                tabIndex={isMeasuring ? -1 : undefined}
+                className={cn(
+                  'min-w-[160px] rounded-full px-5 text-xs font-medium',
+                  isSubmitted && 'bg-emerald-600 hover:bg-emerald-600'
+                )}
+              >
+                {submittingId === card.id ? (
+                  <>
+                    <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                    Saving
+                  </>
+                ) : isSubmitted ? (
+                  'Interest received'
+                ) : (
+                  card.cta_label ?? "I'm interested"
+                )}
+              </Button>
+            )}
+
+            {showOpenButton && card.external_url && (
+              <Button
+                asChild={!isMeasuring}
+                type="button"
+                size="sm"
+                disabled={previewMode || isMeasuring}
+                tabIndex={isMeasuring ? -1 : undefined}
+                className="min-w-[160px] rounded-full px-5 text-xs font-medium"
+              >
+                {isMeasuring ? (
+                  <span>
+                    {card.cta_label ?? 'Open'}
+                    <ExternalLink className="ml-2 inline h-3.5 w-3.5" />
+                  </span>
+                ) : (
+                  <Link
+                    href={card.external_url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {card.cta_label ?? 'Open'}
+                    <ExternalLink className="ml-2 h-3.5 w-3.5" />
+                  </Link>
+                )}
+              </Button>
+            )}
+
+            {showDocumentPreviewButton && (
+              <Button
+                type="button"
+                size="sm"
+                onClick={
+                  isMeasuring ? undefined : () => void openDocumentPreview(card)
+                }
+                disabled={
+                  isMeasuring || (viewerLoading && viewerCard?.id === card.id)
+                }
+                tabIndex={isMeasuring ? -1 : undefined}
+                className="min-w-[160px] rounded-full px-5 text-xs font-medium"
+              >
+                {viewerLoading && viewerCard?.id === card.id && !isMeasuring ? (
+                  <>
+                    <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                    Loading
+                  </>
+                ) : (
+                  <>
+                    {card.cta_label ?? 'Preview'}
+                    <FileText className="ml-2 h-3.5 w-3.5" />
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   if (loading) {
     return <AnnouncementsSkeleton />
   }
@@ -272,7 +795,7 @@ export function MarketingAnnouncementsCarousel({
                 isDark ? 'text-white' : 'text-slate-900'
               )}
             >
-              Upcoming opportunities, events, and market context
+              Upcoming opportunities, events, documents, and market context
               <span
                 className={cn(
                   'mt-1.5 block h-[2px] w-12 rounded-full',
@@ -377,281 +900,45 @@ export function MarketingAnnouncementsCarousel({
           </CardContent>
         </Card>
       ) : (
-        <div
-          className={cn(
-            'grid gap-5',
-            itemsPerPage === 3 ? 'lg:grid-cols-3' : 'grid-cols-1'
-          )}
-        >
-          {visibleCards.map((card) => {
-            const isInterestCard =
-              card.card_type === 'opportunity' || card.card_type === 'event'
-            const isSubmitted = submittedIds.has(card.id)
-            const isInlineVideo =
-              card.media_type === 'video' && activeVideoId === card.id
-            const isCtaDisabled =
-              previewMode || isSubmitted || submittingId === card.id
-            const showOpenButton =
-              card.card_type === 'news' && card.cta_enabled && card.external_url
-            const badgeColor = BADGE_COLORS[card.card_type] ?? BADGE_COLORS.news
-            const sourceDate = card.source_published_at
-              ? format(new Date(card.source_published_at), 'MMM d, yyyy')
-              : null
-
-            return (
-              <Card
-                key={card.id}
-                className={cn(
-                  'group gap-0 overflow-hidden rounded-2xl border py-0 transition-all duration-300',
-                  isDark
-                    ? 'border-white/[0.06] bg-card hover:border-white/[0.12] hover:shadow-lg hover:shadow-black/20'
-                    : 'border-slate-200/60 bg-white hover:border-slate-300 hover:shadow-lg hover:shadow-slate-200/50'
-                )}
+        <div className="relative">
+          <div
+            aria-hidden="true"
+            className={cn(
+              'pointer-events-none absolute inset-x-0 top-0 grid gap-5 opacity-0',
+              itemsPerPage === 3 ? 'lg:grid-cols-3' : 'grid-cols-1'
+            )}
+          >
+            {cards.map((card) => (
+              <div
+                key={`measure-${card.id}`}
+                ref={setMeasurementCardRef(card.id)}
               >
-                <div className="relative aspect-[16/10] overflow-hidden">
-                  {card.media_type === 'video' && card.video_url ? (
-                    isInlineVideo ? (
-                      <video
-                        src={card.video_url}
-                        poster={card.image_url ?? undefined}
-                        controls
-                        autoPlay
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setActiveVideoId(card.id)}
-                        className="relative h-full w-full"
-                      >
-                        {card.image_url ? (
-                          <img
-                            src={card.image_url}
-                            alt={card.title}
-                            className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
-                          />
-                        ) : (
-                          <div
-                            className={cn(
-                              'h-full w-full',
-                              isDark ? 'bg-zinc-800' : 'bg-slate-200'
-                            )}
-                          />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-transparent" />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-slate-900 shadow-xl backdrop-blur-sm transition-transform duration-300 group-hover:scale-110">
-                            <Play className="ml-0.5 h-5 w-5 fill-current" />
-                          </span>
-                        </div>
-                      </button>
-                    )
-                  ) : (
-                    (() => {
-                      const mediaContent = card.image_url ? (
-                        <>
-                          <img
-                            src={card.image_url}
-                            alt={card.title}
-                            className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
-                          />
-                          <div
-                            className={cn(
-                              'absolute inset-0 bg-gradient-to-t',
-                              isDark
-                                ? 'from-black/50 via-black/5 to-transparent'
-                                : 'from-black/20 via-transparent to-transparent'
-                            )}
-                          />
-                        </>
-                      ) : (
-                        <div
-                          className={cn(
-                            'flex h-full flex-col justify-between bg-gradient-to-br p-6',
-                            isDark
-                              ? 'from-zinc-800 via-zinc-900 to-black'
-                              : 'from-slate-50 via-slate-100 to-slate-200'
-                          )}
-                        >
-                          <div
-                            className={cn(
-                              'h-8 w-8 rounded-lg',
-                              isDark ? 'bg-white/[0.04]' : 'bg-black/[0.03]'
-                            )}
-                          />
-                          {card.link_domain && (
-                            <p
-                              className={cn(
-                                'text-xs font-medium uppercase tracking-[0.24em]',
-                                isDark ? 'text-zinc-500' : 'text-slate-400'
-                              )}
-                            >
-                              {card.link_domain}
-                            </p>
-                          )}
-                        </div>
-                      )
-
-                      if (card.external_url && !previewMode) {
-                        return (
-                          <Link
-                            href={card.external_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="block h-full"
-                            aria-label={`Open ${card.title}`}
-                          >
-                            {mediaContent}
-                          </Link>
-                        )
-                      }
-
-                      return mediaContent
-                    })()
-                  )}
-
-                  {/* Floating type badge */}
-                  <div className="absolute left-3 top-3">
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        'rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] backdrop-blur-sm',
-                        isDark ? badgeColor.dark : badgeColor.light
-                      )}
-                    >
-                      {MARKETING_BADGE_LABELS[card.card_type]}
-                    </Badge>
-                  </div>
-                </div>
-
-                <CardContent className="flex flex-1 flex-col gap-3 p-5 pt-4">
-                  {/* Source attribution */}
-                  {(card.link_domain || sourceDate) && (
-                    <div
-                      className={cn(
-                        'flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.1em]',
-                        isDark ? 'text-zinc-500' : 'text-slate-400'
-                      )}
-                    >
-                      {card.link_domain && <span>{card.link_domain}</span>}
-                      {card.link_domain && sourceDate && (
-                        <span
-                          className={
-                            isDark ? 'text-zinc-700' : 'text-slate-300'
-                          }
-                        >
-                          ·
-                        </span>
-                      )}
-                      {sourceDate && <span>{sourceDate}</span>}
-                    </div>
-                  )}
-
-                  {/* Title + summary */}
-                  <div className="space-y-2">
-                    {card.external_url ? (
-                      <>
-                        <Link
-                          href={card.external_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="block"
-                        >
-                          <h3
-                            className={cn(
-                              'text-lg font-semibold leading-snug tracking-tight transition-colors',
-                              isDark
-                                ? 'text-white hover:text-white/80'
-                                : 'text-slate-900 hover:text-slate-600'
-                            )}
-                          >
-                            {card.title}
-                          </h3>
-                        </Link>
-                        <p
-                          className={cn(
-                            'text-sm leading-relaxed',
-                            isDark ? 'text-zinc-400' : 'text-slate-500'
-                          )}
-                        >
-                          {card.summary}
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <h3
-                          className={cn(
-                            'text-lg font-semibold leading-snug tracking-tight',
-                            isDark ? 'text-white' : 'text-slate-900'
-                          )}
-                        >
-                          {card.title}
-                        </h3>
-                        <p
-                          className={cn(
-                            'text-sm leading-relaxed',
-                            isDark ? 'text-zinc-400' : 'text-slate-500'
-                          )}
-                        >
-                          {card.summary}
-                        </p>
-                      </>
-                    )}
-                  </div>
-
-                  {/* CTA buttons — pill-shaped */}
-                  <div className="mt-auto flex flex-wrap items-center justify-center gap-3 pt-1">
-                    {isInterestCard && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={() => handleInterestClick(card)}
-                        disabled={isCtaDisabled}
-                        className={cn(
-                          'min-w-[160px] rounded-full px-5 text-xs font-medium',
-                          isSubmitted && 'bg-emerald-600 hover:bg-emerald-600'
-                        )}
-                      >
-                        {submittingId === card.id ? (
-                          <>
-                            <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                            Saving
-                          </>
-                        ) : isSubmitted ? (
-                          'Interest received'
-                        ) : (
-                          (card.cta_label ?? "I'm interested")
-                        )}
-                      </Button>
-                    )}
-
-                    {showOpenButton && card.external_url && (
-                      <Button
-                        asChild
-                        type="button"
-                        size="sm"
-                        disabled={previewMode}
-                        className="min-w-[160px] rounded-full px-5 text-xs font-medium"
-                      >
-                        <Link
-                          href={card.external_url}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {card.cta_label ?? 'Open'}
-                          <ExternalLink className="ml-2 h-3.5 w-3.5" />
-                        </Link>
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
+                {renderCard(card, { isMeasuring: true })}
+              </div>
+            ))}
+          </div>
+          <div
+            className={cn(
+              'grid items-stretch gap-5',
+              itemsPerPage === 3 ? 'lg:grid-cols-3' : 'grid-cols-1'
+            )}
+          >
+            {visibleCards.map((card) => renderCard(card))}
+          </div>
         </div>
       )}
 
       <ConfirmationDialog />
+      <DocumentViewerFullscreen
+        isOpen={Boolean(viewerDocument)}
+        document={viewerDocument}
+        previewUrl={viewerPreviewUrl}
+        isLoading={viewerLoading}
+        error={viewerError}
+        onClose={closeDocumentViewer}
+        onDownload={() => void downloadDocument()}
+        hideDownload={viewerHideDownload}
+      />
     </section>
   )
 }

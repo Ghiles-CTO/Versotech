@@ -49,6 +49,10 @@ export const marketingCardCreateSchema = z
     external_url: nullableUrl,
     link_domain: nullableTrimmedString(120),
     source_published_at: nullableDateTime,
+    document_storage_path: nullableTrimmedString(500),
+    document_file_name: nullableTrimmedString(255),
+    document_mime_type: nullableTrimmedString(120),
+    document_preview_storage_path: nullableTrimmedString(500),
     metadata_json: z
       .record(z.string(), z.unknown())
       .nullable()
@@ -107,6 +111,48 @@ export const marketingCardCreateSchema = z
         path: ['external_url'],
       })
     }
+
+    if (value.card_type === 'document') {
+      if (value.media_type !== 'document') {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Document cards must use the document media mode.',
+          path: ['media_type'],
+        })
+      }
+
+      if (!value.document_storage_path) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Document cards require an uploaded file.',
+          path: ['document_storage_path'],
+        })
+      }
+
+      if (!value.document_file_name) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Document cards require a file name.',
+          path: ['document_file_name'],
+        })
+      }
+
+      if (!value.document_mime_type) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Document cards require a file type.',
+          path: ['document_mime_type'],
+        })
+      }
+
+      if (!value.document_preview_storage_path) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Document cards require a generated cover preview.',
+          path: ['document_preview_storage_path'],
+        })
+      }
+    }
   })
 
 export const marketingCardPatchSchema = z
@@ -123,6 +169,10 @@ export const marketingCardPatchSchema = z
     external_url: z.union([z.string(), z.null()]).optional(),
     link_domain: z.union([z.string(), z.null()]).optional(),
     source_published_at: z.union([z.string(), z.null()]).optional(),
+    document_storage_path: z.union([z.string(), z.null()]).optional(),
+    document_file_name: z.union([z.string(), z.null()]).optional(),
+    document_mime_type: z.union([z.string(), z.null()]).optional(),
+    document_preview_storage_path: z.union([z.string(), z.null()]).optional(),
     metadata_json: z.record(z.string(), z.unknown()).nullable().optional(),
     cta_enabled: z.boolean().optional(),
     cta_label: z.union([z.string(), z.null()]).optional(),
@@ -146,13 +196,25 @@ export type MarketingCardCreateInput = z.infer<typeof marketingCardCreateSchema>
 
 export function normalizeMarketingCardInput(input: MarketingCardCreateInput) {
   const cardType = input.card_type as MarketingCardType
-  const mediaType = cardType === 'news' ? 'link' : input.media_type
-  const ctaEnabled = input.cta_enabled ?? (cardType === 'news' ? false : true)
+  const mediaType =
+    cardType === 'news'
+      ? 'link'
+      : cardType === 'document'
+        ? 'document'
+        : input.media_type
+  const ctaEnabled =
+    cardType === 'document'
+      ? true
+      : input.cta_enabled ?? (cardType === 'news' ? false : true)
 
   let ctaLabel = input.cta_label
 
   if (cardType === 'opportunity' || cardType === 'event') {
     ctaLabel = "I'm interested"
+  }
+
+  if (cardType === 'document') {
+    ctaLabel = 'Preview'
   }
 
   if (cardType === 'news' && ctaEnabled && !ctaLabel) {
@@ -162,11 +224,25 @@ export function normalizeMarketingCardInput(input: MarketingCardCreateInput) {
   return {
     ...input,
     media_type: mediaType,
+    image_url:
+      mediaType === 'image' || mediaType === 'video' || cardType === 'news'
+        ? input.image_url
+        : null,
+    image_storage_path:
+      mediaType === 'image' || mediaType === 'video' ? input.image_storage_path : null,
     video_url: mediaType === 'video' ? input.video_url : null,
     video_storage_path: mediaType === 'video' ? input.video_storage_path : null,
+    external_url: mediaType === 'link' ? input.external_url : null,
+    link_domain: mediaType === 'link' ? input.link_domain : null,
+    source_published_at:
+      mediaType === 'link' ? input.source_published_at : null,
     cta_enabled: ctaEnabled,
     cta_label: ctaEnabled ? ctaLabel : null,
-    link_domain: input.link_domain,
-    external_url: input.external_url,
+    document_storage_path:
+      mediaType === 'document' ? input.document_storage_path : null,
+    document_file_name: mediaType === 'document' ? input.document_file_name : null,
+    document_mime_type: mediaType === 'document' ? input.document_mime_type : null,
+    document_preview_storage_path:
+      mediaType === 'document' ? input.document_preview_storage_path : null,
   }
 }

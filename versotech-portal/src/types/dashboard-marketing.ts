@@ -1,6 +1,16 @@
-export const MARKETING_CARD_TYPES = ['opportunity', 'event', 'news'] as const
+export const MARKETING_CARD_TYPES = [
+  'opportunity',
+  'event',
+  'news',
+  'document',
+] as const
 export const MARKETING_CARD_STATUSES = ['draft', 'published'] as const
-export const MARKETING_CARD_MEDIA_TYPES = ['image', 'video', 'link'] as const
+export const MARKETING_CARD_MEDIA_TYPES = [
+  'image',
+  'video',
+  'link',
+  'document',
+] as const
 
 export type MarketingCardType = (typeof MARKETING_CARD_TYPES)[number]
 export type MarketingCardStatus = (typeof MARKETING_CARD_STATUSES)[number]
@@ -10,6 +20,7 @@ export const MARKETING_BADGE_LABELS: Record<MarketingCardType, string> = {
   opportunity: 'Investment Opportunity',
   event: 'Event',
   news: 'News',
+  document: 'Document',
 }
 
 export interface MarketingCard {
@@ -26,6 +37,13 @@ export interface MarketingCard {
   external_url: string | null
   link_domain: string | null
   source_published_at: string | null
+  document_storage_path: string | null
+  document_file_name: string | null
+  document_mime_type: string | null
+  document_preview_storage_path: string | null
+  document_preview_url?: string | null
+  document_preview_strategy?: 'direct' | 'office_embed' | null
+  document_preview_type?: string | null
   metadata_json: Record<string, unknown> | null
   cta_enabled: boolean
   cta_label: string | null

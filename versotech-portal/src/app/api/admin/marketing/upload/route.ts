@@ -2,6 +2,10 @@ import { Buffer } from 'node:buffer'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { requireMarketingAdmin } from '@/lib/dashboard-marketing/auth'
+import {
+  isSupportedMarketingDocument,
+  uploadMarketingDocumentAsset,
+} from '@/lib/dashboard-marketing/documents'
 import { createServiceClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
@@ -24,7 +28,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'File is required' }, { status: 400 })
   }
 
-  if (!['image', 'video'].includes(mediaKind)) {
+  if (!['image', 'video', 'document'].includes(mediaKind)) {
     return NextResponse.json({ error: 'Unsupported media kind' }, { status: 400 })
   }
 
@@ -37,6 +41,38 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createServiceClient() as any
+
+  if (mediaKind === 'document') {
+    if (!isSupportedMarketingDocument(file.name, file.type)) {
+      return NextResponse.json(
+        {
+          error: 'Document uploads must use a PDF or Word file (.pdf, .doc, .docx)',
+        },
+        { status: 400 }
+      )
+    }
+
+    try {
+      const payload = await uploadMarketingDocumentAsset({
+        supabase,
+        fileName: file.name,
+        mimeType: file.type || 'application/octet-stream',
+        bytes: new Uint8Array(await file.arrayBuffer()),
+      })
+
+      return NextResponse.json({
+        success: true,
+        ...payload,
+      })
+    } catch (error) {
+      console.error('[admin/marketing/upload] Failed to upload document asset:', error)
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : 'Failed to upload document' },
+        { status: 500 }
+      )
+    }
+  }
+
   const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
   const storagePath = `marketing/${mediaKind}/${Date.now()}-${sanitizedName}`
   const buffer = Buffer.from(await file.arrayBuffer())

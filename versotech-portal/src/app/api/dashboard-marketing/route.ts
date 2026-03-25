@@ -63,10 +63,11 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json(
-    buildMarketingCardsResponse(data ?? [], {
+    await buildMarketingCardsResponse(data ?? [], {
       submittedCardIds: (leadData ?? []).map(
         (row: { card_id: string }) => row.card_id
       ),
+      supabase,
     })
   )
 }
