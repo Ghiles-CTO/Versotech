@@ -13,6 +13,7 @@ import {
   getExistingFormalSubscriptionForCycle,
   updateDealInvestmentCycleProgress,
 } from '@/lib/deals/investment-cycles'
+import { rejectDealSubscriptionSubmission } from '@/lib/deals/reject-deal-subscription-submission'
 import { buildSubscriptionPackPayload } from '@/lib/subscription-pack/payload-builder'
 import { assertSubscriptionPackPdfIsA4 } from '@/lib/subscription-pack/pdf-format-guard'
 import { applySubscriptionPackPageNumbers } from '@/lib/subscription/page-numbering'
@@ -836,8 +837,62 @@ export async function POST(
         notificationData = result.notificationData
       }
     } else if (action === 'reject') {
-      // Handle rejection
-      await handleEntityRejection(serviceSupabase, approval, rejection_reason || '', user.id)
+      // Handle rejection and rollback the approval if side effects fail.
+      try {
+        await handleEntityRejection(serviceSupabase, approval, rejection_reason || '', user.id)
+      } catch (rejectionError) {
+        const rollbackTimestamp = new Date().toISOString()
+        const rejectionMessage = rejectionError instanceof Error ? rejectionError.message : 'Unknown rejection error'
+
+        const { error: rollbackError } = await serviceSupabase
+          .from('approvals')
+          .update({
+            status: 'pending',
+            approved_by: null,
+            approved_at: null,
+            resolved_at: null,
+            rejection_reason: null,
+            notes: `Auto-rollback: ${rejectionMessage}. Original approver: ${user.id}`,
+            updated_at: rollbackTimestamp,
+          })
+          .eq('id', id)
+
+        if (rollbackError) {
+          console.error('CRITICAL: Rejection rollback failed:', rollbackError)
+          await auditLogger.log({
+            actor_user_id: user.id,
+            action: 'approval_rollback_failed',
+            entity: 'approvals',
+            entity_id: id,
+            metadata: {
+              original_error: rejectionMessage,
+              rollback_error: rollbackError.message,
+              severity: 'critical',
+            },
+          })
+
+          return NextResponse.json(
+            {
+              success: false,
+              error: `CRITICAL: Rejection failed AND rollback failed. Manual intervention required for Approval ID: ${id}`,
+              details: {
+                rejection_error: rejectionMessage,
+                rollback_error: rollbackError.message,
+                approval_id: id,
+              },
+            },
+            { status: 500 }
+          )
+        }
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Failed to process rejection: ${rejectionMessage}. The approval has been rolled back to pending status. Please try again or contact support.`,
+          },
+          { status: 500 }
+        )
+      }
     }
 
     // Audit log
@@ -2772,39 +2827,14 @@ async function handleEntityRejection(
         .eq('id', entityId)
     }
 
-	    if (entityType === 'deal_subscription') {
-	      const now = new Date().toISOString()
-	      const { data: rejectedSubmission } = await supabase
-	        .from('deal_subscription_submissions')
-	        .select('cycle_id')
-	        .eq('id', entityId)
-	        .maybeSingle()
-
-	      await supabase
-	        .from('deal_subscription_submissions')
-	        .update({
-	          status: 'rejected',
-	          rejection_reason: reason,
-	          updated_at: now
-	        })
-	        .eq('id', entityId)
-
-	      if (rejectedSubmission?.cycle_id) {
-	        try {
-	          await updateDealInvestmentCycleProgress({
-	            supabase,
-	            cycleId: rejectedSubmission.cycle_id,
-	            status: 'rejected',
-	            rejectionReason: reason,
-	            timestamps: {
-	              rejected_at: now,
-	            },
-	          })
-	        } catch (cycleError) {
-	          console.error('Failed to reject investment cycle:', cycleError)
-	        }
-	      }
-	    }
+    if (entityType === 'deal_subscription') {
+      await rejectDealSubscriptionSubmission({
+        supabase,
+        submissionId: entityId,
+        reason,
+        actorId,
+      })
+    }
 
     if (entityType === 'investor_onboarding') {
       await supabase
@@ -3023,7 +3053,9 @@ async function handleEntityRejection(
     }
   } catch (error) {
     console.error('Entity rejection handler error:', error)
-    // Don't fail the rejection, just log
+    if (approval?.entity_type === 'deal_subscription') {
+      throw error
+    }
   }
 }
 

@@ -1,5 +1,6 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getAuthenticatedUser } from '@/lib/api-auth'
+import { rejectDealSubscriptionSubmission } from '@/lib/deals/reject-deal-subscription-submission'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -125,7 +126,7 @@ export async function POST(request: NextRequest) {
     // Fetch all approvals to validate (use service client to bypass RLS for demo mode)
     const { data: approvals, error: fetchError } = await serviceSupabase
       .from('approvals')
-      .select('id, entity_type, entity_metadata, status, assigned_to, priority, created_at')
+      .select('id, entity_id, entity_type, entity_metadata, status, assigned_to, priority, created_at')
       .in('id', approval_ids)
 
     if (fetchError) {
@@ -207,7 +208,7 @@ export async function POST(request: NextRequest) {
           continue
         }
 
-        // If approved, trigger downstream actions based on entity_type
+        // Trigger downstream actions based on entity_type.
         if (action === 'approve') {
           try {
             // REMOVED: 'deal_commitment' case - table deleted
@@ -228,6 +229,46 @@ export async function POST(request: NextRequest) {
           } catch (downstreamError) {
             console.error(`Downstream action failed for ${approval.id}:`, downstreamError)
             // Don't fail the approval, just log the error
+          }
+        } else if (action === 'reject' && approval.entity_type === 'deal_subscription') {
+          try {
+            await rejectDealSubscriptionSubmission({
+              supabase: serviceSupabase as any,
+              submissionId: approval.entity_id,
+              reason: rejection_reason || '',
+              actorId: user.id,
+              now,
+            })
+          } catch (rejectionError) {
+            const rejectionMessage = rejectionError instanceof Error ? rejectionError.message : 'Unknown rejection error'
+            const { error: rollbackError } = await serviceSupabase
+              .from('approvals')
+              .update({
+                status: 'pending',
+                approved_by: null,
+                approved_at: null,
+                resolved_at: null,
+                rejection_reason: null,
+                notes: `Auto-rollback: ${rejectionMessage}. Original approver: ${user.id}`,
+              })
+              .eq('id', approval.id)
+
+            if (rollbackError) {
+              console.error(`Rejection rollback failed for ${approval.id}:`, rollbackError)
+              results.push({
+                id: approval.id,
+                success: false,
+                error: `Rejection failed and rollback failed: ${rollbackError.message}`,
+              })
+              continue
+            }
+
+            results.push({
+              id: approval.id,
+              success: false,
+              error: rejectionMessage,
+            })
+            continue
           }
         }
 
