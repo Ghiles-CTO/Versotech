@@ -1,20 +1,9 @@
 import { updateDealInvestmentCycleProgress } from '@/lib/deals/investment-cycles'
 
-type SupabaseLike = {
-  from: (table: string) => {
-    select: (columns: string) => {
-      eq: (column: string, value: unknown) => {
-        maybeSingle: () => Promise<{ data: any; error: any }>
-      }
-    }
-    update: (payload: Record<string, unknown>) => {
-      eq: (column: string, value: unknown) => Promise<{ data: any; error: any }>
-    }
-  }
-}
+type CycleProgressSupabase = Parameters<typeof updateDealInvestmentCycleProgress>[0]['supabase']
 
 type RejectDealSubscriptionSubmissionParams = {
-  supabase: SupabaseLike
+  supabase: CycleProgressSupabase
   submissionId: string
   reason: string
   actorId: string

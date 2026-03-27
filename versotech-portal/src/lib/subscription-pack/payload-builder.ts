@@ -25,14 +25,6 @@ export interface SubscriptionPackInvestor {
   display_name?: string | null
   type?: string | null
   registered_address?: string | null
-  registered_address_line_1?: string | null
-  registered_address_line_2?: string | null
-  registered_city?: string | null
-  registered_state?: string | null
-  registered_postal_code?: string | null
-  registered_country?: string | null
-  address_line_1?: string | null
-  address_line_2?: string | null
   city?: string | null
   state_province?: string | null
   postal_code?: string | null
@@ -279,12 +271,11 @@ function formatResidentialAddress(investor: SubscriptionPackInvestor): string {
 
 function formatInvestorRegisteredAddress(investor: SubscriptionPackInvestor): string {
   const structuredAddress = buildAddress({
-    street: investor.registered_address_line_1 || investor.address_line_1,
-    line2: investor.registered_address_line_2 || investor.address_line_2,
-    city: investor.registered_city || investor.city,
-    state: investor.registered_state || investor.state_province,
-    postalCode: investor.registered_postal_code || investor.postal_code,
-    country: investor.registered_country || investor.country || investor.country_of_incorporation,
+    street: investor.registered_address,
+    city: investor.city,
+    state: investor.state_province,
+    postalCode: investor.postal_code,
+    country: investor.country || investor.country_of_incorporation,
   })
 
   if (structuredAddress) return structuredAddress
