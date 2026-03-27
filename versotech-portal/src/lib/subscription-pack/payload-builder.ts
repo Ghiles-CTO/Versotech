@@ -25,6 +25,19 @@ export interface SubscriptionPackInvestor {
   display_name?: string | null
   type?: string | null
   registered_address?: string | null
+  registered_address_line_1?: string | null
+  registered_address_line_2?: string | null
+  registered_city?: string | null
+  registered_state?: string | null
+  registered_postal_code?: string | null
+  registered_country?: string | null
+  address_line_1?: string | null
+  address_line_2?: string | null
+  city?: string | null
+  state_province?: string | null
+  postal_code?: string | null
+  country?: string | null
+  country_of_incorporation?: string | null
   residential_address?: string | null
   residential_street?: string | null
   residential_line_2?: string | null
@@ -162,13 +175,67 @@ function toBoolean(value: unknown): boolean {
   return false
 }
 
+function formatCountryName(value: unknown): string {
+  const normalized = normalizeWhitespace(String(value || ''))
+  if (!normalized) return ''
+
+  const regionCode = normalized.toUpperCase() === 'UK'
+    ? 'GB'
+    : normalized.toUpperCase()
+
+  if (/^[A-Z]{2}$/.test(regionCode) && typeof Intl !== 'undefined' && typeof Intl.DisplayNames === 'function') {
+    const regionNames = new Intl.DisplayNames(['en'], { type: 'region' })
+    return normalizeWhitespace(regionNames.of(regionCode) || normalized)
+  }
+
+  return normalized
+}
+
+function buildAddressLine(city: string, state: string, postalCode: string): string {
+  return [city, state, postalCode].filter(Boolean).join(', ')
+}
+
+function buildAddress(parts: {
+  street?: string | null
+  line2?: string | null
+  city?: string | null
+  state?: string | null
+  postalCode?: string | null
+  country?: string | null
+}): string {
+  const street = normalizeWhitespace(String(parts.street || ''))
+  const line2 = normalizeWhitespace(String(parts.line2 || ''))
+  const city = normalizeWhitespace(String(parts.city || ''))
+  const state = normalizeWhitespace(String(parts.state || ''))
+  const postalCode = normalizeWhitespace(String(parts.postalCode || ''))
+  const country = formatCountryName(parts.country)
+
+  return [
+    street,
+    line2,
+    buildAddressLine(city, state, postalCode),
+    country,
+  ].filter(Boolean).join(', ')
+}
+
+function isCountryOnlyValue(value: string): boolean {
+  const normalized = normalizeWhitespace(value)
+  if (!normalized) return false
+
+  if (/^[A-Z]{2}$/i.test(normalized)) return true
+
+  return formatCountryName(normalized).toLowerCase() === normalized.toLowerCase()
+}
+
 function formatCounterpartyAddress(address?: SubscriptionPackCounterpartyAddress | null): string {
   if (!address) return ''
-  return [
-    address.street,
-    [address.city, address.state, address.postal_code].filter(Boolean).join(', '),
-    address.country,
-  ].filter(Boolean).join(', ')
+  return buildAddress({
+    street: address.street,
+    city: address.city,
+    state: address.state,
+    postalCode: address.postal_code,
+    country: address.country,
+  })
 }
 
 function formatMoneyDisplay(value: number): string {
@@ -200,18 +267,79 @@ function formatResidentialAddress(investor: SubscriptionPackInvestor): string {
   const inlineResidential = normalizeWhitespace(String(investor.residential_address || ''))
   if (inlineResidential) return inlineResidential
 
-  const cityStatePostal = [
-    normalizeWhitespace(String(investor.residential_city || '')),
-    normalizeWhitespace(String(investor.residential_state || '')),
-    normalizeWhitespace(String(investor.residential_postal_code || '')),
-  ].filter(Boolean).join(', ')
+  return buildAddress({
+    street: investor.residential_street,
+    line2: investor.residential_line_2,
+    city: investor.residential_city,
+    state: investor.residential_state,
+    postalCode: investor.residential_postal_code,
+    country: investor.residential_country,
+  })
+}
 
-  return [
-    normalizeWhitespace(String(investor.residential_street || '')),
-    normalizeWhitespace(String(investor.residential_line_2 || '')),
-    cityStatePostal,
-    normalizeWhitespace(String(investor.residential_country || '')),
-  ].filter(Boolean).join(', ')
+function formatInvestorRegisteredAddress(investor: SubscriptionPackInvestor): string {
+  const structuredAddress = buildAddress({
+    street: investor.registered_address_line_1 || investor.address_line_1,
+    line2: investor.registered_address_line_2 || investor.address_line_2,
+    city: investor.registered_city || investor.city,
+    state: investor.registered_state || investor.state_province,
+    postalCode: investor.registered_postal_code || investor.postal_code,
+    country: investor.registered_country || investor.country || investor.country_of_incorporation,
+  })
+
+  if (structuredAddress) return structuredAddress
+
+  const inlineRegistered = normalizeWhitespace(String(investor.registered_address || ''))
+  if (inlineRegistered && !isCountryOnlyValue(inlineRegistered)) return inlineRegistered
+
+  return ''
+}
+
+function formatCounterpartyEntityType(value: string | null | undefined): string {
+  const normalized = normalizeWhitespace(String(value || '')).toLowerCase()
+  if (!normalized) return ''
+
+  const typeLabels: Record<string, string> = {
+    trust: 'trust',
+    llc: 'LLC',
+    partnership: 'partnership',
+    family_office: 'family office',
+    law_firm: 'law firm',
+    investment_bank: 'investment bank',
+    fund: 'fund',
+    corporation: 'corporation',
+    other: '',
+  }
+
+  return typeLabels[normalized] ?? normalized.replace(/_/g, ' ')
+}
+
+function withIndefiniteArticle(value: string): string {
+  const normalized = normalizeWhitespace(value)
+  if (!normalized) return ''
+
+  const firstToken = normalized.split(/\s+/)[0] || ''
+  const usesAn = /^[aeiou]/i.test(firstToken)
+    || (/^[A-Z]{2,}$/.test(firstToken) && /^[AEFHILMNORSX]/.test(firstToken))
+
+  return `${usesAn ? 'an' : 'a'} ${normalized}`
+}
+
+function buildEntitySubscriberBlock(name: string, address: string, typeLabel?: string): string {
+  const normalizedName = normalizeWhitespace(name)
+  const normalizedAddress = normalizeWhitespace(address)
+  const normalizedType = normalizeWhitespace(typeLabel || '')
+
+  if (!normalizedName) return normalizedAddress ? `with registered office at ${normalizedAddress}` : ''
+  if (!normalizedAddress) {
+    return normalizedType
+      ? `${normalizedName}, ${withIndefiniteArticle(normalizedType)}`
+      : normalizedName
+  }
+
+  return normalizedType
+    ? `${normalizedName}, ${withIndefiniteArticle(normalizedType)} with registered office at ${normalizedAddress}`
+    : `${normalizedName}, with registered office at ${normalizedAddress}`
 }
 
 function cleanSeriesTitle(value: string, seriesNumber: string): string {
@@ -365,9 +493,10 @@ export function buildSubscriptionPackPayload(
     .toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 
   const subscriberName = normalizeWhitespace(String(counterpartyEntity?.legal_name || investor.legal_name || investor.display_name || ''))
-  const subscriberType = counterpartyEntity?.entity_type
-    ? counterpartyEntity.entity_type.replace(/_/g, ' ').toUpperCase()
-    : normalizeWhitespace(String(investor.type || 'Corporate Entity'))
+  const counterpartyTypeLabel = formatCounterpartyEntityType(counterpartyEntity?.entity_type)
+  const subscriberType = counterpartyTypeLabel
+    ? counterpartyTypeLabel.toUpperCase()
+    : normalizeWhitespace(String(investor.type || 'Corporate Entity')).replace(/_/g, ' ').toUpperCase()
   const subscriberTitle = normalizeWhitespace(String(counterpartyEntity?.representative_title || 'Authorized Representative'))
   const subscriberRepName = counterpartyEntity?.representative_name
     || counterpartyEntity?.legal_name
@@ -422,20 +551,21 @@ export function buildSubscriptionPackPayload(
       : '')
   const isIndividualSubscriber = !counterpartyEntity && /individual/i.test(investor.type || '')
   const subscriberResidentialAddress = formatResidentialAddress(investor)
+  const investorRegisteredAddress = formatInvestorRegisteredAddress(investor)
   const subscriberAddress = counterpartyEntity
     ? formatCounterpartyAddress(counterpartyEntity.registered_address)
-    : normalizeWhitespace(String(subscriberResidentialAddress || investor.registered_address || ''))
+    : (isIndividualSubscriber ? (subscriberResidentialAddress || investorRegisteredAddress) : investorRegisteredAddress)
   const individualIdentityNumber = normalizeWhitespace(String(investor.passport_number || investor.id_number || ''))
   const individualIdentityLabel = /passport/i.test(String(investor.id_type || ''))
     ? 'passport number'
     : 'ID number'
   const subscriberBlock = counterpartyEntity
-    ? `${counterpartyEntity.legal_name}, a ${(counterpartyEntity.entity_type || 'entity').replace(/_/g, ' ')} with registered office at ${subscriberAddress}`
-    : `${investor.legal_name || investor.display_name || ''}, ${investor.type || 'entity'} with registered office at ${subscriberAddress}`
+    ? buildEntitySubscriberBlock(counterpartyEntity.legal_name || '', subscriberAddress, counterpartyTypeLabel)
+    : buildEntitySubscriberBlock(investor.legal_name || investor.display_name || '', subscriberAddress)
   const subscriberClauseText = counterpartyEntity
     ? subscriberBlock
     : isIndividualSubscriber
-      ? `${subscriberName}${individualIdentityNumber ? `, ${individualIdentityLabel} ${individualIdentityNumber}` : ''}, with registered address at ${subscriberAddress}`
+      ? `${subscriberName}${individualIdentityNumber ? `, ${individualIdentityLabel} ${individualIdentityNumber}` : ''}${subscriberAddress ? `, with registered address at ${subscriberAddress}` : ''}`
       : subscriberBlock
   const maxAggregateAmount = normalizeWhitespace(String(feeStructure.max_aggregate_amount || ''))
     || '100,000,000'
