@@ -183,6 +183,35 @@ export async function GET(request: Request, { params }: RouteParams) {
       .limit(1)
       .maybeSingle()
 
+    let hasPendingExtensionRequest = false
+    if (dataRoomAccess?.id) {
+      const { data: pendingExtensionApproval } = await serviceSupabase
+        .from('approvals')
+        .select('id')
+        .eq('entity_type', 'data_room_access_extension')
+        .eq('entity_id', dataRoomAccess.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      hasPendingExtensionRequest = !!pendingExtensionApproval?.id
+    }
+
+    let latestInterestStatus: string | null = null
+    if (effectiveInvestorId) {
+      const { data: latestInterest } = await serviceSupabase
+        .from('investor_deal_interest')
+        .select('status')
+        .eq('deal_id', dealId)
+        .eq('investor_id', effectiveInvestorId)
+        .order('submitted_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      latestInterestStatus = latestInterest?.status ?? null
+    }
+
     let investmentCycles: any[] = []
     let cycleSubscriptionsById = new Map<string, any>()
     let cycleSubmissionsById = new Map<string, any>()
@@ -1117,6 +1146,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       // Data room access
       data_room: {
         has_access: hasDataRoomAccess,
+        extension_request_pending: hasPendingExtensionRequest,
         access_details: dataRoomAccess ? {
           granted_at: dataRoomAccess.granted_at,
           expires_at: dataRoomAccess.expires_at,
@@ -1171,6 +1201,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       // Signatories for NDA/subscription signing
       signatories: signatories || [],
       nda_signing_url: ndaSigningUrl,
+      latest_interest_status: latestInterestStatus,
 
       // Computed flags for UI
       // Only show express interest for users with an investor persona

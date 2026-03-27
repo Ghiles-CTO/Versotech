@@ -115,6 +115,16 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
     notFound()
   }
 
+  const { data: pendingExtensionApproval } = await serviceSupabase
+    .from('approvals')
+    .select('id')
+    .eq('entity_type', 'data_room_access_extension')
+    .eq('entity_id', accessData.id)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
   // Get comprehensive deal data
   const { data: deal } = await serviceSupabase
     .from('deals')
@@ -271,6 +281,7 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
                   dealName={deal.name}
                   expiresAt={accessData.expires_at}
                   daysRemaining={daysRemaining}
+                  initialPending={!!pendingExtensionApproval?.id}
                 />
               </div>
             </div>

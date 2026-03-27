@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { resolveActiveInvestorLinkFromCookies } from '@/lib/kyc/active-investor-link'
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,14 +26,17 @@ export async function POST(req: NextRequest) {
 
     const serviceSupabase = createServiceClient()
 
-    // Get investor ID from user
-    const { data: investorLink } = await serviceSupabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
-      .single()
+    // Resolve the active investor deterministically so multi-link accounts work.
+    const { link: investorLink, error: investorLinkError } = await resolveActiveInvestorLinkFromCookies<{
+      investor_id: string
+    }>({
+      supabase: serviceSupabase,
+      userId: user.id,
+      cookieStore: req.cookies,
+      select: 'investor_id',
+    })
 
-    if (!investorLink) {
+    if (investorLinkError || !investorLink?.investor_id) {
       return NextResponse.json(
         { error: 'Investor profile not found' },
         { status: 404 }

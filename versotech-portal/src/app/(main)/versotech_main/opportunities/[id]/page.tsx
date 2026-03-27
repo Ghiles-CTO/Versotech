@@ -72,6 +72,7 @@ import { downloadFileFromUrl } from '@/lib/browser-download'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { canPreviewExternalOfficeLink } from '@/lib/documents/office-viewer'
+import { canRequestDataRoomAccess, hasExpiredDataRoomAccess } from '@/lib/deals/data-room-request-state'
 
 interface Document {
   id: string
@@ -250,6 +251,7 @@ interface Opportunity {
   }
   data_room: {
     has_access: boolean
+    extension_request_pending?: boolean
     access_details: {
       granted_at: string
       expires_at: string | null
@@ -320,6 +322,7 @@ interface Opportunity {
   faqs: FAQ[]
   signatories: Signatory[]
   nda_signing_url?: string | null
+  latest_interest_status?: string | null
   can_express_interest: boolean
   can_sign_nda: boolean
   can_access_data_room: boolean
@@ -977,6 +980,19 @@ export default function OpportunityDetailPage() {
     isAccountApproved
   const canSubscribe = opportunity.can_subscribe && !isTrackingOnly && isAccountApproved
   const canExpressInterest = opportunity.can_express_interest && !isTrackingOnly && isAccountApproved
+  const hasExpiredAccess = hasExpiredDataRoomAccess(
+    opportunity.data_room.has_access,
+    opportunity.data_room.access_details?.expires_at || null
+  )
+  const canRequestAccess = canRequestDataRoomAccess({
+    isAccountApproved,
+    isTrackingOnly,
+    canViewDataRoom: opportunity.access_controls?.can_view_data_room !== false,
+    hasDataRoomAccess: opportunity.data_room.has_access,
+    canSignNda: opportunity.can_sign_nda,
+    accessExpiresAt: opportunity.data_room.access_details?.expires_at || null,
+    latestInterestStatus: opportunity.latest_interest_status || null,
+  })
   const subscriptionEntries = opportunity.subscription_entries || []
   const showMultipleSubscriptions = subscriptionEntries.length > 1
 
@@ -991,7 +1007,7 @@ export default function OpportunityDetailPage() {
   const showActionChoices =
     !isBlacklisted &&
     opportunity.status !== 'closed' &&
-    (canContinueSelectedCycle || canSubscribe || canExpressInterest || canInvestMore)
+    (canContinueSelectedCycle || canSubscribe || canExpressInterest || canInvestMore || canRequestAccess)
   const subscribeButtonTitle = canInvestMore ? 'I would like to invest more' : 'Confirm Interest'
   const subscribeDialogTitle = canInvestMore
     ? 'I would like to invest more'
@@ -1196,7 +1212,7 @@ export default function OpportunityDetailPage() {
               )}
 
               {/* OR Divider */}
-              {(canContinueSelectedCycle || canSubscribe || canInvestMore) && canExpressInterest && (
+              {(canContinueSelectedCycle || canSubscribe || canInvestMore) && (canExpressInterest || canRequestAccess) && (
                 <div className="relative flex items-center gap-3">
                   <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
                   <span className="text-xs text-muted-foreground font-medium px-2">OR</span>
@@ -1206,7 +1222,7 @@ export default function OpportunityDetailPage() {
 
               {/* Secondary: Data Room Interest */}
               {/* PERSONA ACCESS RULE: Hide for introducers and lawyers who can't access data room */}
-              {canExpressInterest && opportunity.access_controls?.can_view_data_room !== false && (
+              {(canExpressInterest || canRequestAccess) && opportunity.access_controls?.can_view_data_room !== false && (
                 <Button
                   variant="outline"
                   className="w-full h-auto py-3 border-dashed"
@@ -1784,7 +1800,11 @@ export default function OpportunityDetailPage() {
               hasAccess={opportunity.data_room.has_access}
               requiresNda={opportunity.data_room.requires_nda}
               dealId={opportunity.id}
-              onRequestAccess={opportunity.can_sign_nda ? handleSignNda : undefined}
+              dealName={opportunity.name}
+              accessExpiresAt={opportunity.data_room.access_details?.expires_at || null}
+              hasPendingExtensionRequest={opportunity.data_room.extension_request_pending === true}
+              onRequestAccess={canSignNda ? handleSignNda : undefined}
+              onRequestNewAccess={canRequestAccess && !hasExpiredAccess ? handleExpressInterest : undefined}
             />
           </TabsContent>
         )}

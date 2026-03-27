@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { RequestExtensionButton } from '@/components/deals/request-extension-button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
   ChevronDown,
@@ -25,6 +26,7 @@ import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerF
 import { DocumentReference } from '@/types/document-viewer.types'
 import { getFileTypeCategory } from '@/constants/document-preview.constants'
 import { canPreviewExternalOfficeLink } from '@/lib/documents/office-viewer'
+import { hasExpiredDataRoomAccess } from '@/lib/deals/data-room-request-state'
 
 export interface DataRoomDocument {
   id: string
@@ -44,7 +46,11 @@ interface DataRoomViewerProps {
   hasAccess: boolean
   requiresNda: boolean
   dealId: string
+  dealName?: string
+  accessExpiresAt?: string | null
+  hasPendingExtensionRequest?: boolean
   onRequestAccess?: () => void
+  onRequestNewAccess?: () => void
 }
 
 // File type icon mapping
@@ -212,7 +218,11 @@ export function DataRoomViewer({
   hasAccess,
   requiresNda,
   dealId,
-  onRequestAccess
+  dealName,
+  accessExpiresAt,
+  hasPendingExtensionRequest = false,
+  onRequestAccess,
+  onRequestNewAccess
 }: DataRoomViewerProps) {
   const {
     isOpen,
@@ -237,6 +247,15 @@ export function DataRoomViewer({
     }
     openPreview(docRef, dealId)
   }, [dealId, openPreview])
+
+  const accessDaysRemaining = useMemo(() => {
+    if (!accessExpiresAt) return null
+    const expiresAtMs = new Date(accessExpiresAt).getTime()
+    if (Number.isNaN(expiresAtMs)) return null
+    return Math.ceil((expiresAtMs - Date.now()) / (1000 * 60 * 60 * 24))
+  }, [accessExpiresAt])
+
+  const hasExpiredAccess = hasExpiredDataRoomAccess(hasAccess, accessExpiresAt || null)
 
   // Group documents by folder with featured section
   const { featured, folders } = useMemo(() => {
@@ -272,17 +291,41 @@ export function DataRoomViewer({
   // No access state
   if (!hasAccess) {
     return (
-      <Card className="border-amber-200 bg-amber-50 dark:bg-amber-900/20">
-        <CardContent className="py-8 text-center">
-          <Lock className="h-12 w-12 mx-auto text-amber-500 mb-4" />
-          <h3 className="text-lg font-semibold text-amber-800 dark:text-amber-200 mb-4">
-            Data Room Access Required
+      <Card>
+        <CardContent className="py-10 text-center">
+          <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <Lock className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <h3 className="text-base font-semibold text-foreground mb-1.5">
+            {hasExpiredAccess ? 'Data Room Access Expired' : 'Data Room Access Required'}
           </h3>
-          {onRequestAccess && (
-            <Button onClick={onRequestAccess} className="bg-amber-600 hover:bg-amber-700">
-              {requiresNda ? 'Sign NDA to Unlock' : 'Request Access'}
-            </Button>
-          )}
+          <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
+            {hasExpiredAccess
+              ? 'Your review period has ended.'
+              : requiresNda
+                ? 'Complete the NDA requirements to unlock the data room.'
+                : 'Request access to review the data room documents.'}
+          </p>
+          <div className="flex justify-center">
+            {hasExpiredAccess && dealName ? (
+              <RequestExtensionButton
+                dealId={dealId}
+                dealName={dealName}
+                expiresAt={accessExpiresAt || null}
+                daysRemaining={accessDaysRemaining}
+                allowExpired
+                initialPending={hasPendingExtensionRequest}
+              />
+            ) : onRequestAccess ? (
+              <Button onClick={onRequestAccess}>
+                {requiresNda ? 'Sign NDA to Unlock' : 'Request Access'}
+              </Button>
+            ) : onRequestNewAccess ? (
+              <Button onClick={onRequestNewAccess}>
+                Request Access
+              </Button>
+            ) : null}
+          </div>
         </CardContent>
       </Card>
     )
