@@ -56,6 +56,8 @@ export async function POST(request: NextRequest) {
   const supabase = createServiceClient() as any
   const payload = {
     ...normalized,
+    // New cards should surface first until an admin manually reorders them.
+    sort_order: 0,
     published_at: normalized.status === 'published' ? new Date().toISOString() : null,
     created_by: auth.user.id,
     updated_by: auth.user.id,

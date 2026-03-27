@@ -292,6 +292,14 @@ function formToPreviewCard(form: MarketingCardFormState): MarketingCard {
   }
 }
 
+function compareMarketingCards(left: MarketingCard, right: MarketingCard) {
+  if (left.sort_order !== right.sort_order) {
+    return left.sort_order - right.sort_order
+  }
+
+  return right.created_at.localeCompare(left.created_at)
+}
+
 function hasFormContent(form: MarketingCardFormState): boolean {
   return Boolean(
     form.id ||
@@ -345,9 +353,7 @@ export function MarketingAdminClient() {
 
   const workingPreviewCards = useMemo(() => {
     if (!hasFormContent(form)) {
-      return [...cards].sort(
-        (left, right) => left.sort_order - right.sort_order
-      )
+      return [...cards].sort(compareMarketingCards)
     }
 
     const previewCard = formToPreviewCard(form)
@@ -359,12 +365,10 @@ export function MarketingAdminClient() {
             ? { ...previewCard, sort_order: card.sort_order }
             : card
         )
-        .sort((left, right) => left.sort_order - right.sort_order)
+        .sort(compareMarketingCards)
     }
 
-    return [...cards, { ...previewCard, sort_order: cards.length }].sort(
-      (left, right) => left.sort_order - right.sort_order
-    )
+    return [...cards, previewCard].sort(compareMarketingCards)
   }, [cards, form])
 
   const loadData = async () => {
@@ -503,7 +507,7 @@ export function MarketingAdminClient() {
       const sortOrder = form.id
         ? (cards.find((card) => card.id === form.id)?.sort_order ??
           cards.length)
-        : cards.length
+        : 0
 
       const payload = formToPayload(form, sortOrder)
       const url = form.id
