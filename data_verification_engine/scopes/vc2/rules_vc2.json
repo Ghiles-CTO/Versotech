@@ -39,6 +39,7 @@
     "position_unique_per_investor_vehicle": true,
     "max_introducers_per_subscription": 2,
     "commission_exact_duplicate_check": true,
+    "subscription_exact_duplicate_check": true,
     "commission_fk_introduction_check": true,
     "commission_status_must_be_paid": true,
     "currency_must_match_dashboard_when_present": true,
@@ -55,6 +56,7 @@
     "mapping_coverage_hard_fail": true,
     "dual_role_introducer_check": true,
     "deprecated_introducer_references_check": true,
+    "investor_identity_duplicate_global_ref_check": true,
     "commission_rate_amount_formula_check": true,
     "dashboard_commission_header_mismatch_is_failure": true,
     "dashboard_numeric_parse_check": true,
@@ -95,6 +97,8 @@
     "Lafferty": "R. F. Lafferty & Co. Inc.",
     "brightviews": "Bright Views Holdings",
     "Bright Views": "Bright Views Holdings",
+    "keirbenbow": "Keir Richard BENBOW",
+    "Keir BENBOW": "Keir Richard BENBOW",
     "robertcvogtiv": "Robert VOGT IV",
     "Robert C. VOGT IV": "Robert VOGT IV",
     "georgeschen": "George Guoying CHEN",
@@ -105,6 +109,11 @@
     "Lafferty + Visual Sectors": "Visual Sectors",
     "Dimensional Advisors + Lafferty": "Dimensional Advisors",
     "Anand+Dan": "Set Cap"
+  },
+  "dashboard_investor_aliases_by_vehicle": {
+    "VC209": {
+      "BRIGHT VIEWS HOLDINGS": "Bright Views Holdings S.à.r.l."
+    }
   },
   "brokers_table_expected": [
     "Bromley Capital Partners",

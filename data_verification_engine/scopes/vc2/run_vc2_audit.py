@@ -389,6 +389,22 @@ class Auditor:
             for kk in alias_key_variants(str(v)):
                 normalized_aliases.setdefault(kk, vv)
         self.aliases = normalized_aliases
+        raw_dash_investor_aliases = rules.get("dashboard_investor_aliases_by_vehicle", {}) or {}
+        normalized_dash_investor_aliases: dict[str, dict[str, str]] = {}
+        for vehicle, mapping in raw_dash_investor_aliases.items():
+            vehicle_code = str(vehicle or "").strip()
+            if not vehicle_code or not isinstance(mapping, dict):
+                continue
+            vehicle_map: dict[str, str] = {}
+            for k, v in mapping.items():
+                vv = canonical_name_key(str(v))
+                if not vv:
+                    continue
+                for kk in alias_key_variants(str(k)):
+                    vehicle_map[kk] = vv
+            if vehicle_map:
+                normalized_dash_investor_aliases[vehicle_code] = vehicle_map
+        self.dashboard_investor_aliases_by_vehicle = normalized_dash_investor_aliases
         self.failures: list[dict[str, str]] = []
         self.warnings: list[dict[str, str]] = []
 
@@ -401,6 +417,19 @@ class Auditor:
         self.warnings.append(
             {"severity": "warn", "check": check, "vehicle": vehicle, "row_ref": row_ref, "details": details}
         )
+
+    def dashboard_investor_key(self, vehicle: str, investor_name: str) -> str:
+        base = canonical_name_key(investor_name)
+        if not base:
+            return base
+        vehicle_map = self.dashboard_investor_aliases_by_vehicle.get(str(vehicle or "").strip(), {})
+        for key in (base, compact_name_key(investor_name), loose_name_key(investor_name)):
+            if not key:
+                continue
+            vehicle_target = vehicle_map.get(key)
+            if vehicle_target:
+                return vehicle_target
+        return name_key(investor_name, self.aliases)
 
     def load_dashboard_rows(
         self,
@@ -668,7 +697,7 @@ class Auditor:
                     sheet=sheet,
                     row_num=r_idx,
                     investor_name=investor_name,
-                    investor_key=name_key(investor_name, self.aliases),
+                    investor_key=self.dashboard_investor_key(mapped_v, investor_name),
                     currency=normalize_currency_token(row[col["currency"] - 1]) if col.get("currency") else "",
                     cost_per_share=cell_float("cost_per_share"),
                     commitment=cell_float("amount"),
@@ -980,6 +1009,7 @@ class Auditor:
         subs: list[DbSub] = []
         sub_totals = defaultdict(lambda: defaultdict(float))
         sub_key_counts = Counter()
+        sub_exact_dup = defaultdict(list)
         sub_null_deal_ids: list[str] = []
         sub_deal_vehicle_mismatch: list[tuple[str, str, str, str]] = []
         sub_contract_dates_by_deal_investor: dict[tuple[str, str], set[str]] = defaultdict(set)
@@ -1028,6 +1058,15 @@ class Auditor:
                 dvc = did_to_vehicle.get(rec.deal_id, "")
                 if dvc and rec.vehicle and dvc != rec.vehicle:
                     sub_deal_vehicle_mismatch.append((rec.id, rec.deal_id, rec.vehicle, dvc))
+            dup_key = (
+                rec.vehicle,
+                rec.deal_id or "",
+                rec.investor_id,
+                round(rec.commitment, 2),
+                round(rec.shares, 6),
+                rec.contract_date or "",
+            )
+            sub_exact_dup[dup_key].append(rec.id)
             k = (rec.vehicle, round(rec.commitment, 2), round(rec.shares, 6), rec.contract_date or "")
             sub_key_counts[k] += 1
             t = sub_totals[rec.vehicle]
@@ -1136,6 +1175,88 @@ class Auditor:
             ik: refs for ik, refs in investor_scope_refs.items() if len(refs) > 1
         }
 
+        subscription_exact_duplicates = {
+            sig: ids for sig, ids in sub_exact_dup.items() if len(ids) > 1
+        }
+
+        scope_name_keys = {
+            normalize_text(name)
+            for name in iid_to_name.values()
+            if str(name or "").strip()
+        }
+        global_investors = api_get_all("investors", "id,legal_name,display_name,email,created_at", key)
+        global_duplicate_groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
+        for inv in global_investors:
+            preferred_name = str(inv.get("legal_name") or inv.get("display_name") or "").strip()
+            name_key_raw = normalize_text(preferred_name)
+            if name_key_raw and name_key_raw in scope_name_keys:
+                global_duplicate_groups[name_key_raw].append(inv)
+
+        global_duplicate_groups = {
+            nk: rows for nk, rows in global_duplicate_groups.items() if len(rows) > 1
+        }
+        duplicate_investor_ids = sorted(
+            {
+                str(row.get("id") or "")
+                for rows in global_duplicate_groups.values()
+                for row in rows
+                if str(row.get("id") or "").strip()
+            }
+        )
+        global_duplicate_ref_counts: dict[str, Counter[str]] = defaultdict(Counter)
+        if duplicate_investor_ids:
+            dup_id_filter = "in.(" + ",".join([f'"{x}"' for x in duplicate_investor_ids]) + ")"
+            for row in api_get_all("subscriptions", "id,investor_id", key, {"investor_id": dup_id_filter}):
+                iid = str(row.get("investor_id") or "")
+                if iid:
+                    global_duplicate_ref_counts[iid]["subscriptions"] += 1
+            for row in api_get_all("positions", "id,investor_id", key, {"investor_id": dup_id_filter}):
+                iid = str(row.get("investor_id") or "")
+                if iid:
+                    global_duplicate_ref_counts[iid]["positions"] += 1
+            for row in api_get_all("introducer_commissions", "id,investor_id", key, {"investor_id": dup_id_filter}):
+                iid = str(row.get("investor_id") or "")
+                if iid:
+                    global_duplicate_ref_counts[iid]["commissions"] += 1
+            for row in api_get_all(
+                "introductions",
+                "id,prospect_investor_id,deal_id,prospect_email",
+                key,
+                {"prospect_investor_id": dup_id_filter},
+            ):
+                iid = str(row.get("prospect_investor_id") or "")
+                if iid:
+                    global_duplicate_ref_counts[iid]["introductions"] += 1
+                    if not row.get("deal_id"):
+                        global_duplicate_ref_counts[iid]["introductions_null_deal"] += 1
+            for row in api_get_all("entity_investors", "id,investor_id", key, {"investor_id": dup_id_filter}):
+                iid = str(row.get("investor_id") or "")
+                if iid:
+                    global_duplicate_ref_counts[iid]["entity_investors"] += 1
+
+        investor_identity_duplicates_global_refs: dict[str, dict[str, dict[str, Any]]] = {}
+        for nk, rows in global_duplicate_groups.items():
+            per_id: dict[str, dict[str, Any]] = {}
+            group_total_refs = 0
+            for row in rows:
+                iid = str(row.get("id") or "")
+                counts = global_duplicate_ref_counts.get(iid, Counter())
+                ref_total = sum(counts.values())
+                group_total_refs += ref_total
+                per_id[iid] = {
+                    "name": str(row.get("legal_name") or row.get("display_name") or ""),
+                    "email": str(row.get("email") or ""),
+                    "created_at": str(row.get("created_at") or ""),
+                    "subscriptions": int(counts.get("subscriptions", 0)),
+                    "positions": int(counts.get("positions", 0)),
+                    "commissions": int(counts.get("commissions", 0)),
+                    "introductions": int(counts.get("introductions", 0)),
+                    "introductions_null_deal": int(counts.get("introductions_null_deal", 0)),
+                    "entity_investors": int(counts.get("entity_investors", 0)),
+                }
+            if group_total_refs > 0:
+                investor_identity_duplicates_global_refs[nk] = per_id
+
         return {
             "vehicles": vehicles,
             "vid_to_code": vid_to_code,
@@ -1143,6 +1264,7 @@ class Auditor:
             "subs": subs,
             "sub_totals": sub_totals,
             "sub_key_counts": sub_key_counts,
+            "subscription_exact_duplicates": subscription_exact_duplicates,
             "sub_null_deal_ids": sub_null_deal_ids,
             "sub_deal_vehicle_mismatch": sub_deal_vehicle_mismatch,
             "sub_contract_dates_by_deal_investor": sub_contract_dates_by_deal_investor,
@@ -1158,6 +1280,7 @@ class Auditor:
             "brokers": brokers,
             "iid_to_name": iid_to_name,
             "investor_identity_duplicates": investor_identity_duplicates,
+            "investor_identity_duplicates_global_refs": investor_identity_duplicates_global_refs,
         }
 
     def run_checks(self):
@@ -1173,6 +1296,16 @@ class Auditor:
         db = self.load_db_data()
 
         scope_codes = self.rules["scope_vehicle_codes"]
+        dash_exact_signature_counts = Counter(
+            (
+                r.vehicle,
+                r.investor_key,
+                round(r.commitment, 2),
+                round(r.shares, 6),
+                r.contract_date or "",
+            )
+            for r in (dash_active + dash_zero)
+        )
         db_totals = db["sub_totals"]
 
         # vehicle totals parity
@@ -1218,10 +1351,65 @@ class Auditor:
                     f"subscription_id={sid} deal_id={did} subscription_vehicle={svc} deal_vehicle={dvc}",
                 )
 
+        if bool(self.rules["checks"].get("subscription_exact_duplicate_check", True)):
+            for sig, ids in sorted(db.get("subscription_exact_duplicates", {}).items(), key=lambda x: x[0]):
+                vc, did, inv_id, commitment, shares, contract_date = sig
+                investor_name = db["iid_to_name"].get(inv_id, "")
+                investor_key = name_key(investor_name, self.aliases) if investor_name else ""
+                dash_count = dash_exact_signature_counts.get(
+                    (vc, investor_key, commitment, shares, contract_date or ""),
+                    0,
+                )
+                db_count = len(ids)
+                if db_count > dash_count:
+                    self.add_failure(
+                        "subscription_duplicate_exact",
+                        vc,
+                        " ".join(
+                            [
+                                f"investor_id={inv_id}",
+                                f"investor={investor_name or '<blank>'}",
+                                f"deal_id={did or '<blank>'}",
+                                f"commitment={commitment}",
+                                f"shares={shares}",
+                                f"contract_date={contract_date or '<blank>'}",
+                                f"dashboard_count={dash_count}",
+                                f"db_count={db_count}",
+                                f"ids={','.join(ids)}",
+                            ]
+                        ),
+                    )
+
         if bool(self.rules["checks"].get("investor_identity_duplicate_check", False)):
             for ik, refs in sorted(db.get("investor_identity_duplicates", {}).items(), key=lambda x: x[0]):
                 detail = ", ".join([f"{iid}:{cnt}" for iid, cnt in sorted(refs.items())])
                 self.add_failure("investor_identity_duplicate", "", f"investor_key={ik} ids={detail}")
+
+        if bool(self.rules["checks"].get("investor_identity_duplicate_global_ref_check", True)):
+            for ik, refs in sorted(db.get("investor_identity_duplicates_global_refs", {}).items(), key=lambda x: x[0]):
+                detail_parts = []
+                for iid, meta in sorted(refs.items()):
+                    detail_parts.append(
+                        " ".join(
+                            [
+                                f"{iid}",
+                                f"name={meta.get('name') or '<blank>'}",
+                                f"email={meta.get('email') or '<blank>'}",
+                                f"created_at={meta.get('created_at') or '<blank>'}",
+                                f"subs={meta.get('subscriptions', 0)}",
+                                f"pos={meta.get('positions', 0)}",
+                                f"comm={meta.get('commissions', 0)}",
+                                f"intros={meta.get('introductions', 0)}",
+                                f"null_deal_intros={meta.get('introductions_null_deal', 0)}",
+                                f"entity={meta.get('entity_investors', 0)}",
+                            ]
+                        )
+                    )
+                self.add_failure(
+                    "investor_identity_duplicate_global_refs",
+                    "",
+                    f"investor_key={ik} refs={' | '.join(detail_parts)}",
+                )
 
         if bool(self.rules["checks"].get("introduction_integrity_check", True)):
             intro_requires_dash_signal = bool(

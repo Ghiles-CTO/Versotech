@@ -7,7 +7,7 @@
     <style>
         @page {
             size: A4;
-            margin: 1.45cm 1.9cm 1.2cm 1.9cm;
+            margin: 1.05cm 1.9cm 1.2cm 1.9cm;
         }
 
         body {
@@ -32,7 +32,7 @@
             letter-spacing: 0.15em;
             color: #000;
             text-transform: uppercase;
-            margin: 0 0 0.60cm 0;
+            margin: 0 0 0.53cm 0;
         }
 
         table.print-frame {
@@ -200,9 +200,28 @@
             padding-right: 8px;
         }
 
+        .summary-page table.summary-table td:last-child,
+        .summary-page table.summary-table th:last-child,
+        .summary-page table.summary-signature-table td:last-child,
+        .summary-page table.summary-signature-table th:last-child {
+            border-right: 1.5px solid #000;
+        }
+
         .issuer-signer-meta {
             text-align: left;
             margin-top: 0.2cm;
+        }
+
+        .summary-issuer-identity {
+            text-align: left !important;
+            margin: 0;
+            padding: 0;
+        }
+
+        .summary-issuer-identity > div {
+            text-align: left !important;
+            margin: 0;
+            padding: 0;
         }
 
         .label-cell {
@@ -234,8 +253,8 @@
         p {
             margin: 0.2cm 0;
             text-align: justify;
-            orphans: 3;
-            widows: 3;
+            orphans: 2;
+            widows: 2;
         }
 
         .clause {
@@ -257,8 +276,8 @@
 
         li {
             margin: 0.08cm 0;
-            orphans: 3;
-            widows: 3;
+            orphans: 2;
+            widows: 2;
         }
 
         /* Signature blocks */
@@ -280,12 +299,12 @@
         .signature-line {
             position: relative;
             border-top: 1px solid #000;
-            width: 60%;
+            width: 48%;
             margin: 3cm 0 0.2cm 0;
         }
 
         .signature-line.wire-line {
-            width: 42%;
+            width: 38%;
             margin-top: 2.1cm;
         }
 
@@ -328,14 +347,17 @@
         .summary-page .signature-line,
         .summary-page .signature-line.form-line {
             margin-top: 2.25cm;
+            width: 42%;
         }
 
         .signature-line.main-line {
-            width: 50%;
+            width: 44%;
         }
 
         .signature-line.tcs-line {
+            width: 36%;
             margin-left: 0;
+            margin-top: 3.1cm;
         }
 
         .tcs-signer-meta {
@@ -381,10 +403,10 @@
 
         /* Wire instructions box */
         .wire-box {
-            border: 2px solid #000;
+            border: 1px solid #d9d9d9;
             padding: 0.5cm;
             margin: 0.5cm 0;
-            background-color: #f9f9f9;
+            background-color: #f2f2f2;
             page-break-inside: avoid;
         }
 
@@ -410,6 +432,10 @@
 
         .wire-signoff {
             margin-top: 0.3cm;
+        }
+
+        .wire-page {
+            padding-top: 0.38cm;
         }
 
         .signature-meta-table {
@@ -440,16 +466,6 @@
         h1, h2, h3 {
             page-break-after: avoid;
             break-after: avoid-page;
-            page-break-inside: avoid;
-            break-inside: avoid-page;
-        }
-
-        h2 + p,
-        h3 + p,
-        h3 + ul,
-        h3 + ol {
-            page-break-inside: avoid;
-            break-inside: avoid-page;
         }
 
         /* Print optimizations */
@@ -566,10 +582,12 @@
 
 <table class="compact summary-signature-table" style="margin-top: 1cm;">
     <tr>
-        <td style="width: 50%; text-align: center;">
-            <strong>VERSO Capital 2 SCSP Series 215</strong><br>
-            duly represented by its general partner<br>
-            <strong>VERSO Capital 2 GP SARL</strong><br>
+        <td style="width: 50%; text-align: left;">
+            <div class="summary-issuer-identity">
+                <div><strong>VERSO Capital 2 SCSP Series 215</strong></div>
+                <div>duly represented by its general partner</div>
+                <div><strong>VERSO Capital 2 GP SARL</strong></div>
+            </div>
             <div class="signature-line form-line"><span class="sig-anchor">SIG_ANCHOR:party_b_form</span></div>
             <div class="issuer-signer-meta">
                 Name: Julien Machot<br>
@@ -590,6 +608,7 @@
 <div class="page-break"></div>
 
 <!-- PAGE 3: WIRE TRANSFER INSTRUCTIONS -->
+<div class="wire-page">
 <h1>VERSO CAPITAL SERIES 215</h1>
 <h1>WIRE TRANSFER INSTRUCTIONS</h1>
 
@@ -631,6 +650,7 @@
         <p>Name: Julien Machot<br>
         Title: Manager and authorized representative</p>
     </div>
+</div>
 </div>
 
 <div class="page-break"></div>
@@ -1183,6 +1203,7 @@
     <p><strong>Holder:</strong> Dupont Partners</p>
     <p><strong>IBAN:</strong> LU71 0141 8595 5133 3010</p>
     <p><strong>BIC:</strong> CELLLULLXXX</p>
+    <p>(FYI: some banks require the additional XXX at the end of BIC Codes)</p>
     <p><strong>Reference:</strong> Agency VERSO Capital 2 SCSP Series 215</p>
     <p><strong>Currency:</strong> USD (United States, Dollars)</p>
 </div>
@@ -1478,8 +1499,6 @@
 
 <p>For the avoidance of doubt, the payment of the Sale and Transfer Fee shall be considered as a condition precedent of the contemplated sale or transfer. The contemplated sale or transfer shall have no effect, whatsoever, towards the Issuer, as long as the Sale and Transfer Fee has not been paid to the Paying Agent Account.</p>
 
-<div class="page-break"></div>
-
 <h2>13. TAXATION</h2>
 
 <p>All payments and/or deliveries in respect of the Certificates made by or on behalf of the Issuer shall be made free and clear of and without any withholding or deduction for any taxes, duties, assessments or governmental charges of whatever nature which may be required to be withheld or deducted.</p>
@@ -1525,8 +1544,6 @@ Trident Chambers, Wickhams Cay, P.O. Box 146, Road Town,<br>
 Tortola VG1110 British Virgin Islands<br>
 c/o Julien MACHOT, Director</p>
 
-<div class="page-break"></div>
-
 <h2>16. HOLDERS' MEETINGS</h2>
 
 <p>The provisions of Article 470-13 item 1*, 470-13 second paragraph and Article 470-15 of the Luxembourg law of 10 August 1915 relating to commercial companies, as amended (the "<strong>Company Law</strong>") do not apply.</p>
@@ -1546,8 +1563,6 @@ c/o Julien MACHOT, Director</p>
 <p>Each Holder shall have the right, during the fifteen (15) days prior to a Meeting, to consult or take copies, or cause an agent to do so on its behalf, of the text of the proposed resolutions and the reports to be presented to the Meeting, at the registered office of the Issuer and, as the case may be, at any other place specified in the convening notice.</p>
 
 <p>The Issuer undertakes to make physical or virtual premises available, provided each Holder may be duly identified and may effectively participate at the Meeting, to the Holders for their Meetings. Should a Meeting be convened all expenses relating thereto shall be borne by the Issuer.</p>
-
-<div class="page-break"></div>
 
 <h2>17. SUBSTITUTION OF ISSUER</h2>
 
@@ -1580,8 +1595,6 @@ c/o Julien MACHOT, Director</p>
 
 <h3 class="inline-number">18.3.</h3>
 <p>The Certificates described in these Terms and Conditions, have not been, and will not be, registered under the United States Securities Act of 1933 as amended, or the securities laws of any state of the United States or other relevant jurisdiction. and it has not been registered under the United States Investment Company Act of 1940, as amended. The Certificates may not be offered, sold, pledged or otherwise transferred within the United States except (1) to a ''qualified institutional buyer'' within the meaning of rule 144a under the Securities Act, and (2) to a person that is not a ''U.S. Person'' as defined in rule 902 of regulations under the Securities Act. Failure to comply with this directive may result in a violation of the Securities Act or the applicable laws of other jurisdictions.</p>
-
-<div class="page-break"></div>
 
 <h2>19. EXCLUSIVITY</h2>
 

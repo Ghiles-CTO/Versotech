@@ -1,0 +1,2374 @@
+{
+  "generated_at": "2026-03-27T13:51:15.424Z",
+  "source": "Investor_Extraction_Production.xlsx validated against extraction_data/*.json; numeric display normalized for comparison",
+  "summary": {
+    "investors": {
+      "workbook_rows": 13,
+      "prod_rows_found": 13,
+      "missing_in_prod": 0,
+      "mismatched_rows": 13,
+      "mismatched_fields": 26,
+      "extra_rows": 0
+    },
+    "subscriptions": {
+      "workbook_rows": 35,
+      "prod_rows_found": 35,
+      "missing_in_prod": 0,
+      "mismatched_rows": 0,
+      "mismatched_fields": 0,
+      "extra_rows": 0
+    },
+    "positions": {
+      "workbook_rows": 26,
+      "prod_rows_found": 26,
+      "missing_in_prod": 0,
+      "mismatched_rows": 0,
+      "mismatched_fields": 0,
+      "extra_rows": 0
+    },
+    "entity_investors": {
+      "workbook_rows": 30,
+      "prod_rows_found": 30,
+      "missing_in_prod": 0,
+      "mismatched_rows": 30,
+      "mismatched_fields": 60,
+      "extra_rows": 0
+    },
+    "introductions": {
+      "workbook_rows": 26,
+      "prod_rows_found": 26,
+      "missing_in_prod": 0,
+      "mismatched_rows": 26,
+      "mismatched_fields": 26,
+      "extra_rows": 0
+    },
+    "commissions": {
+      "workbook_rows": 48,
+      "prod_rows_found": 48,
+      "missing_in_prod": 0,
+      "mismatched_rows": 0,
+      "mismatched_fields": 0,
+      "extra_rows": 0
+    }
+  },
+  "issue_count": 69,
+  "issues": [
+    {
+      "sheet": "investors",
+      "severity": "field_mismatch",
+      "id": "69075b7c-5dfd-4bd5-b8f7-e0757fe28d64",
+      "label": "Scott FLETCHER",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T20:59:48.411085+00:00",
+          "prod": "2026-01-09 20:59:48.411085+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-10T18:32:16.528853+00:00",
+          "prod": "2026-01-10 18:32:16.528853+00"
+        }
+      ]
+    },
+    {
+      "sheet": "investors",
+      "severity": "field_mismatch",
+      "id": "68524290-1804-4f44-b45b-fcc6d54615a0",
+      "label": "Wymo Finance Limited",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T20:59:48.581529+00:00",
+          "prod": "2026-01-09 20:59:48.581529+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-10T18:32:16.528853+00:00",
+          "prod": "2026-01-10 18:32:16.528853+00"
+        }
+      ]
+    },
+    {
+      "sheet": "investors",
+      "severity": "field_mismatch",
+      "id": "f8d38dac-803e-4a46-9ab4-52434371efdc",
+      "label": "OEP LIMITED",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T20:59:48.581529+00:00",
+          "prod": "2026-01-09 20:59:48.581529+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-10T18:32:16.528853+00:00",
+          "prod": "2026-01-10 18:32:16.528853+00"
+        }
+      ]
+    },
+    {
+      "sheet": "investors",
+      "severity": "field_mismatch",
+      "id": "f0183109-5b5e-4fb0-8d57-4ff6c57c0b35",
+      "label": "HASSBRO Investments Limited",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T20:59:48.581529+00:00",
+          "prod": "2026-01-09 20:59:48.581529+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-10T18:32:16.528853+00:00",
+          "prod": "2026-01-10 18:32:16.528853+00"
+        }
+      ]
+    },
+    {
+      "sheet": "investors",
+      "severity": "field_mismatch",
+      "id": "20951004-4990-4398-8890-c2a538d55bfa",
+      "label": "FRALIS SPF",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T20:59:48.710204+00:00",
+          "prod": "2026-01-09 20:59:48.710204+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-10T18:32:16.528853+00:00",
+          "prod": "2026-01-10 18:32:16.528853+00"
+        }
+      ]
+    },
+    {
+      "sheet": "investors",
+      "severity": "field_mismatch",
+      "id": "a76229d8-970d-4556-8b59-9c61d68b5fa2",
+      "label": "Adam Smith Singapore Pte Ltd",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T20:59:48.105298+00:00",
+          "prod": "2026-01-09 20:59:48.105298+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-10T18:32:16.528853+00:00",
+          "prod": "2026-01-10 18:32:16.528853+00"
+        }
+      ]
+    },
+    {
+      "sheet": "investors",
+      "severity": "field_mismatch",
+      "id": "cf13eafd-7b59-4ad5-9f5f-c91042c5b62d",
+      "label": "GELIGA LIMITED",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T20:59:48.411085+00:00",
+          "prod": "2026-01-09 20:59:48.411085+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-10T18:32:16.528853+00:00",
+          "prod": "2026-01-10 18:32:16.528853+00"
+        }
+      ]
+    },
+    {
+      "sheet": "investors",
+      "severity": "field_mismatch",
+      "id": "e2b7a06b-cb6b-4297-a1b2-f00555d85c6a",
+      "label": "JASSQ HOLDING LIMITED",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T20:59:48.105298+00:00",
+          "prod": "2026-01-09 20:59:48.105298+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-10T18:32:16.528853+00:00",
+          "prod": "2026-01-10 18:32:16.528853+00"
+        }
+      ]
+    },
+    {
+      "sheet": "investors",
+      "severity": "field_mismatch",
+      "id": "9456cb56-9e5f-4dcc-a44a-8514293102e5",
+      "label": "Denis MATTHEY",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T20:59:48.411085+00:00",
+          "prod": "2026-01-09 20:59:48.411085+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-10T18:32:16.528853+00:00",
+          "prod": "2026-01-10 18:32:16.528853+00"
+        }
+      ]
+    },
+    {
+      "sheet": "investors",
+      "severity": "field_mismatch",
+      "id": "854eff91-c0a4-453e-b951-3457c1cdc21c",
+      "label": "Talal CHAMSI PASHA",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T20:59:48.710204+00:00",
+          "prod": "2026-01-09 20:59:48.710204+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-10T18:32:16.528853+00:00",
+          "prod": "2026-01-10 18:32:16.528853+00"
+        }
+      ]
+    },
+    {
+      "sheet": "investors",
+      "severity": "field_mismatch",
+      "id": "494ada77-4fb7-4bbd-a7f1-784ecc263338",
+      "label": "Michael RYAN",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T20:59:48.827513+00:00",
+          "prod": "2026-01-09 20:59:48.827513+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-02-08T11:48:15.183071+00:00",
+          "prod": "2026-02-08 11:48:15.183071+00"
+        }
+      ]
+    },
+    {
+      "sheet": "investors",
+      "severity": "field_mismatch",
+      "id": "ea7ec75f-d518-4cfe-a65c-70655f433a14",
+      "label": "Michael RYAN",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-10T01:18:26.965032+00:00",
+          "prod": "2026-01-10 01:18:26.965032+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-02-08T11:48:15.183071+00:00",
+          "prod": "2026-02-08 11:48:15.183071+00"
+        }
+      ]
+    },
+    {
+      "sheet": "investors",
+      "severity": "field_mismatch",
+      "id": "ab1109d5-4563-4a47-a8fd-e73eedce1ff5",
+      "label": "Mahesh NALLAPATI",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-02-07T11:45:49.083848+00:00",
+          "prod": "2026-02-07 11:45:49.083848+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-02-07T18:09:34.513105+00:00",
+          "prod": "2026-02-07 18:09:34.513105+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "6331ffcf-6f8e-4c75-aa57-94260df9b53c",
+      "label": "Adam Smith Singapore Pte Ltd",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T21:00:59.492943+00:00",
+          "prod": "2026-01-09 21:00:59.492943+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-09T21:00:59.492943+00:00",
+          "prod": "2026-01-09 21:00:59.492943+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "b47962bf-840c-4ceb-b0b3-69c76a3b51ee",
+      "label": "JASSQ HOLDING LIMITED",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T21:00:59.637948+00:00",
+          "prod": "2026-01-09 21:00:59.637948+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-09T21:00:59.637948+00:00",
+          "prod": "2026-01-09 21:00:59.637948+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "f2f7c6a8-debb-45ca-9cb2-ca250c76bbd4",
+      "label": "GELIGA LIMITED",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T21:00:59.784218+00:00",
+          "prod": "2026-01-09 21:00:59.784218+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-09T21:00:59.784218+00:00",
+          "prod": "2026-01-09 21:00:59.784218+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "745f1955-af78-4cd6-8e20-7cbf0b4c4383",
+      "label": "Scott FLETCHER",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T21:00:59.784218+00:00",
+          "prod": "2026-01-09 21:00:59.784218+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-09T21:00:59.784218+00:00",
+          "prod": "2026-01-09 21:00:59.784218+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "b28348ca-fddd-4052-b9c6-2ac557300edf",
+      "label": "Denis MATTHEY",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T21:00:59.937468+00:00",
+          "prod": "2026-01-09 21:00:59.937468+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-09T21:00:59.937468+00:00",
+          "prod": "2026-01-09 21:00:59.937468+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "98f0cf24-20e9-4399-9ed6-37f34f004518",
+      "label": "OEP LIMITED",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T21:01:00.094643+00:00",
+          "prod": "2026-01-09 21:01:00.094643+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-09T21:01:00.094643+00:00",
+          "prod": "2026-01-09 21:01:00.094643+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "bf10e0f1-45f4-4577-b19d-623d3b8fb23d",
+      "label": "Denis MATTHEY",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T21:01:00.094643+00:00",
+          "prod": "2026-01-09 21:01:00.094643+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-09T21:01:00.094643+00:00",
+          "prod": "2026-01-09 21:01:00.094643+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "0629e2f0-d8d5-43fc-b4c3-09cf6b7de1a8",
+      "label": "Wymo Finance Limited",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T21:01:00.310374+00:00",
+          "prod": "2026-01-09 21:01:00.310374+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-09T21:01:00.310374+00:00",
+          "prod": "2026-01-09 21:01:00.310374+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "2b5f0a8f-ab21-4a71-a898-d5193f7dea4e",
+      "label": "HASSBRO Investments Limited",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T21:01:00.310374+00:00",
+          "prod": "2026-01-09 21:01:00.310374+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-09T21:01:00.310374+00:00",
+          "prod": "2026-01-09 21:01:00.310374+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "5a93b93f-6790-4023-b4ac-2fbc6732ea24",
+      "label": "FRALIS SPF",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T21:01:00.505675+00:00",
+          "prod": "2026-01-09 21:01:00.505675+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-09T21:01:00.505675+00:00",
+          "prod": "2026-01-09 21:01:00.505675+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "0c0d04de-a7cc-4d20-8db1-93c0cd2cec30",
+      "label": "Scott FLETCHER",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T21:01:00.505675+00:00",
+          "prod": "2026-01-09 21:01:00.505675+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-09T21:01:00.505675+00:00",
+          "prod": "2026-01-09 21:01:00.505675+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "34ee87d9-7516-49b1-910c-9d0b313174eb",
+      "label": "Denis MATTHEY",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T21:01:00.505675+00:00",
+          "prod": "2026-01-09 21:01:00.505675+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-09T21:01:00.505675+00:00",
+          "prod": "2026-01-09 21:01:00.505675+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "a81a8cf9-6c73-4b3e-9c33-e2df06a49446",
+      "label": "Talal CHAMSI PASHA",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T21:01:00.683425+00:00",
+          "prod": "2026-01-09 21:01:00.683425+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-09T21:01:00.683425+00:00",
+          "prod": "2026-01-09 21:01:00.683425+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "a879e60f-1ebd-4b3c-9736-cdcfae256951",
+      "label": "JASSQ HOLDING LIMITED",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T21:01:00.683425+00:00",
+          "prod": "2026-01-09 21:01:00.683425+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-09T21:01:00.683425+00:00",
+          "prod": "2026-01-09 21:01:00.683425+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "b95c535f-0ccb-482d-89d0-9d721c3a1c17",
+      "label": "Scott FLETCHER",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T21:01:00.683425+00:00",
+          "prod": "2026-01-09 21:01:00.683425+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-09T21:01:00.683425+00:00",
+          "prod": "2026-01-09 21:01:00.683425+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "98961b11-c4dd-4761-bda6-d4850d836d86",
+      "label": "Scott FLETCHER",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T21:01:00.83023+00:00",
+          "prod": "2026-01-09 21:01:00.83023+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-09T21:01:00.83023+00:00",
+          "prod": "2026-01-09 21:01:00.83023+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "2f9feaf7-84d9-4f35-ad2b-2e43a5ac7780",
+      "label": "JASSQ HOLDING LIMITED",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T21:01:00.968877+00:00",
+          "prod": "2026-01-09 21:01:00.968877+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-09T21:01:00.968877+00:00",
+          "prod": "2026-01-09 21:01:00.968877+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "7a5a8c3b-9efa-4178-b761-c7198a795ac9",
+      "label": "Michael RYAN",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T21:01:00.968877+00:00",
+          "prod": "2026-01-09 21:01:00.968877+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-09T21:01:00.968877+00:00",
+          "prod": "2026-01-09 21:01:00.968877+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "cd18e4f0-e25a-4b6a-a158-0945ab439686",
+      "label": "Scott FLETCHER",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T21:01:00.968877+00:00",
+          "prod": "2026-01-09 21:01:00.968877+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-09T21:01:00.968877+00:00",
+          "prod": "2026-01-09 21:01:00.968877+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "c5b6f904-5229-4971-ad49-0d9bdba3f38e",
+      "label": "Wymo Finance Limited",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-10T01:18:32.583736+00:00",
+          "prod": "2026-01-10 01:18:32.583736+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-10T01:18:32.583736+00:00",
+          "prod": "2026-01-10 01:18:32.583736+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "5f327bcc-d4d5-498c-828e-f9306a6dd42a",
+      "label": "HASSBRO Investments Limited",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-10T01:18:32.962891+00:00",
+          "prod": "2026-01-10 01:18:32.962891+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-10T01:18:32.962891+00:00",
+          "prod": "2026-01-10 01:18:32.962891+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "338a1710-90bd-4665-95ba-5aac45df230c",
+      "label": "Michael RYAN",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-10T01:18:34.718164+00:00",
+          "prod": "2026-01-10 01:18:34.718164+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-10T01:18:34.718164+00:00",
+          "prod": "2026-01-10 01:18:34.718164+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "24a8999f-133b-42fa-b1b9-f9867fcaa8d4",
+      "label": "Wymo Finance Limited",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-10T01:18:35.787951+00:00",
+          "prod": "2026-01-10 01:18:35.787951+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-10T01:18:35.787951+00:00",
+          "prod": "2026-01-10 01:18:35.787951+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "c41ac0d0-650a-4c4c-b4ca-b1f6537c0fe1",
+      "label": "Talal CHAMSI PASHA",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-10T21:14:43.02361+00:00",
+          "prod": "2026-01-10 21:14:43.02361+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-10T21:14:43.02361+00:00",
+          "prod": "2026-01-10 21:14:43.02361+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "182eb519-e683-42a1-8102-f655b08acbaa",
+      "label": "OEP LIMITED",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-10T21:16:16.986707+00:00",
+          "prod": "2026-01-10 21:16:16.986707+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-10T21:16:16.986707+00:00",
+          "prod": "2026-01-10 21:16:16.986707+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "97e2d980-d478-4fb5-bfd6-272e9e369334",
+      "label": "Michael RYAN",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-17T00:32:41.10763+00:00",
+          "prod": "2026-01-17 00:32:41.10763+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-17T00:32:41.10763+00:00",
+          "prod": "2026-01-17 00:32:41.10763+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "77772eea-281e-4b90-bc88-b82fa94abb26",
+      "label": "Michael RYAN",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-17T00:32:41.10763+00:00",
+          "prod": "2026-01-17 00:32:41.10763+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-17T00:32:41.10763+00:00",
+          "prod": "2026-01-17 00:32:41.10763+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "1fe591ef-5b7e-4e5c-8e66-21f508b2810a",
+      "label": "Michael RYAN",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-20T23:16:51.949022+00:00",
+          "prod": "2026-01-20 23:16:51.949022+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-01-20T23:16:51.949022+00:00",
+          "prod": "2026-01-20 23:16:51.949022+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "fc174062-e0ce-4d53-ae5f-74ebcdd23f26",
+      "label": "OEP LIMITED",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-10T21:16:34.898201+00:00",
+          "prod": "2026-01-10 21:16:34.898201+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-02-27T13:53:08.327527+00:00",
+          "prod": "2026-02-27 13:53:08.327527+00"
+        }
+      ]
+    },
+    {
+      "sheet": "entity_investors",
+      "severity": "field_mismatch",
+      "id": "5f7b540f-4201-41dc-b07d-9d4ababaf9ff",
+      "label": "Mahesh NALLAPATI",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-02-07T11:45:49.083848+00:00",
+          "prod": "2026-02-07 11:45:49.083848+00"
+        },
+        {
+          "field": "updated_at",
+          "workbook": "2026-02-07T11:45:49.083848+00:00",
+          "prod": "2026-02-07 11:45:49.083848+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "977f3cb5-5113-405a-bef2-dd6653053b01",
+      "label": "Scott FLETCHER",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T23:45:42.328875+00:00",
+          "prod": "2026-01-09 23:45:42.328875+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "c5007b63-366c-4465-9a2b-953c15122322",
+      "label": "FRALIS SPF",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T23:45:37.037265+00:00",
+          "prod": "2026-01-09 23:45:37.037265+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "2447c5d7-563b-4af6-997e-cb2cb84a6a54",
+      "label": "Michael RYAN",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-09T23:45:46.018987+00:00",
+          "prod": "2026-01-09 23:45:46.018987+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "fa76bc82-0d6f-4040-a384-495c7d655264",
+      "label": "Wymo Finance Limited",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-20T11:50:07.385444+00:00",
+          "prod": "2026-01-20 11:50:07.385444+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "a7a47938-9243-4b31-a519-3b50ffa12167",
+      "label": "Scott FLETCHER",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-20T11:50:07.385444+00:00",
+          "prod": "2026-01-20 11:50:07.385444+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "4105a626-4a3f-4bb6-9c4d-96e6d1210966",
+      "label": "HASSBRO Investments Limited",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-20T11:50:07.385444+00:00",
+          "prod": "2026-01-20 11:50:07.385444+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "f2712a6d-c0ae-4edd-8717-bb30d7856446",
+      "label": "Scott FLETCHER",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-20T11:50:07.385444+00:00",
+          "prod": "2026-01-20 11:50:07.385444+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "6a7d0d85-2b3b-4e0d-ba59-d28be5dee53f",
+      "label": "Wymo Finance Limited",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-20T11:50:07.385444+00:00",
+          "prod": "2026-01-20 11:50:07.385444+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "e1f13519-2fea-4a13-9743-2fac0ff62b57",
+      "label": "HASSBRO Investments Limited",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-20T11:50:07.385444+00:00",
+          "prod": "2026-01-20 11:50:07.385444+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "6d62cf6d-1e76-458d-8efc-c8206d4f2e78",
+      "label": "Wymo Finance Limited",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-20T23:16:51.949022+00:00",
+          "prod": "2026-01-20 23:16:51.949022+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "d8ede21a-1e2b-4732-a16b-55f15d82b605",
+      "label": "Wymo Finance Limited",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-20T23:16:51.949022+00:00",
+          "prod": "2026-01-20 23:16:51.949022+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "f3b10bba-e884-4df5-8cd5-adfac85e646f",
+      "label": "HASSBRO Investments Limited",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-20T23:16:51.949022+00:00",
+          "prod": "2026-01-20 23:16:51.949022+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "50b46a3d-a61a-4437-bfea-a840e083cf30",
+      "label": "Wymo Finance Limited",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-20T23:22:27.346439+00:00",
+          "prod": "2026-01-20 23:22:27.346439+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "cac1e1b4-4222-4b06-b924-dafb4fefaf9d",
+      "label": "HASSBRO Investments Limited",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-20T23:22:27.346439+00:00",
+          "prod": "2026-01-20 23:22:27.346439+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "91aab721-7286-4baa-9c7b-3ec5b6ac81a4",
+      "label": "JASSQ HOLDING LIMITED",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-20T11:50:07.385444+00:00",
+          "prod": "2026-01-20 11:50:07.385444+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "43827c09-e37a-4cc0-9e3a-8ec84e82ac8e",
+      "label": "FRALIS SPF",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-01-20T11:50:07.385444+00:00",
+          "prod": "2026-01-20 11:50:07.385444+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "260dfbff-64da-41d4-805c-0e7f0094a609",
+      "label": "Adam Smith Singapore Pte Ltd",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-02-02T16:15:32.575641+00:00",
+          "prod": "2026-02-02 16:15:32.575641+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "96c841d9-c2a8-4615-bb26-81f2093919c9",
+      "label": "Adam Smith Singapore Pte Ltd",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-02-02T16:15:32.575641+00:00",
+          "prod": "2026-02-02 16:15:32.575641+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "bc25a51c-8fb4-4088-a8e2-69106f9d2678",
+      "label": "JASSQ HOLDING LIMITED",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-02-02T16:15:32.575641+00:00",
+          "prod": "2026-02-02 16:15:32.575641+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "43d7d06a-3291-44e9-bb01-e49cc8ab7031",
+      "label": "JASSQ HOLDING LIMITED",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-02-02T16:15:32.575641+00:00",
+          "prod": "2026-02-02 16:15:32.575641+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "0ede7b5b-19c3-4d1b-ae8f-d5c26c6627f1",
+      "label": "GELIGA LIMITED",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-02-02T16:15:32.813022+00:00",
+          "prod": "2026-02-02 16:15:32.813022+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "ffa0a1fd-aae9-4c3e-ace0-871cb34635ef",
+      "label": "GELIGA LIMITED",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-02-02T16:15:32.813022+00:00",
+          "prod": "2026-02-02 16:15:32.813022+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "d3de9759-f6fa-4689-a1ba-f62c59a08f6a",
+      "label": "Scott FLETCHER",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-02-02T16:15:32.813022+00:00",
+          "prod": "2026-02-02 16:15:32.813022+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "4889b371-96ca-4446-af81-b6984d9b6bb6",
+      "label": "Scott FLETCHER",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-02-02T16:15:32.813022+00:00",
+          "prod": "2026-02-02 16:15:32.813022+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "c8d65dc7-6080-4ea0-b820-d255e0a60398",
+      "label": "Mahesh NALLAPATI",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-02-07T12:28:42.269871+00:00",
+          "prod": "2026-02-07 12:28:42.269871+00"
+        }
+      ]
+    },
+    {
+      "sheet": "introductions",
+      "severity": "field_mismatch",
+      "id": "7b6f39ba-e6ea-4d89-ab56-1e530a9d0ccc",
+      "label": "Mahesh NALLAPATI",
+      "diffs": [
+        {
+          "field": "created_at",
+          "workbook": "2026-02-07T12:28:42.269871+00:00",
+          "prod": "2026-02-07 12:28:42.269871+00"
+        }
+      ]
+    }
+  ],
+  "investor_issues": [
+    {
+      "investor_id": "a76229d8-970d-4556-8b59-9c61d68b5fa2",
+      "investor_name": "Adam Smith Singapore Pte Ltd",
+      "issues": [
+        {
+          "sheet": "investors",
+          "severity": "field_mismatch",
+          "id": "a76229d8-970d-4556-8b59-9c61d68b5fa2",
+          "label": "Adam Smith Singapore Pte Ltd",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T20:59:48.105298+00:00",
+              "prod": "2026-01-09 20:59:48.105298+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-10T18:32:16.528853+00:00",
+              "prod": "2026-01-10 18:32:16.528853+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "6331ffcf-6f8e-4c75-aa57-94260df9b53c",
+          "label": "Adam Smith Singapore Pte Ltd",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T21:00:59.492943+00:00",
+              "prod": "2026-01-09 21:00:59.492943+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-09T21:00:59.492943+00:00",
+              "prod": "2026-01-09 21:00:59.492943+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "260dfbff-64da-41d4-805c-0e7f0094a609",
+          "label": "Adam Smith Singapore Pte Ltd",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-02-02T16:15:32.575641+00:00",
+              "prod": "2026-02-02 16:15:32.575641+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "96c841d9-c2a8-4615-bb26-81f2093919c9",
+          "label": "Adam Smith Singapore Pte Ltd",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-02-02T16:15:32.575641+00:00",
+              "prod": "2026-02-02 16:15:32.575641+00"
+            }
+          ]
+        }
+      ],
+      "issue_count": 4
+    },
+    {
+      "investor_id": "9456cb56-9e5f-4dcc-a44a-8514293102e5",
+      "investor_name": "Denis MATTHEY",
+      "issues": [
+        {
+          "sheet": "investors",
+          "severity": "field_mismatch",
+          "id": "9456cb56-9e5f-4dcc-a44a-8514293102e5",
+          "label": "Denis MATTHEY",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T20:59:48.411085+00:00",
+              "prod": "2026-01-09 20:59:48.411085+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-10T18:32:16.528853+00:00",
+              "prod": "2026-01-10 18:32:16.528853+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "b28348ca-fddd-4052-b9c6-2ac557300edf",
+          "label": "Denis MATTHEY",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T21:00:59.937468+00:00",
+              "prod": "2026-01-09 21:00:59.937468+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-09T21:00:59.937468+00:00",
+              "prod": "2026-01-09 21:00:59.937468+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "bf10e0f1-45f4-4577-b19d-623d3b8fb23d",
+          "label": "Denis MATTHEY",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T21:01:00.094643+00:00",
+              "prod": "2026-01-09 21:01:00.094643+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-09T21:01:00.094643+00:00",
+              "prod": "2026-01-09 21:01:00.094643+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "34ee87d9-7516-49b1-910c-9d0b313174eb",
+          "label": "Denis MATTHEY",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T21:01:00.505675+00:00",
+              "prod": "2026-01-09 21:01:00.505675+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-09T21:01:00.505675+00:00",
+              "prod": "2026-01-09 21:01:00.505675+00"
+            }
+          ]
+        }
+      ],
+      "issue_count": 4
+    },
+    {
+      "investor_id": "20951004-4990-4398-8890-c2a538d55bfa",
+      "investor_name": "FRALIS SPF",
+      "issues": [
+        {
+          "sheet": "investors",
+          "severity": "field_mismatch",
+          "id": "20951004-4990-4398-8890-c2a538d55bfa",
+          "label": "FRALIS SPF",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T20:59:48.710204+00:00",
+              "prod": "2026-01-09 20:59:48.710204+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-10T18:32:16.528853+00:00",
+              "prod": "2026-01-10 18:32:16.528853+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "5a93b93f-6790-4023-b4ac-2fbc6732ea24",
+          "label": "FRALIS SPF",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T21:01:00.505675+00:00",
+              "prod": "2026-01-09 21:01:00.505675+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-09T21:01:00.505675+00:00",
+              "prod": "2026-01-09 21:01:00.505675+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "c5007b63-366c-4465-9a2b-953c15122322",
+          "label": "FRALIS SPF",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T23:45:37.037265+00:00",
+              "prod": "2026-01-09 23:45:37.037265+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "43827c09-e37a-4cc0-9e3a-8ec84e82ac8e",
+          "label": "FRALIS SPF",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-20T11:50:07.385444+00:00",
+              "prod": "2026-01-20 11:50:07.385444+00"
+            }
+          ]
+        }
+      ],
+      "issue_count": 4
+    },
+    {
+      "investor_id": "cf13eafd-7b59-4ad5-9f5f-c91042c5b62d",
+      "investor_name": "GELIGA LIMITED",
+      "issues": [
+        {
+          "sheet": "investors",
+          "severity": "field_mismatch",
+          "id": "cf13eafd-7b59-4ad5-9f5f-c91042c5b62d",
+          "label": "GELIGA LIMITED",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T20:59:48.411085+00:00",
+              "prod": "2026-01-09 20:59:48.411085+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-10T18:32:16.528853+00:00",
+              "prod": "2026-01-10 18:32:16.528853+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "f2f7c6a8-debb-45ca-9cb2-ca250c76bbd4",
+          "label": "GELIGA LIMITED",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T21:00:59.784218+00:00",
+              "prod": "2026-01-09 21:00:59.784218+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-09T21:00:59.784218+00:00",
+              "prod": "2026-01-09 21:00:59.784218+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "0ede7b5b-19c3-4d1b-ae8f-d5c26c6627f1",
+          "label": "GELIGA LIMITED",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-02-02T16:15:32.813022+00:00",
+              "prod": "2026-02-02 16:15:32.813022+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "ffa0a1fd-aae9-4c3e-ace0-871cb34635ef",
+          "label": "GELIGA LIMITED",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-02-02T16:15:32.813022+00:00",
+              "prod": "2026-02-02 16:15:32.813022+00"
+            }
+          ]
+        }
+      ],
+      "issue_count": 4
+    },
+    {
+      "investor_id": "f0183109-5b5e-4fb0-8d57-4ff6c57c0b35",
+      "investor_name": "HASSBRO Investments Limited",
+      "issues": [
+        {
+          "sheet": "investors",
+          "severity": "field_mismatch",
+          "id": "f0183109-5b5e-4fb0-8d57-4ff6c57c0b35",
+          "label": "HASSBRO Investments Limited",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T20:59:48.581529+00:00",
+              "prod": "2026-01-09 20:59:48.581529+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-10T18:32:16.528853+00:00",
+              "prod": "2026-01-10 18:32:16.528853+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "2b5f0a8f-ab21-4a71-a898-d5193f7dea4e",
+          "label": "HASSBRO Investments Limited",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T21:01:00.310374+00:00",
+              "prod": "2026-01-09 21:01:00.310374+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-09T21:01:00.310374+00:00",
+              "prod": "2026-01-09 21:01:00.310374+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "5f327bcc-d4d5-498c-828e-f9306a6dd42a",
+          "label": "HASSBRO Investments Limited",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-10T01:18:32.962891+00:00",
+              "prod": "2026-01-10 01:18:32.962891+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-10T01:18:32.962891+00:00",
+              "prod": "2026-01-10 01:18:32.962891+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "4105a626-4a3f-4bb6-9c4d-96e6d1210966",
+          "label": "HASSBRO Investments Limited",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-20T11:50:07.385444+00:00",
+              "prod": "2026-01-20 11:50:07.385444+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "e1f13519-2fea-4a13-9743-2fac0ff62b57",
+          "label": "HASSBRO Investments Limited",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-20T11:50:07.385444+00:00",
+              "prod": "2026-01-20 11:50:07.385444+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "f3b10bba-e884-4df5-8cd5-adfac85e646f",
+          "label": "HASSBRO Investments Limited",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-20T23:16:51.949022+00:00",
+              "prod": "2026-01-20 23:16:51.949022+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "cac1e1b4-4222-4b06-b924-dafb4fefaf9d",
+          "label": "HASSBRO Investments Limited",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-20T23:22:27.346439+00:00",
+              "prod": "2026-01-20 23:22:27.346439+00"
+            }
+          ]
+        }
+      ],
+      "issue_count": 7
+    },
+    {
+      "investor_id": "e2b7a06b-cb6b-4297-a1b2-f00555d85c6a",
+      "investor_name": "JASSQ HOLDING LIMITED",
+      "issues": [
+        {
+          "sheet": "investors",
+          "severity": "field_mismatch",
+          "id": "e2b7a06b-cb6b-4297-a1b2-f00555d85c6a",
+          "label": "JASSQ HOLDING LIMITED",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T20:59:48.105298+00:00",
+              "prod": "2026-01-09 20:59:48.105298+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-10T18:32:16.528853+00:00",
+              "prod": "2026-01-10 18:32:16.528853+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "b47962bf-840c-4ceb-b0b3-69c76a3b51ee",
+          "label": "JASSQ HOLDING LIMITED",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T21:00:59.637948+00:00",
+              "prod": "2026-01-09 21:00:59.637948+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-09T21:00:59.637948+00:00",
+              "prod": "2026-01-09 21:00:59.637948+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "a879e60f-1ebd-4b3c-9736-cdcfae256951",
+          "label": "JASSQ HOLDING LIMITED",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T21:01:00.683425+00:00",
+              "prod": "2026-01-09 21:01:00.683425+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-09T21:01:00.683425+00:00",
+              "prod": "2026-01-09 21:01:00.683425+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "2f9feaf7-84d9-4f35-ad2b-2e43a5ac7780",
+          "label": "JASSQ HOLDING LIMITED",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T21:01:00.968877+00:00",
+              "prod": "2026-01-09 21:01:00.968877+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-09T21:01:00.968877+00:00",
+              "prod": "2026-01-09 21:01:00.968877+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "91aab721-7286-4baa-9c7b-3ec5b6ac81a4",
+          "label": "JASSQ HOLDING LIMITED",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-20T11:50:07.385444+00:00",
+              "prod": "2026-01-20 11:50:07.385444+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "bc25a51c-8fb4-4088-a8e2-69106f9d2678",
+          "label": "JASSQ HOLDING LIMITED",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-02-02T16:15:32.575641+00:00",
+              "prod": "2026-02-02 16:15:32.575641+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "43d7d06a-3291-44e9-bb01-e49cc8ab7031",
+          "label": "JASSQ HOLDING LIMITED",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-02-02T16:15:32.575641+00:00",
+              "prod": "2026-02-02 16:15:32.575641+00"
+            }
+          ]
+        }
+      ],
+      "issue_count": 7
+    },
+    {
+      "investor_id": "ab1109d5-4563-4a47-a8fd-e73eedce1ff5",
+      "investor_name": "Mahesh NALLAPATI",
+      "issues": [
+        {
+          "sheet": "investors",
+          "severity": "field_mismatch",
+          "id": "ab1109d5-4563-4a47-a8fd-e73eedce1ff5",
+          "label": "Mahesh NALLAPATI",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-02-07T11:45:49.083848+00:00",
+              "prod": "2026-02-07 11:45:49.083848+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-02-07T18:09:34.513105+00:00",
+              "prod": "2026-02-07 18:09:34.513105+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "5f7b540f-4201-41dc-b07d-9d4ababaf9ff",
+          "label": "Mahesh NALLAPATI",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-02-07T11:45:49.083848+00:00",
+              "prod": "2026-02-07 11:45:49.083848+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-02-07T11:45:49.083848+00:00",
+              "prod": "2026-02-07 11:45:49.083848+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "c8d65dc7-6080-4ea0-b820-d255e0a60398",
+          "label": "Mahesh NALLAPATI",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-02-07T12:28:42.269871+00:00",
+              "prod": "2026-02-07 12:28:42.269871+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "7b6f39ba-e6ea-4d89-ab56-1e530a9d0ccc",
+          "label": "Mahesh NALLAPATI",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-02-07T12:28:42.269871+00:00",
+              "prod": "2026-02-07 12:28:42.269871+00"
+            }
+          ]
+        }
+      ],
+      "issue_count": 4
+    },
+    {
+      "investor_id": "494ada77-4fb7-4bbd-a7f1-784ecc263338",
+      "investor_name": "Michael RYAN",
+      "issues": [
+        {
+          "sheet": "investors",
+          "severity": "field_mismatch",
+          "id": "494ada77-4fb7-4bbd-a7f1-784ecc263338",
+          "label": "Michael RYAN",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T20:59:48.827513+00:00",
+              "prod": "2026-01-09 20:59:48.827513+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-02-08T11:48:15.183071+00:00",
+              "prod": "2026-02-08 11:48:15.183071+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "7a5a8c3b-9efa-4178-b761-c7198a795ac9",
+          "label": "Michael RYAN",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T21:01:00.968877+00:00",
+              "prod": "2026-01-09 21:01:00.968877+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-09T21:01:00.968877+00:00",
+              "prod": "2026-01-09 21:01:00.968877+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "1fe591ef-5b7e-4e5c-8e66-21f508b2810a",
+          "label": "Michael RYAN",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-20T23:16:51.949022+00:00",
+              "prod": "2026-01-20 23:16:51.949022+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-20T23:16:51.949022+00:00",
+              "prod": "2026-01-20 23:16:51.949022+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "2447c5d7-563b-4af6-997e-cb2cb84a6a54",
+          "label": "Michael RYAN",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T23:45:46.018987+00:00",
+              "prod": "2026-01-09 23:45:46.018987+00"
+            }
+          ]
+        }
+      ],
+      "issue_count": 4
+    },
+    {
+      "investor_id": "ea7ec75f-d518-4cfe-a65c-70655f433a14",
+      "investor_name": "Michael RYAN",
+      "issues": [
+        {
+          "sheet": "investors",
+          "severity": "field_mismatch",
+          "id": "ea7ec75f-d518-4cfe-a65c-70655f433a14",
+          "label": "Michael RYAN",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-10T01:18:26.965032+00:00",
+              "prod": "2026-01-10 01:18:26.965032+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-02-08T11:48:15.183071+00:00",
+              "prod": "2026-02-08 11:48:15.183071+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "338a1710-90bd-4665-95ba-5aac45df230c",
+          "label": "Michael RYAN",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-10T01:18:34.718164+00:00",
+              "prod": "2026-01-10 01:18:34.718164+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-10T01:18:34.718164+00:00",
+              "prod": "2026-01-10 01:18:34.718164+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "97e2d980-d478-4fb5-bfd6-272e9e369334",
+          "label": "Michael RYAN",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-17T00:32:41.10763+00:00",
+              "prod": "2026-01-17 00:32:41.10763+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-17T00:32:41.10763+00:00",
+              "prod": "2026-01-17 00:32:41.10763+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "77772eea-281e-4b90-bc88-b82fa94abb26",
+          "label": "Michael RYAN",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-17T00:32:41.10763+00:00",
+              "prod": "2026-01-17 00:32:41.10763+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-17T00:32:41.10763+00:00",
+              "prod": "2026-01-17 00:32:41.10763+00"
+            }
+          ]
+        }
+      ],
+      "issue_count": 4
+    },
+    {
+      "investor_id": "f8d38dac-803e-4a46-9ab4-52434371efdc",
+      "investor_name": "OEP LIMITED",
+      "issues": [
+        {
+          "sheet": "investors",
+          "severity": "field_mismatch",
+          "id": "f8d38dac-803e-4a46-9ab4-52434371efdc",
+          "label": "OEP LIMITED",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T20:59:48.581529+00:00",
+              "prod": "2026-01-09 20:59:48.581529+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-10T18:32:16.528853+00:00",
+              "prod": "2026-01-10 18:32:16.528853+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "98f0cf24-20e9-4399-9ed6-37f34f004518",
+          "label": "OEP LIMITED",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T21:01:00.094643+00:00",
+              "prod": "2026-01-09 21:01:00.094643+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-09T21:01:00.094643+00:00",
+              "prod": "2026-01-09 21:01:00.094643+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "182eb519-e683-42a1-8102-f655b08acbaa",
+          "label": "OEP LIMITED",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-10T21:16:16.986707+00:00",
+              "prod": "2026-01-10 21:16:16.986707+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-10T21:16:16.986707+00:00",
+              "prod": "2026-01-10 21:16:16.986707+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "fc174062-e0ce-4d53-ae5f-74ebcdd23f26",
+          "label": "OEP LIMITED",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-10T21:16:34.898201+00:00",
+              "prod": "2026-01-10 21:16:34.898201+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-02-27T13:53:08.327527+00:00",
+              "prod": "2026-02-27 13:53:08.327527+00"
+            }
+          ]
+        }
+      ],
+      "issue_count": 4
+    },
+    {
+      "investor_id": "69075b7c-5dfd-4bd5-b8f7-e0757fe28d64",
+      "investor_name": "Scott FLETCHER",
+      "issues": [
+        {
+          "sheet": "investors",
+          "severity": "field_mismatch",
+          "id": "69075b7c-5dfd-4bd5-b8f7-e0757fe28d64",
+          "label": "Scott FLETCHER",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T20:59:48.411085+00:00",
+              "prod": "2026-01-09 20:59:48.411085+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-10T18:32:16.528853+00:00",
+              "prod": "2026-01-10 18:32:16.528853+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "745f1955-af78-4cd6-8e20-7cbf0b4c4383",
+          "label": "Scott FLETCHER",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T21:00:59.784218+00:00",
+              "prod": "2026-01-09 21:00:59.784218+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-09T21:00:59.784218+00:00",
+              "prod": "2026-01-09 21:00:59.784218+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "0c0d04de-a7cc-4d20-8db1-93c0cd2cec30",
+          "label": "Scott FLETCHER",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T21:01:00.505675+00:00",
+              "prod": "2026-01-09 21:01:00.505675+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-09T21:01:00.505675+00:00",
+              "prod": "2026-01-09 21:01:00.505675+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "b95c535f-0ccb-482d-89d0-9d721c3a1c17",
+          "label": "Scott FLETCHER",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T21:01:00.683425+00:00",
+              "prod": "2026-01-09 21:01:00.683425+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-09T21:01:00.683425+00:00",
+              "prod": "2026-01-09 21:01:00.683425+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "98961b11-c4dd-4761-bda6-d4850d836d86",
+          "label": "Scott FLETCHER",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T21:01:00.83023+00:00",
+              "prod": "2026-01-09 21:01:00.83023+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-09T21:01:00.83023+00:00",
+              "prod": "2026-01-09 21:01:00.83023+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "cd18e4f0-e25a-4b6a-a158-0945ab439686",
+          "label": "Scott FLETCHER",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T21:01:00.968877+00:00",
+              "prod": "2026-01-09 21:01:00.968877+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-09T21:01:00.968877+00:00",
+              "prod": "2026-01-09 21:01:00.968877+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "977f3cb5-5113-405a-bef2-dd6653053b01",
+          "label": "Scott FLETCHER",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T23:45:42.328875+00:00",
+              "prod": "2026-01-09 23:45:42.328875+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "a7a47938-9243-4b31-a519-3b50ffa12167",
+          "label": "Scott FLETCHER",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-20T11:50:07.385444+00:00",
+              "prod": "2026-01-20 11:50:07.385444+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "f2712a6d-c0ae-4edd-8717-bb30d7856446",
+          "label": "Scott FLETCHER",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-20T11:50:07.385444+00:00",
+              "prod": "2026-01-20 11:50:07.385444+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "d3de9759-f6fa-4689-a1ba-f62c59a08f6a",
+          "label": "Scott FLETCHER",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-02-02T16:15:32.813022+00:00",
+              "prod": "2026-02-02 16:15:32.813022+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "4889b371-96ca-4446-af81-b6984d9b6bb6",
+          "label": "Scott FLETCHER",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-02-02T16:15:32.813022+00:00",
+              "prod": "2026-02-02 16:15:32.813022+00"
+            }
+          ]
+        }
+      ],
+      "issue_count": 11
+    },
+    {
+      "investor_id": "854eff91-c0a4-453e-b951-3457c1cdc21c",
+      "investor_name": "Talal CHAMSI PASHA",
+      "issues": [
+        {
+          "sheet": "investors",
+          "severity": "field_mismatch",
+          "id": "854eff91-c0a4-453e-b951-3457c1cdc21c",
+          "label": "Talal CHAMSI PASHA",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T20:59:48.710204+00:00",
+              "prod": "2026-01-09 20:59:48.710204+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-10T18:32:16.528853+00:00",
+              "prod": "2026-01-10 18:32:16.528853+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "a81a8cf9-6c73-4b3e-9c33-e2df06a49446",
+          "label": "Talal CHAMSI PASHA",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T21:01:00.683425+00:00",
+              "prod": "2026-01-09 21:01:00.683425+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-09T21:01:00.683425+00:00",
+              "prod": "2026-01-09 21:01:00.683425+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "c41ac0d0-650a-4c4c-b4ca-b1f6537c0fe1",
+          "label": "Talal CHAMSI PASHA",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-10T21:14:43.02361+00:00",
+              "prod": "2026-01-10 21:14:43.02361+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-10T21:14:43.02361+00:00",
+              "prod": "2026-01-10 21:14:43.02361+00"
+            }
+          ]
+        }
+      ],
+      "issue_count": 3
+    },
+    {
+      "investor_id": "68524290-1804-4f44-b45b-fcc6d54615a0",
+      "investor_name": "Wymo Finance Limited",
+      "issues": [
+        {
+          "sheet": "investors",
+          "severity": "field_mismatch",
+          "id": "68524290-1804-4f44-b45b-fcc6d54615a0",
+          "label": "Wymo Finance Limited",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T20:59:48.581529+00:00",
+              "prod": "2026-01-09 20:59:48.581529+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-10T18:32:16.528853+00:00",
+              "prod": "2026-01-10 18:32:16.528853+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "0629e2f0-d8d5-43fc-b4c3-09cf6b7de1a8",
+          "label": "Wymo Finance Limited",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-09T21:01:00.310374+00:00",
+              "prod": "2026-01-09 21:01:00.310374+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-09T21:01:00.310374+00:00",
+              "prod": "2026-01-09 21:01:00.310374+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "c5b6f904-5229-4971-ad49-0d9bdba3f38e",
+          "label": "Wymo Finance Limited",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-10T01:18:32.583736+00:00",
+              "prod": "2026-01-10 01:18:32.583736+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-10T01:18:32.583736+00:00",
+              "prod": "2026-01-10 01:18:32.583736+00"
+            }
+          ]
+        },
+        {
+          "sheet": "entity_investors",
+          "severity": "field_mismatch",
+          "id": "24a8999f-133b-42fa-b1b9-f9867fcaa8d4",
+          "label": "Wymo Finance Limited",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-10T01:18:35.787951+00:00",
+              "prod": "2026-01-10 01:18:35.787951+00"
+            },
+            {
+              "field": "updated_at",
+              "workbook": "2026-01-10T01:18:35.787951+00:00",
+              "prod": "2026-01-10 01:18:35.787951+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "fa76bc82-0d6f-4040-a384-495c7d655264",
+          "label": "Wymo Finance Limited",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-20T11:50:07.385444+00:00",
+              "prod": "2026-01-20 11:50:07.385444+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "6a7d0d85-2b3b-4e0d-ba59-d28be5dee53f",
+          "label": "Wymo Finance Limited",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-20T11:50:07.385444+00:00",
+              "prod": "2026-01-20 11:50:07.385444+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "6d62cf6d-1e76-458d-8efc-c8206d4f2e78",
+          "label": "Wymo Finance Limited",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-20T23:16:51.949022+00:00",
+              "prod": "2026-01-20 23:16:51.949022+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "d8ede21a-1e2b-4732-a16b-55f15d82b605",
+          "label": "Wymo Finance Limited",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-20T23:16:51.949022+00:00",
+              "prod": "2026-01-20 23:16:51.949022+00"
+            }
+          ]
+        },
+        {
+          "sheet": "introductions",
+          "severity": "field_mismatch",
+          "id": "50b46a3d-a61a-4437-bfea-a840e083cf30",
+          "label": "Wymo Finance Limited",
+          "diffs": [
+            {
+              "field": "created_at",
+              "workbook": "2026-01-20T23:22:27.346439+00:00",
+              "prod": "2026-01-20 23:22:27.346439+00"
+            }
+          ]
+        }
+      ],
+      "issue_count": 9
+    }
+  ]
+}

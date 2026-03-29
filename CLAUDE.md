@@ -13,6 +13,19 @@ Investment banking OS for VERSO Holdings. Manages deal flow, investor subscripti
 
 Next.js 15 · TypeScript · Tailwind · shadcn/ui · Supabase (Postgres + RLS) · React Hook Form + Zod
 
+## Available CLIs & MCPs
+
+All four tools below are installed, authenticated, and connected. Use them proactively.
+
+| Tool | When to Use |
+|------|-------------|
+| **Supabase MCP** (`mcp__supabase-old__*` / `mcp__supabase__*`) | Quick queries, listing tables, running SQL, checking data — preferred for read operations and exploratory work |
+| **Supabase CLI** (`supabase`) | Migrations, type generation, local dev, diffing schemas — preferred for schema changes and CI tasks |
+| **Vercel CLI** (`vercel`) | Deployments, env var management, logs, domain config, promoting/rolling back |
+| **GitHub CLI** (`gh`) | Creating PRs, viewing checks, managing issues, reviewing PR comments |
+
+Use both Supabase CLI and MCP depending on the task — MCP for data/query work, CLI for schema/migration work. Use Vercel CLI for deployment operations. Use GitHub CLI for PR and issue workflows.
+
 ## Domain Terms
 
 | Term | Definition |
@@ -150,6 +163,7 @@ export async function POST(request: Request) {
 8. **Run `npm run build` before pushing to `dev` for frontend changes.** Fix build errors first, then push.
 9. **When a user specifies a regression window, verify commits within that date range before concluding root cause.** Do not assume earlier changes are the culprit without checking the requested window.
 10. **Never call `apply_patch` via `exec_command`.** Always use the `apply_patch` tool for patches to avoid tool misuse warnings.
+11. **Git push permission fix**: If `git push origin main` fails with permission denied for `Moussaoui-Ghiles`, run `gh auth switch --user Ghiles-CTO` first, push, then switch back with `gh auth switch --user Moussaoui-Ghiles`.
 
 ## Commands
 
@@ -162,7 +176,7 @@ npm run lint                           # ESLint
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **Versotech** (10664 symbols, 27059 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **Versotech** (10984 symbols, 28263 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
