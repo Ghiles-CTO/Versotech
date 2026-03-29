@@ -538,7 +538,9 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
     {
       label: 'Open opportunities',
       value: data.featuredDeals.length,
-      helper: 'Available deals'
+      helper: 'Available deals',
+      href: '/versotech_main/opportunities',
+      ctaLabel: 'Open opportunities'
     },
     {
       label: 'Outstanding tasks',
@@ -548,12 +550,16 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
           ? 'Pending actions'
           : data.onboarding && !isAccountApproved
             ? 'Onboarding pending'
-            : 'All caught up'
+            : 'All caught up',
+      href: '/versotech_main/tasks',
+      ctaLabel: 'Open tasks'
     },
     {
       label: 'Active holdings',
       value: data.vehicles.length,
-      helper: 'Investment vehicles'
+      helper: 'Investment vehicles',
+      href: '/versotech_main/portfolio',
+      ctaLabel: 'Open holdings'
     }
   ]
 
@@ -624,7 +630,7 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
                     "text-sm",
                     isDark ? "text-gray-400" : "text-slate-600"
                   )}>
-                    <span style={{ fontFamily: 'var(--font-spartan), sans-serif', letterSpacing: '0.3em' }}>V E R S O</span> • Merchant Banking Group • Since 1958
+                    <span style={{ fontFamily: 'var(--font-spartan), sans-serif', letterSpacing: '0.3em' }}>V E R S O</span> • Merchant Banking Group
                   </p>
                 </div>
               </div>
@@ -633,13 +639,14 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
             {/* Responsive: stack on phone, 2 cols on small, 3 on medium+ */}
             <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
               {summaryTiles.map((tile) => (
-                <div
+                <Link
                   key={tile.label}
+                  href={tile.href}
                   className={cn(
-                    "rounded-2xl border p-4 shadow-sm",
+                    "group flex h-full flex-col rounded-2xl border p-4 shadow-sm transition-colors",
                     isDark
-                      ? "border-white/10 bg-white/5"
-                      : "border-slate-200/80 bg-slate-50/70"
+                      ? "border-white/10 bg-white/5 hover:border-primary/40 hover:bg-white/10"
+                      : "border-slate-200/80 bg-slate-50/70 hover:border-primary/40 hover:bg-primary/5"
                   )}
                 >
                   <p className={cn(
@@ -656,7 +663,11 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
                     "mt-1 text-xs",
                     isDark ? "text-gray-400" : "text-slate-600"
                   )}>{tile.helper}</p>
-                </div>
+                  <span className="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-semibold text-primary">
+                    {tile.ctaLabel}
+                    <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                  </span>
+                </Link>
               ))}
             </div>
 
@@ -691,13 +702,13 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
             </div>
 
             <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-              <Link href="/versotech_main/opportunities" className="w-full sm:w-auto">
+              <Link href="/versotech_main/portfolio" className="w-full sm:w-auto">
                 <Button size="sm" className="w-full sm:w-auto">
                   View holdings
                   <ArrowUpRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              <Link href="/versotech_main/tasks" className="w-full sm:w-auto">
+              <Link href="/versotech_main/calendar" className="w-full sm:w-auto">
                 <Button size="sm" variant="outline" className="w-full sm:w-auto">
                   Calendar & deadlines
                   <CalendarClock className="ml-2 h-4 w-4" />

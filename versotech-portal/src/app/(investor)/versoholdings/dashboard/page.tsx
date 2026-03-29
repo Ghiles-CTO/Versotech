@@ -707,17 +707,23 @@ export default async function InvestorDashboard() {
     {
       label: 'Open opportunities',
       value: featuredDeals.length,
-      helper: 'Available deals'
+      helper: 'Available deals',
+      href: '/versotech_main/opportunities',
+      ctaLabel: 'Open opportunities'
     },
     {
       label: 'Outstanding tasks',
       value: actionCenter.tasksTotal,
-      helper: actionCenter.tasksTotal ? 'Pending actions' : 'All caught up'
+      helper: actionCenter.tasksTotal ? 'Pending actions' : 'All caught up',
+      href: '/versotech_main/tasks',
+      ctaLabel: 'Open tasks'
     },
     {
       label: 'Active holdings',
       value: portfolioData.vehicles.length,
-      helper: 'Investment vehicles'
+      helper: 'Investment vehicles',
+      href: '/versotech_main/portfolio',
+      ctaLabel: 'Open holdings'
     }
   ]
 
@@ -756,7 +762,7 @@ export default async function InvestorDashboard() {
                         : 'Welcome'}
                     </h1>
                     <p className="text-sm text-slate-600">
-                      <span style={{ fontFamily: 'var(--font-spartan), sans-serif', letterSpacing: '0.3em' }}>V E R S O</span> • Merchant Banking Group • Since 1958
+                      <span style={{ fontFamily: 'var(--font-spartan), sans-serif', letterSpacing: '0.3em' }}>V E R S O</span> • Merchant Banking Group
                     </p>
                   </div>
                 </div>
@@ -764,16 +770,21 @@ export default async function InvestorDashboard() {
 
               <div className="grid gap-4 sm:grid-cols-3">
                 {summaryTiles.map((tile) => (
-                  <div
+                  <Link
                     key={tile.label}
-                    className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 shadow-sm"
+                    href={tile.href}
+                    className="group flex h-full flex-col rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/5"
                   >
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                       {tile.label}
                     </p>
                     <p className="mt-2 text-2xl font-semibold text-slate-900">{tile.value}</p>
                     <p className="mt-1 text-xs text-slate-600">{tile.helper}</p>
-                  </div>
+                    <span className="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-semibold text-primary">
+                      {tile.ctaLabel}
+                      <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                    </span>
+                  </Link>
                 ))}
               </div>
 
