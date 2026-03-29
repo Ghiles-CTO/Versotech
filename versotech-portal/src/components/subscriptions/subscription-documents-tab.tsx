@@ -35,6 +35,28 @@ interface SubscriptionDocumentsTabProps {
   subscriptionId: string
 }
 
+function showRegenerateErrorToast(message: string) {
+  const normalized = message.toLowerCase()
+
+  if (normalized.includes('missing an assigned term sheet')) {
+    toast.error('Cannot regenerate subscription pack', {
+      description: 'This subscription has no term sheet linked to it yet. Assign the term sheet first, then try regenerating again.'
+    })
+    return
+  }
+
+  if (normalized.includes('no fee structure found for this subscription term sheet')) {
+    toast.error('Cannot regenerate subscription pack', {
+      description: 'This subscription points to a term sheet, but the pricing and fee data for that term sheet could not be found. Fix the term sheet setup, then try again.'
+    })
+    return
+  }
+
+  toast.error('Failed to regenerate subscription pack', {
+    description: message
+  })
+}
+
 export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumentsTabProps) {
   const [documents, setDocuments] = useState<Document[]>([])
   const [loading, setLoading] = useState(true)
@@ -248,8 +270,18 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to regenerate subscription pack')
+        let message = 'Failed to regenerate subscription pack'
+
+        try {
+          const error = await response.json()
+          if (typeof error?.error === 'string' && error.error.trim().length > 0) {
+            message = error.error
+          }
+        } catch {
+          // Keep the default message if the error body is missing or invalid.
+        }
+
+        throw new Error(message)
       }
 
       const data = await response.json()
@@ -259,7 +291,9 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
       fetchDocuments() // Refresh document list
     } catch (error) {
       console.error('Error regenerating subscription pack:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to regenerate subscription pack')
+      showRegenerateErrorToast(
+        error instanceof Error ? error.message : 'Failed to regenerate subscription pack'
+      )
     } finally {
       setRegenerating(false)
     }

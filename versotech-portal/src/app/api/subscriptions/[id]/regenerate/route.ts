@@ -114,10 +114,7 @@ export async function POST(
           registered_state,
           registered_postal_code,
           registered_country,
-          address_line_1,
-          address_line_2,
           city,
-          state_province,
           postal_code,
           country,
           country_of_incorporation,
@@ -425,7 +422,20 @@ export async function POST(
     console.log('[REGENERATE] arrangerSignatureHtml FULL:', arrangerSignatureHtml)
     console.log('[REGENERATE] ==========================================')
 
-    const investorData = subscription.investor
+    const rawInvestorData = subscription.investor as any
+    const investorData = {
+      ...rawInvestorData,
+      registered_address: [
+        rawInvestorData?.registered_address,
+        [rawInvestorData?.registered_address_line_1, rawInvestorData?.registered_address_line_2]
+          .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+          .join(', '),
+      ].find((value): value is string => typeof value === 'string' && value.trim().length > 0) || null,
+      city: rawInvestorData?.registered_city ?? rawInvestorData?.city ?? null,
+      state_province: rawInvestorData?.registered_state ?? null,
+      postal_code: rawInvestorData?.registered_postal_code ?? rawInvestorData?.postal_code ?? null,
+      country: rawInvestorData?.registered_country ?? rawInvestorData?.country ?? rawInvestorData?.country_of_incorporation ?? null,
+    }
     const dealData = subscription.deal
 
     let subscriptionPayload: Record<string, any>
