@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Building2, ChevronDown, Filter } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { formatViewerDate } from '@/lib/format'
 
 interface Deal {
   id: string
@@ -374,12 +375,12 @@ export function DealContextSelector({
             <div>Type: {getDealTypeLabel(selectedDeal.deal_type)}</div>
             {selectedDeal.open_at && (
               <div>
-                Opened: {new Date(selectedDeal.open_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                Opened: {formatViewerDate(selectedDeal.open_at, { timeZone: 'UTC' })}
               </div>
             )}
             {selectedDeal.close_at && (
               <div>
-                Closes: {new Date(selectedDeal.close_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                Closes: {formatViewerDate(selectedDeal.close_at, { timeZone: 'UTC' })}
               </div>
             )}
           </div>

@@ -21,12 +21,13 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { format } from 'date-fns'
+import { formatViewerDate, formatViewerDateTime } from '@/lib/format'
 
 /** Format a UTC ISO timestamp as "wall clock" time (no timezone shift) */
 function formatUTC(dateStr: string, fmt: string) {
-  const d = new Date(dateStr)
-  return format(new Date(d.getTime() + d.getTimezoneOffset() * 60000), fmt)
+  return fmt.includes('HH')
+    ? formatViewerDateTime(dateStr, { timeZone: 'UTC' })
+    : formatViewerDate(dateStr, { timeZone: 'UTC' })
 }
 import { Loader2, Plus, Copy, Rocket, Archive, Pencil, Upload, FileCheck, Users, Building2, Briefcase, Eye, Download, X, SendHorizontal, MoreVertical } from 'lucide-react'
 import {
@@ -793,9 +794,9 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                     <CardTitle className="text-foreground">Version {published.version}</CardTitle>
                     <CardDescription>
                       Published{' '}
-                      {published.published_at ? format(new Date(published.published_at), 'dd MMM yyyy') : '—'}
+                      {published.published_at ? formatViewerDate(published.published_at) : '—'}
                       {published.closed_processed_at && (
-                        <span className="ml-2">• Closed: {format(new Date(published.closed_processed_at), 'dd MMM yyyy')}</span>
+                        <span className="ml-2">• Closed: {formatViewerDate(published.closed_processed_at)}</span>
                       )}
                       {published.term_sheet_date && <span className="ml-2">• Dated: {formatUTC(published.term_sheet_date, 'dd MMM yyyy')}</span>}
                       {published.vehicle && <span className="ml-2">• {published.vehicle}</span>}
@@ -1035,7 +1036,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   Version {termSheet.version}
                 </CardTitle>
                 <CardDescription>
-                  Created {format(new Date(termSheet.created_at), 'dd MMM yyyy')}
+                  Created {formatViewerDate(termSheet.created_at)}
                   {termSheet.term_sheet_date && ` • Term Sheet Date: ${formatUTC(termSheet.term_sheet_date, 'dd MMM yyyy')}`}
                 </CardDescription>
               </div>

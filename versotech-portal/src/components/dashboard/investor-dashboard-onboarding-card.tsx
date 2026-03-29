@@ -20,6 +20,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { useTheme } from '@/components/theme-provider'
 import { cn } from '@/lib/utils'
+import { formatViewerDate } from '@/lib/format'
 
 export type DashboardOnboardingMissingItem = {
   scope: 'entity' | 'member'
@@ -447,10 +448,7 @@ export function InvestorDashboardOnboardingCard({
                 isDark ? 'text-gray-500' : 'text-slate-500'
               )}
             >
-              {new Date(state.latestRequestInfo.requestedAt).toLocaleDateString(
-                'en-US',
-                { month: 'short', day: 'numeric', year: 'numeric' }
-              )}
+              {formatViewerDate(state.latestRequestInfo.requestedAt)}
             </p>
           )}
         </div>

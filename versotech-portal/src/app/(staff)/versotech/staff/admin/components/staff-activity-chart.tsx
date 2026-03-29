@@ -1,6 +1,7 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { formatViewerDate } from '@/lib/format'
 import { Users } from 'lucide-react'
 import {
   BarChart,
@@ -49,7 +50,7 @@ export function StaffActivityChart({ data }: StaffActivityChartProps) {
           <p className="text-zinc-400 text-sm">{data.actions} actions (7d)</p>
           {data.lastAction && (
             <p className="text-zinc-500 text-xs mt-1">
-              Last: {new Date(data.lastAction).toLocaleDateString()}
+              Last: {formatViewerDate(data.lastAction)}
             </p>
           )}
         </div>

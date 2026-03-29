@@ -56,6 +56,7 @@ import {
 } from '@/lib/reports/constants'
 import type { RequestTicketWithRelations, RequestStatus } from '@/types/reports'
 import { cn } from '@/lib/utils'
+import { formatViewerDateTime } from '@/lib/format'
 
 type RequestFilters = {
   search: string
@@ -918,23 +919,13 @@ function RequestCard({
               <MetadataItem label="Investor" value={request.investor?.legal_name || 'N/A'} />
               <MetadataItem
                 label="Created"
-                value={new Date(request.created_at).toLocaleString(undefined, {
-                  month: 'short',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+                value={formatViewerDateTime(request.created_at)}
               />
               <MetadataItem
                 label="Due"
                 value={
                   request.due_date
-                    ? new Date(request.due_date).toLocaleString(undefined, {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })
+                    ? formatViewerDateTime(request.due_date)
                     : 'Not set'
                 }
                 emphasis={overdue}
@@ -1078,12 +1069,7 @@ function RequestDetails({ request, onUpdate, currentUserId }: {
         {(request as any).due_date && (
           <DetailsCard title="SLA & Due Date">
             <p className="text-sm font-medium">
-              {new Date((request as any).due_date).toLocaleString(undefined, {
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
+              {formatViewerDateTime((request as any).due_date)}
             </p>
             <p className="text-xs text-muted-foreground">
               {formatTimeRemaining((request as any).due_date)}
@@ -1110,12 +1096,12 @@ function RequestDetails({ request, onUpdate, currentUserId }: {
         <h3 className="text-lg font-medium mb-2">Status History & Notes</h3>
         <ul className="space-y-2 text-sm text-muted-foreground">
           <li>
-            Created at {new Date(request.created_at).toLocaleString()} by {request.created_by_profile?.display_name}
+            Created at {formatViewerDateTime(request.created_at)} by {request.created_by_profile?.display_name}
           </li>
           {request.updated_at && (
-            <li>Last updated at {new Date(request.updated_at).toLocaleString()}</li>
+            <li>Last updated at {formatViewerDateTime(request.updated_at)}</li>
           )}
-          {request.closed_at && <li>Closed at {new Date(request.closed_at).toLocaleString()}</li>}
+          {request.closed_at && <li>Closed at {formatViewerDateTime(request.closed_at)}</li>}
           {request.completion_note && (
             <li className="bg-white/5 border border-white/10 rounded-md p-3 text-foreground">
               <p className="text-sm font-medium mb-1">Completion Note</p>
@@ -1211,4 +1197,3 @@ function EyeIcon() {
     </svg>
   )
 }
-

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { RefreshCw, Users, Zap, Activity, Settings, Download, Shield } from 'lucide-react'
 import { useTheme } from '@/components/theme-provider'
+import { formatViewerDateTime } from '@/lib/format'
 
 // Import components from staff admin
 import { CollapsibleSection } from '@/app/(staff)/versotech/staff/admin/components/collapsible-section'
@@ -226,7 +227,7 @@ export function AdminDashboardClient() {
         <div className={`text-center py-6 border-t ${isDark ? 'border-zinc-800' : 'border-gray-200'}`}>
           <p className={`text-sm ${isDark ? 'text-zinc-500' : 'text-gray-500'}`}>
             <span style={{ fontFamily: 'var(--font-spartan), sans-serif', letterSpacing: '0.2em' }}>V E R S O</span> Super Admin Dashboard • Last updated:{' '}
-            {new Date().toLocaleString()}
+            {formatViewerDateTime(new Date())}
           </p>
         </div>
       </div>

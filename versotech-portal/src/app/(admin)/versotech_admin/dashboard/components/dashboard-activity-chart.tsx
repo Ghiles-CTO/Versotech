@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Activity } from 'lucide-react'
+import { formatViewerDate } from '@/lib/format'
 import {
   LineChart,
   Line,
@@ -54,12 +55,7 @@ function CustomTooltip({
 }) {
   if (active && payload && payload.length > 0) {
     const data = payload[0].payload
-    const formattedDate = new Date(data.date).toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
+    const formattedDate = formatViewerDate(data.date, { timeZone: 'UTC' })
     return (
       <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
         <p className="text-sm font-medium text-foreground">{formattedDate}</p>

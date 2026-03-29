@@ -20,6 +20,7 @@ import { StaffActivityChart } from './components/staff-activity-chart'
 import { ApprovalQueueChart } from './components/approval-queue-chart'
 import { WorkflowTrendChart } from './components/workflow-trend-chart'
 import { ComplianceForecastChart } from './components/compliance-forecast-chart'
+import { formatViewerDateTime } from '@/lib/format'
 
 export default function SuperAdminDashboard() {
   const [loading, setLoading] = useState(true)
@@ -217,7 +218,7 @@ export default function SuperAdminDashboard() {
         <div className="text-center py-6 border-t border-zinc-800">
           <p className="text-sm text-zinc-500">
             V E R S O Super Admin Dashboard • Last updated:{' '}
-            {new Date().toLocaleString()}
+            {formatViewerDateTime(new Date())}
           </p>
         </div>
       </div>

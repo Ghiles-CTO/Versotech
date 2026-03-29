@@ -8,6 +8,7 @@ import { DocumentService } from '@/services/document.service'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import { downloadFileFromUrl } from '@/lib/browser-download'
 import { toast } from 'sonner'
+import { formatViewerDate } from '@/lib/format'
 
 interface Document {
   id: string
@@ -99,12 +100,12 @@ export function VehicleDocumentsList({ documents }: VehicleDocumentsListProps) {
               <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted transition-colors">
                 <div className="flex items-center gap-3">
                   <FileText className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <div className="font-medium">{doc.name || doc.file_key?.split('/').pop() || doc.type}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {doc.type} • {new Date(doc.created_at).toLocaleDateString()}
+                    <div>
+                      <div className="font-medium">{doc.name || doc.file_key?.split('/').pop() || doc.type}</div>
+                      <div className="text-sm text-muted-foreground">
+                      {doc.type} • {formatViewerDate(doc.created_at)}
+                      </div>
                     </div>
-                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button

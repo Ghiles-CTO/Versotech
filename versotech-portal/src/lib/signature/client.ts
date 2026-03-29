@@ -26,6 +26,7 @@ import {
 } from './staged-release'
 import { canSignIntroducerAgreement } from './introducer-agreement-flow'
 import { sendSignatureRequestEmail } from '@/lib/email/resend-service'
+import { formatViewerDate } from '@/lib/format'
 import type {
   CreateSignatureRequestParams,
   CreateSignatureRequestResult,
@@ -610,7 +611,7 @@ export async function createSignatureRequest(
         // For countersigner tasks: investor_name is the INVESTOR (subscriber), NOT the signer (CEO/arranger)
         // Don't fall back to signer_name as that would show the countersigner's name
         const investorContext = subscriptionDetails.investor_name
-        const dateFormatted = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        const dateFormatted = formatViewerDate(new Date())
 
         console.log('📋 [SIGNATURE] Building staff task with context:', {
           dealContext,
@@ -699,8 +700,8 @@ export async function createSignatureRequest(
       const amountFormatted = subscriptionDetails.commitment
         ? new Intl.NumberFormat('en-US', { style: 'currency', currency: subscriptionDetails.currency || 'USD', maximumFractionDigits: 0 }).format(subscriptionDetails.commitment)
         : null
-      const dateFormatted = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-      const dueDate = token_expires_at.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      const dateFormatted = formatViewerDate(new Date())
+      const dueDate = formatViewerDate(token_expires_at)
 
       if (hasUserAccount) {
         // Investor has user account(s) - create task visible to ALL investor users

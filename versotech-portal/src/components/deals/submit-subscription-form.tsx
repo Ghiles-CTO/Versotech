@@ -26,6 +26,7 @@ import { Loader2, CheckCircle2, AlertTriangle, TrendingUp } from 'lucide-react'
 import { EntitySelector } from '@/components/subscriptions/entity-selector'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Progress } from '@/components/ui/progress'
+import { formatViewerDateTime } from '@/lib/format'
 
 interface DealCapacityInfo {
   target_raise: number | null
@@ -182,7 +183,7 @@ export function SubmitSubscriptionForm({ dealId, currency, existingSubmission }:
 
   if (isLocked) {
     const submittedAt = existingSubmission?.submitted_at
-      ? new Date(existingSubmission.submitted_at).toLocaleString()
+      ? formatViewerDateTime(existingSubmission.submitted_at)
       : 'Recently'
 
     return (

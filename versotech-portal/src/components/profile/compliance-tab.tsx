@@ -16,12 +16,13 @@ import {
   FileText,
   Calendar
 } from 'lucide-react'
-import { format, differenceInDays, isPast, addDays } from 'date-fns'
+import { differenceInDays, isPast, addDays } from 'date-fns'
+import { formatViewerDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 function formatUTC(dateStr: string, fmt: string) {
-  const d = new Date(dateStr)
-  return format(new Date(d.getTime() + d.getTimezoneOffset() * 60000), fmt)
+  void fmt
+  return formatViewerDate(dateStr, { timeZone: 'UTC' })
 }
 
 interface ComplianceData {
@@ -224,7 +225,7 @@ export function ComplianceTab() {
               <span className="text-sm font-medium">Last Reviewed</span>
               <span className="text-sm text-muted-foreground">
                 {compliance.aml_last_reviewed_at
-                  ? format(new Date(compliance.aml_last_reviewed_at), 'MMM dd, yyyy')
+                  ? formatViewerDate(compliance.aml_last_reviewed_at)
                   : 'Never'
                 }
               </span>
@@ -306,7 +307,7 @@ export function ComplianceTab() {
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Completed</span>
                 <span className="text-muted-foreground">
-                  {format(new Date(compliance.kyc_completed_at), 'MMM dd, yyyy')}
+                  {formatViewerDate(compliance.kyc_completed_at)}
                 </span>
               </div>
             )}

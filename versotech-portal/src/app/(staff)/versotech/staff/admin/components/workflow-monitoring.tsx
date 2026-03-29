@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { formatViewerDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import {
   Table,
@@ -287,7 +288,7 @@ export function WorkflowMonitoring({ isDark = true }: WorkflowMonitoringProps) {
                     <TableCell className={isDark ? 'text-zinc-300' : 'text-gray-700'}>{workflow.total_runs}</TableCell>
                     <TableCell className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>
                       {workflow.last_run_at
-                        ? new Date(workflow.last_run_at).toLocaleString()
+                        ? formatViewerDateTime(workflow.last_run_at)
                         : 'Never'}
                     </TableCell>
                     <TableCell className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>
@@ -381,7 +382,7 @@ export function WorkflowMonitoring({ isDark = true }: WorkflowMonitoringProps) {
                       )}
                     </TableCell>
                     <TableCell className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>
-                      {new Date(run.started_at).toLocaleString()}
+                      {formatViewerDateTime(run.started_at)}
                     </TableCell>
                     <TableCell className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>
                       {formatDuration(run.duration_ms)}
@@ -444,7 +445,7 @@ export function WorkflowMonitoring({ isDark = true }: WorkflowMonitoringProps) {
                 <div className={cn('p-3 rounded-lg', isDark ? 'bg-zinc-800' : 'bg-gray-100')}>
                   <p className={cn('text-xs mb-1', isDark ? 'text-zinc-400' : 'text-gray-500')}>Started At</p>
                   <p className={cn('text-sm', isDark ? 'text-white' : 'text-gray-900')}>
-                    {new Date(selectedRun.started_at).toLocaleString()}
+                    {formatViewerDateTime(selectedRun.started_at)}
                   </p>
                 </div>
                 <div className={cn('p-3 rounded-lg', isDark ? 'bg-zinc-800' : 'bg-gray-100')}>

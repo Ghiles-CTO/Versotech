@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { formatViewerDate } from '@/lib/format'
 import {
   Select,
   SelectContent,
@@ -445,7 +446,7 @@ export function TransactionDetailClient({ transaction, openInvoices, staffProfil
                   <Label className="text-muted-foreground text-xs">Value Date</Label>
                   <div className="text-lg font-medium text-foreground flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    {new Date(transaction.value_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                    {formatViewerDate(transaction.value_date, { timeZone: 'UTC' })}
                   </div>
                 </div>
               </div>

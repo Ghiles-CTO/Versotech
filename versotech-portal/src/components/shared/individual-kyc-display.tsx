@@ -4,6 +4,7 @@ import type { ComponentType, ReactNode } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { formatViewerDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import {
   User,
@@ -19,7 +20,6 @@ import {
   XCircle,
   Shield,
 } from 'lucide-react'
-import { format, parseISO } from 'date-fns'
 import { getCountryName } from '@/components/kyc/country-select'
 
 // Individual KYC data structure (matches entity-kyc-edit-dialog)
@@ -90,7 +90,7 @@ interface IndividualKycDisplayProps {
 function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '-'
   try {
-    return format(parseISO(dateStr), 'MMM d, yyyy')
+    return formatViewerDate(dateStr)
   } catch {
     return dateStr
   }

@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, Clock, CheckCircle2, Circle, AlertTriangle } from 'lucide-react'
+import { formatViewerDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 interface DealTimelineCardProps {
@@ -20,12 +21,7 @@ interface TimelineMilestone {
 
 function formatDate(dateString: string | null): string {
   if (!dateString) return 'TBD'
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC'
-  })
+  return formatViewerDate(dateString, { timeZone: 'UTC' })
 }
 
 function getDaysRemaining(dateString: string | null): number | null {

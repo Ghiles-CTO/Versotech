@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { formatViewerDate } from '@/lib/format'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -156,12 +157,7 @@ export function EntityKYCDocuments({ entityId, entityName }: EntityKYCDocumentsP
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      timeZone: 'UTC'
-    })
+    return formatViewerDate(dateString, { timeZone: 'UTC' })
   }
 
   const formatFileSize = (bytes: number) => {

@@ -33,6 +33,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/components/theme-provider'
+import { formatViewerDate } from '@/lib/format'
 
 export interface DashboardTask {
   id: string
@@ -146,7 +147,7 @@ function formatDueCopy(dueDate: string | null, status: DashboardTask['status']) 
 
   const date = new Date(dueDate)
   const now = new Date()
-  const formatted = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  const formatted = formatViewerDate(date)
 
   if (status === 'completed') return `Completed ${formatted}`
 
@@ -400,7 +401,7 @@ export function InvestorActionCenter({ tasks, tasksTotal, recentActivity }: Inve
                   const meta = getActivityMeta(activity, isDark)
                   const ActivityIcon: IconType = meta.icon
                   const createdAt = new Date(activity.created_at)
-                  const timestamp = createdAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+                  const timestamp = formatViewerDate(createdAt)
 
                   return (
                     <div key={activity.id} className="flex gap-3 group">

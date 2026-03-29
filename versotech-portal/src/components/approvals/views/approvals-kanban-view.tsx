@@ -3,7 +3,7 @@ import { Approval } from '@/types/approvals'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Clock, DollarSign, Shield, CheckCircle2, XCircle } from 'lucide-react'
-import { format } from 'date-fns'
+import { formatViewerDate, formatViewerDateTime } from '@/lib/format'
 
 interface ApprovalsKanbanViewProps {
   approvals: Approval[]
@@ -66,7 +66,7 @@ export function ApprovalsKanbanView({ approvals, onApprovalClick, onApproveClick
                     {approval.sla_breach_at && (
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {format(new Date(approval.sla_breach_at), 'MMM dd, HH:mm')}
+                        {formatViewerDateTime(approval.sla_breach_at)}
                       </span>
                     )}
                     {approval.entity_metadata?.indicative_amount && (
@@ -92,7 +92,7 @@ export function ApprovalsKanbanView({ approvals, onApprovalClick, onApproveClick
                         : approval.related_investor?.legal_name || approval.requested_by_profile?.display_name || ''}
                     </span>
                     <span className="shrink-0 ml-2">
-                      {format(new Date(approval.created_at), 'MMM dd')}
+                      {formatViewerDate(approval.created_at)}
                     </span>
                   </div>
 

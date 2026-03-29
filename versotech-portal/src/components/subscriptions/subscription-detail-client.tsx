@@ -24,6 +24,7 @@ import { SubscriptionEditDialog } from './subscription-edit-dialog'
 import { CapitalActivityTable } from './capital-activity-table'
 import { SubscriptionWithRelations, SubscriptionMetrics } from '@/types/subscription'
 import { SubscriptionDocumentsTab } from './subscription-documents-tab'
+import { formatViewerDate } from '@/lib/format'
 
 interface SubscriptionDetailClientProps {
   subscription: SubscriptionWithRelations
@@ -65,11 +66,7 @@ export function SubscriptionDetailClient({
 
   const formatDate = (date: string | null) => {
     if (!date) return '-'
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
+    return formatViewerDate(date)
   }
 
   const getStatusColor = (status: string) => {

@@ -37,6 +37,7 @@ import {
 import { toast } from 'sonner'
 import { MemberKYCEditDialog } from '@/components/shared/member-kyc-edit-dialog'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { formatViewerDate } from '@/lib/format'
 
 // Entity types that support members
 export type StaffEntityType = 'investor' | 'partner' | 'introducer' | 'lawyer' | 'arranger' | 'commercial_partner'
@@ -600,7 +601,7 @@ export function StaffEntityMembersTab({
                             </Badge>
                           ) : (
                             <span className="text-sm">
-                              {new Date(member.id_expiry_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                              {formatViewerDate(member.id_expiry_date, { timeZone: 'UTC' })}
                             </span>
                           )}
                         </div>

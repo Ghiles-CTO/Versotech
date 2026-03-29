@@ -20,13 +20,8 @@ import {
   AlertTriangle,
   ArrowLeft
 } from 'lucide-react'
-import { format } from 'date-fns'
+import { formatViewerDate } from '@/lib/format'
 import { SignatureCanvasWidget } from '@/components/signature/signature-canvas-widget'
-
-function formatUTC(dateStr: string, fmt: string) {
-  const d = new Date(dateStr)
-  return format(new Date(d.getTime() + d.getTimezoneOffset() * 60000), fmt)
-}
 import { InlinePdfViewer } from '@/components/signature/inline-pdf-viewer'
 import type { SignatureGroup, ExpiredSignature } from './page'
 import type { SignatureTask } from './page'
@@ -512,7 +507,7 @@ Action Required: ${task.instructions?.action_required || 'Send signature link to
                                 )}
                                 <span className="flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
-                                  Created {format(new Date(task.created_at), 'MMM d, yyyy')}
+                                  Created {formatViewerDate(task.created_at)}
                                 </span>
                               </div>
                             </div>
@@ -533,7 +528,7 @@ Action Required: ${task.instructions?.action_required || 'Send signature link to
                                 <Badge variant="destructive">Expired</Badge>
                               </div>
                               <p className="text-sm text-muted-foreground mb-3">
-                                Request for {sig.signer_name} expired on {format(new Date(sig.token_expires_at), 'MMM d, yyyy')}
+                                Request for {sig.signer_name} expired on {formatViewerDate(sig.token_expires_at)}
                               </p>
                               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1">
@@ -546,7 +541,7 @@ Action Required: ${task.instructions?.action_required || 'Send signature link to
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
-                                  Created {format(new Date(sig.created_at), 'MMM d, yyyy')}
+                                  Created {formatViewerDate(sig.created_at)}
                                 </span>
                               </div>
                             </div>
@@ -611,7 +606,7 @@ Action Required: ${task.instructions?.action_required || 'Send signature link to
                               {task.due_at && (
                                 <span className="flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
-                                  Due {formatUTC(task.due_at, 'MMM d, yyyy')}
+                                  Due {formatViewerDate(task.due_at, { timeZone: 'UTC' })}
                                 </span>
                               )}
                               {task.instructions?.investor_email && (
@@ -651,7 +646,7 @@ Action Required: ${task.instructions?.action_required || 'Send signature link to
                             )}
                             {task.status === 'completed' && task.completed_at && (
                               <Badge variant="outline" className="text-green-600">
-                                Completed {format(new Date(task.completed_at), 'MMM d')}
+                                Completed {formatViewerDate(task.completed_at)}
                               </Badge>
                             )}
                           </div>

@@ -1162,16 +1162,16 @@ export function getTourSteps(persona: string): TourStep[] {
 export function getWelcomeMessage(persona: string): { title: string; description: string } {
   const messages: Record<string, { title: string; description: string }> = {
     investor: {
-      title: 'Welcome to VERSOTECH Investor Workspace',
-      description: 'This walkthrough covers Dashboard, Investment Opportunities, Portfolio, Inbox, and Profile so you can move from review to execution quickly.'
+      title: 'Welcome to Versotech',
+      description: 'Your gateway to smarter investing:'
     },
     investor_entity: {
-      title: 'Welcome to VERSOTECH Investor Workspace',
-      description: 'You will see where to track entity-level portfolio activity, manage members, and complete required actions in Inbox and Profile.'
+      title: 'Welcome to Versotech',
+      description: 'Your gateway to smarter investing:'
     },
     investor_individual: {
-      title: 'Welcome to VERSOTECH',
-      description: 'We will walk through the pages you use most: Dashboard, Investment Opportunities, Portfolio, Inbox, and Profile.'
+      title: 'Welcome to Versotech',
+      description: 'Your gateway to smarter investing:'
     },
     ceo: {
       title: 'Welcome to VERSOTECH Executive Workspace',

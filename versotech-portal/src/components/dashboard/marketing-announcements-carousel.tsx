@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { format } from 'date-fns'
 import {
   ChevronLeft,
   ChevronRight,
@@ -17,6 +16,7 @@ import { toast } from 'sonner'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import { useConfirmationDialog } from '@/hooks/use-confirmation-dialog'
 import { downloadFileFromUrl } from '@/lib/browser-download'
+import { formatViewerDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/components/theme-provider'
 import { Badge } from '@/components/ui/badge'
@@ -415,7 +415,7 @@ export function MarketingAnnouncementsCarousel({
     )
     const badgeColor = BADGE_COLORS[card.card_type] ?? BADGE_COLORS.news
     const sourceDate = card.source_published_at
-      ? format(new Date(card.source_published_at), 'MMM d, yyyy')
+      ? formatViewerDate(card.source_published_at)
       : null
     const heroImageUrl = card.image_url ?? null
 

@@ -24,6 +24,7 @@ import {
   DollarSign,
   Eye
 } from 'lucide-react'
+import { formatViewerDate } from '@/lib/format'
 
 type SortField = 'vehicle_name' | 'total_commitment' | 'total_funded' | 'total_nav' | 'subscription_count' | 'investor_count' | 'moic' | 'total_fees' | 'total_capital_calls' | 'total_distributions' | 'total_outstanding' | 'total_shares'
 type SortDirection = 'asc' | 'desc'
@@ -372,9 +373,9 @@ export function VehicleSummaryTable({ summaries }: VehicleSummaryTableProps) {
                     <TableCell className="text-foreground">
                       {vehicle.earliest_subscription && vehicle.latest_subscription ? (
                         <div className="text-xs">
-                          <div>{new Date(vehicle.earliest_subscription).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}</div>
+                          <div>{formatViewerDate(vehicle.earliest_subscription)}</div>
                           <div className="text-muted-foreground/70">to</div>
-                          <div>{new Date(vehicle.latest_subscription).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}</div>
+                          <div>{formatViewerDate(vehicle.latest_subscription)}</div>
                         </div>
                       ) : (
                         <span className="text-muted-foreground/70 text-sm">-</span>

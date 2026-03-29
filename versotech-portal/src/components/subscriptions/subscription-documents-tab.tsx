@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import { SignatorySelectionDialog } from './signatory-selection-dialog'
+import { formatViewerDateTime } from '@/lib/format'
 
 interface Document {
   id: string
@@ -505,8 +506,7 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
                           {document.mime_type.includes('pdf') ? ' PDF' : ' DOCX'}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          Uploaded {new Date(document.created_at).toLocaleDateString()} at{' '}
-                          {new Date(document.created_at).toLocaleTimeString()}
+                          Uploaded {formatViewerDateTime(document.created_at)}
                           {document.created_by_profile && ` by ${document.created_by_profile.display_name}`}
                         </p>
                       </div>

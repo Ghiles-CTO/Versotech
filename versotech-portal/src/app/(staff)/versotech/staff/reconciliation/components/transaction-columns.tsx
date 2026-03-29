@@ -3,6 +3,7 @@
 import { ColumnDef } from '@tanstack/react-table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { formatViewerDate } from '@/lib/format'
 import { ArrowUpDown, Eye, CheckCircle2, AlertCircle, HelpCircle, FileText, Users } from 'lucide-react'
 import Link from 'next/link'
 
@@ -111,11 +112,7 @@ const formatCurrency = (amount: number, currency: string) => {
 }
 
 const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
+  return formatViewerDate(dateString)
 }
 
 const buildInvoiceLabel = (invoice?: InvoiceSummary | null) => {

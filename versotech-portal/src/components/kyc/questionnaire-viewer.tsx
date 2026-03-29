@@ -15,6 +15,7 @@ import {
   ClipboardCheck,
 } from 'lucide-react'
 import { STEP_CONFIG } from './schemas/kyc-questionnaire-schema'
+import { formatViewerDate } from '@/lib/format'
 
 // ─── Field label map ──────────────────────────────────────────────────────────
 const FIELD_LABELS: Record<string, string> = {
@@ -170,7 +171,7 @@ export function QuestionnaireViewer({ open, onClose, investorName, submittedAt, 
         {/* Required by Radix for accessibility — visually part of the header */}
         <SheetTitle className="sr-only">KYC Questionnaire — {investorName}</SheetTitle>
         <SheetDescription className="sr-only">
-          Submitted {new Date(submittedAt).toLocaleDateString()}
+          Submitted {formatViewerDate(submittedAt)}
         </SheetDescription>
 
         {/* ── Header ─────────────────────────────────────────────────────────── */}
@@ -190,7 +191,7 @@ export function QuestionnaireViewer({ open, onClose, investorName, submittedAt, 
             <p className="text-sm text-muted-foreground mt-0.5 truncate">
               <span className="font-medium text-foreground">{investorName}</span>
               {' · '}
-              {new Date(submittedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+              {formatViewerDate(submittedAt)}
             </p>
           </div>
         </div>

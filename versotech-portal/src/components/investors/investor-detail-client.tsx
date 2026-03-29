@@ -20,6 +20,7 @@ import {
   extractApprovedKycDocumentMetadata,
   type ApprovedKycDocumentMetadata,
 } from '@/lib/kyc/approved-document-metadata'
+import { formatViewerDate } from '@/lib/format'
 
 type InvestorDetail = {
   id: string
@@ -378,7 +379,7 @@ export function InvestorDetailClient({ investor, capitalMetrics, metricsAvailabl
                   <div>
                     <div className="text-sm text-muted-foreground">Created</div>
                     <div className="text-sm font-medium">
-                      {new Date(investor.created_at).toLocaleDateString()}
+                      {formatViewerDate(investor.created_at)}
                     </div>
                   </div>
                 </div>

@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
+import { formatViewerDate } from '@/lib/format'
 
 interface FeeManagementPanelProps {
   dealId: string
@@ -232,7 +233,7 @@ export default function FeeManagementPanel({ dealId, dealName }: FeeManagementPa
                 </div>
                 <div className="text-sm text-muted-foreground mt-1">
                   Investor: {event.investors?.legal_name} • 
-                  Date: {new Date(event.event_date).toLocaleDateString(undefined, { timeZone: 'UTC' })} •
+                  Date: {formatViewerDate(event.event_date, { timeZone: 'UTC' })} •
                   Method: {event.fee_components?.calc_method} ({event.fee_components?.rate_bps} bps)
                 </div>
               </div>
@@ -265,13 +266,13 @@ export default function FeeManagementPanel({ dealId, dealName }: FeeManagementPa
                 </div>
                 <div className="text-sm text-muted-foreground mt-1">
                   Investor: {invoice.investors?.legal_name} • 
-                  Due: {new Date(invoice.due_date).toLocaleDateString(undefined, { timeZone: 'UTC' })} •
+                  Due: {formatViewerDate(invoice.due_date, { timeZone: 'UTC' })} •
                   Lines: {invoice.invoice_lines?.length || 0}
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-sm text-muted-foreground">
-                  Created: {new Date(invoice.created_at).toLocaleDateString()}
+                  Created: {formatViewerDate(invoice.created_at)}
                 </div>
               </div>
             </div>

@@ -58,6 +58,7 @@ import {
   getInvestorVisiblePackGeneratedAt,
   isInvestorVisibleSubmissionStatus,
 } from '@/lib/deals/investor-opportunity-visibility'
+import { formatViewerDate } from '@/lib/format'
 
 type Nullable<T> = T | null
 
@@ -526,7 +527,7 @@ function formatDeadlineCopy(
   const now = new Date()
 
   if (effectiveStatus === 'closed' || closeDate < now) {
-    return `Closed ${closeDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}`
+    return `Closed ${formatViewerDate(closeDate, { timeZone: 'UTC' })}`
   }
 
   const diffMs = closeDate.getTime() - now.getTime()
@@ -544,7 +545,7 @@ function formatDeadlineCopy(
     return `Closes in ${diffDays} days`
   }
 
-  return `Closes ${closeDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}`
+  return `Closes ${formatViewerDate(closeDate, { timeZone: 'UTC' })}`
 }
 
 function ReinvestmentMiniProgress({
@@ -1483,7 +1484,7 @@ export function InvestorDealsListClient({
                     {/* Submission date */}
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>Submitted</span>
-                      <span>{new Date(subscription.submitted_at).toLocaleDateString()}</span>
+                      <span>{formatViewerDate(subscription.submitted_at)}</span>
                     </div>
 
                     {/* View Details button */}
@@ -1618,7 +1619,7 @@ export function InvestorDealsListClient({
                       <p className="text-sm font-medium text-foreground">{deadlineCopy}</p>
                       {ndaAccess?.expires_at && (
                         <p className="text-xs text-muted-foreground">
-                          NDA access until {new Date(ndaAccess.expires_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                          NDA access until {formatViewerDate(ndaAccess.expires_at, { timeZone: 'UTC' })}
                         </p>
                       )}
                     </div>
@@ -1825,7 +1826,7 @@ export function InvestorDealsListClient({
                               )}
                               {feeStructure?.interest_confirmation_deadline && (
                                 <span className="text-xs text-muted-foreground">
-                                  Interest deadline: {new Date(feeStructure.interest_confirmation_deadline).toLocaleDateString('en-US', { timeZone: 'UTC' })}
+                                  Interest deadline: {formatViewerDate(feeStructure.interest_confirmation_deadline, { timeZone: 'UTC' })}
                                 </span>
                               )}
                             </>
@@ -1864,7 +1865,7 @@ export function InvestorDealsListClient({
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
                       <CalendarClock className="h-4 w-4 text-muted-foreground" />
                       {deal.open_at
-                        ? `Opened ${new Date(deal.open_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}`
+                        ? `Opened ${formatViewerDate(deal.open_at, { timeZone: 'UTC' })}`
                         : 'Opening window announced soon'}
                     </div>
                     <div className="flex flex-wrap items-center gap-3">

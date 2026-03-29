@@ -35,6 +35,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { formatViewerDate, formatViewerDateTime } from '@/lib/format'
 
 interface Director {
   id: string
@@ -189,7 +190,7 @@ export function EntityDetailClient({ entity: initialEntity, directors: initialDi
       {
         label: 'Formation Date',
         value: entity.formation_date
-          ? new Date(entity.formation_date).toLocaleDateString(undefined, { timeZone: 'UTC' })
+          ? formatViewerDate(entity.formation_date, { timeZone: 'UTC' })
           : '—',
         icon: CalendarClock
       },
@@ -257,8 +258,8 @@ export function EntityDetailClient({ entity: initialEntity, directors: initialDi
             )}
             <p>{entity.domicile || 'Domicile unknown'}</p>
             <p className="text-sm">
-              Created {new Date(entity.created_at).toLocaleString()}
-              {entity.updated_at && ` • Updated ${new Date(entity.updated_at).toLocaleString()}`}
+              Created {formatViewerDateTime(entity.created_at)}
+              {entity.updated_at && ` • Updated ${formatViewerDateTime(entity.updated_at)}`}
             </p>
           </div>
         </div>
@@ -406,7 +407,7 @@ export function EntityDetailClient({ entity: initialEntity, directors: initialDi
                         <p className="font-medium text-foreground">{deal.name}</p>
                         <p className="text-muted-foreground text-xs">
                           {deal.deal_type.replace('_', ' ')} • {deal.currency || '—'} • Created{' '}
-                          {new Date(deal.created_at).toLocaleDateString()}
+                          {formatViewerDate(deal.created_at)}
                         </p>
                       </div>
                       <Button variant="outline" size="sm" asChild>
@@ -456,7 +457,7 @@ export function EntityDetailClient({ entity: initialEntity, directors: initialDi
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Uploaded {new Date(doc.created_at).toLocaleString()}
+                          Uploaded {formatViewerDateTime(doc.created_at)}
                           {doc.created_by && ` • ${doc.created_by}`}
                         </p>
                         {doc.description && (
@@ -511,8 +512,8 @@ export function EntityDetailClient({ entity: initialEntity, directors: initialDi
                         </Badge>
                       </div>
                       <div className="text-xs text-muted-foreground mt-2">
-                        Effective {director.effective_from ? new Date(director.effective_from).toLocaleDateString(undefined, { timeZone: 'UTC' }) : 'unknown'}
-                        {director.effective_to && ` • Ended ${new Date(director.effective_to).toLocaleDateString(undefined, { timeZone: 'UTC' })}`}
+                        Effective {director.effective_from ? formatViewerDate(director.effective_from, { timeZone: 'UTC' }) : 'unknown'}
+                        {director.effective_to && ` • Ended ${formatViewerDate(director.effective_to, { timeZone: 'UTC' })}`}
                       </div>
                       {director.notes && (
                         <p className="text-sm text-muted-foreground mt-2">{director.notes}</p>
@@ -578,7 +579,7 @@ export function EntityDetailClient({ entity: initialEntity, directors: initialDi
                           {event.event_type.replace(/_/g, ' ')}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(event.created_at).toLocaleString()}
+                          {formatViewerDateTime(event.created_at)}
                           {event.changed_by_profile?.display_name && ` • ${event.changed_by_profile.display_name}`}
                         </p>
                         {event.description && (
@@ -612,5 +613,4 @@ export function EntityDetailClient({ entity: initialEntity, directors: initialDi
     </div>
   )
 }
-
 

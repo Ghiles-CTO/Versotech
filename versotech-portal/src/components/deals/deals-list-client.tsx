@@ -30,6 +30,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react'
+import { formatViewerDate } from '@/lib/format'
 
 const statusColors = {
   draft: 'bg-muted dark:bg-white/10 text-muted-foreground dark:text-foreground border border-border',
@@ -358,7 +359,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
 
                     <div className="flex items-center gap-1.5">
                       <Clock className="h-4 w-4 flex-shrink-0" />
-                      <span>{new Date(deal.created_at).toLocaleDateString()}</span>
+                      <span>{formatViewerDate(deal.created_at)}</span>
                     </div>
                   </div>
                 </div>

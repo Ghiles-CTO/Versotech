@@ -1,4 +1,5 @@
 import { AppLayout } from '@/components/layout/app-layout'
+import { formatViewerDate } from '@/lib/format'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { DealLogo } from '@/components/deals/deal-logo'
@@ -38,11 +39,7 @@ interface PageProps {
 function formatDate(value: string | null) {
   if (!value) return 'Not specified'
   const date = new Date(value)
-  return date.toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  })
+  return formatViewerDate(date)
 }
 
 function daysUntil(date: string | null) {

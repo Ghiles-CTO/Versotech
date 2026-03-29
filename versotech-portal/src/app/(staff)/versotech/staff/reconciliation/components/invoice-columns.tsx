@@ -3,6 +3,7 @@
 import { ColumnDef } from '@tanstack/react-table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { formatViewerDate } from '@/lib/format'
 import { ArrowUpDown, FileText, CheckCircle2, AlertCircle, Clock, DollarSign } from 'lucide-react'
 
 export type ReconciliationInvoiceRow = {
@@ -71,11 +72,7 @@ const formatCurrency = (amount: number, currency: string | null) => {
 }
 
 const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
+  return formatViewerDate(dateString)
 }
 
 export const invoiceColumns: ColumnDef<ReconciliationInvoiceRow>[] = [

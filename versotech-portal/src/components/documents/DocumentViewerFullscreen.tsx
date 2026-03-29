@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { createPortal } from 'react-dom'
+import { formatViewerDate } from '@/lib/format'
 import { X, Download, Loader2, AlertCircle, FileText, AlertTriangle, FileImage, FileVideo2, Music, FileSpreadsheet, Pause, Play, Presentation } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatFileSize } from '@/lib/utils'
@@ -33,11 +34,7 @@ function isDocumentExpired(expiryDate?: string | null): boolean {
  * Format expiry date for display
  */
 function formatExpiryDate(expiryDate: string): string {
-  return new Date(expiryDate).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
+  return formatViewerDate(expiryDate)
 }
 
 /**

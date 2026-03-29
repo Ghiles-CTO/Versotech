@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { AlertTriangle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { formatViewerDateTime } from '@/lib/format'
 
 interface ComplianceAlert {
   id: string
@@ -79,7 +80,7 @@ export function ComplianceAlerts({ alerts }: { alerts: ComplianceAlert[] }) {
                     {alert.description || 'No description'}
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
-                    {new Date(alert.created_at).toLocaleString()}
+                    {formatViewerDateTime(alert.created_at)}
                   </div>
                 </div>
               </div>

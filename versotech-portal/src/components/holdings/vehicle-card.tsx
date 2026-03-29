@@ -30,6 +30,7 @@ import {
 import { downloadFileFromUrl } from '@/lib/browser-download'
 import { cn } from '@/lib/utils'
 import { SellPositionForm } from '@/components/investor/sell-position-form'
+import { formatViewerDate } from '@/lib/format'
 
 interface DocumentInfo {
   id: string
@@ -310,7 +311,7 @@ export function VehicleCard({
                       </p>
                       <p className="text-xs text-muted-foreground flex items-center justify-end gap-1">
                         <Calendar className="h-3 w-3" />
-                        {new Date(holding.valuation.asOfDate).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                        {formatViewerDate(holding.valuation.asOfDate, { timeZone: 'UTC' })}
                       </p>
                     </div>
                   </div>
@@ -343,12 +344,12 @@ export function VehicleCard({
                 )}
                 {holding.subscription?.funding_due_at && (
                   <p className="text-xs text-muted-foreground">
-                    Funding due {new Date(holding.subscription.funding_due_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                    Funding due {formatViewerDate(holding.subscription.funding_due_at, { timeZone: 'UTC' })}
                   </p>
                 )}
                 {holding.invite_sent_at && (
                   <p className="text-xs text-muted-foreground">
-                    Invite sent {new Date(holding.invite_sent_at).toLocaleDateString()}
+                    Invite sent {formatViewerDate(holding.invite_sent_at)}
                   </p>
                 )}
               </div>

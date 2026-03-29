@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle2, XCircle, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { formatViewerDate } from '@/lib/format'
 
 interface ApprovalsTableViewProps {
   approvals: Approval[]
@@ -297,7 +298,7 @@ export function ApprovalsTableView({
 
                     <TableCell>
                       <span className="text-xs text-muted-foreground">
-                        {new Date(approval.created_at).toLocaleDateString()}
+                        {formatViewerDate(approval.created_at)}
                       </span>
                     </TableCell>
 

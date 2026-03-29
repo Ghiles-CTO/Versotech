@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { formatViewerDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import {
   Table,
@@ -325,7 +326,7 @@ export function ComplianceAlertsPanel({ isDark = true }: ComplianceAlertsPanelPr
                           <div className="flex items-center gap-2">
                             <Calendar className={cn('h-3 w-3', isDark ? 'text-zinc-400' : 'text-gray-500')} />
                             <span className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>
-                              {new Date(alert.due_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                              {formatViewerDate(alert.due_date, { timeZone: 'UTC' })}
                             </span>
                             {alert.days_until_due !== undefined && (
                               <Badge

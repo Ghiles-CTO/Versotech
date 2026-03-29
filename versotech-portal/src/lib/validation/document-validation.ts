@@ -9,6 +9,7 @@
  */
 
 import { differenceInDays, differenceInMonths, isBefore, isAfter, addDays } from 'date-fns'
+import { formatViewerDate } from '@/lib/format'
 
 // ============================================================
 // Types
@@ -337,14 +338,14 @@ export function validateDocument(input: DocumentValidationInput): ValidationResu
         result.isValid = false
         result.status = 'expired'
         result.errors.push(
-          `ID document has expired on ${expiryDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}. Please upload a current, valid document.`
+          `ID document has expired on ${formatViewerDate(expiryDate, { timeZone: 'UTC' })}. Please upload a current, valid document.`
         )
         result.canOverride = false // STRICT - no override for expired IDs
       } else if (config.warningDays && result.daysUntilExpiry <= config.warningDays) {
         // Document expiring soon
         result.status = 'expiring_soon'
         result.warnings.push(
-          `ID document expires in ${result.daysUntilExpiry} days (${expiryDate.toLocaleDateString(undefined, { timeZone: 'UTC' })})`
+          `ID document expires in ${result.daysUntilExpiry} days (${formatViewerDate(expiryDate, { timeZone: 'UTC' })})`
         )
       }
     }
@@ -378,7 +379,7 @@ export function validateDocument(input: DocumentValidationInput): ValidationResu
           result.isValid = false
           result.status = 'stale'
           result.errors.push(
-            `Proof of address must be dated within the last ${maxAgeDays / 30} months. This document is ${monthsOld} months old (dated ${dateToCheck.toLocaleDateString(undefined, { timeZone: 'UTC' })}). Staff override required.`
+            `Proof of address must be dated within the last ${maxAgeDays / 30} months. This document is ${monthsOld} months old (dated ${formatViewerDate(dateToCheck, { timeZone: 'UTC' })}). Staff override required.`
           )
           result.canOverride = true
         }
@@ -403,7 +404,7 @@ export function validateDocument(input: DocumentValidationInput): ValidationResu
     if (isBefore(expiryDate, today)) {
       result.status = 'expired'
       result.warnings.push(
-        `This document expired on ${expiryDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}. Consider uploading a renewed version.`
+        `This document expired on ${formatViewerDate(expiryDate, { timeZone: 'UTC' })}. Consider uploading a renewed version.`
       )
     } else if (config.warningDays && result.daysUntilExpiry <= config.warningDays) {
       result.status = 'expiring_soon'

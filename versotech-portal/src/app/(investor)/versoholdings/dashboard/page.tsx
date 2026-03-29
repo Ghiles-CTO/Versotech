@@ -27,6 +27,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { formatViewerDate } from '@/lib/format'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { VideoIntroWrapper } from './video-intro-wrapper'
 
@@ -660,12 +661,12 @@ function buildUpcomingHighlights(deals: FeaturedDeal[], tasks: DashboardTask[]):
     .sort((a, b) => new Date(a.close_at ?? 0).getTime() - new Date(b.close_at ?? 0).getTime())[0]
 
   if (nextDeal?.close_at) {
-    const dueDate = new Date(nextDeal.close_at)
+    const dueDate = nextDeal.close_at
     highlights.push({
       id: `deal-${nextDeal.id}`,
       label: 'Deal close',
-      description: `${nextDeal.name} closes ${dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
-      date: dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      description: `${nextDeal.name} closes ${formatViewerDate(dueDate)}`,
+      date: formatViewerDate(dueDate),
       href: `/versotech_main/opportunities/${nextDeal.id}`,
       accent: 'blue'
     })
@@ -677,12 +678,12 @@ function buildUpcomingHighlights(deals: FeaturedDeal[], tasks: DashboardTask[]):
     .sort((a, b) => new Date(a.due_at ?? 0).getTime() - new Date(b.due_at ?? 0).getTime())[0]
 
   if (nextTask?.due_at) {
-    const dueDate = new Date(nextTask.due_at)
+    const dueDate = nextTask.due_at
     highlights.push({
       id: `task-${nextTask.id}`,
       label: 'Action item',
       description: nextTask.title,
-      date: dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      date: formatViewerDate(dueDate),
       href: '/versotech_main/tasks',
       accent: 'amber'
     })
@@ -821,7 +822,7 @@ export default async function InvestorDashboard() {
                 Portal snapshot
               </p>
               <p className="mt-3 text-2xl font-semibold text-slate-900">
-                {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                {formatViewerDate(new Date())}
               </p>
               <Separator className="my-4" />
               <p className="text-sm text-slate-600">

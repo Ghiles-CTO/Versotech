@@ -1,5 +1,6 @@
 import { requireStaffAuth } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
+import { formatViewerDate } from '@/lib/format'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ProfilePageClient } from './profile-page-client'
 import { User, Calendar, Shield } from 'lucide-react'
@@ -31,10 +32,7 @@ export default async function StaffProfilePage() {
   }
 
   // Format member since date
-  const memberSince = new Date(profile.created_at).toLocaleDateString('en-US', {
-    month: 'long',
-    year: 'numeric'
-  })
+  const memberSince = formatViewerDate(profile.created_at)
 
   // Format role display
   const roleDisplay = profile.role

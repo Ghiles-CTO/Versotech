@@ -42,6 +42,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { PRIORITY_CONFIG, REQUEST_CATEGORIES } from '@/lib/reports/constants'
+import { formatViewerDate, formatViewerDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import type { AdminCaseDetail, AdminCaseItem, AdminCaseListResult, AdminCaseStatus } from '@/lib/audit/admin-cases'
 
@@ -128,14 +129,14 @@ function formatDateTime(value: string | null | undefined) {
   if (!value) return 'N/A'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return 'N/A'
-  return date.toLocaleString()
+  return formatViewerDateTime(date)
 }
 
 function formatDateOnly(value: string | null | undefined) {
   if (!value) return 'N/A'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return 'N/A'
-  return date.toLocaleDateString()
+  return formatViewerDate(date)
 }
 
 function getStatusClasses(status: AdminCaseStatus) {

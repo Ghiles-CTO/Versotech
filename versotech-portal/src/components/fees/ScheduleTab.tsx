@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { formatCurrency } from '@/lib/fees/calculations';
 import { formatCurrencyTotals, sumByCurrency } from '@/lib/currency-totals';
+import { formatViewerDate } from '@/lib/format';
 import { Calendar, DollarSign, Clock, Users, Building2, ChevronDown, ChevronRight, UserCheck, Handshake, Briefcase, X, Filter, Check, ChevronsUpDown } from 'lucide-react';
 import {
   Collapsible,
@@ -832,9 +833,9 @@ export default function ScheduleTab() {
           </CardHeader>
           <CardContent>
             <div className="text-sm font-medium text-white">
-              {new Date(data.summary.date_range.from).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              {formatViewerDate(data.summary.date_range.from)}
               {' - '}
-              {new Date(data.summary.date_range.to).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              {formatViewerDate(data.summary.date_range.to)}
             </div>
             <p className="text-xs text-gray-400">
               Forecast period
@@ -1099,20 +1100,12 @@ export default function ScheduleTab() {
                                     </td>
                                     <td className="py-2 px-2 text-gray-300">
                                       {fee.period_start_date
-                                        ? new Date(fee.period_start_date).toLocaleDateString('en-US', {
-                                            month: 'short',
-                                            day: 'numeric',
-                                            year: 'numeric',
-                                          })
+                                        ? formatViewerDate(fee.period_start_date)
                                         : '-'}
                                     </td>
                                     <td className="py-2 px-2 text-gray-300">
                                       {fee.period_end_date
-                                        ? new Date(fee.period_end_date).toLocaleDateString('en-US', {
-                                            month: 'short',
-                                            day: 'numeric',
-                                            year: 'numeric',
-                                          })
+                                        ? formatViewerDate(fee.period_end_date)
                                         : '-'}
                                     </td>
                                   </tr>
@@ -1225,11 +1218,7 @@ export default function ScheduleTab() {
                                       </Badge>
                                     </td>
                                     <td className="py-2 px-2 text-gray-300">
-                                      {new Date(commission.created_at).toLocaleDateString('en-US', {
-                                        month: 'short',
-                                        day: 'numeric',
-                                        year: 'numeric',
-                                      })}
+                                      {formatViewerDate(commission.created_at)}
                                     </td>
                                   </tr>
                                 ))}
@@ -1341,11 +1330,7 @@ export default function ScheduleTab() {
                                       </Badge>
                                     </td>
                                     <td className="py-2 px-2 text-gray-300">
-                                      {new Date(commission.created_at).toLocaleDateString('en-US', {
-                                        month: 'short',
-                                        day: 'numeric',
-                                        year: 'numeric',
-                                      })}
+                                      {formatViewerDate(commission.created_at)}
                                     </td>
                                   </tr>
                                 ))}
@@ -1461,11 +1446,7 @@ export default function ScheduleTab() {
                                       </Badge>
                                     </td>
                                     <td className="py-2 px-2 text-gray-300">
-                                      {new Date(commission.created_at).toLocaleDateString('en-US', {
-                                        month: 'short',
-                                        day: 'numeric',
-                                        year: 'numeric',
-                                      })}
+                                      {formatViewerDate(commission.created_at)}
                                     </td>
                                   </tr>
                                 ))}
@@ -1532,12 +1513,7 @@ export default function ScheduleTab() {
                               Subscription: {fee.subscription_number}
                             </p>
                             <p className="text-xs text-gray-500">
-                              Due: {new Date(fee.next_due_date).toLocaleDateString('en-US', {
-                                weekday: 'short',
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                              })}
+                              Due: {formatViewerDate(fee.next_due_date)}
                             </p>
                           </div>
                         </div>

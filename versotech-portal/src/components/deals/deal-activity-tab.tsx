@@ -20,7 +20,8 @@ import {
   Filter,
   RefreshCw
 } from 'lucide-react'
-import { formatDistanceToNow, format } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
+import { formatViewerDateTime } from '@/lib/format'
 
 interface DealActivityEvent {
   id: string
@@ -287,7 +288,7 @@ export function DealActivityTab({ dealId }: DealActivityTabProps) {
                                 </>
                               )}
                               <span
-                                title={format(new Date(activity.timestamp), 'PPpp')}
+                                title={formatViewerDateTime(activity.timestamp)}
                               >
                                 {formatDistanceToNow(new Date(activity.timestamp), {
                                   addSuffix: true

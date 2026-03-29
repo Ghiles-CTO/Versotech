@@ -68,6 +68,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { downloadFileFromUrl } from '@/lib/browser-download'
 import { cn } from '@/lib/utils'
+import { formatViewerDate, formatViewerDateTime } from '@/lib/format'
 import { useConfirmationDialog } from '@/hooks/use-confirmation-dialog'
 import { SubscriptionEditModal } from './subscription-edit-modal'
 import { AddValuationModal } from './add-valuation-modal'
@@ -317,14 +318,14 @@ const formatWorkbookDate = (value?: string | number | null) => {
     const excelEpoch = new Date(1899, 11, 30)
     const computed = new Date(excelEpoch.getTime() + castNumber * 24 * 60 * 60 * 1000)
     if (!Number.isNaN(computed.getTime())) {
-      return computed.toLocaleDateString(undefined, { timeZone: 'UTC' })
+      return formatViewerDate(computed, { timeZone: 'UTC' })
     }
   }
 
   if (typeof value === 'string') {
     const parsed = new Date(value)
     if (!Number.isNaN(parsed.getTime())) {
-      return parsed.toLocaleDateString(undefined, { timeZone: 'UTC' })
+      return formatViewerDate(parsed, { timeZone: 'UTC' })
     }
   }
 
@@ -700,7 +701,7 @@ export function EntityDetailEnhanced({
     confirm(
       {
         title: 'Delete valuation?',
-        description: `This will permanently remove the valuation dated ${new Date(valuation.as_of_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}.`,
+        description: `This will permanently remove the valuation dated ${formatViewerDate(valuation.as_of_date, { timeZone: 'UTC' })}.`,
         confirmText: 'Delete',
         cancelText: 'Cancel',
         variant: 'destructive'
@@ -1161,7 +1162,7 @@ export function EntityDetailEnhanced({
       {
         label: 'Formation Date',
         value: entity.formation_date
-          ? new Date(entity.formation_date).toLocaleDateString(undefined, { timeZone: 'UTC' })
+          ? formatViewerDate(entity.formation_date, { timeZone: 'UTC' })
           : '—',
         icon: CalendarClock
       },
@@ -1243,8 +1244,8 @@ export function EntityDetailEnhanced({
             {entity.former_entity && <p>Formerly: {entity.former_entity}</p>}
             <p>{entity.domicile || 'Domicile unknown'}</p>
             <p className="text-sm">
-              Created {new Date(entity.created_at).toLocaleString()}
-              {entity.updated_at && ` • Updated ${new Date(entity.updated_at).toLocaleString()}`}
+              Created {formatViewerDateTime(entity.created_at)}
+              {entity.updated_at && ` • Updated ${formatViewerDateTime(entity.updated_at)}`}
             </p>
           </div>
         </div>
@@ -1497,7 +1498,7 @@ export function EntityDetailEnhanced({
                 <p className="text-muted-foreground">Formation Date</p>
                 <p className="text-foreground font-medium">
                   {entity.formation_date
-                    ? new Date(entity.formation_date).toLocaleDateString(undefined, { timeZone: 'UTC' })
+                    ? formatViewerDate(entity.formation_date, { timeZone: 'UTC' })
                     : '—'}
                 </p>
               </div>
@@ -1660,7 +1661,7 @@ export function EntityDetailEnhanced({
                                 </span>
                               )}
                               {investorProfile?.email && <span>{investorProfile.email}</span>}
-                              <span>Linked {new Date(investor.created_at).toLocaleDateString()}</span>
+                              <span>Linked {formatViewerDate(investor.created_at)}</span>
                             </div>
 
                             {/* Subscriptions Section - Compact */}
@@ -1735,13 +1736,13 @@ export function EntityDetailEnhanced({
                                             {entry.committed_at && (
                                               <span>
                                                 <span className="text-emerald-300">Committed:</span>{' '}
-                                                {new Date(entry.committed_at).toLocaleDateString()}
+                                                {formatViewerDate(entry.committed_at)}
                                               </span>
                                             )}
                                             {entry.created_at && (
                                               <span>
                                                 <span className="text-emerald-300">Created:</span>{' '}
-                                                {new Date(entry.created_at).toLocaleDateString()}
+                                                {formatViewerDate(entry.created_at)}
                                               </span>
                                             )}
                                           </div>
@@ -1838,13 +1839,13 @@ export function EntityDetailEnhanced({
                                           <span>
                                             <span className="text-blue-300">Eff:</span>{' '}
                                             {holding.effective_date
-                                              ? new Date(holding.effective_date).toLocaleDateString(undefined, { timeZone: 'UTC' })
+                                              ? formatViewerDate(holding.effective_date, { timeZone: 'UTC' })
                                               : '—'}
                                           </span>
                                           <span>
                                             <span className="text-blue-300">Due:</span>{' '}
                                             {holding.funding_due_at
-                                              ? new Date(holding.funding_due_at).toLocaleDateString(undefined, { timeZone: 'UTC' })
+                                              ? formatViewerDate(holding.funding_due_at, { timeZone: 'UTC' })
                                               : '—'}
                                           </span>
                                         </div>
@@ -2015,7 +2016,7 @@ export function EntityDetailEnhanced({
                             )}
                           </div>
                           <p className="text-xs text-gray-400">
-                            {timestampLabel} {new Date(doc.created_at).toLocaleString()}
+                            {timestampLabel} {formatViewerDateTime(doc.created_at)}
                             {doc.created_by && ` • ${doc.created_by}`}
                           </p>
                           {folderInfo && (
@@ -2213,10 +2214,10 @@ export function EntityDetailEnhanced({
                                 </div>
                                 <p className="text-xs text-gray-400 mt-1">
                                   Effective {stakeholder.effective_from
-                                    ? new Date(stakeholder.effective_from).toLocaleDateString(undefined, { timeZone: 'UTC' })
+                                    ? formatViewerDate(stakeholder.effective_from, { timeZone: 'UTC' })
                                     : 'unknown'}
                                   {stakeholder.effective_to &&
-                                    ` • Ended ${new Date(stakeholder.effective_to).toLocaleDateString(undefined, { timeZone: 'UTC' })}`}
+                                    ` • Ended ${formatViewerDate(stakeholder.effective_to, { timeZone: 'UTC' })}`}
                                 </p>
                                 {stakeholder.notes && (
                                   <p className="text-sm text-gray-400 mt-2">{stakeholder.notes}</p>
@@ -2300,10 +2301,10 @@ export function EntityDetailEnhanced({
                       <div className="text-xs text-gray-400 mt-2">
                         Effective{' '}
                         {director.effective_from
-                          ? new Date(director.effective_from).toLocaleDateString(undefined, { timeZone: 'UTC' })
+                          ? formatViewerDate(director.effective_from, { timeZone: 'UTC' })
                           : 'unknown'}
                         {director.effective_to &&
-                          ` • Ended ${new Date(director.effective_to).toLocaleDateString(undefined, { timeZone: 'UTC' })}`}
+                          ` • Ended ${formatViewerDate(director.effective_to, { timeZone: 'UTC' })}`}
                       </div>
                       {director.notes && (
                         <p className="text-sm text-gray-400 mt-2">{director.notes}</p>
@@ -2349,7 +2350,7 @@ export function EntityDetailEnhanced({
                             {deal.deal_type.replace('_', ' ')} • {deal.currency || '—'}
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
-                            Created {new Date(deal.created_at).toLocaleDateString()}
+                            Created {formatViewerDate(deal.created_at)}
                           </p>
                         </div>
                       </div>
@@ -2452,7 +2453,7 @@ export function EntityDetailEnhanced({
                           {event.event_type.replace(/_/g, ' ')}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(event.created_at).toLocaleString()}
+                          {formatViewerDateTime(event.created_at)}
                           {event.changed_by_profile?.display_name &&
                             ` • ${event.changed_by_profile.display_name}`}
                         </p>
@@ -2524,7 +2525,7 @@ export function EntityDetailEnhanced({
                       {valuations.map((valuation) => (
                         <tr key={valuation.id} className="border-b border-white/5 hover:bg-white/5">
                           <td className="py-3 px-4 text-sm">
-                            {new Date(valuation.as_of_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                            {formatViewerDate(valuation.as_of_date, { timeZone: 'UTC' })}
                           </td>
                           <td className="py-3 px-4 text-sm text-right font-mono">
                             {valuation.nav_total
@@ -2665,7 +2666,7 @@ export function EntityDetailEnhanced({
                             </td>
                             <td className="py-3 px-4 text-sm">
                               {position.as_of_date
-                                ? new Date(position.as_of_date).toLocaleDateString(undefined, { timeZone: 'UTC' })
+                                ? formatViewerDate(position.as_of_date, { timeZone: 'UTC' })
                                 : '-'}
                             </td>
                             <td className="py-3 px-4 text-right">

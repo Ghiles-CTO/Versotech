@@ -1,5 +1,6 @@
 'use client'
 
+import { formatViewerDate } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -245,11 +246,7 @@ export function CommercialPartnerKYCDocumentsTab({
   }
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    })
+    return formatViewerDate(dateStr)
   }
 
   const uploadedCount = isIndividualEntity

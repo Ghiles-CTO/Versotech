@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { formatViewerDate } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Loader2, RotateCcw } from 'lucide-react'
@@ -186,7 +187,7 @@ export default function SignPage() {
               <span className="text-muted-foreground">Expires:</span>
               <span className="font-medium text-foreground">
                 {signatureRequest?.expires_at
-                  ? new Date(signatureRequest.expires_at).toLocaleDateString(undefined, { timeZone: 'UTC' })
+                  ? formatViewerDate(signatureRequest.expires_at, { timeZone: 'UTC' })
                   : 'N/A'}
               </span>
             </div>

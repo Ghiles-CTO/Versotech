@@ -4,7 +4,8 @@ import * as React from 'react'
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { formatDistanceToNow, format } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
+import { formatViewerDate } from '@/lib/format'
 import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -1070,7 +1071,7 @@ export default function UserDetailPage() {
                   <p className="text-sm text-muted-foreground">Account Created</p>
                   <p className="font-medium flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    {user.createdAt ? format(new Date(user.createdAt), 'MMM d, yyyy') : '—'}
+                    {user.createdAt ? formatViewerDate(user.createdAt) : '—'}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -1079,7 +1080,7 @@ export default function UserDetailPage() {
                     <Clock className="h-4 w-4 text-muted-foreground" />
                     {user.lastLoginAt ? (
                       <>
-                        {format(new Date(user.lastLoginAt), 'MMM d, yyyy')}
+                        {formatViewerDate(user.lastLoginAt)}
                         <span className="text-sm text-muted-foreground">
                           ({formatDistanceToNow(new Date(user.lastLoginAt), { addSuffix: true })})
                         </span>

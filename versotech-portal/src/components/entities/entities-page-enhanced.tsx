@@ -21,6 +21,7 @@ import { AlertCircle, FileText, FlagTriangleRight, LayoutGrid, List, Plus, Searc
 import { Entity, EntitiesTableView, EntitiesListView, EntitiesKanbanView } from './entities-views'
 import { EditEntityModal } from './edit-entity-modal'
 import { CreateEntityModal } from './create-entity-modal'
+import { formatViewerDate } from '@/lib/format'
 
 interface EntitiesPageEnhancedProps {
   entities: Entity[]
@@ -259,7 +260,7 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
                     <p className="text-sm font-semibold text-foreground">{entity.name}</p>
                     <p className="text-xs text-red-100/80">
                       {entity.open_flag_count} unresolved flag{entity.open_flag_count === 1 ? '' : 's'} • Last update{' '}
-                      {entity.last_event_at ? new Date(entity.last_event_at).toLocaleDateString() : 'n/a'}
+                      {entity.last_event_at ? formatViewerDate(entity.last_event_at) : 'n/a'}
                     </p>
                   </div>
                   <Badge className="bg-red-500/20 border-red-400/40 text-red-100">Review</Badge>

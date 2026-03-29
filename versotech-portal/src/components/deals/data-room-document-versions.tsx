@@ -19,9 +19,9 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Download, FileText, Loader2, Upload } from 'lucide-react'
-import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { DocumentService } from '@/services/document.service'
+import { formatViewerDateTime } from '@/lib/format'
 
 interface DocumentVersionsProps {
   dealId: string
@@ -273,7 +273,7 @@ export function DataRoomDocumentVersions({
                       {formatFileSize(version.file_size_bytes)}
                     </TableCell>
                     <TableCell className="text-sm">
-                      {format(new Date(version.created_at), 'dd MMM yyyy HH:mm')}
+                      {formatViewerDateTime(version.created_at)}
                     </TableCell>
                     <TableCell>
                       {isLatest ? (

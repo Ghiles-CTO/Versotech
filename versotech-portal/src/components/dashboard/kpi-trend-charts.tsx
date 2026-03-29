@@ -27,7 +27,7 @@ import {
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, formatViewerDate } from '@/lib/format'
 
 interface DataPoint {
   date: string
@@ -279,9 +279,9 @@ export function KPITrendCharts({
       const value = baseValue + (Math.random() - 0.5) * variance + (i * variance * 0.01)
 
       data.push({
-        date: date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
+        date: formatViewerDate(date, { timeZone: 'UTC' }),
         value: Math.round(value),
-        label: date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+        label: formatViewerDate(date, { timeZone: 'UTC' })
       })
     }
 

@@ -71,6 +71,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { downloadFileFromUrl } from '@/lib/browser-download'
+import { formatViewerDate } from '@/lib/format'
 
 // Search result from server-side search API
 interface SearchResult {
@@ -713,11 +714,7 @@ function SearchResultCard({
 }) {
   const DocIcon = getDocumentIcon(result.type)
   const formattedSize = formatFileSize(result.file_size)
-  const formattedDate = new Date(result.created_at).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
+  const formattedDate = formatViewerDate(result.created_at)
 
   // Build path: Vehicle > Folder
   const pathParts: string[] = []
@@ -808,11 +805,7 @@ function SearchResultRow({
 }) {
   const DocIcon = getDocumentIcon(result.type)
   const formattedSize = formatFileSize(result.file_size)
-  const formattedDate = new Date(result.created_at).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
+  const formattedDate = formatViewerDate(result.created_at)
 
   // Build path: Vehicle > Folder
   const pathParts: string[] = []
@@ -962,11 +955,7 @@ function isDocumentExpired(expiryDate?: string | null): boolean {
  * Format expiry date for display
  */
 function formatExpiryDate(expiryDate: string): string {
-  return new Date(expiryDate).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
+  return formatViewerDate(expiryDate)
 }
 
 /**
@@ -1007,11 +996,7 @@ function DocumentListRow({
   const displayName = (document as any).file_name || (document as any).name || 'Untitled Document'
   const DocIcon = getDocumentIcon(document.type)
   const formattedSize = formatFileSize(document.file_size_bytes)
-  const formattedDate = new Date(document.created_at).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
+  const formattedDate = formatViewerDate(document.created_at)
 
   const handleDownload = async () => {
     setIsDownloading(true)

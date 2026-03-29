@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { Loader2, ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { formatViewerDate } from '@/lib/format'
 
 interface AnalyticsData {
   summary: {
@@ -398,10 +399,7 @@ export function RequestAnalyticsClient() {
                   {data.timeSeries.slice(-14).map((item) => (
                     <div key={item.date} className="flex items-center gap-3">
                       <span className="text-xs text-gray-400 w-24">
-                        {new Date(item.date).toLocaleDateString(undefined, {
-                          month: 'short',
-                          day: 'numeric',
-                        })}
+                        {formatViewerDate(item.date, { timeZone: 'UTC' })}
                       </span>
                       <div className="flex-1 h-6 bg-white/10 rounded-full overflow-hidden">
                         <div

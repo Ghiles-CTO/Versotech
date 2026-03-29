@@ -23,7 +23,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, formatViewerDate } from '@/lib/format'
 import Link from 'next/link'
 
 type Agreement = {
@@ -81,12 +81,7 @@ const PAYMENT_TERMS_LABELS: Record<string, string> = {
 
 function formatDate(dateString: string | null): string {
   if (!dateString) return '-'
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC'
-  })
+  return formatViewerDate(dateString, { timeZone: 'UTC' })
 }
 
 function formatBps(bps: number): string {

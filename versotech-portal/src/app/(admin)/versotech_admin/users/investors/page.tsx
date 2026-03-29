@@ -81,6 +81,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { formatDistanceToNow, format } from 'date-fns'
+import { formatViewerDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import type { UserRow, UsersResponse } from '@/app/api/admin/users/route'
@@ -411,7 +412,7 @@ const createColumns = (handlers: InvestorActionHandlers): ColumnDef<UserRow>[] =
     cell: ({ row }) => {
       return (
         <span className="text-muted-foreground">
-          {format(new Date(row.original.createdAt), 'MMM d, yyyy')}
+          {formatViewerDate(row.original.createdAt)}
         </span>
       )
     },

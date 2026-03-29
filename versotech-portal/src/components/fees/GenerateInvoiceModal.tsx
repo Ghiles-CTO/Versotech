@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/fees/calculations';
 import { formatCurrencyTotals, sumByCurrency } from '@/lib/currency-totals';
+import { formatViewerDate } from '@/lib/format';
 
 interface FeeEvent {
   id: string;
@@ -536,7 +537,7 @@ export function GenerateInvoiceModal({ open, onClose, onSuccess, preselectedInve
                             <span className="text-white">{formatAmount(event.computed_amount, event.currency || selectedSubscription?.currency)}</span>
                           </div>
                           <div className="text-sm text-gray-400">
-                            {new Date(event.event_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                            {formatViewerDate(event.event_date, { timeZone: 'UTC' })}
                             {event.deal && ` • ${event.deal.name}`}
                           </div>
                         </div>

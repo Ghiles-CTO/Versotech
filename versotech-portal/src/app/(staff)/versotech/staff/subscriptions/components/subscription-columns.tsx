@@ -4,6 +4,7 @@ import { ColumnDef } from '@tanstack/react-table'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
+import { formatViewerDate } from '@/lib/format'
 import { ArrowUpDown, Eye, CheckCircle2, Clock, Loader2, XCircle, Archive } from 'lucide-react'
 import Link from 'next/link'
 import { getCountryName } from '@/components/kyc/country-select'
@@ -120,11 +121,7 @@ function formatCurrencyPrecise(amount: number, currency: string) {
 
 function formatDate(date: string | null) {
   if (!date) return '-'
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
+  return formatViewerDate(date)
 }
 
 export const subscriptionColumns: ColumnDef<SubscriptionRow>[] = [

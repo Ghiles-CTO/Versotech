@@ -50,6 +50,7 @@ import {
   Download,
   Plus
 } from 'lucide-react'
+import { formatViewerDate } from '@/lib/format'
 import { getCountryName } from '@/components/kyc/country-select'
 import type { UnifiedUser, UnifiedUsersResponse } from '@/app/api/admin/unified-users/route'
 import { BatchInviteDialog, type EntityType } from '@/components/users/batch-invite-dialog'
@@ -167,7 +168,7 @@ export default function UnifiedUsersContent() {
       u.status,
       u.kycStatus || '-',
       u.country || '-',
-      new Date(u.createdAt).toLocaleDateString()
+      formatViewerDate(u.createdAt)
     ])
 
     const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')

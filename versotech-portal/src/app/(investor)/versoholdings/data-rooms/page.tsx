@@ -1,4 +1,5 @@
 import { AppLayout } from '@/components/layout/app-layout'
+import { formatViewerDate } from '@/lib/format'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import {
   AlertCircle,
@@ -45,7 +46,7 @@ function formatDate(value: string | null, fallback = 'Open ended') {
   if (!value) return fallback
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) return fallback
-  return parsed.toLocaleDateString(undefined, { timeZone: 'UTC' })
+  return formatViewerDate(parsed, { timeZone: 'UTC' })
 }
 
 function daysUntil(date: string | null) {

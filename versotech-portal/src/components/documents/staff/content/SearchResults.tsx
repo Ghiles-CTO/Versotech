@@ -16,6 +16,7 @@ import { useStaffDocuments } from '../context/StaffDocumentsContext'
 import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import { getDocumentDisplayName } from '@/lib/documents/document-name'
+import { formatViewerDate } from '@/lib/format'
 import {
   FileText,
   Building2,
@@ -89,11 +90,7 @@ export function SearchResults({ className }: SearchResultsProps) {
   // ---------------------------------------------------------------------------
 
   const formatDate = (dateStr: string): string => {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
+    return formatViewerDate(dateStr)
   }
 
   // ---------------------------------------------------------------------------

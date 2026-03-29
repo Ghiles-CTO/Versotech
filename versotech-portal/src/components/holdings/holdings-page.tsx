@@ -23,6 +23,7 @@ import {
   PieChart
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { formatViewerDate } from '@/lib/format'
 
 // Enhanced holding interface
 interface EnhancedHolding {
@@ -370,7 +371,7 @@ export function HoldingsPage({
             const performance = Object.entries(navByDate).map(([date, value]: [string, any]) => ({
               date,
               value,
-              displayDate: new Date(date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+              displayDate: formatViewerDate(date)
             }))
             setPerformanceData(performance)
           } else {
@@ -411,7 +412,7 @@ export function HoldingsPage({
 
         const cashFlow = Object.values(cashFlowMap).map((cf: any) => ({
           ...cf,
-          displayPeriod: new Date(cf.period + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+          displayPeriod: formatViewerDate(`${cf.period}-01`, { timeZone: 'UTC' })
         }))
         setCashFlowData(cashFlow)
 
@@ -608,7 +609,7 @@ export function HoldingsPage({
       h.position?.unrealizedGainPct?.toFixed(2) || '0',
       h.position?.units?.toString() || '0',
       h.subscription?.commitment?.toFixed(2) || '0',
-      new Date(h.created_at).toLocaleDateString()
+      formatViewerDate(h.created_at)
     ])
 
     // Build CSV content

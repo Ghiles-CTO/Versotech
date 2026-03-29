@@ -1,6 +1,7 @@
 'use client'
 
 import { Document, DocumentType } from '@/types/documents'
+import { formatViewerDate } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -114,11 +115,7 @@ function isDocumentExpired(expiryDate?: string | null): boolean {
  * Format expiry date for display
  */
 function formatExpiryDate(expiryDate: string): string {
-  return new Date(expiryDate).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
+  return formatViewerDate(expiryDate)
 }
 
 
@@ -171,11 +168,7 @@ export function DocumentCard({
   const formattedSize = formatFileSize(document.file_size_bytes)
   const formattedType = formatDocumentType(document.type)
   const vehicle = document.scope?.vehicle
-  const formattedDate = new Date(document.created_at).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
+  const formattedDate = formatViewerDate(document.created_at)
   const DocIcon = getDocumentIcon(document.type)
 
   // Compact variant for list view

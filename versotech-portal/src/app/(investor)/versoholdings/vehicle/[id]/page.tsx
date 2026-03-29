@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { VehicleDocumentsList } from '@/components/holdings/vehicle-documents-list'
+import { formatViewerDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -477,7 +478,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                     <div className="flex justify-between items-center mt-2">
                       <span className="text-gray-600 dark:text-gray-400">Signed Date</span>
                       <span className="text-sm text-gray-500 dark:text-gray-400">
-                        {new Date(subscriptionData.signedDate).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                        {formatViewerDate(subscriptionData.signedDate, { timeZone: 'UTC' })}
                       </span>
                     </div>
                   </div>
@@ -506,7 +507,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                             <div>
                               <div className="font-medium capitalize text-gray-900 dark:text-gray-100">{flow.type}</div>
                               <div className="text-sm text-gray-500 dark:text-gray-400">
-                                {new Date(flow.date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                                {formatViewerDate(flow.date, { timeZone: 'UTC' })}
                               </div>
                             </div>
                           </div>
@@ -606,7 +607,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                           <div className="text-sm text-blue-800 dark:text-blue-200">
                             <p><strong>Valuation Source:</strong> Latest NAV reported by the fund administrator</p>
                             <p className="mt-1"><strong>Frequency:</strong> Monthly/Quarterly basis</p>
-                            <p className="mt-1"><strong>Last Updated:</strong> {positionData.lastUpdated ? new Date(positionData.lastUpdated).toLocaleDateString(undefined, { timeZone: 'UTC' }) : 'N/A'}</p>
+                            <p className="mt-1"><strong>Last Updated:</strong> {positionData.lastUpdated ? formatViewerDate(positionData.lastUpdated, { timeZone: 'UTC' }) : 'N/A'}</p>
                           </div>
                         </div>
                       </div>
@@ -646,7 +647,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                               {flow.type === 'call' ? 'Capital Call' : 'Distribution'}
                             </div>
                             <div className="text-sm text-gray-500 dark:text-gray-400">
-                              {new Date(flow.date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                              {formatViewerDate(flow.date, { timeZone: 'UTC' })}
                             </div>
                           </div>
                         </div>
@@ -696,7 +697,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                           <Calendar className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                           <div>
                             <div className="font-medium text-gray-900 dark:text-gray-100">
-                              {new Date(valuation.as_of_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                              {formatViewerDate(valuation.as_of_date, { timeZone: 'UTC' })}
                             </div>
                             <div className="text-sm text-gray-500 dark:text-gray-400">Valuation Date</div>
                           </div>

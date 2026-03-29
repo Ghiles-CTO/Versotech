@@ -1,4 +1,15 @@
+import { formatViewerDate, formatViewerDateTime } from '@/lib/format'
 import type { ConversationMessage } from '@/types/messaging'
+
+const MESSAGE_TIME_FORMATTER = new Intl.DateTimeFormat('en-GB', {
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+})
+
+const WEEKDAY_FORMATTER = new Intl.DateTimeFormat('en-GB', {
+  weekday: 'long',
+})
 
 /**
  * Format a timestamp as relative time (e.g., "2m ago", "Yesterday at 3:45 PM")
@@ -29,7 +40,7 @@ export function formatRelativeTime(timestamp: string): string {
   const yesterday = new Date(now)
   yesterday.setDate(yesterday.getDate() - 1)
   if (messageTime.toDateString() === yesterday.toDateString()) {
-    return `Yesterday at ${messageTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`
+    return `Yesterday at ${MESSAGE_TIME_FORMATTER.format(messageTime)}`
   }
   
   // Less than a week
@@ -39,11 +50,7 @@ export function formatRelativeTime(timestamp: string): string {
   }
   
   // Older - show full date
-  return messageTime.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric',
-    year: messageTime.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
-  })
+  return formatViewerDate(messageTime)
 }
 
 /**
@@ -51,14 +58,7 @@ export function formatRelativeTime(timestamp: string): string {
  */
 export function formatFullTimestamp(timestamp: string): string {
   const date = new Date(timestamp)
-  return date.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  })
+  return formatViewerDateTime(date)
 }
 
 /**
@@ -157,15 +157,11 @@ export function getDateDivider(timestamp: string): string {
   // Within this week
   const diffDays = Math.floor((todayOnly.getTime() - messageDateOnly.getTime()) / (1000 * 60 * 60 * 24))
   if (diffDays < 7) {
-    return messageDate.toLocaleDateString('en-US', { weekday: 'long' })
+    return WEEKDAY_FORMATTER.format(messageDate)
   }
   
   // Older
-  return messageDate.toLocaleDateString('en-US', { 
-    month: 'long', 
-    day: 'numeric',
-    year: messageDate.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
-  })
+  return formatViewerDate(messageDate)
 }
 
 /**
@@ -180,4 +176,3 @@ export function shouldShowDateDivider(currentMessage: ConversationMessage, previ
   // Different day
   return currentDate.toDateString() !== previousDate.toDateString()
 }
-

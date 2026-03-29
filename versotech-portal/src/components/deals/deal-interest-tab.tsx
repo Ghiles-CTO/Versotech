@@ -18,8 +18,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
-import { format } from 'date-fns'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, formatViewerDateTime } from '@/lib/format'
 
 interface DealInterestTabProps {
   dealId: string
@@ -136,7 +135,7 @@ export function DealInterestTab({ dealId, interests, subscriptions }: DealIntere
                       </TableCell>
                       <TableCell>
                         {subscription.submitted_at
-                          ? format(new Date(subscription.submitted_at), 'dd MMM yyyy HH:mm')
+                          ? formatViewerDateTime(subscription.submitted_at)
                           : '—'}
                       </TableCell>
                       <TableCell>{formattedAmount}</TableCell>
@@ -211,7 +210,7 @@ function InterestTable({ title, interests, emptyLabel }: InterestTableProps) {
                   </TableCell>
                   <TableCell>
                     {interest.submitted_at
-                      ? format(new Date(interest.submitted_at), 'dd MMM yyyy HH:mm')
+                      ? formatViewerDateTime(interest.submitted_at)
                       : '—'}
                   </TableCell>
                 </TableRow>

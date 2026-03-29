@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { format } from 'date-fns'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -45,6 +44,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { AddParticipantModal } from './add-participant-modal'
+import { formatViewerDate } from '@/lib/format'
 
 // Partner assignment types
 interface PartnerAssignment {
@@ -177,7 +177,7 @@ function JourneyProgressBar({ member }: { member: any }) {
                   ? 'bg-yellow-500/30 text-yellow-400 border border-yellow-500/50'
                   : 'bg-muted text-muted-foreground'
             }`}
-            title={`${stage.label}${value ? ` - ${format(new Date(value), 'MMM d, yyyy')}` : ''}`}
+            title={`${stage.label}${value ? ` - ${formatViewerDate(value)}` : ''}`}
           >
             <stage.icon className="h-3 w-3" />
           </div>
@@ -228,7 +228,7 @@ export function DealMembersTab({ dealId, dealStatus, members: initialMembers, su
       .replace(/\b\w/g, character => character.toUpperCase())
   }
 
-  const formatDateLabel = (value?: string | null) => value ? format(new Date(value), 'MMM d, yyyy') : null
+  const formatDateLabel = (value?: string | null) => value ? formatViewerDate(value) : null
 
   const getTermSheetLabel = (termSheet: any) => {
     if (!termSheet) return 'Term Sheet'

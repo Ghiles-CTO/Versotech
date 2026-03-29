@@ -54,6 +54,7 @@ import { getCountryName } from '@/components/kyc/country-select'
 import type { UnifiedUser, UnifiedUsersResponse } from '@/app/api/admin/unified-users/route'
 import { BatchInviteDialog, type EntityType } from '@/components/users/batch-invite-dialog'
 import { AddAccountModal } from '@/components/users/add-account-modal'
+import { formatViewerDate } from '@/lib/format'
 
 const ENTITY_TYPE_CONFIG = {
   investor: { label: 'Investor', icon: Users, color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
@@ -167,7 +168,7 @@ export default function UnifiedAccountsContent() {
       a.status,
       a.kycStatus || '-',
       a.country || '-',
-      new Date(a.createdAt).toLocaleDateString()
+      formatViewerDate(a.createdAt)
     ])
 
     const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')

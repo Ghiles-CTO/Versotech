@@ -1,6 +1,9 @@
 'use client'
 
 import React, { createContext, useContext, useMemo } from 'react'
+import { formatViewerDate } from '@/lib/format'
+
+const MONTH_FORMATTER = new Intl.DateTimeFormat('en-GB', { month: 'short' })
 
 export type GanttFeature = {
   id: string
@@ -59,9 +62,9 @@ function generateWeekSegments(startDate: Date, endDate: Date) {
     segments.push({
       start: weekStart,
       end: weekEnd,
-      month: weekStart.toLocaleDateString(undefined, { month: 'short' }),
+      month: MONTH_FORMATTER.format(weekStart),
       year: weekStart.getFullYear(),
-      weekLabel: `${weekStart.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`,
+      weekLabel: formatViewerDate(weekStart, { timeZone: 'UTC' }),
       width: (spanDays / totalDays) * 100
     })
 
@@ -367,7 +370,7 @@ export function GanttToday() {
   const today = new Date()
   return (
     <div className="px-4 py-3 text-xs text-muted-foreground">
-      Today: {today.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+      Today: {formatViewerDate(today)}
     </div>
   )
 }

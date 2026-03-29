@@ -30,6 +30,7 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { InterestModal } from './interest-modal'
 import { NotifySimilarButton } from './notify-similar-button'
+import { formatViewerDate } from '@/lib/format'
 
 interface DealDetailsModalProps {
   deal: DealDetailsData
@@ -157,7 +158,7 @@ function formatDate(value: string | null | undefined, fallback = '—') {
   if (!value) return fallback
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) return fallback
-  return parsed.toLocaleDateString('en-US', { timeZone: 'UTC' })
+  return formatViewerDate(parsed, { timeZone: 'UTC' })
 }
 
 function pickLatestStructure(structures: FeeStructure[] = []) {

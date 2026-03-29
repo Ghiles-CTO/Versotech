@@ -13,6 +13,7 @@ import {
   KanbanProvider
 } from '@/components/kibo-ui/kanban'
 import type { DragEndEvent } from '@/components/kibo-ui/list'
+import { formatViewerDate } from '@/lib/format'
 import {
   ListGroup,
   ListHeader,
@@ -91,7 +92,7 @@ const getStatusColor = (status: string | null) => {
 const formatLastActivity = (timestamp?: string | null) => {
   if (!timestamp) return 'No activity'
   try {
-    return new Date(timestamp).toLocaleDateString()
+    return formatViewerDate(timestamp)
   } catch {
     return 'No activity'
   }

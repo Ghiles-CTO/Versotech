@@ -54,6 +54,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { formatViewerDate } from '@/lib/format'
 
 export type EntityType = 'partner' | 'investor' | 'introducer' | 'commercial_partner' | 'lawyer' | 'arranger'
 
@@ -400,11 +401,7 @@ export function MembersManagementTab({
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    })
+    return formatViewerDate(dateString)
   }
 
   const getStatusBadge = (status: string) => {

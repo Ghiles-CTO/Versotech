@@ -27,6 +27,7 @@ import {
   Target
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { formatViewerDate } from '@/lib/format'
 
 interface PositionLot {
   id: string
@@ -330,11 +331,7 @@ export function PositionDetailModal({
                                   <div className="font-medium text-foreground truncate">{cf.description}</div>
                                   <div className="text-sm text-muted-foreground flex items-center gap-2 mt-0.5">
                                     <Calendar className="h-3 w-3" />
-                                    {new Date(cf.date).toLocaleDateString('en-US', {
-                                      year: 'numeric',
-                                      month: 'short',
-                                      day: 'numeric'
-                                    })}
+                                    {formatViewerDate(cf.date)}
                                     {cf.reference && (
                                       <span className="text-xs text-muted-foreground/70">• Ref: {cf.reference}</span>
                                     )}
@@ -401,11 +398,7 @@ export function PositionDetailModal({
                             {fee.nextDue && fee.status !== 'paid' && (
                               <div className="flex items-center gap-2 mt-3 pt-3 border-t text-sm text-muted-foreground">
                                 <Clock className="h-4 w-4" />
-                                <span>Next due: {new Date(fee.nextDue).toLocaleDateString('en-US', {
-                                  year: 'numeric',
-                                  month: 'short',
-                                  day: 'numeric'
-                                })}</span>
+                                <span>Next due: {formatViewerDate(fee.nextDue)}</span>
                               </div>
                             )}
                           </CardContent>
@@ -463,11 +456,7 @@ export function PositionDetailModal({
                                   <div className="font-medium text-foreground">{lot.source}</div>
                                   <div className="text-sm text-muted-foreground flex items-center gap-1">
                                     <Calendar className="h-3 w-3" />
-                                    {new Date(lot.acquisitionDate).toLocaleDateString('en-US', {
-                                      year: 'numeric',
-                                      month: 'short',
-                                      day: 'numeric'
-                                    })}
+                                    {formatViewerDate(lot.acquisitionDate)}
                                   </div>
                                 </div>
                               </div>
@@ -534,11 +523,7 @@ export function PositionDetailModal({
                                   <div className="font-medium text-foreground truncate">{doc.type}</div>
                                   <div className="text-sm text-muted-foreground flex items-center gap-2">
                                     <Calendar className="h-3 w-3" />
-                                    {new Date(doc.createdAt).toLocaleDateString('en-US', {
-                                      year: 'numeric',
-                                      month: 'short',
-                                      day: 'numeric'
-                                    })}
+                                    {formatViewerDate(doc.createdAt)}
                                     <span className="text-muted-foreground/70">•</span>
                                     <span>{doc.size}</span>
                                   </div>

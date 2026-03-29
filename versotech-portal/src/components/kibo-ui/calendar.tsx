@@ -2,6 +2,9 @@
 
 import React, { createContext, useContext, useMemo, useState } from 'react'
 
+const MONTH_FORMATTER = new Intl.DateTimeFormat('en-GB', { month: 'long' })
+const MONTH_YEAR_FORMATTER = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' })
+
 type CalendarFeature = {
   id: string
   name: string
@@ -149,7 +152,7 @@ export function CalendarMonthPicker({ brand = 'versotech' }: { brand?: 'versohol
     >
       {Array.from({ length: 12 }).map((_, index) => (
         <option key={index} value={index}>
-          {new Date(2000, index).toLocaleString('default', { month: 'long' })}
+          {MONTH_FORMATTER.format(new Date(2000, index))}
         </option>
       ))}
     </select>
@@ -221,7 +224,7 @@ export function CalendarHeader({ brand = 'versotech' }: { brand?: 'versoholdings
   return (
     <div className="flex flex-col gap-3">
       <div className={`text-lg font-semibold ${isLight ? 'text-gray-900' : 'text-foreground'}`}>
-        {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+        {MONTH_YEAR_FORMATTER.format(currentDate)}
       </div>
       <div className={`grid grid-cols-7 gap-2 text-[11px] font-semibold uppercase tracking-wide ${isLight ? 'text-gray-600' : 'text-muted-foreground'}`}>
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((weekday) => (

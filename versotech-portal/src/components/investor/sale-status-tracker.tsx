@@ -29,7 +29,8 @@ import {
   type LucideIcon
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { formatDistanceToNow, format } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
+import { formatViewerDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 interface SaleRequest {
@@ -316,7 +317,7 @@ export function SaleStatusTracker({ requests, onRequestCancelled }: SaleStatusTr
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <FileText className="h-3.5 w-3.5" />
                       <span>
-                        Submitted {format(new Date(request.created_at), 'MMM d, yyyy')}
+                        Submitted {formatViewerDate(request.created_at)}
                         <span className="text-xs ml-1 opacity-70">
                           ({formatDistanceToNow(new Date(request.created_at), { addSuffix: true })})
                         </span>
@@ -435,7 +436,7 @@ export function SaleStatusTracker({ requests, onRequestCancelled }: SaleStatusTr
                       </div>
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      {format(new Date(request.created_at), 'MMM d, yyyy')}
+                      {formatViewerDate(request.created_at)}
                     </span>
                   </div>
 

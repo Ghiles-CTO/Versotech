@@ -27,6 +27,7 @@ import { DocumentReference } from '@/types/document-viewer.types'
 import { getFileTypeCategory } from '@/constants/document-preview.constants'
 import { canPreviewExternalOfficeLink } from '@/lib/documents/office-viewer'
 import { hasExpiredDataRoomAccess } from '@/lib/deals/data-room-request-state'
+import { formatViewerDate } from '@/lib/format'
 
 export interface DataRoomDocument {
   id: string
@@ -74,12 +75,7 @@ function formatFileSize(bytes: number): string {
 
 // Format date
 function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC'
-  })
+  return formatViewerDate(dateString, { timeZone: 'UTC' })
 }
 
 // Check if file type supports in-app preview

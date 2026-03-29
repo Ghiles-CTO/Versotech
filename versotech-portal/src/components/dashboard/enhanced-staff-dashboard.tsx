@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, formatViewerDate } from '@/lib/format'
 import {
     Users,
     Workflow,
@@ -428,20 +428,11 @@ export function EnhancedStaffDashboard({
 
     // Memoize data processing
     const formattedDate = useMemo(() => {
-        if (!initialData.generatedAt) return format(new Date(), 'dd MMM yyyy').toUpperCase()
-        try {
-            return format(parseISO(initialData.generatedAt), 'dd MMM yyyy').toUpperCase()
-        } catch {
-            return format(new Date(), 'dd MMM yyyy').toUpperCase()
-        }
+        return formatViewerDate(initialData.generatedAt || new Date())
     }, [initialData.generatedAt])
 
     const formatChartDate = useCallback((dateStr: string) => {
-        try {
-             return format(parseISO(dateStr), 'MMM dd')
-        } catch (e) {
-            return dateStr
-        }
+        return formatViewerDate(dateStr, { timeZone: 'UTC' })
     }, [])
 
     const feesData = useMemo(() => initialData.charts.fees.map(f => ({

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Package } from 'lucide-react'
 import { AddShareLotModal } from './add-share-lot-modal'
+import { formatViewerDate } from '@/lib/format'
 
 interface DealInventoryTabProps {
   dealId: string
@@ -116,7 +117,7 @@ export function DealInventoryTab({ dealId, shareLots, inventorySummary, onRefres
                         <span>Remaining: {lot.units_remaining.toLocaleString()} units</span>
                         <span>Cost: {lot.currency} {lot.unit_cost.toFixed(2)}/unit</span>
                         {lot.acquired_at && (
-                          <span>Acquired: {new Date(lot.acquired_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}</span>
+                          <span>Acquired: {formatViewerDate(lot.acquired_at, { timeZone: 'UTC' })}</span>
                         )}
                       </div>
                     </div>

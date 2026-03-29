@@ -26,6 +26,7 @@ import { TrendingUp, TrendingDown, Calendar, Target, DollarSign, BarChart3 } fro
 import { cn } from '@/lib/utils'
 import { useChartColors, useChartPalette } from '@/lib/theme-colors'
 import { normalizeCurrencyCode } from '@/lib/currency-totals'
+import { formatViewerDate } from '@/lib/format'
 
 interface PerformanceData {
   period: string
@@ -129,7 +130,7 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
             const avgIrr = snapshots.reduce((sum, s) => sum + (s.irr_net || 0), 0) / snapshots.length
 
             performanceData.push({
-              period: new Date(date).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+              period: formatViewerDate(date, { timeZone: 'UTC' }),
               date,
               nav: totalNav,
               contributions: totalContributed,

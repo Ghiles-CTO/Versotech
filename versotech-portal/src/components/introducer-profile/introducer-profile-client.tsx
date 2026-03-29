@@ -26,6 +26,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { formatViewerDateTime } from '@/lib/format'
 import { toast } from 'sonner'
 
 // Import profile components
@@ -540,7 +541,7 @@ export function IntroducerProfileClient({
                             <p className="text-sm text-red-800">{latestAccountRequestInfo.details}</p>
                             {latestAccountRequestInfo.requestedAt && (
                               <p className="mt-2 text-xs text-red-600">
-                                Requested on {new Date(latestAccountRequestInfo.requestedAt).toLocaleString()}
+                                Requested on {formatViewerDateTime(latestAccountRequestInfo.requestedAt)}
                               </p>
                             )}
                           </div>

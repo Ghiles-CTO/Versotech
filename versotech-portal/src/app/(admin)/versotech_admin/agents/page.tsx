@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils'
 import { getCurrentUser } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolveAgentIdForTask } from '@/lib/agents'
+import { formatViewerDate } from '@/lib/format'
 import { suggestKycExpiryDate } from '@/lib/compliance/kyc-expiry-assistant'
 import {
   isWayneAgentName,
@@ -329,12 +330,7 @@ function formatDate(value?: string | null) {
   if (!value) return '—'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return '—'
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC',
-  })
+  return formatViewerDate(date, { timeZone: 'UTC' })
 }
 
 function formatConfidence(value: number | string) {

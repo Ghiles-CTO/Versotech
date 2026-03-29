@@ -11,6 +11,16 @@ import { SIGNATURE_CONFIG } from './config'
 import { calculateSignaturePosition } from './helpers'
 import type { EmbedSignatureParams, EmbedSignatureMultipleParams } from './types'
 
+const SIGNATURE_TIMESTAMP_FORMATTER = new Intl.DateTimeFormat('en-GB', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+  timeZoneName: 'short',
+})
+
 /**
  * Embed signature into PDF document
  *
@@ -108,14 +118,7 @@ export async function embedSignatureInPDF(
   })
 
   // Format signature timestamp
-  const signatureDate = timestamp.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZoneName: 'short'
-  })
+  const signatureDate = SIGNATURE_TIMESTAMP_FORMATTER.format(timestamp).replace(',', '')
 
   const { metadata: metaConfig } = SIGNATURE_CONFIG.pdf
 
@@ -199,14 +202,7 @@ export async function embedSignatureMultipleLocations(
   const { metadata: metaConfig } = SIGNATURE_CONFIG.pdf
 
   // Format signature timestamp once (same for all placements)
-  const signatureDate = timestamp.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZoneName: 'short'
-  })
+  const signatureDate = SIGNATURE_TIMESTAMP_FORMATTER.format(timestamp).replace(',', '')
 
   // Embed signature on each placement
   for (const placement of placements) {

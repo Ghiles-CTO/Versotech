@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Building2, DollarSign, Calendar, Hash, ArrowRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { formatViewerDate } from '@/lib/format'
 
 type Subscription = {
   id: string
@@ -135,11 +136,7 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
 
   const formatDate = (date: string | null) => {
     if (!date) return '-'
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
+    return formatViewerDate(date)
   }
 
   const getStatusColor = (status: string) => {

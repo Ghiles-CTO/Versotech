@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { formatViewerDateTime } from '@/lib/format'
 
 interface AuditLog {
   id: string
@@ -187,7 +188,7 @@ export function AuditLogTable({ logs }: { logs: AuditLog[] }) {
                         <div>
                           <div className="font-medium text-foreground">Timestamp</div>
                           <div className="text-muted-foreground">
-                            {new Date(log.timestamp).toLocaleString()}
+                            {formatViewerDateTime(log.timestamp)}
                           </div>
                         </div>
                         <div>
@@ -242,7 +243,7 @@ export function AuditLogTable({ logs }: { logs: AuditLog[] }) {
                 <div>
                   <h4 className="font-medium mb-1">Timestamp</h4>
                   <p className="text-sm text-muted-foreground">
-                    {new Date(selectedLog.timestamp).toLocaleString()}
+                    {formatViewerDateTime(selectedLog.timestamp)}
                   </p>
                 </div>
                 <div>

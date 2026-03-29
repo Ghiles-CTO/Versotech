@@ -288,6 +288,9 @@ export function ProfilePageClient({
   const [isSubmittingAccountApproval, setIsSubmittingAccountApproval] = useState(false)
   const [showRequestInfoDetails, setShowRequestInfoDetails] = useState(false)
   const [approvedDocMetadata, setApprovedDocMetadata] = useState<ApprovedKycDocumentMetadata | null>(null)
+  const [activeTab, setActiveTab] = useState(
+    variant !== 'staff' && defaultTab === 'preferences' ? 'overview' : defaultTab
+  )
   // Use server-passed investorInfo instead of client-side fetching
   const hasInvestorEntity = !!investorInfo
   const isIndividual = investorInfo?.type === 'individual'
@@ -487,7 +490,53 @@ export function ProfilePageClient({
     hasPendingAccountApproval ||
     !isAccountApprovalReady
 
-  const normalizedInvestorDefaultTab = !isStaff && defaultTab === 'preferences' ? 'overview' : defaultTab
+  // Resolve the next onboarding action from missing KYC items
+  const resolveNextOnboardingAction = (): { label: string; action: () => void } | null => {
+    if (missingAccountKycItems.length === 0) return null
+
+    const isIndividualInvestor = investorInfo?.type === 'individual'
+
+    if (isIndividualInvestor) {
+      // Individual: check for Personal Information first, then documents
+      const entityGroup = missingAccountKycItems.find((i) => i.scope === 'entity')
+      const hasPersonalInfo = entityGroup?.missingItems.some((raw) =>
+        raw.replace(/\s*\(.*\)$/, '') === 'Personal Information'
+      )
+      if (hasPersonalInfo) {
+        return { label: 'Complete Personal Information', action: () => setShowKycDialog(true) }
+      }
+      return { label: 'Upload KYC Documents', action: () => setActiveTab('kyc') }
+    }
+
+    // Entity investor: entity info → member personal info → documents
+    const entityGroup = missingAccountKycItems.find((i) => i.scope === 'entity')
+    const hasEntityInfo = entityGroup?.missingItems.some((raw) =>
+      raw.replace(/\s*\(.*\)$/, '') === 'Entity Information'
+    )
+    if (hasEntityInfo) {
+      return { label: 'Complete Entity Information', action: () => setShowEntityOverviewDialog(true) }
+    }
+
+    const memberGroup = missingAccountKycItems.find((i) => i.scope === 'member')
+    const hasMemberPersonalInfo = memberGroup?.missingItems.some((raw) =>
+      raw.replace(/\s*\(.*\)$/, '') === 'Personal Information'
+    )
+    if (hasMemberPersonalInfo) {
+      return { label: 'Complete Member KYC', action: () => setActiveTab('entity-members') }
+    }
+
+    // Remaining: documents (entity docs or member docs)
+    if (entityGroup && entityGroup.missingItems.length > 0) {
+      return { label: 'Upload Entity Documents', action: () => setActiveTab('kyc') }
+    }
+    if (memberGroup && memberGroup.missingItems.length > 0) {
+      return { label: 'Complete Member Documents', action: () => setActiveTab('entity-members') }
+    }
+
+    return { label: 'Continue Onboarding', action: () => setActiveTab('kyc') }
+  }
+
+  const nextOnboardingAction = resolveNextOnboardingAction()
 
   // Staff layout - keep the original grid layout
   if (isStaff) {
@@ -623,7 +672,7 @@ export function ProfilePageClient({
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue={normalizedInvestorDefaultTab} className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList>
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Building2 className="h-4 w-4" />
@@ -1003,6 +1052,20 @@ export function ProfilePageClient({
                     <p className="text-sm text-muted-foreground">
                       All required KYC items are complete.
                     </p>
+                  </div>
+                )}
+
+                {/* Next Step CTA */}
+                {nextOnboardingAction && !hasPendingAccountApproval && (
+                  <div className="pt-1">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={nextOnboardingAction.action}
+                    >
+                      {nextOnboardingAction.label}
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
                   </div>
                 )}
 

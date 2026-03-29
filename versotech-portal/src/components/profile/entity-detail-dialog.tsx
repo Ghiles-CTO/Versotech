@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { formatViewerDate } from '@/lib/format'
 import {
   Dialog,
   DialogContent,
@@ -129,12 +130,7 @@ export function EntityDetailDialog({ open, onClose, entity, onUpdate }: EntityDe
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '—'
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      timeZone: 'UTC'
-    })
+    return formatViewerDate(dateString, { timeZone: 'UTC' })
   }
 
   const handleEditSuccess = () => {

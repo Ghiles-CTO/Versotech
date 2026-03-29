@@ -1,3 +1,5 @@
+import { formatViewerDate } from '@/lib/format'
+
 /**
  * Entity Health Checker
  *
@@ -208,7 +210,7 @@ export function checkMetadataCompleteness(entity: Entity): HealthCheck[] {
       category: 'metadata',
       title: 'Formation Date',
       status: 'pass',
-      message: `Formed: ${new Date(entity.formation_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}`
+      message: `Formed: ${formatViewerDate(entity.formation_date, { timeZone: 'UTC' })}`
     })
   }
 

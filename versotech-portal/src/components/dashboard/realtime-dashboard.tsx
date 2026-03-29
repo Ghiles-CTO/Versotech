@@ -26,7 +26,7 @@ import {
   ArrowUpRight
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, formatViewerDateTime } from '@/lib/format'
 
 interface DashboardData {
   kpis: {
@@ -672,8 +672,7 @@ export function RealtimeDashboard({ initialData, investorIds, userId }: Realtime
                       <p className="text-sm font-medium">{activity.title}</p>
                       <p className="text-xs text-gray-500">{activity.description}</p>
                       <p className="text-xs text-gray-400">
-                        {new Date(activity.created_at).toLocaleDateString()} •
-                        {new Date(activity.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                        {formatViewerDateTime(activity.created_at)}
                       </p>
                     </div>
 

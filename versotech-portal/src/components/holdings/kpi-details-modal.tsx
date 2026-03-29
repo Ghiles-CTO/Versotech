@@ -25,6 +25,7 @@ import {
   RefreshCw
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { formatViewerDate } from '@/lib/format'
 
 // Simple Skeleton component
 const Skeleton = ({ className }: { className?: string }) => (
@@ -242,12 +243,13 @@ export function KPIDetailsModal({
               <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                 <Calendar className="h-3 w-3" />
                 <span>
-                  Last: {new Date(
+                  Last: {formatViewerDate(
                     metadata.last_valuation_date ||
                     metadata.last_contribution_date ||
                     metadata.last_distribution_date ||
-                    ''
-                  ).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                    '',
+                    { timeZone: 'UTC' }
+                  )}
                 </span>
               </div>
             )}
@@ -345,7 +347,7 @@ export function KPIDetailsModal({
                       {data.items.length} {data.items.length === 1 ? 'Item' : 'Items'}
                     </h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Total: <span className="font-medium">{config?.formatValue(data.total) || data.total.toLocaleString()}</span> • As of {new Date(data.asOfDate).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                      Total: <span className="font-medium">{config?.formatValue(data.total) || data.total.toLocaleString()}</span> • As of {formatViewerDate(data.asOfDate, { timeZone: 'UTC' })}
                     </p>
                   </div>
                   {data.total > 0 && (

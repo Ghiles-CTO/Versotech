@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, formatViewerDate } from '@/lib/format'
 import {
   ArrowUpRight,
   Building2,
@@ -733,7 +733,7 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
               "mt-3 text-2xl font-semibold",
               isDark ? "text-white" : "text-slate-900"
             )}>
-              {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              {formatViewerDate(new Date())}
             </p>
             <Separator className="my-4" />
             <p className={cn(

@@ -19,6 +19,7 @@ import {
   Award,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { formatViewerDate } from '@/lib/format'
 
 export interface SubscriptionStatusEntry {
   id: string
@@ -124,11 +125,7 @@ function getStatusConfig(status: string) {
 
 function formatDateShort(dateString: string | null): string {
   if (!dateString) return ''
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC'
-  })
+  return formatViewerDate(dateString, { timeZone: 'UTC' })
 }
 
 export function DocumentRow({

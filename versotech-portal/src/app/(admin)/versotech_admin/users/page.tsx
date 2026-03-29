@@ -84,6 +84,7 @@ import {
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { formatDistanceToNow, format } from 'date-fns'
+import { formatViewerDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import type { UserRow, UsersResponse } from '@/app/api/admin/users/route'
 import { BatchInviteDialog } from '@/components/users/batch-invite-dialog'
@@ -467,7 +468,7 @@ const createColumns = (handlers: UserActionHandlers): ColumnDef<UserRow>[] => [
     cell: ({ row }) => {
       return (
         <span className="text-muted-foreground">
-          {format(new Date(row.original.createdAt), 'MMM d, yyyy')}
+          {formatViewerDate(row.original.createdAt)}
         </span>
       )
     },

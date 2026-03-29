@@ -1,4 +1,5 @@
 import { requireInvestorAuth } from '@/lib/auth'
+import { formatViewerDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ProfilePageClient } from './profile-page-client'
@@ -31,10 +32,7 @@ export default async function InvestorProfilePage() {
   }
 
   // Format member since date
-  const memberSince = new Date(profile.created_at).toLocaleDateString('en-US', {
-    month: 'long',
-    year: 'numeric'
-  })
+  const memberSince = formatViewerDate(profile.created_at)
 
   return (
     <div className="container mx-auto p-6 space-y-6">

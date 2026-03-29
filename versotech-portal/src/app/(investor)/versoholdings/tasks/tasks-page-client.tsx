@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { formatViewerDate } from '@/lib/format'
 import { InlinePdfViewer } from '@/components/signature/inline-pdf-viewer'
 import { SignatureCanvasWidget } from '@/components/signature/signature-canvas-widget'
 import { Card, CardContent } from '@/components/ui/card'
@@ -468,10 +469,7 @@ export function TasksPageClient({
                 <div className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
                   <span className={cn(overdue && "text-red-600 font-medium")}>
-                    {new Date(task.due_at).toLocaleDateString('en-US', { 
-                      month: 'short', 
-                      day: 'numeric'
-                    })}
+                    {formatViewerDate(task.due_at)}
                   </span>
                 </div>
               )}
@@ -950,12 +948,7 @@ export function TasksPageClient({
                       "font-medium",
                       isOverdue(selectedTask!) ? "text-red-600 dark:text-red-400" : "text-gray-900 dark:text-gray-100"
                     )}>
-                      {new Date(selectedTask.due_at).toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
+                      {formatViewerDate(selectedTask.due_at)}
                     </span>
                   </div>
                 </div>
@@ -977,11 +970,7 @@ export function TasksPageClient({
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-400" />
                     <span className="text-gray-900 dark:text-gray-100 font-medium">
-                      {new Date(selectedTask.completed_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
+                      {formatViewerDate(selectedTask.completed_at)}
                     </span>
                   </div>
                 </div>

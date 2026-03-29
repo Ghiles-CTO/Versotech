@@ -8,6 +8,7 @@ import {
   DollarSign,
   Building2
 } from 'lucide-react'
+import { formatViewerDate } from '@/lib/format'
 
 interface DealOverviewTabProps {
   deal: any
@@ -334,35 +335,21 @@ export function DealOverviewTab({
             <div>
               <label className="text-sm font-medium text-muted-foreground">Open Date</label>
               <p className="text-foreground mt-1">
-                {deal.open_at ? new Date(deal.open_at).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  timeZone: 'UTC'
-                }) : '—'}
+                {deal.open_at ? formatViewerDate(deal.open_at, { timeZone: 'UTC' }) : '—'}
               </p>
             </div>
 
             <div>
               <label className="text-sm font-medium text-muted-foreground">Close Date</label>
               <p className="text-foreground mt-1">
-                {deal.close_at ? new Date(deal.close_at).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  timeZone: 'UTC'
-                }) : '—'}
+                {deal.close_at ? formatViewerDate(deal.close_at, { timeZone: 'UTC' }) : '—'}
               </p>
             </div>
 
             <div>
               <label className="text-sm font-medium text-muted-foreground">Created</label>
               <p className="text-foreground mt-1">
-                {new Date(deal.created_at).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
+                {formatViewerDate(deal.created_at)}
               </p>
             </div>
 

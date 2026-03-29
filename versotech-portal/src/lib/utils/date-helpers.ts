@@ -1,3 +1,5 @@
+import { formatViewerDate } from '@/lib/format'
+
 /**
  * Date Helper Utilities
  *
@@ -29,11 +31,7 @@ export function getIdExpiryWarning(expiryDate: string | null): 'expired' | 'expi
  * @returns Formatted date string
  */
 export function formatDateDisplay(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric'
-  })
+  return formatViewerDate(dateStr)
 }
 
 /**

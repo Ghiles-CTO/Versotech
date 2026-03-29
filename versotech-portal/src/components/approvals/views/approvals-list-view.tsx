@@ -16,7 +16,8 @@ import {
   UserPlus,
   Shield
 } from 'lucide-react'
-import { format, isToday, isThisWeek } from 'date-fns'
+import { isToday, isThisWeek } from 'date-fns'
+import { formatViewerDate, formatViewerDateTime } from '@/lib/format'
 
 interface ApprovalsListViewProps {
   approvals: Approval[]
@@ -140,7 +141,7 @@ export function ApprovalsListView({
                 {approval.sla_breach_at && (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Clock className="h-4 w-4 flex-shrink-0" />
-                    <span>Due {format(new Date(approval.sla_breach_at), 'MMM dd, HH:mm')}</span>
+                    <span>Due {formatViewerDateTime(approval.sla_breach_at)}</span>
                   </div>
                 )}
               </div>
@@ -163,7 +164,7 @@ export function ApprovalsListView({
                 {approval.sla_breach_at && (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Clock className="h-4 w-4 flex-shrink-0" />
-                    <span>Due {format(new Date(approval.sla_breach_at), 'MMM dd, HH:mm')}</span>
+                    <span>Due {formatViewerDateTime(approval.sla_breach_at)}</span>
                   </div>
                 )}
                 {approval.entity_metadata?.indicative_amount && (
@@ -183,7 +184,7 @@ export function ApprovalsListView({
               <span>•</span>
               <span>Assigned to {approval.assigned_to_profile?.display_name || 'Unassigned'}</span>
               <span>•</span>
-              <span>{format(new Date(approval.created_at), 'MMM dd, yyyy')}</span>
+              <span>{formatViewerDate(approval.created_at)}</span>
             </div>
           </div>
 

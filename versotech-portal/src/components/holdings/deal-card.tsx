@@ -24,6 +24,7 @@ import {
   ChevronRight
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { formatViewerDate } from '@/lib/format'
 
 interface DealHolding {
   id: string
@@ -156,7 +157,7 @@ export function CleanDealCard({ deal }: { deal: DealHolding }) {
           <Alert className="py-2">
             <Info className="h-4 w-4" />
             <AlertDescription className="text-xs">
-              Reservation expires {new Date(deal.reservation.expiresAt).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+              Reservation expires {formatViewerDate(deal.reservation.expiresAt, { timeZone: 'UTC' })}
             </AlertDescription>
           </Alert>
         )}

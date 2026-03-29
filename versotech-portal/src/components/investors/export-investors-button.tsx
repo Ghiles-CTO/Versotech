@@ -1,6 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import { formatViewerDate } from '@/lib/format'
 import { Download } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -54,7 +55,7 @@ export function ExportInvestorsButton({ investors }: ExportInvestorsButtonProps)
         inv.metricsAvailable === false ? 'Pending' : inv.vehicleCount,
         inv.relationshipManager,
         inv.country,
-        new Date(inv.lastActivity).toLocaleDateString()
+        formatViewerDate(inv.lastActivity)
       ])
 
       // Combine headers and rows

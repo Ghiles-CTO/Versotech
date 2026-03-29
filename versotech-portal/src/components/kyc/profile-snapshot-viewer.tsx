@@ -12,6 +12,7 @@ import {
 import {
   User, Phone, MapPin, Building2, FileText,
 } from 'lucide-react'
+import { formatViewerDate } from '@/lib/format'
 
 // ─── Field label map ──────────────────────────────────────────────────────────
 const FIELD_LABELS: Record<string, string> = {
@@ -223,7 +224,7 @@ export function ProfileSnapshotViewer({
 
         <SheetTitle className="sr-only">{headerTitle} — {entityName}</SheetTitle>
         <SheetDescription className="sr-only">
-          Submitted {new Date(submittedAt).toLocaleDateString()}
+          Submitted {formatViewerDate(submittedAt)}
         </SheetDescription>
 
         {/* ── Header ─────────────────────────────────────────────────────────── */}
@@ -238,7 +239,7 @@ export function ProfileSnapshotViewer({
                 {memberName || entityName}
               </span>
               {' \u00b7 '}
-              {new Date(submittedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+              {formatViewerDate(submittedAt)}
             </p>
           </div>
         </div>

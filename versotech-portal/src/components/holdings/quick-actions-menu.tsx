@@ -30,6 +30,7 @@ import {
   AlertCircle
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { formatViewerDate } from '@/lib/format'
 
 interface QuickActionsMenuProps {
   holdingId: string
@@ -236,7 +237,7 @@ export function QuickActionsMenu({ holdingId, holdingName, holdingType, classNam
                       <div>
                         <div className="font-medium text-sm">{request.type.replace('_', ' ')}</div>
                         <div className="text-xs text-muted-foreground">
-                          {new Date(request.created_at).toLocaleDateString()}
+                          {formatViewerDate(request.created_at)}
                         </div>
                       </div>
                     </div>

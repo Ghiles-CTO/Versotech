@@ -10,6 +10,7 @@ import { DocumentService } from '@/services/document.service'
 import { getFileTypeCategory } from '@/constants/document-preview.constants'
 import { usePersona } from '@/contexts/persona-context'
 import { canPreviewExternalOfficeLink } from '@/lib/documents/office-viewer'
+import { formatViewerDate } from '@/lib/format'
 
 export interface DataRoomDocument {
   id: string
@@ -114,7 +115,7 @@ export function DataRoomDocuments({ documents }: DataRoomDocumentsProps) {
                       {fileName}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {doc.external_link ? 'Microsoft-hosted link' : `Uploaded ${new Date(doc.created_at).toLocaleDateString()}`}
+                      {doc.external_link ? 'Microsoft-hosted link' : `Uploaded ${formatViewerDate(doc.created_at)}`}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">

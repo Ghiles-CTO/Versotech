@@ -16,6 +16,7 @@ import { DataRoomDocument } from './data-room-documents'
 import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import { canPreviewExternalOfficeLink } from '@/lib/documents/office-viewer'
+import { formatViewerDate } from '@/lib/format'
 
 interface DataRoomDocumentsGroupedProps {
   documents: DataRoomDocument[]
@@ -155,7 +156,7 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
                       {doc.file_name || 'Untitled'}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(doc.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      {formatViewerDate(doc.created_at)}
                     </span>
                   </div>
                 </div>
@@ -239,7 +240,7 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
                           {doc.file_name || 'Untitled'}
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          {new Date(doc.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          {formatViewerDate(doc.created_at)}
                         </span>
                       </div>
                     </div>

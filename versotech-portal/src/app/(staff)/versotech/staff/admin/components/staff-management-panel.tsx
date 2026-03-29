@@ -23,6 +23,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
+import { formatViewerDate, formatViewerDateTime } from '@/lib/format'
 import {
   Select,
   SelectContent,
@@ -268,7 +269,7 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate, isDark = tru
                     <TableCell>
                       {staff.last_login_at ? (
                         <div className="text-sm">
-                          <p className={isDark ? 'text-zinc-300' : 'text-gray-700'}>{new Date(staff.last_login_at).toLocaleDateString()}</p>
+                          <p className={isDark ? 'text-zinc-300' : 'text-gray-700'}>{formatViewerDate(staff.last_login_at)}</p>
                           <p className={cn(
                             'text-xs',
                             isDark ? 'text-zinc-400' : 'text-gray-500'
@@ -291,7 +292,7 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate, isDark = tru
                             'text-xs',
                             isDark ? 'text-zinc-400' : 'text-gray-500'
                           )}>
-                            {new Date(staff.last_activity).toLocaleString()}
+                            {formatViewerDateTime(staff.last_activity)}
                           </p>
                         </div>
                       ) : (
@@ -656,7 +657,7 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate, isDark = tru
                             'text-xs',
                             isDark ? 'text-zinc-400' : 'text-gray-500'
                           )}>
-                            {new Date(activity.timestamp).toLocaleString()}
+                            {formatViewerDateTime(activity.timestamp)}
                           </span>
                         </div>
                         {activity.entity_type && (

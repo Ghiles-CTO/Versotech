@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { formatViewerDate } from '@/lib/format'
 import {
   Activity,
   AlertCircle,
@@ -103,7 +104,7 @@ export function RealTimeActivityFeed({ isDark = true }: RealTimeActivityFeedProp
     const hours = Math.floor(minutes / 60)
     if (hours < 24) return `${hours}h ago`
 
-    return date.toLocaleDateString()
+    return formatViewerDate(date)
   }
 
   return (

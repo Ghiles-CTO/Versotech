@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import { formatViewerDate } from '@/lib/format'
 
 interface EnhancedHolding {
   id: string
@@ -250,16 +251,12 @@ export function VehicleHoldingCard({ holding }: VehicleHoldingCardProps) {
         <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted rounded-md px-3 py-2">
           <Calendar className="h-3 w-3" />
           <span className="font-medium">
-            Last updated: {new Date(
-              holding.valuation?.asOfDate || 
-              holding.position?.lastUpdated || 
+            Last updated: {formatViewerDate(
+              holding.valuation?.asOfDate ||
+              holding.position?.lastUpdated ||
               holding.created_at ||
               new Date().toISOString()
-            ).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short', 
-              day: 'numeric'
-            })}
+            )}
           </span>
         </div>
 

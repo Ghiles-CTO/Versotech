@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { formatViewerDate } from '@/lib/format'
 import { Upload, CheckCircle, XCircle, Clock, Download, AlertCircle, Loader2, FileText, User, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -184,12 +185,7 @@ export function KYCDocumentsTab({ autoOpenUpload }: KYCDocumentsTabProps = {}) {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      timeZone: 'UTC'
-    })
+    return formatViewerDate(dateString, { timeZone: 'UTC' })
   }
 
   const formatFileSize = (bytes: number) => {

@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
+import { formatViewerDate, formatViewerDateTime } from '@/lib/format'
 import { InvestorJourneyBar } from '@/components/deals/investor-journey-bar'
 import { DataRoomViewer, type DataRoomDocument } from '@/components/deals/data-room-viewer'
 import { DealTimelineCard } from '@/components/deals/deal-timeline-card'
@@ -350,30 +351,12 @@ function formatCurrency(amount: number | null, currency: string = 'USD'): string
 
 function formatDate(dateString: string | null): string {
   if (!dateString) return '-'
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC'
-  })
+  return formatViewerDate(dateString, { timeZone: 'UTC' })
 }
 
 function formatDateTime(dateString: string | null): string {
   if (!dateString) return '-'
-  const date = new Date(dateString)
-  const datePart = date.toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC'
-  })
-  const timePart = date.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-    timeZone: 'UTC'
-  })
-  return `${datePart} ${timePart}`
+  return formatViewerDateTime(dateString, { timeZone: 'UTC' })
 }
 
 // Format with identifier like PDF does - e.g., "ABC Company" → 'ABC Company ("Issuer")'

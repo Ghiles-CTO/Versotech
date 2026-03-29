@@ -16,6 +16,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/components/theme-provider'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { formatViewerDate } from '@/lib/format'
 
 type NotificationItem = {
   id: string
@@ -56,7 +57,7 @@ function formatTimeAgo(dateString: string): string {
   if (diffMins < 60) return `${diffMins}m ago`
   if (diffHours < 24) return `${diffHours}h ago`
   if (diffDays < 7) return `${diffDays}d ago`
-  return date.toLocaleDateString()
+  return formatViewerDate(date)
 }
 
 export function HeaderNotifications({ href, userId, userRole }: HeaderNotificationsProps) {
@@ -229,7 +230,7 @@ export function HeaderNotifications({ href, userId, userRole }: HeaderNotificati
                             'text-xs mt-1',
                             isDark ? 'text-gray-500' : 'text-gray-400'
                           )}>
-                            Due {new Date(task.due_at).toLocaleDateString()}
+                            Due {formatViewerDate(task.due_at)}
                           </div>
                         )}
                       </div>

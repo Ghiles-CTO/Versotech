@@ -18,6 +18,7 @@ import React from 'react'
 import { cn } from '@/lib/utils'
 import { StaffDocument } from '../context/types'
 import { getDocumentDisplayName } from '@/lib/documents/document-name'
+import { formatViewerDate } from '@/lib/format'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   FileText,
@@ -101,11 +102,7 @@ export function DocumentCard({
   // ---------------------------------------------------------------------------
 
   const formatDate = (dateStr: string): string => {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
+    return formatViewerDate(dateStr)
   }
 
   // ---------------------------------------------------------------------------

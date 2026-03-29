@@ -21,9 +21,9 @@ import {
   AlertCircle,
   HardDrive
 } from 'lucide-react'
-import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { downloadFileFromUrl } from '@/lib/browser-download'
+import { formatViewerDateTime } from '@/lib/format'
 
 interface DocumentVersion {
   id: string
@@ -248,7 +248,7 @@ export function VersionHistorySheet({
                       <div className="flex items-center gap-2">
                         <Calendar className="h-3.5 w-3.5" />
                         <span>
-                          {format(new Date(version.created_at), 'MMM d, yyyy \'at\' h:mm a')}
+                          {formatViewerDateTime(version.created_at)}
                         </span>
                       </div>
 

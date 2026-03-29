@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { downloadFileFromUrl } from '@/lib/browser-download'
 import { FileText, ExternalLink, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { formatViewerDate } from '@/lib/format'
 
 interface SubscriptionWithDocuments {
   id: string
@@ -190,7 +191,7 @@ export function DealSubscriptionsTab({ dealId }: DealSubscriptionsTabProps) {
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span>Amount: {formatAmount(subscription)}</span>
                         <span>•</span>
-                        <span>Submitted {new Date(subscription.submitted_at).toLocaleDateString()}</span>
+                        <span>Submitted {formatViewerDate(subscription.submitted_at)}</span>
                       </div>
                     </div>
                   </div>

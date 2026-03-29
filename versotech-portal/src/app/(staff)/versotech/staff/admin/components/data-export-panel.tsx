@@ -25,6 +25,7 @@ import {
   Calendar,
   Loader2,
 } from 'lucide-react'
+import { formatViewerDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 interface ExportOption {
@@ -398,7 +399,7 @@ export function DataExportPanel({ isDark = true }: DataExportPanelProps) {
                         'text-xs',
                         isDark ? 'text-zinc-400' : 'text-gray-500'
                       )}>
-                        {new Date(exp.timestamp).toLocaleString()}
+                        {formatViewerDateTime(exp.timestamp)}
                       </p>
                     </div>
                   </div>

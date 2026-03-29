@@ -1,3 +1,4 @@
+import { formatViewerDateTime } from '@/lib/format'
 import { Approval } from '@/types/approvals'
 
 export function exportApprovalsToCSV(approvals: Approval[], filename: string = 'approvals-export.csv') {
@@ -43,10 +44,10 @@ export function exportApprovalsToCSV(approvals: Approval[], filename: string = '
       approval.related_deal?.name || '',
       amount,
       units,
-      approval.sla_breach_at ? new Date(approval.sla_breach_at).toLocaleString() : '',
-      new Date(approval.created_at).toLocaleString(),
+      approval.sla_breach_at ? formatViewerDateTime(approval.sla_breach_at) : '',
+      formatViewerDateTime(approval.created_at),
       approval.approved_by_profile?.display_name || '',
-      approval.approved_at ? new Date(approval.approved_at).toLocaleString() : '',
+      approval.approved_at ? formatViewerDateTime(approval.approved_at) : '',
       approval.rejection_reason || '',
       approval.notes || ''
     ].map(value => {
@@ -77,4 +78,3 @@ export function exportApprovalsToCSV(approvals: Approval[], filename: string = '
   link.click()
   document.body.removeChild(link)
 }
-

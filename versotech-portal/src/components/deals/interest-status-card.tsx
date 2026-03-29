@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getAccountStatusCopy, formatKycStatusLabel } from '@/lib/account-approval-status'
+import { formatViewerDateTime } from '@/lib/format'
 
 interface InterestStatusCardProps {
   currentStage: number
@@ -143,13 +144,7 @@ const blockedStageInfo: StageInfo = {
 
 function formatDate(dateString: string | null): string {
   if (!dateString) return ''
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+  return formatViewerDateTime(dateString)
 }
 
 function getLastAction(

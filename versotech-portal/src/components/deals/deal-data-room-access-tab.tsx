@@ -46,7 +46,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { format, formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
 import { Loader2, ShieldCheck, KeyRound, Clock, Trash2, Plus, Edit, Download, FileText, ExternalLink, Star, Check, ChevronsUpDown, FolderOpen, FolderClosed, FolderUp, MoreHorizontal, ChevronRight, Eye, EyeOff, File, Upload } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { DataRoomDocumentUpload } from './data-room-document-upload'
@@ -55,6 +55,7 @@ import { toast } from 'sonner'
 import { DATA_ROOM_DEFAULT_FOLDERS } from '@/lib/data-room/constants'
 import { cn } from '@/lib/utils'
 import { DocumentService } from '@/services/document.service'
+import { formatViewerDate, formatViewerDateTime } from '@/lib/format'
 
 interface DealDataRoomAccessTabProps {
   dealId: string
@@ -535,7 +536,7 @@ export function DealDataRoomAccessTab({
 
       {/* Date */}
       <span className="text-[11px] text-muted-foreground flex-shrink-0 w-20 text-right">
-        {doc.created_at ? format(new Date(doc.created_at), 'MMM d, yyyy') : ''}
+        {doc.created_at ? formatViewerDate(doc.created_at) : ''}
       </span>
 
       {/* Actions — visible on hover */}
@@ -753,13 +754,13 @@ export function DealDataRoomAccessTab({
                         {investorName}
                       </TableCell>
                       <TableCell>
-                        {record?.granted_at ? format(new Date(record.granted_at), 'dd MMM yyyy HH:mm') : 'Not granted'}
+                        {record?.granted_at ? formatViewerDateTime(record.granted_at) : 'Not granted'}
                       </TableCell>
                       <TableCell>
                         {!record
                           ? '—'
                           : record.expires_at
-                            ? `${format(new Date(record.expires_at), 'dd MMM yyyy HH:mm')} (${formatDistanceToNow(new Date(record.expires_at), { addSuffix: true })})`
+                            ? `${formatViewerDateTime(record.expires_at)} (${formatDistanceToNow(new Date(record.expires_at), { addSuffix: true })})`
                             : 'No expiry'}
                       </TableCell>
                       <TableCell>

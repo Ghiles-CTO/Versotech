@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts'
+import { formatViewerDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 interface WorkflowTrendChartProps {
@@ -28,7 +29,7 @@ export function WorkflowTrendChart({ data, isDark = true }: WorkflowTrendChartPr
   // Format dates for display
   const chartData = (data || []).map((d) => ({
     ...d,
-    dateLabel: new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    dateLabel: formatViewerDate(d.date, { timeZone: 'UTC' }),
   }))
 
   // Calculate overall success rate

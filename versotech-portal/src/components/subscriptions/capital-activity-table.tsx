@@ -42,6 +42,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ArrowDownCircle, ArrowUpCircle, Edit2, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { formatViewerDate } from '@/lib/format'
 
 type Cashflow = {
   id: string
@@ -119,11 +120,7 @@ export function CapitalActivityTable({
   }
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
+    return formatViewerDate(date)
   }
 
   const handleCreate = async () => {

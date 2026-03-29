@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { formatViewerDate } from '@/lib/format'
 import { Building2, Plus, Edit, Trash2, CheckCircle, XCircle, Clock, Users, Loader2, MapPin, Calendar, Hash, FileText, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -168,12 +169,7 @@ export function CounterpartyEntitiesTab() {
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '—'
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      timeZone: 'UTC'
-    })
+    return formatViewerDate(dateString, { timeZone: 'UTC' })
   }
 
   const formatAddress = (address?: CounterpartyEntity['registered_address']) => {

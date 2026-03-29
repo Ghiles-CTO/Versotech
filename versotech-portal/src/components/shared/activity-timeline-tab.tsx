@@ -19,7 +19,8 @@ import {
   ChevronDown,
   AlertCircle,
 } from 'lucide-react'
-import { formatDistanceToNow, format } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
+import { formatViewerDateTime } from '@/lib/format'
 
 export type EntityType = 'investor' | 'introducer' | 'arranger' | 'lawyer' | 'partner' | 'commercial_partner'
 
@@ -257,7 +258,7 @@ export function ActivityTimelineTab({ entityType, entityId, entityName }: Activi
                     {/* Timestamp */}
                     <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                       <Clock className="h-3 w-3" />
-                      <span title={format(new Date(activity.timestamp), 'PPpp')}>
+                      <span title={formatViewerDateTime(activity.timestamp)}>
                         {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
                       </span>
                     </div>

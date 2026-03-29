@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import { formatViewerDate, formatViewerDateTime } from '@/lib/format'
 
 interface DealHolding {
   id: string
@@ -236,13 +237,7 @@ export function DealHoldingCard({ deal }: DealHoldingCardProps) {
               <span className="font-medium text-yellow-800">Reservation Active</span>
             </div>
             <div className="text-xs text-yellow-700 mt-1">
-              Expires: {new Date(deal.reservation.expiresAt).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
+              Expires: {formatViewerDateTime(deal.reservation.expiresAt)}
             </div>
           </div>
         )}
@@ -251,15 +246,11 @@ export function DealHoldingCard({ deal }: DealHoldingCardProps) {
         <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted rounded-md px-3 py-2">
           <Calendar className="h-3 w-3" />
           <span className="font-medium">
-            Last updated: {new Date(
-              deal.allocation.approvedAt || 
+            Last updated: {formatViewerDate(
+              deal.allocation.approvedAt ||
               deal.reservation?.expiresAt ||
               new Date().toISOString()
-            ).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short', 
-              day: 'numeric'
-            })}
+            )}
           </span>
         </div>
 

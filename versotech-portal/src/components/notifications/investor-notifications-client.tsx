@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { formatViewerDate } from '@/lib/format'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -137,7 +138,7 @@ function formatTimeAgo(dateString: string): string {
   if (diffMins < 60) return `${diffMins}m ago`
   if (diffHours < 24) return `${diffHours}h ago`
   if (diffDays < 7) return `${diffDays}d ago`
-  return date.toLocaleDateString()
+  return formatViewerDate(date)
 }
 
 function getInitials(name?: string | null) {
@@ -577,7 +578,7 @@ export default function InvestorNotificationsClient({
                           )}
                           {task.due_at && (
                             <p className="text-xs text-muted-foreground">
-                              Due {new Date(task.due_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                              Due {formatViewerDate(task.due_at, { timeZone: 'UTC' })}
                             </p>
                           )}
                         </div>

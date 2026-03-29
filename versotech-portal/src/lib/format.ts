@@ -18,38 +18,61 @@ export const formatPercentage = (value: number | null | undefined) => {
   return `${(value * 100).toFixed(1)}%`
 }
 
-export const formatDate = (value: string | Date | null | undefined) => {
-  if (!value) return '—'
-  const date = typeof value === 'string' ? new Date(value) : value
-  if (Number.isNaN(date?.getTime?.())) return '—'
-  // Use explicit locale + UTC to prevent hydration mismatch and timezone shift
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC'
-  })
+type ViewerDateValue = string | Date | null | undefined
+
+type ViewerDateOptions = {
+  timeZone?: string
 }
 
-export const formatDateTime = (value: string | Date | null | undefined) => {
+const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/
+
+const toValidDate = (value: ViewerDateValue) => {
   if (!value) return '—'
   const date = typeof value === 'string' ? new Date(value) : value
   if (Number.isNaN(date?.getTime?.())) return '—'
-  // Use explicit locale + UTC to prevent hydration mismatch and timezone shift
-  const datePart = date.toLocaleDateString('en-US', {
+  return date
+}
+
+const resolveViewerTimeZone = (value: ViewerDateValue, timeZone?: string) => {
+  if (timeZone) return timeZone
+  if (typeof value === 'string' && DATE_ONLY_REGEX.test(value)) return 'UTC'
+  return undefined
+}
+
+export const formatViewerDate = (value: ViewerDateValue, options: ViewerDateOptions = {}) => {
+  const date = toValidDate(value)
+  if (date === '—') return date
+
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
     year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    timeZone: 'UTC'
-  })
-  const timePart = date.toLocaleTimeString('en-US', {
-    hour: 'numeric',
+    timeZone: resolveViewerTimeZone(value, options.timeZone),
+  }).format(date)
+}
+
+export const formatViewerDateTime = (
+  value: ViewerDateValue,
+  options: ViewerDateOptions = {}
+) => {
+  const date = toValidDate(value)
+  if (date === '—') return date
+
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
     minute: '2-digit',
-    hour12: true,
-    timeZone: 'UTC'
-  })
-  return `${datePart} ${timePart}`
+    hour12: false,
+    timeZone: resolveViewerTimeZone(value, options.timeZone),
+  }).format(date).replace(',', '')
 }
 
+export const formatDate = (value: ViewerDateValue) => {
+  return formatViewerDate(value)
+}
 
-
+export const formatDateTime = (value: ViewerDateValue) => {
+  return formatViewerDateTime(value)
+}

@@ -44,11 +44,12 @@ import {
   Send
 } from 'lucide-react'
 import { Approval } from '@/types/approvals'
-import { format, formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
 import { getCountryName } from '@/components/kyc/country-select'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { formatViewerDate, formatViewerDateTime } from '@/lib/format'
 
 interface ApprovalDetailDrawerProps {
   approval: Approval | null
@@ -307,7 +308,7 @@ export function ApprovalDetailDrawer({
                           {formatDistanceToNow(slaBreachDate)} overdue
                         </span>
                       ) : (
-                        format(slaBreachDate, 'MMM dd, yyyy HH:mm')
+                        formatViewerDateTime(slaBreachDate)
                       )}
                     </span>
                   </div>
@@ -635,7 +636,7 @@ export function ApprovalDetailDrawer({
                           <div className="text-right">
                             <p className="text-xs text-muted-foreground">Completed</p>
                             <p className="text-sm text-foreground">
-                              {new Date(approval.entity_metadata.counterparty_entity.kyc_completed_at).toLocaleDateString()}
+                              {formatViewerDate(approval.entity_metadata.counterparty_entity.kyc_completed_at)}
                             </p>
                           </div>
                         )}
@@ -643,7 +644,7 @@ export function ApprovalDetailDrawer({
                       {approval.entity_metadata.counterparty_entity.kyc_expiry_date && (
                         <div className="mt-2 pt-2 border-t border-border">
                           <p className="text-xs text-muted-foreground">
-                            Expires: {new Date(approval.entity_metadata.counterparty_entity.kyc_expiry_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                            Expires: {formatViewerDate(approval.entity_metadata.counterparty_entity.kyc_expiry_date, { timeZone: 'UTC' })}
                           </p>
                         </div>
                       )}
@@ -814,7 +815,7 @@ export function ApprovalDetailDrawer({
                     <div>
                       <p className="text-sm text-muted-foreground">Decided At</p>
                       <p className="font-medium text-foreground">
-                        {approval.approved_at && format(new Date(approval.approved_at), 'MMM dd, yyyy HH:mm')}
+                        {approval.approved_at && formatViewerDateTime(approval.approved_at)}
                       </p>
                     </div>
                   </div>
@@ -893,14 +894,14 @@ export function ApprovalDetailDrawer({
                   <div>
                     <p className="text-muted-foreground">Created At</p>
                     <p className="font-medium text-foreground">
-                      {format(new Date(approval.created_at), 'MMM dd, yyyy HH:mm:ss')}
+                      {formatViewerDateTime(approval.created_at)}
                     </p>
                   </div>
                   {approval.updated_at && (
                     <div>
                       <p className="text-muted-foreground">Updated At</p>
                       <p className="font-medium text-foreground">
-                        {format(new Date(approval.updated_at), 'MMM dd, yyyy HH:mm:ss')}
+                        {formatViewerDateTime(approval.updated_at)}
                       </p>
                     </div>
                   )}
@@ -908,7 +909,7 @@ export function ApprovalDetailDrawer({
                     <div>
                       <p className="text-muted-foreground">Approved/Rejected At</p>
                       <p className="font-medium text-foreground">
-                        {format(new Date(approval.approved_at), 'MMM dd, yyyy HH:mm:ss')}
+                        {formatViewerDateTime(approval.approved_at)}
                       </p>
                     </div>
                   )}
@@ -916,7 +917,7 @@ export function ApprovalDetailDrawer({
                     <div>
                       <p className="text-muted-foreground">Resolved At</p>
                       <p className="font-medium text-foreground">
-                        {format(new Date(approval.resolved_at), 'MMM dd, yyyy HH:mm:ss')}
+                        {formatViewerDateTime(approval.resolved_at)}
                       </p>
                     </div>
                   )}
@@ -924,7 +925,7 @@ export function ApprovalDetailDrawer({
                     <div>
                       <p className="text-muted-foreground">SLA Deadline</p>
                       <p className="font-medium text-foreground">
-                        {format(new Date(approval.sla_breach_at), 'MMM dd, yyyy HH:mm:ss')}
+                        {formatViewerDateTime(approval.sla_breach_at)}
                       </p>
                     </div>
                   )}
@@ -1040,7 +1041,7 @@ function ApprovalTimeline({ approval }: { approval: Approval }) {
       current: true,
       icon: Clock,
       description: approval.sla_breach_at
-        ? `SLA deadline: ${format(new Date(approval.sla_breach_at), 'MMM dd, HH:mm')}`
+        ? `SLA deadline: ${formatViewerDateTime(approval.sla_breach_at)}`
         : 'Awaiting decision'
     })
   } else if (approval.status === 'approved') {
@@ -1152,7 +1153,7 @@ function ApprovalTimeline({ approval }: { approval: Approval }) {
                 {event.label}
               </p>
               {event.date && (
-                <p className="text-sm text-muted-foreground">{format(event.date, 'MMM dd, yyyy HH:mm')}</p>
+                <p className="text-sm text-muted-foreground">{formatViewerDateTime(event.date)}</p>
               )}
               <p className="text-sm text-muted-foreground">{event.description}</p>
             </div>

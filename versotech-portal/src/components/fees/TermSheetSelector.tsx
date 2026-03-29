@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, FileText, AlertCircle } from 'lucide-react';
+import { formatViewerDate } from '@/lib/format';
 
 export interface TermSheet {
   id: string;
@@ -150,7 +151,7 @@ export function TermSheetSelector({
                     <span>Version {ts.version}</span>
                     {ts.term_sheet_date && (
                       <span className="text-muted-foreground text-xs">
-                        ({new Date(ts.term_sheet_date).toLocaleDateString(undefined, { timeZone: 'UTC' })})
+                        ({formatViewerDate(ts.term_sheet_date, { timeZone: 'UTC' })})
                       </span>
                     )}
                   </div>

@@ -33,6 +33,7 @@ import {
   History
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { formatViewerDateTime } from '@/lib/format'
 
 interface ProcessDrawerProps {
   workflow: WorkflowDefinition | null
@@ -445,7 +446,7 @@ export function ProcessDrawer({ workflow, open, onClose }: ProcessDrawerProps) {
                           </Badge>
                         </div>
                         <div className="text-xs text-gray-400">
-                          {new Date(run.created_at).toLocaleString()}
+                          {formatViewerDateTime(run.created_at)}
                         </div>
                       </div>
                     ))}
@@ -459,4 +460,3 @@ export function ProcessDrawer({ workflow, open, onClose }: ProcessDrawerProps) {
     </Sheet>
   )
 }
-

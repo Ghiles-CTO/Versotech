@@ -21,7 +21,8 @@ import {
   Filter,
   Download
 } from 'lucide-react'
-import { formatDistanceToNow, format } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
+import { formatViewerDate, formatViewerDateTime } from '@/lib/format'
 
 interface ActivityEvent {
   id: string
@@ -127,7 +128,7 @@ export function ActivityTimeline({ investorId, compact = false, maxHeight = '600
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `investor-${investorId}-activity-${format(new Date(), 'yyyy-MM-dd')}.csv`
+      a.download = `investor-${investorId}-activity-${formatViewerDate(new Date()).replace(/\//g, '-')}.csv`
       document.body.appendChild(a)
       a.click()
       window.URL.revokeObjectURL(url)
@@ -276,7 +277,7 @@ export function ActivityTimeline({ investorId, compact = false, maxHeight = '600
                                   <span>•</span>
                                 </>
                               )}
-                              <span title={format(new Date(activity.created_at), 'PPpp')}>
+                              <span title={formatViewerDateTime(activity.created_at)}>
                                 {formatDistanceToNow(new Date(activity.created_at), {
                                   addSuffix: true
                                 })}

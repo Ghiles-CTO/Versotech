@@ -102,6 +102,7 @@ import {
   UserCheck,
   UserX
 } from 'lucide-react'
+import { formatViewerDate } from '@/lib/format'
 import type { UserRow, UsersResponse, UsersStats, EntityAssociation } from './types'
 import { ROLE_BADGE_CONFIG, ENTITY_TYPE_CONFIG, KYC_STATUS_CONFIG, DEFAULT_VISIBLE_COLUMNS, ALL_COLUMNS, REQUIRED_COLUMNS } from './types'
 
@@ -474,8 +475,8 @@ export default function UsersPageClient() {
         u.title || '',
         u.entityCount.toString(),
         u.kyc?.status || '',
-        u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString() : 'Never',
-        new Date(u.createdAt).toLocaleDateString()
+        u.lastLoginAt ? formatViewerDate(u.lastLoginAt) : 'Never',
+        formatViewerDate(u.createdAt)
       ]
     })
 
@@ -695,7 +696,7 @@ export default function UsersPageClient() {
       ),
       cell: ({ row }) => (
         <span className="text-sm text-muted-foreground">
-          {new Date(row.original.createdAt).toLocaleDateString()}
+          {formatViewerDate(row.original.createdAt)}
         </span>
       ),
       size: 100,
@@ -852,8 +853,8 @@ export default function UsersPageClient() {
       u.title || '',
       u.entityCount.toString(),
       u.kyc?.status || '',
-      u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString() : 'Never',
-      new Date(u.createdAt).toLocaleDateString()
+      u.lastLoginAt ? formatViewerDate(u.lastLoginAt) : 'Never',
+      formatViewerDate(u.createdAt)
     ])
 
     const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')

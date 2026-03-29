@@ -22,6 +22,7 @@ import {
   FileSignature
 } from 'lucide-react'
 import Link from 'next/link'
+import { formatViewerDate } from '@/lib/format'
 
 interface NotificationItem {
   id: string
@@ -174,7 +175,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
     if (diffMins < 60) return `${diffMins}m ago`
     if (diffHours < 24) return `${diffHours}h ago`
     if (diffDays < 7) return `${diffDays}d ago`
-    return date.toLocaleDateString()
+    return formatViewerDate(date)
   }
 
   // Render placeholder button until mounted to prevent Radix UI hydration mismatch
@@ -354,7 +355,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
                           "text-xs mt-1",
                           isDark ? "text-gray-500" : "text-gray-400"
                         )}>
-                          {task.due_at ? `Due ${new Date(task.due_at).toLocaleDateString()}` : formatTime(task.created_at)}
+                          {task.due_at ? `Due ${formatViewerDate(task.due_at)}` : formatTime(task.created_at)}
                         </div>
                       </div>
                       <div className="h-2 w-2 rounded-full bg-amber-500 flex-shrink-0 mt-2" />

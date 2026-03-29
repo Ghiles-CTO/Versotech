@@ -43,6 +43,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { formatViewerDate } from '@/lib/format'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
@@ -679,7 +680,7 @@ export function KYCReviewClient() {
                       <TableCell className="py-3"><InvestorCell submission={submission} /></TableCell>
                       <TableCell className="py-3"><DocumentCell submission={submission} /></TableCell>
                       <TableCell className="py-3">
-                        <div className="text-sm">{new Date(submission.submitted_at).toLocaleDateString()}</div>
+                        <div className="text-sm">{formatViewerDate(submission.submitted_at)}</div>
                         <div className="text-xs text-muted-foreground">{new Date(submission.submitted_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                       </TableCell>
                       <TableCell className="py-3">{getStatusBadge(submission.status)}</TableCell>
@@ -794,7 +795,7 @@ export function KYCReviewClient() {
                       <TableCell className="py-3"><InvestorCell submission={submission} /></TableCell>
                       <TableCell className="py-3"><DocumentCell submission={submission} /></TableCell>
                       <TableCell className="py-3">
-                        <div className="text-sm">{new Date(submission.submitted_at).toLocaleDateString()}</div>
+                        <div className="text-sm">{formatViewerDate(submission.submitted_at)}</div>
                         <div className="text-xs text-muted-foreground">{new Date(submission.submitted_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                       </TableCell>
                       <TableCell className="py-3">
@@ -826,7 +827,7 @@ export function KYCReviewClient() {
                       <TableCell className="py-3">
                         {submission.reviewed_at ? (
                           <>
-                            <div className="text-sm">{new Date(submission.reviewed_at).toLocaleDateString()}</div>
+                            <div className="text-sm">{formatViewerDate(submission.reviewed_at)}</div>
                             <div className="text-xs text-muted-foreground">{new Date(submission.reviewed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                           </>
                         ) : <span className="text-sm text-muted-foreground">—</span>}

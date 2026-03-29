@@ -51,6 +51,7 @@ import {
   Calendar,
   AlertTriangle,
 } from 'lucide-react'
+import { formatViewerDate, formatViewerDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 interface UserAccount {
@@ -404,7 +405,7 @@ export function UserAccountManagement({ isDark = true }: UserAccountManagementPr
                       isDark ? 'text-zinc-400' : 'text-gray-500'
                     )}>
                       {user.last_sign_in_at
-                        ? new Date(user.last_sign_in_at).toLocaleDateString()
+                        ? formatViewerDate(user.last_sign_in_at)
                         : 'Never'}
                     </TableCell>
                     <TableCell>
@@ -666,7 +667,7 @@ export function UserAccountManagement({ isDark = true }: UserAccountManagementPr
                         'text-xs',
                         isDark ? 'text-zinc-400' : 'text-gray-500'
                       )}>
-                        {new Date(log.timestamp).toLocaleString()}
+                        {formatViewerDateTime(log.timestamp)}
                       </p>
                       {log.ip_address && (
                         <p className={cn(

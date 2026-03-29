@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { FileText, Users, Calendar, Clock, MapPin, TrendingUp } from 'lucide-react'
 import { DealLogo } from '@/components/deals/deal-logo'
+import { formatViewerDate } from '@/lib/format'
 
 interface DataRoomPreviewCardProps {
   deal: {
@@ -26,8 +27,7 @@ interface DataRoomPreviewCardProps {
 
 function formatDate(value: string | null) {
   if (!value) return 'Open ended'
-  const date = new Date(value)
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+  return formatViewerDate(value, { timeZone: 'UTC' })
 }
 
 function daysUntil(date: string | null) {

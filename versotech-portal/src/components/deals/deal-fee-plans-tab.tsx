@@ -10,6 +10,7 @@ import FeePlanEditModal from '@/components/fees/FeePlanEditModal'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import { useRouter } from 'next/navigation'
 import { evaluateIntroducerCommercialEligibility } from '@/lib/introducers/commercial-eligibility'
+import { formatViewerDate } from '@/lib/format'
 
 interface DealFeePlansTabProps {
   dealId: string
@@ -458,7 +459,7 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
                               Term Sheet v{plan.term_sheet.version}
                               {plan.term_sheet.term_sheet_date && (
                                 <span className="text-muted-foreground ml-1">
-                                  ({new Date(plan.term_sheet.term_sheet_date).toLocaleDateString(undefined, { timeZone: 'UTC' })})
+                                  ({formatViewerDate(plan.term_sheet.term_sheet_date, { timeZone: 'UTC' })})
                                 </span>
                               )}
                             </span>
@@ -487,7 +488,7 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
                         {plan.accepted_at && (
                           <div className="flex items-center gap-2 text-sm text-green-400">
                             <CheckCircle className="h-4 w-4" />
-                            <span>Accepted {new Date(plan.accepted_at).toLocaleDateString()}</span>
+                            <span>Accepted {formatViewerDate(plan.accepted_at)}</span>
                           </div>
                         )}
                       </div>

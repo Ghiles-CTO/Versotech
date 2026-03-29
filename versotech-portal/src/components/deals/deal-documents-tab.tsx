@@ -15,6 +15,7 @@ import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerF
 import { getFileTypeCategory } from '@/constants/document-preview.constants'
 import { DocumentService } from '@/services/document.service'
 import { toast } from 'sonner'
+import { formatViewerDate } from '@/lib/format'
 
 interface DealDocumentsTabProps {
   dealId: string
@@ -281,7 +282,7 @@ export function DealDocumentsTab({ dealId, documents, onRefresh }: DealDocuments
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Uploaded {new Date(doc.created_at).toLocaleDateString()}
+                        Uploaded {formatViewerDate(doc.created_at)}
                         {doc.created_by_profile && ` by ${doc.created_by_profile.display_name}`}
                         {formatFileSize(doc.file_size_bytes) && ` \u00b7 ${formatFileSize(doc.file_size_bytes)}`}
                       </p>

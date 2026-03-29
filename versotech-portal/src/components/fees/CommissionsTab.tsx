@@ -12,6 +12,7 @@ import { DollarSign, CheckCircle, Clock, AlertCircle, ExternalLink, FileText, Us
 import { formatCurrency } from '@/lib/fees/calculations';
 import Link from 'next/link';
 import { formatCurrencyTotals, sumByCurrency } from '@/lib/currency-totals';
+import { formatViewerDate } from '@/lib/format';
 
 type EntityType = 'introducer' | 'partner' | 'commercial_partner';
 
@@ -459,7 +460,7 @@ export default function CommissionsTab() {
                                 {(commission.rate_bps / 100).toFixed(2)}% of {formatCurrency(commission.base_amount, commission.currency)}
                                 {commission.payment_due_date && (
                                   <span className="ml-2">
-                                    • Due: {new Date(commission.payment_due_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                                    • Due: {formatViewerDate(commission.payment_due_date, { timeZone: 'UTC' })}
                                   </span>
                                 )}
                               </p>
@@ -500,7 +501,7 @@ export default function CommissionsTab() {
                                 )}
                                 {commission.status === 'paid' && commission.paid_at && (
                                   <p className="text-xs text-green-400">
-                                    Paid {new Date(commission.paid_at).toLocaleDateString()}
+                                    Paid {formatViewerDate(commission.paid_at)}
                                   </p>
                                 )}
                               </div>

@@ -1,5 +1,6 @@
 'use client'
 
+import { formatViewerDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Check } from 'lucide-react'
 import {
@@ -63,12 +64,7 @@ const LINEAR_STAGES: StageDefinition[] = [
 
 function formatDate(dateString: string | null): string {
   if (!dateString) return ''
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC',
-  })
+  return formatViewerDate(dateString, { timeZone: 'UTC' })
 }
 
 export function InvestorJourneyBar({

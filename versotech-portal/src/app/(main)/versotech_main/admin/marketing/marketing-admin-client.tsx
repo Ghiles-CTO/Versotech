@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { format } from 'date-fns'
+import { formatViewerDateTime } from '@/lib/format'
 import {
   ArrowDown,
   ArrowUp,
@@ -1658,7 +1658,7 @@ export function MarketingAdminClient() {
                         </div>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {format(new Date(lead.created_at), 'MMM d, yyyy HH:mm')}
+                        {formatViewerDateTime(lead.created_at)}
                       </TableCell>
                     </TableRow>
                   ))}

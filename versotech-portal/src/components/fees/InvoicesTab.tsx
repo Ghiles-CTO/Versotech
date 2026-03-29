@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import type { InvoiceWithLines } from '@/lib/fees/types';
 import { formatCurrency } from '@/lib/fees/calculations';
 import { formatCurrencyTotals, sumByCurrency } from '@/lib/currency-totals';
+import { formatViewerDate } from '@/lib/format';
 import { GenerateInvoiceModal } from './GenerateInvoiceModal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -383,7 +384,7 @@ export default function InvoicesTab() {
                                       {formatAmount(event.computed_amount, event.currency || subGroup.subscription?.currency)}
                                     </div>
                                     <div className="text-xs text-muted-foreground">
-                                      {new Date(event.event_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                                      {formatViewerDate(event.event_date, { timeZone: 'UTC' })}
                                     </div>
                                   </div>
                                 </div>
@@ -497,7 +498,7 @@ export default function InvoicesTab() {
                             {formatAmount(invoice.total, getInvoiceCurrency(invoice))}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            Due: {new Date(invoice.due_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                            Due: {formatViewerDate(invoice.due_date, { timeZone: 'UTC' })}
                             {invoice.balance_due && invoice.balance_due > 0 && (
                               <span className="ml-2">
                                 • Balance: {formatAmount(invoice.balance_due, getInvoiceCurrency(invoice))}

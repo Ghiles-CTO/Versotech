@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Eye, CheckCircle2, Clock, Loader2, XCircle, Archive, Building2, User, DollarSign, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { getCountryName } from '@/components/kyc/country-select'
+import { formatViewerDate } from '@/lib/format'
 
 type SubscriptionListItem = {
   id: string
@@ -42,11 +43,7 @@ export function SubscriptionListView({ subscriptions }: SubscriptionListViewProp
 
   const formatDate = (date: string | null) => {
     if (!date) return '-'
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
+    return formatViewerDate(date)
   }
 
   const getStatusColor = (status: string) => {

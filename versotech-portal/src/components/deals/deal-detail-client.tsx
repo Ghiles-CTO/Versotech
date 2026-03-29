@@ -41,6 +41,7 @@ import { DealInterestTab } from './deal-interest-tab'
 import { DealDataRoomAccessTab } from './deal-data-room-access-tab'
 import { DealSubscriptionsTab } from './deal-subscriptions-tab'
 import { DealFaqTab } from './deal-faq-tab'
+import { formatViewerDate } from '@/lib/format'
 
 const statusColors = {
   draft: 'bg-muted text-foreground border border-border',
@@ -303,8 +304,8 @@ export function DealDetailClient({
             <p className="text-xs text-muted-foreground">
               {publishedTermSheet
                 ? publishedTermSheetClosedAt
-                  ? `Closed ${new Date(publishedTermSheetClosedAt).toLocaleDateString()}`
-                  : `Published ${publishedTermSheet.published_at ? new Date(publishedTermSheet.published_at).toLocaleDateString() : ''}`
+                  ? `Closed ${formatViewerDate(publishedTermSheetClosedAt)}`
+                  : `Published ${publishedTermSheet.published_at ? formatViewerDate(publishedTermSheet.published_at) : ''}`
                 : 'No published version'}
             </p>
           </CardContent>

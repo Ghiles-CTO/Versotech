@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { formatViewerDate, formatViewerDateTime } from '@/lib/format'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -210,11 +211,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
 
   const formatDate = (date: string | null) => {
     if (!date) return '—'
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
+    return formatViewerDate(date)
   }
 
   const interestStatusMeta: Record<string, { label: string; tone: string }> = {
@@ -553,15 +550,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                         <div>
                           <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Interest Confirmation Deadline</p>
                           <p className="font-medium text-gray-900 dark:text-gray-100">
-                            {new Date(feeStructure.interest_confirmation_deadline).toLocaleString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                              hour: 'numeric',
-                              minute: '2-digit',
-                              timeZone: 'UTC',
-                              timeZoneName: 'short'
-                            })}
+                            {formatViewerDateTime(feeStructure.interest_confirmation_deadline, { timeZone: 'UTC' })}
                           </p>
                         </div>
                       )}
@@ -614,15 +603,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                         <div>
                           <p className="font-medium text-gray-700 dark:text-gray-300">Validity</p>
                           <p className="text-gray-600 dark:text-gray-400">
-                            This term sheet expires on {new Date(feeStructure.validity_date).toLocaleString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                              hour: 'numeric',
-                              minute: '2-digit',
-                              timeZone: 'UTC',
-                              timeZoneName: 'short'
-                            })}
+                            This term sheet expires on {formatViewerDateTime(feeStructure.validity_date, { timeZone: 'UTC' })}
                           </p>
                         </div>
                       )}

@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/components/theme-provider'
 import { DealLogo } from '@/components/deals/deal-logo'
+import { formatViewerDate } from '@/lib/format'
 
 export interface FeaturedDealFeeStructure {
   id: string
@@ -101,7 +102,7 @@ function formatDeadlineCopy(closeAt: string | null, status: string) {
   const now = new Date()
 
   if (status === 'closed' || closeDate < now) {
-    return `Closed ${closeDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}`
+    return `Closed ${formatViewerDate(closeDate, { timeZone: 'UTC' })}`
   }
 
   const diffMs = closeDate.getTime() - now.getTime()
@@ -111,7 +112,7 @@ function formatDeadlineCopy(closeAt: string | null, status: string) {
   if (diffDays === 1) return 'Closes tomorrow'
   if (diffDays <= 14) return `Closes in ${diffDays} days`
 
-  return `Closes ${closeDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}`
+  return `Closes ${formatViewerDate(closeDate, { timeZone: 'UTC' })}`
 }
 
 function formatCurrency(amount: number | null, currency: string | null) {
