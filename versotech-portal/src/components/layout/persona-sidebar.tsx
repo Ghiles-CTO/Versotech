@@ -73,8 +73,8 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
   ceo: [
     // Core (daily use)
     { name: 'Dashboard', href: '/versotech_main/dashboard', icon: LayoutDashboard, description: 'Overview' },
-    { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, description: 'Inbox' },
-    { name: 'Approvals', href: '/versotech_main/approvals', icon: UserCheck, description: 'Pending approvals' },
+    { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, notificationKey: 'messages', description: 'Inbox' },
+    { name: 'Approvals', href: '/versotech_main/approvals', icon: UserCheck, notificationKey: 'approvals', description: 'Pending approvals' },
     // Deal Flow
     { name: 'Deals', href: '/versotech_main/deals', icon: Activity, description: 'Deal management' },
     { name: 'Vehicles', href: '/versotech_main/entities', icon: Building2, description: 'Investment vehicles' },
@@ -105,8 +105,8 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
   // Staff persona - common items for non-CEO staff roles (staff_ops, staff_rm)
   staff: [
     { name: 'Dashboard', href: '/versotech_main/dashboard', icon: LayoutDashboard, description: 'Overview' },
-    { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, description: 'Inbox' },
-    { name: 'Approvals', href: '/versotech_main/approvals', icon: UserCheck, description: 'Pending approvals' },
+    { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, notificationKey: 'messages', description: 'Inbox' },
+    { name: 'Approvals', href: '/versotech_main/approvals', icon: UserCheck, notificationKey: 'approvals', description: 'Pending approvals' },
     { name: 'KYC Review', href: '/versotech_main/kyc-review', icon: UserCheck, notificationKey: 'kyc_review', description: 'KYC compliance' },
     { name: 'Deals', href: '/versotech_main/deals', icon: Activity, description: 'Deal management' },
     { name: 'Vehicles', href: '/versotech_main/entities', icon: Building2, description: 'Investment vehicles' },
@@ -182,7 +182,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Portfolio', href: '/versotech_main/portfolio', icon: Briefcase, description: 'My investments' },
     { name: 'Agreements', href: '/versotech_main/placement-agreements', icon: FileText, description: 'Placement agreements' },
     { name: 'Profile', href: '/versotech_main/commercial-partner-profile', icon: FileSignature, description: 'Signature & settings' },
-    { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, description: 'Communications' },
+    { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, notificationKey: 'messages', description: 'Communications' },
   ],
 
   // Lawyer persona
