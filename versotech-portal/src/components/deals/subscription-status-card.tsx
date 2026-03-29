@@ -279,6 +279,13 @@ export function SubscriptionStatusCard({
     : docs?.subscription_pack?.status === 'complete'
       ? docs.subscription_pack.signed_url
       : null
+  const showSubscriptionPackRow = !!docs?.subscription_pack && (
+    docs.subscription_pack.status !== 'not_started' ||
+    docs.subscription_pack.signatories.length > 0 ||
+    !!docs.subscription_pack.unsigned_url ||
+    !!docs.subscription_pack.signed_url ||
+    !!signedPackPath
+  )
   const effectiveHeading = heading === undefined ? 'Your Subscription' : heading
 
   const isActive = entry ? entry.milestones.active : !!subscription?.activated_at
@@ -378,13 +385,15 @@ export function SubscriptionStatusCard({
               onPreview={onViewNdas}
             />
           )}
-          <DocumentRow
-            icon={FileText}
-            iconColor="text-purple-500"
-            label="Subscription Pack"
-            doc={docs.subscription_pack}
-            onPreview={signedPackPath && onViewSignedPack ? () => onViewSignedPack(signedPackPath) : undefined}
-          />
+          {showSubscriptionPackRow && (
+            <DocumentRow
+              icon={FileText}
+              iconColor="text-purple-500"
+              label="Subscription Pack"
+              doc={docs.subscription_pack}
+              onPreview={signedPackPath && onViewSignedPack ? () => onViewSignedPack(signedPackPath) : undefined}
+            />
+          )}
           {(docs.certificate || isActive) && (
             <div className="flex items-center gap-2.5 py-2 px-2.5">
               <Award className={cn('w-4 h-4', docs.certificate?.status === 'available' ? 'text-amber-500' : 'text-muted-foreground')} />

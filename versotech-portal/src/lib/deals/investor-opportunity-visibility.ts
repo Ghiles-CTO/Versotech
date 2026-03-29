@@ -19,6 +19,17 @@ const INVESTOR_VISIBLE_SUBMISSION_STATUSES = new Set([
   'approved',
 ])
 
+export function isInvestorSubscriptionPackDispatched(packSentAt?: string | null): boolean {
+  return Boolean(packSentAt)
+}
+
+export function getInvestorVisiblePackGeneratedAt(
+  packGeneratedAt?: string | null,
+  packSentAt?: string | null
+): string | null {
+  return isInvestorSubscriptionPackDispatched(packSentAt) ? packGeneratedAt ?? null : null
+}
+
 export function normalizeRejectedJourneyCycle<T extends RejectedJourneyCycle>(cycle: T | null): T | null {
   if (!cycle || cycle.status !== 'rejected') return cycle
 

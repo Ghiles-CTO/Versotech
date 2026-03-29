@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   filterInvestorVisibleSubmissions,
   filterInvestorVisibleCycles,
+  getInvestorVisiblePackGeneratedAt,
   isInvestorVisibleSubmissionStatus,
+  isInvestorSubscriptionPackDispatched,
   isRetryableRejectedPrimaryCycle,
   normalizeRejectedJourneyCycle,
 } from '@/lib/deals/investor-opportunity-visibility'
@@ -92,5 +94,26 @@ describe('investor opportunity visibility', () => {
         { id: 'submission-rejected', status: 'rejected' },
       ]).map(submission => submission.id)
     ).toEqual(['submission-pending', 'submission-approved'])
+  })
+
+  it('treats the subscription pack as investor-visible only after it is sent', () => {
+    expect(isInvestorSubscriptionPackDispatched(null)).toBe(false)
+    expect(isInvestorSubscriptionPackDispatched('2026-03-28T10:00:00.000Z')).toBe(true)
+  })
+
+  it('hides pack-generated progress from investors until the pack is sent', () => {
+    expect(
+      getInvestorVisiblePackGeneratedAt(
+        '2026-03-28T09:00:00.000Z',
+        null
+      )
+    ).toBeNull()
+
+    expect(
+      getInvestorVisiblePackGeneratedAt(
+        '2026-03-28T09:00:00.000Z',
+        '2026-03-28T10:00:00.000Z'
+      )
+    ).toBe('2026-03-28T09:00:00.000Z')
   })
 })

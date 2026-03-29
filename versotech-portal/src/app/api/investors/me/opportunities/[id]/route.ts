@@ -10,6 +10,8 @@ import {
 } from '@/lib/deals/investment-cycles'
 import {
   filterInvestorVisibleCycles,
+  getInvestorVisiblePackGeneratedAt,
+  isInvestorSubscriptionPackDispatched,
   isRetryableRejectedPrimaryCycle,
   normalizeRejectedJourneyCycle,
 } from '@/lib/deals/investor-opportunity-visibility'
@@ -30,6 +32,12 @@ interface RouteParams {
 }
 
 const MEMBER_SIGNATORY_FILTER = 'is_signatory.eq.true,role.eq.authorized_signatory'
+const EMPTY_SUBSCRIPTION_PACK: SubscriptionDocumentSummary = {
+  status: 'not_started',
+  signatories: [],
+  unsigned_url: null,
+  signed_url: null,
+}
 
 /**
  * GET /api/investors/me/opportunities/:id
@@ -531,14 +539,12 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     // Fetch signature documents for this subscription
     if (subscription) {
+      const investorPackDispatched = isInvestorSubscriptionPackDispatched(subscription.pack_sent_at)
       subscriptionDocuments = {
         nda: ndaDocumentSummary,
-        subscription_pack: subscriptionPackDocumentsBySubscriptionId.get(subscription.id) || {
-          status: 'not_started',
-          signatories: [],
-          unsigned_url: null,
-          signed_url: null,
-        },
+        subscription_pack: investorPackDispatched
+          ? subscriptionPackDocumentsBySubscriptionId.get(subscription.id) || EMPTY_SUBSCRIPTION_PACK
+          : EMPTY_SUBSCRIPTION_PACK,
         certificate: certificateDocumentsBySubscriptionId.get(subscription.id) || null,
       }
     }
@@ -974,6 +980,11 @@ export async function GET(request: Request, { params }: RouteParams) {
         const signatureSummary = cycle.subscription?.id
           ? subscriptionSignatureSummaryById.get(cycle.subscription.id) || null
           : null
+        const packDispatchedToInvestor = isInvestorSubscriptionPackDispatched(cycle.subscription?.pack_sent_at)
+        const visiblePackGeneratedAt = getInvestorVisiblePackGeneratedAt(
+          cycle.subscription?.pack_generated_at,
+          cycle.subscription?.pack_sent_at
+        )
         const isSigned = signatureSummary?.status === 'complete'
         const isFunded = !!cycle.subscription?.funded_at || cycle.status === 'funded' || cycle.status === 'active'
         const isActive = !!cycle.subscription?.activated_at || cycle.status === 'active'
@@ -990,7 +1001,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         } else if (isSigned) {
           statusKey = 'awaiting_funding'
           statusLabel = 'Awaiting Funding'
-        } else if (cycle.subscription) {
+        } else if (cycle.subscription && packDispatchedToInvestor) {
           statusKey = 'awaiting_signature'
           statusLabel = 'Awaiting Signature'
         }
@@ -1002,7 +1013,7 @@ export async function GET(request: Request, { params }: RouteParams) {
           currency: cycle.subscription?.currency || deal.currency || 'USD',
           funded_amount: cycle.subscription?.funded_amount || null,
           submitted_at: cycle.submission?.submitted_at || null,
-          created_at: cycle.subscription?.pack_generated_at || cycle.submission?.submitted_at || null,
+          created_at: visiblePackGeneratedAt || cycle.submission?.submitted_at || null,
           status: statusKey,
           status_label: statusLabel,
           is_reinvestment: cycle.sequence_number > 1,
@@ -1018,18 +1029,10 @@ export async function GET(request: Request, { params }: RouteParams) {
           documents: {
             nda: ndaDocumentSummary,
             subscription_pack: cycle.subscription?.id
-              ? subscriptionPackDocumentsBySubscriptionId.get(cycle.subscription.id) || {
-                  status: 'not_started',
-                  signatories: [],
-                  unsigned_url: null,
-                  signed_url: null,
-                }
-              : {
-                  status: 'not_started',
-                  signatories: [],
-                  unsigned_url: null,
-                  signed_url: null,
-                },
+              ? packDispatchedToInvestor
+                ? subscriptionPackDocumentsBySubscriptionId.get(cycle.subscription.id) || EMPTY_SUBSCRIPTION_PACK
+                : EMPTY_SUBSCRIPTION_PACK
+              : EMPTY_SUBSCRIPTION_PACK,
             certificate: cycle.subscription?.id
               ? certificateDocumentsBySubscriptionId.get(cycle.subscription.id) || null
               : null,
@@ -1173,7 +1176,10 @@ export async function GET(request: Request, { params }: RouteParams) {
         commitment: subscription.commitment,
         currency: subscription.currency || deal.currency || 'USD',
         funded_amount: subscription.funded_amount,
-        pack_generated_at: subscription.pack_generated_at,
+        pack_generated_at: getInvestorVisiblePackGeneratedAt(
+          subscription.pack_generated_at,
+          subscription.pack_sent_at
+        ),
         pack_sent_at: subscription.pack_sent_at,
         signed_at: subscriptionDocuments?.subscription_pack.status === 'complete'
           ? subscription.signed_at

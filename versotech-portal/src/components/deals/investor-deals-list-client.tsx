@@ -54,7 +54,10 @@ import { InterestModal } from '@/components/deals/interest-modal'
 // import { SubscribeNowDialog } from '@/components/deals/subscribe-now-dialog'
 import { ShareDealDialog } from '@/components/deals/share-deal-dialog'
 import { getAccountStatusCopy, formatKycStatusLabel } from '@/lib/account-approval-status'
-import { isInvestorVisibleSubmissionStatus } from '@/lib/deals/investor-opportunity-visibility'
+import {
+  getInvestorVisiblePackGeneratedAt,
+  isInvestorVisibleSubmissionStatus,
+} from '@/lib/deals/investor-opportunity-visibility'
 
 type Nullable<T> = T | null
 
@@ -1419,7 +1422,11 @@ export function InvestorDealsListClient({
               const isFunded = isActive || !!progress?.funded_at
               const isSigned = isFunded || !!progress?.signed_at
               const isSent = isSigned || !!progress?.pack_sent_at
-              const isGenerated = isSent || !!progress?.pack_generated_at
+              const visiblePackGeneratedAt = getInvestorVisiblePackGeneratedAt(
+                progress?.pack_generated_at,
+                progress?.pack_sent_at
+              )
+              const isGenerated = isSent || !!visiblePackGeneratedAt
               const progressSteps = [isGenerated, isSent, isSigned, isFunded, isActive]
               const completedSteps = progressSteps.filter(Boolean).length
               const progressPercent = (completedSteps / progressSteps.length) * 100
