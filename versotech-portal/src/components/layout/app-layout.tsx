@@ -95,7 +95,7 @@ export async function AppLayout({ children, brand }: AppLayoutProps) {
           </header>
 
           {/* Content Area - theme responsive */}
-          <main className="flex-1 overflow-y-auto scrollbar-hide bg-transparent dark:bg-zinc-950 backdrop-blur-sm">
+          <main className="flex-1 overflow-y-auto scrollbar-thin bg-transparent dark:bg-zinc-950 backdrop-blur-sm">
             <div className="min-h-full bg-white/60 dark:bg-transparent backdrop-blur-sm dark:backdrop-blur-none">
               {/* KYC Alert for Investors */}
               {!isStaff && kycStatus !== 'completed' && (

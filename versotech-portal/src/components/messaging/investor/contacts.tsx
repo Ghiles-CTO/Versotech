@@ -73,7 +73,7 @@ export function InvestorContacts({
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-background">
+      <div className="flex-1 overflow-y-auto scrollbar-thin bg-background">
         {filteredConversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-sm">
             {isLoading ? 'Loading conversations…' : 'No conversations yet.'}

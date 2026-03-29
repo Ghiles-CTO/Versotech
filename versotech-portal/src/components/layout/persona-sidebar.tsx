@@ -439,7 +439,7 @@ export function PersonaSidebar() {
       )}
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide px-3 py-2 space-y-1">
+      <div className="flex-1 overflow-y-auto scrollbar-thin px-3 py-2 space-y-1">
         {filteredNavItems.map((item) => {
           const isActive = isNavItemActive(pathname, item.href)
           const Icon = item.icon
@@ -652,7 +652,7 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide px-3 py-2 space-y-1">
+      <div className="flex-1 overflow-y-auto scrollbar-thin px-3 py-2 space-y-1">
         {navItems.map((item) => {
           const isActive = isNavItemActive(pathname, item.href)
           const Icon = item.icon

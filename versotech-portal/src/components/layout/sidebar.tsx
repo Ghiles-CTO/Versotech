@@ -350,7 +350,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
       )}
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide px-3 py-2 space-y-1">
+      <div className="flex-1 overflow-y-auto scrollbar-thin px-3 py-2 space-y-1">
         {filteredNavItems.map((item) => {
           // Special case: dashboard paths that are base paths (e.g., /versotech/staff)
           // should only match exactly, not all sub-paths

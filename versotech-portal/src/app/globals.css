@@ -114,6 +114,15 @@
   * {
     @apply border-border outline-ring/50;
   }
+
+  /* Native checkboxes: ensure visibility in all themes */
+  input[type="checkbox"] {
+    accent-color: #2563eb;
+  }
+  .staff-dark input[type="checkbox"],
+  .dark input[type="checkbox"] {
+    color-scheme: dark;
+  }
 }
 
 /* Force Tailwind styles to load */
@@ -136,6 +145,38 @@
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Slim themed scrollbar — light & dark mode */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  .scrollbar-thin:hover {
+    scrollbar-color: hsl(0 0% 78%) transparent;
+  }
+  .dark .scrollbar-thin:hover,
+  .staff-dark .scrollbar-thin:hover {
+    scrollbar-color: hsl(0 0% 24%) transparent;
+  }
+
+  /* Webkit (Chrome, Safari, Edge) */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 9999px;
+  }
+  .scrollbar-thin:hover::-webkit-scrollbar-thumb {
+    background-color: hsl(0 0% 78%);
+  }
+  .dark .scrollbar-thin:hover::-webkit-scrollbar-thumb,
+  .staff-dark .scrollbar-thin:hover::-webkit-scrollbar-thumb {
+    background-color: hsl(0 0% 24%);
   }
 }
 
