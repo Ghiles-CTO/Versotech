@@ -296,7 +296,6 @@ export function AdvancedSubscriptionFilters({
                   id={`status-${status.value}`}
                   checked={filters.statuses?.includes(status.value) || false}
                   onCheckedChange={() => toggleArrayFilter('statuses', status.value)}
-                  className="border-border"
                 />
                 <Label
                   htmlFor={`status-${status.value}`}
@@ -342,7 +341,6 @@ export function AdvancedSubscriptionFilters({
                       id={`vehicle-${vehicle.id}`}
                       checked={filters.vehicleIds?.includes(vehicle.id) || false}
                       onCheckedChange={() => toggleArrayFilter('vehicleIds', vehicle.id)}
-                      className="border-border"
                     />
                     <Label
                       htmlFor={`vehicle-${vehicle.id}`}
@@ -365,7 +363,6 @@ export function AdvancedSubscriptionFilters({
                       id={`investor-type-${type}`}
                       checked={filters.investorTypes?.includes(type) || false}
                       onCheckedChange={() => toggleArrayFilter('investorTypes', type)}
-                      className="border-border"
                     />
                     <Label
                       htmlFor={`investor-type-${type}`}
@@ -551,7 +548,6 @@ export function AdvancedSubscriptionFilters({
                 id="has-performance-fees"
                 checked={filters.hasPerformanceFees || false}
                 onCheckedChange={(checked) => updateFilter('hasPerformanceFees', checked as boolean)}
-                className="border-border"
               />
               <Label htmlFor="has-performance-fees" className="text-foreground text-sm cursor-pointer">
                 Has Performance Fees
@@ -563,7 +559,6 @@ export function AdvancedSubscriptionFilters({
                 id="has-introducer"
                 checked={filters.hasIntroducer || false}
                 onCheckedChange={(checked) => updateFilter('hasIntroducer', checked as boolean)}
-                className="border-border"
               />
               <Label htmlFor="has-introducer" className="text-foreground text-sm cursor-pointer">
                 Has Introducer
@@ -575,7 +570,6 @@ export function AdvancedSubscriptionFilters({
                 id="has-outstanding"
                 checked={filters.hasOutstanding || false}
                 onCheckedChange={(checked) => updateFilter('hasOutstanding', checked as boolean)}
-                className="border-border"
               />
               <Label htmlFor="has-outstanding" className="text-foreground text-sm cursor-pointer">
                 Has Outstanding Amount
@@ -587,7 +581,6 @@ export function AdvancedSubscriptionFilters({
                 id="is-overdue"
                 checked={filters.isOverdue || false}
                 onCheckedChange={(checked) => updateFilter('isOverdue', checked as boolean)}
-                className="border-border"
               />
               <Label htmlFor="is-overdue" className="text-foreground text-sm cursor-pointer">
                 Funding Overdue

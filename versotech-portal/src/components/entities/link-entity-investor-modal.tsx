@@ -660,7 +660,7 @@ export function LinkEntityInvestorModal({
                   id="send-invite"
                   checked={sendInvite}
                   onCheckedChange={(value) => setSendInvite(Boolean(value))}
-                  className="border-white/20 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+                  className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
                 />
                 <Label htmlFor="send-invite" className="text-sm text-white cursor-pointer">
                   Send investor portal invitation (if not already invited)

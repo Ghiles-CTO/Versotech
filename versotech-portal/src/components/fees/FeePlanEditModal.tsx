@@ -832,7 +832,7 @@ export default function FeePlanEditModal({
                   id="is_active"
                   checked={isActive}
                   onCheckedChange={(checked) => setIsActive(checked as boolean)}
-                  className="border-border h-5 w-5"
+                  className="h-5 w-5"
                 />
                 <Label htmlFor="is_active" className="text-sm text-muted-foreground cursor-pointer font-medium">
                   Plan Active
@@ -1113,7 +1113,7 @@ export default function FeePlanEditModal({
                               non_circumvention_months: checked ? null : 24,
                             });
                           }}
-                          className="border-border"
+                          className=""
                         />
                         <span className="text-xs text-muted-foreground">Indefinite</span>
                         {!agreementTerms.non_circumvention_indefinite && (
@@ -1231,7 +1231,7 @@ export default function FeePlanEditModal({
                           <Checkbox
                             checked={agreementTerms.has_catchup}
                             onCheckedChange={(checked) => updateAgreementTerms({ has_catchup: !!checked })}
-                            className="border-border"
+                            className=""
                           />
                           <span className="text-sm text-muted-foreground">GP Catchup</span>
                           {agreementTerms.has_catchup && (
@@ -1252,7 +1252,7 @@ export default function FeePlanEditModal({
                           <Checkbox
                             checked={agreementTerms.has_high_water_mark}
                             onCheckedChange={(checked) => updateAgreementTerms({ has_high_water_mark: !!checked })}
-                            className="border-border"
+                            className=""
                           />
                           <span className="text-sm text-muted-foreground">High Water Mark</span>
                         </div>
@@ -1267,7 +1267,7 @@ export default function FeePlanEditModal({
                                 performance_cap_percent: checked ? undefined : 20,
                               });
                             }}
-                            className="border-border"
+                            className=""
                           />
                           <span className="text-sm text-muted-foreground">No Cap</span>
                           {!agreementTerms.has_no_cap && (
