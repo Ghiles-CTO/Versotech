@@ -490,53 +490,51 @@ export function ProfilePageClient({
     hasPendingAccountApproval ||
     !isAccountApprovalReady
 
-  // Resolve the next onboarding action from missing KYC items
-  const resolveNextOnboardingAction = (): { label: string; action: () => void } | null => {
+  // Resolve next onboarding CTA — same priority as the onboarding popup
+  const resolveNextCTA = (): { label: string; action: () => void } | null => {
     if (missingAccountKycItems.length === 0) return null
 
-    const isIndividualInvestor = investorInfo?.type === 'individual'
-
-    if (isIndividualInvestor) {
-      // Individual: check for Personal Information first, then documents
-      const entityGroup = missingAccountKycItems.find((i) => i.scope === 'entity')
-      const hasPersonalInfo = entityGroup?.missingItems.some((raw) =>
-        raw.replace(/\s*\(.*\)$/, '') === 'Personal Information'
-      )
-      if (hasPersonalInfo) {
-        return { label: 'Complete Personal Information', action: () => setShowKycDialog(true) }
-      }
-      return { label: 'Upload KYC Documents', action: () => setActiveTab('kyc') }
-    }
-
-    // Entity investor: entity info → member personal info → documents
+    const strip = (raw: string) => raw.replace(/\s*\(.*\)$/, '')
     const entityGroup = missingAccountKycItems.find((i) => i.scope === 'entity')
-    const hasEntityInfo = entityGroup?.missingItems.some((raw) =>
-      raw.replace(/\s*\(.*\)$/, '') === 'Entity Information'
-    )
-    if (hasEntityInfo) {
-      return { label: 'Complete Entity Information', action: () => setShowEntityOverviewDialog(true) }
+    const memberGroups = missingAccountKycItems.filter((i) => i.scope === 'member')
+    const userMember = memberGroups[0] || null
+
+    // Navigate with action param so forms auto-open on load
+    const nav = (tab: string, action?: string) => {
+      const url = new URL(window.location.href)
+      url.searchParams.set('tab', tab)
+      if (action) url.searchParams.set('action', action)
+      window.location.href = url.toString()
     }
 
-    const memberGroup = missingAccountKycItems.find((i) => i.scope === 'member')
-    const hasMemberPersonalInfo = memberGroup?.missingItems.some((raw) =>
-      raw.replace(/\s*\(.*\)$/, '') === 'Personal Information'
-    )
-    if (hasMemberPersonalInfo) {
-      return { label: 'Complete Member KYC', action: () => setActiveTab('entity-members') }
+    if (isIndividual) {
+      const src = userMember || entityGroup
+      if (src?.missingItems.some((r) => strip(r) === 'Personal Information')) {
+        return { label: 'Complete personal details', action: () => setShowKycDialog(true) }
+      }
+      return { label: 'Upload documents', action: () => nav('kyc', 'upload-doc') }
     }
 
-    // Remaining: documents (entity docs or member docs)
-    if (entityGroup && entityGroup.missingItems.length > 0) {
-      return { label: 'Upload Entity Documents', action: () => setActiveTab('kyc') }
+    // Entity — mirrors onboarding modal priority exactly
+    if (userMember?.missingItems.some((r) => strip(r) === 'Personal Information')) {
+      return { label: 'Complete personal details', action: () => nav('overview', 'edit-personal-kyc') }
     }
-    if (memberGroup && memberGroup.missingItems.length > 0) {
-      return { label: 'Complete Member Documents', action: () => setActiveTab('entity-members') }
+    if (entityGroup?.missingItems.some((r) => strip(r) === 'Entity Information')) {
+      return { label: 'Complete entity details', action: () => setShowEntityOverviewDialog(true) }
     }
-
-    return { label: 'Continue Onboarding', action: () => setActiveTab('kyc') }
+    if (userMember?.missingItems.some((r) => strip(r) !== 'Personal Information')) {
+      return { label: 'Upload personal documents', action: () => nav('kyc', 'upload-doc') }
+    }
+    if (entityGroup?.missingItems.some((r) => strip(r) !== 'Entity Information')) {
+      return { label: 'Upload entity documents', action: () => nav('kyc', 'upload-doc') }
+    }
+    if (memberGroups.slice(1).some((m) => m.missingItems.length > 0)) {
+      return { label: 'Review member KYC', action: () => nav('entity-members') }
+    }
+    return null
   }
 
-  const nextOnboardingAction = resolveNextOnboardingAction()
+  const nextCTA = resolveNextCTA()
 
   // Staff layout - keep the original grid layout
   if (isStaff) {
@@ -1056,17 +1054,15 @@ export function ProfilePageClient({
                 )}
 
                 {/* Next Step CTA */}
-                {nextOnboardingAction && !hasPendingAccountApproval && (
-                  <div className="pt-1">
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={nextOnboardingAction.action}
-                    >
-                      {nextOnboardingAction.label}
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
-                  </div>
+                {nextCTA && !hasPendingAccountApproval && (
+                  <button
+                    type="button"
+                    onClick={nextCTA.action}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                  >
+                    {nextCTA.label}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
                 )}
 
                 {/* Submit Button */}
