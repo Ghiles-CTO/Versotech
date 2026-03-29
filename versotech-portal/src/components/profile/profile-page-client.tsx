@@ -7,7 +7,6 @@ import { PasswordChangeForm } from '@/components/profile/password-change-form'
 import { PreferencesEditor } from '@/components/profile/preferences-editor'
 import { KYCDocumentsTab } from '@/components/profile/kyc-documents-tab'
 import { CounterpartyEntitiesTab } from '@/components/profile/counterparty-entities-tab'
-import { ComplianceTab } from '@/components/profile/compliance-tab'
 import { KYCQuestionnaire } from '@/components/kyc/KYCQuestionnaire'
 import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -52,6 +51,7 @@ import {
   extractApprovedKycDocumentMetadata,
   type ApprovedKycDocumentMetadata,
 } from '@/lib/kyc/approved-document-metadata'
+import { formatViewerDateTime } from '@/lib/format'
 
 // Types for investor entity data passed from server
 type InvestorInfo = {
@@ -965,7 +965,7 @@ export function ProfilePageClient({
                         <p className="text-sm text-red-800">{latestAccountRequestInfo.details}</p>
                         {latestAccountRequestInfo.requestedAt && (
                           <p className="mt-2 text-xs text-red-600">
-                            Requested on {new Date(latestAccountRequestInfo.requestedAt).toLocaleString()}
+                            Requested on {formatViewerDateTime(latestAccountRequestInfo.requestedAt)}
                           </p>
                         )}
                       </div>
@@ -1096,12 +1096,7 @@ export function ProfilePageClient({
         {/* Compliance Tab */}
         {hasInvestorEntity && (
           <TabsContent value="compliance" className="space-y-6">
-            <ComplianceTab />
-
-            {/* Compliance Questionnaire */}
-            <div className="pt-6 border-t">
-              <KYCQuestionnaire />
-            </div>
+            <KYCQuestionnaire />
           </TabsContent>
         )}
 

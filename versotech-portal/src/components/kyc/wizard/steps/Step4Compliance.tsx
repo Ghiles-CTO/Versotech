@@ -70,7 +70,7 @@ function YesNoField({
                           : 'border-border hover:border-muted-foreground/50 bg-card'
                       )}
                     >
-                      <RadioGroupItem value={value} className="sr-only" />
+                      <RadioGroupItem value={value} className="absolute opacity-0 pointer-events-none" />
                       {value}
                     </label>
                   ))}

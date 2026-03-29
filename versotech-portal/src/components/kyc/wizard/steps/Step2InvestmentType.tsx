@@ -82,7 +82,7 @@ export function Step2InvestmentType() {
                             : 'border-border hover:border-muted-foreground/50 bg-card'
                         )}
                       >
-                        <RadioGroupItem value={option.value} className="sr-only" />
+                        <RadioGroupItem value={option.value} className="absolute opacity-0 pointer-events-none" />
                         <div
                           className={cn(
                             'p-2 rounded-lg',

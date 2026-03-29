@@ -90,7 +90,7 @@ export function Step3WellInformed() {
                             isSelected && option.value === 'unsure' && 'border-amber-500 bg-amber-500/10'
                           )}
                         >
-                          <RadioGroupItem value={option.value} className="sr-only" />
+                          <RadioGroupItem value={option.value} className="absolute opacity-0 pointer-events-none" />
                           <Icon
                             className={cn(
                               'h-5 w-5',

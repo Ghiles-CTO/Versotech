@@ -67,7 +67,7 @@ function RadioOptionGroup({
               : 'border-border hover:border-muted-foreground/50'
           )}
         >
-          <RadioGroupItem value={option.value} className="sr-only" />
+          <RadioGroupItem value={option.value} className="absolute opacity-0 pointer-events-none" />
           <div
             className={cn(
               'w-4 h-4 rounded-full border-2 flex items-center justify-center',
@@ -375,7 +375,7 @@ export function Step8Suitability() {
                               : 'border-border hover:border-muted-foreground/50'
                           )}
                         >
-                          <RadioGroupItem value={value} className="sr-only" />
+                          <RadioGroupItem value={value} className="absolute opacity-0 pointer-events-none" />
                           {value}
                         </label>
                       ))}

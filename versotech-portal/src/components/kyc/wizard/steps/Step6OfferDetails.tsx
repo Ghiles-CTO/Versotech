@@ -69,7 +69,7 @@ function YesNoQuestion({
                         : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     )}
                   >
-                    <RadioGroupItem value={value} className="sr-only" />
+                    <RadioGroupItem value={value} className="absolute opacity-0 pointer-events-none" />
                     {value}
                   </label>
                 ))}
@@ -158,7 +158,7 @@ export function Step6OfferDetails() {
                                 : 'border-border hover:border-muted-foreground/50'
                             )}
                           >
-                            <RadioGroupItem value={option.value} className="sr-only" />
+                            <RadioGroupItem value={option.value} className="absolute opacity-0 pointer-events-none" />
                             <div
                               className={cn(
                                 'p-2 rounded-lg',

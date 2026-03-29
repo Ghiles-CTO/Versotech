@@ -56,7 +56,7 @@ function YesNoQuestion({
                       : 'bg-muted text-muted-foreground hover:bg-muted/80'
                   )}
                 >
-                  <RadioGroupItem value={value} className="sr-only" />
+                  <RadioGroupItem value={value} className="absolute opacity-0 pointer-events-none" />
                   {value}
                 </label>
               ))}
