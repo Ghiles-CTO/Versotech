@@ -26,6 +26,7 @@ type SubscriptionDocumentSummary = {
   }>
   unsigned_url: string | null
   signed_url: string | null
+  available_in_documents: boolean
 }
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -37,6 +38,7 @@ const EMPTY_SUBSCRIPTION_PACK: SubscriptionDocumentSummary = {
   signatories: [],
   unsigned_url: null,
   signed_url: null,
+  available_in_documents: false,
 }
 
 /**
@@ -238,6 +240,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       signatories: [],
       unsigned_url: null,
       signed_url: null,
+      available_in_documents: false,
     }
 
     if (effectiveInvestorId) {
@@ -387,12 +390,11 @@ export async function GET(request: Request, { params }: RouteParams) {
                 status: signature.status,
                 signed_at: signature.signature_timestamp,
               })),
-              unsigned_url: signatures.find(signature => signature.unsigned_pdf_path)?.unsigned_pdf_path || null,
-              signed_url: allSigned
-                ? signatures.find(signature => signature.signed_pdf_path)?.signed_pdf_path || null
-                : hasPublishedSignedPack
-                  ? publishedDocument?.file_key || null
-                  : null,
+              unsigned_url: null,
+              signed_url: hasPublishedSignedPack
+                ? publishedDocument?.file_key || null
+                : null,
+              available_in_documents: hasPublishedSignedPack,
             })
           }
 
@@ -423,13 +425,22 @@ export async function GET(request: Request, { params }: RouteParams) {
     }
 
     if (effectiveInvestorId) {
-      const { data: ndaSignatures } = await serviceSupabase
-        .from('signature_requests')
-        .select('signer_name, signer_email, status, signature_timestamp, unsigned_pdf_path, signed_pdf_path')
-        .eq('deal_id', dealId)
-        .eq('investor_id', effectiveInvestorId)
-        .eq('document_type', 'nda')
-        .order('created_at', { ascending: true })
+      const [{ data: ndaSignatures }, { count: publishedNdaCount }] = await Promise.all([
+        serviceSupabase
+          .from('signature_requests')
+          .select('signer_name, signer_email, status, signature_timestamp, unsigned_pdf_path, signed_pdf_path')
+          .eq('deal_id', dealId)
+          .eq('investor_id', effectiveInvestorId)
+          .eq('document_type', 'nda')
+          .order('created_at', { ascending: true }),
+        serviceSupabase
+          .from('documents')
+          .select('id', { count: 'exact', head: true })
+          .eq('owner_investor_id', effectiveInvestorId)
+          .eq('deal_id', dealId)
+          .eq('type', 'nda')
+          .eq('is_published', true),
+      ])
 
       const ndaSigs = ndaSignatures || []
       const ndaAllSigned = ndaSigs.length > 0 && ndaSigs.every(signature => signature.status === 'signed')
@@ -443,8 +454,9 @@ export async function GET(request: Request, { params }: RouteParams) {
           status: signature.status,
           signed_at: signature.signature_timestamp,
         })),
-        unsigned_url: ndaSigs.find(signature => signature.unsigned_pdf_path)?.unsigned_pdf_path || null,
-        signed_url: ndaAllSigned ? ndaSigs.find(signature => signature.signed_pdf_path)?.signed_pdf_path || null : null,
+        unsigned_url: null,
+        signed_url: null,
+        available_in_documents: (publishedNdaCount ?? 0) > 0,
       }
     }
 
@@ -980,6 +992,9 @@ export async function GET(request: Request, { params }: RouteParams) {
         const signatureSummary = cycle.subscription?.id
           ? subscriptionSignatureSummaryById.get(cycle.subscription.id) || null
           : null
+        const publishedSubscriptionPack = cycle.subscription?.id
+          ? subscriptionPackDocumentsBySubscriptionId.get(cycle.subscription.id) || EMPTY_SUBSCRIPTION_PACK
+          : EMPTY_SUBSCRIPTION_PACK
         const packDispatchedToInvestor = isInvestorSubscriptionPackDispatched(cycle.subscription?.pack_sent_at)
         const visiblePackGeneratedAt = getInvestorVisiblePackGeneratedAt(
           cycle.subscription?.pack_generated_at,
@@ -1036,8 +1051,8 @@ export async function GET(request: Request, { params }: RouteParams) {
             certificate: cycle.subscription?.id
               ? certificateDocumentsBySubscriptionId.get(cycle.subscription.id) || null
               : null,
-            signed_pack_available: !!signatureSummary?.signedPath,
-            signed_pack_path: signatureSummary?.signedPath || null,
+            signed_pack_available: publishedSubscriptionPack.available_in_documents,
+            signed_pack_path: publishedSubscriptionPack.signed_url || null,
           },
           can_invest_more: !!cycle.can_invest_more,
         }

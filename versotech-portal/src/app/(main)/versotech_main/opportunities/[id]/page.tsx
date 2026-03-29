@@ -288,6 +288,7 @@ interface Opportunity {
         }>
         unsigned_url: string | null
         signed_url: string | null
+        available_in_documents: boolean
       }
       subscription_pack: {
         status: string
@@ -299,6 +300,7 @@ interface Opportunity {
         }>
         unsigned_url: string | null
         signed_url: string | null
+        available_in_documents: boolean
       }
       certificate: {
         status: string
@@ -1292,7 +1294,7 @@ export default function OpportunityDetailPage() {
                           iconColor="text-blue-500"
                           label="NDA"
                           doc={sharedNda}
-                          onPreview={opportunity.vehicle?.id ? handleViewNdas : undefined}
+                          onPreview={sharedNda.available_in_documents && opportunity.vehicle?.id ? handleViewNdas : undefined}
                         />
                       </div>
                     )
@@ -1318,7 +1320,7 @@ export default function OpportunityDetailPage() {
               <SubscriptionStatusCard
                 subscription={opportunity.subscription}
                 dealCurrency={opportunity.currency}
-                onViewNdas={opportunity.vehicle?.id ? handleViewNdas : undefined}
+                onViewNdas={opportunity.subscription.documents?.nda.available_in_documents && opportunity.vehicle?.id ? handleViewNdas : undefined}
                 onViewSignedPack={handleViewSignedPack}
               />
             ) : opportunity.subscription_submission ? (

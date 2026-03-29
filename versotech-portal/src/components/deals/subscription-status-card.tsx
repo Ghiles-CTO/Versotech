@@ -63,6 +63,7 @@ interface SubscriptionDocument {
   signatories: DocumentSignatory[]
   unsigned_url: string | null
   signed_url: string | null
+  available_in_documents?: boolean
 }
 
 interface SubscriptionStatusCardProps {
@@ -145,7 +146,7 @@ export function DocumentRow({
   const signedCount = doc.signatories.filter(s => s.status === 'signed').length
   const totalCount = doc.signatories.length
   const isComplete = doc.status === 'complete'
-  const hasUrl = doc.signed_url || doc.unsigned_url
+  const hasUrl = (doc.available_in_documents ?? true) && !!(doc.signed_url || doc.unsigned_url)
   const isToggleable = totalCount > 0
   const toggleExpanded = () => {
     if (isToggleable) setExpanded(current => !current)
@@ -180,6 +181,7 @@ export function DocumentRow({
               size="icon"
               variant="ghost"
               className="h-6 w-6"
+              aria-label={`${label} preview`}
               onClick={(e) => {
                 e.stopPropagation()
                 onPreview()
@@ -273,7 +275,7 @@ export function SubscriptionStatusCard({
   const fundedAmount = entry?.funded_amount ?? subscription?.funded_amount ?? null
   const signedPackPath = entry?.documents.signed_pack_available
     ? entry.documents.signed_pack_path
-    : docs?.subscription_pack?.status === 'complete'
+    : docs?.subscription_pack?.available_in_documents
       ? docs.subscription_pack.signed_url
       : null
   const showSubscriptionPackRow = !!docs?.subscription_pack && (
