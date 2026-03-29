@@ -18,6 +18,7 @@ import { buildSubscriptionPackPayload } from '@/lib/subscription-pack/payload-bu
 import { assertSubscriptionPackPdfIsA4 } from '@/lib/subscription-pack/pdf-format-guard'
 import { applySubscriptionPackPageNumbers } from '@/lib/subscription/page-numbering'
 import { getEntityPrimaryAndAdminRecipients } from '@/lib/notifications/entity-recipient-groups'
+import { getRequesterApprovalNotificationCopy } from '@/lib/approvals/requester-notifications'
 
 const ACCOUNT_ACTIVATION_ENTITY_TABLES = [
   'investors',
@@ -138,6 +139,7 @@ function getApprovalEntityLabel(entityType: string): string {
     member_invitation: 'member invitation',
     sale_request: 'sale request',
     commission_invoice: 'commission invoice',
+    data_room_access_extension: 'data room access extension',
   }
 
   return labels[entityType] || entityType.replace(/_/g, ' ')
@@ -911,16 +913,24 @@ export async function POST(
 
     // Create notification for requester
     if (approval.requested_by) {
-      const approvalLabel = getApprovalEntityLabel(approval.entity_type)
-      const notificationMessage = action === 'approve'
-        ? `Your ${approvalLabel} request has been approved.`
-        : `Your ${approvalLabel} request has been rejected${rejection_reason ? `: ${rejection_reason}` : '.'}`
+      const notificationCopy = getRequesterApprovalNotificationCopy({
+        action,
+        entityType: approval.entity_type,
+        rejectionReason: rejection_reason,
+      })
+      let notificationMessage: string
+      if (approval.entity_type === 'data_room_access_extension' && action === 'approve' && notificationData?.new_expires_at) {
+        const expiryDate = new Date(notificationData.new_expires_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+        notificationMessage = `Your data room access extension request has been approved. Access is now available until ${expiryDate}.`
+      } else {
+        notificationMessage = notificationCopy.message
+      }
 
       await serviceSupabase
         .from('investor_notifications')
         .insert({
           user_id: approval.requested_by,
-          title: `${approvalLabel} ${action === 'approve' ? 'approved' : 'rejected'}`,
+          title: notificationCopy.title,
           message: notificationMessage,
           type: action === 'approve' ? 'approval_granted' : 'approval_rejected',
           metadata: {
@@ -1584,7 +1594,7 @@ async function handleEntityApproval(
           old_expiry: currentAccess.expires_at,
           new_expiry: newExpiry.toISOString()
         })
-        break
+        return { success: true, notificationData: { new_expires_at: newExpiry.toISOString() } }
 
       case 'deal_subscription':
         // Create formal subscription from submission
