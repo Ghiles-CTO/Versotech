@@ -1,6 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import { websiteUrlSchema } from '@/lib/schemas/entity-schema'
 import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 
@@ -368,7 +369,7 @@ const updateEntitySchema = z.object({
   requires_reporting: z.boolean().optional().nullable(),
   notes: z.string().optional().nullable(),
   logo_url: z.string().url('Logo must be a valid URL').optional().nullable(),
-  website_url: z.string().url('Website must be a valid URL').optional().nullable(),
+  website_url: websiteUrlSchema().optional(),
   address: z.string().optional().nullable(),
   arranger_entity_id: z.string().uuid('Arranger must be a valid UUID').optional().nullable(),
   lawyer_id: z.string().uuid('Lawyer must be a valid UUID').optional().nullable(),

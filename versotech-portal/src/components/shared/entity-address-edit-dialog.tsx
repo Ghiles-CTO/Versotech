@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { websiteUrlSchema } from '@/lib/schemas/entity-schema'
 import {
   Dialog,
   DialogContent,
@@ -37,7 +38,7 @@ const entityAddressSchema = z.object({
   phone: z.string().max(30).optional().nullable(),
   phone_mobile: z.string().max(30).optional().nullable(),
   phone_office: z.string().max(30).optional().nullable(),
-  website: z.string().url('Invalid URL').optional().nullable().or(z.literal('')),
+  website: websiteUrlSchema().optional(),
 }).superRefine((data, ctx) => {
   const mobileError = getMobilePhoneValidationError(data.phone_mobile, true)
   if (mobileError) {

@@ -1,5 +1,27 @@
 import { z } from 'zod'
 
+/**
+ * Flexible website URL schema — accepts bare domains (e.g. "example.com"),
+ * auto-prepends https:// when no protocol is present.
+ * Use this for all website fields across the system.
+ */
+/**
+ * Flexible website URL schema — accepts bare domains (e.g. "example.com"),
+ * auto-prepends https:// when no protocol is present.
+ * Chain .optional() for API routes where the field may be absent.
+ */
+export const websiteUrlSchema = (opts?: { max?: number }) =>
+  z
+    .string()
+    .max(opts?.max ?? 255)
+    .nullable()
+    .or(z.literal(''))
+    .transform((val) => {
+      if (!val || val === '') return null
+      if (!/^https?:\/\//i.test(val)) return `https://${val}`
+      return val
+    })
+
 export const entityFormSchema = z.object({
   name: z
     .string()
@@ -71,12 +93,7 @@ export const entityFormSchema = z.object({
     .or(z.literal(''))
     .transform((val) => (val === '' ? null : val)),
 
-  website_url: z
-    .string()
-    .url('Website URL must be a valid URL')
-    .nullable()
-    .or(z.literal(''))
-    .transform((val) => (val === '' ? null : val))
+  website_url: websiteUrlSchema()
 })
 
 export type EntityFormData = z.infer<typeof entityFormSchema>

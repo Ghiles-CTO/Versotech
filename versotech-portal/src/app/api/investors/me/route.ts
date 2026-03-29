@@ -1,6 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import { websiteUrlSchema } from '@/lib/schemas/entity-schema'
 import { cookies } from 'next/headers'
 import { resolveActiveInvestorLinkFromCookies } from '@/lib/kyc/active-investor-link'
 import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
@@ -94,7 +95,7 @@ const updateInvestorSchema = z.object({
   phone: z.string().max(30).optional().nullable(),
   phone_mobile: z.string().optional().nullable(),
   phone_office: z.string().optional().nullable(),
-  website: z.string().url().optional().nullable().or(z.literal('')),
+  website: websiteUrlSchema().optional(),
 
   // US Tax compliance (FATCA)
   is_us_citizen: z.boolean().optional(),

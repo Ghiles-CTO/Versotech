@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { websiteUrlSchema } from '@/lib/schemas/entity-schema'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import {
@@ -33,7 +34,7 @@ const entityOverviewSchema = z.object({
   phone: z.string().max(30).optional().nullable(),
   phone_mobile: z.string().max(30).optional().nullable(),
   phone_office: z.string().max(30).optional().nullable(),
-  website: z.string().url('Invalid URL').optional().nullable().or(z.literal('')),
+  website: websiteUrlSchema().optional(),
 
   address: z.string().max(200).optional().nullable(),
   address_2: z.string().max(200).optional().nullable(),

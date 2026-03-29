@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { websiteUrlSchema } from '@/lib/schemas/entity-schema'
 
 const createPartnerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -12,7 +13,7 @@ const createPartnerSchema = z.object({
   contact_name: z.string().optional(),
   contact_email: z.string().email().optional().or(z.literal('')),
   contact_phone: z.string().optional(),
-  website: z.string().url().optional().or(z.literal('')),
+  website: websiteUrlSchema().optional(),
   address: z.string().optional(),
   address_2: z.string().optional(),
   address_line_1: z.string().optional(),

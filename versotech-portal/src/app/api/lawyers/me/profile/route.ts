@@ -8,6 +8,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { websiteUrlSchema } from '@/lib/schemas/entity-schema'
 import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 
 // Schema for lawyer self-service profile updates
@@ -33,7 +34,7 @@ const profileUpdateSchema = z.object({
   phone: z.string().max(30).optional().nullable(),
   phone_mobile: z.string().max(30).optional().nullable(),
   phone_office: z.string().max(30).optional().nullable(),
-  website: z.string().url().max(255).optional().nullable().or(z.literal('')),
+  website: websiteUrlSchema().optional(),
 
   // Entity info
   registration_number: z.string().max(100).optional().nullable(),

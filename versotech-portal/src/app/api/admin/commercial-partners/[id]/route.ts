@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { websiteUrlSchema } from '@/lib/schemas/entity-schema'
 
 const updateCommercialPartnerSchema = z.object({
   name: z.string().min(2).optional(),
@@ -15,7 +16,7 @@ const updateCommercialPartnerSchema = z.object({
   contact_email: z.string().email().nullable().optional().or(z.literal('')),
   contact_phone: z.string().nullable().optional(),
   email: z.string().email().nullable().optional().or(z.literal('')),
-  website: z.string().url().nullable().optional().or(z.literal('')),
+  website: websiteUrlSchema().optional(),
   address: z.string().nullable().optional(),
   address_2: z.string().nullable().optional(),
   address_line_1: z.string().nullable().optional(),

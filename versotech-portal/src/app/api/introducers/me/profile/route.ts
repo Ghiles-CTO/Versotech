@@ -9,6 +9,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { websiteUrlSchema } from '@/lib/schemas/entity-schema'
 import { getMobilePhoneValidationError } from '@/lib/validation/phone-number'
 import {
   readActivePersonaCookieValues,
@@ -43,7 +44,7 @@ const profileUpdateSchema = z.object({
   phone: z.string().max(30).optional().nullable(),
   phone_mobile: z.string().max(30).optional().nullable(),
   phone_office: z.string().max(30).optional().nullable(),
-  website: z.string().url().max(255).optional().nullable(),
+  website: websiteUrlSchema().optional(),
 
   // Entity info (for type='entity')
   country_of_incorporation: z.string().max(2).optional().nullable(),
