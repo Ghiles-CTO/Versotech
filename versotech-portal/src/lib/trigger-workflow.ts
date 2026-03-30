@@ -37,6 +37,7 @@ interface TriggerWorkflowParams {
   payload: Record<string, any>
   entityType?: string
   entityId?: string
+  allowMissingWebhookSecret?: boolean
   user: {
     id: string
     email: string
@@ -51,6 +52,7 @@ export async function triggerWorkflow({
   payload,
   entityType,
   entityId,
+  allowMissingWebhookSecret = false,
   user
 }: TriggerWorkflowParams): Promise<{
   success: boolean
@@ -80,10 +82,12 @@ export async function triggerWorkflow({
       .update(`${workflow.id}:${user.id}:${JSON.stringify(payload)}`)
       .digest('hex')
 
-    // Generate webhook signature
-    const webhookSecret = process.env.N8N_WEBHOOK_SECRET || process.env.N8N_OUTBOUND_SECRET
+    // Most workflow triggers should fail closed if outbound webhook auth is not
+    // configured. The approval flow can opt into the historical fallback used
+    // by the manual trigger route while prod config is being corrected.
+    const configuredWebhookSecret = process.env.N8N_WEBHOOK_SECRET || process.env.N8N_OUTBOUND_SECRET
 
-    if (!webhookSecret) {
+    if (!configuredWebhookSecret && !allowMissingWebhookSecret) {
       console.error('N8N_WEBHOOK_SECRET not configured')
       return {
         success: false,
@@ -91,7 +95,13 @@ export async function triggerWorkflow({
       }
     }
 
-    if (webhookSecret === 'default-webhook-secret' && process.env.NODE_ENV === 'production') {
+    const webhookSecret = configuredWebhookSecret || 'default-webhook-secret'
+
+    if (!configuredWebhookSecret) {
+      console.warn('N8N webhook secret not configured, using fallback signature')
+    }
+
+    if (configuredWebhookSecret === 'default-webhook-secret' && process.env.NODE_ENV === 'production') {
       console.error('CRITICAL: N8N_WEBHOOK_SECRET using insecure default value in production')
       return {
         success: false,

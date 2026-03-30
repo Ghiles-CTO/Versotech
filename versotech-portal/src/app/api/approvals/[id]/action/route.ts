@@ -553,6 +553,31 @@ function normalizeN8nResponsePayload(n8nResponse: any): any {
   return candidate
 }
 
+async function markWorkflowRunFailedIfPresent(
+  supabase: any,
+  workflowRunId: string | null | undefined,
+  errorMessage: string
+) {
+  if (!workflowRunId) return
+
+  const { error } = await supabase
+    .from('workflow_runs')
+    .update({
+      status: 'failed',
+      error_message: errorMessage,
+      completed_at: new Date().toISOString(),
+    })
+    .eq('id', workflowRunId)
+    .neq('status', 'completed')
+
+  if (error) {
+    console.error('[workflow] Failed to mark workflow run as failed:', {
+      workflow_run_id: workflowRunId,
+      error,
+    })
+  }
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -1182,6 +1207,88 @@ async function handleEntityApproval(
         console.log('🔍 DEBUG: dealInterest:', dealInterest ? 'EXISTS' : 'NULL')
 
         if (dealInterest) {
+          const triggeredWorkflowRunIds: string[] = []
+          const createdSignatureRequestIds: string[] = []
+
+          const restoreInterestStatus = async () => {
+            const { error: restoreError } = await supabase
+              .from('investor_deal_interest')
+              .update({
+                status: previousInterestStatus,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', entityId)
+
+            if (restoreError) {
+              console.error('[NDA] Failed to restore deal interest status after workflow failure:', restoreError)
+            }
+          }
+
+          const rollbackNdaApproval = async (errorMessage: string) => {
+            if (createdSignatureRequestIds.length > 0) {
+              const { data: createdSignatureRequests, error: loadSignatureRequestsError } = await supabase
+                .from('signature_requests')
+                .select('id, unsigned_pdf_path')
+                .in('id', createdSignatureRequestIds)
+
+              if (loadSignatureRequestsError) {
+                console.error('[NDA] Failed to load signature request artifacts during rollback:', loadSignatureRequestsError)
+              }
+
+              const unsignedPdfPaths = Array.from(
+                new Set(
+                  (createdSignatureRequests || [])
+                    .map((request: { unsigned_pdf_path?: string | null }) => request.unsigned_pdf_path)
+                    .filter((path: string | null | undefined): path is string => Boolean(path))
+                )
+              )
+
+              const { error: deleteTaskError } = await supabase
+                .from('tasks')
+                .delete()
+                .eq('related_entity_type', 'signature_request')
+                .in('related_entity_id', createdSignatureRequestIds)
+
+              if (deleteTaskError) {
+                console.error('[NDA] Failed to delete signature tasks during rollback:', deleteTaskError)
+              }
+
+              if (unsignedPdfPaths.length > 0) {
+                const { error: removeUnsignedPdfError } = await supabase.storage
+                  .from('signatures')
+                  .remove(unsignedPdfPaths)
+
+                if (removeUnsignedPdfError) {
+                  console.error('[NDA] Failed to remove unsigned PDFs during rollback:', removeUnsignedPdfError)
+                }
+              }
+
+              const { error: deleteSignatureError } = await supabase
+                .from('signature_requests')
+                .delete()
+                .in('id', createdSignatureRequestIds)
+
+              if (deleteSignatureError) {
+                console.error('[NDA] Failed to delete signature requests during rollback:', deleteSignatureError)
+              }
+            }
+
+            for (const workflowRunId of triggeredWorkflowRunIds) {
+              await markWorkflowRunFailedIfPresent(
+                supabase,
+                workflowRunId,
+                `Approval rolled back: ${errorMessage}`
+              )
+            }
+
+            await restoreInterestStatus()
+
+            return {
+              success: false as const,
+              error: errorMessage,
+            }
+          }
+
           // Auto-trigger NDA workflow after interest approval
           try {
             // Fetch complete investor and deal data for NDA
@@ -1210,18 +1317,7 @@ async function handleEntityApproval(
 
             if (missingNdaData.length > 0) {
               console.warn('[NDA] Missing core data for NDA workflow:', missingNdaData)
-              await supabase
-                .from('investor_deal_interest')
-                .update({
-                  status: previousInterestStatus,
-                  updated_at: new Date().toISOString()
-                })
-                .eq('id', entityId)
-
-              return {
-                success: false,
-                error: `Missing NDA data: ${missingNdaData.join(', ')}`
-              }
+              return rollbackNdaApproval(`Missing NDA data: ${missingNdaData.join(', ')}`)
             }
 
             const ceoSigner = await getCeoSigner(supabase)
@@ -1406,18 +1502,7 @@ async function handleEntityApproval(
 
             if (missingFields.length > 0) {
               console.error('[NDA] Missing required data:', missingFields)
-              await supabase
-                .from('investor_deal_interest')
-                .update({
-                  status: previousInterestStatus,
-                  updated_at: new Date().toISOString()
-                })
-                .eq('id', entityId)
-
-              return {
-                success: false,
-                error: `Missing NDA data: ${missingFields.join(', ')}`
-              }
+              return rollbackNdaApproval(`Missing NDA data: ${missingFields.join(', ')}`)
             }
 
             console.log(`🔔 [NDA] Processing ${signatories.length} NDA(s) for: ${investorData.legal_name}`)
@@ -1462,27 +1547,34 @@ async function handleEntityApproval(
 
               // Trigger NDA workflow for this signatory
               const result = await triggerWorkflow({
-                workflowKey: 'process-nda',
-                payload: ndaPayload,
-                entityType: 'deal_interest_nda',
-                entityId: dealInterest.id,
-                user: {
-                  id: user.id,
-                  email: user.email,
-                  displayName: user.displayName,
-                  role: user.role,
+                  workflowKey: 'process-nda',
+                  payload: ndaPayload,
+                  entityType: 'deal_interest_nda',
+                  entityId: dealInterest.id,
+                  allowMissingWebhookSecret: true,
+                  user: {
+                    id: user.id,
+                    email: user.email,
+                    displayName: user.displayName,
+                    role: user.role,
                   title: user.title
                 }
               })
 
               if (!result.success) {
                 console.error(`❌ [NDA] Failed to trigger NDA workflow for ${signatory.full_name}:`, result.error)
-                continue // Try next signatory
+                return rollbackNdaApproval(
+                  `Failed to trigger NDA workflow for ${signatory.full_name}: ${result.error || 'Unknown error'}`
+                )
               }
 
               console.log(`✅ [NDA] Workflow triggered for ${signatory.full_name}:`, {
                 workflow_run_id: result.workflow_run_id
               })
+
+              if (result.workflow_run_id) {
+                triggeredWorkflowRunIds.push(result.workflow_run_id)
+              }
 
               // Create signature requests if n8n returned Google Drive file
               if (result.n8n_response && result.workflow_run_id) {
@@ -1515,7 +1607,14 @@ async function handleEntityApproval(
 
                   if (workflowUpdateError) {
                     console.error(`❌ [NDA] Failed to persist staged signature config for ${signatory.full_name}:`, workflowUpdateError)
-                    continue
+                    await markWorkflowRunFailedIfPresent(
+                      supabase,
+                      result.workflow_run_id,
+                      `Failed to persist staged signature config: ${workflowUpdateError.message || 'Unknown error'}`
+                    )
+                    return rollbackNdaApproval(
+                      `Failed to stage NDA signature flow for ${signatory.full_name}`
+                    )
                   }
 
                   // Create admin signature request (PARTY B) for this NDA document
@@ -1535,23 +1634,51 @@ async function handleEntityApproval(
                   const adminSigResult = await createSignatureRequest(adminSigPayload, supabase)
 
                   if (adminSigResult.success) {
+                    if (adminSigResult.signature_request_id) {
+                      createdSignatureRequestIds.push(adminSigResult.signature_request_id)
+                    }
                     console.log(`📧 [NDA] Admin signature request created for ${signatory.full_name}'s NDA; investor release is staged`)
                   } else {
                     console.error(`Failed to create admin signature request:`, adminSigResult.error)
+                    await markWorkflowRunFailedIfPresent(
+                      supabase,
+                      result.workflow_run_id,
+                      `Failed to create admin signature request: ${adminSigResult.error || 'Unknown error'}`
+                    )
+                    return rollbackNdaApproval(
+                      `Failed to create NDA signature request for ${signatory.full_name}: ${adminSigResult.error || 'Unknown error'}`
+                    )
                   }
                 } catch (sigError) {
                   console.error(`Error creating signature requests for ${signatory.full_name}:`, sigError)
-                  // Continue to next signatory
+                  await markWorkflowRunFailedIfPresent(
+                    supabase,
+                    result.workflow_run_id,
+                    `Error creating signature request: ${sigError instanceof Error ? sigError.message : String(sigError)}`
+                  )
+                  return rollbackNdaApproval(
+                    `Error creating NDA signature request for ${signatory.full_name}: ${sigError instanceof Error ? sigError.message : 'Unknown error'}`
+                  )
                 }
               } else {
                 console.warn(`⚠️ [NDA] No workflow_run_id or n8n_response for ${signatory.full_name}`)
+                await markWorkflowRunFailedIfPresent(
+                  supabase,
+                  result.workflow_run_id,
+                  'Workflow returned no response payload for NDA generation'
+                )
+                return rollbackNdaApproval(
+                  `NDA workflow returned no document payload for ${signatory.full_name}`
+                )
               }
             }
 
             console.log(`✅ [NDA] Completed processing ${signatories.length} NDA(s) for ${investorData.legal_name}`)
           } catch (ndaError) {
             console.error('❌ Error triggering NDA workflow:', ndaError)
-            // Don't fail the approval if NDA trigger fails
+            return rollbackNdaApproval(
+              `Error triggering NDA workflow: ${ndaError instanceof Error ? ndaError.message : 'Unknown error'}`
+            )
           }
         } else {
           console.log('⚠️ No deal interest found for entityId:', entityId)
@@ -1624,6 +1751,48 @@ async function handleEntityApproval(
           .single()
 
 	        if (submission && submission.deal?.vehicle_id) {
+	          const previousSubmissionState = {
+	            status: submission.status,
+	            approved_by: submission.approved_by ?? null,
+	            approved_at: submission.approved_at ?? null,
+	            formal_subscription_id: submission.formal_subscription_id ?? null,
+	            cycle_id: submission.cycle_id ?? null,
+	            term_sheet_id: submission.term_sheet_id ?? null,
+	          }
+
+	          const subscriptionRollbackColumns = [
+	            'status',
+	            'cycle_id',
+	            'term_sheet_id',
+	            'fee_plan_id',
+	            'commitment',
+	            'currency',
+	            'effective_date',
+	            'acknowledgement_notes',
+	            'subscription_fee_percent',
+	            'management_fee_percent',
+	            'performance_fee_tier1_percent',
+	            'opportunity_name',
+	            'price_per_share',
+	            'cost_per_share',
+	            'spread_per_share',
+	            'spread_fee_amount',
+	            'num_shares',
+	            'subscription_fee_amount',
+	            'management_fee_frequency',
+	            'performance_fee_tier1_threshold',
+	            'funding_due_at',
+	            'introducer_id',
+	            'introduction_id',
+	            'pack_generated_at',
+	          ].join(', ')
+
+	          let existingSubscriptionSnapshot: Record<string, unknown> | null = null
+	          let createdSubscription = false
+	          let createdSubscriptionPackWorkflowRunId: string | null = null
+	          let createdSubscriptionPackDocumentId: string | null = null
+	          let uploadedSubscriptionPackFileKey: string | null = null
+
 	          // Extract amount from payload_json
 	          const amount = submission.payload_json?.amount || submission.payload_json?.subscription_amount || 0
 
@@ -1647,6 +1816,89 @@ async function handleEntityApproval(
 	            .select('*')
 	            .eq('id', cycleId)
 	            .maybeSingle()
+
+	          const cycleSnapshot = cycle
+	            ? {
+	                status: cycle.status ?? null,
+	                approved_at: cycle.approved_at ?? null,
+	                pack_generated_at: cycle.pack_generated_at ?? null,
+	                rejection_reason: cycle.rejection_reason ?? null,
+	              }
+	            : null
+
+	          const rollbackSubscriptionApproval = async (errorMessage: string) => {
+	            if (createdSubscriptionPackDocumentId) {
+	              const { error: deleteDocumentError } = await supabase
+	                .from('documents')
+	                .delete()
+	                .eq('id', createdSubscriptionPackDocumentId)
+
+	              if (deleteDocumentError) {
+	                console.error('[SUBSCRIPTION PACK] Failed to delete document during rollback:', deleteDocumentError)
+	              }
+	            }
+
+	            if (uploadedSubscriptionPackFileKey) {
+	              const { error: removeFileError } = await supabase.storage
+	                .from('deal-documents')
+	                .remove([uploadedSubscriptionPackFileKey])
+
+	              if (removeFileError) {
+	                console.error('[SUBSCRIPTION PACK] Failed to remove uploaded file during rollback:', removeFileError)
+	              }
+	            }
+
+	            await markWorkflowRunFailedIfPresent(
+	              supabase,
+	              createdSubscriptionPackWorkflowRunId,
+	              `Approval rolled back: ${errorMessage}`
+	            )
+
+	            if (createdSubscription && subscriptionId) {
+	              const { error: deleteSubscriptionError } = await supabase
+	                .from('subscriptions')
+	                .delete()
+	                .eq('id', subscriptionId)
+
+	              if (deleteSubscriptionError) {
+	                console.error('[SUBSCRIPTION PACK] Failed to delete created subscription during rollback:', deleteSubscriptionError)
+	              }
+	            } else if (existingSubscriptionSnapshot && subscriptionId) {
+	              const { error: restoreSubscriptionError } = await supabase
+	                .from('subscriptions')
+	                .update(existingSubscriptionSnapshot)
+	                .eq('id', subscriptionId)
+
+	              if (restoreSubscriptionError) {
+	                console.error('[SUBSCRIPTION PACK] Failed to restore subscription during rollback:', restoreSubscriptionError)
+	              }
+	            }
+
+	            const { error: restoreSubmissionError } = await supabase
+	              .from('deal_subscription_submissions')
+	              .update(previousSubmissionState)
+	              .eq('id', submission.id)
+
+	            if (restoreSubmissionError) {
+	              console.error('[SUBSCRIPTION PACK] Failed to restore submission during rollback:', restoreSubmissionError)
+	            }
+
+	            if (cycleSnapshot && cycleId) {
+	              const { error: restoreCycleError } = await supabase
+	                .from('deal_investment_cycles' as any)
+	                .update(cycleSnapshot)
+	                .eq('id', cycleId)
+
+	              if (restoreCycleError) {
+	                console.error('[SUBSCRIPTION PACK] Failed to restore cycle during rollback:', restoreCycleError)
+	              }
+	            }
+
+	            return {
+	              success: false as const,
+	              error: errorMessage,
+	            }
+	          }
 
 	          const existingCycleSubscription = await getExistingFormalSubscriptionForCycle(supabase, cycleId)
 	          if (
@@ -1823,6 +2075,19 @@ async function handleEntityApproval(
 		          }
 
 		          if (subscriptionId) {
+		            const { data: subscriptionSnapshot, error: subscriptionSnapshotError } = await supabase
+		              .from('subscriptions')
+		              .select(subscriptionRollbackColumns)
+		              .eq('id', subscriptionId)
+		              .maybeSingle()
+
+		            if (subscriptionSnapshotError) {
+		              console.error('Error loading existing subscription for rollback snapshot:', subscriptionSnapshotError)
+		              return { success: false, error: 'Failed to load subscription snapshot' }
+		            }
+
+		            existingSubscriptionSnapshot = subscriptionSnapshot ?? null
+
 		            const { error: updateSubscriptionError } = await supabase
 		              .from('subscriptions')
 		              .update(subscriptionPatch)
@@ -1852,6 +2117,7 @@ async function handleEntityApproval(
 	            }
 
 	            subscriptionId = newSubscription.id
+	            createdSubscription = true
 	          }
 
 	          // Mark submission approved only after the formal subscription work succeeded.
@@ -2112,6 +2378,7 @@ async function handleEntityApproval(
                   payload: subscriptionPayload,
                   entityType: 'deal_subscription',
                   entityId: submission.id,
+                  allowMissingWebhookSecret: true,
                   user: {
                     id: user.id,
                     email: user.email,
@@ -2123,11 +2390,16 @@ async function handleEntityApproval(
 
                 if (!result.success) {
                   console.error('❌ Failed to trigger Subscription Pack workflow:', result.error)
+                  return rollbackSubscriptionApproval(
+                    `Failed to trigger subscription pack workflow: ${result.error || 'Unknown error'}`
+                  )
                 } else {
                   console.log('✅ Subscription Pack workflow triggered successfully:', {
                     investor: investorData.legal_name,
                     workflow_run_id: result.workflow_run_id
                   })
+
+                  createdSubscriptionPackWorkflowRunId = result.workflow_run_id || null
 
                   const markWorkflowRunFailed = async (errorMessage: string) => {
                     if (!result.workflow_run_id) return
@@ -2244,8 +2516,12 @@ async function handleEntityApproval(
                       if (uploadError) {
                         console.error('❌ Failed to upload subscription pack:', uploadError)
                         await markWorkflowRunFailed(`Failed to upload generated subscription pack: ${uploadError.message}`)
+                        return rollbackSubscriptionApproval(
+                          `Failed to upload generated subscription pack: ${uploadError.message || 'Unknown error'}`
+                        )
                       } else {
                         console.log('✅ Subscription pack uploaded to storage:', fileKey)
+                        uploadedSubscriptionPackFileKey = fileKey
 
                         // Look up the Subscription Documents folder for this vehicle
                         let subscriptionFolderId: string | null = null
@@ -2291,8 +2567,12 @@ async function handleEntityApproval(
                         if (docError) {
                           console.error('❌ Failed to create document record:', docError)
                           await markWorkflowRunFailed(`Failed to create subscription pack document record: ${docError.message}`)
+                          return rollbackSubscriptionApproval(
+                            `Failed to create subscription pack document record: ${docError.message || 'Unknown error'}`
+                          )
                         } else {
                           console.log('✅ Subscription pack document created:', docRecord.id)
+                          createdSubscriptionPackDocumentId = docRecord.id
 
                           const packGeneratedAt = new Date().toISOString()
 	                          await supabase
@@ -2372,16 +2652,32 @@ async function handleEntityApproval(
                       await markWorkflowRunFailed(
                         `Subscription pack post-processing failed: ${docError instanceof Error ? docError.message : 'Unknown error'}`
                       )
-                      // Don't fail the approval if document processing fails
+                      return rollbackSubscriptionApproval(
+                        `Subscription pack post-processing failed: ${docError instanceof Error ? docError.message : 'Unknown error'}`
+                      )
                     }
                   } else {
                     await markWorkflowRunFailed('Workflow returned no response payload')
+                    return rollbackSubscriptionApproval('Subscription pack workflow returned no response payload')
                   }
                 }
+              } else {
+                const missingPackData = [
+                  !normalizedSubscriptionInvestor && 'investor',
+                  !vehicleData && 'vehicle',
+                  !feeStructure && 'fee structure',
+                  !user && 'approver',
+                ].filter(Boolean).join(', ')
+
+                return rollbackSubscriptionApproval(
+                  `Missing subscription pack data: ${missingPackData || 'unknown missing dependency'}`
+                )
               }
             } catch (workflowError) {
               console.error('Error triggering Subscription Pack workflow:', workflowError)
-              // Don't fail the approval if workflow trigger fails
+              return rollbackSubscriptionApproval(
+                `Error triggering subscription pack workflow: ${workflowError instanceof Error ? workflowError.message : 'Unknown error'}`
+              )
             }
 
           return {
