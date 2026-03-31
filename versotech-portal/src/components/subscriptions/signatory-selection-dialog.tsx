@@ -26,6 +26,13 @@ interface Signatory {
   is_primary: boolean
 }
 
+interface SignatoryValidationIssue {
+  code: string
+  signer_id: string | null
+  signer_name: string
+  message: string
+}
+
 interface Arranger {
   id: string
   company_name: string
@@ -63,6 +70,7 @@ export function SignatorySelectionDialog({
   const [arranger, setArranger] = useState<Arranger | null>(null)
   const [countersignerType, setCountersignerType] = useState<'ceo' | 'arranger'>('ceo')
   const [documentCountersigner, setDocumentCountersigner] = useState<DocumentCountersigner | null>(null)
+  const [validationIssues, setValidationIssues] = useState<SignatoryValidationIssue[]>([])
 
   useEffect(() => {
     if (open) {
@@ -84,6 +92,7 @@ export function SignatorySelectionDialog({
         throw new Error('Failed to fetch signatories')
       }
       const data = await signatoriesResponse.json()
+      const issues = Array.isArray(data.validation_errors) ? data.validation_errors : []
 
       // Get all designated signatories (is_signatory = true or is_primary for individuals)
       const allSignatories = data.signatories || []
@@ -92,6 +101,7 @@ export function SignatorySelectionDialog({
       )
 
       setSignatories(designatedSignatories)
+      setValidationIssues(issues)
       setInvestorType(data.investor_type || 'individual')
 
       // Check if deal has an arranger - auto-select arranger as countersigner
@@ -126,6 +136,11 @@ export function SignatorySelectionDialog({
   const handleConfirm = async () => {
     if (signatories.length === 0) {
       setError('No signatories found for this investor')
+      return
+    }
+
+    if (validationIssues.length > 0) {
+      setError(validationIssues[0]?.message || 'One or more signatories are missing a valid email')
       return
     }
 
@@ -175,6 +190,13 @@ export function SignatorySelectionDialog({
               <AlertCircle className="h-4 w-4 text-amber-500" />
               <AlertDescription className="text-amber-700 dark:text-amber-200">
                 No designated signatories found for this investor. Please add signatories to the investor entity first.
+              </AlertDescription>
+            </Alert>
+          ) : validationIssues.length > 0 ? (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {validationIssues[0]?.message || 'One or more signatories are missing a valid email.'}
               </AlertDescription>
             </Alert>
           ) : (
@@ -293,7 +315,7 @@ export function SignatorySelectionDialog({
           </Button>
           <Button
             onClick={handleConfirm}
-            disabled={loading || sending || signatories.length === 0}
+            disabled={loading || sending || signatories.length === 0 || validationIssues.length > 0}
             className="gap-2 bg-emerald-500 hover:bg-emerald-600"
           >
             {sending ? (

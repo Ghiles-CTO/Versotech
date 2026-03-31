@@ -18,6 +18,13 @@ const SIGNATURES_BUCKET = process.env.SIGNATURES_BUCKET || 'signatures'
 const DEAL_DOCUMENTS_BUCKET = 'deal-documents'
 const INVESTOR_SIGNER_ROLES = new Set(['investor', 'authorized_signatory'])
 
+type SubscriptionWorkflowConfigInspection = {
+  hasInternalFirstMode: boolean
+  expectedInvestorSignerCount: number
+  hasInvalidInvestorSigners: boolean
+  config: SubscriptionSignatureWorkflowConfig | null
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
@@ -74,6 +81,33 @@ export function parseSubscriptionSignatureWorkflowConfig(
     internal_roles: internalRoles.length > 0 ? internalRoles : ['admin', 'arranger'],
     investor_signers: investorSigners,
     investor_requests_released_at: readString(value.investor_requests_released_at),
+  }
+}
+
+export function inspectSubscriptionSignatureWorkflowConfig(
+  value: unknown
+): SubscriptionWorkflowConfigInspection {
+  if (!isRecord(value) || value.mode !== 'internal_first') {
+    return {
+      hasInternalFirstMode: false,
+      expectedInvestorSignerCount: 0,
+      hasInvalidInvestorSigners: false,
+      config: null,
+    }
+  }
+
+  const rawInvestorSigners = Array.isArray(value.investor_signers) ? value.investor_signers : []
+  const validInvestorSigners = rawInvestorSigners
+    .map(parseInvestorSignerSnapshot)
+    .filter((signer): signer is StagedInvestorSignerSnapshot => signer !== null)
+
+  const config = parseSubscriptionSignatureWorkflowConfig(value)
+
+  return {
+    hasInternalFirstMode: true,
+    expectedInvestorSignerCount: rawInvestorSigners.length,
+    hasInvalidInvestorSigners: rawInvestorSigners.length !== validInvestorSigners.length || validInvestorSigners.length === 0,
+    config,
   }
 }
 
@@ -144,11 +178,14 @@ async function resolveSubscriptionReleaseSourceUrl(
     return signedUrl
   }
 
-  if (!documentFileKey) {
-    return null
+  if (documentFileKey) {
+    console.error('❌ [STAGED SIGNATURE] Missing signed internal subscription PDF for investor release', {
+      documentId,
+      documentFileKey,
+    })
   }
 
-  return createSignedStorageUrl(supabase, DEAL_DOCUMENTS_BUCKET, documentFileKey)
+  return null
 }
 
 async function resolveNdaReleaseSourceUrl(
@@ -281,10 +318,14 @@ async function maybeReleaseDeferredSubscriptionInvestorRequests(
     return
   }
 
-  const config = parseSubscriptionSignatureWorkflowConfig(document.signature_workflow_config)
-  if (!config) {
+  const inspection = inspectSubscriptionSignatureWorkflowConfig(document.signature_workflow_config)
+  if (!inspection.hasInternalFirstMode) {
     return
   }
+  if (!inspection.config || inspection.hasInvalidInvestorSigners) {
+    throw new Error('Subscription staged signer configuration is invalid. Missing investor signer email or signature position.')
+  }
+  const config = inspection.config
 
   const { data: existingRequests, error: requestsError } = await supabase
     .from('signature_requests')
@@ -466,16 +507,20 @@ export async function shouldDelayFinalSignatureCompletion(
       return false
     }
 
-    const config = parseSubscriptionSignatureWorkflowConfig(document.signature_workflow_config)
-    if (!config) {
+    const inspection = inspectSubscriptionSignatureWorkflowConfig(document.signature_workflow_config)
+    if (!inspection.hasInternalFirstMode) {
       return false
     }
+    if (!inspection.config || inspection.hasInvalidInvestorSigners) {
+      return true
+    }
+    const config = inspection.config
 
     const existingInvestorCount = allSignatureRequests.filter((request) =>
       INVESTOR_SIGNER_ROLES.has(request.signer_role)
     ).length
 
-    return existingInvestorCount < config.investor_signers.length
+    return existingInvestorCount < inspection.expectedInvestorSignerCount || existingInvestorCount < config.investor_signers.length
   }
 
   if (signatureRequest.document_type === 'nda' && signatureRequest.workflow_run_id) {

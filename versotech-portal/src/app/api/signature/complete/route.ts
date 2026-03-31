@@ -4,7 +4,7 @@ import { resolveAgentIdForTask } from '@/lib/agents'
 import { buildExecutedDocumentName, formatCounterpartyName } from '@/lib/documents/executed-document-name'
 import { createSignatureRequest } from '@/lib/signature/client'
 import { maybeReleaseIntroducerAgreementCounterpartyRequests } from '@/lib/signature/introducer-agreement-flow'
-import { maybeReleaseDeferredInvestorRequests } from '@/lib/signature/staged-release'
+import { inspectSubscriptionSignatureWorkflowConfig, maybeReleaseDeferredInvestorRequests } from '@/lib/signature/staged-release'
 import { getIntroducerCommercialEligibility } from '@/lib/introducers/commercial-eligibility'
 import { updateDealInvestmentCycleProgress } from '@/lib/deals/investment-cycles'
 import crypto from 'crypto'
@@ -782,6 +782,29 @@ async function checkAndPublishSubscriptionDocument(
   if (!documentId) {
     console.warn('⚠️ [PUBLISH CHECK] No document_id found on signature requests')
     return
+  }
+
+  const { data: documentState, error: documentStateError } = await supabase
+    .from('documents')
+    .select('signature_workflow_config')
+    .eq('id', documentId)
+    .maybeSingle()
+
+  if (documentStateError) {
+    console.error('❌ [PUBLISH CHECK] Failed to load document staged config:', documentStateError)
+    return
+  }
+
+  const inspection = inspectSubscriptionSignatureWorkflowConfig(documentState?.signature_workflow_config)
+  if (inspection.hasInternalFirstMode) {
+    const existingInvestorCount = allSignatures.filter((signature) =>
+      signature.signer_role === 'investor' || signature.signer_role === 'authorized_signatory'
+    ).length
+
+    if (inspection.hasInvalidInvestorSigners || existingInvestorCount < inspection.expectedInvestorSignerCount) {
+      console.warn('⛔ [PUBLISH CHECK] Blocking publish because staged investor signer expectations were not satisfied')
+      return
+    }
   }
 
   // Update the document to be published

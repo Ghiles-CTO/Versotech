@@ -405,6 +405,79 @@ describe('staged-release', () => {
     expect(shouldDelay).toBe(true)
   })
 
+  it('fails closed when the staged subscription config is malformed', async () => {
+    const { supabase } = createSupabaseMock({
+      documents: [
+        {
+          id: 'doc-1',
+          signature_workflow_config: {
+            mode: 'internal_first',
+            internal_roles: ['admin', 'arranger'],
+            investor_signers: [
+              {
+                signer_name: 'Investor Signer',
+                signer_email: null,
+                signature_position: 'party_a',
+              },
+            ],
+            investor_requests_released_at: null,
+          },
+        },
+      ],
+      signature_requests: [
+        {
+          id: 'sig-admin',
+          document_id: 'doc-1',
+          status: 'signed',
+          signer_role: 'admin',
+          signature_position: 'party_b',
+          signed_pdf_path: 'signed/admin.pdf',
+        },
+        {
+          id: 'sig-arranger',
+          document_id: 'doc-1',
+          status: 'signed',
+          signer_role: 'arranger',
+          signature_position: 'party_c',
+          signed_pdf_path: 'signed/arranger.pdf',
+        },
+      ],
+    })
+
+    const createSignatureRequest = vi.fn(async () => ({ success: true, signature_request_id: 'new-investor-sig' }))
+
+    await expect(
+      maybeReleaseDeferredInvestorRequests(
+        buildSignatureRequest({
+          document_type: 'subscription',
+          signer_role: 'arranger',
+          document_id: 'doc-1',
+          subscription_id: 'sub-1',
+          deal_id: 'deal-1',
+          signed_pdf_path: 'signed/arranger.pdf',
+        }),
+        supabase as any,
+        createSignatureRequest
+      )
+    ).rejects.toThrow('Subscription staged signer configuration is invalid')
+
+    const shouldDelay = await shouldDelayFinalSignatureCompletion(
+      buildSignatureRequest({
+        document_type: 'subscription',
+        document_id: 'doc-1',
+        signer_role: 'arranger',
+      }),
+      [
+        { signer_role: 'admin', signature_position: 'party_b' },
+        { signer_role: 'arranger', signature_position: 'party_c' },
+      ],
+      supabase as any
+    )
+
+    expect(createSignatureRequest).not.toHaveBeenCalled()
+    expect(shouldDelay).toBe(true)
+  })
+
   it('does not fall back to the unsigned NDA source when the signed copy cannot be loaded', async () => {
     const { supabase } = createSupabaseMock(
       {

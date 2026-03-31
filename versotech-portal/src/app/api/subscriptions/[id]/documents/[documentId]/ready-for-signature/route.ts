@@ -6,6 +6,7 @@ import { convertDocxToPdf } from '@/lib/gotenberg/convert'
 import { applySubscriptionPackPageNumbers } from '@/lib/subscription/page-numbering'
 import type { SignaturePosition, SubscriptionSignatureWorkflowConfig } from '@/lib/signature/types'
 import { updateDealInvestmentCycleProgress } from '@/lib/deals/investment-cycles'
+import { resolveSubscriptionSigners } from '@/lib/subscriptions/signatory-resolution'
 
 // Schema for multi-signatory support with optional arranger countersigning
 const requestSchema = z.object({
@@ -318,72 +319,28 @@ export async function POST(
 
   // Determine signatories
   console.log('🔍 [READY-FOR-SIGNATURE] Determining signatories...')
-  type Signatory = { id: string; full_name: string; email: string }
-  let signatories: Signatory[] = []
+  const resolvedSigners = await resolveSubscriptionSigners({
+    supabase: serviceSupabase,
+    investorId: subscription.investor_id,
+    investorType: subscription.investor?.type,
+    investorName: subscription.investor?.legal_name || subscription.investor?.display_name || 'Investor',
+    investorEmail: subscription.investor?.email,
+    selectedMemberIds: body.signatory_member_ids || undefined,
+  })
 
-  if (body.signatory_member_ids && body.signatory_member_ids.length > 0) {
-    // Multi-signatory mode: fetch selected members
-    const { data: members, error: membersError } = await serviceSupabase
-      .from('investor_members')
-      .select('id, full_name, email')
-      .in('id', body.signatory_member_ids)
-      .eq('investor_id', subscription.investor_id)
-      .eq('is_active', true)
-
-    if (membersError || !members || members.length === 0) {
-      return NextResponse.json({
-        error: 'Selected signatories not found',
-        details: 'Could not find the specified signatory members'
-      }, { status: 400 })
-    }
-
-    const sortOrder = new Map(body.signatory_member_ids.map((memberId, index) => [memberId, index]))
-    signatories = [...members]
-      .sort((left, right) => (sortOrder.get(left.id) ?? 0) - (sortOrder.get(right.id) ?? 0))
-      .map(m => ({
-      id: m.id,
-      full_name: m.full_name,
-      email: m.email
-      }))
-  } else {
-    // Check if investor is entity type - auto-fetch signatories from investor_members
-    const isEntityInvestor = subscription.investor.type === 'entity' ||
-                             subscription.investor.type === 'institutional'
-
-    if (isEntityInvestor) {
-      // Fetch authorized signatories for entity investor
-      const { data: entityMembers } = await serviceSupabase
-        .from('investor_members')
-        .select('id, full_name, email')
-        .eq('investor_id', subscription.investor_id)
-        .eq('is_signatory', true)
-        .eq('is_active', true)
-
-      if (entityMembers && entityMembers.length > 0) {
-        signatories = entityMembers.map(m => ({
-          id: m.id,
-          full_name: m.full_name,
-          email: m.email
-        }))
-        console.log(`👥 [READY-FOR-SIGNATURE] Auto-fetched ${signatories.length} signatories for entity investor`)
-      } else {
-        // Entity but no signatories marked - fall back to investor name
-        console.warn('[READY-FOR-SIGNATURE] Entity investor has no signatories marked, using investor name')
-        signatories = [{
-          id: 'investor_primary',
-          full_name: subscription.investor.legal_name || subscription.investor.display_name,
-          email: subscription.investor.email
-        }]
-      }
-    } else {
-      // Individual investor: use investor's primary email
-      signatories = [{
-        id: 'investor_primary',
-        full_name: subscription.investor.legal_name || subscription.investor.display_name,
-        email: subscription.investor.email
-      }]
-    }
+  if (resolvedSigners.issues.length > 0 || resolvedSigners.signers.length === 0) {
+    return NextResponse.json({
+      error: 'Subscription pack cannot be sent for signature',
+      details: resolvedSigners.issues[0]?.message || 'No valid signatories could be resolved for this investor.',
+      missing_signers: resolvedSigners.issues,
+    }, { status: 400 })
   }
+
+  const signatories = resolvedSigners.signers.map((signer) => ({
+    id: signer.id,
+    full_name: signer.full_name,
+    email: signer.email,
+  }))
 
   // Create signature requests - COMPANY SIGNS FIRST, then investors.
   // This ensures the company (arranger/CEO) approves the document before investors sign.

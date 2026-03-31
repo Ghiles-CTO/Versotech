@@ -19,6 +19,7 @@ import { assertSubscriptionPackPdfIsA4 } from '@/lib/subscription-pack/pdf-forma
 import { applySubscriptionPackPageNumbers } from '@/lib/subscription/page-numbering'
 import { getEntityPrimaryAndAdminRecipients } from '@/lib/notifications/entity-recipient-groups'
 import { getRequesterApprovalNotificationCopy } from '@/lib/approvals/requester-notifications'
+import { resolveSubscriptionSigners } from '@/lib/subscriptions/signatory-resolution'
 
 const ACCOUNT_ACTIVATION_ENTITY_TABLES = [
   'investors',
@@ -2193,46 +2194,26 @@ async function handleEntityApproval(
                 counterpartyEntity = entityData
               }
 
-              // Build signatories array for multi-signatory subscription packs
-              // Each signatory includes a 'number' field for template display (1, 2, 3...)
-              let signatories: { name: string; title: string; number: number }[] = []
-              // Check BOTH: submission type OR investor's actual type (entity/institutional)
-              const isEntityInvestor = submission.subscription_type === 'entity' ||
-                                       normalizedSubscriptionInvestor?.type === 'entity' ||
-                                       normalizedSubscriptionInvestor?.type === 'institutional'
-              if (isEntityInvestor && submission.investor_id) {
-                // For entity investors: get authorized signatories from investor_members
-                const { data: members } = await supabase
-                  .from('investor_members')
-                  .select('id, full_name, email, role_title')
-                  .eq('investor_id', submission.investor_id)
-                  .eq('is_signatory', true)
-                  .eq('is_active', true)
+              const resolvedSubscriptionSigners = await resolveSubscriptionSigners({
+                supabase,
+                investorId: submission.investor_id,
+                investorType: normalizedSubscriptionInvestor?.type,
+                investorName: normalizedSubscriptionInvestor?.legal_name || normalizedSubscriptionInvestor?.display_name || '',
+                investorEmail: normalizedSubscriptionInvestor?.email || null,
+              })
 
-                if (members && members.length > 0) {
-                  signatories = members.map((m: { full_name: string | null; role_title: string | null }, index: number) => ({
-                    name: m.full_name || '',
-                    title: m.role_title || 'Authorized Signatory',
-                    number: index + 1
-                  }))
-                  console.log(`👥 [SUBSCRIPTION PACK] Found ${signatories.length} authorized signatories for entity`)
-                } else {
-                  // Fallback: use entity representative if no signatories marked
-                  signatories = [{
-                    name: counterpartyEntity?.representative_name || normalizedSubscriptionInvestor?.legal_name || '',
-                    title: counterpartyEntity?.representative_title || 'Authorized Representative',
-                    number: 1
-                  }]
-                  console.warn('[SUBSCRIPTION PACK] No signatories marked, using representative fallback')
-                }
-	              } else {
-	                // For individual investors: single signatory
-	                signatories = [{
-	                  name: normalizedSubscriptionInvestor?.legal_name || '',
-	                  title: '',
-	                  number: 1
-	                }]
-	              }
+              if (resolvedSubscriptionSigners.issues.length > 0 || resolvedSubscriptionSigners.signers.length === 0) {
+                return rollbackSubscriptionApproval(
+                  resolvedSubscriptionSigners.issues[0]?.message || 'Subscription pack signer data is incomplete.'
+                )
+              }
+
+              // Each signatory includes a 'number' field for template display (1, 2, 3...)
+              const signatories = resolvedSubscriptionSigners.signers.map((signer, index) => ({
+                name: signer.full_name,
+                title: signer.role_title || (signer.is_primary ? 'Primary Contact' : 'Authorized Signatory'),
+                number: index + 1,
+              }))
 
               // Generate pre-rendered HTML for signatories (n8n doesn't support Handlebars {{#each}})
               // ANCHOR ID CONVENTION: First subscriber is 'party_a', subsequent are 'party_a_2', 'party_a_3', etc.

@@ -21,6 +21,7 @@ import { calculateSubscriptionFeeEvents, createFeeEvents } from '../fees/subscri
 import { createServiceClient } from '@/lib/supabase/server'
 import type { SignaturePlacementRecord } from './types'
 import {
+  inspectSubscriptionSignatureWorkflowConfig,
   maybeReleaseDeferredInvestorRequests,
   shouldDelayFinalSignatureCompletion,
 } from './staged-release'
@@ -1638,12 +1639,29 @@ export async function submitSignature(
       // Get current signature status for this document
       const { data: docSignatures } = await supabase
         .from('signature_requests')
-        .select('id, status')
+        .select('id, status, signer_role')
         .eq('document_id', signatureRequest.document_id)
 
       const totalSigs = docSignatures?.length || 1
       const signedSigs = docSignatures?.filter(s => s.status === 'signed').length || 1
-      const allComplete = totalSigs === signedSigs
+      let allComplete = totalSigs === signedSigs
+
+      const { data: documentState } = await supabase
+        .from('documents')
+        .select('signature_workflow_config')
+        .eq('id', signatureRequest.document_id)
+        .maybeSingle()
+
+      const inspection = inspectSubscriptionSignatureWorkflowConfig(documentState?.signature_workflow_config)
+      if (inspection.hasInternalFirstMode) {
+        const existingInvestorCount = docSignatures?.filter((signature) =>
+          signature.signer_role === 'investor' || signature.signer_role === 'authorized_signatory'
+        ).length || 0
+
+        allComplete = !inspection.hasInvalidInvestorSigners &&
+          existingInvestorCount >= inspection.expectedInvestorSignerCount &&
+          totalSigs === signedSigs
+      }
 
       // CRITICAL: Copy signed PDF from 'signatures' bucket to 'deal-documents' bucket
       // The document download API expects files in 'deal-documents', not 'signatures'

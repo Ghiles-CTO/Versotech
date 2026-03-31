@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { resolveSubscriptionSigners } from '@/lib/subscriptions/signatory-resolution'
 
 /**
  * GET /api/subscriptions/[id]/signatories
@@ -95,70 +96,34 @@ export async function GET(
     type: string | null
   } | null
 
-  // Check if this is an entity-type investor
-  const isEntityInvestor = investor?.type === 'entity' || investor?.type === 'institutional'
-
-  // Always check for investor_members with is_signatory, even for 'individual' type
-  // (handles cases where type is wrong or LLC/Corp is marked as individual)
-  const { data: members, error: membersError } = await serviceSupabase
-    .from('investor_members')
-    .select('id, full_name, email, role, role_title, is_signatory')
-    .eq('investor_id', subscription.investor_id)
-    .eq('is_active', true)
-    .order('is_signatory', { ascending: false })
-    .order('full_name', { ascending: true })
-
-  if (membersError) {
-    console.error('Error fetching signatories:', membersError)
+  let resolved
+  try {
+    resolved = await resolveSubscriptionSigners({
+      supabase: serviceSupabase,
+      investorId: subscription.investor_id,
+      investorType: investor?.type,
+      investorName: investor?.legal_name || investor?.display_name || 'Investor',
+      investorEmail: investor?.email,
+    })
+  } catch (error) {
+    console.error('Error fetching signatories:', error)
     return NextResponse.json({ error: 'Failed to fetch signatories' }, { status: 500 })
   }
 
-  // Filter to only authorized signatories
-  const authorizedSignatories = members?.filter(m => m.is_signatory) || []
-  const hasDesignatedSignatories = authorizedSignatories.length > 0
-
-  // Build response with signatories
-  let signatories: Array<{
-    id: string
-    full_name: string
-    email: string
-    role: string
-    role_title?: string
-    is_signatory: boolean
-    is_primary: boolean
-  }> = []
-
-  if (hasDesignatedSignatories) {
-    // Use designated signatories from investor_members
-    signatories = authorizedSignatories.map(m => ({
-      id: m.id,
-      full_name: m.full_name,
-      email: m.email || '',
-      role: m.role,
-      role_title: m.role_title || undefined,
-      is_signatory: m.is_signatory,
-      is_primary: false
-    }))
-  } else if (!isEntityInvestor || (members?.length === 0)) {
-    // No members or individual investor - use investor primary email
-    if (investor?.email) {
-      signatories = [{
-        id: 'investor_primary',
-        full_name: investor.legal_name || investor.display_name || 'Investor',
-        email: investor.email,
-        role: 'primary',
-        role_title: 'Primary Contact',
-        is_signatory: true,
-        is_primary: true
-      }]
-    }
-  }
-
   return NextResponse.json({
-    signatories,
+    signatories: resolved.signers.map((signer) => ({
+      id: signer.id,
+      full_name: signer.full_name,
+      email: signer.email,
+      role: signer.role,
+      role_title: signer.role_title,
+      is_signatory: signer.is_signatory,
+      is_primary: signer.is_primary,
+    })),
     investor_type: investor?.type,
-    requires_multi_signatory: hasDesignatedSignatories && authorizedSignatories.length > 1,
-    has_designated_signatories: hasDesignatedSignatories,
-    arranger
+    requires_multi_signatory: resolved.requires_multi_signatory,
+    has_designated_signatories: resolved.has_designated_signatories,
+    arranger,
+    validation_errors: resolved.issues,
   })
 }

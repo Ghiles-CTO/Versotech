@@ -202,6 +202,21 @@ export async function syncMemberSignatoryFromUserLink(params: {
   const config = SYNC_CONFIG[entityType]
   const desiredSignatory = Boolean(canSign)
   const nowIso = new Date().toISOString()
+  let resolvedUserEmail = normalizeEmail(params.userEmail)
+
+  if (!resolvedUserEmail) {
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (profileError) {
+      throw profileError
+    }
+
+    resolvedUserEmail = normalizeEmail(profile?.email)
+  }
 
   const member = await resolveMemberForUser({
     supabase,
@@ -226,6 +241,10 @@ export async function syncMemberSignatoryFromUserLink(params: {
 
   if (!member.linked_user_id) {
     updateData.linked_user_id = userId
+  }
+
+  if (!normalizeEmail(member.email) && resolvedUserEmail) {
+    updateData.email = resolvedUserEmail
   }
 
   const { error: memberUpdateError } = await supabase
