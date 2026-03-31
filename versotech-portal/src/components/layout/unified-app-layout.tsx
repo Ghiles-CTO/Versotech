@@ -107,7 +107,7 @@ function ThemeToggle() {
 // on the html element. This prevents flash during SSR/hydration because the server-rendered
 // HTML has static class names, and the actual colors come from CSS cascade.
 function UnifiedAppLayoutInner({ children, profile }: UnifiedAppLayoutProps) {
-  const { isLoading, personas } = usePersona()
+  const { activePersona, isLoading, personas } = usePersona()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { theme } = useTheme()
 
@@ -135,9 +135,9 @@ function UnifiedAppLayoutInner({ children, profile }: UnifiedAppLayoutProps) {
     }).catch(() => null)
   }, [isLoading, personas, profile.id])
 
-  const hasOnboardingPersona = !isLoading && (personas || []).some((p) =>
-    p?.persona_type === 'investor' || p?.persona_type === 'introducer'
-  )
+  const hasOnboardingPersona =
+    !isLoading &&
+    (activePersona?.persona_type === 'investor' || activePersona?.persona_type === 'introducer')
 
   if (isLoading) {
     // Use CSS classes that respond to .staff-dark - prevents SSR flash

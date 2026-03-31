@@ -293,7 +293,7 @@ function resolveIndividualAction(
 export function OnboardingActionModal() {
   const router = useRouter()
   const { theme } = useTheme()
-  const { activePersona, personas, isLoading: personaLoading } = usePersona()
+  const { activePersona, isLoading: personaLoading } = usePersona()
   const isDark = theme === 'staff-dark'
   const [open, setOpen] = useState(false)
   const [state, setState] = useState<DashboardOnboardingState | null>(null)
@@ -301,11 +301,9 @@ export function OnboardingActionModal() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const onboardingPersona =
-    (activePersona?.persona_type === 'investor' || activePersona?.persona_type === 'introducer')
+    activePersona?.persona_type === 'investor' || activePersona?.persona_type === 'introducer'
       ? activePersona
-      : (personas || []).find((persona) =>
-          persona?.persona_type === 'investor' || persona?.persona_type === 'introducer'
-        ) || null
+      : null
 
   useEffect(() => {
     if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(SESSION_KEY) === '1') {
