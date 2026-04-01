@@ -623,6 +623,8 @@ export async function sendSignatureRequestEmail(params: {
   documentType: string
   signingUrl: string
   expiresAt: string
+  seriesName?: string
+  investmentCompany?: string
 }): Promise<EmailResult> {
   const expiryDate = new Date(params.expiresAt)
   const daysUntilExpiry = Math.ceil((expiryDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000))
@@ -637,11 +639,28 @@ export async function sendSignatureRequestEmail(params: {
   }
 
   const documentLabel = documentTypeLabels[params.documentType] || 'Document'
+  const isSubscription = params.documentType === 'subscription'
+  const subscriptionContextRows = [
+    params.seriesName
+      ? `<p style="margin: 0 0 ${params.investmentCompany ? '12px' : '0'} 0;"><strong>Series:</strong> ${params.seriesName}</p>`
+      : '',
+    params.investmentCompany
+      ? `<p style="margin: 0;"><strong>Investment Company:</strong> ${params.investmentCompany}</p>`
+      : '',
+  ].filter(Boolean).join('')
+  const subscriptionContextHtml = isSubscription && subscriptionContextRows
+    ? `
+    <div class="credentials-box">
+      ${subscriptionContextRows}
+    </div>
+  `
+    : ''
 
   const body = `
     <div class="content">
       <p>Hello ${params.signerName},</p>
       <p>A ${documentLabel} is ready for your electronic signature in the Deal section of VERSOTECH. This signature link expires in ${daysUntilExpiry} days (${formattedDate}). To review and sign the document, click the button below:</p>
+      ${subscriptionContextHtml}
     </div>
 
     <div class="button-container">

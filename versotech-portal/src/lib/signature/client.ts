@@ -343,6 +343,7 @@ export async function createSignatureRequest(
       currency?: string
       deal_name?: string
       company_name?: string
+      series_name?: string
       investor_name?: string
     } = {}
 
@@ -354,7 +355,7 @@ export async function createSignatureRequest(
       // Fetch deal info directly for task title/description
       const { data: deal } = await supabase
         .from('deals')
-        .select('id, name, company_name')
+        .select('id, name, company_name, vehicle_id')
         .eq('id', params.deal_id)
         .single()
 
@@ -362,6 +363,20 @@ export async function createSignatureRequest(
         subscriptionDetails.deal_name = deal.name || deal.company_name
         subscriptionDetails.company_name = deal.company_name
         console.log('📋 [SIGNATURE] Deal info for task:', { deal_name: subscriptionDetails.deal_name })
+
+        if (deal.vehicle_id) {
+          const { data: vehicle } = await supabase
+            .from('vehicles')
+            .select('name, investment_name, series_number')
+            .eq('id', deal.vehicle_id)
+            .maybeSingle()
+
+          if (vehicle) {
+            subscriptionDetails.series_name = vehicle.name
+              || vehicle.investment_name
+              || (vehicle.series_number ? `Series ${vehicle.series_number}` : undefined)
+          }
+        }
       }
     }
 
@@ -373,12 +388,20 @@ export async function createSignatureRequest(
         .from('subscriptions')
         .select(`
           deal_id,
+          vehicle_id,
           commitment,
           currency,
           deal:deals!subscriptions_deal_id_fkey (
             id,
             name,
             company_name
+          ),
+          vehicle:vehicles!subscriptions_vehicle_id_fkey (
+            id,
+            name,
+            investment_name,
+            series_number,
+            series_short_title
           ),
           investor:investors!subscriptions_investor_id_fkey (
             id,
@@ -398,9 +421,8 @@ export async function createSignatureRequest(
 
         // Store details for task creation
         // Note: Supabase returns relations as arrays in types, but single() makes them objects
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const deal = subscription.deal as any
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const vehicle = subscription.vehicle as any
         const investor = subscription.investor as any
 
         // Merge with any existing deal info (from direct deal_id lookup)
@@ -410,6 +432,11 @@ export async function createSignatureRequest(
           currency: subscription.currency || 'USD',
           deal_name: subscriptionDetails.deal_name || deal?.name || deal?.company_name,
           company_name: subscriptionDetails.company_name || deal?.company_name,
+          series_name: subscriptionDetails.series_name
+            || vehicle?.name
+            || vehicle?.investment_name
+            || (vehicle?.series_number ? `Series ${vehicle.series_number}` : undefined)
+            || (vehicle?.series_short_title ? `Series ${vehicle.series_short_title}` : undefined),
           investor_name: investor?.display_name || investor?.legal_name
         }
         console.log('📋 [SIGNATURE] Subscription details for task:', subscriptionDetails)
@@ -551,7 +578,9 @@ export async function createSignatureRequest(
       signerName: signer_name,
       documentType: document_type,
       signingUrl: signing_url,
-      expiresAt: token_expires_at.toISOString()
+      expiresAt: token_expires_at.toISOString(),
+      seriesName: subscriptionDetails.series_name,
+      investmentCompany: subscriptionDetails.company_name || subscriptionDetails.deal_name
     })
 
     if (emailResult.success) {
