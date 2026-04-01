@@ -87,7 +87,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Arrangers', href: '/versotech_main/arrangers', icon: Briefcase, description: 'Regulated entities' },
     // Docs & Legal
     { name: 'Documents', href: '/versotech_main/documents', icon: FileText, description: 'Document center' },
-    { name: 'VersoSign', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
+    { name: 'VERSOSIGN', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
     { name: 'Introducer Agreements', href: '/versotech_main/introducer-agreements', icon: FileText, description: 'Fee agreements' },
     // Finance
     { name: 'Fees', href: '/versotech_main/fees', icon: Calculator, description: 'Billing' },
@@ -114,7 +114,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Subscriptions', href: '/versotech_main/subscriptions', icon: FileText, description: 'Subscription tracking' },
     { name: 'Requests', href: '/versotech_main/requests', icon: ClipboardList, description: 'Service requests' },
     { name: 'Documents', href: '/versotech_main/documents', icon: FileText, description: 'Document center' },
-    { name: 'VersoSign', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
+    { name: 'VERSOSIGN', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
     { name: 'Introducers', href: '/versotech_main/introducers', icon: HandHeart, description: 'Partners' },
     { name: 'Introducer Agreements', href: '/versotech_main/introducer-agreements', icon: FileText, description: 'Fee agreements' },
     { name: 'Arrangers', href: '/versotech_main/arrangers', icon: Briefcase, description: 'Regulated entities' },
@@ -146,7 +146,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'My Introducers', href: '/versotech_main/my-introducers', icon: UserPlus, description: 'Introducer network' },
     { name: 'My Commercial Partners', href: '/versotech_main/my-commercial-partners', icon: Building2, description: 'CP network' },
     { name: 'My Lawyers', href: '/versotech_main/my-lawyers', icon: Scale, description: 'Legal counsel' },
-    { name: 'VERSOSign', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
+    { name: 'VERSOSIGN', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
     { name: 'Profile', href: '/versotech_main/arranger-profile', icon: UserCheck, description: 'Entity & KYC status' },
   ],
 
@@ -157,7 +157,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Introductions', href: '/versotech_main/introductions', icon: UserPlus, description: 'My introductions' },
     { name: 'Agreements', href: '/versotech_main/introducer-agreements', icon: FileText, description: 'Fee agreements' },
     { name: 'My Commissions', href: '/versotech_main/my-commissions', icon: Calculator, description: 'Commission tracking & invoices' },
-    { name: 'VersoSign', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
+    { name: 'VERSOSIGN', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
     { name: 'Profile', href: '/versotech_main/introducer-profile', icon: UserCheck, description: 'My profile' },
   ],
 
@@ -169,7 +169,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Transactions', href: '/versotech_main/partner-transactions', icon: ArrowRightLeft, description: 'My referred investors' },
     { name: 'My Commissions', href: '/versotech_main/my-commissions', icon: Calculator, description: 'Revenue & invoicing' },
     { name: 'Shared Deals', href: '/versotech_main/shared-transactions', icon: Share2, description: 'Co-referred deals' },
-    { name: 'VersoSign', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
+    { name: 'VERSOSIGN', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
     { name: 'Profile', href: '/versotech_main/partner-profile', icon: UserCheck, description: 'Entity & members' },
   ],
 
@@ -193,7 +193,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Assigned Deals', href: '/versotech_main/assigned-deals', icon: Briefcase, description: 'My deals' },
     { name: 'Escrow', href: '/versotech_main/escrow', icon: Lock, description: 'Escrow management' },
     { name: 'Subscription Packs', href: '/versotech_main/subscription-packs', icon: FileText, description: 'Pack review' },
-    { name: 'VersoSign', href: '/versotech_main/versosign', icon: PenTool, description: 'E-signatures' },
+    { name: 'VERSOSIGN', href: '/versotech_main/versosign', icon: PenTool, description: 'E-signatures' },
     { name: 'Reconciliation', href: '/versotech_main/lawyer-reconciliation', icon: Calculator, description: 'Financials' },
     { name: 'Profile', href: '/versotech_main/lawyer-profile', icon: FileSignature, description: 'Signature & settings' },
   ],

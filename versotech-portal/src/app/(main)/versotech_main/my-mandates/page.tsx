@@ -595,7 +595,7 @@ export default function MyMandatesPage() {
                 <Button variant="outline" asChild>
                   <Link href="/versotech_main/versosign">
                     <PenTool className="h-4 w-4 mr-2" />
-                    Go to VERSOSign
+                    Go to VERSOSIGN
                   </Link>
                 </Button>
               </div>

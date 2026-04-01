@@ -207,7 +207,7 @@ const staffNavItems: SidebarItem[] = [
     description: 'Document center'
   },
   {
-    name: 'VersoSign',
+    name: 'VERSOSIGN',
     href: '/versotech_main/versosign',
     icon: FileSignature,
     notificationKey: 'signatures',

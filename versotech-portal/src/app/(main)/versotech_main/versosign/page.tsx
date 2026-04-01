@@ -49,7 +49,7 @@ export default async function VersoSignPage() {
             Authentication Required
           </h3>
           <p className="text-muted-foreground">
-            Please log in to view VersoSign.
+            Please log in to view VERSOSIGN.
           </p>
         </div>
       </div>

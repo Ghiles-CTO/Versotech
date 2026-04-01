@@ -595,7 +595,7 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
               </div>
               <Button asChild>
                 <Link href="/versotech_main/versosign">
-                  View in VERSOSign
+                  View in VERSOSIGN
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Link>
               </Button>
@@ -979,7 +979,7 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
             <Button variant="outline" asChild className="h-auto py-4 flex-col gap-2">
               <Link href="/versotech_main/versosign">
                 <FileSignature className="h-5 w-5" />
-                <span>VERSOSign</span>
+                <span>VERSOSIGN</span>
               </Link>
             </Button>
           </div>

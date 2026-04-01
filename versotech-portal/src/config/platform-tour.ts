@@ -603,9 +603,9 @@ const introducerTour: TourStep[] = [
   {
     id: 'versosign',
     target: '[data-tour="nav-versosign"]',
-    title: 'VersoSign',
+    title: 'VERSOSIGN',
     content: 'Sign documents and execute agreements electronically.',
-    detailedContent: `VersoSign is VERSO's electronic signature platform. Sign fee agreements,
+    detailedContent: `VERSOSIGN is VERSO's electronic signature platform. Sign fee agreements,
       amendments, and other documents that require your signature. Track pending signature requests
       and view signed document history.`,
     features: [
@@ -902,9 +902,9 @@ const lawyerTour: TourStep[] = [
   {
     id: 'versosign',
     target: '[data-tour="nav-versosign"]',
-    title: 'VersoSign',
+    title: 'VERSOSIGN',
     content: 'Review and execute legal documents electronically.',
-    detailedContent: `VersoSign is your electronic signature workspace. Review legal documents,
+    detailedContent: `VERSOSIGN is your electronic signature workspace. Review legal documents,
       execute agreements, and track signature workflows. All signatures are legally binding
       and include complete audit trails.`,
     features: [
@@ -1199,7 +1199,7 @@ export function getWelcomeMessage(persona: string): { title: string; description
     },
     lawyer: {
       title: 'Welcome to VERSOTECH Legal Workspace',
-      description: 'This walkthrough focuses on assigned deals, escrow actions, and legal document execution in VersoSign.'
+      description: 'This walkthrough focuses on assigned deals, escrow actions, and legal document execution in VERSOSIGN.'
     }
   }
 

@@ -60,7 +60,7 @@ export const FAQ_CONTENT: HelpItem[] = [
   {
     id: 'faq-inv-nda',
     title: 'Why do I need to sign an NDA?',
-    content: 'An NDA (Non-Disclosure Agreement) protects confidential deal information. After your interest is approved, you\'ll be prompted to sign the NDA electronically via VERSOSign. Once signed, you get access to the deal\'s data room with detailed documents, financials, and due diligence materials.',
+    content: 'An NDA (Non-Disclosure Agreement) protects confidential deal information. After your interest is approved, you\'ll be prompted to sign the NDA electronically via VERSOSIGN. Once signed, you get access to the deal\'s data room with detailed documents, financials, and due diligence materials.',
     personas: ['investor'],
     category: 'Documents',
     tags: ['nda', 'confidentiality', 'signing', 'data room'],
@@ -96,7 +96,7 @@ export const FAQ_CONTENT: HelpItem[] = [
   {
     id: 'faq-inv-subpack',
     title: 'What is a subscription pack?',
-    content: 'A subscription pack is the legal document bundle you sign to formalize your investment. It includes the subscription agreement, investor questionnaire, and other required forms. You\'ll receive it after your subscription is approved. Sign all required fields via VERSOSign, then proceed to fund your investment.',
+    content: 'A subscription pack is the legal document bundle you sign to formalize your investment. It includes the subscription agreement, investor questionnaire, and other required forms. You\'ll receive it after your subscription is approved. Sign all required fields via VERSOSIGN, then proceed to fund your investment.',
     personas: ['investor'],
     category: 'Subscriptions',
     tags: ['subscription pack', 'signing', 'documents', 'versosign'],
@@ -219,7 +219,7 @@ export const FAQ_CONTENT: HelpItem[] = [
   {
     id: 'faq-int-agreement',
     title: 'How do I sign my introducer agreement?',
-    content: 'When onboarded, you\'ll receive an introducer agreement to sign via VERSOSign. This master agreement governs your relationship with the arranger. Review the terms, sign electronically, and your profile becomes active. You can view your signed agreement anytime from the Agreements page.',
+    content: 'When onboarded, you\'ll receive an introducer agreement to sign via VERSOSIGN. This master agreement governs your relationship with the arranger. Review the terms, sign electronically, and your profile becomes active. You can view your signed agreement anytime from the Agreements page.',
     personas: ['introducer'],
     category: 'Onboarding',
     tags: ['agreement', 'signing', 'onboarding', 'contract'],
@@ -266,7 +266,7 @@ export const FAQ_CONTENT: HelpItem[] = [
   {
     id: 'faq-par-agreement',
     title: 'How does the partnership agreement work?',
-    content: 'Your partnership agreement is signed during onboarding via VERSOSign. It establishes the terms of your co-arrangement or referral relationship. View your signed agreement on the Profile page. Deal-specific fee plans are then created for each opportunity.',
+    content: 'Your partnership agreement is signed during onboarding via VERSOSIGN. It establishes the terms of your co-arrangement or referral relationship. View your signed agreement on the Profile page. Deal-specific fee plans are then created for each opportunity.',
     personas: ['partner'],
     category: 'Onboarding',
     tags: ['agreement', 'partnership', 'onboarding'],
@@ -304,7 +304,7 @@ export const FAQ_CONTENT: HelpItem[] = [
   {
     id: 'faq-cp-placement',
     title: 'How do placement agreements work?',
-    content: 'A placement agreement establishes your distribution relationship with the arranger. It\'s signed during onboarding via VERSOSign. Once active, you can distribute deals to your investor network. View and manage your agreements from the Agreements page.',
+    content: 'A placement agreement establishes your distribution relationship with the arranger. It\'s signed during onboarding via VERSOSIGN. Once active, you can distribute deals to your investor network. View and manage your agreements from the Agreements page.',
     personas: ['commercial_partner'],
     category: 'Agreements',
     tags: ['placement', 'agreement', 'distribution', 'onboarding'],
@@ -351,7 +351,7 @@ export const FAQ_CONTENT: HelpItem[] = [
   {
     id: 'faq-law-certificates',
     title: 'How do I sign share certificates?',
-    content: 'When a deal closes and positions are created, share certificates are generated for each investor. Go to VERSOSign to review and sign certificates. Each certificate requires your digital signature as legal counsel. You can review the certificate details, investor information, and position data before signing.',
+    content: 'When a deal closes and positions are created, share certificates are generated for each investor. Go to VERSOSIGN to review and sign certificates. Each certificate requires your digital signature as legal counsel. You can review the certificate details, investor information, and position data before signing.',
     personas: ['lawyer'],
     category: 'Certificates',
     tags: ['certificate', 'signing', 'share', 'legal'],
@@ -418,7 +418,7 @@ export const FAQ_CONTENT: HelpItem[] = [
   {
     id: 'faq-ceo-docsigning',
     title: 'How does document signing work?',
-    content: 'As CEO or authorized staff, you countersign documents via VERSOSign after investors have signed. Go to Signing or Documents > Pending Signatures to see your queue. You countersign subscription agreements, NDAs, share certificates, and amendments. Review each document for completeness and correct investor signatures before applying your own. Countersigning triggers the next step: data room access for NDAs, funding instructions for subscriptions, or certificate distribution at close.',
+    content: 'As CEO or authorized staff, you countersign documents via VERSOSIGN after investors have signed. Go to Signing or Documents > Pending Signatures to see your queue. You countersign subscription agreements, NDAs, share certificates, and amendments. Review each document for completeness and correct investor signatures before applying your own. Countersigning triggers the next step: data room access for NDAs, funding instructions for subscriptions, or certificate distribution at close.',
     personas: ['ceo', 'staff'],
     category: 'Documents',
     tags: ['signing', 'countersign', 'versosign', 'documents'],
@@ -493,7 +493,7 @@ export const HOW_TO_CONTENT: HelpItem[] = [
   {
     id: 'how-inv-subscribe',
     title: 'Subscribe to a Deal',
-    content: '1. Go to **Investment Opportunities** in the sidebar\n2. Browse active deals and click one to view details\n3. Click **"Express Interest"** and wait for approval\n4. Sign the NDA when prompted (via VERSOSign)\n5. Review the data room documents thoroughly\n6. Click **"Subscribe"** and enter your investment amount\n7. Wait for subscription approval\n8. Sign the subscription pack via VERSOSign\n9. Transfer funds using the provided wire instructions\n10. Your subscription status updates to "funded" once confirmed',
+    content: '1. Go to **Investment Opportunities** in the sidebar\n2. Browse active deals and click one to view details\n3. Click **"Express Interest"** and wait for approval\n4. Sign the NDA when prompted (via VERSOSIGN)\n5. Review the data room documents thoroughly\n6. Click **"Subscribe"** and enter your investment amount\n7. Wait for subscription approval\n8. Sign the subscription pack via VERSOSIGN\n9. Transfer funds using the provided wire instructions\n10. Your subscription status updates to "funded" once confirmed',
     personas: ['investor'],
     category: 'Subscriptions',
     tags: ['subscribe', 'invest', 'deal', 'step-by-step'],
@@ -520,7 +520,7 @@ export const HOW_TO_CONTENT: HelpItem[] = [
   {
     id: 'how-inv-sign-nda',
     title: 'Sign a Deal NDA',
-    content: '1. After your interest is approved, you\'ll receive a notification\n2. Click the notification or go to the deal page\n3. Click **"Sign NDA"** to open VERSOSign\n4. Review the NDA terms carefully\n5. Click through each signature field\n6. Apply your electronic signature\n7. Click **"Complete Signing"**\n8. You\'ll get immediate access to the data room',
+    content: '1. After your interest is approved, you\'ll receive a notification\n2. Click the notification or go to the deal page\n3. Click **"Sign NDA"** to open VERSOSIGN\n4. Review the NDA terms carefully\n5. Click through each signature field\n6. Apply your electronic signature\n7. Click **"Complete Signing"**\n8. You\'ll get immediate access to the data room',
     personas: ['investor'],
     category: 'Documents',
     tags: ['nda', 'signing', 'versosign', 'data room'],
@@ -712,7 +712,7 @@ export const HOW_TO_CONTENT: HelpItem[] = [
   {
     id: 'how-law-sign-cert',
     title: 'Sign Share Certificates',
-    content: '1. Go to **VERSOSign** in the sidebar\n2. Find pending certificates awaiting your signature\n3. Click on a certificate to review the details\n4. Verify the investor name, position details, and share allocation\n5. Review the certificate format and legal text\n6. Apply your electronic signature\n7. Click **"Complete Signing"** to finalize\n8. The signed certificate is automatically distributed to the investor',
+    content: '1. Go to **VERSOSIGN** in the sidebar\n2. Find pending certificates awaiting your signature\n3. Click on a certificate to review the details\n4. Verify the investor name, position details, and share allocation\n5. Review the certificate format and legal text\n6. Apply your electronic signature\n7. Click **"Complete Signing"** to finalize\n8. The signed certificate is automatically distributed to the investor',
     personas: ['lawyer'],
     category: 'Certificates',
     tags: ['sign', 'certificate', 'share', 'versosign'],
@@ -933,7 +933,7 @@ export const HOW_TO_CONTENT: HelpItem[] = [
   {
     id: 'how-law-vehicle-assignments',
     title: 'Understand Your Vehicle Assignments',
-    content: '1. When assigned as legal counsel, you\'ll receive email and platform notifications\n2. Go to **Assigned Deals** in the sidebar to see your assigned vehicles\n3. Review vehicle information: name, structure, jurisdiction, and key contacts\n4. Access relevant documents: constitutional documents, deal documents, and closing materials\n5. Your primary responsibilities are certificate signing, document review, and closing participation\n6. When share certificates need signing, they appear in your **VERSOSign** queue\n7. Sign certificates after verifying investor details, position data, and certificate format',
+    content: '1. When assigned as legal counsel, you\'ll receive email and platform notifications\n2. Go to **Assigned Deals** in the sidebar to see your assigned vehicles\n3. Review vehicle information: name, structure, jurisdiction, and key contacts\n4. Access relevant documents: constitutional documents, deal documents, and closing materials\n5. Your primary responsibilities are certificate signing, document review, and closing participation\n6. When share certificates need signing, they appear in your **VERSOSIGN** queue\n7. Sign certificates after verifying investor details, position data, and certificate format',
     personas: ['lawyer'],
     category: 'Assignments',
     tags: ['assignment', 'vehicle', 'legal counsel', 'certificates', 'responsibilities'],
