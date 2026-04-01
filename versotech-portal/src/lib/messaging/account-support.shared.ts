@@ -6,7 +6,7 @@ export type AccountSupportPersonaType =
 
 export const ACCOUNT_SUPPORT_METADATA_TYPE = 'account_support'
 export const ACCOUNT_SUPPORT_OWNER_SCOPE = 'ceo_inbox'
-export const ACCOUNT_SUPPORT_DISPLAY_NAME = 'Verso Support'
+export const ACCOUNT_SUPPORT_DISPLAY_NAME = 'VERSO Support'
 export const ACCOUNT_SUPPORT_AVATAR_URL = '/versotech-icon.png'
 
 const ACCOUNT_SUPPORT_PERSONA_TYPES = new Set<AccountSupportPersonaType>([
