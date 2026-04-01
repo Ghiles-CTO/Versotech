@@ -67,12 +67,21 @@ vi.mock('@/lib/notifications/entity-recipient-groups', () => ({
   getEntityPrimaryAndAdminRecipients: vi.fn(),
 }))
 
+vi.mock('@/lib/vehicles/bank-accounts', () => ({
+  resolveVehicleActiveBankAccount: vi.fn(),
+  toVehicleBankAccountPayload: vi.fn(),
+}))
+
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { requireStaffAuth } from '@/lib/auth'
 import { updateDealInvestmentCycleProgress } from '@/lib/deals/investment-cycles'
 import { triggerWorkflow } from '@/lib/trigger-workflow'
 import { createSignatureRequest } from '@/lib/signature/client'
 import { getCeoSigner } from '@/lib/staff/ceo-signer'
+import {
+  resolveVehicleActiveBankAccount,
+  toVehicleBankAccountPayload,
+} from '@/lib/vehicles/bank-accounts'
 
 type TableName =
   | 'approvals'
@@ -235,9 +244,31 @@ describe('approval action route', () => {
       email: 'staff@test.com',
       role: 'staff_ops',
     } as any)
-    vi.mocked(updateDealInvestmentCycleProgress).mockResolvedValue(undefined)
+    vi.mocked(updateDealInvestmentCycleProgress).mockResolvedValue(null as any)
     vi.mocked(createSignatureRequest).mockReset()
     vi.mocked(getCeoSigner).mockResolvedValue(null)
+    vi.mocked(resolveVehicleActiveBankAccount).mockResolvedValue({
+      hasExactlyOneActiveAccount: true,
+      hasNoActiveAccount: false,
+      hasMultipleActiveAccounts: false,
+      activeAccount: { id: 'bank-account-1' },
+      activeAccounts: [{ id: 'bank-account-1' }],
+      draftAccounts: [],
+      accounts: [{ id: 'bank-account-1' }],
+    } as any)
+    vi.mocked(toVehicleBankAccountPayload).mockReturnValue({
+      wire_bank_name: 'ING Luxembourg S.A.',
+      wire_bank_address: "ING Luxembourg SA, 52, route d'Esch, L-2965 Luxembourg",
+      wire_account_holder: 'Dupont Partners',
+      wire_escrow_agent: 'Dupont Partners',
+      wire_law_firm_address: '2 Avenue Charles de Gaulle, L-1653 Luxembourg',
+      wire_description: 'Client Account on behalf of Vehicle',
+      wire_iban: 'LU71 0141 8595 5133 3010',
+      wire_bic: 'CELLLULLXXX',
+      wire_reference_display: 'Agency Vehicle',
+      wire_currency_code: 'USD',
+      wire_currency_long: 'United States Dollar',
+    })
   })
 
   it('rejects a deal subscription submission with rejected timestamps instead of leaving it pending review', async () => {

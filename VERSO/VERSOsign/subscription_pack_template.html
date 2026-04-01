@@ -632,7 +632,7 @@
 <ul>
     <li><strong>SPV / Vehicle:</strong> VERSO Capital 2 SCSP Series {{ $json.series_number }}, Luxembourg</li>
     <li><strong>Subscriber:</strong> {{ $json.subscriber_name }}</li>
-    <li><strong>Escrow Agent:</strong> {{ $json.wire_escrow_agent || 'Dupont & Partners' }}, Law Firm, Luxembourg</li>
+    <li><strong>Escrow Agent:</strong> {{ $json.wire_escrow_agent }}, Law Firm, Luxembourg</li>
     <li><strong>Exclusive Arranger:</strong> {{ $json.wire_arranger || 'VERSO Management Ltd' }}, Cat II Reg. Firm, BVI</li>
     <li><strong>Contact us:</strong> {{ $json.wire_contact_email || 'jmachot@versoholdings.com' }}</li>
 </ul>
@@ -646,16 +646,16 @@
 
 <div class="wire-section">
     <div class="wire-box">
-        <p><strong>Bank:</strong> {{ $json.wire_bank_name || 'ING Luxembourg S.A.' }}</p>
-        <p><strong>Bank Address:</strong> {{ $json.wire_bank_address || 'ING Luxembourg SA, 52, route d&#39;Esch, L-2965 Luxembourg' }}</p>
-        <p><strong>Holder:</strong> {{ $json.wire_account_holder || 'Dupont Partners' }}</p>
-        <p><strong>Law Firm Address:</strong> {{ $json.wire_law_firm_address || '2 Avenue Charles de Gaulle, L-1653 Luxembourg' }}</p>
+        <p><strong>Bank:</strong> {{ $json.wire_bank_name }}</p>
+        <p><strong>Bank Address:</strong> {{ $json.wire_bank_address }}</p>
+        <p><strong>Holder:</strong> {{ $json.wire_account_holder }}</p>
+        <p><strong>Law Firm Address:</strong> {{ $json.wire_law_firm_address }}</p>
         <p><strong>Description:</strong> {{ $json.wire_description }}</p>
-        <p><strong>IBAN:</strong> {{ $json.wire_iban || 'LU71 0141 8595 5133 3010' }}</p>
-        <p><strong>BIC:</strong> {{ $json.wire_bic || 'CELLLULLXXX' }}</p>
+        <p><strong>IBAN:</strong> {{ $json.wire_iban }}</p>
+        <p><strong>BIC:</strong> {{ $json.wire_bic }}</p>
         <p>(FYI: some banks require the additional XXX at the end of BIC Codes)</p>
         <p><strong>Amount:</strong> {{ $json.currency_code }} {{ $json.total_subscription_price_display }} only</p>
-        <p><strong>Currency:</strong> {{ $json.currency_code }} (FYI: {{ $json.currency_long }})</p>
+        <p><strong>Currency:</strong> {{ $json.wire_currency_code }} (FYI: {{ $json.wire_currency_long }})</p>
         <p><strong>Reference:</strong> {{ $json.wire_reference_display }}</p>
     </div>
 
@@ -975,7 +975,7 @@
     </tr>
     <tr>
         <td class="bold">"Escrow Agency Fee"</td>
-        <td>means the fee to be paid by the Issuer according to the escrow agency agreement concluded with {{ $json.wire_escrow_agent || 'Dupont &amp; Partners' }}, a law firm with the Luxembourg Bar, with main office on {{ $json.wire_law_firm_address || '2 Avenue Charles de Gaulle, L-1653 Luxembourg, Grand Duchy of Luxembourg' }}.</td>
+        <td>means the fee to be paid by the Issuer according to the escrow agency agreement concluded with {{ $json.wire_escrow_agent }}, a law firm with the Luxembourg Bar, with main office on {{ $json.wire_law_firm_address }}.</td>
     </tr>
     <tr>
         <td class="bold">"Event of Default"</td>
@@ -1079,7 +1079,7 @@
     </tr>
     <tr>
         <td class="bold">"Paying Agent"</td>
-        <td>means {{ $json.wire_escrow_agent || 'Dupont &amp; Partners' }}, a law firm with the Luxembourg Bar, with main office on {{ $json.wire_law_firm_address || '2 Avenue Charles de Gaulle, L-1653 Luxembourg, Grand Duchy of Luxembourg' }}.</td>
+        <td>means {{ $json.wire_escrow_agent }}, a law firm with the Luxembourg Bar, with main office on {{ $json.wire_law_firm_address }}.</td>
     </tr>
     <tr>
         <td class="bold">"Paying Agent Account"</td>
@@ -1215,13 +1215,13 @@
 <p class="clause">2.1.4. The payment of the Certificates Subscription Price and the One-Off Fee(s) shall occur on the Closing Date (the "<strong>Certificates Payment Date</strong>"), under the following bank account on behalf of the Issuer by the Paying Agent (the "<strong>Paying Agent Account</strong>"):</p>
 
 <div class="tcs-wire-details">
-    <p><strong>Bank:</strong> {{ $json.wire_bank_name || 'ING Luxembourg S.A.' }}</p>
-    <p><strong>Holder:</strong> {{ $json.wire_account_holder || 'Dupont Partners' }}</p>
-    <p><strong>IBAN:</strong> {{ $json.wire_iban || 'LU71 0141 8595 5133 3010' }}</p>
-    <p><strong>BIC:</strong> {{ $json.wire_bic || 'CELLLULLXXX' }}</p>
+    <p><strong>Bank:</strong> {{ $json.wire_bank_name }}</p>
+    <p><strong>Holder:</strong> {{ $json.wire_account_holder }}</p>
+    <p><strong>IBAN:</strong> {{ $json.wire_iban }}</p>
+    <p><strong>BIC:</strong> {{ $json.wire_bic }}</p>
     <p>(FYI: some banks require the additional XXX at the end of BIC Codes)</p>
     <p><strong>Reference:</strong> {{ $json.wire_reference_display }}</p>
-    <p><strong>Currency:</strong> {{ $json.currency_code }} ({{ $json.currency_long }})</p>
+    <p><strong>Currency:</strong> {{ $json.wire_currency_code }} ({{ $json.wire_currency_long }})</p>
 </div>
 
 <h3>2.2. Currency and Denomination of the Certificates</h3>

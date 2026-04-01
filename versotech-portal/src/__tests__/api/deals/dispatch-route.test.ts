@@ -20,12 +20,17 @@ vi.mock('@/lib/introducers/commercial-eligibility', () => ({
   getIntroducerCommercialEligibility: vi.fn(),
 }))
 
+vi.mock('@/lib/vehicles/bank-accounts', () => ({
+  resolveVehicleActiveBankAccount: vi.fn(),
+}))
+
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { sendDealDispatchFanout } from '@/lib/deals/dispatch-fanout'
 import {
   assertPublishedDealTermSheet,
   createOrResumeDealInvestmentCycle,
 } from '@/lib/deals/investment-cycles'
+import { resolveVehicleActiveBankAccount } from '@/lib/vehicles/bank-accounts'
 
 type TableName =
   | 'deals'
@@ -168,6 +173,15 @@ describe('deal dispatch route', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(assertPublishedDealTermSheet).mockResolvedValue(undefined)
+    vi.mocked(resolveVehicleActiveBankAccount).mockResolvedValue({
+      hasExactlyOneActiveAccount: true,
+      hasNoActiveAccount: false,
+      hasMultipleActiveAccounts: false,
+      activeAccount: { id: 'bank-account-1' },
+      activeAccounts: [{ id: 'bank-account-1' }],
+      draftAccounts: [],
+      accounts: [{ id: 'bank-account-1' }],
+    } as any)
     vi.mocked(sendDealDispatchFanout).mockResolvedValue({
       success: true,
       errors: [],
@@ -180,7 +194,7 @@ describe('deal dispatch route', () => {
   it('blocks bulk dispatch when the investor already received the selected term sheet', async () => {
     vi.mocked(createServiceClient).mockReturnValue(
       createMockSupabase({
-        deals: [{ id: '11111111-1111-4111-8111-111111111111', name: 'Alpha Deal', status: 'open' }],
+        deals: [{ id: '11111111-1111-4111-8111-111111111111', name: 'Alpha Deal', status: 'open', vehicle_id: 'vehicle-1' }],
         deal_memberships: [],
         profiles: [{
           id: '33333333-3333-4333-8333-333333333333',
@@ -227,7 +241,7 @@ describe('deal dispatch route', () => {
   it('blocks bulk redispatch for an existing member who already received the same term sheet', async () => {
     vi.mocked(createServiceClient).mockReturnValue(
       createMockSupabase({
-        deals: [{ id: '11111111-1111-4111-8111-111111111111', name: 'Alpha Deal', status: 'open' }],
+        deals: [{ id: '11111111-1111-4111-8111-111111111111', name: 'Alpha Deal', status: 'open', vehicle_id: 'vehicle-1' }],
         deal_memberships: [{
           deal_id: '11111111-1111-4111-8111-111111111111',
           user_id: '33333333-3333-4333-8333-333333333333',
@@ -292,7 +306,7 @@ describe('deal dispatch route', () => {
 
     vi.mocked(createServiceClient).mockReturnValue(
       createMockSupabase({
-        deals: [{ id: '11111111-1111-4111-8111-111111111111', name: 'Alpha Deal', status: 'open' }],
+        deals: [{ id: '11111111-1111-4111-8111-111111111111', name: 'Alpha Deal', status: 'open', vehicle_id: 'vehicle-1' }],
         deal_memberships: [{
           deal_id: '11111111-1111-4111-8111-111111111111',
           user_id: '33333333-3333-4333-8333-333333333333',
@@ -353,5 +367,42 @@ describe('deal dispatch route', () => {
       })
     )
     expect(sendDealDispatchFanout).toHaveBeenCalledOnce()
+  })
+
+  it('blocks dispatch when the vehicle has no active bank account', async () => {
+    vi.mocked(resolveVehicleActiveBankAccount).mockResolvedValue({
+      hasExactlyOneActiveAccount: false,
+      hasNoActiveAccount: true,
+      hasMultipleActiveAccounts: false,
+      activeAccount: null,
+      activeAccounts: [],
+      draftAccounts: [],
+      accounts: [],
+    } as any)
+
+    vi.mocked(createServiceClient).mockReturnValue(
+      createMockSupabase({
+        deals: [{ id: '11111111-1111-4111-8111-111111111111', name: 'Alpha Deal', status: 'open', vehicle_id: 'vehicle-42' }],
+      }) as any
+    )
+
+    const { POST } = await import('@/app/api/deals/[id]/dispatch/route')
+
+    const response = await POST(
+      createRequest({
+        user_ids: ['33333333-3333-4333-8333-333333333333'],
+        role: 'investor',
+        term_sheet_id: '55555555-5555-4555-8555-555555555555',
+      }),
+      { params: Promise.resolve({ id: '11111111-1111-4111-8111-111111111111' }) }
+    )
+    const data = await response.json()
+
+    expect(response.status).toBe(409)
+    expect(data.reasonCode).toBe('vehicle_bank_account_missing')
+    expect(data.vehicle_id).toBe('vehicle-42')
+    expect(data.fixUrl).toBe('/versotech_main/entities/vehicle-42?tab=bank_accounts')
+    expect(createOrResumeDealInvestmentCycle).not.toHaveBeenCalled()
+    expect(sendDealDispatchFanout).not.toHaveBeenCalled()
   })
 })

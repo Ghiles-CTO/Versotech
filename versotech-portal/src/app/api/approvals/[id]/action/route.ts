@@ -20,6 +20,10 @@ import { applySubscriptionPackPageNumbers } from '@/lib/subscription/page-number
 import { getEntityPrimaryAndAdminRecipients } from '@/lib/notifications/entity-recipient-groups'
 import { getRequesterApprovalNotificationCopy } from '@/lib/approvals/requester-notifications'
 import { resolveSubscriptionSigners } from '@/lib/subscriptions/signatory-resolution'
+import {
+  resolveVehicleActiveBankAccount,
+  toVehicleBankAccountPayload,
+} from '@/lib/vehicles/bank-accounts'
 
 const ACCOUNT_ACTIVATION_ENTITY_TABLES = [
   'investors',
@@ -2262,7 +2266,7 @@ async function handleEntityApproval(
 
               const { data: vehicleData } = await supabase
                 .from('vehicles')
-                .select('series_number, name, series_short_title, investment_name, issuer_gp_name, issuer_gp_rcc_number, issuer_rcc_number, issuer_website')
+                .select('id, series_number, name, series_short_title, investment_name, currency, issuer_gp_name, issuer_gp_rcc_number, issuer_rcc_number, issuer_website')
                 .eq('id', submission.deal.vehicle_id)
                 .single()
 
@@ -2273,6 +2277,16 @@ async function handleEntityApproval(
 	                .maybeSingle()
 
 	              if (normalizedSubscriptionInvestor && vehicleData && feeStructure && user) {
+                const bankAccountState = await resolveVehicleActiveBankAccount(supabase, submission.deal.vehicle_id)
+
+                if (!bankAccountState.hasExactlyOneActiveAccount || !bankAccountState.activeAccount) {
+                  const bankAccountError = bankAccountState.hasMultipleActiveAccounts
+                    ? `Vehicle ${vehicleData.name} has multiple active bank accounts. Keep exactly one active bank account before generating the subscription pack.`
+                    : `Vehicle ${vehicleData.name} is missing an active bank account. Publish one from the vehicle bank-account tab before generating the subscription pack.`
+
+                  return rollbackSubscriptionApproval(bankAccountError)
+                }
+
                 // Get CEO signer dynamically (instead of hardcoded fallback)
                 const ceoSigner = await getCeoSigner(supabase)
                 const issuerName = ceoSigner?.displayName || feeStructure.issuer_signatory_name || 'Julien Machot'
@@ -2332,6 +2346,7 @@ async function handleEntityApproval(
                   deal: submission.deal,
                   vehicle: vehicleData,
                   feeStructure,
+                  vehicleBankAccount: toVehicleBankAccountPayload(bankAccountState.activeAccount, vehicleData),
                   counterpartyEntity,
                   signatories,
                   issuerName,

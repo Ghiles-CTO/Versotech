@@ -64,6 +64,7 @@ export interface SubscriptionPackVehicle {
   name?: string | null
   series_short_title?: string | null
   investment_name?: string | null
+  currency?: string | null
   issuer_gp_name?: string | null
   issuer_gp_rcc_number?: string | null
   issuer_rcc_number?: string | null
@@ -103,6 +104,20 @@ export interface SubscriptionPackFeeStructure {
   recital_b_html?: string | null
 }
 
+export interface SubscriptionPackVehicleBankAccount {
+  wire_bank_name?: string | null
+  wire_bank_address?: string | null
+  wire_account_holder?: string | null
+  wire_escrow_agent?: string | null
+  wire_law_firm_address?: string | null
+  wire_description?: string | null
+  wire_iban?: string | null
+  wire_bic?: string | null
+  wire_reference_display?: string | null
+  wire_currency_code?: string | null
+  wire_currency_long?: string | null
+}
+
 export interface BuildSubscriptionPackPayloadParams {
   outputFormat: 'docx' | 'pdf'
   subscription: SubscriptionPackSubscription
@@ -110,6 +125,7 @@ export interface BuildSubscriptionPackPayloadParams {
   deal: SubscriptionPackDeal
   vehicle: SubscriptionPackVehicle
   feeStructure: SubscriptionPackFeeStructure
+  vehicleBankAccount?: SubscriptionPackVehicleBankAccount | null
   counterpartyEntity?: SubscriptionPackCounterparty | null
   signatories: SubscriptionPackSignatory[]
   issuerName: string
@@ -178,6 +194,18 @@ function formatCountryName(value: unknown): string {
   if (/^[A-Z]{2}$/.test(regionCode) && typeof Intl !== 'undefined' && typeof Intl.DisplayNames === 'function') {
     const regionNames = new Intl.DisplayNames(['en'], { type: 'region' })
     return normalizeWhitespace(regionNames.of(regionCode) || normalized)
+  }
+
+  return normalized
+}
+
+function formatCurrencyName(value: unknown): string {
+  const normalized = normalizeWhitespace(String(value || '')).toUpperCase()
+  if (!normalized) return ''
+
+  if (/^[A-Z]{3}$/.test(normalized) && typeof Intl !== 'undefined' && typeof Intl.DisplayNames === 'function') {
+    const currencyNames = new Intl.DisplayNames(['en'], { type: 'currency' })
+    return normalizeWhitespace(currencyNames.of(normalized) || normalized)
   }
 
   return normalized
@@ -421,6 +449,7 @@ export function buildSubscriptionPackPayload(
     deal,
     vehicle,
     feeStructure,
+    vehicleBankAccount,
     counterpartyEntity,
     signatories,
     issuerName,
@@ -518,10 +547,11 @@ export function buildSubscriptionPackPayload(
   const pricePerShareNoticeHtml = showPricePerShareNotice
     ? `<p class="small" style="margin-top: 1cm;"><strong>* IMPORTANT NOTICE:</strong> The Price per Share may be amended by the Issuer prior any Capital Call or Funding in order to reflect the exact Price per Share of the recent Qualified Financing. The Issuer shall then issue a Side Letter to provide confirmation of the new Price per Share and as a result of the exact total Number of Shares corresponding to the present Subscription.</p>`
     : ''
-  const wireReferenceRaw = normalizeWhitespace(String(feeStructure.wire_reference_format || ''))
-    .replace('{series}', seriesNumber)
-  const wireReferenceFallback = normalizeWhitespace([seriesNumber, seriesShortTitle || seriesTitle].filter(Boolean).join('-'))
-  const wireReferenceDisplay = resolveWireReference(wireReferenceRaw, seriesNumber) || wireReferenceFallback
+  const wireReferenceFallback = normalizeWhitespace(
+    `Agency ${String(vehicle.name || buildSeriesLabel(seriesNumber) || 'Vehicle')}`,
+  )
+  const wireReferenceDisplay = normalizeWhitespace(String(vehicleBankAccount?.wire_reference_display || ''))
+    || wireReferenceFallback
   const subscriptionFeeSummaryText = normalizeWhitespace(String(feeStructure.subscription_fee_summary_text || ''))
     || (subscriptionFeeRateRaw !== null
       ? `${subscriptionFeeRate.toFixed(2)}% upfront subscription fee`
@@ -575,15 +605,27 @@ export function buildSubscriptionPackPayload(
       : '')
   const recitalBHtml = normalizeWhitespace(String(feeStructure.recital_b_html || ''))
     || `(B) The Issuer intends to issue Certificates which shall track equity interests in ${deal.company_name || deal.name || 'the target investment'}, and the Subscriber intends to subscribe for ${numShares} Certificates.`
-  const wireDescription = normalizeWhitespace(String(feeStructure.wire_description_format || ''))
-    || `Escrow account for ${vehicle.name || seriesTitle || 'subscription'}`
-  const wireBankName = normalizeWhitespace(String(feeStructure.wire_bank_name || 'ING Luxembourg S.A.'))
-  const wireBankAddress = normalizeWhitespace(String(feeStructure.wire_bank_address || "ING Luxembourg SA, 52, route d'Esch, L-2965 Luxembourg"))
-  const wireAccountHolder = normalizeWhitespace(String(feeStructure.wire_account_holder || 'Dupont Partners'))
-  const wireEscrowAgent = normalizeWhitespace(String(feeStructure.wire_escrow_agent || 'Dupont & Partners'))
-  const wireLawFirmAddress = normalizeWhitespace(String(feeStructure.wire_law_firm_address || '2 Avenue Charles de Gaulle, L-1653 Luxembourg'))
-  const wireIban = normalizeWhitespace(String(feeStructure.wire_iban || 'LU71 0141 8595 5133 3010'))
-  const wireBic = normalizeWhitespace(String(feeStructure.wire_bic || 'CELLLULLXXX'))
+  const defaultWireDescription = `Client Account on behalf of ${vehicle.name || seriesTitle || 'the vehicle'}`
+  const wireDescription = normalizeWhitespace(String(vehicleBankAccount?.wire_description || ''))
+    || normalizeWhitespace(String(feeStructure.wire_description_format || ''))
+    || defaultWireDescription
+  const wireBankName = normalizeWhitespace(String(vehicleBankAccount?.wire_bank_name || feeStructure.wire_bank_name || ''))
+  const wireBankAddress = normalizeWhitespace(String(vehicleBankAccount?.wire_bank_address || feeStructure.wire_bank_address || ''))
+  const wireAccountHolder = normalizeWhitespace(String(vehicleBankAccount?.wire_account_holder || feeStructure.wire_account_holder || ''))
+  const wireEscrowAgent = normalizeWhitespace(String(vehicleBankAccount?.wire_escrow_agent || feeStructure.wire_escrow_agent || ''))
+  const wireLawFirmAddress = normalizeWhitespace(String(vehicleBankAccount?.wire_law_firm_address || feeStructure.wire_law_firm_address || ''))
+  const wireIban = normalizeWhitespace(String(vehicleBankAccount?.wire_iban || feeStructure.wire_iban || ''))
+  const wireBic = normalizeWhitespace(String(vehicleBankAccount?.wire_bic || feeStructure.wire_bic || ''))
+  const wireCurrencyCode = normalizeWhitespace(
+    String(
+      vehicleBankAccount?.wire_currency_code
+      || vehicle.currency
+      || currencyCode
+      || 'USD'
+    )
+  ).toUpperCase()
+  const wireCurrencyLong = normalizeWhitespace(String(vehicleBankAccount?.wire_currency_long || ''))
+    || formatCurrencyName(wireCurrencyCode)
   const wireArranger = normalizeWhitespace(String(feeStructure.exclusive_arranger || 'VERSO Management Ltd'))
   const wireContactEmail = normalizeWhitespace(String(feeStructure.wire_contact_email || 'jmachot@versoholdings.com'))
   const issuerGpName = normalizeWhitespace(String(vehicle.issuer_gp_name || 'VERSO Capital 2 GP SARL'))
@@ -661,6 +703,8 @@ export function buildSubscriptionPackPayload(
     wire_reference: wireReferenceDisplay,
     wire_reference_display: wireReferenceDisplay,
     wire_description: wireDescription,
+    wire_currency_code: wireCurrencyCode,
+    wire_currency_long: wireCurrencyLong,
     wire_arranger: wireArranger,
     wire_contact_email: wireContactEmail,
 

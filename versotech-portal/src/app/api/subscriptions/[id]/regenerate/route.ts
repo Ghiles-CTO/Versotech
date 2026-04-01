@@ -9,6 +9,10 @@ import { assertSubscriptionPackPdfIsA4 } from '@/lib/subscription-pack/pdf-forma
 import { applySubscriptionPackPageNumbers } from '@/lib/subscription/page-numbering'
 import { updateDealInvestmentCycleProgress } from '@/lib/deals/investment-cycles'
 import { resolveSubscriptionSigners } from '@/lib/subscriptions/signatory-resolution'
+import {
+  resolveVehicleActiveBankAccount,
+  toVehicleBankAccountPayload,
+} from '@/lib/vehicles/bank-accounts'
 
 const STAFF_ROLES = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo']
 
@@ -136,6 +140,7 @@ export async function POST(
           series_number,
           series_short_title,
           investment_name,
+          currency,
           entity_code,
           issuer_gp_name,
           issuer_gp_rcc_number,
@@ -184,7 +189,7 @@ export async function POST(
       // Fetch vehicle from deal
       const { data: dealVehicle } = await serviceSupabase
         .from('vehicles')
-        .select('id, name, series_number, series_short_title, investment_name, entity_code, issuer_gp_name, issuer_gp_rcc_number, issuer_rcc_number, issuer_website')
+        .select('id, name, series_number, series_short_title, investment_name, currency, entity_code, issuer_gp_name, issuer_gp_rcc_number, issuer_rcc_number, issuer_website')
         .eq('id', subscription.deal.vehicle_id)
         .single()
       vehicleData = dealVehicle
@@ -318,6 +323,18 @@ export async function POST(
       )
     }
 
+    const bankAccountState = await resolveVehicleActiveBankAccount(serviceSupabase, vehicleData.id)
+    if (!bankAccountState.hasExactlyOneActiveAccount || !bankAccountState.activeAccount) {
+      const errorMessage = bankAccountState.hasMultipleActiveAccounts
+        ? `Vehicle ${vehicleData.name} has multiple active bank accounts. Keep exactly one active bank account before regenerating the subscription pack.`
+        : `Vehicle ${vehicleData.name} is missing an active bank account. Publish one from the vehicle bank-account tab before regenerating the subscription pack.`
+
+      return NextResponse.json(
+        { error: errorMessage },
+        { status: 400 }
+      )
+    }
+
     // ============================================================
     // FETCH ACTUAL SIGNERS FROM DATABASE (no more hardcoded names!)
     // ============================================================
@@ -437,6 +454,7 @@ export async function POST(
         deal: dealData,
         vehicle: vehicleData || {},
         feeStructure,
+        vehicleBankAccount: toVehicleBankAccountPayload(bankAccountState.activeAccount, vehicleData),
         counterpartyEntity,
         signatories,
         issuerName,

@@ -10375,6 +10375,112 @@ export type Database = {
           },
         ]
       }
+      vehicle_bank_accounts: {
+        Row: {
+          bank_address: string | null
+          bank_name: string | null
+          bic: string | null
+          created_at: string
+          created_by: string | null
+          currency: string | null
+          description: string | null
+          holder_name: string | null
+          iban: string | null
+          id: string
+          law_firm_address: string | null
+          lawyer_id: string | null
+          published_at: string | null
+          published_by: string | null
+          status: string
+          updated_at: string
+          updated_by: string | null
+          vehicle_id: string
+        }
+        Insert: {
+          bank_address?: string | null
+          bank_name?: string | null
+          bic?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string | null
+          description?: string | null
+          holder_name?: string | null
+          iban?: string | null
+          id?: string
+          law_firm_address?: string | null
+          lawyer_id?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+          vehicle_id: string
+        }
+        Update: {
+          bank_address?: string | null
+          bank_name?: string | null
+          bic?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string | null
+          description?: string | null
+          holder_name?: string | null
+          iban?: string | null
+          id?: string
+          law_firm_address?: string | null
+          lawyer_id?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_bank_accounts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_bank_accounts_lawyer_id_fkey"
+            columns: ["lawyer_id"]
+            isOneToOne: false
+            referencedRelation: "lawyers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_bank_accounts_published_by_fkey"
+            columns: ["published_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_bank_accounts_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_bank_accounts_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "vehicle_bank_accounts_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workflow_run_logs: {
         Row: {
           created_at: string | null

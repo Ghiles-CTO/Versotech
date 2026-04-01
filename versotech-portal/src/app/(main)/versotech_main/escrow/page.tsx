@@ -324,137 +324,30 @@ export default function EscrowPage() {
       }
     }
 
-    async function fetchArrangerEscrowData(supabase: any, arrangerId: string) {
-      // Get deals managed by this arranger (where arranger_entity_id matches)
-      const { data: managedDeals, error: dealsError } = await supabase
-        .from('deals')
-        .select('id')
-        .eq('arranger_entity_id', arrangerId)
+    async function loadEscrowFeeStructures() {
+      const response = await fetch('/api/escrow/accounts')
+      const payload = await response.json().catch(() => ({}))
 
-      const dealIds = (managedDeals || []).map((d: any) => d.id)
-
-      if (dealIds.length === 0) {
-        // No deals managed by this arranger
-        await processEscrowData(supabase, [])
-        return
+      if (!response.ok) {
+        throw new Error(payload.error || 'Failed to load escrow account data')
       }
 
-      // Get deal fee structures for managed deals
-      const { data: feeStructures, error: feeError } = await supabase
-        .from('deal_fee_structures')
-        .select(`
-          id,
-          deal_id,
-          status,
-          legal_counsel,
-          wire_escrow_agent,
-          wire_bank_name,
-          wire_account_holder,
-          wire_iban,
-          wire_bic,
-          escrow_fee_text,
-          deal:deal_id (
-            id,
-            name,
-            company_name,
-            target_amount,
-            currency,
-            status
-          )
-        `)
-        .in('deal_id', dealIds)
-        .eq('status', 'published')
-        .order('created_at', { ascending: false })
-
-      if (feeError) throw feeError
-
-      await processEscrowData(supabase, feeStructures || [])
+      return Array.isArray(payload.feeStructures) ? payload.feeStructures : []
     }
 
-    async function fetchLawyerEscrowData(supabase: any, lawyerId: string, lawyerAssignedDeals: string[] | null) {
-      // Get deals assigned to this lawyer via deal_lawyer_assignments table
-      const { data: assignments, error: assignmentsError } = await supabase
-        .from('deal_lawyer_assignments')
-        .select('deal_id')
-        .eq('lawyer_id', lawyerId)
+    async function fetchArrangerEscrowData(supabase: any, _arrangerId: string) {
+      const feeStructures = await loadEscrowFeeStructures()
+      await processEscrowData(supabase, feeStructures)
+    }
 
-      let dealIds = (assignments || []).map((a: any) => a.deal_id)
-
-      // Fallback to lawyers.assigned_deals array if no assignments found
-      if ((!dealIds.length || assignmentsError) && lawyerAssignedDeals?.length) {
-        dealIds = lawyerAssignedDeals
-      }
-
-      if (dealIds.length === 0) {
-        // No deals assigned
-        await processEscrowData(supabase, [])
-        return
-      }
-
-      // Get deal fee structures for assigned deals
-      const { data: feeStructures, error: feeError } = await supabase
-        .from('deal_fee_structures')
-        .select(`
-          id,
-          deal_id,
-          status,
-          legal_counsel,
-          wire_escrow_agent,
-          wire_bank_name,
-          wire_account_holder,
-          wire_iban,
-          wire_bic,
-          escrow_fee_text,
-          deal:deal_id (
-            id,
-            name,
-            company_name,
-            target_amount,
-            currency,
-            status
-          )
-        `)
-        .in('deal_id', dealIds)
-        .eq('status', 'published')
-        .order('created_at', { ascending: false })
-
-      if (feeError) throw feeError
-
-      await processEscrowData(supabase, feeStructures || [])
+    async function fetchLawyerEscrowData(supabase: any, _lawyerId: string, _lawyerAssignedDeals: string[] | null) {
+      const feeStructures = await loadEscrowFeeStructures()
+      await processEscrowData(supabase, feeStructures)
     }
 
     async function fetchAllEscrowData(supabase: any) {
-      // Staff view - get all deals with fee structures that have escrow data
-      const { data: feeStructures, error: feeError } = await supabase
-        .from('deal_fee_structures')
-        .select(`
-          id,
-          deal_id,
-          status,
-          legal_counsel,
-          wire_escrow_agent,
-          wire_bank_name,
-          wire_account_holder,
-          wire_iban,
-          wire_bic,
-          escrow_fee_text,
-          deal:deal_id (
-            id,
-            name,
-            company_name,
-            target_amount,
-            currency,
-            status
-          )
-        `)
-        .not('wire_escrow_agent', 'is', null)
-        .eq('status', 'published')
-        .order('created_at', { ascending: false })
-        .limit(100)
-
-      if (feeError) throw feeError
-
-      await processEscrowData(supabase, feeStructures || [])
+      const feeStructures = await loadEscrowFeeStructures()
+      await processEscrowData(supabase, feeStructures)
     }
 
     async function processEscrowData(supabase: any, feeStructures: any[]) {

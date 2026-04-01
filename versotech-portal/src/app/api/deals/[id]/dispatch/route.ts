@@ -12,6 +12,7 @@ import {
   evaluateIntroducerCommercialEligibility,
   getIntroducerCommercialEligibility,
 } from '@/lib/introducers/commercial-eligibility'
+import { resolveVehicleActiveBankAccount } from '@/lib/vehicles/bank-accounts'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -259,7 +260,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     // Verify deal exists
     const { data: deal, error: dealError } = await serviceSupabase
       .from('deals')
-      .select('id, name, status')
+      .select('id, name, status, vehicle_id')
       .eq('id', dealId)
       .single()
 
@@ -273,6 +274,35 @@ export async function POST(request: Request, { params }: RouteParams) {
       return NextResponse.json(
         { error: `Cannot dispatch when deal status is "${deal.status}". Change the deal status to "Open" first.` },
         { status: 400 }
+      )
+    }
+
+    if (!deal.vehicle_id) {
+      return NextResponse.json(
+        {
+          error: 'Dispatch requires a vehicle with a published bank account.',
+          reasonCode: 'vehicle_bank_account_missing',
+          message: 'This deal is not linked to a vehicle, so dispatch cannot determine which bank account to use.',
+        },
+        { status: 409 }
+      )
+    }
+
+    const bankAccountState = await resolveVehicleActiveBankAccount(serviceSupabase, deal.vehicle_id)
+    if (!bankAccountState.hasExactlyOneActiveAccount) {
+      return NextResponse.json(
+        {
+          error: 'Vehicle bank account configuration invalid',
+          reasonCode: bankAccountState.hasMultipleActiveAccounts
+            ? 'vehicle_bank_account_multiple_active'
+            : 'vehicle_bank_account_missing',
+          message: bankAccountState.hasMultipleActiveAccounts
+            ? 'This vehicle has multiple active bank accounts. Keep exactly one active bank account before dispatching the investment opportunity.'
+            : 'This vehicle does not have a main bank account yet. Publish one from the vehicle bank-account tab before dispatching the investment opportunity.',
+          vehicle_id: deal.vehicle_id,
+          fixUrl: `/versotech_main/entities/${deal.vehicle_id}?tab=bank_accounts`,
+        },
+        { status: 409 }
       )
     }
 

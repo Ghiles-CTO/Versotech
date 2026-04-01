@@ -5,6 +5,7 @@ import { buildSubscriptionPackPayload } from '@/lib/subscription-pack/payload-bu
 function buildBasePayload(overrides?: {
   investor?: Record<string, unknown>
   counterpartyEntity?: Record<string, unknown> | null
+  vehicleBankAccount?: Record<string, unknown> | null
 }) {
   return buildSubscriptionPackPayload({
     outputFormat: 'pdf',
@@ -46,6 +47,7 @@ function buildBasePayload(overrides?: {
       payment_deadline_days: 5,
       issue_within_business_days: 10,
     },
+    vehicleBankAccount: overrides?.vehicleBankAccount as any,
     counterpartyEntity: overrides?.counterpartyEntity as any,
     signatories: [{ name: 'Jane Doe', title: 'Director', number: 1 }],
     issuerName: 'Julien Machot',
@@ -125,5 +127,89 @@ describe('buildSubscriptionPackPayload', () => {
 
     expect(payload.subscriber_address).toBe('1 Home Lane, Miami, FL, 33101, United States')
     expect(payload.subscriber_clause_text).toBe('John Smith, passport number A1234567, with registered address at 1 Home Lane, Miami, FL, 33101, United States')
+  })
+
+  it('prefers the active vehicle bank account for wire details and keeps bank-account currency separate', () => {
+    const payload = buildBasePayload({
+      vehicleBankAccount: {
+        wire_bank_name: 'ING Luxembourg S.A.',
+        wire_bank_address: "ING Luxembourg SA, 52, route d'Esch, L-2965 Luxembourg",
+        wire_account_holder: 'Dupont Partners',
+        wire_escrow_agent: 'Dupont Partners',
+        wire_law_firm_address: '2 Avenue Charles de Gaulle, L-1653 Luxembourg',
+        wire_description: 'Client Account on behalf of VERSO Capital 2 SCSP Series 600',
+        wire_iban: 'LU71 0141 8595 5133 3010',
+        wire_bic: 'CELLLULLXXX',
+        wire_reference_display: 'Agency VERSO Capital 2 SCSP Series 600',
+        wire_currency_code: 'EUR',
+      },
+    })
+
+    expect(payload.wire_bank_name).toBe('ING Luxembourg S.A.')
+    expect(payload.wire_description).toBe('Client Account on behalf of VERSO Capital 2 SCSP Series 600')
+    expect(payload.wire_reference_display).toBe('Agency VERSO Capital 2 SCSP Series 600')
+    expect(payload.wire_currency_code).toBe('EUR')
+    expect(payload.wire_currency_long).toBe('Euro')
+    expect(payload.currency_code).toBe('USD')
+    expect(payload.currency_long).toBe('United States Dollars')
+  })
+
+  it('does not fall back to placeholder bank details when no wire account data is present', () => {
+    const payload = buildBasePayload({
+      vehicleBankAccount: null,
+    })
+
+    expect(payload.wire_bank_name).toBe('')
+    expect(payload.wire_account_holder).toBe('')
+    expect(payload.wire_iban).toBe('')
+    expect(payload.wire_bic).toBe('')
+  })
+
+  it('builds the wire reference from the vehicle name instead of the old placeholder format', () => {
+    const payload = buildSubscriptionPackPayload({
+      outputFormat: 'pdf',
+      subscription: {
+        commitment: 390000,
+        currency: 'USD',
+        price_per_share: 199.12345,
+        num_shares: 1883,
+        subscription_fee_percent: 4,
+      },
+      investor: {
+        legal_name: 'UatInvestor Ltd',
+        display_name: 'UatInvestor Ltd',
+        type: 'entity',
+      },
+      deal: {
+        name: 'Anthropic',
+        company_name: 'Anthropic',
+        currency: 'USD',
+      },
+      vehicle: {
+        series_number: '206',
+        name: 'VERSO Capital 2 SCSp Series 206',
+      },
+      feeStructure: {
+        subscription_fee_percent: 4,
+        management_fee_percent: 1,
+        carried_interest_percent: 15,
+        payment_deadline_days: 5,
+        issue_within_business_days: 10,
+        wire_reference_format: '{series}-{short_title}',
+      },
+      signatories: [{ name: 'Jane Doe', title: 'Director', number: 1 }],
+      issuerName: 'Julien Machot',
+      issuerTitle: 'Manager',
+      arrangerName: 'Julien Machot',
+      arrangerTitle: 'Director',
+      signatoriesTableHtml: '',
+      signatoriesFormHtml: '',
+      signatoriesSignatureHtml: '',
+      issuerSignatureHtml: '',
+      arrangerSignatureHtml: '',
+    }).payload
+
+    expect(payload.wire_reference_display).toBe('Agency VERSO Capital 2 SCSp Series 206')
+    expect(payload.wire_reference_display).not.toContain('{short_title}')
   })
 })

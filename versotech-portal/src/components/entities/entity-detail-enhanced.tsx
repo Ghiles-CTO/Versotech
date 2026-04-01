@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import {
   ArrowLeft,
   Building2,
@@ -76,6 +77,10 @@ import { EditValuationModal } from './edit-valuation-modal'
 import { ImportValuationsDialog } from './import-valuations-dialog'
 import { PositionModal } from './position-modal'
 import { ImportPositionsDialog } from './import-positions-dialog'
+import {
+  VehicleBankAccountSummaryCard,
+  VehicleBankAccountsTab,
+} from './vehicle-bank-accounts-tab'
 
 interface Director {
   id: string
@@ -454,6 +459,7 @@ export function EntityDetailEnhanced({
   valuations: initialValuations,
   positions: initialPositions
 }: EntityDetailEnhancedProps) {
+  const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState('overview')
   const [entity, setEntity] = useState(initialEntity)
   const [directors, setDirectors] = useState<Director[]>(initialDirectors)
@@ -511,6 +517,13 @@ export function EntityDetailEnhanced({
 
   // Confirmation dialog hook
   const { confirm, ConfirmationDialog } = useConfirmationDialog()
+
+  useEffect(() => {
+    const requestedTab = searchParams.get('tab')
+    if (requestedTab) {
+      setActiveTab(requestedTab)
+    }
+  }, [searchParams])
 
   const fetchFolders = useCallback(async () => {
     try {
@@ -1400,6 +1413,10 @@ export function EntityDetailEnhanced({
             <Briefcase className="h-4 w-4" />
             Deals ({deals.length})
           </TabsTrigger>
+          <TabsTrigger value="bank_accounts" className="gap-2">
+            <Building2 className="h-4 w-4" />
+            Bank Accounts
+          </TabsTrigger>
           <TabsTrigger value="health" className="gap-2">
             <Activity className="h-4 w-4" />
             Health
@@ -1566,6 +1583,8 @@ export function EntityDetailEnhanced({
             </CardContent>
           </Card>
 
+          <VehicleBankAccountSummaryCard vehicleId={entity.id} />
+
           {/* Notes Section */}
           <Card className="border border-white/10 bg-white/5">
             <CardHeader>
@@ -1577,6 +1596,10 @@ export function EntityDetailEnhanced({
               </p>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="bank_accounts" className="space-y-4">
+          <VehicleBankAccountsTab vehicleId={entity.id} vehicleName={entity.name} />
         </TabsContent>
 
         {/* Investors Tab */}
