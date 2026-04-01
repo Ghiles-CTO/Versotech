@@ -336,6 +336,11 @@
             padding: 6px;
         }
 
+        .summary-page table.summary-table.summary-terms-table td,
+        .summary-page table.summary-table.summary-terms-table th {
+            padding: 3px 6px;
+        }
+
         .summary-page .summary-signature-table {
             margin-top: 0.45cm !important;
         }
@@ -572,14 +577,18 @@
     </tr>
 </table>
 
-<table class="compact summary-table">
+<table class="compact summary-table summary-terms-table">
     <tr>
-        <td class="label-cell">Applicable Terms:</td>
-        <td>
-            • {{ $json.subscription_fee_text }}<br>
-            • {{ $json.management_fee_text }}<br>
-            • {{ $json.performance_fee_text }}<br>
-        </td>
+        <td class="label-cell">Subscription Fee:</td>
+        <td>{{ String($json.subscription_fee_text || '').replace(/^•\s*/, '').replace(/^Subscription Fee\s*/i, '').replace(/^:\s*/, '') }}</td>
+    </tr>
+    <tr>
+        <td class="label-cell">Management Fee:</td>
+        <td>{{ String($json.management_fee_text || '').replace(/^•\s*/, '').replace(/^Management Fee\s*/i, '').replace(/^:\s*/, '') }}</td>
+    </tr>
+    <tr>
+        <td class="label-cell">Performance Fee:</td>
+        <td>{{ String($json.performance_fee_text || '').replace(/^•\s*/, '').replace(/^Performance Fee\s*/i, '').replace(/^:\s*/, '') }}</td>
     </tr>
     <tr>
         <td class="label-cell">Escrow Agency Fee:</td>
