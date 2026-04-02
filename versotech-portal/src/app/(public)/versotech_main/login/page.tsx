@@ -163,7 +163,7 @@ function UnifiedLoginContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-[#F8FAFC] p-4 font-sans text-slate-900">
+    <div className="min-h-screen flex flex-col items-center bg-white p-4 font-sans text-slate-900">
 
       {/* Logo — centered in the space between top and card */}
       <div className="flex-1 flex items-center justify-center">
@@ -180,7 +180,7 @@ function UnifiedLoginContent() {
       <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-700">
         <h1 className="sr-only">VERSO</h1>
 
-        <Card className="border-[#E2E8F0] shadow-lg shadow-slate-900/5 bg-white">
+        <Card className="border-[#E2E8F0] shadow-lg shadow-slate-900/5 bg-[#F1F5F9] rounded-2xl">
           <CardContent className="p-8 space-y-6">
 
             {message && (
@@ -275,7 +275,7 @@ function UnifiedLoginContent() {
 export default function UnifiedLoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-[#0F172A]" />
       </div>
     }>
