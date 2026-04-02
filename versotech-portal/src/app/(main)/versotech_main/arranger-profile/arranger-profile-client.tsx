@@ -40,6 +40,7 @@ import { toast } from 'sonner'
 import Image from 'next/image'
 
 // Import profile components
+import { ProfileForm } from '@/components/profile/profile-form'
 import { PasswordChangeForm } from '@/components/profile/password-change-form'
 import { PreferencesEditor } from '@/components/profile/preferences-editor'
 import { GDPRControls } from '@/components/profile/gdpr-controls'
@@ -126,9 +127,15 @@ type ArrangerUserInfo = {
 }
 
 type Profile = {
-  full_name: string | null
-  email: string
+  id: string
+  display_name: string | null
+  email: string | null
   avatar_url: string | null
+  title: string | null
+  phone: string | null
+  office_location: string | null
+  bio: string | null
+  role: string
 }
 
 interface ArrangerProfileClientProps {
@@ -240,6 +247,7 @@ export function ArrangerProfileClient({
   memberInfo,
 }: ArrangerProfileClientProps) {
   const [arrangerInfo, setArrangerInfo] = useState(initialArrangerInfo)
+  const [profileState, setProfileState] = useState(profile)
   const [isEditingEntity, setIsEditingEntity] = useState(false)
   const [isEditingRegulatory, setIsEditingRegulatory] = useState(false)
   const [isEditingContact, setIsEditingContact] = useState(false)
@@ -538,7 +546,7 @@ export function ArrangerProfileClient({
               {arrangerInfo.legal_name}
             </h1>
             <p className="text-muted-foreground">
-              {profile?.full_name || userEmail} - {arrangerUserInfo.role || 'Member'}
+              {profileState?.display_name || userEmail} - {arrangerUserInfo.role || 'Member'}
             </p>
           </div>
         </div>
@@ -790,6 +798,31 @@ export function ArrangerProfileClient({
             entityId={arrangerInfo.id}
             onRefresh={() => window.location.reload()}
           />
+
+          {profileState && (
+            <ProfileForm
+              userId={profileState.id}
+              initialData={{
+                display_name: profileState.display_name,
+                email: profileState.email,
+                title: profileState.title,
+                phone: profileState.phone,
+                office_location: profileState.office_location,
+                bio: profileState.bio,
+                role: profileState.role,
+              }}
+              onUpdate={(updatedProfile) => {
+                setProfileState((current) => (
+                  current
+                    ? {
+                        ...current,
+                        ...updatedProfile,
+                      }
+                    : current
+                ))
+              }}
+            />
+          )}
 
           {/* Individual KYC for Individual Arrangers */}
           {arrangerInfo.type === 'individual' && (

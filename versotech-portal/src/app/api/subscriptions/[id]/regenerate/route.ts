@@ -3,6 +3,7 @@ import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { NextResponse } from 'next/server'
 import { triggerWorkflow } from '@/lib/trigger-workflow'
 import { convertDocxToPdf } from '@/lib/gotenberg/convert'
+import { getArrangerSigner } from '@/lib/staff/arranger-signer'
 import { getCeoSigner } from '@/lib/staff/ceo-signer'
 import { buildSubscriptionPackPayload } from '@/lib/subscription-pack/payload-builder'
 import { assertSubscriptionPackPdfIsA4 } from '@/lib/subscription-pack/pdf-format-guard'
@@ -288,7 +289,7 @@ export async function POST(
     // Parent div needs position:relative for anchor's position:absolute to work
     const signatoriesSignatureHtml = signatories.map(s => `
 	<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
-	    <p><strong>The Subscriber</strong>, represented by Authorized Signatory ${s.number}</p>
+	    <p><strong>The Subscriber</strong>, represented by Authorized signatories</p>
 	    <div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number)}</span></div>
 	    <p style="margin-top: 0.3cm;">Name: ${s.name}${s.title ? `<br>Title: ${s.title}` : ''}</p>
 	</div>`).join('')
@@ -346,46 +347,26 @@ export async function POST(
     console.log('[REGENERATE] Issuer signer:', { name: issuerName, title: issuerTitle })
 
     // Get arranger signer for arranger block (party_c)
-    let arrangerName = feeStructure.arranger_person_name || ''
-    let arrangerTitle = feeStructure.arranger_person_title || 'Director'
-
-    // Fetch arranger from deal's arranger entity
     const { data: dealForArranger } = await serviceSupabase
       .from('deals')
       .select('arranger_entity_id')
       .eq('id', subscription.deal_id)
       .single()
 
-    if (dealForArranger?.arranger_entity_id) {
-      // Get arranger user who can sign
-      const { data: arrangerUser } = await serviceSupabase
-        .from('arranger_users')
-        .select('user_id, title')
-        .eq('arranger_id', dealForArranger.arranger_entity_id)
-        .eq('can_sign', true)
-        .order('is_primary', { ascending: false })
-        .limit(1)
-        .maybeSingle()
+    const arrangerSigner = dealForArranger?.arranger_entity_id
+      ? await getArrangerSigner(serviceSupabase, dealForArranger.arranger_entity_id)
+      : null
 
-      if (arrangerUser?.user_id) {
-        const { data: arrangerProfile } = await serviceSupabase
-          .from('profiles')
-          .select('display_name')
-          .eq('id', arrangerUser.user_id)
-          .single()
+    const arrangerName = arrangerSigner?.displayName
+      || feeStructure.arranger_person_name
+      || 'Julien Machot'
+    const arrangerTitle = arrangerSigner?.title
+      || feeStructure.arranger_person_title
+      || 'Authorized Signatory'
 
-        if (arrangerProfile?.display_name) {
-          arrangerName = arrangerProfile.display_name
-          arrangerTitle = arrangerUser.title || arrangerTitle
-          console.log('[REGENERATE] Arranger signer found:', { name: arrangerName, title: arrangerTitle })
-        }
-      }
-    }
-
-    // Hardcoded fallback if no arranger name found from any source
-    // This ensures the arranger block is never empty
-    if (!arrangerName) {
-      arrangerName = 'Julien Machot'
+    if (arrangerSigner) {
+      console.log('[REGENERATE] Arranger signer found:', { name: arrangerName, title: arrangerTitle })
+    } else if (!feeStructure.arranger_person_name) {
       console.warn('[REGENERATE] Using hardcoded arranger fallback: Julien Machot')
     }
     console.log('[REGENERATE] Arranger signer:', { name: arrangerName, title: arrangerTitle })

@@ -4,6 +4,7 @@ import { auditLogger, AuditActions } from '@/lib/audit'
 import { NextResponse } from 'next/server'
 import { triggerWorkflow } from '@/lib/trigger-workflow'
 import { createSignatureRequest } from '@/lib/signature/client'
+import { getArrangerSigner } from '@/lib/staff/arranger-signer'
 import { getCeoSigner } from '@/lib/staff/ceo-signer'
 import { sendAccountStatusEmail, sendInvitationEmail } from '@/lib/email/resend-service'
 import { getAppUrl } from '@/lib/signature/token'
@@ -2250,7 +2251,7 @@ async function handleEntityApproval(
               // Parent div needs position:relative for anchor's position:absolute to work
               const signatoriesSignatureHtml = signatories.map(s => `
 	<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
-	    <p><strong>The Subscriber</strong>, represented by Authorized Signatory ${s.number}</p>
+	    <p><strong>The Subscriber</strong>, represented by Authorized signatories</p>
 	    <div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number)}</span></div>
 	    <p style="margin-top: 0.3cm;">Name: ${s.name}${s.title ? `<br>Title: ${s.title}` : ''}</p>
 	</div>`).join('')
@@ -2292,6 +2293,22 @@ async function handleEntityApproval(
                 const issuerName = ceoSigner?.displayName || feeStructure.issuer_signatory_name || 'Julien Machot'
                 const issuerTitle = ceoSigner?.title || feeStructure.issuer_signatory_title || 'Authorized Signatory'
 
+                const { data: dealForArranger } = await supabase
+                  .from('deals')
+                  .select('arranger_entity_id')
+                  .eq('id', submission.deal_id)
+                  .single()
+
+                const arrangerSigner = dealForArranger?.arranger_entity_id
+                  ? await getArrangerSigner(supabase, dealForArranger.arranger_entity_id)
+                  : null
+                const arrangerName = arrangerSigner?.displayName
+                  || feeStructure.arranger_person_name
+                  || 'Julien Machot'
+                const arrangerTitle = arrangerSigner?.title
+                  || feeStructure.arranger_person_title
+                  || 'Authorized Signatory'
+
                 // Pre-rendered HTML for issuer (party_b) and arranger (party_c) signature blocks
                 // These include SIG_ANCHOR markers for signature positioning
                 // Page 12 - Main Agreement: Issuer signature with anchor
@@ -2312,8 +2329,8 @@ async function handleEntityApproval(
 <div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
     <p><strong>The Attorney, Verso Management Ltd.</strong>, for the purpose of the powers granted under Clause 6</p>
     <div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:party_c</span></div>
-    <p style="margin-top: 0.3cm;">Name: ${feeStructure.arranger_person_name || 'Julien Machot'}<br>
-    Title: ${feeStructure.arranger_person_title || 'Director'}</p>
+    <p style="margin-top: 0.3cm;">Name: ${arrangerName}<br>
+    Title: ${arrangerTitle}</p>
 </div>`
 
                 // Warn about incomplete address data (helps identify data quality issues)
@@ -2351,8 +2368,8 @@ async function handleEntityApproval(
                   signatories,
                   issuerName,
                   issuerTitle,
-                  arrangerName: feeStructure.arranger_person_name || 'Julien Machot',
-                  arrangerTitle: feeStructure.arranger_person_title || 'Director',
+                  arrangerName,
+                  arrangerTitle,
                   signatoriesTableHtml,
                   signatoriesFormHtml,
                   signatoriesSignatureHtml,

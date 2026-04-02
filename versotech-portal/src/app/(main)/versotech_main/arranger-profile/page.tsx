@@ -92,7 +92,7 @@ export default async function ArrangerProfilePage() {
   // Get user profile info
   const { data: profile } = await serviceSupabase
     .from('profiles')
-    .select('display_name, email, avatar_url')
+    .select('id, display_name, email, avatar_url, title, phone, office_location, bio, role')
     .eq('id', user.id)
     .maybeSingle()
 
@@ -158,9 +158,15 @@ export default async function ArrangerProfilePage() {
     <ArrangerProfileClient
       userEmail={user.email || ''}
       profile={profile ? {
-        full_name: profile.display_name,
+        id: profile.id,
+        display_name: profile.display_name,
         email: profile.email || user.email || '',
-        avatar_url: profile.avatar_url
+        avatar_url: profile.avatar_url,
+        title: profile.title,
+        phone: profile.phone,
+        office_location: profile.office_location,
+        bio: profile.bio,
+        role: profile.role || 'arranger',
       } : null}
       arrangerInfo={arranger ? {
         id: arranger.id,
