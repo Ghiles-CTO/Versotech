@@ -5559,8 +5559,6 @@ export type Database = {
         Row: {
           address_line_1: string | null
           address_line_2: string | null
-          agreement_doc_id: string | null
-          agreement_expiry_date: string | null
           city: string | null
           commission_cap_amount: number | null
           contact_name: string | null
@@ -5571,7 +5569,6 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           date_of_birth: string | null
-          default_commission_bps: number | null
           display_name: string | null
           email: string | null
           first_name: string | null
@@ -5617,8 +5614,6 @@ export type Database = {
         Insert: {
           address_line_1?: string | null
           address_line_2?: string | null
-          agreement_doc_id?: string | null
-          agreement_expiry_date?: string | null
           city?: string | null
           commission_cap_amount?: number | null
           contact_name?: string | null
@@ -5629,7 +5624,6 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           date_of_birth?: string | null
-          default_commission_bps?: number | null
           display_name?: string | null
           email?: string | null
           first_name?: string | null
@@ -5675,8 +5669,6 @@ export type Database = {
         Update: {
           address_line_1?: string | null
           address_line_2?: string | null
-          agreement_doc_id?: string | null
-          agreement_expiry_date?: string | null
           city?: string | null
           commission_cap_amount?: number | null
           contact_name?: string | null
@@ -5687,7 +5679,6 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           date_of_birth?: string | null
-          default_commission_bps?: number | null
           display_name?: string | null
           email?: string | null
           first_name?: string | null
@@ -5731,13 +5722,6 @@ export type Database = {
           website?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "introducers_agreement_doc_id_fkey"
-            columns: ["agreement_doc_id"]
-            isOneToOne: false
-            referencedRelation: "documents"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "introducers_created_by_fkey"
             columns: ["created_by"]

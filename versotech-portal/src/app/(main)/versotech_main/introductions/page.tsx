@@ -108,7 +108,6 @@ type DealDetails = {
 type IntroducerInfo = {
   id: string
   legal_name: string
-  default_commission_bps: number
   status: string
 }
 
@@ -349,7 +348,7 @@ export default function IntroductionsPage() {
         // Fetch introducer info
         const { data: introducer, error: introducerError } = await supabase
           .from('introducers')
-          .select('id, legal_name, default_commission_bps, status')
+          .select('id, legal_name, status')
           .eq('id', selectedIntroducerId)
           .single()
 

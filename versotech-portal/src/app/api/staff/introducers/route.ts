@@ -18,7 +18,6 @@ const bodySchema = z.object({
   contact_name: z.string().trim().optional().nullable(),
   email: z.string().trim().email().optional().nullable().or(z.literal("")),
   country: z.string().trim().optional().nullable(),
-  default_commission_bps: z.coerce.number().int().min(0).max(300).optional().nullable(),
   commission_cap_amount: z.coerce.number().min(0).optional().nullable(),
   payment_terms: z.string().trim().optional().nullable(),
   status: z.enum(["active", "inactive", "suspended"]).optional().default("active"),
@@ -118,7 +117,6 @@ export async function POST(request: NextRequest) {
       contact_name: parsed.contact_name ?? null,
       email: parsed.email || null,
       country: parsed.country ?? null,
-      default_commission_bps: parsed.default_commission_bps ?? null,
       commission_cap_amount: parsed.commission_cap_amount ?? null,
       payment_terms: parsed.payment_terms ?? null,
       status: parsed.status,
@@ -135,7 +133,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Failed to create introducer: ${error.message}` }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, data }, { status: 201 })
+    const sanitizedData = (data || []).map(({ default_commission_bps: _legacyDefaultCommissionBps, ...introducer }) => introducer)
+
+    return NextResponse.json({ success: true, data: sanitizedData }, { status: 201 })
   } catch (error) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
   }

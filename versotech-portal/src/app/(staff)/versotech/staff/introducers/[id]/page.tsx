@@ -13,7 +13,6 @@ type IntroducerDetail = {
   email: string | null
   phone_mobile: string | null
   phone_office: string | null
-  default_commission_bps: number | null
   commission_cap_amount: number | null
   payment_terms: string | null
   status: string
@@ -293,11 +292,11 @@ export default async function IntroducerDetailPage({
     pendingCommission,
   }
 
-  const introducerData = introducer as IntroducerDetail
+  const { default_commission_bps: _legacyDefaultCommissionBps, ...introducerData } = introducer
 
   return (
     <IntroducerDetailClient
-      introducer={introducerData}
+      introducer={introducerData as IntroducerDetail}
       metrics={metrics}
       introductions={introductions}
       commissions={commissions}

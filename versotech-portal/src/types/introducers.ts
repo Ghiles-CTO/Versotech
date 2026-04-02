@@ -90,10 +90,8 @@ export type IntroducerDetail = {
   contact_name: string | null
   email: string | null
   status: 'active' | 'inactive' | 'suspended'
-  default_commission_bps: number | null
   commission_cap_amount: number | null
   payment_terms: string | null
-  agreement_expiry_date: string | null
   logo_url: string | null
   notes: string | null
   created_at: string | null
@@ -180,9 +178,7 @@ export type IntroducerListItem = {
   contact_name: string | null
   email: string | null
   status: string
-  default_commission_bps: number | null
   commission_cap_amount: number | null
-  agreement_expiry_date: string | null
   logo_url: string | null
   deals_count: number
   referrals_count: number

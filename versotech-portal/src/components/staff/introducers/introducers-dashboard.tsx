@@ -40,7 +40,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import FeePlanEditModal from '@/components/fees/FeePlanEditModal'
 import { cn } from '@/lib/utils'
-import { formatCurrency, formatDate, formatBps } from '@/lib/format'
+import { formatCurrency, formatDate } from '@/lib/format'
 import { CheckCircle2 } from 'lucide-react'
 import { useAddIntroducer } from '@/components/staff/introducers/add-introducer-context'
 import { EditIntroducerDialog } from '@/components/staff/introducers/edit-introducer-dialog'
@@ -64,7 +64,6 @@ export type IntroducersDashboardProps = {
     legalName: string
     contactName: string | null
     email: string | null
-    defaultCommissionBps: number
     commissionCapAmount: number | null
     paymentTerms: string | null
     status: string
@@ -503,7 +502,6 @@ function IntroducerRow({
               {introducer.contactName || 'No contact'} • {introducer.email || 'No email provided'}
             </div>
             <div className="text-sm text-muted-foreground flex flex-wrap gap-2">
-              <span>Default commission: {formatBps(introducer.defaultCommissionBps)}</span>
               {introducer.commissionCapAmount ? (
                 <span>Cap: {formatCurrency(introducer.commissionCapAmount)}</span>
               ) : null}

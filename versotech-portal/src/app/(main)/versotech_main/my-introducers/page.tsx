@@ -30,11 +30,9 @@ import {
   ExternalLink,
   Mail,
   Handshake,
-  Percent,
   FileText,
   PenTool,
   Clock,
-  Plus,
   Wallet,
   CreditCard,
   TrendingUp,
@@ -44,7 +42,6 @@ import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
 import { type CurrencyTotals, formatCurrencyTotals, sumByCurrency } from '@/lib/currency-totals'
-import { CreateAgreementDialog } from '@/components/staff/introducers/create-agreement-dialog'
 import { IntroducerDetailDrawer } from '@/components/introducers/introducer-detail-drawer'
 import { CommissionSummary } from '@/components/common/commission-summary'
 import type { CommissionSummary as CommissionSummaryType } from '@/components/common/commission-summary'
@@ -67,9 +64,7 @@ type Introducer = {
   contact_name: string | null
   email: string | null
   status: string
-  default_commission_bps: number | null
   commission_cap_amount: number | null
-  agreement_expiry_date: string | null
   logo_url: string | null
   deals_count: number
   referrals_count: number
@@ -140,8 +135,6 @@ export default function MyIntroducersPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [dealFilter, setDealFilter] = useState('all')
-  const [createAgreementOpen, setCreateAgreementOpen] = useState(false)
-  const [selectedIntroducerForAgreement, setSelectedIntroducerForAgreement] = useState<Introducer | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedIntroducerId, setSelectedIntroducerId] = useState<string | null>(null)
 
@@ -381,9 +374,7 @@ export default function MyIntroducersPage() {
           contact_name: i.contact_name,
           email: i.email,
           status: i.status || 'active',
-          default_commission_bps: i.default_commission_bps,
           commission_cap_amount: i.commission_cap_amount ? Number(i.commission_cap_amount) : null,
-          agreement_expiry_date: i.agreement_expiry_date,
           logo_url: i.logo_url,
           deals_count: dealsInvolved.length,
           referrals_count: introRefs.length,
@@ -455,9 +446,7 @@ export default function MyIntroducersPage() {
       contact_name: i.contact_name,
       email: i.email,
       status: i.status || 'active',
-      default_commission_bps: i.default_commission_bps,
       commission_cap_amount: i.commission_cap_amount ? Number(i.commission_cap_amount) : null,
-      agreement_expiry_date: i.agreement_expiry_date,
       logo_url: i.logo_url,
       deals_count: 0,
       referrals_count: 0,
@@ -732,18 +721,15 @@ export default function MyIntroducersPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Introducer</TableHead>
-                    <TableHead>Rate / Fee Plans</TableHead>
+                    <TableHead>Fee Plans</TableHead>
                     <TableHead>Referrals</TableHead>
                     <TableHead>Commission Status</TableHead>
-                    <TableHead>Agreement</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredIntroducers.map((introducer) => {
-                    const isExpiringSoon = introducer.agreement_expiry_date && new Date(introducer.agreement_expiry_date) <= thirtyDaysFromNow && new Date(introducer.agreement_expiry_date) > today
-                    const isExpired = introducer.agreement_expiry_date && new Date(introducer.agreement_expiry_date) <= today
                     return (
                       <TableRow
                         key={introducer.id}
@@ -765,11 +751,6 @@ export default function MyIntroducersPage() {
                         </TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()}>
                           <div className="space-y-1">
-                            {introducer.default_commission_bps ? (
-                              <div className="font-medium flex items-center gap-1"><Percent className="h-3 w-3" />{(introducer.default_commission_bps / 100).toFixed(2)}%</div>
-                            ) : (
-                              <span className="text-muted-foreground text-xs">No default rate</span>
-                            )}
                             {introducer.fee_plans.length > 0 && (
                               <div className="flex flex-wrap gap-1">
                                 {introducer.fee_plans.slice(0, 2).map((fp) => (
@@ -781,6 +762,9 @@ export default function MyIntroducersPage() {
                                   <Badge variant="outline" className="text-xs">+{introducer.fee_plans.length - 2}</Badge>
                                 )}
                               </div>
+                            )}
+                            {introducer.fee_plans.length === 0 && (
+                              <span className="text-muted-foreground text-xs">No fee plans</span>
                             )}
                           </div>
                         </TableCell>
@@ -794,33 +778,10 @@ export default function MyIntroducersPage() {
                           <CommissionSummary summary={introducer.commission_summary} variant="inline" />
                         </TableCell>
                         <TableCell>
-                          {introducer.agreement_expiry_date ? (
-                            <div className={cn("text-sm", isExpired && "text-red-600", isExpiringSoon && "text-yellow-600")}>
-                              <div className="flex items-center gap-1"><FileText className="h-3 w-3" />{formatDate(introducer.agreement_expiry_date)}</div>
-                              {isExpired && <Badge variant="destructive" className="text-xs mt-1">Expired</Badge>}
-                              {isExpiringSoon && <Badge variant="outline" className="text-xs mt-1 bg-yellow-100">Expiring Soon</Badge>}
-                            </div>
-                          ) : <span className="text-muted-foreground text-xs">No agreement</span>}
-                        </TableCell>
-                        <TableCell>
                           <Badge variant="outline" className={cn('capitalize', STATUS_STYLES[introducer.status] || STATUS_STYLES.active)}>{introducer.status}</Badge>
                         </TableCell>
                         <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1">
-                            {arrangerInfo && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setSelectedIntroducerForAgreement(introducer)
-                                  setCreateAgreementOpen(true)
-                                }}
-                              >
-                                <Plus className="h-4 w-4 mr-1" />
-                                Agreement
-                              </Button>
-                            )}
                             <Button
                               variant="ghost"
                               size="sm"
@@ -842,20 +803,6 @@ export default function MyIntroducersPage() {
           )}
         </CardContent>
       </Card>
-
-      {/* Create Agreement Dialog */}
-      {selectedIntroducerForAgreement && (
-        <CreateAgreementDialog
-          open={createAgreementOpen}
-          onOpenChange={(open) => {
-            setCreateAgreementOpen(open)
-            if (!open) setSelectedIntroducerForAgreement(null)
-          }}
-          introducerId={selectedIntroducerForAgreement.id}
-          introducerName={selectedIntroducerForAgreement.legal_name}
-          defaultCommissionBps={selectedIntroducerForAgreement.default_commission_bps || 100}
-        />
-      )}
 
       {/* Introducer Detail Drawer */}
       <IntroducerDetailDrawer

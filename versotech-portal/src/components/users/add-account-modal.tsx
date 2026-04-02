@@ -185,7 +185,6 @@ const introducerSchema = z.object({
   // Common fields
   email: z.string().email().optional().or(z.literal('')),
   country: z.string().optional(),
-  default_commission_bps: z.coerce.number().min(0).max(300).optional(),
   payment_terms: z.enum(['net_15', 'net_30', 'net_45', 'net_60']).optional(),
   status: z.enum(['active', 'inactive', 'suspended']).default('active'),
   notes: z.string().optional(),
@@ -428,7 +427,6 @@ export function AddAccountModal({
         payment_terms: 'net_30',
         email: '',
         country: '',
-        default_commission_bps: '',
         notes: '',
       },
       lawyer: {
@@ -910,7 +908,6 @@ export function AddAccountModal({
             {renderFormField('country', formData.type === 'individual' ? 'Country of Residence' : 'Country', 'text', undefined, 'United States')}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {renderFormField('default_commission_bps', 'Commission (bps)', 'number', undefined, '0-300')}
             {renderFormField('payment_terms', 'Payment Terms', 'select', [
               { value: 'net_15', label: 'Net 15' },
               { value: 'net_30', label: 'Net 30' },

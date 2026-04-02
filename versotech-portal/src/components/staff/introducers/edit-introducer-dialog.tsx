@@ -15,7 +15,6 @@ type Introducer = {
   legalName: string
   contactName: string | null
   email: string | null
-  defaultCommissionBps: number
   commissionCapAmount: number | null
   paymentTerms: string | null
   status: string
@@ -32,7 +31,6 @@ export function EditIntroducerDialog({ open, onOpenChange, introducer }: EditInt
   const [legalName, setLegalName] = useState('')
   const [contactName, setContactName] = useState('')
   const [email, setEmail] = useState('')
-  const [commissionBps, setCommissionBps] = useState<number | ''>('')
   const [commissionCapAmount, setCommissionCapAmount] = useState<number | ''>('')
   const [paymentTerms, setPaymentTerms] = useState('net_30')
   const [status, setStatus] = useState('active')
@@ -45,7 +43,6 @@ export function EditIntroducerDialog({ open, onOpenChange, introducer }: EditInt
       setLegalName(introducer.legalName)
       setContactName(introducer.contactName || '')
       setEmail(introducer.email || '')
-      setCommissionBps(introducer.defaultCommissionBps || '')
       setCommissionCapAmount(introducer.commissionCapAmount || '')
       setPaymentTerms(introducer.paymentTerms || 'net_30')
       setStatus(introducer.status)
@@ -62,11 +59,6 @@ export function EditIntroducerDialog({ open, onOpenChange, introducer }: EditInt
         return
       }
 
-      if (commissionBps !== '' && (Number(commissionBps) < 0 || Number(commissionBps) > 300)) {
-        toast.error('Default commission must be between 0 and 300 bps')
-        return
-      }
-
       try {
         const response = await fetch(`/api/staff/introducers/${introducer.id}`, {
           method: 'PATCH',
@@ -75,7 +67,6 @@ export function EditIntroducerDialog({ open, onOpenChange, introducer }: EditInt
             legal_name: legalName.trim(),
             contact_name: contactName.trim() || null,
             email: email.trim() || null,
-            default_commission_bps: commissionBps === '' ? null : Number(commissionBps),
             commission_cap_amount: commissionCapAmount === '' ? null : Number(commissionCapAmount),
             payment_terms: paymentTerms,
             status,
@@ -142,7 +133,7 @@ export function EditIntroducerDialog({ open, onOpenChange, introducer }: EditInt
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Introducer</DialogTitle>
-          <DialogDescription>Update introducer contact information and commercial terms.</DialogDescription>
+          <DialogDescription>Update introducer contact information and commercial details.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid gap-2">
@@ -174,30 +165,16 @@ export function EditIntroducerDialog({ open, onOpenChange, introducer }: EditInt
               placeholder="jane.smith@example.com"
             />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="commissionBps">Default Commission (bps)</Label>
-              <Input
-                id="commissionBps"
-                type="number"
-                min={0}
-                max={300}
-                value={commissionBps}
-                onChange={(event) => setCommissionBps(event.target.value === '' ? '' : Number(event.target.value))}
-                placeholder="150"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="commissionCap">Commission Cap (optional)</Label>
-              <Input
-                id="commissionCap"
-                type="number"
-                min={0}
-                value={commissionCapAmount}
-                onChange={(event) => setCommissionCapAmount(event.target.value === '' ? '' : Number(event.target.value))}
-                placeholder="50000"
-              />
-            </div>
+          <div className="grid gap-2">
+            <Label htmlFor="commissionCap">Commission Cap (optional)</Label>
+            <Input
+              id="commissionCap"
+              type="number"
+              min={0}
+              value={commissionCapAmount}
+              onChange={(event) => setCommissionCapAmount(event.target.value === '' ? '' : Number(event.target.value))}
+              placeholder="50000"
+            />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="grid gap-2">

@@ -70,7 +70,6 @@ type IntroducerInfo = {
   id: string
   legal_name: string
   status: string
-  default_commission_bps: number | null
   logo_url: string | null
 }
 
@@ -260,7 +259,7 @@ export default function IntroducerAgreementsPage() {
 
           const { data: introducer, error: introducerError } = await supabase
             .from('introducers')
-            .select('id, legal_name, status, default_commission_bps, logo_url')
+            .select('id, legal_name, status, logo_url')
             .eq('id', selectedIntroducerId)
             .single()
 
@@ -432,11 +431,6 @@ export default function IntroducerAgreementsPage() {
                 : 'View and manage all introducer agreements'}
           </p>
         </div>
-        {introducerInfo && introducerInfo.default_commission_bps && (
-          <Badge variant="outline" className="text-sm">
-            Default: {formatCommission(introducerInfo.default_commission_bps)}
-          </Badge>
-        )}
       </div>
 
       {/* Summary Cards */}

@@ -9,7 +9,6 @@ const createIntroducerSchema = z.object({
   contact_name: z.string().optional(),
   contact_email: z.string().email().optional().or(z.literal('')),
   contact_phone: z.string().optional(),
-  default_commission_bps: z.number().optional(),
   commission_cap_amount: z.number().optional(),
   payment_terms: z.string().optional(),
   notes: z.string().optional(),
@@ -159,7 +158,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch introducers' }, { status: 500 })
     }
 
-    return NextResponse.json({ introducers })
+    const sanitizedIntroducers = (introducers || []).map(
+      ({ default_commission_bps: _legacyDefaultCommissionBps, ...introducer }) => introducer
+    )
+
+    return NextResponse.json({ introducers: sanitizedIntroducers })
   } catch (error) {
     console.error('Introducers fetch error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

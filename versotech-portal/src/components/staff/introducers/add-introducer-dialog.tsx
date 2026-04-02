@@ -14,7 +14,6 @@ export function AddIntroducerDialog() {
   const [legalName, setLegalName] = useState('')
   const [contactName, setContactName] = useState('')
   const [email, setEmail] = useState('')
-  const [commissionBps, setCommissionBps] = useState<number | ''>('')
   const [commissionCapAmount, setCommissionCapAmount] = useState<number | ''>('')
   const [paymentTerms, setPaymentTerms] = useState('net_30')
   const [status, setStatus] = useState('active')
@@ -27,7 +26,6 @@ export function AddIntroducerDialog() {
     setLegalName('')
     setContactName('')
     setEmail('')
-    setCommissionBps('')
     setCommissionCapAmount('')
     setPaymentTerms('net_30')
     setStatus('active')
@@ -41,11 +39,6 @@ export function AddIntroducerDialog() {
         return
       }
 
-      if (commissionBps !== '' && (Number(commissionBps) < 0 || Number(commissionBps) > 300)) {
-        toast.error('Default commission must be between 0 and 300 bps')
-        return
-      }
-
       try {
         const response = await fetch('/api/staff/introducers', {
           method: 'POST',
@@ -54,7 +47,6 @@ export function AddIntroducerDialog() {
             legal_name: legalName.trim(),
             contact_name: contactName.trim() || null,
             email: email.trim() || null,
-            default_commission_bps: commissionBps === '' ? null : Number(commissionBps),
             commission_cap_amount: commissionCapAmount === '' ? null : Number(commissionCapAmount),
             payment_terms: paymentTerms,
             status,
@@ -93,7 +85,7 @@ export function AddIntroducerDialog() {
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Add Introducer</DialogTitle>
-          <DialogDescription>Capture introducer contact information and default commercial terms.</DialogDescription>
+          <DialogDescription>Capture introducer contact information and commercial details.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid gap-2">
@@ -125,30 +117,16 @@ export function AddIntroducerDialog() {
               placeholder="jane.smith@example.com"
             />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="commissionBps">Default Commission (bps)</Label>
-              <Input
-                id="commissionBps"
-                type="number"
-                min={0}
-                max={300}
-                value={commissionBps}
-                onChange={(event) => setCommissionBps(event.target.value === '' ? '' : Number(event.target.value))}
-                placeholder="150"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="commissionCap">Commission Cap (optional)</Label>
-              <Input
-                id="commissionCap"
-                type="number"
-                min={0}
-                value={commissionCapAmount}
-                onChange={(event) => setCommissionCapAmount(event.target.value === '' ? '' : Number(event.target.value))}
-                placeholder="50000"
-              />
-            </div>
+          <div className="grid gap-2">
+            <Label htmlFor="commissionCap">Commission Cap (optional)</Label>
+            <Input
+              id="commissionCap"
+              type="number"
+              min={0}
+              value={commissionCapAmount}
+              onChange={(event) => setCommissionCapAmount(event.target.value === '' ? '' : Number(event.target.value))}
+              placeholder="50000"
+            />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="grid gap-2">
@@ -202,4 +180,3 @@ export function AddIntroducerDialog() {
     </Dialog>
   )
 }
-

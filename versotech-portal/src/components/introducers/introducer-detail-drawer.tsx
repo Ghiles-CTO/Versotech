@@ -224,11 +224,6 @@ export function IntroducerDetailDrawer({
                 >
                   {data.introducer.status}
                 </Badge>
-                {data.introducer.default_commission_bps && (
-                  <Badge variant="secondary" className="text-xs">
-                    {(data.introducer.default_commission_bps / 100).toFixed(2)}% default rate
-                  </Badge>
-                )}
               </div>
             </SheetHeader>
 
@@ -286,17 +281,9 @@ export function IntroducerDetailDrawer({
                 {/* Commission Terms */}
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Commission Terms</CardTitle>
+                    <CardTitle className="text-sm">Commercial Terms</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2 text-sm">
-                    {data.introducer.default_commission_bps ? (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Default Rate:</span>
-                        <span className="font-medium">{(data.introducer.default_commission_bps / 100).toFixed(2)}%</span>
-                      </div>
-                    ) : (
-                      <p className="text-muted-foreground">No default rate set</p>
-                    )}
                     {data.introducer.commission_cap_amount && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Commission Cap:</span>
@@ -311,11 +298,8 @@ export function IntroducerDetailDrawer({
                         <span className="font-medium">{data.introducer.payment_terms}</span>
                       </div>
                     )}
-                    {data.introducer.agreement_expiry_date && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Agreement Expiry:</span>
-                        <span className="font-medium">{formatDate(data.introducer.agreement_expiry_date)}</span>
-                      </div>
+                    {!data.introducer.commission_cap_amount && !data.introducer.payment_terms && (
+                      <p className="text-muted-foreground">No additional commercial terms set</p>
                     )}
                   </CardContent>
                 </Card>

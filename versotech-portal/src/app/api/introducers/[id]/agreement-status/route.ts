@@ -61,7 +61,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Get introducer details
     const { data: introducer, error: introducerError } = await serviceSupabase
       .from('introducers')
-      .select('id, legal_name, agreement_doc_id, agreement_expiry_date, status')
+      .select('id, legal_name, status')
       .eq('id', introducerId)
       .single()
 

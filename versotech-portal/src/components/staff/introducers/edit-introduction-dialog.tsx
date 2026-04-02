@@ -242,7 +242,7 @@ export function EditIntroductionDialog({
               onChange={(event) =>
                 setCommissionOverride(event.target.value === '' ? '' : Number(event.target.value))
               }
-              placeholder="Leave empty to use introducer's default rate"
+              placeholder="Leave empty unless this introduction needs a specific rate"
             />
           </div>
 

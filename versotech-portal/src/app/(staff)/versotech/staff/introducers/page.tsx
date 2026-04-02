@@ -15,7 +15,6 @@ type IntroducerRecord = {
   legal_name: string | null
   contact_name: string | null
   email: string | null
-  default_commission_bps: number | null
   commission_cap_amount: number | string | null
   payment_terms: string | null
   status: string | null
@@ -81,7 +80,6 @@ export default async function IntroducersPage() {
         legal_name,
         contact_name,
         email,
-        default_commission_bps,
         commission_cap_amount,
         payment_terms,
         status,
@@ -156,7 +154,6 @@ export default async function IntroducersPage() {
       legalName: record.legal_name ?? 'Unnamed Introducer',
       contactName: record.contact_name,
       email: record.email,
-      defaultCommissionBps: record.default_commission_bps ?? 0,
       commissionCapAmount: record.commission_cap_amount ? Number(record.commission_cap_amount) : null,
       paymentTerms: record.payment_terms,
       status: record.status ?? 'active',

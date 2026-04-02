@@ -47,7 +47,6 @@ type IntroducerInfo = {
   legal_name: string | null
   contact_name: string | null
   email: string | null
-  default_commission_bps: number | null
   payment_terms: string | null
   commission_cap_amount: number | null
   status: string | null

@@ -20,7 +20,6 @@ const updateIntroducerSchema = z.object({
   state_province: z.string().nullable().optional(),
   postal_code: z.string().nullable().optional(),
   country: z.string().nullable().optional(),
-  default_commission_bps: z.number().nullable().optional(),
   commission_cap_amount: z.number().nullable().optional(),
   payment_terms: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
@@ -113,7 +112,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
       `)
       .eq('introducer_id', id)
 
-    return NextResponse.json({ introducer, introducerUsers: introducerUsers || [] })
+    const { default_commission_bps: _legacyDefaultCommissionBps, ...sanitizedIntroducer } = introducer
+
+    return NextResponse.json({ introducer: sanitizedIntroducer, introducerUsers: introducerUsers || [] })
   } catch (error) {
     console.error('Introducer fetch error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -215,9 +216,11 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       timestamp: new Date().toISOString()
     })
 
+    const { default_commission_bps: _legacyDefaultCommissionBps, ...sanitizedIntroducer } = introducer
+
     return NextResponse.json({
       success: true,
-      introducer,
+      introducer: sanitizedIntroducer,
       message: 'Introducer updated successfully',
     })
   } catch (error) {

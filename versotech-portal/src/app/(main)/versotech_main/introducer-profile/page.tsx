@@ -231,7 +231,6 @@ export default async function IntroducerProfilePage({
         legal_name: introducer.legal_name,
         contact_name: introducer.contact_name,
         email: introducer.email,
-        default_commission_bps: introducer.default_commission_bps,
         payment_terms: introducer.payment_terms,
         commission_cap_amount: introducer.commission_cap_amount,
         status: introducer.status,

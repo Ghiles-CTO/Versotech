@@ -26,7 +26,6 @@ import {
   Eye,
   Send,
   PenLine,
-  Plus,
   CheckCircle2,
   XCircle,
   AlertCircle,
@@ -55,7 +54,6 @@ import { ActivityTimelineTab } from '@/components/shared/activity-timeline-tab'
 import { IndividualKycDisplay, EntityKYCEditDialog } from '@/components/shared'
 import { StaffEntityMembersTab } from '@/components/staff/shared/staff-entity-members-tab'
 import { EditIntroducerDialog } from '@/components/staff/introducers/edit-introducer-dialog'
-import { CreateAgreementDialog } from '@/components/staff/introducers/create-agreement-dialog'
 import { InviteUserDialog } from '@/components/users/invite-user-dialog'
 import { DispatchIntroducerInvestorDialog } from '@/components/staff/introducers/dispatch-introducer-investor-dialog'
 import { useRouter } from 'next/navigation'
@@ -73,7 +71,6 @@ type IntroducerDetail = {
   email: string | null
   phone_mobile: string | null
   phone_office: string | null
-  default_commission_bps: number | null
   commission_cap_amount: number | null
   payment_terms: string | null
   status: string
@@ -280,7 +277,6 @@ export function IntroducerDetailClient({
   const commercialActionsDisabled = !commercialEligibility.eligible
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
-  const [createAgreementOpen, setCreateAgreementOpen] = useState(false)
   const [kycDialogOpen, setKycDialogOpen] = useState(false)
   const [dispatchDialogOpen, setDispatchDialogOpen] = useState(false)
   const [sendingAgreement, setSendingAgreement] = useState<string | null>(null)
@@ -566,7 +562,6 @@ export function IntroducerDetailClient({
     legalName: introducer.legal_name,
     contactName: introducer.contact_name,
     email: introducer.email,
-    defaultCommissionBps: introducer.default_commission_bps || 0,
     commissionCapAmount: introducer.commission_cap_amount,
     paymentTerms: introducer.payment_terms,
     status: introducer.status,
@@ -626,11 +621,6 @@ export function IntroducerDetailClient({
             KYC: {introducer.kyc_status}
           </Badge>
         )}
-        {introducer.default_commission_bps && (
-          <Badge variant="outline">
-            {formatBps(introducer.default_commission_bps)} Commission
-          </Badge>
-        )}
       </div>
       {commercialActionsDisabled && (
         <p className="text-sm text-amber-600">
@@ -639,7 +629,7 @@ export function IntroducerDetailClient({
       )}
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -700,24 +690,6 @@ export function IntroducerDetailClient({
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Percent className="h-4 w-4" />
-              Default Rate
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              {formatBps(introducer.default_commission_bps || 0)}
-            </div>
-            {introducer.commission_cap_amount && (
-              <div className="text-sm text-muted-foreground mt-1">
-                Cap: {formatCurrency(introducer.commission_cap_amount)}
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
 
       {/* Tabbed Content */}
@@ -1236,16 +1208,9 @@ export function IntroducerDetailClient({
               <div>
                 <CardTitle>Fee Agreements</CardTitle>
                 <CardDescription>
-                  Manage commission agreements with {introducer.legal_name}
+                  Deal-specific fee agreements with {introducer.legal_name}
                 </CardDescription>
               </div>
-              <Button
-                onClick={() => setCreateAgreementOpen(true)}
-                className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Agreement
-              </Button>
             </CardHeader>
             <CardContent>
               {agreements.length === 0 ? (
@@ -1255,7 +1220,7 @@ export function IntroducerDetailClient({
                   </div>
                   <p className="text-muted-foreground mb-1">No agreements yet</p>
                   <p className="text-sm text-muted-foreground/70">
-                    Create a fee agreement to enable introductions
+                    Agreements appear here after a deal fee plan is generated
                   </p>
                 </div>
               ) : (
@@ -1526,14 +1491,6 @@ export function IntroducerDetailClient({
         entityType="introducer"
         entityId={introducer.id}
         entityName={introducer.legal_name}
-      />
-
-      <CreateAgreementDialog
-        open={createAgreementOpen}
-        onOpenChange={setCreateAgreementOpen}
-        introducerId={introducer.id}
-        introducerName={introducer.legal_name}
-        defaultCommissionBps={introducer.default_commission_bps || 100}
       />
 
       <DispatchIntroducerInvestorDialog
