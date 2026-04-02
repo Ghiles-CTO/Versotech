@@ -163,9 +163,9 @@ function useVehicleBankAccounts(vehicleId: string) {
 
 function AccountField({ label, value }: { label: string; value: string | null | undefined }) {
   return (
-    <div>
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="mt-1 text-sm text-foreground whitespace-pre-wrap">{value?.trim() || '—'}</p>
+    <div className="min-w-0">
+      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">{label}</p>
+      <p className="mt-0.5 text-sm text-foreground whitespace-pre-wrap break-words">{value?.trim() || '—'}</p>
     </div>
   )
 }
@@ -367,244 +367,255 @@ export function VehicleBankAccountsTab({
 
   if (loading) {
     return (
-      <Card className="border border-white/10 bg-white/5">
-        <CardContent className="flex items-center gap-3 py-10 text-sm text-muted-foreground">
+      <div className="rounded-lg border border-border/40 bg-card p-8">
+        <div className="flex items-center gap-3 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          Loading vehicle bank accounts…
-        </CardContent>
-      </Card>
+          Loading vehicle bank accounts...
+        </div>
+      </div>
     )
   }
 
   return (
-    <div className="space-y-4">
-      <Card className="border border-white/10 bg-white/5">
-        <CardHeader className="flex flex-row items-start justify-between gap-4">
-          <div>
-            <CardTitle>Vehicle Bank Accounts</CardTitle>
-            <CardDescription>
-              Draft changes stay internal. Only the active main account is used in dispatch, escrow, and subscription packs.
-            </CardDescription>
+    <div className="space-y-5">
+      {/* Header row */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-base font-semibold text-foreground">Bank Accounts</h3>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Only the active main account is used in dispatch, escrow, and subscription packs.
+          </p>
+        </div>
+        {canManage && (
+          <Button size="sm" onClick={() => openDraftEditor(draftAccount || mainAccount || null)}>
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            {draftAccount ? 'Edit Draft' : mainAccount ? 'Prepare Replacement' : 'Create Draft'}
+          </Button>
+        )}
+      </div>
+
+      {/* Dispatch blocked warning */}
+      {!mainAccount && (
+        <div className="flex items-start gap-3 rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+          <div className="text-sm">
+            <p className="font-medium text-amber-600 dark:text-amber-400">Dispatch is blocked</p>
+            <p className="mt-0.5 text-muted-foreground">
+              Create and publish a bank account for {vehicleName} before dispatching subscriptions.
+            </p>
           </div>
-          {canManage && (
-            <Button onClick={() => openDraftEditor(draftAccount || mainAccount || null)}>
-              <Plus className="mr-2 h-4 w-4" />
-              {draftAccount ? 'Edit Draft' : mainAccount ? 'Prepare Replacement' : 'Create Draft'}
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {!mainAccount && (
-            <div className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-              <div className="flex items-start gap-2">
-                <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
-                <div>
-                  <p className="font-medium">Dispatch is blocked until one main bank account is published.</p>
-                  <p className="mt-1 text-amber-50/90">
-                    Create a draft for {vehicleName}, complete the required fields, then publish it as the main account.
-                  </p>
-                </div>
+        </div>
+      )}
+
+      {/* Main Account Card */}
+      {mainAccount && (
+        <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/[0.03]">
+          <div className="flex items-center justify-between border-b border-emerald-500/10 px-5 py-3">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-6 items-center rounded-full bg-emerald-500/10 px-2.5">
+                <CheckCircle2 className="mr-1 h-3 w-3 text-emerald-500" />
+                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Active</span>
               </div>
+              <span className="text-sm font-medium text-foreground">Main Account</span>
             </div>
-          )}
-
-          {mainAccount && (
-            <Card className="border border-emerald-400/20 bg-emerald-500/5">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <CardTitle className="text-base">Main Account</CardTitle>
-                    <CardDescription>
-                      Visible to investors and used in all generated subscription packs.
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-emerald-500/20 text-emerald-100 border border-emerald-400/30">
-                      Active
-                    </Badge>
-                    {canManage && (
-                      <>
-                        <Button variant="outline" size="sm" onClick={() => openDraftEditor(draftAccount || mainAccount)}>
-                          <Edit2 className="mr-2 h-4 w-4" />
-                          Edit via Draft
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleDelete(mainAccount, 'main bank account')}>
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="grid gap-4 md:grid-cols-2">
-                <AccountField label="Bank" value={mainAccount.bank_name} />
-                <AccountField label="Holder" value={mainAccount.holder_name} />
-                <AccountField label="Bank Address" value={mainAccount.bank_address} />
-                <AccountField label="Law Firm Address" value={mainAccount.law_firm_address} />
+            {canManage && (
+              <div className="flex items-center gap-1.5">
+                <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => openDraftEditor(draftAccount || mainAccount)}>
+                  <Edit2 className="mr-1 h-3 w-3" />
+                  Edit via Draft
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-destructive hover:text-destructive" onClick={() => handleDelete(mainAccount, 'main bank account')}>
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
+          </div>
+          <div className="grid gap-x-8 gap-y-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
+            <AccountField label="Bank" value={mainAccount.bank_name} />
+            <AccountField label="Holder" value={mainAccount.holder_name} />
+            <AccountField label="Currency" value={mainAccount.currency} />
+            <AccountField label="IBAN" value={mainAccount.iban} />
+            <AccountField label="BIC" value={mainAccount.bic} />
+            <AccountField label="Reference" value={`Agency ${vehicleName}`} />
+            <div className="sm:col-span-2 lg:col-span-3">
+              <AccountField label="Bank Address" value={mainAccount.bank_address} />
+            </div>
+            <div className="sm:col-span-2 lg:col-span-3">
+              <AccountField label="Law Firm Address" value={mainAccount.law_firm_address} />
+            </div>
+            {mainAccount.description && (
+              <div className="sm:col-span-2 lg:col-span-3">
                 <AccountField label="Description" value={mainAccount.description} />
-                <AccountField label="Reference" value={`Agency ${vehicleName}`} />
-                <AccountField label="IBAN" value={mainAccount.iban} />
-                <AccountField label="BIC" value={mainAccount.bic} />
-                <AccountField label="Currency" value={mainAccount.currency} />
-              </CardContent>
-            </Card>
-          )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
-          {draftAccount ? (
-            <Card className="border border-blue-400/20 bg-blue-500/5">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <CardTitle className="text-base">Draft Replacement</CardTitle>
-                    <CardDescription>
-                      Investors cannot see this yet. Publish when you want it to replace the current main account.
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-blue-500/20 text-blue-100 border border-blue-400/30">
-                      Draft
-                    </Badge>
-                    {canManage && (
-                      <>
-                        <Button variant="outline" size="sm" onClick={() => openDraftEditor(draftAccount)}>
-                          <Edit2 className="mr-2 h-4 w-4" />
-                          Edit Draft
-                        </Button>
-                        <Button variant="default" size="sm" onClick={handlePublish} disabled={publishing}>
-                          {publishing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
-                          Publish
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleDelete(draftAccount, 'draft bank account')}>
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="grid gap-4 md:grid-cols-2">
-                <AccountField label="Bank" value={draftAccount.bank_name} />
-                <AccountField label="Holder" value={draftAccount.holder_name} />
-                <AccountField label="Bank Address" value={draftAccount.bank_address} />
-                <AccountField label="Law Firm Address" value={draftAccount.law_firm_address} />
-                <AccountField label="Description" value={draftAccount.description} />
-                <AccountField label="Reference Preview" value={`Agency ${vehicleName}`} />
-                <AccountField label="IBAN" value={draftAccount.iban} />
-                <AccountField label="BIC" value={draftAccount.bic} />
-                <AccountField label="Currency" value={draftAccount.currency} />
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="rounded-lg border border-white/10 bg-white/5 px-4 py-4 text-sm text-muted-foreground">
-              No unpublished replacement exists. Create one when you want to change the live account without exposing draft data to investors.
+      {/* Draft Card */}
+      {draftAccount ? (
+        <div className="rounded-lg border border-blue-500/20 bg-blue-500/[0.03]">
+          <div className="flex items-center justify-between border-b border-blue-500/10 px-5 py-3">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-6 items-center rounded-full bg-blue-500/10 px-2.5">
+                <Edit2 className="mr-1 h-3 w-3 text-blue-500" />
+                <span className="text-xs font-medium text-blue-600 dark:text-blue-400">Draft</span>
+              </div>
+              <span className="text-sm font-medium text-foreground">Replacement</span>
             </div>
-          )}
-        </CardContent>
-      </Card>
+            {canManage && (
+              <div className="flex items-center gap-1.5">
+                <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => openDraftEditor(draftAccount)}>
+                  <Edit2 className="mr-1 h-3 w-3" />
+                  Edit
+                </Button>
+                <Button size="sm" className="h-7 px-2.5 text-xs" onClick={handlePublish} disabled={publishing}>
+                  {publishing ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <CheckCircle2 className="mr-1 h-3 w-3" />}
+                  Publish
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-destructive hover:text-destructive" onClick={() => handleDelete(draftAccount, 'draft bank account')}>
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
+          </div>
+          <div className="grid gap-x-8 gap-y-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
+            <AccountField label="Bank" value={draftAccount.bank_name} />
+            <AccountField label="Holder" value={draftAccount.holder_name} />
+            <AccountField label="Currency" value={draftAccount.currency} />
+            <AccountField label="IBAN" value={draftAccount.iban} />
+            <AccountField label="BIC" value={draftAccount.bic} />
+            <AccountField label="Reference Preview" value={`Agency ${vehicleName}`} />
+            <div className="sm:col-span-2 lg:col-span-3">
+              <AccountField label="Bank Address" value={draftAccount.bank_address} />
+            </div>
+            <div className="sm:col-span-2 lg:col-span-3">
+              <AccountField label="Law Firm Address" value={draftAccount.law_firm_address} />
+            </div>
+            {draftAccount.description && (
+              <div className="sm:col-span-2 lg:col-span-3">
+                <AccountField label="Description" value={draftAccount.description} />
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-dashed border-border/60 px-5 py-6 text-center text-sm text-muted-foreground">
+          No unpublished replacement exists. Create one when you need to change the live account.
+        </div>
+      )}
 
+      {/* Form Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{draftAccount ? 'Edit Draft Bank Account' : 'Create Draft Bank Account'}</DialogTitle>
+            <DialogTitle className="text-lg">{draftAccount ? 'Edit Draft Bank Account' : 'Create Draft Bank Account'}</DialogTitle>
             <DialogDescription>
-              Save changes as a draft first. Publishing is a separate action and replaces the live main account.
+              Changes are saved as a draft. Publishing replaces the live main account.
             </DialogDescription>
           </DialogHeader>
 
           {formState && (
-            <div className="grid gap-4 py-2 md:grid-cols-2">
-              <div className="md:col-span-2 rounded-lg border border-blue-400/20 bg-blue-500/5 px-4 py-3 text-sm text-blue-100">
-                <div className="flex items-start gap-2">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <div>
-                    <p className="font-medium">Reference is generated automatically.</p>
-                    <p className="mt-1 text-blue-50/90">{`Agency ${vehicleName}`}</p>
+            <div className="space-y-6 py-2">
+              {/* Auto-reference notice */}
+              <div className="flex items-center gap-2.5 rounded-md bg-muted/50 px-3.5 py-2.5 text-sm">
+                <AlertCircle className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span className="text-muted-foreground">
+                  Reference: <span className="font-medium text-foreground">{`Agency ${vehicleName}`}</span>
+                </span>
+              </div>
+
+              {/* Section: Account Holder */}
+              <fieldset className="space-y-3">
+                <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Account Holder</legend>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="lawyer_id" className="text-xs">Holder Preset</Label>
+                    <Select value={formState.lawyer_id || 'manual'} onValueChange={(value) => handleLawyerChange(value === 'manual' ? '' : value)}>
+                      <SelectTrigger id="lawyer_id">
+                        <SelectValue placeholder="Select a law firm" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manual">Manual entry</SelectItem>
+                        {lawyers.map((lawyer) => (
+                          <SelectItem key={lawyer.id} value={lawyer.id}>
+                            {lawyer.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="holder_name" className="text-xs">Holder Name</Label>
+                    <Input id="holder_name" value={formState.holder_name} onChange={(event) => setFormState((current) => current ? { ...current, holder_name: event.target.value } : current)} placeholder="Legal entity name" />
                   </div>
                 </div>
-              </div>
-
-              <div>
-                <Label htmlFor="lawyer_id">Holder Preset</Label>
-                <Select value={formState.lawyer_id || 'manual'} onValueChange={(value) => handleLawyerChange(value === 'manual' ? '' : value)}>
-                  <SelectTrigger id="lawyer_id">
-                    <SelectValue placeholder="Select a law firm" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="manual">Manual entry</SelectItem>
-                    {lawyers.map((lawyer) => (
-                      <SelectItem key={lawyer.id} value={lawyer.id}>
-                        {lawyer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="currency">Currency</Label>
-                <Select value={formState.currency || 'USD'} onValueChange={(value) => setFormState((current) => current ? { ...current, currency: value } : current)}>
-                  <SelectTrigger id="currency">
-                    <SelectValue placeholder="Select currency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CURRENCIES.map((currency) => (
-                      <SelectItem key={currency.value} value={currency.value}>
-                        {currency.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="bank_name">Bank</Label>
-                <Input id="bank_name" value={formState.bank_name} onChange={(event) => setFormState((current) => current ? { ...current, bank_name: event.target.value } : current)} />
-              </div>
-
-              <div>
-                <Label htmlFor="holder_name">Holder</Label>
-                <Input id="holder_name" value={formState.holder_name} onChange={(event) => setFormState((current) => current ? { ...current, holder_name: event.target.value } : current)} />
-              </div>
-
-              <div className="md:col-span-2">
-                <Label htmlFor="bank_address">Bank Address</Label>
-                <Textarea id="bank_address" value={formState.bank_address} onChange={(event) => setFormState((current) => current ? { ...current, bank_address: event.target.value } : current)} rows={2} />
-              </div>
-
-              <div className="md:col-span-2">
-                <Label htmlFor="law_firm_address">Law Firm Address</Label>
-                <Textarea id="law_firm_address" value={formState.law_firm_address} onChange={(event) => setFormState((current) => current ? { ...current, law_firm_address: event.target.value } : current)} rows={2} />
-              </div>
-
-              <div className="md:col-span-2">
-                <Label htmlFor="description">Description</Label>
-                <Input id="description" value={formState.description} onChange={(event) => setFormState((current) => current ? { ...current, description: event.target.value } : current)} />
-              </div>
-
-              <div>
-                <Label htmlFor="iban">IBAN</Label>
-                <Input id="iban" value={formState.iban} onChange={(event) => setFormState((current) => current ? { ...current, iban: event.target.value } : current)} />
-              </div>
-
-              <div>
-                <Label htmlFor="bic">BIC</Label>
-                <Input id="bic" value={formState.bic} onChange={(event) => setFormState((current) => current ? { ...current, bic: event.target.value } : current)} />
-              </div>
-
-              {selectedLawyer?.email && (
-                <div className="md:col-span-2 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-muted-foreground">
-                  Selected lawyer contact: <span className="font-medium text-foreground">{selectedLawyer.email}</span>
+                {selectedLawyer?.email && (
+                  <p className="text-xs text-muted-foreground">
+                    Contact: <span className="font-medium text-foreground">{selectedLawyer.email}</span>
+                  </p>
+                )}
+                <div className="space-y-1.5">
+                  <Label htmlFor="law_firm_address" className="text-xs">Law Firm Address</Label>
+                  <Textarea id="law_firm_address" value={formState.law_firm_address} onChange={(event) => setFormState((current) => current ? { ...current, law_firm_address: event.target.value } : current)} rows={2} placeholder="Full law firm address" className="resize-none" />
                 </div>
-              )}
+              </fieldset>
+
+              {/* Section: Bank Details */}
+              <fieldset className="space-y-3">
+                <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Bank Details</legend>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="bank_name" className="text-xs">Bank Name</Label>
+                    <Input id="bank_name" value={formState.bank_name} onChange={(event) => setFormState((current) => current ? { ...current, bank_name: event.target.value } : current)} placeholder="e.g. HSBC, BNP Paribas" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="currency" className="text-xs">Currency</Label>
+                    <Select value={formState.currency || 'USD'} onValueChange={(value) => setFormState((current) => current ? { ...current, currency: value } : current)}>
+                      <SelectTrigger id="currency">
+                        <SelectValue placeholder="Select currency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CURRENCIES.map((currency) => (
+                          <SelectItem key={currency.value} value={currency.value}>
+                            {currency.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="bank_address" className="text-xs">Bank Address</Label>
+                  <Textarea id="bank_address" value={formState.bank_address} onChange={(event) => setFormState((current) => current ? { ...current, bank_address: event.target.value } : current)} rows={2} placeholder="Full bank address" className="resize-none" />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="iban" className="text-xs">IBAN</Label>
+                    <Input id="iban" value={formState.iban} onChange={(event) => setFormState((current) => current ? { ...current, iban: event.target.value } : current)} placeholder="e.g. LU12 3456 7890 1234 5678" className="font-mono text-sm tracking-wide" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="bic" className="text-xs">BIC / SWIFT</Label>
+                    <Input id="bic" value={formState.bic} onChange={(event) => setFormState((current) => current ? { ...current, bic: event.target.value } : current)} placeholder="e.g. BCEELULL" className="font-mono text-sm tracking-wide" />
+                  </div>
+                </div>
+              </fieldset>
+
+              {/* Section: Additional */}
+              <fieldset className="space-y-3">
+                <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Additional</legend>
+                <div className="space-y-1.5">
+                  <Label htmlFor="description" className="text-xs">Description</Label>
+                  <Input id="description" value={formState.description} onChange={(event) => setFormState((current) => current ? { ...current, description: event.target.value } : current)} placeholder="Purpose or notes for this account" />
+                </div>
+              </fieldset>
             </div>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleSaveDraft} disabled={saving}>
-              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              {saving ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Save className="mr-1.5 h-3.5 w-3.5" />}
               Save Draft
             </Button>
           </DialogFooter>

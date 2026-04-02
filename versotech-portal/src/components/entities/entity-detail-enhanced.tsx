@@ -1388,52 +1388,54 @@ export function EntityDetailEnhanced({
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="bg-white/5 border border-white/10">
-          <TabsTrigger value="overview" className="gap-2">
-            <Building2 className="h-4 w-4" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="investors" className="gap-2">
-            <ShieldCheck className="h-4 w-4" />
-            Subscriptions ({investors.length})
-          </TabsTrigger>
-          <TabsTrigger value="documents" className="gap-2">
-            <FolderOpen className="h-4 w-4" />
-            Documents & Folders
-          </TabsTrigger>
-          <TabsTrigger value="stakeholders" className="gap-2">
-            <Users className="h-4 w-4" />
-            Stakeholders ({stakeholders.length})
-          </TabsTrigger>
-          <TabsTrigger value="directors" className="gap-2">
-            <Users className="h-4 w-4" />
-            Directors ({directors.length})
-          </TabsTrigger>
-          <TabsTrigger value="deals" className="gap-2">
-            <Briefcase className="h-4 w-4" />
-            Deals ({deals.length})
-          </TabsTrigger>
-          <TabsTrigger value="bank_accounts" className="gap-2">
-            <Building2 className="h-4 w-4" />
-            Bank Accounts
-          </TabsTrigger>
-          <TabsTrigger value="health" className="gap-2">
-            <Activity className="h-4 w-4" />
-            Health
-          </TabsTrigger>
-          <TabsTrigger value="activity" className="gap-2">
-            <Activity className="h-4 w-4" />
-            Activity Log
-          </TabsTrigger>
-          <TabsTrigger value="valuations" className="gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Valuations ({valuations.length})
-          </TabsTrigger>
-          <TabsTrigger value="positions" className="gap-2">
-            <ClipboardList className="h-4 w-4" />
-            Positions ({positions.length})
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto no-scrollbar -mx-1 px-1">
+          <TabsList className="bg-white/5 border border-white/10 inline-flex w-max min-w-full gap-0.5">
+            <TabsTrigger value="overview" className="gap-1.5 text-xs px-2.5 py-1.5 shrink-0">
+              <Building2 className="h-3.5 w-3.5" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="investors" className="gap-1.5 text-xs px-2.5 py-1.5 shrink-0">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Subscriptions{investors.length > 0 ? ` (${investors.length})` : ''}
+            </TabsTrigger>
+            <TabsTrigger value="documents" className="gap-1.5 text-xs px-2.5 py-1.5 shrink-0">
+              <FolderOpen className="h-3.5 w-3.5" />
+              Documents
+            </TabsTrigger>
+            <TabsTrigger value="stakeholders" className="gap-1.5 text-xs px-2.5 py-1.5 shrink-0">
+              <Users className="h-3.5 w-3.5" />
+              Stakeholders{stakeholders.length > 0 ? ` (${stakeholders.length})` : ''}
+            </TabsTrigger>
+            <TabsTrigger value="directors" className="gap-1.5 text-xs px-2.5 py-1.5 shrink-0">
+              <Users className="h-3.5 w-3.5" />
+              Directors{directors.length > 0 ? ` (${directors.length})` : ''}
+            </TabsTrigger>
+            <TabsTrigger value="deals" className="gap-1.5 text-xs px-2.5 py-1.5 shrink-0">
+              <Briefcase className="h-3.5 w-3.5" />
+              Deals{deals.length > 0 ? ` (${deals.length})` : ''}
+            </TabsTrigger>
+            <TabsTrigger value="bank_accounts" className="gap-1.5 text-xs px-2.5 py-1.5 shrink-0">
+              <Building2 className="h-3.5 w-3.5" />
+              Bank Accounts
+            </TabsTrigger>
+            <TabsTrigger value="health" className="gap-1.5 text-xs px-2.5 py-1.5 shrink-0">
+              <Activity className="h-3.5 w-3.5" />
+              Health
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="gap-1.5 text-xs px-2.5 py-1.5 shrink-0">
+              <Activity className="h-3.5 w-3.5" />
+              Activity
+            </TabsTrigger>
+            <TabsTrigger value="valuations" className="gap-1.5 text-xs px-2.5 py-1.5 shrink-0">
+              <TrendingUp className="h-3.5 w-3.5" />
+              Valuations{valuations.length > 0 ? ` (${valuations.length})` : ''}
+            </TabsTrigger>
+            <TabsTrigger value="positions" className="gap-1.5 text-xs px-2.5 py-1.5 shrink-0">
+              <ClipboardList className="h-3.5 w-3.5" />
+              Positions{positions.length > 0 ? ` (${positions.length})` : ''}
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Overview Tab - showing CSV fields */}
         <TabsContent value="overview" className="space-y-4">
