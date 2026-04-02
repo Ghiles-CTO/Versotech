@@ -4,7 +4,6 @@ import type { User } from '@supabase/supabase-js'
 import {
   ArrowUpRight,
   Building2,
-  CalendarClock,
   FileText,
   Layers,
   MapPin,
@@ -435,7 +434,7 @@ function HoldingsSnapshot({ vehicles }: { vehicles: PortfolioVehicle[] }) {
       <CardContent className="space-y-4 p-6">
         {displayed.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-200/80 bg-slate-50/80 p-6 text-center text-sm text-slate-500">
-            No active holdings yet. Allocations will appear here once your onboarding is complete.
+            No current investments yet. Allocations will appear here once your onboarding is complete.
           </div>
         ) : (
           <div className="space-y-3">
@@ -461,7 +460,7 @@ function HoldingsSnapshot({ vehicles }: { vehicles: PortfolioVehicle[] }) {
         </Badge>
         <Link href="/versotech_main/portfolio">
           <Button variant="outline" size="sm">
-            Open holdings workspace
+            Open investments workspace
             <ArrowUpRight className="h-4 w-4" />
           </Button>
         </Link>
@@ -720,11 +719,11 @@ export default async function InvestorDashboard() {
       ctaLabel: 'Open tasks'
     },
     {
-      label: 'Active holdings',
+      label: 'Current investments',
       value: portfolioData.vehicles.length,
-      helper: 'Investment vehicles',
+      helper: 'Investments',
       href: '/versotech_main/portfolio',
-      ctaLabel: 'Open holdings'
+      ctaLabel: 'Open investments'
     }
   ]
 
@@ -791,10 +790,7 @@ export default async function InvestorDashboard() {
 
               <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-600">
                 <Badge variant="outline" className="rounded-full border-slate-200/80 bg-slate-50 text-slate-600">
-                  <MapPin className="mr-1 h-3 w-3" /> Luxembourg HQ
-                </Badge>
-                <Badge variant="outline" className="rounded-full border-slate-200/80 bg-slate-50 text-slate-600">
-                  <Building2 className="mr-1 h-3 w-3" /> BVI Professional Fund
+                  <MapPin className="mr-1 h-3 w-3" /> Luxembourg
                 </Badge>
                 <Badge variant="outline" className="rounded-full border-slate-200/80 bg-slate-50 text-slate-600">
                   <Target className="mr-1 h-3 w-3" /> PE • VC • Real Estate
@@ -806,12 +802,6 @@ export default async function InvestorDashboard() {
                   <Button size="sm" className="w-full sm:w-auto">
                     View holdings
                     <ArrowUpRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link href="/versotech_main/calendar" className="w-full sm:w-auto">
-                  <Button size="sm" variant="outline" className="w-full sm:w-auto">
-                    Calendar & deadlines
-                    <CalendarClock className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
               </div>

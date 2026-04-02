@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   ArrowUpRight,
   CalendarClock,
-  CalendarDays,
   CheckSquare,
   Clock,
   FileText,
@@ -328,7 +327,7 @@ export function InvestorActionCenter({ tasks, tasksTotal, recentActivity }: Inve
                         </div>
                       </div>
 
-                      <Link href={`/versotech_main/tasks?id=${task.id}`}>
+                      <Link href={task.title.toLowerCase().includes('invite') ? '/versotech_main/team' : `/versotech_main/tasks?id=${task.id}`}>
                         <Button size="sm" className={cn(
                           "gap-1 shadow-sm transition-all",
                           isOverdue
@@ -457,10 +456,10 @@ export function InvestorActionCenter({ tasks, tasksTotal, recentActivity }: Inve
 
       {/* Quick Actions Grid */}
       <Card className="glass-panel border-0">
-        <CardContent className="grid gap-4 p-6 md:grid-cols-2 lg:grid-cols-5">
+        <CardContent className="grid gap-4 p-6 md:grid-cols-2 lg:grid-cols-4">
           {[
             {
-              href: '/versotech_main/opportunities',
+              href: '/versotech_main/portfolio',
               label: 'Holdings',
               description: 'Portfolio & NAV',
               icon: Target,
@@ -479,13 +478,6 @@ export function InvestorActionCenter({ tasks, tasksTotal, recentActivity }: Inve
               description: 'Statements',
               icon: FileText,
               color: 'text-emerald-600'
-            },
-            {
-              href: '/versotech_main/tasks',
-              label: 'Calendar',
-              description: 'Deadlines',
-              icon: CalendarDays,
-              color: 'text-amber-600'
             },
             {
               href: '/versotech_main/inbox',
