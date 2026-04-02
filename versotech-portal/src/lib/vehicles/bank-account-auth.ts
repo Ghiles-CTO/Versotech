@@ -11,18 +11,28 @@ type PersonaRecord = {
   role_in_entity?: string | null
 }
 
-export async function canReadVehicleBankAccounts(supabase: DbClient, user: User) {
-  return isStaffUser(supabase, user)
+const VEHICLE_BANK_ACCOUNT_READ_ROLES = ['ceo', 'staff_admin', 'staff_ops', 'staff_rm'] as const
+const VEHICLE_BANK_ACCOUNT_MANAGE_ROLES = ['ceo', 'staff_admin', 'staff_ops'] as const
+
+function hasAllowedVehicleBankRole(
+  role: string | null | undefined,
+  allowedRoles: readonly string[],
+) {
+  return Boolean(role && allowedRoles.includes(role))
 }
 
-export async function canManageVehicleBankAccounts(supabase: DbClient, user: User) {
+async function hasVehicleBankAccountAccess(
+  supabase: DbClient,
+  user: User,
+  allowedRoles: readonly string[],
+) {
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .maybeSingle()
 
-  if (profile?.role && ['ceo', 'staff_admin', 'staff_ops'].includes(profile.role)) {
+  if (hasAllowedVehicleBankRole(profile?.role, allowedRoles)) {
     return true
   }
 
@@ -33,8 +43,28 @@ export async function canManageVehicleBankAccounts(supabase: DbClient, user: Use
   return Array.isArray(personas) && personas.some((persona: PersonaRecord) =>
     persona.persona_type === 'ceo' ||
     (persona.persona_type === 'staff' &&
-      (persona.role_in_entity === 'ceo' ||
-        persona.role_in_entity === 'staff_admin' ||
-        persona.role_in_entity === 'staff_ops'))
+      hasAllowedVehicleBankRole(persona.role_in_entity, allowedRoles))
+  )
+}
+
+export async function canReadVehicleBankAccounts(supabase: DbClient, user: User) {
+  const hasDirectVehicleAccess = await hasVehicleBankAccountAccess(
+    supabase,
+    user,
+    VEHICLE_BANK_ACCOUNT_READ_ROLES,
+  )
+
+  if (hasDirectVehicleAccess) {
+    return true
+  }
+
+  return isStaffUser(supabase, user)
+}
+
+export async function canManageVehicleBankAccounts(supabase: DbClient, user: User) {
+  return hasVehicleBankAccountAccess(
+    supabase,
+    user,
+    VEHICLE_BANK_ACCOUNT_MANAGE_ROLES,
   )
 }

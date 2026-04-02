@@ -34,6 +34,16 @@ export async function POST(
       return NextResponse.json({ error: 'Bank account not found' }, { status: 404 })
     }
 
+    if (selectedAccount.status !== 'draft') {
+      return NextResponse.json(
+        {
+          error: 'Only draft bank accounts can be published.',
+          reasonCode: 'vehicle_bank_account_publish_requires_draft',
+        },
+        { status: 409 }
+      )
+    }
+
     const missingFields = getVehicleBankAccountMissingFields(selectedAccount)
     if (missingFields.length > 0) {
       return NextResponse.json(
@@ -85,14 +95,12 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to load published bank account' }, { status: 500 })
     }
 
+    let warning: string | null = null
     try {
       await syncVehicleBankFieldsToLegacyFeeStructures(serviceSupabase, vehicleId)
     } catch (syncError) {
       console.error('[vehicle-bank-accounts] publish legacy sync error:', syncError)
-      return NextResponse.json(
-        { error: 'Bank account was published, but the legacy term-sheet bank fields could not be synced.' },
-        { status: 500 }
-      )
+      warning = 'Bank account was published, but the legacy term-sheet bank fields could not be synced.'
     }
 
     await serviceSupabase.from('audit_logs').insert({
@@ -105,7 +113,7 @@ export async function POST(
       },
     })
 
-    return NextResponse.json({ bankAccount: published })
+    return NextResponse.json({ bankAccount: published, warning })
   } catch (error) {
     console.error('[vehicle-bank-accounts] publish unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

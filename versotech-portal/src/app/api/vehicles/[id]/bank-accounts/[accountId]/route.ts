@@ -134,15 +134,13 @@ export async function PATCH(
       return NextResponse.json({ error: 'Failed to update bank account' }, { status: 500 })
     }
 
+    let warning: string | null = null
     if (updated.status === 'active') {
       try {
         await syncVehicleBankFieldsToLegacyFeeStructures(serviceSupabase, vehicleId)
       } catch (syncError) {
         console.error('[vehicle-bank-accounts] PATCH legacy sync error:', syncError)
-        return NextResponse.json(
-          { error: 'Bank account was updated, but the legacy term-sheet bank fields could not be synced.' },
-          { status: 500 }
-        )
+        warning = 'Bank account was updated, but the legacy term-sheet bank fields could not be synced.'
       }
     }
 
@@ -157,7 +155,7 @@ export async function PATCH(
       },
     })
 
-    return NextResponse.json({ bankAccount: updated })
+    return NextResponse.json({ bankAccount: updated, warning })
   } catch (error) {
     console.error('[vehicle-bank-accounts] PATCH unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -205,15 +203,13 @@ export async function DELETE(
       return NextResponse.json({ error: 'Failed to delete bank account' }, { status: 500 })
     }
 
+    let warning: string | null = null
     if (existing.status === 'active') {
       try {
         await syncVehicleBankFieldsToLegacyFeeStructures(serviceSupabase, vehicleId)
       } catch (syncError) {
         console.error('[vehicle-bank-accounts] DELETE legacy sync error:', syncError)
-        return NextResponse.json(
-          { error: 'Bank account was deleted, but the legacy term-sheet bank fields could not be synced.' },
-          { status: 500 }
-        )
+        warning = 'Bank account was deleted, but the legacy term-sheet bank fields could not be synced.'
       }
     }
 
@@ -228,7 +224,7 @@ export async function DELETE(
       },
     })
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, warning })
   } catch (error) {
     console.error('[vehicle-bank-accounts] DELETE unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

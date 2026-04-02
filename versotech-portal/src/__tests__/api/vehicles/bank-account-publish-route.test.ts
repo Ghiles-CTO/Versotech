@@ -121,4 +121,46 @@ describe('vehicle bank account publish route', () => {
     expect(data.reasonCode).toBe('vehicle_bank_account_incomplete')
     expect(serviceSupabase.rpc).not.toHaveBeenCalled()
   })
+
+  it('blocks publishing non-draft accounts', async () => {
+    const serviceSupabase = createMockServiceSupabase()
+    vi.mocked(createServiceClient).mockReturnValue(serviceSupabase as any)
+    vi.mocked(getVehicleBankAccountState).mockResolvedValue({
+      accounts: [{ id: 'active-1', status: 'active' }],
+      activeAccounts: [{ id: 'active-1', status: 'active' }],
+      draftAccounts: [],
+      activeAccount: { id: 'active-1', status: 'active' },
+      draftAccount: null,
+    } as any)
+
+    const { POST } = await import('@/app/api/vehicles/[id]/bank-accounts/[accountId]/publish/route')
+
+    const response = await POST(
+      new Request('http://localhost/api/vehicles/vehicle-1/bank-accounts/active-1/publish', { method: 'POST' }) as any,
+      { params: Promise.resolve({ id: 'vehicle-1', accountId: 'active-1' }) }
+    )
+    const data = await response.json()
+
+    expect(response.status).toBe(409)
+    expect(data.reasonCode).toBe('vehicle_bank_account_publish_requires_draft')
+    expect(serviceSupabase.rpc).not.toHaveBeenCalled()
+  })
+
+  it('returns success with a warning when legacy sync fails after publish', async () => {
+    const serviceSupabase = createMockServiceSupabase()
+    vi.mocked(createServiceClient).mockReturnValue(serviceSupabase as any)
+    vi.mocked(syncVehicleBankFieldsToLegacyFeeStructures).mockRejectedValue(new Error('sync failed'))
+
+    const { POST } = await import('@/app/api/vehicles/[id]/bank-accounts/[accountId]/publish/route')
+
+    const response = await POST(
+      new Request('http://localhost/api/vehicles/vehicle-1/bank-accounts/draft-1/publish', { method: 'POST' }) as any,
+      { params: Promise.resolve({ id: 'vehicle-1', accountId: 'draft-1' }) }
+    )
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.warning).toContain('legacy term-sheet bank fields could not be synced')
+    expect(data.bankAccount.id).toBe('draft-1')
+  })
 })
