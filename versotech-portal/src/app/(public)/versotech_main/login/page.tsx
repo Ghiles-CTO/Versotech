@@ -163,30 +163,31 @@ function UnifiedLoginContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#050505] p-4 font-sans text-zinc-100">
+    <div className="min-h-screen flex flex-col items-center bg-white p-4 font-sans text-slate-900">
 
-      <div className="w-full max-w-md space-y-8 animate-in fade-in zoom-in-95 duration-700">
-
-        <div className="text-center">
-          <div className="flex justify-center items-center gap-3 mb-6">
-            <div className="relative w-10 h-10 flex-shrink-0">
-              <Image src="/versotech-icon.png" alt="" fill className="object-contain" priority />
-            </div>
-            <span style={{ fontFamily: 'var(--font-spartan), sans-serif' }} className="text-2xl font-extrabold tracking-wide text-white">
-              VERSOTECH
-            </span>
+      {/* Logo — centered in the space between top and card */}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="flex items-center gap-3 animate-in fade-in duration-700">
+          <div className="relative w-10 h-10 flex-shrink-0">
+            <Image src="/versotech-icon.png" alt="" fill className="object-contain" priority />
           </div>
-          <h1 className="text-3xl font-light tracking-tight text-white sr-only">VERSO</h1>
+          <span style={{ fontFamily: 'var(--font-spartan), sans-serif' }} className="text-2xl font-extrabold tracking-wide text-slate-900">
+            VERSOTECH
+          </span>
         </div>
+      </div>
 
-        <Card className="bg-zinc-900/50 border-white/5 backdrop-blur-sm shadow-2xl shadow-black">
+      <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-700">
+        <h1 className="sr-only">VERSO</h1>
+
+        <Card className="border-slate-200 shadow-xl shadow-slate-200/40 bg-slate-50">
           <CardContent className="p-8 space-y-6">
 
             {message && (
               <div className={`p-3 rounded-md text-sm font-medium border ${
-                message.type === 'error' ? 'bg-red-900/20 border-red-900/50 text-red-400' :
-                message.type === 'success' ? 'bg-emerald-900/20 border-emerald-900/50 text-emerald-400' :
-                'bg-blue-900/20 border-blue-900/50 text-blue-400'
+                message.type === 'error' ? 'bg-red-50 border-red-100 text-red-600' :
+                message.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
+                'bg-blue-50 border-blue-100 text-blue-600'
               }`}>
                 {message.text}
               </div>
@@ -194,11 +195,11 @@ function UnifiedLoginContent() {
 
             <form onSubmit={handleEmailAuth} className="space-y-5">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-zinc-500 uppercase">Email Address</Label>
+                <Label className="text-xs font-semibold text-black uppercase">Email Address</Label>
                 <Input
                   type="email"
                   placeholder="name@example.com"
-                  className="h-11 bg-black/50 border-white/10 text-white placeholder:text-zinc-700 focus:border-white/30 focus:ring-0 transition-all"
+                  className="h-11 bg-slate-50 border-slate-200 text-black placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -207,10 +208,10 @@ function UnifiedLoginContent() {
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs font-semibold text-zinc-500 uppercase">Password</Label>
+                  <Label className="text-xs font-semibold text-black uppercase">Password</Label>
                   <Link
                     href="/versotech_main/reset-password"
-                    className="text-xs text-zinc-500 hover:text-white transition-colors"
+                    className="text-xs text-black hover:text-blue-600 transition-colors"
                   >
                     Forgot Password?
                   </Link>
@@ -219,7 +220,7 @@ function UnifiedLoginContent() {
                   <Input
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
-                    className="h-11 bg-black/50 border-white/10 text-white placeholder:text-zinc-700 focus:border-white/30 focus:ring-0 transition-all pr-10"
+                    className="h-11 bg-slate-50 border-slate-200 text-black placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all pr-10"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -227,7 +228,7 @@ function UnifiedLoginContent() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-zinc-600 hover:text-white transition-colors"
+                    className="absolute right-3 top-3 text-black/60 hover:text-black transition-colors"
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -237,7 +238,7 @@ function UnifiedLoginContent() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-12 bg-white hover:bg-zinc-200 text-black font-medium tracking-wide transition-all mt-4"
+                className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white font-medium tracking-wide transition-all mt-4"
               >
                 {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
                     <span className="flex items-center gap-2">
@@ -249,11 +250,11 @@ function UnifiedLoginContent() {
 
             {/* Request Access */}
             <div className="text-center pt-2">
-              <p className="text-sm text-zinc-400">
+              <p className="text-sm text-black">
                 Request Access: Please contact us at{' '}
                 <a
                   href="mailto:contact@versotech.com"
-                  className="text-white hover:text-zinc-300 underline underline-offset-2 transition-colors"
+                  className="text-black font-medium hover:text-blue-600 underline underline-offset-2 transition-colors"
                 >
                   contact@versotech.com
                 </a>
@@ -264,6 +265,9 @@ function UnifiedLoginContent() {
         </Card>
 
       </div>
+
+      {/* Bottom spacer to keep card centered */}
+      <div className="flex-1" />
     </div>
   )
 }
@@ -271,8 +275,8 @@ function UnifiedLoginContent() {
 export default function UnifiedLoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
       </div>
     }>
       <UnifiedLoginContent />
