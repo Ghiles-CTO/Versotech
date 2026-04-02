@@ -83,6 +83,12 @@ interface Investor {
   allocation_status: string | null
 }
 
+interface VehicleBankAccountState {
+  totalCount: number
+  activeCount: number
+  draftCount: number
+}
+
 /**
  * Check metadata completeness
  */
@@ -561,6 +567,63 @@ export function checkInvestorStatus(investors: Investor[]): HealthCheck[] {
   return checks
 }
 
+export function checkVehicleBankAccountStatus(
+  bankAccountState?: VehicleBankAccountState | null,
+): HealthCheck[] {
+  const checks: HealthCheck[] = []
+  const activeCount = bankAccountState?.activeCount || 0
+  const draftCount = bankAccountState?.draftCount || 0
+  const totalCount = bankAccountState?.totalCount || 0
+
+  if (activeCount === 1) {
+    checks.push({
+      id: 'bank_accounts_main',
+      category: 'bank_accounts',
+      title: 'Main Bank Account',
+      status: 'pass',
+      message: draftCount > 0
+        ? 'One active main bank account is published and a draft replacement exists'
+        : 'One active main bank account is published',
+    })
+
+    return checks
+  }
+
+  if (activeCount > 1) {
+    checks.push({
+      id: 'bank_accounts_main',
+      category: 'bank_accounts',
+      title: 'Main Bank Account',
+      status: 'fail',
+      message: 'Multiple active bank accounts found',
+      details: 'Keep exactly one active main bank account for dispatch and subscription packs',
+      actionable: {
+        label: 'Review bank accounts',
+        action: 'manage_bank_accounts',
+      }
+    })
+
+    return checks
+  }
+
+  checks.push({
+    id: 'bank_accounts_main',
+    category: 'bank_accounts',
+    title: 'Main Bank Account',
+    status: 'fail',
+    message: totalCount > 0
+      ? 'A bank account draft exists, but no main bank account is published'
+      : 'No main bank account is published',
+    details: 'Dispatch and subscription packs depend on one active vehicle bank account',
+    actionable: {
+      label: 'Set bank account',
+      action: 'manage_bank_accounts',
+    }
+  })
+
+  return checks
+}
+
 /**
  * Calculate overall health score and status
  */
@@ -604,6 +667,7 @@ export function runEntityHealthChecks(data: {
   folders: Folder[]
   deals: Deal[]
   investors: Investor[]
+  bankAccountState?: VehicleBankAccountState | null
 }): EntityHealthResult {
   const allChecks: HealthCheck[] = [
     ...checkMetadataCompleteness(data.entity),
@@ -611,7 +675,8 @@ export function runEntityHealthChecks(data: {
     ...checkDirectorStatus(data.directors),
     ...checkDocumentRequirements(data.documents, data.folders),
     ...checkDealActivity(data.deals),
-    ...checkInvestorStatus(data.investors)
+    ...checkInvestorStatus(data.investors),
+    ...checkVehicleBankAccountStatus(data.bankAccountState),
   ]
 
   return calculateOverallHealth(allChecks)

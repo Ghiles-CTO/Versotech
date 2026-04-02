@@ -31,6 +31,11 @@ interface EntityHealthMonitorProps {
   folders: any[]
   deals: any[]
   investors: any[]
+  bankAccountState?: {
+    totalCount: number
+    activeCount: number
+    draftCount: number
+  } | null
   onAction?: (action: string) => void
 }
 
@@ -42,7 +47,8 @@ const categoryIcons: Record<string, IconType> = {
   directors: User,
   documents: FileText,
   deals: Briefcase,
-  investors: ShieldCheck
+  investors: ShieldCheck,
+  bank_accounts: Briefcase,
 }
 
 const categoryLabels: Record<string, string> = {
@@ -51,7 +57,8 @@ const categoryLabels: Record<string, string> = {
   directors: 'Director Status',
   documents: 'Document Requirements',
   deals: 'Deal Activity',
-  investors: 'Investor Status'
+  investors: 'Investor Status',
+  bank_accounts: 'Bank Accounts',
 }
 
 function getStatusIcon(status: HealthStatus) {
@@ -129,6 +136,7 @@ export function EntityHealthMonitor({
   folders,
   deals,
   investors,
+  bankAccountState,
   onAction
 }: EntityHealthMonitorProps) {
   const healthResult = useMemo(() => {
@@ -139,9 +147,10 @@ export function EntityHealthMonitor({
       documents,
       folders,
       deals,
-      investors
+      investors,
+      bankAccountState,
     })
-  }, [entity, directors, stakeholders, documents, folders, deals, investors])
+  }, [entity, directors, stakeholders, documents, folders, deals, investors, bankAccountState])
 
   const checksByCategory = useMemo(() => {
     const grouped: Record<string, HealthCheck[]> = {}

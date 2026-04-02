@@ -101,13 +101,16 @@ const CURRENCIES = [
   { value: 'AUD', label: 'AUD (Australia, Dollars)' },
 ]
 
-function buildInitialFormState(response: VehicleBankAccountsResponse, source?: VehicleBankAccount | null): VehicleBankAccountFormState {
+export function buildInitialFormState(response: VehicleBankAccountsResponse, source?: VehicleBankAccount | null): VehicleBankAccountFormState {
+  const lawyerId = source?.lawyer_id || response.draftAccount?.lawyer_id || response.vehicle.lawyer_id || ''
+  const selectedLawyer = response.lawyers.find((lawyer) => lawyer.id === lawyerId)
+
   return {
-    lawyer_id: source?.lawyer_id || response.draftAccount?.lawyer_id || response.vehicle.lawyer_id || '',
+    lawyer_id: lawyerId,
     bank_name: source?.bank_name || '',
     bank_address: source?.bank_address || '',
-    holder_name: source?.holder_name || '',
-    law_firm_address: source?.law_firm_address || '',
+    holder_name: source?.holder_name || selectedLawyer?.name || '',
+    law_firm_address: source?.law_firm_address || formatLawyerAddress(selectedLawyer) || '',
     description: source?.description || response.vehicle.default_description,
     iban: source?.iban || '',
     bic: source?.bic || '',
@@ -125,6 +128,27 @@ function formatLawyerAddress(lawyer: VehicleBankLawyerOption | undefined) {
     lawyer.postal_code,
     lawyer.country,
   ].filter(Boolean).join(', ')
+}
+
+export function applyLawyerSelectionToFormState(
+  current: VehicleBankAccountFormState,
+  lawyer?: VehicleBankLawyerOption,
+): VehicleBankAccountFormState {
+  if (!lawyer) {
+    return {
+      ...current,
+      lawyer_id: '',
+      holder_name: '',
+      law_firm_address: '',
+    }
+  }
+
+  return {
+    ...current,
+    lawyer_id: lawyer.id,
+    holder_name: lawyer.name || '',
+    law_firm_address: formatLawyerAddress(lawyer) || '',
+  }
 }
 
 function useVehicleBankAccounts(vehicleId: string) {
@@ -261,12 +285,7 @@ export function VehicleBankAccountsTab({
     const lawyer = lawyers.find((option) => option.id === lawyerId)
     setFormState((current) => {
       if (!current) return current
-      return {
-        ...current,
-        lawyer_id: lawyerId,
-        holder_name: lawyer?.name || current.holder_name,
-        law_firm_address: formatLawyerAddress(lawyer) || current.law_firm_address,
-      }
+      return applyLawyerSelectionToFormState(current, lawyer)
     })
   }
 
@@ -530,7 +549,7 @@ export function VehicleBankAccountsTab({
                 <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Account Holder</legend>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <Label htmlFor="lawyer_id" className="text-xs">Holder Preset</Label>
+                    <Label htmlFor="lawyer_id" className="text-xs">Prefill From Lawyer</Label>
                     <Select value={formState.lawyer_id || 'manual'} onValueChange={(value) => handleLawyerChange(value === 'manual' ? '' : value)}>
                       <SelectTrigger id="lawyer_id">
                         <SelectValue placeholder="Select a law firm" />
@@ -552,7 +571,7 @@ export function VehicleBankAccountsTab({
                 </div>
                 {selectedLawyer?.email && (
                   <p className="text-xs text-muted-foreground">
-                    Contact: <span className="font-medium text-foreground">{selectedLawyer.email}</span>
+                    Contact email on file: <span className="font-medium text-foreground">{selectedLawyer.email}</span>
                   </p>
                 )}
                 <div className="space-y-1.5">

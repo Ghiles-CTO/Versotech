@@ -217,6 +217,11 @@ interface EntityDetailEnhancedProps {
   investors: EntityInvestorSummary[]
   valuations: Valuation[]
   positions: Position[]
+  bankAccountState?: {
+    totalCount: number
+    activeCount: number
+    draftCount: number
+  } | null
 }
 
 const entityTypeLabels: Record<string, string> = {
@@ -457,7 +462,8 @@ export function EntityDetailEnhanced({
   events: initialEvents,
   investors: initialInvestors,
   valuations: initialValuations,
-  positions: initialPositions
+  positions: initialPositions,
+  bankAccountState,
 }: EntityDetailEnhancedProps) {
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState('overview')
@@ -2407,6 +2413,7 @@ export function EntityDetailEnhanced({
             folders={folders}
             deals={deals}
             investors={investors}
+            bankAccountState={bankAccountState}
             onAction={(action) => {
               // Handle quick actions from health monitor
               switch (action) {
@@ -2428,6 +2435,9 @@ export function EntityDetailEnhanced({
                 case 'upload_document':
                 case 'create_folder':
                   setActiveTab('documents')
+                  break
+                case 'manage_bank_accounts':
+                  setActiveTab('bank_accounts')
                   break
                 default:
                   console.log('Action not implemented:', action)

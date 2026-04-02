@@ -57,7 +57,8 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
     { data: entityInvestors },
     { data: vehicleSubscriptions },
     { data: valuations },
-    { data: positions }
+    { data: positions },
+    { data: vehicleBankAccounts }
   ] = await Promise.all([
     supabase
       .from('entity_directors')
@@ -166,7 +167,11 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
         )
       `)
       .eq('vehicle_id', id)
-      .order('as_of_date', { ascending: false })
+      .order('as_of_date', { ascending: false }),
+    supabase
+      .from('vehicle_bank_accounts')
+      .select('id, status')
+      .eq('vehicle_id', id)
   ])
 
   let holdings: any[] = []
@@ -217,6 +222,12 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
     deals: deals ?? [] as any
   })
 
+  const bankAccountState = {
+    totalCount: vehicleBankAccounts?.length || 0,
+    activeCount: vehicleBankAccounts?.filter((account) => account.status === 'active').length || 0,
+    draftCount: vehicleBankAccounts?.filter((account) => account.status === 'draft').length || 0,
+  }
+
   return (
     <EntityDetailEnhanced
         entity={{ ...entity, updated_at: null }}
@@ -229,6 +240,7 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
         investors={mergedInvestors}
         valuations={valuations || []}
         positions={(positions as any) || []}
+        bankAccountState={bankAccountState}
       />
     )
 }
