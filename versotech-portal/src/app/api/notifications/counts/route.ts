@@ -295,7 +295,7 @@ export async function GET(request: NextRequest) {
           .select('id', { count: 'exact', head: true })
           .in('status', KYC_REVIEW_STATUSES),
         // Signatures: pending signature tasks (countersignature + subscription_pack_signature)
-        // Note: VersoSign uses the tasks table, not signature_requests (which doesn't exist)
+        // Note: VERSOSIGN uses the tasks table, not signature_requests (which doesn't exist)
         serviceSupabase
           .from('tasks')
           .select('id', { count: 'exact', head: true })

@@ -939,7 +939,7 @@ export async function POST(
                       })
                       .eq('id', agreement.id);
 
-                    // Create task for CEO in VERSOSign with detailed info
+                    // Create task for CEO in VERSOSIGN with detailed info
                     const signingUrl = `/sign/${signingToken}`;
                     const dealName = deal?.company_name || deal?.name || 'Unknown Deal';
                     const introducerName = introducer?.legal_name || 'Unknown Introducer';
@@ -985,7 +985,7 @@ export async function POST(
                     if (taskError) {
                       console.error('⚠️ Failed to create CEO task:', taskError);
                     } else {
-                      console.log('✅ CEO task created in VERSOSign');
+                      console.log('✅ CEO task created in VERSOSIGN');
                     }
 
                     if (arrangerId) {

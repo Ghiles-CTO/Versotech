@@ -1636,7 +1636,7 @@ export async function handlePlacementAgreementSignature(
           investor_id: null,
           title: 'Placement Agreement Ready for Signature',
           message: `Your placement agreement has been signed by the ${signerLabel} and is ready for your signature.`,
-          link: `/versotech_main/versosign`, // Direct to VERSOSign page where task will appear
+          link: `/versotech_main/versosign`, // Direct to VERSOSIGN page where task will appear
           type: 'introducer_agreement_pending',
         }))
 

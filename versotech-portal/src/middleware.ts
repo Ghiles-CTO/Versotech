@@ -201,7 +201,7 @@ export async function middleware(request: NextRequest) {
       return createLegacyRedirect('/versotech_main/kyc-review')
     }
 
-    // VersoSign
+    // VERSOSIGN
     if (pathname === '/versotech/staff/versosign') {
       return createLegacyRedirect('/versotech_main/versosign')
     }

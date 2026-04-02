@@ -606,11 +606,11 @@ export async function createSignatureRequest(
         .eq('id', signatureRequest.id)
     }
 
-    // Create task for CEO/admin and arranger signatures to appear in VERSOSign
+    // Create task for CEO/admin and arranger signatures to appear in VERSOSIGN
     // - CEO tasks: owned by ceo_entity_id (found via owner_ceo_entity_id)
     // - Arranger tasks: NOT owned by user (found via related_deal_id in arranger query)
     if (signer_role === 'admin' || signer_role === 'arranger') {
-      console.log('📋 [SIGNATURE] Creating task for staff signature in VERSOSign')
+      console.log('📋 [SIGNATURE] Creating task for staff signature in VERSOSIGN')
 
       // Find the staff user by email (for logging/context, not ownership)
       const { data: staffProfile, error: profileError } = await supabase
@@ -669,7 +669,7 @@ export async function createSignatureRequest(
         // Task ownership based on role:
         // - CEO/admin: owner_ceo_entity_id (all CEO members see it)
         // - Arranger: NO owner (found via related_deal_id, not owner_user_id)
-        //   This prevents arranger tasks from showing in staff VERSOsign view
+        //   This prevents arranger tasks from showing in staff VERSOSIGN view
         const taskOwnership = signer_role === 'admin' && ceoEntityId
           ? { owner_user_id: null, owner_ceo_entity_id: ceoEntityId }
           : { owner_user_id: null, owner_ceo_entity_id: null }  // Arranger: no ownership, use related_deal_id
@@ -702,7 +702,7 @@ export async function createSignatureRequest(
         if (taskError) {
           console.error('⚠️ [SIGNATURE] Failed to create task:', taskError)
         } else {
-          console.log('✅ [SIGNATURE] Task created for VERSOSign:', {
+          console.log('✅ [SIGNATURE] Task created for VERSOSIGN:', {
             assignee: staffProfile.display_name,
             title: `Countersign ${document_type.toUpperCase()} for ${signer_name}`
           })

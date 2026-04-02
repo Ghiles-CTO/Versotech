@@ -274,7 +274,7 @@ export async function POST(request: NextRequest) {
           priority: 'medium',
           related_entity_type: 'deal',
           related_entity_id: deal_id,
-          related_deal_id: deal_id,  // Direct deal reference for VERSOSign queries
+          related_deal_id: deal_id,  // Direct deal reference for VERSOSIGN queries
           due_at: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
           instructions: {
             type: 'subscription_prepare',

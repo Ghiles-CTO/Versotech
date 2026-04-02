@@ -29,7 +29,7 @@ type PlacementAgreementForSigning = {
 }
 
 /**
- * VersoSign Page for Unified Portal (versotech_main)
+ * VERSOSIGN Page for Unified Portal (versotech_main)
  *
  * Persona-aware signature management:
  * - Staff/CEO personas: Full access to all signature tasks
