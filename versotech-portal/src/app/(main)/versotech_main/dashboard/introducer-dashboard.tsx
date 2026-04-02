@@ -30,10 +30,6 @@ import { useTheme } from '@/components/theme-provider'
 import type { DateRange } from 'react-day-picker'
 import { format } from 'date-fns'
 import { type CurrencyTotals, formatCurrencyTotals, sumByCurrency } from '@/lib/currency-totals'
-import {
-  InvestorDashboardOnboardingCard,
-  type DashboardOnboardingState,
-} from '@/components/dashboard/investor-dashboard-onboarding-card'
 
 type Persona = {
   persona_type: string
@@ -128,31 +124,11 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
   const [pendingAgreement, setPendingAgreement] = useState<Agreement | null>(null)
   const [recentIntroductions, setRecentIntroductions] = useState<RecentIntroduction[]>([])
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
-  const [onboarding, setOnboarding] = useState<DashboardOnboardingState | null>(null)
 
   useEffect(() => {
     async function fetchData() {
       try {
         const supabase = createClient()
-        const onboardingPromise = fetch('/api/introducers/me/dashboard-onboarding', {
-          credentials: 'same-origin',
-        })
-          .then(async (response) => {
-            if (response.status === 404) {
-              return null
-            }
-
-            if (!response.ok) {
-              throw new Error('Failed to load introducer onboarding state')
-            }
-
-            return (await response.json()) as DashboardOnboardingState
-          })
-          .catch((onboardingError) => {
-            console.error('[IntroducerDashboard] Error fetching onboarding state:', onboardingError)
-            return null
-          })
-
         // Fetch introductions for metrics
         const { data: introductions } = await supabase
           .from('introductions')
@@ -324,8 +300,6 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
           setActiveAgreement(active || null)
           setPendingAgreement(pending || null)
         }
-
-        setOnboarding(await onboardingPromise)
       } catch (error) {
         console.error('Error fetching introducer data:', error)
       } finally {
@@ -373,8 +347,6 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
           />
         )}
       </div>
-
-      {onboarding && <InvestorDashboardOnboardingCard state={onboarding} />}
 
       {/* Alert for Pending Agreement */}
       {pendingAgreement && (
