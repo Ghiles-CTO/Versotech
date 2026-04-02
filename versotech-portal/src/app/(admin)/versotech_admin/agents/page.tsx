@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getCountryName } from '@/components/kyc/country-select'
+import { getCountryName } from '@/lib/countries'
 import {
   Bot,
   ShieldAlert,
