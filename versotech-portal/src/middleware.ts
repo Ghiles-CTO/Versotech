@@ -714,13 +714,18 @@ export async function middleware(request: NextRequest) {
         '/versotech_main/subscription-packs',
         '/versotech_main/lawyer-reconciliation',
       ]
+      const isArrangerInvestorDetailPath = /^\/versotech_main\/investors\/[^/]+\/?$/.test(pathname)
 
       if (matchesPrefix(ceoOnlyPaths) && !isCEO) {
         return NextResponse.redirect(new URL('/versotech_main/dashboard', request.url))
       }
 
       // CEO users have full access to staff paths (they have 'ceo' persona, not 'staff')
-      if (matchesPrefix(staffPaths) && !hasAnyPersona(['staff', 'ceo'])) {
+      if (
+        matchesPrefix(staffPaths) &&
+        !hasAnyPersona(['staff', 'ceo']) &&
+        !(isArrangerInvestorDetailPath && hasPersona('arranger'))
+      ) {
         return NextResponse.redirect(new URL('/versotech_main/dashboard', request.url))
       }
 

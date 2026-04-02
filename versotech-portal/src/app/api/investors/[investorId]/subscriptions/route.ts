@@ -3,6 +3,10 @@ import { z } from 'zod'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
+import {
+  buildInvestorSubscriptionsSummary,
+  sanitizeSubscriptionForViewer,
+} from '@/lib/subscriptions/investor-subscriptions-view'
 import crypto from 'crypto'
 
 export const runtime = 'nodejs'
@@ -83,11 +87,6 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const staff = await isStaffUser(authClient, user)
-    if (!staff) {
-      return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
-    }
-
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
     if (!serviceRoleKey) {
@@ -99,6 +98,56 @@ export async function GET(
     }
 
     const supabase = createServiceClient()
+    const staff = await isStaffUser(authClient, user)
+
+    const [{ data: profile }, { data: personas }, { data: arrangerUsers }] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle(),
+      supabase.rpc('get_user_personas', {
+        p_user_id: user.id,
+      }),
+      supabase
+        .from('arranger_users')
+        .select('arranger_id')
+        .eq('user_id', user.id),
+    ])
+
+    const arrangerIds = (arrangerUsers || []).map((item) => item.arranger_id)
+    const hasCeoAccess =
+      profile?.role === 'ceo' ||
+      profile?.role === 'staff_admin' ||
+      personas?.some((persona: { persona_type: string }) => persona.persona_type === 'ceo')
+
+    const isArranger = arrangerIds.length > 0
+
+    if (!staff && !isArranger) {
+      return NextResponse.json({ error: 'Staff or arranger access required' }, { status: 403 })
+    }
+
+    const canViewSpread = hasCeoAccess || isArranger
+    const canManageSubscriptions = staff
+
+    let allowedDealIds: string[] | null = null
+    if (!staff) {
+      const { data: arrangerDeals, error: arrangerDealsError } = await supabase
+        .from('deals')
+        .select('id')
+        .in('arranger_entity_id', arrangerIds)
+
+      if (arrangerDealsError) {
+        console.error('[Subscriptions GET] Failed to resolve arranger deals:', arrangerDealsError)
+        return NextResponse.json({ error: 'Failed to resolve arranger access' }, { status: 500 })
+      }
+
+      allowedDealIds = (arrangerDeals || []).map((deal) => deal.id)
+
+      if (allowedDealIds.length === 0) {
+        return NextResponse.json({ error: 'Investor not found' }, { status: 404 })
+      }
+    }
 
     // Verify investor exists
     const { data: investor, error: investorError } = await supabase
@@ -112,7 +161,7 @@ export async function GET(
     }
 
     // Fetch all subscriptions with vehicle details (all 39 fields)
-    const { data: subscriptions, error: subsError } = await supabase
+    let subscriptionsQuery = supabase
       .from('subscriptions')
       .select(
         `
@@ -129,6 +178,12 @@ export async function GET(
       .order('vehicle_id', { ascending: true })
       .order('subscription_number', { ascending: true })
 
+    if (allowedDealIds) {
+      subscriptionsQuery = subscriptionsQuery.in('deal_id', allowedDealIds)
+    }
+
+    const { data: rawSubscriptions, error: subsError } = await subscriptionsQuery
+
     if (subsError) {
       console.error('[Subscriptions GET] Error:', subsError)
       return NextResponse.json(
@@ -140,11 +195,18 @@ export async function GET(
       )
     }
 
+    if (!staff && (!rawSubscriptions || rawSubscriptions.length === 0)) {
+      return NextResponse.json({ error: 'Investor not found' }, { status: 404 })
+    }
+
+    const subscriptions = (rawSubscriptions || []).map((subscription) =>
+      sanitizeSubscriptionForViewer(subscription, canViewSpread)
+    )
+
     // Group by vehicle and calculate totals
     const byVehicle: Record<string, any> = {}
-    const totalsByCurrency: Record<string, number> = {}
 
-    for (const sub of subscriptions || []) {
+    for (const sub of subscriptions) {
       const vehicleId = sub.vehicle_id
       if (!byVehicle[vehicleId]) {
         byVehicle[vehicleId] = {
@@ -157,22 +219,23 @@ export async function GET(
 
       byVehicle[vehicleId].subscriptions.push(sub)
       byVehicle[vehicleId].total_commitment += Number(sub.commitment || 0)
-
-      const currency = sub.currency || 'USD'
-      totalsByCurrency[currency] = (totalsByCurrency[currency] || 0) + Number(sub.commitment || 0)
     }
+
+    const summary = buildInvestorSubscriptionsSummary(subscriptions, {
+      canViewSpread,
+    })
 
     return NextResponse.json({
       investor: {
         id: investor.id,
         legal_name: investor.legal_name
       },
-      subscriptions: subscriptions || [],
+      subscriptions,
       grouped_by_vehicle: Object.values(byVehicle),
-      summary: {
-        total_vehicles: Object.keys(byVehicle).length,
-        total_subscriptions: (subscriptions || []).length,
-        total_commitment_by_currency: totalsByCurrency
+      summary,
+      viewer: {
+        can_view_spread: canViewSpread,
+        can_manage_subscriptions: canManageSubscriptions,
       }
     })
   } catch (error) {

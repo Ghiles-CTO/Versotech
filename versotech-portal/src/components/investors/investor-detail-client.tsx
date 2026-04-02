@@ -102,13 +102,22 @@ interface InvestorDetailClientProps {
   investor: InvestorDetail
   capitalMetrics: CapitalMetrics
   metricsAvailable?: boolean
+  viewerType?: 'staff' | 'arranger'
+  canViewSpread?: boolean
 }
 
-export function InvestorDetailClient({ investor, capitalMetrics, metricsAvailable }: InvestorDetailClientProps) {
+export function InvestorDetailClient({
+  investor,
+  capitalMetrics,
+  metricsAvailable,
+  viewerType = 'staff',
+  canViewSpread = false,
+}: InvestorDetailClientProps) {
   const [tabsReady, setTabsReady] = useState(false)
   const [kycDialogOpen, setKycDialogOpen] = useState(false)
   const [approvedDocMetadata, setApprovedDocMetadata] = useState<ApprovedKycDocumentMetadata | null>(null)
   const hasMetrics = metricsAvailable !== false
+  const isArrangerView = viewerType === 'arranger'
 
   useEffect(() => {
     setTabsReady(true)
@@ -118,7 +127,7 @@ export function InvestorDetailClient({ investor, capitalMetrics, metricsAvailabl
     let cancelled = false
 
     const loadApprovedDocumentMetadata = async () => {
-      if (investor.type !== 'individual') {
+      if (viewerType !== 'staff' || investor.type !== 'individual') {
         setApprovedDocMetadata(null)
         return
       }
@@ -150,7 +159,52 @@ export function InvestorDetailClient({ investor, capitalMetrics, metricsAvailabl
     return () => {
       cancelled = true
     }
-  }, [investor.id, investor.type])
+  }, [investor.id, investor.type, viewerType])
+
+  if (isArrangerView) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/versotech_main/subscription-packs">
+              <Button variant="ghost" size="sm" className="bg-gray-800 text-white hover:bg-gray-700">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Subscription Packs
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">
+                {investor.legal_name}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Investor ID: {investor.id.slice(0, 8)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-2 flex-wrap">
+          <Badge variant={investor.status === 'active' ? 'default' : 'secondary'}>
+            {investor.status}
+          </Badge>
+          <Badge variant="outline" className="capitalize">
+            {investor.type}
+          </Badge>
+          {investor.kyc_status && (
+            <Badge variant={investor.kyc_status === 'completed' || investor.kyc_status === 'approved' ? 'default' : 'secondary'}>
+              KYC: {investor.kyc_status}
+            </Badge>
+          )}
+        </div>
+
+        <SubscriptionsTab
+          investorId={investor.id}
+          canViewSpread={canViewSpread}
+          canManageSubscriptions={false}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -436,7 +490,11 @@ export function InvestorDetailClient({ investor, capitalMetrics, metricsAvailabl
 
         {/* Subscriptions Tab */}
         <TabsContent value="subscriptions">
-          <SubscriptionsTab investorId={investor.id} />
+          <SubscriptionsTab
+            investorId={investor.id}
+            canViewSpread={canViewSpread}
+            canManageSubscriptions={true}
+          />
         </TabsContent>
 
         {/* KYC Documents Tab */}

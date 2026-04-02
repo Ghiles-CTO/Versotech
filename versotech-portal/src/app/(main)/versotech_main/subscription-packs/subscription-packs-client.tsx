@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -752,7 +753,16 @@ export function SubscriptionPacksClient({ entityInfo, subscriptions }: Subscript
                             <div className="font-medium">{subscription.deal_name}</div>
                           </TableCell>
                           <TableCell>
-                            <div className="font-medium">{subscription.investor_name}</div>
+                            {entityInfo?.entity_type === 'arranger' ? (
+                              <Link
+                                href={`/versotech_main/investors/${subscription.investor_id}`}
+                                className="font-medium text-primary hover:underline"
+                              >
+                                {subscription.investor_name}
+                              </Link>
+                            ) : (
+                              <div className="font-medium">{subscription.investor_name}</div>
+                            )}
                           </TableCell>
                           <TableCell>
                             <div className="font-medium">

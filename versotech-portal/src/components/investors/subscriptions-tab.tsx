@@ -5,9 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Building2, DollarSign, Calendar, Hash, ArrowRight } from 'lucide-react'
+import { Building2, Hash, ArrowRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { formatViewerDate } from '@/lib/format'
+import {
+  resolvePercentBasedFeeAmount,
+  resolveSpreadAmount,
+  type CurrencyTotals,
+} from '@/lib/subscriptions/investor-subscriptions-view'
 
 type Subscription = {
   id: string
@@ -32,6 +37,9 @@ type Subscription = {
   // Fee fields
   subscription_fee_percent: number | null
   subscription_fee_amount: number | null
+  management_fee_percent: number | null
+  management_fee_amount: number | null
+  management_fee_frequency: string | null
   bd_fee_percent: number | null
   bd_fee_amount: number | null
   finra_fee_amount: number | null
@@ -78,11 +86,33 @@ type SubscriptionsData = {
   summary: {
     total_vehicles: number
     total_subscriptions: number
-    total_commitment_by_currency: Record<string, number>
+    total_commitment_by_currency: CurrencyTotals
+    total_subscription_fees_by_currency: CurrencyTotals
+    total_management_fees_by_currency: CurrencyTotals
+    total_spread_by_currency: CurrencyTotals
+  }
+  viewer?: {
+    can_view_spread?: boolean
+    can_manage_subscriptions?: boolean
   }
 }
 
-export function SubscriptionsTab({ investorId }: { investorId: string }) {
+type SubscriptionsTabProps = {
+  investorId: string
+  canViewSpread?: boolean
+  canManageSubscriptions?: boolean
+}
+
+function formatPercent(value: number | null | undefined) {
+  if (value == null) return '—'
+  return `${value.toFixed(2)}%`
+}
+
+export function SubscriptionsTab({
+  investorId,
+  canViewSpread = false,
+  canManageSubscriptions = true,
+}: SubscriptionsTabProps) {
   const router = useRouter()
   const [data, setData] = useState<SubscriptionsData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -156,6 +186,34 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
     }
   }
 
+  const renderCurrencyTotals = (
+    totals: CurrencyTotals,
+    emptyLabel = '—'
+  ) => {
+    const entries = Object.entries(totals).sort(([left], [right]) => left.localeCompare(right))
+
+    if (entries.length === 0) {
+      return (
+        <p className="text-2xl font-semibold text-muted-foreground">
+          {emptyLabel}
+        </p>
+      )
+    }
+
+    return (
+      <div className="space-y-1">
+        {entries.map(([currency, amount], index) => (
+          <p
+            key={currency}
+            className={index === 0 ? 'text-2xl font-bold' : 'text-sm font-medium text-muted-foreground'}
+          >
+            {formatCurrency(amount, currency)}
+          </p>
+        ))}
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -182,6 +240,9 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
     return null
   }
 
+  const showSpread = data.viewer?.can_view_spread ?? canViewSpread
+  const showManageActions = data.viewer?.can_manage_subscriptions ?? canManageSubscriptions
+
   return (
     <div className="space-y-6">
       <div>
@@ -189,7 +250,9 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
           Subscriptions ({data.summary.total_subscriptions})
         </h2>
         <p className="text-muted-foreground">
-          {data.summary.total_vehicles} vehicles. Use "Manage Subscriptions" button to view and manage all subscriptions.
+          {showManageActions
+            ? `${data.summary.total_vehicles} vehicles. Use "Manage Subscriptions" to review the full subscription register.`
+            : `${data.summary.total_vehicles} vehicles linked to this investor in your managed mandates.`}
         </p>
       </div>
 
@@ -197,16 +260,58 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
         <Card>
           <CardContent className="pt-6 text-center">
             <p className="text-muted-foreground">
-              No subscriptions yet. Use the "Manage Subscriptions" button to navigate to the subscriptions page.
+              {showManageActions
+                ? 'No subscriptions yet. Use the subscriptions page to manage records.'
+                : 'No managed subscriptions are visible for this investor.'}
             </p>
           </CardContent>
         </Card>
       ) : (
         <>
+          <div className={showSpread ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4' : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4'}>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Total Commitment</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {renderCurrencyTotals(data.summary.total_commitment_by_currency)}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Total Subscription Fees</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {renderCurrencyTotals(data.summary.total_subscription_fees_by_currency)}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Total Management Fees</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {renderCurrencyTotals(data.summary.total_management_fees_by_currency)}
+              </CardContent>
+            </Card>
+
+            {showSpread && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Total Spread</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {renderCurrencyTotals(data.summary.total_spread_by_currency)}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
           {data.grouped_by_vehicle.map((group, index) => (
             <Card key={group.vehicle?.id ?? `no-vehicle-${index}`}>
               <CardHeader>
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between gap-4">
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <Building2 className="h-5 w-5" />
@@ -231,22 +336,44 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
                 <div className="space-y-3">
                   {group.subscriptions.map((sub) => {
                     const percentFunded = sub.commitment > 0 ? (sub.funded_amount / sub.commitment) * 100 : 0
-                    const hasFees = sub.subscription_fee_amount || sub.bd_fee_amount || sub.spread_fee_amount || sub.finra_fee_amount
-                    const totalFees = [
+                    const subscriptionFeeAmount = resolvePercentBasedFeeAmount(
+                      sub.commitment,
                       sub.subscription_fee_amount,
-                      sub.bd_fee_amount,
-                      sub.spread_fee_amount,
-                      sub.finra_fee_amount
-                    ].reduce((sum: number, fee) => sum + (fee || 0), 0)
+                      sub.subscription_fee_percent
+                    )
+                    const hasSubscriptionFee =
+                      sub.subscription_fee_amount != null || sub.subscription_fee_percent != null
+                    const managementFeeAmount = resolvePercentBasedFeeAmount(
+                      sub.commitment,
+                      sub.management_fee_amount,
+                      sub.management_fee_percent
+                    )
+                    const hasManagementFee =
+                      sub.management_fee_amount != null || sub.management_fee_percent != null
+                    const spreadAmount = showSpread ? resolveSpreadAmount(sub) : 0
                     const moic = sub.funded_amount > 0 && sub.current_nav ? sub.current_nav / sub.funded_amount : null
+                    const performanceFeeLines = [
+                      sub.performance_fee_tier1_percent != null
+                        ? {
+                            label: sub.performance_fee_tier2_percent != null ? 'Tier 1' : 'Performance',
+                            value: sub.performance_fee_tier1_percent,
+                          }
+                        : null,
+                      sub.performance_fee_tier2_percent != null
+                        ? {
+                            label: 'Tier 2',
+                            value: sub.performance_fee_tier2_percent,
+                          }
+                        : null,
+                    ].filter((line): line is { label: string; value: number } => line !== null)
 
                     return (
                       <div
                         key={sub.id}
                         className="p-4 border rounded-lg hover:bg-accent/50 transition-colors"
                       >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-4">
+                        <div className="flex items-start justify-between gap-4 mb-3">
+                          <div className="flex items-center gap-4 flex-wrap">
                             <div className="flex items-center gap-2">
                               <Hash className="h-4 w-4 text-muted-foreground" />
                               <span className="font-mono font-semibold text-lg">
@@ -262,20 +389,21 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => router.push('/versotech_main/subscriptions')}
-                            >
-                              View Details
-                              <ArrowRight className="h-4 w-4 ml-2" />
-                            </Button>
-                          </div>
+                          {showManageActions && (
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => router.push('/versotech_main/subscriptions')}
+                              >
+                                View Details
+                                <ArrowRight className="h-4 w-4 ml-2" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          {/* Commitment & Funded */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
                           <div>
                             <p className="text-xs text-muted-foreground mb-1">Commitment</p>
                             <p className="font-semibold">{formatCurrency(sub.commitment, sub.currency)}</p>
@@ -289,7 +417,6 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
                             )}
                           </div>
 
-                          {/* Dates */}
                           <div>
                             <p className="text-xs text-muted-foreground mb-1">Important Dates</p>
                             {sub.committed_at && (
@@ -303,18 +430,24 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
                             )}
                           </div>
 
-                          {/* Share Structure */}
                           <div>
-                            <p className="text-xs text-muted-foreground mb-1">Share Structure</p>
+                            <p className="text-xs text-muted-foreground mb-1">Shares count</p>
                             {sub.num_shares != null ? (
                               <>
                                 <p className="text-sm font-medium">{sub.num_shares.toLocaleString()} shares</p>
                                 {sub.price_per_share != null && (
-                                  <p className="text-xs">@ {formatCurrency(sub.price_per_share, sub.currency)}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    Price/share: {formatCurrency(sub.price_per_share, sub.currency)}
+                                  </p>
                                 )}
-                                {sub.spread_per_share != null && sub.spread_per_share > 0 && (
+                                {showSpread && sub.spread_per_share != null && sub.spread_per_share > 0 && (
                                   <p className="text-xs text-green-600">
-                                    Spread: {formatCurrency(sub.spread_per_share, sub.currency)}
+                                    Spread/share: {formatCurrency(sub.spread_per_share, sub.currency)}
+                                  </p>
+                                )}
+                                {showSpread && spreadAmount > 0 && (
+                                  <p className="text-xs text-muted-foreground">
+                                    Total spread: {formatCurrency(spreadAmount, sub.currency)}
                                   </p>
                                 )}
                               </>
@@ -323,33 +456,49 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
                             )}
                           </div>
 
-                          {/* Fees & Performance */}
                           <div>
-                            <p className="text-xs text-muted-foreground mb-1">Fees & Performance</p>
-                            {hasFees ? (
-                              <>
-                                <p className="text-sm font-medium">Total Fees: {formatCurrency(totalFees, sub.currency)}</p>
-                                {sub.subscription_fee_percent && (
-                                  <p className="text-xs">Sub: {sub.subscription_fee_percent.toFixed(2)}%</p>
-                                )}
-                                {sub.bd_fee_percent && (
-                                  <p className="text-xs">BD: {sub.bd_fee_percent.toFixed(2)}%</p>
-                                )}
-                              </>
+                            <p className="text-xs text-muted-foreground mb-1">Subscription Fees</p>
+                            <p className="text-sm font-medium">
+                              {hasSubscriptionFee
+                                ? formatCurrency(subscriptionFeeAmount, sub.currency)
+                                : '—'}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatPercent(sub.subscription_fee_percent)}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Management Fees</p>
+                            <p className="text-sm font-medium">
+                              {hasManagementFee
+                                ? formatCurrency(managementFeeAmount, sub.currency)
+                                : '—'}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatPercent(sub.management_fee_percent)}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Performance Fees</p>
+                            {performanceFeeLines.length > 0 ? (
+                              <div className="space-y-1">
+                                {performanceFeeLines.map((line) => (
+                                  <p key={line.label} className="text-sm">
+                                    <span className="font-medium">{line.label}:</span>{' '}
+                                    {formatPercent(line.value)}
+                                  </p>
+                                ))}
+                              </div>
                             ) : (
-                              <p className="text-sm text-muted-foreground">No fees</p>
-                            )}
-                            {moic != null && (
-                              <p className={`text-xs font-medium mt-1 ${moic >= 1 ? 'text-green-600' : 'text-red-600'}`}>
-                                MOIC: {moic.toFixed(2)}x
-                              </p>
+                              <p className="text-sm text-muted-foreground">No performance fee</p>
                             )}
                           </div>
                         </div>
 
-                        {/* Additional Financial Info */}
                         {(sub.capital_calls_total > 0 || sub.distributions_total > 0 || sub.current_nav != null) && (
-                          <div className="mt-3 pt-3 border-t grid grid-cols-3 gap-4 text-sm">
+                          <div className="mt-3 pt-3 border-t grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                             {sub.capital_calls_total > 0 && (
                               <div>
                                 <p className="text-xs text-muted-foreground">Capital Calls</p>
@@ -379,26 +528,6 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
               </CardContent>
             </Card>
           ))}
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Grand Total</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {Object.entries(data.summary.total_commitment_by_currency).map(
-                  ([currency, amount]) => (
-                    <div key={currency} className="flex justify-between text-lg">
-                      <span className="font-medium">{currency}:</span>
-                      <span className="font-bold">
-                        {formatCurrency(amount, currency)}
-                      </span>
-                    </div>
-                  )
-                )}
-              </div>
-            </CardContent>
-          </Card>
         </>
       )}
     </div>
