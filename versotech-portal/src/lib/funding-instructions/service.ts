@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { PDFDocument } from 'pdf-lib'
 
 import { convertHtmlToPdf } from '@/lib/gotenberg/convert'
 import { createInvestorNotificationForAll } from '@/lib/notifications'
@@ -68,6 +69,57 @@ function buildOpportunityLink(dealId: string, cycleId?: string | null) {
   return `/versotech_main/opportunities/${dealId}?${params.toString()}`
 }
 
+function getStorageFileName(fileKey: string | null | undefined) {
+  const normalized = normalizeText(fileKey)
+  if (!normalized) return ''
+
+  const parts = normalized.split('/')
+  return normalizeText(parts[parts.length - 1] || '')
+}
+
+function buildFundingDocumentFileName(
+  snapshot: FundingInstructionSnapshot,
+  context: Pick<FundingInstructionContext, 'investor' | 'vehicle'>
+) {
+  return buildFundingInstructionDocumentName(snapshot, {
+    entityCode: context.vehicle?.entity_code,
+    investmentName: context.vehicle?.investment_name || context.vehicle?.name || snapshot.vehicle_name || snapshot.deal_name,
+    investorName: context.investor?.display_name || context.investor?.legal_name,
+    createdAt: snapshot.created_at,
+    extension: 'pdf',
+  })
+}
+
+async function shouldRegenerateFundingInstructionDocument(
+  supabase: ServiceSupabase,
+  fundingDocument: FundingInstructionDocumentRecord | null,
+  expectedDocumentName: string
+) {
+  if (!fundingDocument?.file_key) return true
+
+  const hasNameMismatch =
+    normalizeText(fundingDocument.name) !== expectedDocumentName ||
+    getStorageFileName(fundingDocument.file_key) !== expectedDocumentName
+  if (hasNameMismatch) return true
+
+  try {
+    const { data, error } = await supabase.storage
+      .from(DEAL_DOCUMENTS_BUCKET)
+      .download(fundingDocument.file_key)
+
+    if (error || !data) return true
+
+    const pdfBuffer = Buffer.from(await data.arrayBuffer())
+    const pdfDocument = await PDFDocument.load(pdfBuffer)
+    const pdfTitle = normalizeText(pdfDocument.getTitle())
+
+    return pdfDocument.getPageCount() !== 1 || pdfTitle.toLowerCase() === 'index.html'
+  } catch (error) {
+    console.error('[funding] Failed to inspect existing funding PDF, forcing regeneration:', error)
+    return true
+  }
+}
+
 async function getFundingInstructionContext(
   supabase: ServiceSupabase,
   subscriptionId: string
@@ -123,7 +175,7 @@ async function getFundingInstructionContext(
     vehicleId
       ? supabase
           .from('vehicles')
-          .select('id, name, currency')
+          .select('id, name, investment_name, currency, entity_code')
           .eq('id', vehicleId)
           .maybeSingle()
       : Promise.resolve({ data: null }),
@@ -223,10 +275,10 @@ async function resolveFundingInstructionFolderId(
 async function uploadFundingInstructionPdf(args: {
   supabase: ServiceSupabase
   subscriptionId: string
+  fileName: string
   pdfBuffer: Buffer
 }) {
-  const timestamp = Date.now()
-  const fileKey = `subscriptions/${args.subscriptionId}/funding/${timestamp}-funding-instructions.pdf`
+  const fileKey = `subscriptions/${args.subscriptionId}/funding/${args.fileName}`
 
   const { error } = await args.supabase.storage
     .from(DEAL_DOCUMENTS_BUCKET)
@@ -247,6 +299,7 @@ async function getFundingInstructionBuffer(args: {
   subscriptionId: string
   snapshot: FundingInstructionSnapshot
   existingDocument: FundingInstructionDocumentRecord | null
+  documentName: string
 }) {
   if (args.existingDocument?.file_key) {
     const { data, error } = await args.supabase.storage
@@ -260,14 +313,14 @@ async function getFundingInstructionBuffer(args: {
 
   const pdfResult = await convertHtmlToPdf(
     renderFundingInstructionHtml(args.snapshot),
-    'funding-instructions.html',
+    'index.html',
     {
       paperWidth: 8.27,
       paperHeight: 11.69,
-      marginTop: 0.2,
-      marginBottom: 0.2,
-      marginLeft: 0.2,
-      marginRight: 0.2,
+      marginTop: 0,
+      marginBottom: 0,
+      marginLeft: 0,
+      marginRight: 0,
       printBackground: true,
       preferCssPageSize: true,
     }
@@ -277,7 +330,13 @@ async function getFundingInstructionBuffer(args: {
     throw new Error(pdfResult.error || 'Failed to generate funding instructions PDF')
   }
 
-  return pdfResult.pdfBuffer
+  const pdfDocument = await PDFDocument.load(pdfResult.pdfBuffer)
+  pdfDocument.setTitle(args.documentName)
+  pdfDocument.setSubject('VERSO funding instructions')
+  pdfDocument.setProducer('VERSO')
+  pdfDocument.setCreator('VERSO')
+
+  return Buffer.from(await pdfDocument.save())
 }
 
 async function resolveFundingFallbackEmailRecipient(
@@ -382,6 +441,7 @@ export async function sendFundingInstructionEmail(args: {
   recipientName: string
   snapshot: FundingInstructionSnapshot
   pdfBuffer: Buffer
+  documentName?: string
   subjectPrefix?: string
   introLine?: string
 }): Promise<FundingEmailResult> {
@@ -392,7 +452,7 @@ export async function sendFundingInstructionEmail(args: {
     }
   }
 
-  const documentName = `${buildFundingInstructionDocumentName(args.snapshot)}.pdf`
+  const documentName = normalizeText(args.documentName) || buildFundingInstructionDocumentName(args.snapshot, { extension: 'pdf' })
   const recipients = (Array.isArray(args.to) ? args.to : [args.to])
     .map((value) => normalizeText(value))
     .filter(Boolean)
@@ -511,25 +571,33 @@ export async function ensureFundingInstructionArtifacts(args: {
 
   let fundingDocument = context.fundingDocument
   let pdfBuffer: Buffer | null = null
+  const documentFileName = buildFundingDocumentFileName(snapshot, context)
+  const shouldRegenerateDocument = await shouldRegenerateFundingInstructionDocument(
+    supabase,
+    fundingDocument,
+    documentFileName
+  )
 
-  if (!fundingDocument?.file_key) {
+  if (shouldRegenerateDocument) {
     pdfBuffer = await getFundingInstructionBuffer({
       supabase,
       subscriptionId,
       snapshot,
       existingDocument: null,
+      documentName: documentFileName,
     })
 
     const fileKey = await uploadFundingInstructionPdf({
       supabase,
       subscriptionId,
+      fileName: documentFileName,
       pdfBuffer,
     })
 
     const folderId = await resolveFundingInstructionFolderId(supabase, context.subscription.vehicle_id)
-    const documentName = buildFundingInstructionDocumentName(snapshot)
+    const documentName = documentFileName
 
-    const existingDocumentId = context.fundingDocument?.id || null
+    const existingDocumentId = fundingDocument?.id || null
     if (existingDocumentId) {
       await supabase
         .from('documents')
@@ -539,7 +607,7 @@ export async function ensureFundingInstructionArtifacts(args: {
           folder_id: folderId,
           mime_type: 'application/pdf',
           file_size_bytes: pdfBuffer.length,
-          status: 'generated',
+          status: 'draft',
           updated_at: new Date().toISOString(),
         })
         .eq('id', existingDocumentId)
@@ -563,7 +631,7 @@ export async function ensureFundingInstructionArtifacts(args: {
           file_key: fileKey,
           mime_type: 'application/pdf',
           file_size_bytes: pdfBuffer.length,
-          status: 'generated',
+          status: 'draft',
           current_version: 1,
           is_published: false,
           description: `Funding instructions for ${context.deal?.name || context.vehicle?.name || 'the investment'}`.slice(0, 500),
@@ -641,6 +709,7 @@ export async function ensureFundingInstructionArtifacts(args: {
           subscriptionId,
           snapshot,
           existingDocument: fundingDocument,
+          documentName: fundingDocument?.name || buildFundingDocumentFileName(snapshot, context),
         })
 
       const emailResult = await sendFundingInstructionEmail({
@@ -648,6 +717,7 @@ export async function ensureFundingInstructionArtifacts(args: {
         recipientName: recipients.length === 1 ? recipients[0].name : 'Investor',
         snapshot,
         pdfBuffer,
+        documentName: fundingDocument?.name || buildFundingDocumentFileName(snapshot, context),
         subjectPrefix: `Funding instructions for ${context.vehicle?.name || context.deal?.name || 'your investment'}`,
         introLine: `Your subscription pack has been signed. Please find attached the banking instructions and gross wire amount due for ${context.vehicle?.name || context.deal?.name || 'your investment'}.`,
       })

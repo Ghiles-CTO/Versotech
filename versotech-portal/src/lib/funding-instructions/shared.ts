@@ -114,6 +114,14 @@ export interface FundingInstructionSummary {
   signed_pack_path: string | null
 }
 
+type FundingInstructionDocumentNameOptions = {
+  entityCode?: string | null
+  investmentName?: string | null
+  investorName?: string | null
+  createdAt?: string | Date | null
+  extension?: string | null
+}
+
 function toFiniteNumber(value: unknown): number | null {
   if (value === null || value === undefined || value === '') return null
   if (typeof value !== 'number' && typeof value !== 'string') return null
@@ -179,9 +187,35 @@ export function formatFundingCurrency(amount: number, currency: string = 'USD') 
   }).format(amount)
 }
 
-export function buildFundingInstructionDocumentName(snapshot: FundingInstructionSnapshot) {
-  const suffix = normalizeText(snapshot.vehicle_name || snapshot.deal_name || 'Investment')
-  return suffix ? `Funding Instructions - ${suffix}` : 'Funding Instructions'
+function formatDocumentDateToken(value: string | Date | null | undefined) {
+  const rawDate =
+    value instanceof Date
+      ? value
+      : typeof value === 'string' && value
+        ? new Date(value)
+        : new Date()
+
+  const safeDate = Number.isNaN(rawDate.getTime()) ? new Date() : rawDate
+  const day = safeDate.getUTCDate().toString().padStart(2, '0')
+  const month = (safeDate.getUTCMonth() + 1).toString().padStart(2, '0')
+  const year = safeDate.getUTCFullYear().toString().slice(-2)
+
+  return `${day}${month}${year}`
+}
+
+export function buildFundingInstructionDocumentName(
+  snapshot: FundingInstructionSnapshot,
+  options: FundingInstructionDocumentNameOptions = {}
+) {
+  const entityCode = normalizeText(options.entityCode || 'VERSO')
+  const investmentName = normalizeText(options.investmentName || snapshot.vehicle_name || snapshot.deal_name || 'INVESTMENT')
+  const investorName = normalizeText(options.investorName || 'INVESTOR')
+  const formattedDate = formatDocumentDateToken(options.createdAt || snapshot.created_at)
+
+  const baseName = `${entityCode} - FUNDING INSTRUCTIONS - ${investmentName} - ${investorName} - ${formattedDate}`
+  const extension = normalizeText(options.extension).replace(/^\.+/, '')
+
+  return extension ? `${baseName}.${extension}` : baseName
 }
 
 export function buildFundingInstructionSnapshot(args: {
@@ -356,175 +390,258 @@ function formatDateForDisplay(value: string | null) {
 }
 
 export function renderFundingInstructionHtml(snapshot: FundingInstructionSnapshot) {
-  const rows = [
+  const documentTitle = escapeHtml(`${snapshot.vehicle_name || snapshot.deal_name || 'Investment'} - Funding Instructions`)
+  const generalRows: [string, string][] = [
+    ['SPV / Vehicle', snapshot.vehicle_name || snapshot.deal_name || 'Investment'],
+    ['Subscriber', 'As per signed subscription pack'],
+    ['Escrow Agent', snapshot.wire_escrow_agent || snapshot.wire_account_holder || '-'],
+    ['Contact', snapshot.wire_contact_email || '-'],
+  ]
+  const subscriptionRows: [string, string, boolean][] = [
+    ['Investment', snapshot.deal_name || snapshot.vehicle_name || 'Investment', false],
+    ['Currency', `${snapshot.wire_currency_long || snapshot.currency} (${snapshot.wire_currency_code || snapshot.currency})`, false],
+    ['Commitment Amount', formatFundingCurrency(snapshot.commitment_amount, snapshot.currency), false],
+    ['Subscription Fee', formatFundingCurrency(snapshot.subscription_fee_amount, snapshot.currency), false],
+    ['Total Amount to Wire', formatFundingCurrency(snapshot.gross_amount, snapshot.currency), true],
+    ['Funding Deadline', formatDateForDisplay(snapshot.due_at), false],
+  ]
+  const wireRows = ([
     ['Bank', snapshot.wire_bank_name],
-    ['Bank address', snapshot.wire_bank_address],
-    ['Account holder', snapshot.wire_account_holder],
-    ['Escrow agent', snapshot.wire_escrow_agent],
-    ['Law firm address', snapshot.wire_law_firm_address],
+    ['Bank Address', snapshot.wire_bank_address],
+    ['Account Holder', snapshot.wire_account_holder],
+    ['Escrow Agent', snapshot.wire_escrow_agent],
+    ['Law Firm Address', snapshot.wire_law_firm_address],
     ['IBAN', snapshot.wire_iban],
     ['BIC / SWIFT', snapshot.wire_bic],
     ['Reference', snapshot.wire_reference],
-    ['Wire description', snapshot.wire_description],
-    ['Contact email', snapshot.wire_contact_email],
-  ].filter(([, value]) => normalizeText(value))
+    ['Wire Description', snapshot.wire_description],
+  ] as [string, string][]).filter(([, value]) => normalizeText(value))
 
   return `<!doctype html>
 <html>
   <head>
     <meta charset="utf-8" />
+    <title>${documentTitle}</title>
+    <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@700&display=swap" rel="stylesheet">
     <style>
       @page {
         size: A4;
-        margin: 18mm 16mm;
+        margin: 0;
       }
 
-      body {
-        font-family: Inter, Arial, sans-serif;
-        color: #0f172a;
+      * {
+        box-sizing: border-box;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      html, body {
         margin: 0;
-        font-size: 13px;
-        line-height: 1.5;
+        padding: 0;
+        font-family: 'Arial', 'Helvetica', sans-serif;
+        color: #000;
+        font-size: 11pt;
+        line-height: 1.3;
+        background: #fff;
       }
 
       .page {
-        border: 1px solid #dbe3ef;
-        border-radius: 18px;
+        position: relative;
+        width: 210mm;
+        height: 297mm;
         overflow: hidden;
+        padding: 0.65in 0.78in 1.35in 0.78in;
       }
 
-      .hero {
-        background: linear-gradient(135deg, #0f172a 0%, #0b3d5c 100%);
-        color: white;
-        padding: 28px 30px 24px;
+      .page-header {
+        text-align: center;
+        margin-bottom: 0.12in;
       }
 
-      .eyebrow {
-        font-size: 11px;
-        letter-spacing: 0.24em;
+      .verso-logo-text {
+        font-family: 'League Spartan', Arial, sans-serif;
+        font-weight: 700;
+        font-size: 28pt;
+        letter-spacing: 0.15em;
+        color: #000;
         text-transform: uppercase;
-        opacity: 0.78;
-        margin-bottom: 10px;
       }
 
-      .title {
-        font-size: 28px;
-        font-weight: 700;
-        margin: 0 0 8px;
+      .document-title {
+        text-align: center;
+        margin: 0 0 0.14in 0;
+        line-height: 1.35;
       }
 
-      .subtitle {
-        margin: 0;
-        font-size: 14px;
-        opacity: 0.92;
+      .title-line {
+        font-size: 14pt;
+        font-weight: bold;
+        color: #002060;
       }
 
-      .content {
-        padding: 26px 30px 30px;
+      .title-subline {
+        font-size: 14pt;
+        font-weight: bold;
+        color: #0d0d0d;
+        margin-top: 2px;
       }
 
-      .summary {
-        display: grid;
-        grid-template-columns: 1.3fr 1fr;
-        gap: 14px;
-        margin-bottom: 22px;
+      p {
+        margin: 0.05in 0;
       }
 
-      .summary-card {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 14px;
-        padding: 16px 18px;
+      .lead-note {
+        margin: 0 0 0.1in 0;
+        text-align: justify;
       }
 
-      .summary-label {
-        font-size: 11px;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-        color: #475569;
-        margin-bottom: 8px;
-      }
-
-      .summary-value {
-        font-size: 24px;
-        font-weight: 700;
-        color: #0f172a;
-      }
-
-      .summary-note {
-        margin-top: 6px;
-        color: #475569;
-        font-size: 12px;
-      }
-
-      .section-title {
-        margin: 0 0 12px;
-        font-size: 16px;
-        font-weight: 700;
-        color: #0f172a;
-      }
-
-      table {
+      table.section-table {
         width: 100%;
         border-collapse: collapse;
+        margin: 0 0 0.1in 0;
+        border: 1px solid #bfbfbf;
+        table-layout: fixed;
       }
 
-      td {
-        padding: 10px 0;
-        border-bottom: 1px solid #e2e8f0;
+      table.section-table td {
+        padding: 4px 9px;
+        border: 1px solid #bfbfbf;
         vertical-align: top;
+        font-size: 11pt;
       }
 
-      td:first-child {
+      .section-header {
+        background-color: #b4c6e7;
+        font-weight: bold;
+        color: #002060;
+      }
+
+      td.label-cell {
         width: 34%;
-        color: #475569;
-        padding-right: 20px;
+        font-weight: bold;
+        background-color: #f2f2f2;
       }
 
-      td:last-child {
-        font-weight: 600;
+      td.highlight-label {
+        width: 34%;
+        font-weight: bold;
+        background-color: #dce6f1;
       }
 
-      .footer {
-        margin-top: 20px;
-        font-size: 11px;
-        color: #64748b;
+      td.highlight-value {
+        font-weight: bold;
+        background-color: #e8f0fe;
+      }
+
+      h3 {
+        font-size: 11pt;
+        font-weight: bold;
+        margin: 0.08in 0 0.04in 0;
+        color: #002060;
+        text-transform: uppercase;
+      }
+
+      ol.instructions-list {
+        margin: 0 0 0.08in 0.35in;
+        padding: 0;
+        font-size: 10pt;
+      }
+
+      ol.instructions-list li {
+        margin-bottom: 1.5px;
+      }
+
+      .running-footer {
+        position: absolute;
+        bottom: 0.42in;
+        left: 0.78in;
+        right: 0.78in;
+        border-top: 1px solid #cccccc;
+        padding-top: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        font-size: 7.5pt;
+        color: #555;
+        line-height: 1.15;
+      }
+
+      .footer-left {
+        flex: 1;
+        text-align: center;
+        min-width: 0;
+      }
+
+      .footer-logo {
+        font-family: 'League Spartan', Arial, sans-serif;
+        font-weight: 700;
+        font-size: 9pt;
+        letter-spacing: 0.15em;
+        color: #000;
+        text-transform: uppercase;
+      }
+
+      .footer-address {
+        margin-top: 2px;
+        font-size: 7pt;
+        color: #666;
       }
     </style>
   </head>
   <body>
     <div class="page">
-      <div class="hero">
-        <div class="eyebrow">VERSO Funding Flow</div>
-        <h1 class="title">Funding Instructions</h1>
-        <p class="subtitle">${escapeHtml(snapshot.vehicle_name || snapshot.deal_name || 'Investment')}</p>
+      <div class="page-header">
+        <span class="verso-logo-text">VERSO</span>
       </div>
-      <div class="content">
-        <div class="summary">
-          <div class="summary-card">
-            <div class="summary-label">Amount to Wire</div>
-            <div class="summary-value">${escapeHtml(formatFundingCurrency(snapshot.gross_amount, snapshot.currency))}</div>
-            <div class="summary-note">
-              Commitment ${escapeHtml(formatFundingCurrency(snapshot.commitment_amount, snapshot.currency))}
-              · Fees ${escapeHtml(formatFundingCurrency(snapshot.subscription_fee_amount, snapshot.currency))}
-            </div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label">Funding Deadline</div>
-            <div class="summary-value" style="font-size: 18px;">${escapeHtml(formatDateForDisplay(snapshot.due_at))}</div>
-            <div class="summary-note">${escapeHtml(snapshot.currency)} settlement</div>
-          </div>
-        </div>
 
-        <h2 class="section-title">Wire Details</h2>
-        <table>
-          <tbody>
-            ${rows.map(([label, value]) => `<tr><td>${escapeHtml(label)}</td><td>${escapeHtml(value)}</td></tr>`).join('')}
-          </tbody>
-        </table>
+      <div class="document-title">
+        <div class="title-line">${escapeHtml(snapshot.vehicle_name || snapshot.deal_name || 'Investment')}</div>
+        <div class="title-subline">Funding Instructions</div>
+      </div>
 
-        <div class="footer">
-          Please include the exact reference above with your transfer so the funds can be matched correctly.
+      <p class="lead-note">
+        Please transfer the full amount shown below before the funding deadline and use the exact reference shown in the wire instructions.
+      </p>
+
+      <table class="section-table">
+        <tr><td colspan="2" class="section-header">General Information</td></tr>
+        ${generalRows.map(([label, value]) => `
+        <tr>
+          <td class="label-cell">${escapeHtml(label)}</td>
+          <td>${escapeHtml(value)}</td>
+        </tr>`).join('')}
+      </table>
+
+      <table class="section-table">
+        <tr><td colspan="2" class="section-header">Subscription Summary</td></tr>
+        ${subscriptionRows.map(([label, value, highlight]) => `
+        <tr>
+          <td class="${highlight ? 'highlight-label' : 'label-cell'}">${escapeHtml(label)}</td>
+          <td${highlight ? ' class="highlight-value"' : ''}>${escapeHtml(value)}</td>
+        </tr>`).join('')}
+      </table>
+
+      <h3>Payment Notes</h3>
+      <ol class="instructions-list">
+        <li>Please transfer the full amount shown above before the funding deadline.</li>
+        <li>Please ensure all banking fees, charges, or FX spreads are charged as <strong>OUR</strong>.</li>
+        <li>Please use the exact payment reference shown below so the funds can be matched correctly.</li>
+      </ol>
+
+      <table class="section-table">
+        <tr><td colspan="2" class="section-header">Wire Transfer Details</td></tr>
+        ${wireRows.map(([label, value]) => `
+        <tr>
+          <td class="label-cell">${escapeHtml(label)}</td>
+          <td>${escapeHtml(value)}</td>
+        </tr>`).join('')}
+      </table>
+
+      <div class="running-footer">
+        <div class="footer-left">
+          <span class="footer-logo">VERSO</span>
+          <div class="footer-address">2, Avenue Charles de Gaulle &ndash; L-1653 Luxembourg</div>
         </div>
       </div>
     </div>
