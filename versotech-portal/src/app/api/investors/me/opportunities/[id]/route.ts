@@ -15,6 +15,11 @@ import {
   isRetryableRejectedPrimaryCycle,
   normalizeRejectedJourneyCycle,
 } from '@/lib/deals/investor-opportunity-visibility'
+import {
+  buildFundingInstructionSummary,
+  parseFundingInstructionSnapshot,
+  type FundingInstructionSummary,
+} from '@/lib/funding-instructions/shared'
 
 type SubscriptionDocumentSummary = {
   status: string
@@ -235,6 +240,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       status: string
       url: string | null
     } | null>()
+    let fundingInstructionsBySubscriptionId = new Map<string, FundingInstructionSummary | null>()
     let ndaDocumentSummary: SubscriptionDocumentSummary = {
       status: 'not_started',
       signatories: [],
@@ -278,6 +284,10 @@ export async function GET(request: Request, { params }: RouteParams) {
               commitment,
               currency,
               funded_amount,
+              funding_due_at,
+              funding_gross_target_amount,
+              funding_gross_received_amount,
+              funding_instruction_snapshot,
               pack_generated_at,
               pack_sent_at,
               signed_at,
@@ -308,7 +318,7 @@ export async function GET(request: Request, { params }: RouteParams) {
 
         const subscriptionIds = (cycleSubscriptions || []).map(sub => sub.id).filter(Boolean)
         if (subscriptionIds.length > 0) {
-          const [{ data: subscriptionSignatures }, { data: subscriptionPackDocuments }, { data: certificateDocuments }] = await Promise.all([
+          const [{ data: subscriptionSignatures }, { data: subscriptionPackDocuments }, { data: certificateDocuments }, { data: fundingDocuments }] = await Promise.all([
             serviceSupabase
               .from('signature_requests')
               .select('subscription_id, status, signed_pdf_path, unsigned_pdf_path, signer_name, signer_email, signature_timestamp')
@@ -327,6 +337,12 @@ export async function GET(request: Request, { params }: RouteParams) {
               .select('subscription_id, file_key, created_at')
               .in('subscription_id', subscriptionIds)
               .eq('type', 'certificate')
+              .order('created_at', { ascending: false }),
+            serviceSupabase
+              .from('documents')
+              .select('id, subscription_id, name, created_at')
+              .in('subscription_id', subscriptionIds)
+              .eq('type', 'funding_instruction')
               .order('created_at', { ascending: false }),
           ])
 
@@ -404,8 +420,32 @@ export async function GET(request: Request, { params }: RouteParams) {
             latestCertificateBySubscriptionId.set(document.subscription_id, document.file_key || null)
           }
 
+          const latestFundingDocumentBySubscriptionId = new Map<string, { id: string; name: string | null }>()
+          for (const document of fundingDocuments || []) {
+            if (!document.subscription_id || latestFundingDocumentBySubscriptionId.has(document.subscription_id)) continue
+            latestFundingDocumentBySubscriptionId.set(document.subscription_id, {
+              id: document.id,
+              name: document.name || null,
+            })
+          }
+
           for (const sub of cycleSubscriptions || []) {
             if (!sub?.id) continue
+
+            const fundingDocument = latestFundingDocumentBySubscriptionId.get(sub.id) || null
+            fundingInstructionsBySubscriptionId.set(sub.id, buildFundingInstructionSummary({
+              subscriptionId: sub.id,
+              cycleId: sub.cycle_id || null,
+              snapshot: parseFundingInstructionSnapshot(sub.funding_instruction_snapshot),
+              fundingGrossTargetAmount: sub.funding_gross_target_amount,
+              fundingGrossReceivedAmount: sub.funding_gross_received_amount,
+              fundingDocumentId: fundingDocument?.id || null,
+              fundingDocumentName: fundingDocument?.name || null,
+              signedPackPath: packDocumentBySubscriptionId.get(sub.id)?.file_key
+                || subscriptionSignatureSummaryById.get(sub.id)?.signedPath
+                || null,
+            }))
+
             if (!sub.activated_at) {
               certificateDocumentsBySubscriptionId.set(sub.id, null)
               continue
@@ -533,6 +573,10 @@ export async function GET(request: Request, { params }: RouteParams) {
           commitment,
           currency,
           funded_amount,
+          funding_due_at,
+          funding_gross_target_amount,
+          funding_gross_received_amount,
+          funding_instruction_snapshot,
           pack_generated_at,
           pack_sent_at,
           signed_at,
@@ -547,6 +591,30 @@ export async function GET(request: Request, { params }: RouteParams) {
         .maybeSingle()
 
       subscription = sub
+    }
+
+    if (subscription?.id && !fundingInstructionsBySubscriptionId.has(subscription.id)) {
+      const { data: fundingDocument } = await serviceSupabase
+        .from('documents')
+        .select('id, name')
+        .eq('subscription_id', subscription.id)
+        .eq('type', 'funding_instruction')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      fundingInstructionsBySubscriptionId.set(subscription.id, buildFundingInstructionSummary({
+        subscriptionId: subscription.id,
+        cycleId: (subscription as any).cycle_id || null,
+        snapshot: parseFundingInstructionSnapshot((subscription as any).funding_instruction_snapshot),
+        fundingGrossTargetAmount: (subscription as any).funding_gross_target_amount,
+        fundingGrossReceivedAmount: (subscription as any).funding_gross_received_amount,
+        fundingDocumentId: fundingDocument?.id || null,
+        fundingDocumentName: fundingDocument?.name || null,
+        signedPackPath: subscriptionSignatureSummaryById.get(subscription.id)?.signedPath
+          || subscriptionPackDocumentsBySubscriptionId.get(subscription.id)?.signed_url
+          || null,
+      }))
     }
 
     // Fetch signature documents for this subscription
@@ -821,8 +889,17 @@ export async function GET(request: Request, { params }: RouteParams) {
     const primaryJourneySignatureSummary = primaryJourneySubscription?.id
       ? subscriptionSignatureSummaryById.get(primaryJourneySubscription.id) || null
       : null
+    const primaryJourneyFundingSummary = primaryJourneySubscription?.id
+      ? fundingInstructionsBySubscriptionId.get(primaryJourneySubscription.id) || null
+      : null
+    const fallbackFundingSummary = subscription?.id
+      ? fundingInstructionsBySubscriptionId.get(subscription.id) || null
+      : null
     const subPackComplete = subscriptionDocuments?.subscription_pack.status === 'complete'
     const primarySubPackComplete = primaryJourneySignatureSummary?.status === 'complete'
+    const primaryJourneyFunded = primaryJourneyFundingSummary
+      ? primaryJourneyFundingSummary.amount_due <= 0
+      : !!(primaryJourneySubscription?.funded_at || primaryJourneyCycle?.funded_at)
 
     // Calculate current journey stage
     // Use actual document completion for signed stage, not subscription.signed_at
@@ -833,12 +910,16 @@ export async function GET(request: Request, { params }: RouteParams) {
           pack_generated_at: primaryJourneySubscription?.pack_generated_at || primaryJourneyCycle.pack_generated_at,
           pack_sent_at: primaryJourneySubscription?.pack_sent_at || primaryJourneyCycle.pack_sent_at,
           signed_at: (primarySubPackComplete ? primaryJourneySubscription?.signed_at : null) || primaryJourneyCycle.signed_at,
-          funded_at: primaryJourneySubscription?.funded_at || primaryJourneyCycle.funded_at,
+          funded_at: primaryJourneyFunded ? (primaryJourneySubscription?.funded_at || primaryJourneyCycle.funded_at) : null,
           activated_at: primaryJourneySubscription?.activated_at || primaryJourneyCycle.activated_at,
         })
       : (() => {
           if (subscription?.activated_at || subscription?.status === 'active') return 10
-          if (subscription?.funded_at || subscription?.status === 'funded') return 9
+          if (
+            fallbackFundingSummary
+              ? fallbackFundingSummary.amount_due <= 0
+              : (subscription?.funded_at || subscription?.status === 'funded')
+          ) return 9
           if (subPackComplete && subscription?.signed_at) return 8
           if (subscription?.pack_sent_at) return 7
           if (subscription?.pack_generated_at) return 6
@@ -1000,9 +1081,16 @@ export async function GET(request: Request, { params }: RouteParams) {
           cycle.subscription?.pack_generated_at,
           cycle.subscription?.pack_sent_at
         )
+        const fundingInstructions = cycle.subscription?.id
+          ? fundingInstructionsBySubscriptionId.get(cycle.subscription.id) || null
+          : null
         const isSigned = signatureSummary?.status === 'complete'
-        const isFunded = !!cycle.subscription?.funded_at || cycle.status === 'funded' || cycle.status === 'active'
         const isActive = !!cycle.subscription?.activated_at || cycle.status === 'active'
+        const isFunded = isActive || (
+          fundingInstructions
+            ? fundingInstructions.amount_due <= 0
+            : (!!cycle.subscription?.funded_at || cycle.status === 'funded')
+        )
 
         let statusKey: 'pending_review' | 'awaiting_signature' | 'awaiting_funding' | 'funded' | 'active' = 'pending_review'
         let statusLabel = 'Pending Review'
@@ -1033,7 +1121,7 @@ export async function GET(request: Request, { params }: RouteParams) {
           status_label: statusLabel,
           is_reinvestment: cycle.sequence_number > 1,
           signed_at: (isSigned ? cycle.subscription?.signed_at : null) || null,
-          funded_at: cycle.subscription?.funded_at || null,
+          funded_at: isFunded ? (cycle.subscription?.funded_at || null) : null,
           activated_at: cycle.subscription?.activated_at || null,
           milestones: {
             confirmed: !!cycle.submission || !!cycle.subscription || cycle.stage >= 4,
@@ -1054,10 +1142,18 @@ export async function GET(request: Request, { params }: RouteParams) {
             signed_pack_available: publishedSubscriptionPack.available_in_documents,
             signed_pack_path: publishedSubscriptionPack.signed_url || null,
           },
+          funding_instructions: fundingInstructions,
           can_invest_more: !!cycle.can_invest_more,
         }
       })
       .filter(Boolean)
+
+    const selectedSubscriptionFundingSummary = subscription?.id
+      ? fundingInstructionsBySubscriptionId.get(subscription.id) || null
+      : null
+    const selectedSubscriptionFunded = selectedSubscriptionFundingSummary
+      ? selectedSubscriptionFundingSummary.amount_due <= 0
+      : !!(subscription?.funded_at || subscription?.status === 'funded' || subscription?.status === 'active')
 
     const latestReinvestmentCycle = [...chronologicalCycles]
       .reverse()
@@ -1156,7 +1252,7 @@ export async function GET(request: Request, { params }: RouteParams) {
           pack_generated: primaryJourneySubscription?.pack_generated_at || primaryJourneyCycle?.pack_generated_at || null,
           pack_sent: primaryJourneySubscription?.pack_sent_at || primaryJourneyCycle?.pack_sent_at || null,
           signed: (primarySubPackComplete ? primaryJourneySubscription?.signed_at : null) || primaryJourneyCycle?.signed_at || null,
-          funded: primaryJourneySubscription?.funded_at || primaryJourneyCycle?.funded_at || null,
+          funded: primaryJourneyFunded ? (primaryJourneySubscription?.funded_at || primaryJourneyCycle?.funded_at || null) : null,
           active: primaryJourneySubscription?.activated_at || primaryJourneyCycle?.activated_at || null
         }
       },
@@ -1199,13 +1295,14 @@ export async function GET(request: Request, { params }: RouteParams) {
         signed_at: subscriptionDocuments?.subscription_pack.status === 'complete'
           ? subscription.signed_at
           : null,
-        funded_at: subscription.funded_at,
+        funded_at: selectedSubscriptionFunded ? subscription.funded_at : null,
         activated_at: subscription.activated_at,
         created_at: subscription.created_at,
         is_signed: subscriptionDocuments?.subscription_pack.status === 'complete',
-        is_funded: !!subscription.funded_at || subscription.status === 'funded' || subscription.status === 'active',
+        is_funded: selectedSubscriptionFunded,
         is_active: !!subscription.activated_at || subscription.status === 'active',
-        documents: subscriptionDocuments
+        documents: subscriptionDocuments,
+        funding_instructions: selectedSubscriptionFundingSummary,
       } : null,
       subscription_submission: subscriptionSubmission,
       active_cycle_id: selectedCycle?.id || null,

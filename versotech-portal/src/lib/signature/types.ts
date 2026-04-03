@@ -94,6 +94,7 @@ export interface SignatureRequestPublicView {
   expires_at: string
   verification_required?: boolean
   verification_completed_at?: string
+  success_redirect_path?: string | null
 }
 
 export interface SubmitSignatureParams {

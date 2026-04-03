@@ -7,6 +7,7 @@ import { maybeReleaseIntroducerAgreementCounterpartyRequests } from '@/lib/signa
 import { inspectSubscriptionSignatureWorkflowConfig, maybeReleaseDeferredInvestorRequests } from '@/lib/signature/staged-release'
 import { getIntroducerCommercialEligibility } from '@/lib/introducers/commercial-eligibility'
 import { updateDealInvestmentCycleProgress } from '@/lib/deals/investment-cycles'
+import { ensureFundingInstructionArtifacts } from '@/lib/funding-instructions/service'
 import crypto from 'crypto'
 
 function normalizeWebhookSignature(rawSignature: string): string | null {
@@ -634,6 +635,14 @@ async function handleSubscriptionCompletion(
       }
     }
     await checkAndPublishSubscriptionDocument(supabase, subscriptionId)
+    try {
+      await ensureFundingInstructionArtifacts({
+        supabase,
+        subscriptionId,
+      })
+    } catch (fundingError) {
+      console.error('Failed to repair funding instructions after duplicate webhook:', fundingError)
+    }
     return
   }
 
@@ -674,39 +683,16 @@ async function handleSubscriptionCompletion(
     }
   }
 
-  // Create notification for investor
+  try {
+    await ensureFundingInstructionArtifacts({
+      supabase,
+      subscriptionId,
+    })
+  } catch (fundingError) {
+    console.error('Failed to generate funding instructions after signing:', fundingError)
+  }
+
   if (subscription) {
-    const { data: investorUsers } = await supabase
-      .from('investor_users')
-      .select('user_id')
-      .eq('investor_id', subscription.investor_id)
-      .limit(1)
-
-    if (investorUsers && investorUsers.length > 0) {
-      const { data: vehicle } = await supabase
-        .from('vehicles')
-        .select('name')
-        .eq('id', subscription.vehicle_id)
-        .single()
-
-      await supabase.from('investor_notifications').insert({
-        user_id: investorUsers[0].user_id,
-        investor_id: subscription.investor_id,
-        title: 'Investment Commitment Confirmed',
-        message: `Your subscription for ${vehicle?.name || 'the investment'} of ${subscription.commitment} ${subscription.currency} is now confirmed.`,
-        link: subscription.deal_id
-          ? `/versotech_main/opportunities/${subscription.deal_id}${(subscription as any).cycle_id ? `?cycle=${(subscription as any).cycle_id}` : ''}`
-          : '/versotech_main/portfolio',
-        metadata: {
-          type: 'subscription_committed',
-          subscription_id: subscriptionId,
-          deal_id: subscription.deal_id,
-          cycle_id: (subscription as any).cycle_id || null,
-        }
-      })
-      console.log('✅ [SUBSCRIPTION] Investor notification created')
-    }
-
     // Notify lawyers assigned to this deal
     const { data: investor } = await supabase
       .from('investors')

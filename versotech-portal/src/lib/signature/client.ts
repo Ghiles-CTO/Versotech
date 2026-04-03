@@ -1019,6 +1019,7 @@ export async function getSignatureRequest(
 
     // Get unsigned PDF URL if it exists
     let unsigned_pdf_url: string | null = null
+    let success_redirect_path: string | null = null
 
     if (signatureRequest.unsigned_pdf_path) {
       const storage = new SignatureStorageManager(supabase)
@@ -1026,6 +1027,30 @@ export async function getSignatureRequest(
         signatureRequest.unsigned_pdf_path,
         3600
       ) // 1 hour expiry
+    }
+
+    if (signatureRequest.document_type === 'subscription') {
+      let redirectDealId = signatureRequest.deal_id || null
+      let redirectCycleId: string | null = null
+
+      if (signatureRequest.subscription_id) {
+        const { data: subscription } = await supabase
+          .from('subscriptions')
+          .select('deal_id, cycle_id')
+          .eq('id', signatureRequest.subscription_id)
+          .maybeSingle()
+
+        redirectDealId = redirectDealId || subscription?.deal_id || null
+        redirectCycleId = subscription?.cycle_id || null
+      }
+
+      if (redirectDealId) {
+        const params = new URLSearchParams({ action: 'funding' })
+        if (redirectCycleId) {
+          params.set('cycle', redirectCycleId)
+        }
+        success_redirect_path = `/versotech_main/opportunities/${redirectDealId}?${params.toString()}`
+      }
     }
 
     // Return public view
@@ -1039,7 +1064,8 @@ export async function getSignatureRequest(
       status: signatureRequest.status,
       expires_at: signatureRequest.token_expires_at,
       verification_required: signatureRequest.verification_required || false,
-      verification_completed_at: signatureRequest.verification_completed_at || null
+      verification_completed_at: signatureRequest.verification_completed_at || null,
+      success_redirect_path,
     }
   } catch (error) {
     console.error('Error fetching signature request:', error)
@@ -2018,29 +2044,6 @@ async function checkAndCommitSubscriptionIfInvestorComplete(
         console.log('✅ [SIGNATURE] Investor signature task completed:', task.id)
       }
     }
-  }
-
-  // Notify investor users about commitment
-  const investorUserId = subscription.investor?.[0]?.investor_users?.[0]?.user_id
-  if (investorUserId) {
-    const vehicleName = subscription.vehicle?.[0]?.name || 'the investment'
-    const { error: notifError } = await supabase
-      .from('investor_notifications')
-      .insert({
-        user_id: investorUserId,
-        investor_id: subscription.investor_id,
-        title: 'Investment Commitment Confirmed',
-        message: `Your subscription agreement for ${vehicleName} has been signed. Your commitment of ${subscription.commitment} ${subscription.currency} is now confirmed; countersignature is in progress.`,
-        link: '/versotech_main/portfolio',
-      })
-
-    if (notifError) {
-      console.error('❌ [SIGNATURE] Failed to create investor notification:', notifError)
-    } else {
-      console.log('✅ [SIGNATURE] Investor notification created')
-    }
-  } else {
-    console.warn('⚠️ [SIGNATURE] No investor user found - skipping commitment notification')
   }
 
   // Audit log entry for commitment

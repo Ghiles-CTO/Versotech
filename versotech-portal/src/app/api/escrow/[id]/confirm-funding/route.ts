@@ -54,6 +54,8 @@ export async function POST(
         currency,
         status,
         funded_amount,
+        funding_gross_target_amount,
+        funding_gross_received_amount,
         deals (id, name)
       `)
       .eq('id', subscriptionId)
@@ -99,45 +101,61 @@ export async function POST(
     const { amount, confirmation_notes, bank_reference } = validation.data
     const commitment = Number(subscription.commitment || 0)
     const currentFunded = Number(subscription.funded_amount || 0)
+    const grossTarget = Math.max(
+      Number(subscription.funding_gross_target_amount || subscription.commitment || 0),
+      0
+    )
+    const currentGrossReceived = Math.max(
+      Number(subscription.funding_gross_received_amount || 0),
+      0
+    )
 
-    // Idempotency check: If subscription is already fully funded, reject
-    if (commitment > 0 && subscription.status === 'active' && currentFunded >= commitment) {
+    // Idempotency check: If the full signed gross amount has already been confirmed, reject.
+    if (grossTarget > 0 && ['funded', 'active'].includes(subscription.status || '') && currentGrossReceived >= grossTarget) {
       return NextResponse.json({
         error: 'Subscription is already fully funded',
         data: {
           subscription_id: subscriptionId,
           current_funded: currentFunded,
-          commitment: commitment,
+          current_gross_received: currentGrossReceived,
+          gross_target: grossTarget,
           status: subscription.status
         }
       }, { status: 409 }) // Conflict
     }
 
-    const remaining = commitment > 0 ? Math.max(commitment - currentFunded, 0) : 0
+    const grossRemaining = grossTarget > 0 ? Math.max(grossTarget - currentGrossReceived, 0) : 0
 
-    // Prevent over-funding
-    if (commitment > 0 && amount > remaining) {
+    // Prevent over-confirming beyond the signed gross amount still due.
+    if (grossTarget > 0 && amount > grossRemaining) {
       return NextResponse.json({
-        error: `Amount would exceed commitment. Maximum additional funding allowed: ${remaining.toLocaleString()} ${subscription.currency || 'USD'}`,
+        error: `Amount would exceed the signed funding amount. Maximum additional funding allowed: ${grossRemaining.toLocaleString()} ${subscription.currency || 'USD'}`,
         data: {
           current_funded: currentFunded,
-          commitment: commitment,
-          max_allowed: remaining
+          current_gross_received: currentGrossReceived,
+          gross_target: grossTarget,
+          max_allowed: grossRemaining
         }
       }, { status: 400 })
     }
 
-    // Calculate new funded amount
+    const newGrossReceived = grossTarget > 0
+      ? Math.min(currentGrossReceived + amount, grossTarget)
+      : currentGrossReceived + amount
+
+    // Keep legacy commitment-based tracking for reporting and close workflows.
     const newFundedAmount = commitment > 0 ? Math.min(currentFunded + amount, commitment) : currentFunded + amount
     const newOutstandingAmount = commitment > 0 ? Math.max(commitment - newFundedAmount, 0) : null
+    const grossFundingComplete = grossTarget > 0
+      ? newGrossReceived >= grossTarget
+      : (commitment > 0 ? newFundedAmount >= commitment : newGrossReceived > 0)
 
-    // Determine new status based on funding level
-    // NOTE: Status changes to 'funded' here, NOT 'active'
-    // 'active' status + position + certificate + commissions are set at DEAL CLOSE (see deal-close-handler.ts)
+    // NOTE: Status changes to 'funded' here, NOT 'active'.
+    // 'active' status + position + certificate + commissions are set at deal close.
     let newStatus = subscription.status
-    if (commitment > 0 && newFundedAmount >= commitment) {
-      newStatus = 'funded' // Fully funded - awaiting deal close
-    } else if (newFundedAmount > 0) {
+    if (grossFundingComplete) {
+      newStatus = 'funded'
+    } else if (newGrossReceived > 0) {
       newStatus = 'partially_funded'
     }
 
@@ -146,7 +164,8 @@ export async function POST(
       .from('subscriptions')
       .update({
         funded_amount: newFundedAmount,
-        funded_at: commitment > 0 && newFundedAmount >= commitment ? new Date().toISOString() : null,
+        funded_at: grossFundingComplete ? new Date().toISOString() : null,
+        funding_gross_received_amount: newGrossReceived,
         status: newStatus,
         outstanding_amount: newOutstandingAmount
       })
@@ -278,12 +297,17 @@ export async function POST(
         confirmation_notes,
         previous_funded: currentFunded,
         new_funded: newFundedAmount,
+        previous_gross_received: currentGrossReceived,
+        new_gross_received: newGrossReceived,
+        gross_target: grossTarget,
         new_status: newStatus,
         lawyer_id: lawyerUser.lawyer_id
       }
     })
 
-    const remainingAfter = commitment > 0 ? Math.max(commitment - newFundedAmount, 0) : 0
+    const remainingAfter = grossTarget > 0
+      ? Math.max(grossTarget - newGrossReceived, 0)
+      : Math.max(commitment - newFundedAmount, 0)
 
     return NextResponse.json({
       success: true,
@@ -291,10 +315,12 @@ export async function POST(
         subscription_id: subscriptionId,
         amount_confirmed: amount,
         total_funded: newFundedAmount,
+        total_gross_received: newGrossReceived,
+        gross_target: grossTarget,
         commitment: commitment,
         status: newStatus,
-        message: commitment > 0 && newStatus === 'active'
-          ? 'Subscription is now fully funded and active'
+        message: grossFundingComplete
+          ? 'Funding is now fully confirmed.'
           : `Funding confirmed. ${remainingAfter.toLocaleString()} remaining`
       }
     })

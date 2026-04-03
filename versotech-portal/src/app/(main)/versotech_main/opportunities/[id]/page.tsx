@@ -58,6 +58,7 @@ import {
   Tag,
   FolderOpen,
   Loader2,
+  Banknote,
   DollarSign,
   ShieldCheck,
   ArrowUpRight
@@ -192,6 +193,39 @@ interface OpportunityCycle {
   }
 }
 
+interface FundingInstructionsSummary {
+  subscription_id: string
+  cycle_id: string | null
+  is_available: boolean
+  auto_open: boolean
+  currency: string
+  amount_due: number
+  amount_original: number
+  amount_received: number
+  due_at: string | null
+  bank_details: {
+    bank_name: string
+    bank_address: string
+    account_holder: string
+    escrow_agent: string
+    law_firm_address: string
+    iban: string
+    bic: string
+    wire_currency_code: string
+    wire_currency_long: string
+    wire_description: string
+  }
+  reference: string
+  contact_email: string
+  funding_document_id: string | null
+  funding_document_name: string | null
+  signed_pack_path: string | null
+}
+
+type OpportunitySubscriptionEntry = SubscriptionStatusEntry & {
+  funding_instructions?: FundingInstructionsSummary | null
+}
+
 interface Opportunity {
   id: string
   name: string
@@ -277,6 +311,7 @@ interface Opportunity {
     is_signed: boolean
     is_funded: boolean
     is_active: boolean
+    funding_instructions?: FundingInstructionsSummary | null
     documents: {
       nda: {
         status: string
@@ -315,7 +350,7 @@ interface Opportunity {
   } | null
   active_cycle_id: string | null
   cycles: OpportunityCycle[]
-  subscription_entries: SubscriptionStatusEntry[]
+  subscription_entries: OpportunitySubscriptionEntry[]
   reinvestment_branch: {
     confirmed_at: string | null
     signed_at: string | null
@@ -339,6 +374,19 @@ interface Opportunity {
     has_auto_data_room_access: boolean
     restriction_reason: string | null
   }
+}
+
+function findPreferredFundingInstructions(targetOpportunity: Opportunity): FundingInstructionsSummary | null {
+  const availableEntries = (targetOpportunity.subscription_entries || []).filter(
+    (entry) => entry.funding_instructions?.is_available
+  )
+
+  if (!availableEntries.length) return null
+
+  const preferredEntry = availableEntries.find((entry) => entry.id === targetOpportunity.active_cycle_id)
+    || availableEntries[0]
+
+  return preferredEntry.funding_instructions || null
 }
 
 function formatCurrency(amount: number | null, currency: string = 'USD'): string {
@@ -534,10 +582,16 @@ export default function OpportunityDetailPage() {
   const [showInterestDialog, setShowInterestDialog] = useState(false)
   const [showNdaDialog, setShowNdaDialog] = useState(false)
   const [showSubscribeDialog, setShowSubscribeDialog] = useState(false)
+  const [showFundingDialog, setShowFundingDialog] = useState(false)
+  const [showFundingShareDialog, setShowFundingShareDialog] = useState(false)
   const [subscribeAmount, setSubscribeAmount] = useState('')
   const [subscribeBankConfirm, setSubscribeBankConfirm] = useState(true)
   const [subscribeNotes, setSubscribeNotes] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
+  const [fundingShareEmail, setFundingShareEmail] = useState('')
+  const [fundingShareLoading, setFundingShareLoading] = useState(false)
+  const [activeFundingInstructions, setActiveFundingInstructions] = useState<FundingInstructionsSummary | null>(null)
+  const [hasAutoOpenedFunding, setHasAutoOpenedFunding] = useState(false)
   const [ndaRequestOpen, setNdaRequestOpen] = useState(false)
   const [ndaRequestSubject, setNdaRequestSubject] = useState('')
   const [ndaRequestDetails, setNdaRequestDetails] = useState('')
@@ -695,6 +749,26 @@ export default function OpportunityDetailPage() {
       abortController.abort()
     }
   }, [hasAnyPersona, dealId, actionParam, isPartnerPersona, isProxyMode, selectedClient?.id, selectedCycleParam, updateCycleSelection])
+
+  useEffect(() => {
+    setHasAutoOpenedFunding(false)
+    setActiveFundingInstructions(null)
+    setShowFundingDialog(false)
+    setShowFundingShareDialog(false)
+  }, [dealId, selectedCycleParam])
+
+  useEffect(() => {
+    if (!opportunity || hasAutoOpenedFunding) return
+
+    const preferredFundingInstructions = findPreferredFundingInstructions(opportunity)
+    if (!preferredFundingInstructions) return
+
+    if (actionParam === 'funding' || preferredFundingInstructions.auto_open) {
+      setActiveFundingInstructions(preferredFundingInstructions)
+      setShowFundingDialog(true)
+      setHasAutoOpenedFunding(true)
+    }
+  }, [actionParam, hasAutoOpenedFunding, opportunity])
 
   const handleExpressInterest = async () => {
     try {
@@ -979,6 +1053,7 @@ export default function OpportunityDetailPage() {
     latestInterestStatus: opportunity.latest_interest_status || null,
   })
   const subscriptionEntries = opportunity.subscription_entries || []
+  const primarySubscriptionEntry = subscriptionEntries[0] || null
   const showMultipleSubscriptions = subscriptionEntries.length > 1
 
   // Derive subscription limits from termsheet (fee_structures), falling back to deal-level fields
@@ -1061,6 +1136,101 @@ export default function OpportunityDetailPage() {
       return
     }
     router.push(`/versotech_main/documents?holding=${opportunity.vehicle.id}&category=ndas`)
+  }
+
+  const handleOpenFundingInstructions = (fundingInstructions: FundingInstructionsSummary | null | undefined) => {
+    if (!fundingInstructions) return
+    setActiveFundingInstructions(fundingInstructions)
+    setShowFundingDialog(true)
+  }
+
+  const handleDownloadFundingInstructions = async (fundingInstructions: FundingInstructionsSummary | null) => {
+    if (!fundingInstructions?.funding_document_id) {
+      toast.error('Funding PDF is not available yet.')
+      return
+    }
+
+    try {
+      const fileName = fundingInstructions.funding_document_name || 'Funding Instructions.pdf'
+      await downloadFileFromUrl(`/api/documents/${fundingInstructions.funding_document_id}/download`, fileName)
+    } catch (error) {
+      console.error('Failed to download funding instructions:', error)
+      toast.error('Failed to download funding instructions.')
+    }
+  }
+
+  const handleSubmitFundingShare = async () => {
+    if (!activeFundingInstructions?.subscription_id) {
+      toast.error('Funding instructions are not available yet.')
+      return
+    }
+
+    if (!fundingShareEmail.trim()) {
+      toast.error('Enter an email address first.')
+      return
+    }
+
+    try {
+      setFundingShareLoading(true)
+      const response = await fetch(
+        `/api/investors/me/subscriptions/${activeFundingInstructions.subscription_id}/funding-share`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            recipientEmail: fundingShareEmail.trim(),
+          }),
+        }
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to share funding instructions.')
+      }
+
+      toast.success('Funding instructions shared by email.')
+      setShowFundingShareDialog(false)
+      setFundingShareEmail('')
+    } catch (error) {
+      console.error('Failed to share funding instructions:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to share funding instructions.')
+    } finally {
+      setFundingShareLoading(false)
+    }
+  }
+
+  const renderFundingActionStrip = (
+    fundingInstructions: FundingInstructionsSummary | null | undefined,
+    label: string
+  ) => {
+    if (!fundingInstructions?.is_available) return null
+
+    return (
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 px-4 py-3 dark:border-emerald-900/70 dark:bg-emerald-950/20">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">
+              Funding instructions ready
+            </div>
+            <div className="text-sm text-emerald-800/80 dark:text-emerald-300/80">
+              {label}: {formatCurrency(fundingInstructions.amount_due, fundingInstructions.currency)} due
+              {fundingInstructions.due_at ? ` by ${formatDate(fundingInstructions.due_at)}` : ''}
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="border-emerald-300 bg-white/80 text-emerald-900 hover:bg-white dark:border-emerald-800 dark:bg-transparent dark:text-emerald-200"
+            onClick={() => handleOpenFundingInstructions(fundingInstructions)}
+          >
+            <Banknote className="mr-2 h-4 w-4" />
+            View Funding Instructions
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -1304,18 +1474,35 @@ export default function OpportunityDetailPage() {
                   {subscriptionEntries.map((entry, idx) => (
                     <div key={entry.id}>
                       {idx > 0 && <div className="border-t my-4" />}
-                      <SubscriptionStatusCard
-                        entry={entry}
-                        heading={null}
-                        hideNda
-                        variant="inline"
-                        onViewNdas={opportunity.vehicle?.id ? handleViewNdas : undefined}
-                        onViewSignedPack={handleViewSignedPack}
-                      />
+                      <div className="space-y-3">
+                        <SubscriptionStatusCard
+                          entry={entry}
+                          heading={null}
+                          hideNda
+                          variant="inline"
+                          onViewNdas={opportunity.vehicle?.id ? handleViewNdas : undefined}
+                          onViewSignedPack={handleViewSignedPack}
+                        />
+                        {renderFundingActionStrip(
+                          entry.funding_instructions,
+                          entry.is_reinvestment ? 'Additional investment' : 'Primary subscription'
+                        )}
+                      </div>
                     </div>
                   ))}
                 </CardContent>
               </Card>
+            ) : opportunity.subscription && primarySubscriptionEntry ? (
+              <div className="space-y-3">
+                <SubscriptionStatusCard
+                  entry={primarySubscriptionEntry}
+                  heading="Your Subscription"
+                  dealCurrency={opportunity.currency}
+                  onViewNdas={opportunity.subscription.documents?.nda.available_in_documents && opportunity.vehicle?.id ? handleViewNdas : undefined}
+                  onViewSignedPack={handleViewSignedPack}
+                />
+                {renderFundingActionStrip(primarySubscriptionEntry.funding_instructions, 'Primary subscription')}
+              </div>
             ) : opportunity.subscription ? (
               <SubscriptionStatusCard
                 subscription={opportunity.subscription}
@@ -2166,6 +2353,164 @@ export default function OpportunityDetailPage() {
               )}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showFundingDialog} onOpenChange={setShowFundingDialog}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Funding Instructions</DialogTitle>
+            <DialogDescription>
+              Review the capital call summary and use the actions below to wire the signed amount.
+            </DialogDescription>
+          </DialogHeader>
+
+          {activeFundingInstructions && (
+            <div className="space-y-5">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="rounded-xl border bg-muted/30 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Amount Due
+                  </div>
+                  <div className="mt-2 text-3xl font-semibold tracking-tight">
+                    {formatCurrency(activeFundingInstructions.amount_due, activeFundingInstructions.currency)}
+                  </div>
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    Original amount {formatCurrency(activeFundingInstructions.amount_original, activeFundingInstructions.currency)}
+                    {activeFundingInstructions.amount_received > 0
+                      ? ` · Received ${formatCurrency(activeFundingInstructions.amount_received, activeFundingInstructions.currency)}`
+                      : ''}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border bg-muted/30 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Funding Deadline
+                  </div>
+                  <div className="mt-2 text-xl font-semibold">
+                    {formatDate(activeFundingInstructions.due_at)}
+                  </div>
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    {activeFundingInstructions.due_at && new Date(activeFundingInstructions.due_at) < new Date()
+                      ? 'This deadline has passed. Please contact the team if the transfer is still pending.'
+                      : 'Please use the exact reference below so the funds can be matched correctly.'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl border">
+                <div className="border-b px-4 py-3 text-sm font-semibold">Bank Details</div>
+                <div className="divide-y">
+                  {[
+                    ['Bank', activeFundingInstructions.bank_details.bank_name],
+                    ['Bank address', activeFundingInstructions.bank_details.bank_address],
+                    ['Account holder', activeFundingInstructions.bank_details.account_holder],
+                    ['Escrow agent', activeFundingInstructions.bank_details.escrow_agent],
+                    ['Law firm address', activeFundingInstructions.bank_details.law_firm_address],
+                    ['IBAN', activeFundingInstructions.bank_details.iban],
+                    ['BIC / SWIFT', activeFundingInstructions.bank_details.bic],
+                    ['Reference', activeFundingInstructions.reference],
+                    ['Wire description', activeFundingInstructions.bank_details.wire_description],
+                    ['Contact email', activeFundingInstructions.contact_email],
+                  ]
+                    .filter(([, value]) => value)
+                    .map(([label, value]) => (
+                      <div key={label} className="grid gap-2 px-4 py-3 md:grid-cols-[180px,1fr]">
+                        <div className="text-sm text-muted-foreground">{label}</div>
+                        <div className="text-sm font-medium break-words">{value}</div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:justify-between">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleDownloadFundingInstructions(activeFundingInstructions)}
+                disabled={!activeFundingInstructions?.funding_document_id}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Download PDF
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setFundingShareEmail('')
+                  setShowFundingShareDialog(true)
+                }}
+                disabled={!activeFundingInstructions?.subscription_id}
+              >
+                <MessageSquare className="mr-2 h-4 w-4" />
+                Share by Email
+              </Button>
+              {activeFundingInstructions?.signed_pack_path ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleViewSignedPack(activeFundingInstructions.signed_pack_path as string)}
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Signed Pack
+                </Button>
+              ) : null}
+            </div>
+            <Button type="button" variant="ghost" onClick={() => setShowFundingDialog(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showFundingShareDialog} onOpenChange={setShowFundingShareDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share Funding Instructions</DialogTitle>
+            <DialogDescription>
+              Enter the email address that should receive the funding PDF and wire details.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <Label htmlFor="funding-share-email">Recipient email</Label>
+            <Input
+              id="funding-share-email"
+              type="email"
+              autoFocus
+              value={fundingShareEmail}
+              onChange={(event) => setFundingShareEmail(event.target.value)}
+              placeholder="name@example.com"
+            />
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowFundingShareDialog(false)}
+              disabled={fundingShareLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSubmitFundingShare}
+              disabled={fundingShareLoading || !fundingShareEmail.trim()}
+            >
+              {fundingShareLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                'Send Email'
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

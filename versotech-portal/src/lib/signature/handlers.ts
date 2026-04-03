@@ -921,35 +921,6 @@ export async function handleSubscriptionSignature(
     console.log('ℹ️ [SUBSCRIPTION HANDLER] No pending signature tasks found for staff')
   }
 
-  // 6. CREATE NOTIFICATIONS
-  if (committedNow) {
-    console.log('\n📬 [SUBSCRIPTION HANDLER] Step 6: Creating commitment notification')
-
-    const investorUserId = activeSubscription.investor?.investor_users?.[0]?.user_id
-
-    if (!investorUserId) {
-      console.warn('⚠️ [SUBSCRIPTION HANDLER] No user_id found for investor - skipping notification')
-    } else {
-      const { error: notifError } = await supabase
-        .from('investor_notifications')
-        .insert({
-          user_id: investorUserId,
-          investor_id: activeSubscription.investor_id,
-          title: 'Investment Commitment Confirmed',
-          message: `Your subscription agreement for ${activeSubscription.vehicle?.name || 'the investment'} has been signed. Your commitment of ${activeSubscription.commitment} ${activeSubscription.currency} is now confirmed; countersignature is in progress.`,
-          link: `/versotech_main/portfolio`,
-        })
-
-      if (notifError) {
-        console.error('❌ [SUBSCRIPTION HANDLER] Failed to create notification:', notifError)
-      } else {
-        console.log('✅ [SUBSCRIPTION HANDLER] Created notification for investor')
-      }
-    }
-  } else {
-    console.log('ℹ️ [SUBSCRIPTION HANDLER] Subscription already committed - skipping commitment notification')
-  }
-
   // 6b. NOTIFY ASSIGNED LAWYERS (FULLY EXECUTED)
   console.log('\n👨‍⚖️ [SUBSCRIPTION HANDLER] Step 6b: Notifying assigned lawyers')
 

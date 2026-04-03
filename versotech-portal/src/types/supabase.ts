@@ -9610,6 +9610,7 @@ export type Database = {
           created_at: string | null
           currency: string | null
           current_nav: number | null
+          cycle_id: string | null
           deal_id: string | null
           distributions_total: number | null
           effective_date: string | null
@@ -9618,6 +9619,12 @@ export type Database = {
           funded_amount: number | null
           funded_at: string | null
           funding_due_at: string | null
+          funding_gross_received_amount: number | null
+          funding_gross_target_amount: number | null
+          funding_instruction_emailed_at: string | null
+          funding_instruction_generated_at: string | null
+          funding_instruction_notified_at: string | null
+          funding_instruction_snapshot: Json | null
           id: string
           introducer_id: string | null
           introduction_id: string | null
@@ -9653,6 +9660,7 @@ export type Database = {
           subscription_fee_amount: number | null
           subscription_fee_percent: number | null
           subscription_number: number
+          term_sheet_id: string | null
           units: number | null
           vehicle_id: string | null
         }
@@ -9669,6 +9677,7 @@ export type Database = {
           created_at?: string | null
           currency?: string | null
           current_nav?: number | null
+          cycle_id?: string | null
           deal_id?: string | null
           distributions_total?: number | null
           effective_date?: string | null
@@ -9677,6 +9686,12 @@ export type Database = {
           funded_amount?: number | null
           funded_at?: string | null
           funding_due_at?: string | null
+          funding_gross_received_amount?: number | null
+          funding_gross_target_amount?: number | null
+          funding_instruction_emailed_at?: string | null
+          funding_instruction_generated_at?: string | null
+          funding_instruction_notified_at?: string | null
+          funding_instruction_snapshot?: Json | null
           id?: string
           introducer_id?: string | null
           introduction_id?: string | null
@@ -9712,6 +9727,7 @@ export type Database = {
           subscription_fee_amount?: number | null
           subscription_fee_percent?: number | null
           subscription_number?: number
+          term_sheet_id?: string | null
           units?: number | null
           vehicle_id?: string | null
         }
@@ -9728,6 +9744,7 @@ export type Database = {
           created_at?: string | null
           currency?: string | null
           current_nav?: number | null
+          cycle_id?: string | null
           deal_id?: string | null
           distributions_total?: number | null
           effective_date?: string | null
@@ -9736,6 +9753,12 @@ export type Database = {
           funded_amount?: number | null
           funded_at?: string | null
           funding_due_at?: string | null
+          funding_gross_received_amount?: number | null
+          funding_gross_target_amount?: number | null
+          funding_instruction_emailed_at?: string | null
+          funding_instruction_generated_at?: string | null
+          funding_instruction_notified_at?: string | null
+          funding_instruction_snapshot?: Json | null
           id?: string
           introducer_id?: string | null
           introduction_id?: string | null
@@ -9771,6 +9794,7 @@ export type Database = {
           subscription_fee_amount?: number | null
           subscription_fee_percent?: number | null
           subscription_number?: number
+          term_sheet_id?: string | null
           units?: number | null
           vehicle_id?: string | null
         }
