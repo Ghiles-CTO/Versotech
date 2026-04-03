@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   ArrowRight,
+  ArrowUpRight,
   Loader2,
   PenLine,
   BarChart3,
@@ -452,73 +453,97 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              Total Introductions
-            </CardTitle>
-            <Users className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {metrics?.totalIntroductions || 0}
-            </div>
-            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-              {metrics?.interestedIntroductions || 0} interested
-            </p>
-          </CardContent>
-        </Card>
+        <Link href="/versotech_main/introductions" className="group">
+          <Card className={`h-full transition-colors ${isDark ? 'bg-white/5 border-white/10 hover:border-primary/40 hover:bg-white/10' : 'hover:border-primary/40 hover:bg-primary/5'}`}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                Total Introductions
+              </CardTitle>
+              <Users className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                {metrics?.totalIntroductions || 0}
+              </div>
+              <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                {metrics?.interestedIntroductions || 0} interested
+              </p>
+              <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                View introductions
+                <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </span>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              Conversion Rate
-            </CardTitle>
-            <TrendingUp className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {metrics?.conversionRate.toFixed(1) || 0}%
-            </div>
-            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-              {metrics?.fundedIntroductions || 0} funded
-            </p>
-          </CardContent>
-        </Card>
+        <Link href="/versotech_main/introductions" className="group">
+          <Card className={`h-full transition-colors ${isDark ? 'bg-white/5 border-white/10 hover:border-primary/40 hover:bg-white/10' : 'hover:border-primary/40 hover:bg-primary/5'}`}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                Conversion Rate
+              </CardTitle>
+              <TrendingUp className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                {metrics?.conversionRate.toFixed(1) || 0}%
+              </div>
+              <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                {metrics?.fundedIntroductions || 0} funded
+              </p>
+              <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                View introductions
+                <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </span>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              Commission Earned
-            </CardTitle>
-            <DollarSign className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold text-green-500`}>
-              {formatCurrencyTotals(metrics?.totalCommissionEarnedByCurrency || {})}
-            </div>
-            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-              Total paid to date
-            </p>
-          </CardContent>
-        </Card>
+        <Link href="/versotech_main/my-commissions" className="group">
+          <Card className={`h-full transition-colors ${isDark ? 'bg-white/5 border-white/10 hover:border-primary/40 hover:bg-white/10' : 'hover:border-primary/40 hover:bg-primary/5'}`}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                Commission Earned
+              </CardTitle>
+              <DollarSign className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold text-green-500`}>
+                {formatCurrencyTotals(metrics?.totalCommissionEarnedByCurrency || {})}
+              </div>
+              <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                Total paid to date
+              </p>
+              <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                View commissions
+                <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </span>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              Pending Commission
-            </CardTitle>
-            <Clock className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold text-amber-500`}>
-              {formatCurrencyTotals(metrics?.pendingCommissionByCurrency || {})}
-            </div>
-            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-              Accrued or awaiting approval
-            </p>
-          </CardContent>
-        </Card>
+        <Link href="/versotech_main/my-commissions" className="group">
+          <Card className={`h-full transition-colors ${isDark ? 'bg-white/5 border-white/10 hover:border-primary/40 hover:bg-white/10' : 'hover:border-primary/40 hover:bg-primary/5'}`}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                Pending Commission
+              </CardTitle>
+              <Clock className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold text-amber-500`}>
+                {formatCurrencyTotals(metrics?.pendingCommissionByCurrency || {})}
+              </div>
+              <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                Accrued or awaiting approval
+              </p>
+              <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                View commissions
+                <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </span>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Performance Analytics */}

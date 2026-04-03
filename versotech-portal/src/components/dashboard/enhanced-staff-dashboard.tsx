@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useCallback, useMemo } from 'react'
+import Link from 'next/link'
 import { StaffActionCenter } from './staff-action-center'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -137,8 +138,8 @@ DashboardHeader.displayName = 'DashboardHeader'
 
 const KPICard = React.memo(({ kpi, glassCardStyle, labelStyle, valueStyle }: { kpi: any, glassCardStyle: string, labelStyle: string, valueStyle: string }) => {
     const Icon = kpi.icon
-    return (
-        <div className={glassCardStyle + " p-6 rounded-xl relative overflow-hidden group"}>
+    const content = (
+        <div className={glassCardStyle + " p-6 rounded-xl relative overflow-hidden group" + (kpi.href ? " hover:border-primary/40 transition-colors cursor-pointer" : "")}>
             <div className="relative z-10">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className={labelStyle}>{kpi.label}</h3>
@@ -148,13 +149,25 @@ const KPICard = React.memo(({ kpi, glassCardStyle, labelStyle, valueStyle }: { k
                     <span className={valueStyle}>{typeof kpi.value === 'number' ? kpi.value.toLocaleString() : kpi.value}</span>
                     <span className="text-sm text-gray-500 dark:text-zinc-200 font-light">{kpi.subValue}</span>
                 </div>
-                <div className="mt-4 flex items-center gap-2 text-xs text-gray-500 dark:text-zinc-200">
-                    {kpi.trend === 'up' ? <ArrowUpRight className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> : <MoreHorizontal className="w-3 h-3 text-gray-400 dark:text-zinc-300" />}
-                    <span className={kpi.trend === 'up' ? "text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-zinc-200"}>{kpi.change}</span>
+                <div className="mt-4 flex items-center justify-between text-xs text-gray-500 dark:text-zinc-200">
+                    <div className="flex items-center gap-2">
+                        {kpi.trend === 'up' ? <ArrowUpRight className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> : <MoreHorizontal className="w-3 h-3 text-gray-400 dark:text-zinc-300" />}
+                        <span className={kpi.trend === 'up' ? "text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-zinc-200"}>{kpi.change}</span>
+                    </div>
+                    {kpi.href && kpi.ctaLabel && (
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                            {kpi.ctaLabel}
+                            <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                        </span>
+                    )}
                 </div>
             </div>
         </div>
     )
+    if (kpi.href) {
+        return <Link href={kpi.href} className="group">{content}</Link>
+    }
+    return content
 })
 KPICard.displayName = 'KPICard'
 
@@ -454,7 +467,9 @@ export function EnhancedStaffDashboard({
             change: '+2.4%',
             trend: 'up',
             icon: Users,
-            accent: 'text-gray-600 dark:text-zinc-200'
+            accent: 'text-gray-600 dark:text-zinc-200',
+            href: '/versotech_main/investors',
+            ctaLabel: 'View investors'
         },
         {
             label: 'Pending KYC',
@@ -463,7 +478,9 @@ export function EnhancedStaffDashboard({
             change: initialData.kpis.highPriorityKyc && initialData.kpis.highPriorityKyc > 0 ? `${initialData.kpis.highPriorityKyc} High Priority` : 'Standard',
             trend: 'neutral',
             icon: Shield,
-            accent: 'text-amber-600 dark:text-amber-200'
+            accent: 'text-amber-600 dark:text-amber-200',
+            href: '/versotech_main/kyc-review',
+            ctaLabel: 'Review KYC'
         },
         {
             label: 'Process Executions',
@@ -472,7 +489,9 @@ export function EnhancedStaffDashboard({
             change: 'MTD',
             trend: 'up',
             icon: Workflow,
-            accent: 'text-sky-600 dark:text-sky-200'
+            accent: 'text-sky-600 dark:text-sky-200',
+            href: '/versotech_main/subscriptions',
+            ctaLabel: 'View workflows'
         },
         {
             label: 'Compliance Index',
@@ -481,7 +500,9 @@ export function EnhancedStaffDashboard({
             change: 'Target: 100%',
             trend: 'neutral',
             icon: CheckCircle,
-            accent: 'text-emerald-600 dark:text-emerald-200'
+            accent: 'text-emerald-600 dark:text-emerald-200',
+            href: '/versotech_main/audit',
+            ctaLabel: 'View audit'
         }
     ], [initialData.kpis])
 

@@ -11,24 +11,21 @@ import {
   UserPlus,
   Building2,
   Scale,
-  DollarSign,
   FileText,
   Clock,
   CheckCircle2,
   ArrowRight,
+  ArrowUpRight,
   Loader2,
   AlertCircle,
   TrendingUp,
   FileSignature,
-  Wallet,
-  Receipt,
 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { useTheme } from '@/components/theme-provider'
 import { ArrangerOnboardingChecklist } from '@/components/arranger/arranger-onboarding-checklist'
-import { type CurrencyTotals, formatCurrencyTotals, mergeCurrencyTotals, sumByCurrency } from '@/lib/currency-totals'
 
 type Persona = {
   persona_type: string
@@ -54,8 +51,6 @@ type ArrangerMetrics = {
   totalCommercialPartners: number
   totalLawyers: number
   pendingAgreements: number
-  totalCommitmentValue: number
-  totalCommitmentByCurrency: CurrencyTotals
 }
 
 type RecentMandate = {
@@ -75,35 +70,12 @@ type PendingAgreement = {
   created_at: string
 }
 
-// New metrics types for User Story compliance (2.5.2, 2.6.1, 2.2.4/2.3.4/2.4.4)
-type EscrowMetrics = {
-  totalExpected: number      // SUM(commitment) for committed subscriptions
-  totalFunded: number        // SUM(funded_amount)
-  totalOutstanding: number   // SUM(outstanding_amount)
-  totalExpectedByCurrency: CurrencyTotals
-  totalFundedByCurrency: CurrencyTotals
-  totalOutstandingByCurrency: CurrencyTotals
-  fundingRate: number        // percentage
-  pendingInvestors: number   // COUNT where funded_amount < commitment
-}
-
 type SubscriptionPackMetrics = {
   awaitingInvestorSignature: number
   awaitingArrangerSignature: number
   awaitingCEOSignature: number
   signedThisMonth: number
   totalPending: number
-}
-
-type FeeMetrics = {
-  totalAccrued: number       // status = 'accrued'
-  totalInvoiced: number      // status = 'invoiced'
-  totalPaid: number          // status = 'paid'
-  feePipeline: number        // accrued + invoiced (not yet paid)
-  totalAccruedByCurrency: CurrencyTotals
-  totalInvoicedByCurrency: CurrencyTotals
-  totalPaidByCurrency: CurrencyTotals
-  feePipelineByCurrency: CurrencyTotals
 }
 
 export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashboardProps) {
@@ -119,10 +91,7 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
   } | null>(null)
   const [recentMandates, setRecentMandates] = useState<RecentMandate[]>([])
   const [pendingAgreements, setPendingAgreements] = useState<PendingAgreement[]>([])
-  // New state for User Story compliance metrics
-  const [escrowMetrics, setEscrowMetrics] = useState<EscrowMetrics | null>(null)
   const [subPackMetrics, setSubPackMetrics] = useState<SubscriptionPackMetrics | null>(null)
-  const [feeMetrics, setFeeMetrics] = useState<FeeMetrics | null>(null)
 
   const formatAmountWithCurrency = (amount: number, currency?: string | null) => {
     if (currency) return formatCurrency(amount, currency)
@@ -182,28 +151,7 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
           created_at: d.created_at,
         })))
 
-        // Get total commitment value from subscriptions on arranger's deals
         const dealIds = mandates.map((d: any) => d.id)
-        let totalCommitment = 0
-        let totalCommitmentByCurrency: CurrencyTotals = {}
-
-        if (dealIds.length > 0) {
-          const { data: subscriptions } = await supabase
-            .from('subscriptions')
-            .select('commitment, currency')
-            .in('deal_id', dealIds)
-            .in('status', ['committed', 'active', 'signed', 'funded'])
-
-          totalCommitment = (subscriptions || []).reduce(
-            (sum: number, s: any) => sum + (s.commitment || 0),
-            0
-          )
-          totalCommitmentByCurrency = sumByCurrency(
-            subscriptions || [],
-            (s: any) => s.commitment,
-            (s: any) => s.currency
-          )
-        }
 
         // Count related entities - SCOPED TO ARRANGER'S DEALS
         let partnersCount = 0
@@ -313,49 +261,8 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
         )
         setPendingAgreements(allPendingAgreements.slice(0, 5))
 
-        // ========== NEW METRICS: User Story Compliance ==========
-
-        // 1. ESCROW/FUNDING METRICS (User Story 2.5.2)
+        // SUBSCRIPTION PACK PIPELINE METRICS (User Story 2.6.1)
         if (dealIds.length > 0) {
-          const { data: fundingData } = await supabase
-            .from('subscriptions')
-            .select('commitment, funded_amount, outstanding_amount, currency, status, investor_id')
-            .in('deal_id', dealIds)
-            .in('status', ['committed', 'partially_funded', 'funded', 'active', 'signed'])
-
-          const totalExpected = (fundingData || []).reduce((sum: number, s: any) => sum + (s.commitment || 0), 0)
-          const totalFunded = (fundingData || []).reduce((sum: number, s: any) => sum + (s.funded_amount || 0), 0)
-          const totalOutstanding = (fundingData || []).reduce((sum: number, s: any) => sum + (s.outstanding_amount || 0), 0)
-          const totalExpectedByCurrency = sumByCurrency(
-            fundingData || [],
-            (s: any) => s.commitment,
-            (s: any) => s.currency
-          )
-          const totalFundedByCurrency = sumByCurrency(
-            fundingData || [],
-            (s: any) => s.funded_amount,
-            (s: any) => s.currency
-          )
-          const totalOutstandingByCurrency = sumByCurrency(
-            fundingData || [],
-            (s: any) => s.outstanding_amount,
-            (s: any) => s.currency
-          )
-          const pendingInvestors = (fundingData || []).filter((s: any) => (s.funded_amount || 0) < (s.commitment || 0)).length
-
-          setEscrowMetrics({
-            totalExpected,
-            totalFunded,
-            totalOutstanding,
-            totalExpectedByCurrency,
-            totalFundedByCurrency,
-            totalOutstandingByCurrency,
-            fundingRate: totalExpected > 0 ? (totalFunded / totalExpected) * 100 : 0,
-            pendingInvestors,
-          })
-
-          // 2. SUBSCRIPTION PACK PIPELINE METRICS (User Story 2.6.1)
-          // Query documents with subscription pack type and their signature requests
           const { data: subDocs } = await supabase
             .from('documents')
             .select(`
@@ -368,16 +275,12 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
             .not('subscription_id', 'is', null)
             .in('status', ['published', 'pending_signature'])
 
-          // Filter to only documents for this arranger's deals
-          // We need to check which subscriptions belong to this arranger's deals
           const { data: arrangerSubscriptions } = await supabase
             .from('subscriptions')
             .select('id')
             .in('deal_id', dealIds)
 
           const arrangerSubIds = new Set((arrangerSubscriptions || []).map((s: any) => s.id))
-
-          // Filter documents to only those for arranger's subscriptions
           const arrangerDocs = (subDocs || []).filter((doc: any) => arrangerSubIds.has(doc.subscription_id))
 
           let awaitingInvestor = 0
@@ -396,7 +299,6 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
             if (hasPendingCEO) awaitingCEO++
           })
 
-          // Get signed this month count
           const startOfMonth = new Date()
           startOfMonth.setDate(1)
           startOfMonth.setHours(0, 0, 0, 0)
@@ -416,17 +318,6 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
             totalPending: awaitingInvestor + awaitingArranger + awaitingCEO,
           })
         } else {
-          // No deals - set empty metrics
-          setEscrowMetrics({
-            totalExpected: 0,
-            totalFunded: 0,
-            totalOutstanding: 0,
-            totalExpectedByCurrency: {},
-            totalFundedByCurrency: {},
-            totalOutstandingByCurrency: {},
-            fundingRate: 0,
-            pendingInvestors: 0,
-          })
           setSubPackMetrics({
             awaitingInvestorSignature: 0,
             awaitingArrangerSignature: 0,
@@ -435,36 +326,6 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
             totalPending: 0,
           })
         }
-
-        // 3. FEE METRICS (User Story 2.2.4, 2.3.4, 2.4.4)
-        const { data: feeData } = await supabase
-          .from('fee_events')
-          .select('computed_amount, status, currency')
-          .eq('payee_arranger_id', arrangerId)
-
-        const validFees = (feeData || []).filter((f: any) => f.status !== 'voided' && f.status !== 'cancelled')
-        const accruedFees = validFees.filter((f: any) => f.status === 'accrued')
-        const invoicedFees = validFees.filter((f: any) => f.status === 'invoiced')
-        const paidFees = validFees.filter((f: any) => f.status === 'paid')
-        const totalAccrued = accruedFees.reduce((s: number, f: any) => s + (f.computed_amount || 0), 0)
-        const totalInvoiced = invoicedFees.reduce((s: number, f: any) => s + (f.computed_amount || 0), 0)
-        const totalPaid = paidFees.reduce((s: number, f: any) => s + (f.computed_amount || 0), 0)
-        const totalAccruedByCurrency = sumByCurrency(accruedFees, (f: any) => f.computed_amount, (f: any) => f.currency)
-        const totalInvoicedByCurrency = sumByCurrency(invoicedFees, (f: any) => f.computed_amount, (f: any) => f.currency)
-        const totalPaidByCurrency = sumByCurrency(paidFees, (f: any) => f.computed_amount, (f: any) => f.currency)
-
-        setFeeMetrics({
-          totalAccrued,
-          totalInvoiced,
-          totalPaid,
-          feePipeline: totalAccrued + totalInvoiced,
-          totalAccruedByCurrency,
-          totalInvoicedByCurrency,
-          totalPaidByCurrency,
-          feePipelineByCurrency: mergeCurrencyTotals(totalAccruedByCurrency, totalInvoicedByCurrency),
-        })
-
-        // ========== END NEW METRICS ==========
 
         setMetrics({
           totalMandates: mandates.length,
@@ -475,8 +336,6 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
           totalCommercialPartners: cpCount || 0,
           totalLawyers: lawyersCount,
           pendingAgreements: allPendingAgreements.length,
-          totalCommitmentValue: totalCommitment,
-          totalCommitmentByCurrency,
         })
       } catch (error) {
         console.error('Error fetching arranger data:', error)
@@ -610,143 +469,75 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
       )}
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              Total Mandates
-            </CardTitle>
-            <Briefcase className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {metrics?.totalMandates || 0}
-            </div>
-            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-              {metrics?.activeMandates || 0} active, {metrics?.pendingMandates || 0} pending
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              Active Network
-            </CardTitle>
-            <Users className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {(metrics?.totalPartners || 0) + (metrics?.totalIntroducers || 0) + (metrics?.totalCommercialPartners || 0)}
-            </div>
-            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-              On your mandates
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              Total Commitment
-            </CardTitle>
-            <DollarSign className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold text-green-500`}>
-              {formatCurrencyTotals(metrics?.totalCommitmentByCurrency || {})}
-            </div>
-            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-              Across all mandates
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              Assigned Lawyers
-            </CardTitle>
-            <Scale className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {metrics?.totalLawyers || 0}
-            </div>
-            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-              On your mandates
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* NEW: Escrow & Fee Metrics Row (User Story 2.5.2, 2.2.4/2.3.4/2.4.4) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Escrow Funding Status Card */}
-        <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              Escrow Funding Status
-            </CardTitle>
-            <Wallet className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${(escrowMetrics?.fundingRate || 0) >= 75 ? 'text-green-500' : 'text-amber-500'}`}>
-              {(escrowMetrics?.fundingRate || 0).toFixed(0)}% Funded
-            </div>
-            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-              {formatCurrencyTotals(escrowMetrics?.totalFundedByCurrency || {})} of {formatCurrencyTotals(escrowMetrics?.totalExpectedByCurrency || {})}
-            </p>
-            {/* Progress bar */}
-            <div className={`mt-2 h-2 ${isDark ? 'bg-gray-700' : 'bg-gray-200'} rounded-full overflow-hidden`}>
-              <div
-                className="h-full bg-green-500 transition-all duration-300"
-                style={{ width: `${Math.min(escrowMetrics?.fundingRate || 0, 100)}%` }}
-              />
-            </div>
-            {(escrowMetrics?.pendingInvestors || 0) > 0 && (
-              <p className="text-xs text-amber-400 mt-2">
-                {escrowMetrics?.pendingInvestors} investor(s) pending funding
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Link href="/versotech_main/my-mandates" className="group">
+          <Card className={`h-full transition-colors ${isDark ? 'bg-white/5 border-white/10 hover:border-primary/40 hover:bg-white/10' : 'hover:border-primary/40 hover:bg-primary/5'}`}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                Total Mandates
+              </CardTitle>
+              <Briefcase className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                {metrics?.totalMandates || 0}
+              </div>
+              <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                {metrics?.activeMandates || 0} active, {metrics?.pendingMandates || 0} pending
               </p>
-            )}
-            <div className="mt-3 pt-3 border-t border-gray-700/50 flex justify-between text-xs">
-              <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Outstanding:</span>
-              <span className="text-amber-400 font-medium">{formatCurrencyTotals(escrowMetrics?.totalOutstandingByCurrency || {})}</span>
-            </div>
-          </CardContent>
-        </Card>
+              <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                View mandates
+                <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </span>
+            </CardContent>
+          </Card>
+        </Link>
 
-        {/* Fee Pipeline Card */}
-        <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              Fee Pipeline
-            </CardTitle>
-            <Receipt className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-500">
-              {formatCurrencyTotals(feeMetrics?.feePipelineByCurrency || {})}
-            </div>
-            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-              Pending collection
-            </p>
-            <div className="mt-3 space-y-2 text-xs">
-              <div className="flex justify-between items-center">
-                <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Accrued:</span>
-                <span className="text-amber-400 font-medium">{formatCurrencyTotals(feeMetrics?.totalAccruedByCurrency || {})}</span>
+        <Link href="/versotech_main/my-introducers" className="group">
+          <Card className={`h-full transition-colors ${isDark ? 'bg-white/5 border-white/10 hover:border-primary/40 hover:bg-white/10' : 'hover:border-primary/40 hover:bg-primary/5'}`}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                Active Network
+              </CardTitle>
+              <Users className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                {(metrics?.totalPartners || 0) + (metrics?.totalIntroducers || 0) + (metrics?.totalCommercialPartners || 0)}
               </div>
-              <div className="flex justify-between items-center">
-                <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Invoiced:</span>
-                <span className="text-blue-400 font-medium">{formatCurrencyTotals(feeMetrics?.totalInvoicedByCurrency || {})}</span>
+              <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                On your mandates
+              </p>
+              <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                View network
+                <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </span>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/versotech_main/my-lawyers" className="group">
+          <Card className={`h-full transition-colors ${isDark ? 'bg-white/5 border-white/10 hover:border-primary/40 hover:bg-white/10' : 'hover:border-primary/40 hover:bg-primary/5'}`}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                Assigned Lawyers
+              </CardTitle>
+              <Scale className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                {metrics?.totalLawyers || 0}
               </div>
-              <div className="flex justify-between items-center pt-2 border-t border-gray-700/50">
-                <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Total Paid:</span>
-                <span className="text-green-400 font-medium">{formatCurrencyTotals(feeMetrics?.totalPaidByCurrency || {})}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                On your mandates
+              </p>
+              <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                View lawyers
+                <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </span>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* NEW: Subscription Pack Pipeline (User Story 2.6.1) */}
