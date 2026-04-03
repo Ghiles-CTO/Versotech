@@ -499,7 +499,7 @@ export function ProfilePageClient({
     const memberGroups = missingAccountKycItems.filter((i) => i.scope === 'member')
     const userMember = memberGroups[0] || null
 
-    // Navigate with action param so forms auto-open on load
+    // Navigate to the relevant tab or editor without auto-opening the legacy upload dialog.
     const nav = (tab: string, action?: string) => {
       const url = new URL(window.location.href)
       url.searchParams.set('tab', tab)
@@ -512,7 +512,7 @@ export function ProfilePageClient({
       if (src?.missingItems.some((r) => strip(r) === 'Personal Information')) {
         return { label: 'Complete personal details', action: () => setShowKycDialog(true) }
       }
-      return { label: 'Upload documents', action: () => nav('kyc', 'upload-doc') }
+      return { label: 'Upload documents', action: () => nav('kyc') }
     }
 
     // Entity — mirrors onboarding modal priority exactly
@@ -523,10 +523,10 @@ export function ProfilePageClient({
       return { label: 'Complete entity details', action: () => setShowEntityOverviewDialog(true) }
     }
     if (userMember?.missingItems.some((r) => strip(r) !== 'Personal Information')) {
-      return { label: 'Upload personal documents', action: () => nav('kyc', 'upload-doc') }
+      return { label: 'Upload personal documents', action: () => nav('kyc') }
     }
     if (entityGroup?.missingItems.some((r) => strip(r) !== 'Entity Information')) {
-      return { label: 'Upload entity documents', action: () => nav('kyc', 'upload-doc') }
+      return { label: 'Upload entity documents', action: () => nav('kyc') }
     }
     if (memberGroups.slice(1).some((m) => m.missingItems.length > 0)) {
       return { label: 'Review member KYC', action: () => nav('entity-members') }
@@ -535,6 +535,172 @@ export function ProfilePageClient({
   }
 
   const nextCTA = resolveNextCTA()
+  const accountApprovalSection = hasInvestorEntity && !hideAccountApprovalSection ? (
+    <Card className="overflow-hidden">
+      <div className={`px-6 py-2.5 flex items-center gap-2 ${
+        hasPendingAccountApproval
+          ? 'bg-blue-50 border-b border-blue-100'
+          : isAccountApprovalReady
+            ? 'bg-emerald-50 border-b border-emerald-100'
+            : showRequestInfoBadge
+              ? 'bg-red-50 border-b border-red-100'
+              : 'bg-amber-50 border-b border-amber-100'
+      }`}>
+        {hasPendingAccountApproval ? (
+          <>
+            <Clock className="h-4 w-4 text-blue-600" />
+            <span className="text-sm font-medium text-blue-800">Under Review</span>
+          </>
+        ) : isAccountApprovalReady ? (
+          <>
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            <span className="text-sm font-medium text-emerald-800">Ready to Submit</span>
+          </>
+        ) : showRequestInfoBadge ? (
+          <>
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <span className="text-sm font-medium text-red-800">Action Required</span>
+          </>
+        ) : (
+          <>
+            <Info className="h-4 w-4 text-amber-600" />
+            <span className="text-sm font-medium text-amber-800">Onboarding In Progress</span>
+          </>
+        )}
+      </div>
+
+      <CardHeader>
+        <CardTitle className="text-base">Submit Account for Approval</CardTitle>
+        <CardDescription>
+          Submit your completed account file to the CEO for activation review.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          {isEntity
+            ? 'We require to receive the required Entity KYC information as well as all UBOs and authorized signatories KYC (Personal Information, Proof of Identification and Proof of Address) before submitting your account for approval.'
+            : 'We require to receive your Personal Information, Proof of Identification and Proof of Address before submitting your account for approval.'}
+        </p>
+
+        {showRequestInfoBadge && latestAccountRequestInfo && (
+          <div className="rounded-lg border border-red-200 bg-red-50/80 p-4">
+            <button
+              type="button"
+              onClick={() => setShowRequestInfoDetails((prev) => !prev)}
+              className="flex w-full items-start gap-3 text-left"
+            >
+              <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-100">
+                <AlertCircle className="h-3.5 w-3.5 text-red-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-red-900">Latest request for information</p>
+                <p className="mt-0.5 text-xs text-red-700">
+                  The review team has requested additional information. Tap to {showRequestInfoDetails ? 'hide' : 'view'} details.
+                </p>
+              </div>
+              <ArrowRight className={`h-4 w-4 text-red-400 shrink-0 mt-0.5 transition-transform ${showRequestInfoDetails ? 'rotate-90' : ''}`} />
+            </button>
+            {showRequestInfoDetails && (
+              <div className="mt-3 ml-9 rounded-md bg-white/60 border border-red-100 p-3">
+                <p className="text-sm text-red-800">{latestAccountRequestInfo.details}</p>
+                {latestAccountRequestInfo.requestedAt && (
+                  <p className="mt-2 text-xs text-red-600">
+                    Requested on {formatViewerDateTime(latestAccountRequestInfo.requestedAt)}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {missingAccountKycItems.length > 0 ? (
+          <div className="space-y-2">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Outstanding KYC requirements</p>
+            <div className="divide-y divide-border rounded-lg border bg-muted/30">
+              {missingAccountKycItems.map((item, index) => (
+                <div
+                  key={`${item.scope}-${item.memberId || item.name}-${index}`}
+                  className="flex items-start gap-3 px-3 py-2.5"
+                >
+                  <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-100">
+                    <XCircle className="h-3 w-3 text-amber-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground leading-tight">{item.name}</p>
+                    {item.scope === 'member' && item.email && (
+                      <p className="text-xs text-muted-foreground">{item.email}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-0.5">Outstanding: {item.missingItems.join(' · ')}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50/50 px-4 py-3">
+            <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+            <p className="text-sm text-muted-foreground">
+              All required KYC items are complete.
+            </p>
+          </div>
+        )}
+
+        {nextCTA && !hasPendingAccountApproval && (
+          <button
+            type="button"
+            onClick={nextCTA.action}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+          >
+            {nextCTA.label}
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        )}
+
+        <div className="pt-1">
+          {hasPendingAccountApproval ? (
+            <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50/50 px-4 py-3">
+              <Loader2 className="h-4 w-4 text-blue-600 animate-spin shrink-0" />
+              <p className="text-sm text-muted-foreground">
+                Under review by the CEO.
+              </p>
+            </div>
+          ) : (
+            <>
+              <Button
+                onClick={handleSubmitAccountForApproval}
+                disabled={accountApprovalSubmitDisabled}
+                className={isAccountApprovalReady && canSubmitAccountApproval ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}
+                size="sm"
+              >
+                {isSubmittingAccountApproval ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Submit Account for Approval
+                  </>
+                )}
+              </Button>
+
+              {!canSubmitAccountApproval && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Only primary contacts or admins can submit account approval.
+                </p>
+              )}
+              {canSubmitAccountApproval && !hasPendingAccountApproval && !isAccountApprovalReady && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Complete all required KYC items before submitting for approval.
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  ) : null
 
   // Staff layout - keep the original grid layout
   if (isStaff) {
@@ -742,6 +908,8 @@ export function ProfilePageClient({
               )}
             </div>
 
+            {accountApprovalSection}
+
             {/* Entity Overview — Full Width */}
             {isEntity && investorInfo && (
               <OverviewSectionCard
@@ -940,178 +1108,6 @@ export function ProfilePageClient({
             </div>
           )}
 
-          {hasInvestorEntity && !hideAccountApprovalSection && (
-            <Card className="overflow-hidden">
-              {/* Status Banner */}
-              <div className={`px-6 py-2.5 flex items-center gap-2 ${
-                hasPendingAccountApproval
-                  ? 'bg-blue-50 border-b border-blue-100'
-                  : isAccountApprovalReady
-                    ? 'bg-emerald-50 border-b border-emerald-100'
-                    : showRequestInfoBadge
-                      ? 'bg-red-50 border-b border-red-100'
-                      : 'bg-amber-50 border-b border-amber-100'
-              }`}>
-                {hasPendingAccountApproval ? (
-                  <>
-                    <Clock className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-800">Under Review</span>
-                  </>
-                ) : isAccountApprovalReady ? (
-                  <>
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                    <span className="text-sm font-medium text-emerald-800">Ready to Submit</span>
-                  </>
-                ) : showRequestInfoBadge ? (
-                  <>
-                    <AlertCircle className="h-4 w-4 text-red-600" />
-                    <span className="text-sm font-medium text-red-800">Action Required</span>
-                  </>
-                ) : (
-                  <>
-                    <Info className="h-4 w-4 text-amber-600" />
-                    <span className="text-sm font-medium text-amber-800">Onboarding In Progress</span>
-                  </>
-                )}
-              </div>
-
-              <CardHeader>
-                <CardTitle className="text-base">Submit Account for Approval</CardTitle>
-                <CardDescription>
-                  Submit your completed account file to the CEO for activation review.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  {isEntity
-                    ? 'We require to receive the required Entity KYC information as well as all UBOs and authorized signatories KYC (Personal Information, Proof of Identification and Proof of Address) before submitting your account for approval.'
-                    : 'We require to receive your Personal Information, Proof of Identification and Proof of Address before submitting your account for approval.'}
-                </p>
-
-                {/* Request for Information Alert */}
-                {showRequestInfoBadge && latestAccountRequestInfo && (
-                  <div className="rounded-lg border border-red-200 bg-red-50/80 p-4">
-                    <button
-                      type="button"
-                      onClick={() => setShowRequestInfoDetails((prev) => !prev)}
-                      className="flex w-full items-start gap-3 text-left"
-                    >
-                      <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-100">
-                        <AlertCircle className="h-3.5 w-3.5 text-red-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-red-900">Latest request for information</p>
-                        <p className="mt-0.5 text-xs text-red-700">
-                          The review team has requested additional information. Tap to {showRequestInfoDetails ? 'hide' : 'view'} details.
-                        </p>
-                      </div>
-                      <ArrowRight className={`h-4 w-4 text-red-400 shrink-0 mt-0.5 transition-transform ${showRequestInfoDetails ? 'rotate-90' : ''}`} />
-                    </button>
-                    {showRequestInfoDetails && (
-                      <div className="mt-3 ml-9 rounded-md bg-white/60 border border-red-100 p-3">
-                        <p className="text-sm text-red-800">{latestAccountRequestInfo.details}</p>
-                        {latestAccountRequestInfo.requestedAt && (
-                          <p className="mt-2 text-xs text-red-600">
-                            Requested on {formatViewerDateTime(latestAccountRequestInfo.requestedAt)}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Outstanding KYC requirements */}
-                {missingAccountKycItems.length > 0 ? (
-                  <div className="space-y-2">
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Outstanding KYC requirements</p>
-                    <div className="divide-y divide-border rounded-lg border bg-muted/30">
-                      {missingAccountKycItems.map((item, index) => (
-                        <div
-                          key={`${item.scope}-${item.memberId || item.name}-${index}`}
-                          className="flex items-start gap-3 px-3 py-2.5"
-                        >
-                          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-100">
-                            <XCircle className="h-3 w-3 text-amber-600" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-foreground leading-tight">{item.name}</p>
-                            {item.scope === 'member' && item.email && (
-                              <p className="text-xs text-muted-foreground">{item.email}</p>
-                            )}
-                            <p className="text-xs text-muted-foreground mt-0.5">Outstanding: {item.missingItems.join(' \u00B7 ')}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50/50 px-4 py-3">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
-                    <p className="text-sm text-muted-foreground">
-                      All required KYC items are complete.
-                    </p>
-                  </div>
-                )}
-
-                {/* Next Step CTA */}
-                {nextCTA && !hasPendingAccountApproval && (
-                  <button
-                    type="button"
-                    onClick={nextCTA.action}
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-                  >
-                    {nextCTA.label}
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </button>
-                )}
-
-                {/* Submit Button */}
-                <div className="pt-1">
-                  {hasPendingAccountApproval ? (
-                    <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50/50 px-4 py-3">
-                      <Loader2 className="h-4 w-4 text-blue-600 animate-spin shrink-0" />
-                      <p className="text-sm text-muted-foreground">
-                        Under review by the CEO.
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <Button
-                        onClick={handleSubmitAccountForApproval}
-                        disabled={accountApprovalSubmitDisabled}
-                        className={isAccountApprovalReady && canSubmitAccountApproval ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}
-                        size="sm"
-                      >
-                        {isSubmittingAccountApproval ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Submitting...
-                          </>
-                        ) : (
-                          <>
-                            <Send className="h-4 w-4 mr-2" />
-                            Submit Account for Approval
-                          </>
-                        )}
-                      </Button>
-
-                      {!canSubmitAccountApproval && (
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          Only primary contacts or admins can submit account approval.
-                        </p>
-                      )}
-                      {canSubmitAccountApproval && !hasPendingAccountApproval && !isAccountApprovalReady && (
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          Complete all required KYC items before submitting for approval.
-                        </p>
-                      )}
-                    </>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
           {/* If no investor entity, show basic profile edit */}
           {!hasInvestorEntity && (
             <Card>
@@ -1148,7 +1144,7 @@ export function ProfilePageClient({
             </div>
 
             {/* KYC Documents */}
-            <KYCDocumentsTab autoOpenUpload={defaultAction === 'upload-doc'} />
+            <KYCDocumentsTab />
           </TabsContent>
         )}
 

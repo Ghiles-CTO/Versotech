@@ -12,8 +12,20 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { getDocumentTypeLabel } from '@/constants/kyc-document-types'
 import { isIdDocument, isProofOfAddress } from '@/lib/validation/document-validation'
+
+export type UploadDocumentTypeOption = {
+  value: string
+  label: string
+}
 
 export type UploadMetadataFields = {
   documentNumber: string
@@ -35,7 +47,9 @@ interface DocumentMetadataDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   documentType: string | null
-  onConfirm: (metadata: UploadMetadataFields) => void
+  documentTypeOptions?: UploadDocumentTypeOption[]
+  defaultDocumentType?: string | null
+  onConfirm: (metadata: UploadMetadataFields, documentType?: string) => void
   isSubmitting?: boolean
 }
 
@@ -43,27 +57,49 @@ export function DocumentMetadataDialog({
   open,
   onOpenChange,
   documentType,
+  documentTypeOptions,
+  defaultDocumentType,
   onConfirm,
   isSubmitting = false,
 }: DocumentMetadataDialogProps) {
   const [metadata, setMetadata] = useState<UploadMetadataFields>(EMPTY_METADATA)
+  const [selectedDocumentType, setSelectedDocumentType] = useState<string>('')
+
+  const resolvedDocumentType = useMemo(
+    () =>
+      selectedDocumentType ||
+      defaultDocumentType ||
+      documentTypeOptions?.[0]?.value ||
+      documentType ||
+      '',
+    [defaultDocumentType, documentType, documentTypeOptions, selectedDocumentType]
+  )
+
+  const showsDocumentTypeSelect = (documentTypeOptions?.length || 0) > 1
 
   const requiresIdFields = useMemo(
-    () => !!documentType && isIdDocument(documentType),
-    [documentType]
+    () => !!resolvedDocumentType && isIdDocument(resolvedDocumentType),
+    [resolvedDocumentType]
   )
   const requiresAddressDate = useMemo(
-    () => !!documentType && isProofOfAddress(documentType),
-    [documentType]
+    () => !!resolvedDocumentType && isProofOfAddress(resolvedDocumentType),
+    [resolvedDocumentType]
   )
 
   useEffect(() => {
     if (!open) {
       setMetadata(EMPTY_METADATA)
+      setSelectedDocumentType('')
+      return
     }
-  }, [open, documentType])
+
+    setSelectedDocumentType(defaultDocumentType || documentTypeOptions?.[0]?.value || documentType || '')
+  }, [defaultDocumentType, documentType, documentTypeOptions, open])
 
   const isValid = useMemo(() => {
+    if (showsDocumentTypeSelect && !resolvedDocumentType) {
+      return false
+    }
     if (requiresIdFields) {
       return Boolean(metadata.documentExpiryDate)
     }
@@ -73,7 +109,7 @@ export function DocumentMetadataDialog({
     return true
   }, [metadata, requiresAddressDate, requiresIdFields])
 
-  if (!documentType || (!requiresIdFields && !requiresAddressDate)) {
+  if (!resolvedDocumentType || (!showsDocumentTypeSelect && !requiresIdFields && !requiresAddressDate)) {
     return null
   }
 
@@ -83,11 +119,32 @@ export function DocumentMetadataDialog({
         <DialogHeader>
           <DialogTitle>Document Details Required</DialogTitle>
           <DialogDescription>
-            Add metadata for {getDocumentTypeLabel(documentType).toLowerCase()} before upload.
+            Add the required document details before upload.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
+          {showsDocumentTypeSelect && (
+            <div className="space-y-2">
+              <Label htmlFor="documentType">Document Type</Label>
+              <Select value={resolvedDocumentType} onValueChange={setSelectedDocumentType}>
+                <SelectTrigger id="documentType">
+                  <SelectValue placeholder="Select document type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {documentTypeOptions?.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                This upload will count toward {getDocumentTypeLabel(resolvedDocumentType).toLowerCase()}.
+              </p>
+            </div>
+          )}
+
           {requiresIdFields && (
             <>
               <p className="text-xs text-muted-foreground">
@@ -166,7 +223,7 @@ export function DocumentMetadataDialog({
           </Button>
           <Button
             type="button"
-            onClick={() => onConfirm(metadata)}
+            onClick={() => onConfirm(metadata, resolvedDocumentType)}
             disabled={isSubmitting || !isValid}
           >
             Continue Upload

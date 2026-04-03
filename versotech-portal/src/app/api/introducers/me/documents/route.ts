@@ -13,6 +13,7 @@ import {
   buildUploadDocumentMetadata,
   validateUploadDocumentMetadata,
 } from '@/lib/kyc/upload-document-metadata'
+import { getEquivalentKycRequirementDocumentTypes } from '@/lib/kyc/portal-kyc-checklist'
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
 const ALLOWED_MIME_TYPES = [
@@ -28,7 +29,7 @@ const ALLOWED_MIME_TYPES = [
 
 /**
  * GET /api/introducers/me/documents
- * List documents for the current introducer entity, including member info
+ * List KYC submissions for the current introducer entity, including latest document info and member context
  */
 export async function GET() {
   try {
@@ -56,26 +57,40 @@ export async function GET() {
       return NextResponse.json({ error: 'Introducer profile not found' }, { status: 404 })
     }
 
-    // Fetch documents for this introducer entity
-    const { data: documents, error: docsError } = await serviceSupabase
-      .from('documents')
+    const { data: submissions, error: submissionsError } = await serviceSupabase
+      .from('kyc_submissions')
       .select(`
         id,
-        name,
-        type,
-        file_key,
-        file_size_bytes,
-        mime_type,
+        document_type,
+        status,
         created_at,
-        created_by,
+        submitted_at,
+        reviewed_at,
+        version,
+        rejection_reason,
+        document_date,
+        document_valid_to,
+        expiry_date,
+        document:document_id(
+          id,
+          name,
+          file_key,
+          file_size_bytes,
+          mime_type,
+          created_at
+        ),
         introducer_member_id,
-        profiles:created_by(display_name, email)
+        introducer_member:introducer_member_id(
+          id,
+          full_name,
+          role
+        )
       `)
       .eq('introducer_id', introducerUser.introducer_id)
       .order('created_at', { ascending: false })
 
-    if (docsError) {
-      console.error('Error fetching documents:', docsError)
+    if (submissionsError) {
+      console.error('Error fetching KYC submissions:', submissionsError)
       return NextResponse.json({ error: 'Failed to fetch documents' }, { status: 500 })
     }
 
@@ -112,21 +127,8 @@ export async function GET() {
       }
     }) || []
 
-    // Transform documents for response
-    const formattedDocs = documents?.map(doc => ({
-      id: doc.id,
-      name: doc.name,
-      type: doc.type,
-      file_key: doc.file_key,
-      file_name: doc.name,
-      file_size_bytes: doc.file_size_bytes,
-      created_at: doc.created_at,
-      created_by: doc.profiles,
-      introducer_member_id: doc.introducer_member_id
-    })) || []
-
     return NextResponse.json({
-      documents: formattedDocs,
+      submissions: submissions || [],
       members: formattedMembers
     })
 
@@ -185,6 +187,7 @@ export async function POST(request: NextRequest) {
     const documentExpiryDate = formData.get('documentExpiryDate') as string | null
     const documentIssuingCountry = formData.get('documentIssuingCountry') as string | null
     const documentDate = formData.get('documentDate') as string | null
+    const isUpdate = ((formData.get('isUpdate') as string | null) || '').toLowerCase() === 'true'
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
@@ -241,6 +244,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         error: 'Invalid file type. Allowed: PDF, DOC, DOCX, JPG, PNG, WEBP, TXT'
       }, { status: 400 })
+    }
+
+    const equivalentDocumentTypes = getEquivalentKycRequirementDocumentTypes(documentType)
+
+    let latestSubmissionQuery = serviceSupabase
+      .from('kyc_submissions')
+      .select('id, version')
+      .eq('introducer_id', introducerId)
+      .in('document_type', equivalentDocumentTypes)
+
+    if (resolvedIntroducerMemberId) {
+      latestSubmissionQuery = latestSubmissionQuery.eq('introducer_member_id', resolvedIntroducerMemberId)
+    } else {
+      latestSubmissionQuery = latestSubmissionQuery.is('introducer_member_id', null)
+    }
+
+    const { data: latestSubmission } = await latestSubmissionQuery
+      .order('version', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (latestSubmission && !isUpdate) {
+      return NextResponse.json(
+        { error: 'This document requirement is already uploaded. Use Update to replace it.' },
+        { status: 409 }
+      )
     }
 
     // Generate secure file path
@@ -307,23 +336,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Version-aware KYC submission entry (review queue source of truth)
-    let versionQuery = serviceSupabase
-      .from('kyc_submissions')
-      .select('id, version')
-      .eq('introducer_id', introducerId)
-      .eq('document_type', documentType)
-
-    if (resolvedIntroducerMemberId) {
-      versionQuery = versionQuery.eq('introducer_member_id', resolvedIntroducerMemberId)
-    } else {
-      versionQuery = versionQuery.is('introducer_member_id', null)
-    }
-
-    const { data: latestSubmission } = await versionQuery
-      .order('version', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-
     const newVersion = latestSubmission ? latestSubmission.version + 1 : 1
     const previousSubmissionId = latestSubmission?.id || null
 

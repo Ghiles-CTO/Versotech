@@ -458,6 +458,34 @@ export function IntroducerProfileClient({
 
         <TabsContent value="overview" className="space-y-4">
           <ProfileOverviewShell>
+            <div className="rounded-lg border bg-card px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <User className="h-5 w-5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold truncate">{profileDisplayName}</p>
+                  <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5">
+                    <Mail className="h-3 w-3" />
+                    {profileData?.email || userEmail}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline" className="capitalize text-xs">
+                  {introducerUserInfo.role}
+                </Badge>
+                {introducerUserInfo.is_primary && (
+                  <Badge variant="secondary" className="text-xs">Primary Contact</Badge>
+                )}
+                {introducerUserInfo.can_sign && (
+                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs">
+                    Signatory
+                  </Badge>
+                )}
+              </div>
+            </div>
+
             {!hideAccountApprovalSection && (
             <Card className="overflow-hidden">
               <div className={`px-6 py-2.5 flex items-center gap-2 ${
@@ -631,34 +659,6 @@ export function IntroducerProfileClient({
               </CardContent>
             </Card>
             )}
-
-            <div className="rounded-lg border bg-card px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <User className="h-5 w-5 text-primary" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold truncate">{profileDisplayName}</p>
-                  <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5">
-                    <Mail className="h-3 w-3" />
-                    {profileData?.email || userEmail}
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="outline" className="capitalize text-xs">
-                  {introducerUserInfo.role}
-                </Badge>
-                {introducerUserInfo.is_primary && (
-                  <Badge variant="secondary" className="text-xs">Primary Contact</Badge>
-                )}
-                {introducerUserInfo.can_sign && (
-                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs">
-                    Signatory
-                  </Badge>
-                )}
-              </div>
-            </div>
 
             {!isIndividualIntroducer && (
               <OverviewSectionCard
@@ -904,7 +904,6 @@ export function IntroducerProfileClient({
               introducerName={introducerInfo.legal_name || undefined}
               kycStatus={introducerInfo.kyc_status || undefined}
               entityType={introducerInfo.type}
-              autoOpenUpload={defaultAction === 'upload-doc'}
             />
           )}
         </TabsContent>

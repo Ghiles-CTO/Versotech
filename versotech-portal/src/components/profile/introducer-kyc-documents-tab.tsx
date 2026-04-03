@@ -1,78 +1,234 @@
 'use client'
 
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { formatViewerDate } from '@/lib/format'
+import {
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Download,
+  Eye,
+  Loader2,
+  Shield,
+  Upload,
+  User,
+  XCircle,
+} from 'lucide-react'
+import { toast } from 'sonner'
+
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import {
-  Upload,
-  Download,
-  CheckCircle2,
-  Circle,
-  Loader2,
-  Shield,
-  AlertCircle,
-  User,
-  Eye,
-} from 'lucide-react'
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
-import { ENTITY_REQUIRED_DOCS } from '@/constants/kyc-document-types'
-import { isIdDocument, isProofOfAddress } from '@/lib/validation/document-validation'
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import {
   DocumentMetadataDialog,
   type UploadMetadataFields,
 } from '@/components/profile/document-metadata-dialog'
-import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import { getFileTypeCategory } from '@/constants/document-preview.constants'
+import { useDocumentViewer } from '@/hooks/useDocumentViewer'
+import {
+  buildPortalKycChecklistRows,
+  getChecklistCompletionSummary,
+  getChecklistDocumentTypeLabel,
+  type KycChecklistMember,
+  type KycChecklistRow,
+  type KycChecklistStatus,
+  type KycChecklistSubmission,
+} from '@/lib/kyc/portal-kyc-checklist'
+import { isIdDocument, isProofOfAddress } from '@/lib/validation/document-validation'
+import { cn } from '@/lib/utils'
 
-interface Document {
+interface IntroducerSubmission {
   id: string
-  name: string
-  type: string
-  file_name: string
-  file_key: string
+  document_type: string
+  status: string
+  submitted_at?: string | null
   created_at: string
-  file_size_bytes?: number
-  introducer_member_id?: string | null
-  created_by?: {
-    display_name?: string
-    email?: string
-  }
+  reviewed_at?: string | null
+  version: number
+  rejection_reason?: string | null
+  document_date?: string | null
+  document_valid_to?: string | null
+  expiry_date?: string | null
+  document?: {
+    id: string
+    name: string
+    file_key: string
+    file_size_bytes?: number | null
+    mime_type?: string | null
+    created_at?: string | null
+  } | null
+  introducer_member?: {
+    id: string
+    full_name: string
+    role: string
+  } | null
 }
 
-interface IntroducerMember {
-  id: string
-  full_name: string
-  role: string
+interface IntroducerMember extends KycChecklistMember {
   is_signatory?: boolean
 }
 
-const REQUIRED_DOCUMENTS = ENTITY_REQUIRED_DOCS.map(doc => ({
-  label: doc.label,
-  value: doc.value,
-}))
+type PendingUpload = {
+  file: File
+  row: KycChecklistRow
+  isUpdate: boolean
+  defaultDocumentType: string
+}
 
-const MEMBER_ID_DOCUMENT_TYPES = ['passport', 'national_id', 'drivers_license', 'residence_permit', 'other_government_id']
-
-const MEMBER_PROOF_OF_ADDRESS_TYPES = ['utility_bill', 'government_correspondence', 'other']
-
-const MEMBER_DOCUMENTS = [
-  { label: 'Passport / Government ID', value: 'passport' },
-  { label: 'Proof of Address (Utility Bill)', value: 'utility_bill' },
-  { label: 'Proof of Address (Government Correspondence)', value: 'government_correspondence' },
-  { label: 'Proof of Address (Other)', value: 'other' },
+const INTRODUCER_ACCEPTED_FILE_TYPES = [
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/msword',
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'text/plain',
 ]
 
-interface IntroducerKYCDocumentsTabProps {
-  introducerId: string
-  introducerName?: string
-  kycStatus?: string
-  entityType?: string | null
-  autoOpenUpload?: boolean
+const INTRODUCER_FILE_ACCEPT = '.pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.txt'
+
+function normalizeChecklistSubmission(submission: IntroducerSubmission): KycChecklistSubmission {
+  return {
+    ...submission,
+    memberId: submission.introducer_member?.id ?? null,
+    memberName: submission.introducer_member?.full_name ?? null,
+    memberRole: submission.introducer_member?.role ?? null,
+  }
+}
+
+function formatDate(dateString?: string | null) {
+  if (!dateString) return '—'
+  return formatViewerDate(dateString)
+}
+
+function formatFileSize(bytes?: number | null) {
+  if (!bytes) return 'Unknown size'
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function getRelevantDate(submission: KycChecklistSubmission | null) {
+  if (!submission?.document_type) return null
+  if (isProofOfAddress(submission.document_type)) {
+    return submission.document_date || null
+  }
+  if (isIdDocument(submission.document_type)) {
+    return submission.expiry_date || submission.document_valid_to || null
+  }
+  return null
+}
+
+function getRelevantDateLabel(submission: KycChecklistSubmission | null) {
+  if (!submission?.document_type) return 'Date'
+  if (isProofOfAddress(submission.document_type)) return 'Document Date'
+  if (isIdDocument(submission.document_type)) return 'Expiry Date'
+  return 'Date'
+}
+
+function getStatusBadge(status: KycChecklistStatus) {
+  switch (status) {
+    case 'approved':
+      return (
+        <Badge
+          variant="default"
+          className="border-emerald-500/30 bg-emerald-500/15 text-emerald-700 dark:border-emerald-500/25 dark:bg-emerald-500/15 dark:text-emerald-300"
+        >
+          <CheckCircle className="mr-1 h-3 w-3" />
+          Approved
+        </Badge>
+      )
+    case 'pending':
+    case 'draft':
+      return (
+        <Badge
+          variant="secondary"
+          className="border-amber-500/30 bg-amber-500/15 text-amber-700 dark:border-amber-500/25 dark:bg-amber-500/15 dark:text-amber-300"
+        >
+          <Clock className="mr-1 h-3 w-3" />
+          Pending
+        </Badge>
+      )
+    case 'under_review':
+      return (
+        <Badge
+          variant="secondary"
+          className="border-amber-500/30 bg-amber-500/15 text-amber-700 dark:border-amber-500/25 dark:bg-amber-500/15 dark:text-amber-300"
+        >
+          <Clock className="mr-1 h-3 w-3" />
+          Pending Review
+        </Badge>
+      )
+    case 'rejected':
+      return (
+        <Badge
+          variant="destructive"
+          className="border-rose-500/30 bg-rose-500/15 text-rose-700 dark:border-rose-500/25 dark:bg-rose-500/15 dark:text-rose-300"
+        >
+          <XCircle className="mr-1 h-3 w-3" />
+          Rejected
+        </Badge>
+      )
+    case 'expired':
+      return (
+        <Badge
+          variant="outline"
+          className="border-rose-500/30 bg-rose-500/10 text-rose-700 dark:border-rose-500/25 dark:bg-rose-500/10 dark:text-rose-300"
+        >
+          <AlertCircle className="mr-1 h-3 w-3" />
+          Expired
+        </Badge>
+      )
+    default:
+      return (
+        <Badge variant="outline" className="border-border bg-muted/60 text-muted-foreground">
+          Missing
+        </Badge>
+      )
+  }
+}
+
+function getRowTone(status: KycChecklistStatus) {
+  switch (status) {
+    case 'approved':
+      return 'bg-emerald-500/[0.08] dark:bg-emerald-500/[0.10]'
+    case 'pending':
+    case 'draft':
+    case 'under_review':
+      return 'bg-amber-500/[0.08] dark:bg-amber-500/[0.10]'
+    case 'rejected':
+    case 'expired':
+    case 'missing':
+      return 'bg-rose-500/[0.07] dark:bg-rose-500/[0.10]'
+    default:
+      return ''
+  }
+}
+
+function getStatusColor(status?: string) {
+  switch ((status || '').toLowerCase().trim()) {
+    case 'approved':
+      return 'border-emerald-500/30 bg-emerald-500/15 text-emerald-700 dark:border-emerald-500/25 dark:text-emerald-300'
+    case 'pending':
+    case 'pending_review':
+    case 'under_review':
+      return 'border-amber-500/30 bg-amber-500/15 text-amber-700 dark:border-amber-500/25 dark:text-amber-300'
+    case 'rejected':
+      return 'border-rose-500/30 bg-rose-500/15 text-rose-700 dark:border-rose-500/25 dark:text-rose-300'
+    default:
+      return 'border-border bg-muted/60 text-muted-foreground'
+  }
 }
 
 export function IntroducerKYCDocumentsTab({
@@ -80,25 +236,44 @@ export function IntroducerKYCDocumentsTab({
   introducerName,
   kycStatus,
   entityType,
-  autoOpenUpload = false,
-}: IntroducerKYCDocumentsTabProps) {
-  const [documents, setDocuments] = useState<Document[]>([])
+}: {
+  introducerId: string
+  introducerName?: string
+  kycStatus?: string
+  entityType?: string | null
+}) {
+  const [submissions, setSubmissions] = useState<IntroducerSubmission[]>([])
   const [members, setMembers] = useState<IntroducerMember[]>([])
   const [loading, setLoading] = useState(true)
-  const [uploading, setUploading] = useState<string | null>(null)
+  const [uploadingKey, setUploadingKey] = useState<string | null>(null)
   const [metadataDialogOpen, setMetadataDialogOpen] = useState(false)
-  const [pendingUpload, setPendingUpload] = useState<{
-    file: File
-    documentType: string
-    memberId?: string
-  } | null>(null)
+  const [pendingUpload, setPendingUpload] = useState<PendingUpload | null>(null)
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const viewer = useDocumentViewer()
-  const currentKycStatus = kycStatus
-  const isIndividualEntity = entityType === 'individual'
-  const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
-  const autoOpenHandledRef = useRef(false)
 
-  const fetchDocuments = useCallback(async () => {
+  const isIndividualEntity = entityType === 'individual'
+
+  useEffect(() => {
+    void fetchDocuments()
+  }, [introducerId])
+
+  const checklistRows = useMemo(
+    () =>
+      buildPortalKycChecklistRows({
+        entityType: isIndividualEntity ? 'individual' : 'entity',
+        members,
+        submissions: submissions.map(normalizeChecklistSubmission),
+      }),
+    [isIndividualEntity, members, submissions]
+  )
+
+  const checklistSummary = useMemo(
+    () => getChecklistCompletionSummary(checklistRows),
+    [checklistRows]
+  )
+
+  async function fetchDocuments() {
     if (!introducerId) return
 
     setLoading(true)
@@ -107,7 +282,7 @@ export function IntroducerKYCDocumentsTab({
       if (!response.ok) throw new Error('Failed to fetch documents')
 
       const data = await response.json()
-      setDocuments(data.documents || [])
+      setSubmissions(data.submissions || [])
       setMembers(data.members || [])
     } catch (error) {
       console.error('Error fetching documents:', error)
@@ -115,146 +290,12 @@ export function IntroducerKYCDocumentsTab({
     } finally {
       setLoading(false)
     }
-  }, [introducerId])
-
-  useEffect(() => {
-    fetchDocuments()
-  }, [fetchDocuments])
-
-  useEffect(() => {
-    if (!autoOpenUpload || loading || autoOpenHandledRef.current) return
-
-    const findFirstMissingKey = () => {
-      if (isIndividualEntity) {
-        const hasIdDocument = documents.some((d) => MEMBER_ID_DOCUMENT_TYPES.includes(d.type))
-        if (!hasIdDocument) return MEMBER_DOCUMENTS[0]?.value || null
-
-        const hasProofOfAddress = documents.some((d) => MEMBER_PROOF_OF_ADDRESS_TYPES.includes(d.type))
-        if (!hasProofOfAddress) return MEMBER_DOCUMENTS[1]?.value || null
-
-        return null
-      }
-
-      const missingEntityDocument = REQUIRED_DOCUMENTS.find(
-        (docType) => !documents.some((d) => d.type === docType.value)
-      )
-      if (missingEntityDocument) return missingEntityDocument.value
-
-      for (const member of members) {
-        const memberDocs = documents.filter((d) => d.introducer_member_id === member.id)
-        for (const docType of MEMBER_DOCUMENTS) {
-          const hasMemberDocument = memberDocs.some((d) => d.type === docType.value)
-          if (!hasMemberDocument) {
-            return `${docType.value}_${member.id}`
-          }
-        }
-      }
-
-      return null
-    }
-
-    const targetKey = findFirstMissingKey()
-    if (!targetKey) {
-      autoOpenHandledRef.current = true
-      return
-    }
-
-    const targetInput = fileInputRefs.current[targetKey]
-    if (!targetInput) return
-
-    autoOpenHandledRef.current = true
-    requestAnimationFrame(() => {
-      targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      targetInput.click()
-    })
-  }, [autoOpenUpload, documents, isIndividualEntity, loading, members])
-
-  const handleUpload = async (
-    file: File,
-    documentType: string,
-    memberId?: string,
-    metadata?: UploadMetadataFields
-  ) => {
-    if (!introducerId) return
-
-    const maxSize = 50 * 1024 * 1024
-    if (file.size > maxSize) {
-      toast.error('File size exceeds 50MB limit')
-      return
-    }
-
-    const allowedTypes = [
-      'application/pdf',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/msword',
-      'image/jpeg',
-      'image/png',
-      'image/webp',
-      'text/plain'
-    ]
-
-    if (!allowedTypes.includes(file.type)) {
-      toast.error('Invalid file type. Please upload PDF, DOC, DOCX, JPG, PNG, or TXT files')
-      return
-    }
-
-    const uploadKey = memberId ? `${documentType}_${memberId}` : documentType
-    setUploading(uploadKey)
-
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('type', documentType)
-      formData.append('name', file.name.replace(/\.[^/.]+$/, ''))
-      if (metadata?.documentNumber) formData.append('documentNumber', metadata.documentNumber)
-      if (metadata?.documentIssueDate) formData.append('documentIssueDate', metadata.documentIssueDate)
-      if (metadata?.documentExpiryDate) formData.append('documentExpiryDate', metadata.documentExpiryDate)
-      if (metadata?.documentIssuingCountry) formData.append('documentIssuingCountry', metadata.documentIssuingCountry)
-      if (metadata?.documentDate) formData.append('documentDate', metadata.documentDate)
-      if (memberId && memberId !== 'entity-level') {
-        formData.append('introducer_member_id', memberId)
-      }
-
-      const response = await fetch('/api/introducers/me/documents', {
-        method: 'POST',
-        body: formData
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Upload failed')
-      }
-
-      const docTypeLabel =
-        [...REQUIRED_DOCUMENTS, ...MEMBER_DOCUMENTS].find(d => d.value === documentType)?.label ||
-        documentType
-      toast.success(`${docTypeLabel} uploaded successfully`)
-
-      await fetchDocuments()
-    } catch (error: unknown) {
-      console.error('Upload error:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to upload document')
-    } finally {
-      setUploading(null)
-      const inputKey = memberId ? `${documentType}_${memberId}` : documentType
-      if (fileInputRefs.current[inputKey]) {
-        fileInputRefs.current[inputKey]!.value = ''
-      }
-    }
   }
 
-  const queueUpload = (file: File, documentType: string, memberId?: string) => {
-    if (isIdDocument(documentType) || isProofOfAddress(documentType)) {
-      setPendingUpload({ file, documentType, memberId })
-      setMetadataDialogOpen(true)
-      return
-    }
-    void handleUpload(file, documentType, memberId)
-  }
-
-  const handleDownload = async (doc: Document) => {
+  async function handleDownload(fileDocument: { id: string; name: string }) {
+    setDownloadingId(fileDocument.id)
     try {
-      const response = await fetch(`/api/documents/${doc.id}/download`)
+      const response = await fetch(`/api/documents/${fileDocument.id}/download`)
 
       if (!response.ok) {
         throw new Error('Download failed')
@@ -262,380 +303,389 @@ export function IntroducerKYCDocumentsTab({
 
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = doc.file_name || doc.name
-      document.body.appendChild(a)
-      a.click()
+      const link = document.createElement('a')
+      link.href = url
+      link.download = fileDocument.name
+      document.body.appendChild(link)
+      link.click()
       window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
+      document.body.removeChild(link)
 
       toast.success('Document downloaded')
     } catch (error) {
       console.error('Download error:', error)
       toast.error('Failed to download document')
+    } finally {
+      setDownloadingId(null)
     }
   }
 
-  const canPreviewDocument = (doc: Document) =>
-    getFileTypeCategory(doc.file_name || doc.name) !== 'unsupported'
+  async function handleUpload(
+    file: File,
+    row: KycChecklistRow,
+    isUpdate: boolean,
+    documentType: string,
+    metadata?: UploadMetadataFields
+  ) {
+    if (!introducerId) return
 
-  const handlePreview = (doc: Document) => {
-    void viewer.openPreview({
-      id: doc.id,
-      name: doc.name,
-      file_name: doc.file_name,
-      file_size_bytes: doc.file_size_bytes,
-    })
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('File size exceeds 50MB limit')
+      return
+    }
+
+    if (!INTRODUCER_ACCEPTED_FILE_TYPES.includes(file.type)) {
+      toast.error('Invalid file type. Please upload PDF, DOC, DOCX, JPG, PNG, WEBP, or TXT files')
+      return
+    }
+
+    setUploadingKey(row.key)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('type', documentType)
+      formData.append('name', file.name.replace(/\.[^/.]+$/, ''))
+      formData.append('isUpdate', isUpdate ? 'true' : 'false')
+
+      if (row.memberId) {
+        formData.append('introducer_member_id', row.memberId)
+      }
+
+      if (metadata?.documentNumber) formData.append('documentNumber', metadata.documentNumber)
+      if (metadata?.documentIssueDate) formData.append('documentIssueDate', metadata.documentIssueDate)
+      if (metadata?.documentExpiryDate) formData.append('documentExpiryDate', metadata.documentExpiryDate)
+      if (metadata?.documentIssuingCountry) formData.append('documentIssuingCountry', metadata.documentIssuingCountry)
+      if (metadata?.documentDate) formData.append('documentDate', metadata.documentDate)
+
+      const response = await fetch('/api/introducers/me/documents', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await response.json().catch(() => null)
+      if (!response.ok) {
+        throw new Error(data?.error || 'Upload failed')
+      }
+
+      toast.success(isUpdate ? 'Document updated successfully' : 'Document uploaded successfully')
+      await fetchDocuments()
+    } catch (error: unknown) {
+      console.error('Upload error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to upload document')
+    } finally {
+      setUploadingKey(null)
+      const input = fileInputRefs.current[row.key]
+      if (input) {
+        input.value = ''
+      }
+    }
   }
 
-  const formatFileSize = (bytes?: number) => {
-    if (!bytes) return 'Unknown size'
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  function queueUpload(file: File, row: KycChecklistRow, isUpdate: boolean) {
+    const latestType = row.latestSubmission?.document_type
+    const defaultDocumentType =
+      latestType && row.acceptedDocumentTypes.includes(latestType)
+        ? latestType
+        : row.documentTypeOptions[0]?.value || row.acceptedDocumentTypes[0]
+
+    if (!defaultDocumentType) {
+      toast.error('Unable to resolve the document type for this upload')
+      return
+    }
+
+    if (
+      row.documentTypeOptions.length > 1 ||
+      isIdDocument(defaultDocumentType) ||
+      isProofOfAddress(defaultDocumentType)
+    ) {
+      setPendingUpload({ file, row, isUpdate, defaultDocumentType })
+      setMetadataDialogOpen(true)
+      return
+    }
+
+    void handleUpload(file, row, isUpdate, defaultDocumentType)
   }
 
-  const formatDate = (dateStr: string) => {
-    return formatViewerDate(dateStr)
+  function handleMetadataConfirm(metadata: UploadMetadataFields, documentType?: string) {
+    if (!pendingUpload) return
+
+    const { file, row, isUpdate, defaultDocumentType } = pendingUpload
+    const selectedType = documentType || defaultDocumentType
+
+    setMetadataDialogOpen(false)
+    setPendingUpload(null)
+    void handleUpload(file, row, isUpdate, selectedType, metadata)
   }
 
-  const uploadedCount = isIndividualEntity
-    ? (
-        (documents.some(d => MEMBER_ID_DOCUMENT_TYPES.includes(d.type)) ? 1 : 0) +
-        (documents.some(d => MEMBER_PROOF_OF_ADDRESS_TYPES.includes(d.type)) ? 1 : 0)
+  if (loading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
       )
-    : documents.filter(d => REQUIRED_DOCUMENTS.some(req => req.value === d.type)).length
-
-  const requiredCount = isIndividualEntity ? 2 : REQUIRED_DOCUMENTS.length
-  const completionPercentage = requiredCount > 0
-    ? Math.round((uploadedCount / requiredCount) * 100)
-    : 0
-
-  const getStatusColor = (status?: string) => {
-    switch (status) {
-      case 'approved': return 'bg-green-100 text-green-800 border-green-200'
-      case 'pending':
-      case 'pending_review': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'rejected': return 'bg-red-100 text-red-800 border-red-200'
-      default: return 'bg-gray-100 text-gray-800 border-gray-200'
-    }
   }
 
   return (
     <div className="space-y-6">
-      {/* KYC Status Header */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={cn(
-                "h-10 w-10 rounded-full flex items-center justify-center",
-                completionPercentage === 100 ? "bg-green-100" : "bg-blue-100"
-              )}>
-                <Shield className={cn(
-                  "h-5 w-5",
-                  completionPercentage === 100 ? "text-green-600" : "text-blue-600"
-                )} />
+              <div
+                className={cn(
+                  'h-10 w-10 rounded-full flex items-center justify-center',
+                  checklistSummary.approved === checklistSummary.total
+                    ? 'bg-emerald-500/15 dark:bg-emerald-500/20'
+                    : 'bg-primary/10 dark:bg-primary/20'
+                )}
+              >
+                <Shield
+                  className={cn(
+                    'h-5 w-5',
+                    checklistSummary.approved === checklistSummary.total
+                      ? 'text-emerald-700 dark:text-emerald-300'
+                      : 'text-primary'
+                  )}
+                />
               </div>
               <div>
                 <CardTitle>KYC Documents</CardTitle>
                 <CardDescription>
                   {isIndividualEntity
-                    ? 'Upload your personal KYC documents'
+                    ? 'Upload your personal KYC documents inline.'
                     : introducerName
                       ? `Compliance documents for ${introducerName}`
-                      : 'Upload required compliance documents'}
+                      : 'Upload required compliance documents inline.'}
                 </CardDescription>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Entity: <span className="font-medium text-foreground">{introducerName || 'Current introducer entity'}</span>
+                  Latest version only is shown per requirement. Use Update to replace an existing upload.
                 </p>
               </div>
             </div>
             <div className="text-right">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 justify-end">
                 <span className="text-2xl font-bold text-foreground">
-                  {uploadedCount}/{requiredCount}
+                  {checklistSummary.approved}/{checklistSummary.total}
                 </span>
-                {currentKycStatus && (
-                  <Badge variant="outline" className={cn('capitalize', getStatusColor(currentKycStatus))}>
-                    KYC: {currentKycStatus.replace('_', ' ')}
+                {kycStatus && (
+                  <Badge variant="outline" className={cn('capitalize', getStatusColor(kycStatus))}>
+                    KYC: {kycStatus.replace(/_/g, ' ')}
                   </Badge>
                 )}
               </div>
               <div className="text-sm text-muted-foreground mt-1">
-                {completionPercentage}% complete
+                {checklistSummary.pending > 0
+                  ? `${checklistSummary.pending} pending review`
+                  : checklistSummary.attention > 0
+                    ? `${checklistSummary.attention} still need attention`
+                    : 'All required items are approved'}
               </div>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
+          <div className="h-2.5 w-full rounded-full bg-muted">
             <div
               className={cn(
-                "h-2.5 rounded-full transition-all duration-500",
-                completionPercentage === 100 ? 'bg-green-500' :
-                completionPercentage >= 50 ? 'bg-yellow-500' : 'bg-blue-500'
+                'h-2.5 rounded-full transition-all duration-500',
+                checklistSummary.approved === checklistSummary.total
+                  ? 'bg-green-500'
+                  : checklistSummary.approved > 0
+                    ? 'bg-yellow-500'
+                    : 'bg-blue-500'
               )}
-              style={{ width: `${completionPercentage}%` }}
+              style={{
+                width: `${checklistSummary.total === 0 ? 0 : Math.round((checklistSummary.approved / checklistSummary.total) * 100)}%`,
+              }}
             />
           </div>
-          {completionPercentage < 100 && (
-            <p className="text-xs text-muted-foreground mt-2">
-              {isIndividualEntity
-                ? 'Upload your ID and proof of address to complete KYC verification'
-                : 'Upload all required documents to complete KYC verification'}
-            </p>
-          )}
         </CardContent>
       </Card>
 
-      {/* Required Documents Checklist */}
-      {!isIndividualEntity && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Required Documents</CardTitle>
-            <CardDescription>
-              These documents are required for regulatory compliance and KYC verification
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {REQUIRED_DOCUMENTS.map((docType) => {
-                  const uploaded = documents.find(d => d.type === docType.value)
-                  const isUploading = uploading === docType.value
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Required Documents</CardTitle>
+          <CardDescription>
+            Every required document stays visible from the start, with inline upload and update actions on each row.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Document</TableHead>
+                  {!isIndividualEntity && <TableHead>Member</TableHead>}
+                  <TableHead>Status</TableHead>
+                  <TableHead>Uploaded</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="w-[220px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {checklistRows.map((row) => {
+                  const latestSubmission = row.latestSubmission
+                  const document = latestSubmission?.document || null
+                  const latestDocumentTypeLabel = getChecklistDocumentTypeLabel(latestSubmission?.document_type)
+                  const canPreview =
+                    !!document &&
+                    getFileTypeCategory(document.name, document.mime_type || undefined) !== 'unsupported'
+                  const isUploading = uploadingKey === row.key
 
                   return (
-                    <div
-                      key={docType.value}
-                      className={cn(
-                        "flex items-center justify-between gap-4 py-3 px-4 rounded-lg border transition-colors",
-                        uploaded ? "border-green-200 bg-green-50/50" : "border-gray-200 hover:bg-gray-50"
+                    <TableRow key={row.key} className={cn('align-top', getRowTone(row.status))}>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <p className="font-medium text-foreground">{row.label}</p>
+                          {latestSubmission ? (
+                            <p className="text-xs text-muted-foreground">
+                              Already uploaded
+                              {latestDocumentTypeLabel && latestDocumentTypeLabel !== row.label
+                                ? ` • ${latestDocumentTypeLabel}`
+                                : ''}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-rose-700 dark:text-rose-300">Awaiting upload</p>
+                          )}
+                        </div>
+                      </TableCell>
+
+                      {!isIndividualEntity && (
+                        <TableCell>
+                          {row.memberName ? (
+                            <div className="flex items-center gap-1.5">
+                              <User className="h-3.5 w-3.5 text-muted-foreground" />
+                              <div className="flex flex-col">
+                                <span className="text-sm">{row.memberName}</span>
+                                {row.memberRole && (
+                                  <span className="text-xs text-muted-foreground capitalize">
+                                    {row.memberRole.replace(/_/g, ' ')}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">Entity-level</span>
+                          )}
+                        </TableCell>
                       )}
-                    >
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        {uploaded ? (
-                          <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
-                        ) : (
-                          <Circle className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">
-                            {docType.label}
-                          </p>
-                          {uploaded && (
-                            <p className="text-xs text-muted-foreground truncate">
-                              {uploaded.file_name} • {formatFileSize(uploaded.file_size_bytes)} • {formatDate(uploaded.created_at)}
+
+                      <TableCell>
+                        <div className="space-y-2">
+                          {getStatusBadge(row.status)}
+                          {row.status === 'rejected' && latestSubmission?.rejection_reason && (
+                            <p className="max-w-xs text-xs text-rose-700 dark:text-rose-300">
+                              {latestSubmission.rejection_reason}
                             </p>
                           )}
                         </div>
-                      </div>
+                      </TableCell>
 
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        {uploaded ? (
-                          <div className="flex items-center gap-1">
-                            {canPreviewDocument(uploaded) && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handlePreview(uploaded)}
-                                className="h-8 w-8 p-0"
-                                title="Preview"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
+                      <TableCell>
+                        {latestSubmission ? (
+                          <div className="space-y-1 text-sm text-muted-foreground">
+                            <p>{formatDate(latestSubmission.submitted_at || latestSubmission.created_at)}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Version {latestSubmission.version || 1}
+                              {document?.file_size_bytes
+                                ? ` • ${formatFileSize(document.file_size_bytes)}`
+                                : ''}
+                            </p>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+
+                      <TableCell>
+                        {latestSubmission ? (
+                          <div className="flex flex-col">
+                            <span className="text-sm text-foreground">
+                              {formatDate(getRelevantDate(latestSubmission))}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {getRelevantDateLabel(latestSubmission)}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Input
+                            ref={(element) => {
+                              fileInputRefs.current[row.key] = element
+                            }}
+                            type="file"
+                            className="hidden"
+                            accept={INTRODUCER_FILE_ACCEPT}
+                            onChange={(event) => {
+                              const file = event.target.files?.[0]
+                              if (file) {
+                                queueUpload(file, row, !!latestSubmission)
+                              }
+                            }}
+                            disabled={isUploading}
+                          />
+
+                          <Button
+                            size="sm"
+                            variant={latestSubmission ? 'outline' : 'default'}
+                            onClick={() => fileInputRefs.current[row.key]?.click()}
+                            disabled={isUploading}
+                          >
+                            {isUploading ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                              <Upload className="mr-2 h-4 w-4" />
                             )}
+                            {latestSubmission ? 'Update' : 'Upload'}
+                          </Button>
+
+                          {document && canPreview && (
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDownload(uploaded)}
-                              className="h-8 w-8 p-0"
+                              onClick={() =>
+                                viewer.openPreview({
+                                  id: document.id,
+                                  name: document.name,
+                                  file_name: document.name,
+                                  mime_type: document.mime_type || undefined,
+                                  file_size_bytes: document.file_size_bytes || undefined,
+                                })
+                              }
+                              title="Preview"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          )}
+
+                          {document && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDownload(document)}
+                              disabled={downloadingId === document.id}
                               title="Download"
                             >
-                              <Download className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <>
-                            <Input
-                              ref={(el) => { fileInputRefs.current[docType.value] = el }}
-                              type="file"
-                              className="hidden"
-                              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.txt"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0]
-                                if (file) queueUpload(file, docType.value)
-                              }}
-                              disabled={isUploading}
-                            />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => fileInputRefs.current[docType.value]?.click()}
-                              disabled={isUploading}
-                            >
-                              {isUploading ? (
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              {downloadingId === document.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
                               ) : (
-                                <Upload className="h-4 w-4 mr-2" />
+                                <Download className="h-4 w-4" />
                               )}
-                              Upload
                             </Button>
-                          </>
-                        )}
-                      </div>
-                    </div>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
                   )
                 })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Member KYC Documents */}
-      {members.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Member KYC Documents
-            </CardTitle>
-            <CardDescription>
-              Upload ID and proof of address for each director/member, including members without user accounts.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {members.map((member) => {
-              const memberDocs = documents.filter(d => d.introducer_member_id === member.id)
-
-              return (
-                <div key={member.id} className="space-y-3">
-                  <div className="flex items-center gap-2 pb-2 border-b">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium text-sm">{member.full_name}</span>
-                    <Badge variant="outline" className="capitalize text-xs">
-                      {member.role}
-                    </Badge>
-                    {member.is_signatory && (
-                      <Badge variant="secondary" className="text-xs">Signatory</Badge>
-                    )}
-                  </div>
-
-                  {MEMBER_DOCUMENTS.map((docType) => {
-                    const uploaded = memberDocs.find(d => d.type === docType.value)
-                    const uploadKey = `${docType.value}_${member.id}`
-                    const isUploading = uploading === uploadKey
-
-                    return (
-                      <div
-                        key={uploadKey}
-                        className={cn(
-                          "flex items-center justify-between gap-4 py-2 px-3 rounded-lg border transition-colors ml-6",
-                          uploaded ? "border-green-200 bg-green-50/50" : "border-gray-200 hover:bg-gray-50"
-                        )}
-                      >
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          {uploaded ? (
-                            <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
-                          ) : (
-                            <Circle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">
-                              {docType.label}
-                            </p>
-                            {uploaded && (
-                              <p className="text-xs text-muted-foreground truncate">
-                                {uploaded.file_name} • {formatFileSize(uploaded.file_size_bytes)} • {formatDate(uploaded.created_at)}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          {uploaded ? (
-                            <div className="flex items-center gap-1">
-                              {canPreviewDocument(uploaded) && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handlePreview(uploaded)}
-                                  className="h-7 w-7 p-0"
-                                  title="Preview"
-                                >
-                                  <Eye className="h-3.5 w-3.5" />
-                                </Button>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDownload(uploaded)}
-                                className="h-7 w-7 p-0"
-                                title="Download"
-                              >
-                                <Download className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <>
-                              <Input
-                                ref={(el) => { fileInputRefs.current[uploadKey] = el }}
-                                type="file"
-                                className="hidden"
-                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.txt"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0]
-                                  if (file) queueUpload(file, docType.value, member.id)
-                                }}
-                                disabled={isUploading}
-                              />
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => fileInputRefs.current[uploadKey]?.click()}
-                                disabled={isUploading}
-                                className="h-7 text-xs"
-                              >
-                                {isUploading ? (
-                                  <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-                                ) : (
-                                  <Upload className="h-3.5 w-3.5 mr-1" />
-                                )}
-                                Upload
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )
-            })}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Info Card */}
-      <Card className="bg-blue-50/50 border-blue-200">
-        <CardContent className="py-4">
-          <div className="flex gap-3">
-            <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div className="text-sm space-y-1">
-              <p className="font-medium text-blue-900">Document Requirements</p>
-              <ul className="text-blue-700 space-y-0.5">
-                <li>• Supported formats: PDF, DOC, DOCX, JPG, PNG, TXT</li>
-                <li>• Maximum file size: 50MB per file</li>
-                <li>• Documents must be current and valid</li>
-                <li>• VERSO staff will review your documents for KYC approval</li>
-              </ul>
-            </div>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
@@ -644,21 +694,15 @@ export function IntroducerKYCDocumentsTab({
         open={metadataDialogOpen}
         onOpenChange={(open) => {
           setMetadataDialogOpen(open)
-          if (!open) setPendingUpload(null)
+          if (!open) {
+            setPendingUpload(null)
+          }
         }}
-        documentType={pendingUpload?.documentType || null}
-        isSubmitting={!!uploading}
-        onConfirm={(metadata) => {
-          if (!pendingUpload) return
-          setMetadataDialogOpen(false)
-          void handleUpload(
-            pendingUpload.file,
-            pendingUpload.documentType,
-            pendingUpload.memberId,
-            metadata
-          )
-          setPendingUpload(null)
-        }}
+        documentType={pendingUpload?.defaultDocumentType || null}
+        documentTypeOptions={pendingUpload?.row.documentTypeOptions}
+        defaultDocumentType={pendingUpload?.defaultDocumentType || null}
+        onConfirm={handleMetadataConfirm}
+        isSubmitting={!!uploadingKey}
       />
 
       <DocumentViewerFullscreen

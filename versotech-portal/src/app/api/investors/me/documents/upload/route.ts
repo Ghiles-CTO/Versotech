@@ -8,6 +8,7 @@ import {
   buildUploadDocumentMetadata,
   validateUploadDocumentMetadata,
 } from '@/lib/kyc/upload-document-metadata'
+import { getEquivalentKycRequirementDocumentTypes } from '@/lib/kyc/portal-kyc-checklist'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const ALLOWED_MIME_TYPES = [
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
     const documentIssuingCountry = formData.get('documentIssuingCountry') as string | null
     const documentDate = formData.get('documentDate') as string | null
     const notes = formData.get('notes') as string | null
+    const isUpdate = ((formData.get('isUpdate') as string | null) || '').toLowerCase() === 'true'
     const taskId = formData.get('taskId') as string | null
     const entityId = formData.get('entityId') as string | null // For counterparty entity KYC
     const investorMemberId = formData.get('investorMemberId') as string | null // For investor member KYC
@@ -214,6 +216,38 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const equivalentDocumentTypes = getEquivalentKycRequirementDocumentTypes(documentType)
+
+    let latestSubmissionQuery = serviceSupabase
+      .from('kyc_submissions')
+      .select('id, version')
+      .in('document_type', equivalentDocumentTypes)
+      .order('version', { ascending: false })
+      .limit(1)
+
+    if (entityId) {
+      latestSubmissionQuery = latestSubmissionQuery.eq('counterparty_entity_id', entityId)
+    } else {
+      latestSubmissionQuery = latestSubmissionQuery
+        .eq('investor_id', investorId)
+        .is('counterparty_entity_id', null)
+    }
+
+    if (resolvedInvestorMemberId) {
+      latestSubmissionQuery = latestSubmissionQuery.eq('investor_member_id', resolvedInvestorMemberId)
+    } else {
+      latestSubmissionQuery = latestSubmissionQuery.is('investor_member_id', null)
+    }
+
+    const { data: latestSubmission } = await latestSubmissionQuery.maybeSingle()
+
+    if (latestSubmission && !isUpdate) {
+      return NextResponse.json(
+        { error: 'This document requirement is already uploaded. Use Update to replace it.' },
+        { status: 409 }
+      )
+    }
+
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
@@ -293,30 +327,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
-
-    // Check for existing submissions to handle versioning
-    let versionQuery = serviceSupabase
-      .from('kyc_submissions')
-      .select('id, version')
-      .eq('document_type', documentType)
-      .order('version', { ascending: false })
-      .limit(1)
-
-    // Filter by either investor_id or counterparty_entity_id
-    if (entityId) {
-      versionQuery = versionQuery.eq('counterparty_entity_id', entityId)
-    } else {
-      versionQuery = versionQuery.eq('investor_id', investorId).is('counterparty_entity_id', null)
-    }
-
-    // Also filter by investor_member_id for member-specific documents
-    if (resolvedInvestorMemberId) {
-      versionQuery = versionQuery.eq('investor_member_id', resolvedInvestorMemberId)
-    } else {
-      versionQuery = versionQuery.is('investor_member_id', null)
-    }
-
-    const { data: latestSubmission } = await versionQuery.maybeSingle()
 
     const newVersion = latestSubmission ? latestSubmission.version + 1 : 1
     const previousSubmissionId = latestSubmission?.id || null
