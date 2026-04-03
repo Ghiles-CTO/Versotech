@@ -1136,14 +1136,6 @@ export function ProfilePageClient({
         {/* KYC Tab */}
         {hasInvestorEntity && (
           <TabsContent value="kyc" className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight">KYC Documents</h2>
-              <p className="text-muted-foreground">
-                Upload required identity and verification documents.
-              </p>
-            </div>
-
-            {/* KYC Documents */}
             <KYCDocumentsTab />
           </TabsContent>
         )}
