@@ -651,7 +651,7 @@ export function KYCDocumentsTab() {
                   isDark ? 'text-white' : 'text-slate-900'
                 )}
               >
-                Congratulations
+                All documents uploaded
               </DialogTitle>
 
               <DialogDescription
@@ -660,8 +660,8 @@ export function KYCDocumentsTab() {
                   isDark ? 'text-white/50' : 'text-slate-500'
                 )}
               >
-                You&apos;ve uploaded all your required KYC documents. Admin will revert within
-                24 hours for final approval.
+                You&apos;ve uploaded all your required KYC documents. Our team will review
+                your submission and revert within 24 hours for final approval.
               </DialogDescription>
             </DialogHeader>
           </div>

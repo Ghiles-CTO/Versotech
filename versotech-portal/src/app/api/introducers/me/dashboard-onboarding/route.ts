@@ -57,7 +57,7 @@ export async function GET() {
 
     const { data: introducer, error: introducerError } = await serviceSupabase
       .from('introducers')
-      .select('account_approval_status, onboarding_status')
+      .select('account_approval_status, onboarding_status, updated_at')
       .eq('id', introducerUser.introducer_id)
       .single()
 
@@ -70,6 +70,7 @@ export async function GET() {
       investorId: readiness.introducerId,
       personaType: 'introducer',
       entityId: readiness.introducerId,
+      approvalEventKey: introducer.updated_at || null,
       entityType: readiness.introducerType,
       investorType: readiness.introducerType,
       profileHref: '/versotech_main/introducer-profile?tab=overview',

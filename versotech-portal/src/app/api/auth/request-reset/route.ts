@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { sendPasswordResetEmail } from '@/lib/email/resend-service'
 
+function buildResetPasswordUrl(appUrl: string, hashedToken: string) {
+  const resetUrl = new URL('/versotech_main/reset-password', appUrl)
+  resetUrl.searchParams.set('token_hash', hashedToken)
+  resetUrl.searchParams.set('type', 'recovery')
+  return resetUrl.toString()
+}
+
 /**
  * POST /api/auth/request-reset
  *
@@ -79,9 +86,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // The generated link includes the token in hash format
-    // We need to construct the URL that will work with our reset-password page
-    const resetUrl = linkData.properties.action_link
+    const resetUrl = buildResetPasswordUrl(appUrl, linkData.properties.hashed_token)
 
     // Send email via Resend
     const emailResult = await sendPasswordResetEmail({

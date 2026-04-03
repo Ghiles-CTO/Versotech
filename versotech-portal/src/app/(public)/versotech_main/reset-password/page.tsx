@@ -33,6 +33,7 @@ function ResetPasswordContent() {
   const [emailSent, setEmailSent] = useState(false)
   const [isRecoveryMode, setIsRecoveryMode] = useState(false)
   const [checkingSession, setCheckingSession] = useState(true)
+  const authType = searchParams.get('type')
 
   // Check if user came from a password reset email link (or was redirected from auth callback)
   useEffect(() => {
@@ -67,6 +68,24 @@ function ResetPasswordContent() {
       }
 
       // Also check URL params (alternative flow)
+      const tokenHash = searchParams.get('token_hash')
+      if (authType === 'recovery' && tokenHash) {
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: 'recovery'
+        })
+
+        if (!error) {
+          console.log('[reset-password] Recovery session set from token hash')
+          setIsRecoveryMode(true)
+          window.history.replaceState(null, '', `${window.location.pathname}?from=recovery`)
+        } else {
+          setMessage({ type: 'error', text: 'Recovery link expired or invalid. Please request a new one.' })
+        }
+        setCheckingSession(false)
+        return
+      }
+
       const code = searchParams.get('code')
       if (code) {
         try {
@@ -107,7 +126,7 @@ function ResetPasswordContent() {
     }
 
     checkRecoverySession()
-  }, [searchParams])
+  }, [authType, searchParams])
 
   // Handle email submission (request reset)
   const handleRequestReset = async (e: React.FormEvent) => {

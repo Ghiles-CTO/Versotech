@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  buildFundingInstructionDocumentName,
   buildFundingInstructionSnapshot,
   buildFundingInstructionSummary,
   parseFundingInstructionSnapshot,
@@ -158,5 +159,44 @@ describe('funding instructions shared helpers', () => {
       amount_due: 0,
       amount_received: 70000,
     })
+  })
+
+  it('builds a VERSO-style funding document filename', () => {
+    const snapshot = parseFundingInstructionSnapshot({
+      subscription_id: 'sub-4',
+      deal_id: 'deal-4',
+      investor_id: 'investor-4',
+      cycle_id: null,
+      deal_name: 'SpaceX Secondary',
+      vehicle_name: 'SPACE X Secondary Investment',
+      currency: 'USD',
+      commitment_amount: 350000,
+      subscription_fee_amount: 14000,
+      gross_amount: 364000,
+      due_at: '2026-03-03T00:00:00.000Z',
+      wire_bank_name: 'ING Luxembourg S.A.',
+      wire_bank_address: '52, route d\'Esch, Luxembourg',
+      wire_account_holder: 'Dupont Partners',
+      wire_escrow_agent: 'Dupont Partners',
+      wire_law_firm_address: '2 Avenue Charles de Gaulle, Luxembourg',
+      wire_iban: 'LU71 0141 8595 5133 3010',
+      wire_bic: 'CELLLULLXXX',
+      wire_reference: 'Agency SPACE X Secondary Investment',
+      wire_description: 'Client Account on behalf of SPACE X Secondary Investment',
+      wire_currency_code: 'USD',
+      wire_currency_long: 'United States Dollar',
+      wire_contact_email: 'funding@verso.test',
+      created_at: '2026-04-03T00:00:00.000Z',
+    })
+
+    expect(snapshot).not.toBeNull()
+    expect(
+      buildFundingInstructionDocumentName(snapshot!, {
+        entityCode: 'VERSO-001',
+        investmentName: 'SPACE X Secondary Investment',
+        investorName: 'Ghiles Ventures LLC',
+        extension: 'pdf',
+      })
+    ).toBe('VERSO-001 - FUNDING INSTRUCTIONS - SPACE X Secondary Investment - Ghiles Ventures LLC - 030426.pdf')
   })
 })

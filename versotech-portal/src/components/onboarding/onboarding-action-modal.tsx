@@ -80,28 +80,40 @@ function normalizeApprovalStatus(value?: string | null) {
   return (value || '').toLowerCase().trim()
 }
 
-function getApprovedStorageScope(personaType?: string | null, entityId?: string | null) {
-  return `${personaType || 'unknown'}:${entityId || 'default'}`
+function getApprovedStorageScope(
+  personaType?: string | null,
+  entityId?: string | null,
+  approvalEventKey?: string | null
+) {
+  return `${personaType || 'unknown'}:${entityId || 'default'}:${approvalEventKey || 'current'}`
 }
 
-function getApprovedSessionKey(personaType?: string | null, entityId?: string | null) {
-  return `${APPROVED_SESSION_KEY_PREFIX}:${getApprovedStorageScope(personaType, entityId)}`
+function getApprovedSessionKey(
+  personaType?: string | null,
+  entityId?: string | null,
+  approvalEventKey?: string | null
+) {
+  return `${APPROVED_SESSION_KEY_PREFIX}:${getApprovedStorageScope(personaType, entityId, approvalEventKey)}`
 }
 
-function getApprovedCountKey(personaType?: string | null, entityId?: string | null) {
-  return `${APPROVED_COUNT_KEY_PREFIX}:${getApprovedStorageScope(personaType, entityId)}`
+function getApprovedCountKey(
+  personaType?: string | null,
+  entityId?: string | null,
+  approvalEventKey?: string | null
+) {
+  return `${APPROVED_COUNT_KEY_PREFIX}:${getApprovedStorageScope(personaType, entityId, approvalEventKey)}`
 }
 
 function getApprovedDescription(personaType?: string) {
   return personaType === 'introducer'
-    ? 'Your account is approved. Your introducer workspace is ready.'
-    : 'Your account is approved. Check out investment opportunities.'
+    ? 'Your account has been approved and is now fully active. Your introducer workspace is ready — start managing your network and referrals.'
+    : 'Your account has been approved and is now fully active. Browse and invest in exclusive opportunities available to you.'
 }
 
 function getApprovedCta(personaType?: string) {
   return personaType === 'introducer'
-    ? { label: 'Open workspace', href: '/versotech_main/dashboard' }
-    : { label: 'View opportunities', href: '/versotech_main/opportunities' }
+    ? { label: 'Go to workspace', href: '/versotech_main/dashboard' }
+    : { label: 'Explore opportunities', href: '/versotech_main/opportunities' }
 }
 
 /* ─── Resolved action with exact specificity ─── */
@@ -352,7 +364,7 @@ export function OnboardingActionModal() {
         ? '/api/introducers/me/dashboard-onboarding'
         : '/api/investors/me/dashboard-onboarding'
 
-    fetch(endpoint, { credentials: 'same-origin' })
+    fetch(endpoint, { credentials: 'same-origin', cache: 'no-store' })
       .then(async (res) => {
         if (!res.ok) return null
         return (await res.json()) as DashboardOnboardingState
@@ -364,9 +376,10 @@ export function OnboardingActionModal() {
         if (isApproved) {
           try {
             if (typeof window === 'undefined') return
-            const entityId = onboardingPersona.entity_id || data.investorId
-            const sessionKey = getApprovedSessionKey(data.personaType, entityId)
-            const countKey = getApprovedCountKey(data.personaType, entityId)
+            const personaType = data.personaType || onboardingPersona.persona_type
+            const entityId = data.entityId || onboardingPersona.entity_id || data.investorId
+            const sessionKey = getApprovedSessionKey(personaType, entityId, data.approvalEventKey)
+            const countKey = getApprovedCountKey(personaType, entityId, data.approvalEventKey)
             const shownCount = Number.parseInt(window.localStorage.getItem(countKey) || '0', 10)
 
             if (window.sessionStorage.getItem(sessionKey) === '1' || shownCount >= APPROVED_POPUP_MAX_SHOWS) {
@@ -395,8 +408,12 @@ export function OnboardingActionModal() {
         return
       }
       if (normalizeApprovalStatus(state?.accountApprovalStatus) === 'approved') {
-        const entityId = onboardingPersona?.entity_id || state?.investorId
-        window.sessionStorage.setItem(getApprovedSessionKey(state?.personaType, entityId), '1')
+        const personaType = state?.personaType || onboardingPersona?.persona_type
+        const entityId = state?.entityId || onboardingPersona?.entity_id || state?.investorId
+        window.sessionStorage.setItem(
+          getApprovedSessionKey(personaType, entityId, state?.approvalEventKey),
+          '1'
+        )
       } else {
         window.sessionStorage.setItem(ACTION_SESSION_KEY, '1')
       }
@@ -444,7 +461,7 @@ export function OnboardingActionModal() {
   const stage = isApproved ? null : resolveInvestorDashboardOnboardingStage(state)
   const action = isApproved
     ? {
-        title: 'Congratulations',
+        title: 'Welcome',
         description: getApprovedDescription(state.personaType),
         ctaLabel: getApprovedCta(state.personaType).label,
         href: getApprovedCta(state.personaType).href,
@@ -508,9 +525,9 @@ export function OnboardingActionModal() {
                   <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
                 </div>
                 <div className="min-w-0 text-left">
-                  <p className="text-sm font-semibold text-foreground">Account approved</p>
+                  <p className="text-sm font-semibold text-foreground">You're all set</p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Your review is complete and your account is now active.
+                    Your account has been reviewed and approved. You're ready to get started.
                   </p>
                 </div>
               </div>

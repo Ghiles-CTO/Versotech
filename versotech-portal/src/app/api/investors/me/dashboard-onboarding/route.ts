@@ -53,7 +53,7 @@ export async function GET() {
 
     const { data: investor, error: investorError } = await serviceSupabase
       .from('investors')
-      .select('account_approval_status, onboarding_status')
+      .select('account_approval_status, onboarding_status, updated_at')
       .eq('id', investorUser.investor_id)
       .single()
 
@@ -64,6 +64,9 @@ export async function GET() {
 
     return NextResponse.json({
       investorId: readiness.investorId,
+      personaType: 'investor',
+      entityId: readiness.investorId,
+      approvalEventKey: investor.updated_at || null,
       investorType: readiness.investorType,
       accountApprovalStatus:
         investor.account_approval_status || readiness.accountApprovalStatus || 'pending_onboarding',

@@ -19,6 +19,13 @@ import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import {
   Table,
@@ -45,6 +52,7 @@ import {
   type KycChecklistSubmission,
 } from '@/lib/kyc/portal-kyc-checklist'
 import { isIdDocument, isProofOfAddress } from '@/lib/validation/document-validation'
+import { useTheme } from '@/components/theme-provider'
 import { cn } from '@/lib/utils'
 
 interface IntroducerSubmission {
@@ -242,6 +250,8 @@ export function IntroducerKYCDocumentsTab({
   kycStatus?: string
   entityType?: string | null
 }) {
+  const { theme } = useTheme()
+  const isDark = theme === 'staff-dark'
   const [submissions, setSubmissions] = useState<IntroducerSubmission[]>([])
   const [members, setMembers] = useState<IntroducerMember[]>([])
   const [loading, setLoading] = useState(true)
@@ -249,6 +259,7 @@ export function IntroducerKYCDocumentsTab({
   const [metadataDialogOpen, setMetadataDialogOpen] = useState(false)
   const [pendingUpload, setPendingUpload] = useState<PendingUpload | null>(null)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const [completionDialogOpen, setCompletionDialogOpen] = useState(false)
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const viewer = useDocumentViewer()
 
@@ -274,7 +285,7 @@ export function IntroducerKYCDocumentsTab({
   )
 
   async function fetchDocuments() {
-    if (!introducerId) return
+    if (!introducerId) return null
 
     setLoading(true)
     try {
@@ -282,11 +293,19 @@ export function IntroducerKYCDocumentsTab({
       if (!response.ok) throw new Error('Failed to fetch documents')
 
       const data = await response.json()
-      setSubmissions(data.submissions || [])
-      setMembers(data.members || [])
+      const subs = data.submissions || []
+      const mems = data.members || []
+      setSubmissions(subs)
+      setMembers(mems)
+      return buildPortalKycChecklistRows({
+        entityType: isIndividualEntity ? 'individual' : 'entity',
+        members: mems,
+        submissions: subs.map(normalizeChecklistSubmission),
+      })
     } catch (error) {
       console.error('Error fetching documents:', error)
       toast.error('Failed to load documents')
+      return null
     } finally {
       setLoading(false)
     }
@@ -329,6 +348,8 @@ export function IntroducerKYCDocumentsTab({
   ) {
     if (!introducerId) return
 
+    const missingBeforeUpload = checklistRows.filter((r) => r.status === 'missing').length
+
     if (file.size > 50 * 1024 * 1024) {
       toast.error('File size exceeds 50MB limit')
       return
@@ -369,7 +390,13 @@ export function IntroducerKYCDocumentsTab({
       }
 
       toast.success(isUpdate ? 'Document updated successfully' : 'Document uploaded successfully')
-      await fetchDocuments()
+      const refreshedRows = await fetchDocuments()
+      const missingAfterUpload =
+        refreshedRows?.filter((r) => r.status === 'missing').length ?? null
+
+      if (!isUpdate && missingBeforeUpload > 0 && missingAfterUpload === 0) {
+        setCompletionDialogOpen(true)
+      }
     } catch (error: unknown) {
       console.error('Upload error:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to upload document')
@@ -689,6 +716,69 @@ export function IntroducerKYCDocumentsTab({
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={completionDialogOpen} onOpenChange={setCompletionDialogOpen}>
+        <DialogContent
+          className={cn(
+            'sm:max-w-[420px] p-0 gap-0 overflow-hidden border rounded-2xl shadow-2xl',
+            isDark
+              ? 'bg-[#0a0a0a] border-white/[0.08]'
+              : 'bg-white border-slate-200'
+          )}
+        >
+          <div className={cn('h-[3px] w-full', isDark ? 'bg-white' : 'bg-blue-600')} />
+
+          <div className="px-6 pt-6 pb-2">
+            <DialogHeader className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                <span
+                  className={cn(
+                    'text-[11px] font-semibold uppercase tracking-[0.15em]',
+                    isDark ? 'text-white/50' : 'text-slate-400'
+                  )}
+                >
+                  KYC complete
+                </span>
+              </div>
+
+              <DialogTitle
+                className={cn(
+                  'text-[20px] font-semibold leading-tight tracking-tight text-left',
+                  isDark ? 'text-white' : 'text-slate-900'
+                )}
+              >
+                All documents uploaded
+              </DialogTitle>
+
+              <DialogDescription
+                className={cn(
+                  'text-[13px] leading-relaxed text-left',
+                  isDark ? 'text-white/50' : 'text-slate-500'
+                )}
+              >
+                You&apos;ve uploaded all your required KYC documents. Our team will review
+                your submission and revert within 24 hours for final approval.
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          <div className="px-6 pb-6 pt-4">
+            <button
+              onClick={() => setCompletionDialogOpen(false)}
+              className={cn(
+                'group w-full flex items-center justify-between rounded-xl px-4 py-3.5 text-sm font-medium transition-all duration-200',
+                isDark
+                  ? 'bg-white text-black hover:bg-white/90'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              )}
+            >
+              <span>Got it</span>
+              <CheckCircle className="h-4 w-4" />
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <DocumentMetadataDialog
         open={metadataDialogOpen}

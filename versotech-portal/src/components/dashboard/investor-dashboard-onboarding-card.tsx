@@ -40,6 +40,7 @@ export type DashboardOnboardingState = {
   investorId: string
   personaType?: 'investor' | 'introducer'
   entityId?: string
+  approvalEventKey?: string | null
   entityType?: string | null
   investorType?: string | null
   accountApprovalStatus: string | null

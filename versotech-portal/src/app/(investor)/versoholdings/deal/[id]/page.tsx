@@ -28,19 +28,26 @@ import { InterestModal } from '@/components/deals/interest-modal'
 import { SubscribeNowDialog } from '@/components/deals/subscribe-now-dialog'
 import { AskQuestionButton } from '@/components/deals/ask-question-button'
 import { DealFaqSection } from '@/components/deals/deal-faq-section'
+import { InvestorFundingInstructionsClient } from '@/components/deals/investor-funding-instructions-client'
 import { getAccountStatusCopy, formatKycStatusLabel } from '@/lib/account-approval-status'
 import { cookies } from 'next/headers'
 import { readActivePersonaCookieValues, resolveActiveInvestorLink } from '@/lib/kyc/active-investor-link'
 import { getLatestActiveOrRecentCycle } from '@/lib/deals/investment-cycles'
+import { buildFundingInstructionSummary, parseFundingInstructionSnapshot } from '@/lib/funding-instructions/shared'
 
 export const dynamic = 'force-dynamic'
 
 interface DealDetailPageProps {
   params: Promise<{ id: string }>
+  searchParams?: Promise<{ action?: string | string[] }>
 }
 
-export default async function DealDetailPage({ params }: DealDetailPageProps) {
+export default async function DealDetailPage({ params, searchParams }: DealDetailPageProps) {
   const { id: dealId } = await params
+  const resolvedSearchParams = searchParams ? await searchParams : {}
+  const actionParam = Array.isArray(resolvedSearchParams?.action)
+    ? resolvedSearchParams.action[0]
+    : resolvedSearchParams?.action ?? null
 
   const clientSupabase = await createClient()
   const { data: { user }, error: userError } = await clientSupabase.auth.getUser()
@@ -174,6 +181,66 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
 
   const subscription = subscriptions?.[0] ?? null
 
+  let fundingInstructions = null
+  let fundingSubscriptionQuery = serviceSupabase
+    .from('subscriptions')
+    .select(`
+      id,
+      deal_id,
+      investor_id,
+      cycle_id,
+      commitment,
+      currency,
+      funding_due_at,
+      funding_gross_target_amount,
+      funding_gross_received_amount,
+      funding_instruction_snapshot,
+      created_at
+    `)
+    .eq('deal_id', dealId)
+    .eq('investor_id', investorId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (latestCycle?.id) {
+    fundingSubscriptionQuery = fundingSubscriptionQuery.eq('cycle_id', latestCycle.id)
+  }
+
+  const { data: fundingSubscription } = await fundingSubscriptionQuery.maybeSingle()
+
+  if (fundingSubscription?.id) {
+    const [{ data: fundingDocument }, { data: signedPackDocument }] = await Promise.all([
+      serviceSupabase
+        .from('documents')
+        .select('id, name')
+        .eq('subscription_id', fundingSubscription.id)
+        .eq('type', 'funding_instruction')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      serviceSupabase
+        .from('documents')
+        .select('file_key')
+        .eq('subscription_id', fundingSubscription.id)
+        .eq('type', 'subscription_pack')
+        .eq('is_published', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ])
+
+    fundingInstructions = buildFundingInstructionSummary({
+      subscriptionId: fundingSubscription.id,
+      cycleId: fundingSubscription.cycle_id || null,
+      snapshot: parseFundingInstructionSnapshot(fundingSubscription.funding_instruction_snapshot),
+      fundingGrossTargetAmount: fundingSubscription.funding_gross_target_amount,
+      fundingGrossReceivedAmount: fundingSubscription.funding_gross_received_amount,
+      fundingDocumentId: fundingDocument?.id || null,
+      fundingDocumentName: fundingDocument?.name || null,
+      signedPackPath: signedPackDocument?.file_key || null,
+    })
+  }
+
   // Determine effective status
   const getEffectiveStatus = () => {
     if (deal.status === 'closed' || deal.status === 'cancelled') {
@@ -305,6 +372,11 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
             </CardContent>
           </Card>
         )}
+
+        <InvestorFundingInstructionsClient
+          fundingInstructions={fundingInstructions}
+          autoOpen={actionParam === 'funding' || !!fundingInstructions?.auto_open}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}

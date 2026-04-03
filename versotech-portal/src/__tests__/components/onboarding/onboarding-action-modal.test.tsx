@@ -152,6 +152,7 @@ describe('OnboardingActionModal persona gating', () => {
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith('/api/investors/me/dashboard-onboarding', {
         credentials: 'same-origin',
+        cache: 'no-store',
       })
     })
   })
@@ -177,14 +178,43 @@ describe('OnboardingActionModal persona gating', () => {
     render(<OnboardingActionModal />)
 
     await waitFor(() => {
-      expect(screen.getByText('Congratulations')).toBeTruthy()
+      expect(screen.getByText('Welcome')).toBeTruthy()
     })
 
     expect(screen.getByText('VERSOTECH')).toBeTruthy()
 
-    fireEvent.click(screen.getByText('View opportunities'))
+    fireEvent.click(screen.getByText('Explore opportunities'))
 
     expect(pushMock).toHaveBeenCalledWith('/versotech_main/opportunities')
+  })
+
+  it('shows the approved popup again for a new approval event key', async () => {
+    localStorage.setItem('verso_onboarding_approved_count:investor:investor-entity:old-approval', '3')
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () =>
+        createOnboardingState({
+          accountApprovalStatus: 'approved',
+          isReady: true,
+          missingItems: [],
+          entityId: 'investor-entity',
+          approvalEventKey: 'fresh-approval',
+        }),
+    })
+    global.fetch = fetchMock as typeof fetch
+
+    usePersonaMock.mockReturnValue({
+      activePersona: createPersona('investor'),
+      personas: [createPersona('investor')],
+      isLoading: false,
+    })
+
+    render(<OnboardingActionModal />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Welcome')).toBeTruthy()
+    })
   })
 
   it('routes missing investor KYC document prompts to the KYC tab instead of the legacy upload popup', async () => {
@@ -281,10 +311,10 @@ describe('OnboardingActionModal persona gating', () => {
     render(<OnboardingActionModal />)
 
     await waitFor(() => {
-      expect(screen.getByText('Congratulations')).toBeTruthy()
+      expect(screen.getByText('Welcome')).toBeTruthy()
     })
 
-    fireEvent.click(screen.getByText('Open workspace'))
+    fireEvent.click(screen.getByText('Go to workspace'))
 
     expect(pushMock).toHaveBeenCalledWith('/versotech_main/dashboard')
   })
