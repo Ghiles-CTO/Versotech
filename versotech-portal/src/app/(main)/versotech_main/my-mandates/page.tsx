@@ -25,8 +25,6 @@ import { Progress } from '@/components/ui/progress'
 import {
   FileText,
   TrendingUp,
-  DollarSign,
-  Clock,
   Search,
   Loader2,
   AlertCircle,
@@ -95,9 +93,6 @@ type Summary = {
   totalMandates: number
   activeMandates: number
   closedMandates: number
-  totalRaised: number
-  totalTarget: number
-  currency: string
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -124,9 +119,6 @@ export default function MyMandatesPage() {
     totalMandates: 0,
     activeMandates: 0,
     closedMandates: 0,
-    totalRaised: 0,
-    totalTarget: 0,
-    currency: 'USD',
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -312,20 +304,10 @@ export default function MyMandatesPage() {
         const active = processedMandates.filter(m => m.status === 'open' || m.status === 'allocation_pending').length
         const closed = processedMandates.filter(m => m.status === 'closed' || m.status === 'fully_subscribed').length
 
-        let totalRaised = 0
-        let totalTarget = 0
-        for (const m of processedMandates) {
-          totalRaised += m.raised_amount
-          totalTarget += m.target_amount
-        }
-
         setSummary({
           totalMandates: processedMandates.length,
           activeMandates: active,
           closedMandates: closed,
-          totalRaised,
-          totalTarget,
-          currency: 'USD',
         })
 
         setError(null)
@@ -407,20 +389,10 @@ export default function MyMandatesPage() {
       const active = processedMandates.filter(m => m.status === 'open' || m.status === 'allocation_pending').length
       const closed = processedMandates.filter(m => m.status === 'closed' || m.status === 'fully_subscribed').length
 
-      let totalRaised = 0
-      let totalTarget = 0
-      for (const m of processedMandates) {
-        totalRaised += m.raised_amount
-        totalTarget += m.target_amount
-      }
-
       setSummary({
         totalMandates: processedMandates.length,
         activeMandates: active,
         closedMandates: closed,
-        totalRaised,
-        totalTarget,
-        currency: 'USD',
       })
     }
 
@@ -502,7 +474,7 @@ export default function MyMandatesPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -529,38 +501,6 @@ export default function MyMandatesPage() {
             <div className="text-2xl font-bold text-green-600">{summary.activeMandates}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Currently raising
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
-              Total Raised
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(summary.totalRaised, summary.currency)}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              of {formatCurrency(summary.totalTarget, summary.currency)} target
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Avg. Progress
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {summary.totalTarget > 0 ? getProgressPercent(summary.totalRaised, summary.totalTarget) : 0}%
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Overall fundraising
             </p>
           </CardContent>
         </Card>
