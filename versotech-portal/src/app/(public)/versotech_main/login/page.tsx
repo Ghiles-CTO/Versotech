@@ -164,6 +164,20 @@ function UnifiedLoginContent() {
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-white p-4 font-sans text-slate-900">
+      {/* Override Chrome autofill gray/blue overlay on saved credentials */}
+      <style>{`
+        .login-card input:-webkit-autofill,
+        .login-card input:-webkit-autofill:hover,
+        .login-card input:-webkit-autofill:focus,
+        .login-card input:-webkit-autofill:active {
+          -webkit-text-fill-color: #0f172a !important;
+          -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+          box-shadow: 0 0 0px 1000px #ffffff inset !important;
+          background-color: #ffffff !important;
+          color: #0f172a !important;
+          transition: background-color 5000s ease-in-out 0s;
+        }
+      `}</style>
 
       {/* Logo — centered in the space between top and card */}
       <div className="flex-1 flex items-center justify-center">
@@ -180,38 +194,53 @@ function UnifiedLoginContent() {
       <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-700">
         <h1 className="sr-only">VERSO</h1>
 
-        <Card className="border-[#E2E8F0] shadow-lg shadow-slate-900/5 bg-[#F1F5F9] rounded-2xl">
+        <Card
+          className="login-card border-[#E2E8F0] shadow-lg shadow-slate-900/5 bg-[#F1F5F9] rounded-2xl"
+          style={{
+            '--background': '0 0% 100%',
+            '--foreground': '222.2 84% 4.9%',
+            '--input': '214.3 31.8% 91.4%',
+            '--muted-foreground': '215.4 16.3% 46.9%',
+          } as React.CSSProperties}
+        >
           <CardContent className="p-8 space-y-6">
 
             {message && (
-              <div className={`p-3 rounded-md text-sm font-medium border ${
-                message.type === 'error' ? 'bg-red-50 border-red-100 text-red-600' :
-                message.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
-                'bg-blue-50 border-blue-100 text-blue-600'
-              }`}>
+              <div
+                className="p-4 rounded-lg text-base font-semibold border-2"
+                style={
+                  message.type === 'error'
+                    ? { backgroundColor: '#fef2f2', borderColor: '#fca5a5', color: '#b91c1c' }
+                    : message.type === 'success'
+                    ? { backgroundColor: '#ecfdf5', borderColor: '#6ee7b7', color: '#047857' }
+                    : { backgroundColor: '#dbeafe', borderColor: '#93c5fd', color: '#1e3a8a' }
+                }
+              >
                 {message.text}
               </div>
             )}
 
             <form onSubmit={handleEmailAuth} className="space-y-5">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-[#0F172A] uppercase">Email Address</Label>
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold uppercase" style={{ color: '#0f172a' }}>Email Address</Label>
                 <Input
                   type="email"
                   placeholder="name@example.com"
-                  className="h-11 bg-white border-[#E2E8F0] text-[#020617] placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all"
+                  className="h-12 text-base border-[#E2E8F0] placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all"
+                  style={{ backgroundColor: '#ffffff', color: '#0f172a' }}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs font-semibold text-[#0F172A] uppercase">Password</Label>
+                  <Label className="text-sm font-semibold uppercase" style={{ color: '#0f172a' }}>Password</Label>
                   <Link
                     href="/versotech_main/reset-password"
-                    className="text-xs text-[#0F172A] hover:text-[#1E3A8A] transition-colors cursor-pointer"
+                    className="text-sm hover:text-[#1E3A8A] transition-colors cursor-pointer"
+                    style={{ color: '#0f172a' }}
                   >
                     Forgot Password?
                   </Link>
@@ -220,7 +249,8 @@ function UnifiedLoginContent() {
                   <Input
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
-                    className="h-11 bg-white border-[#E2E8F0] text-[#020617] placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all pr-10"
+                    className="h-12 text-base border-[#E2E8F0] placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all pr-10"
+                    style={{ backgroundColor: '#ffffff', color: '#0f172a' }}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -228,7 +258,8 @@ function UnifiedLoginContent() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-[#64748B] hover:text-[#0F172A] transition-colors cursor-pointer"
+                    className="absolute right-3 top-3.5 transition-colors cursor-pointer"
+                    style={{ color: '#475569' }}
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -238,7 +269,7 @@ function UnifiedLoginContent() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-12 bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium tracking-wide transition-all mt-4 cursor-pointer"
+                className="w-full h-13 text-base bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium tracking-wide transition-all mt-4 cursor-pointer"
               >
                 {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
                     <span className="flex items-center gap-2">
@@ -250,11 +281,12 @@ function UnifiedLoginContent() {
 
             {/* Request Access */}
             <div className="text-center pt-2">
-              <p className="text-sm text-[#64748B]">
+              <p className="text-base" style={{ color: '#475569' }}>
                 Request Access: Please contact us at{' '}
                 <a
                   href="mailto:contact@versotech.com"
-                  className="text-[#0F172A] font-medium hover:text-[#1E3A8A] underline underline-offset-2 transition-colors"
+                  className="font-medium underline underline-offset-2 transition-colors"
+                  style={{ color: '#0f172a' }}
                 >
                   contact@versotech.com
                 </a>

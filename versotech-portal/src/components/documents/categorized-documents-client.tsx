@@ -2,14 +2,21 @@
 
 import { useMemo, useState } from 'react'
 import Image from 'next/image'
-import { Document, Vehicle, DocumentFilters } from '@/types/documents'
+import { Document, Vehicle } from '@/types/documents'
 import { DocumentCard } from './document-card'
-import { DocumentFiltersComponent } from './document-filters'
 import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from './DocumentViewerFullscreen'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   ArrowLeft,
   BarChart3,
@@ -22,6 +29,8 @@ import {
   FolderOpen,
   Home,
   Lock,
+  Search,
+  X,
   Briefcase
 } from 'lucide-react'
 
@@ -32,7 +41,6 @@ interface CategorizedDocumentsClientProps {
   initialCategory?: CategoryId | null
 }
 
-// Document category configuration (excluding KYC - that stays in Profile)
 const DOCUMENT_CATEGORIES = {
   agreements: {
     id: 'agreements',
@@ -79,13 +87,13 @@ type HoldingWithCategories = {
   totalDocuments: number
 }
 
-function getCategoryForDocumentType(type: string): CategoryId | null {
+function getCategoryForDocumentType(type: string): CategoryId {
   for (const [categoryId, category] of Object.entries(DOCUMENT_CATEGORIES)) {
     if (category.types.includes(type)) {
       return categoryId as CategoryId
     }
   }
-  return 'reports' // Default to reports for unknown types
+  return 'reports'
 }
 
 function getCategoryColor(color: string) {
@@ -118,56 +126,32 @@ export function CategorizedDocumentsClient({
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     initialCategory ? new Set([initialCategory]) : new Set()
   )
-  const [filters, setFilters] = useState<DocumentFilters>({})
+  const [search, setSearch] = useState('')
+  const [vehicleFilter, setVehicleFilter] = useState<string>('all')
   const documentViewer = useDocumentViewer()
 
-  // Filter documents: exclude KYC (stays in Profile), exclude deal-specific except NDAs/subscriptions
+  // Filter out KYC (stays in Profile), apply search + vehicle filter
   const displayableDocuments = useMemo(() => {
-    let docs = initialDocuments.filter(doc => {
-      // Exclude KYC documents - they belong in Profile
-      if (doc.type.toLowerCase() === 'kyc') return false
+    let docs = initialDocuments.filter(doc => doc.type.toLowerCase() !== 'kyc')
 
-      // Include if no deal scope, or if it's an NDA/subscription
-      return !doc.scope.deal ||
-        doc.type === 'nda' ||
-        doc.type === 'subscription_pack' ||
-        doc.type === 'subscription'
-    })
-
-    // Apply vehicle/holding filter
-    if (filters.vehicle_id) {
-      docs = docs.filter(doc => doc.scope.vehicle?.id === filters.vehicle_id)
+    if (vehicleFilter !== 'all') {
+      docs = docs.filter(doc => (doc.scope.vehicle?.id ?? 'general') === vehicleFilter)
     }
 
-    // Apply type filter
-    if (filters.type) {
+    if (search) {
+      const term = search.toLowerCase()
       docs = docs.filter(doc =>
-        doc.type.toLowerCase() === filters.type?.toLowerCase()
-      )
-    }
-
-    // Apply search filter
-    if (filters.search) {
-      const search = filters.search.toLowerCase()
-      docs = docs.filter(doc =>
-        doc.file_name?.toLowerCase().includes(search) ||
-        (doc as any).name?.toLowerCase().includes(search)
+        doc.file_name?.toLowerCase().includes(term) ||
+        (doc as any).name?.toLowerCase().includes(term) ||
+        doc.type.toLowerCase().includes(term) ||
+        doc.scope.vehicle?.name?.toLowerCase().includes(term)
       )
     }
 
     return docs
-  }, [initialDocuments, filters])
+  }, [initialDocuments, search, vehicleFilter])
 
-  // Calculate type counts for filter badges
-  const typeCounts = useMemo(() => {
-    const counts: Record<string, number> = {}
-    displayableDocuments.forEach(doc => {
-      counts[doc.type] = (counts[doc.type] || 0) + 1
-    })
-    return counts
-  }, [displayableDocuments])
-
-  // Group documents by holding/investment FIRST, then by category within each holding
+  // Group documents by holding, then by category within each holding
   const holdingsWithDocuments = useMemo(() => {
     const holdingMap = new Map<string, HoldingWithCategories>()
 
@@ -194,12 +178,11 @@ export function CategorizedDocumentsClient({
       }
 
       const holding = holdingMap.get(holdingId)!
-      const categoryId = getCategoryForDocumentType(doc.type) ?? 'reports'
+      const categoryId = getCategoryForDocumentType(doc.type)
       holding.categories[categoryId].push(doc)
       holding.totalDocuments++
     })
 
-    // Sort: named holdings first (alphabetically), then General at end
     return Array.from(holdingMap.values()).sort((a, b) => {
       if (a.id === 'general') return 1
       if (b.id === 'general') return -1
@@ -247,14 +230,43 @@ export function CategorizedDocumentsClient({
           </div>
         </div>
 
-        {/* Filters */}
-        <DocumentFiltersComponent
-          vehicles={vehicles}
-          deals={[]}
-          typeCounts={typeCounts}
-          appliedFilters={filters}
-          onChange={setFilters}
-        />
+        {/* Filters — search + vehicle */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search all documents..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          {vehicles.length > 1 && (
+            <Select value={vehicleFilter} onValueChange={setVehicleFilter}>
+              <SelectTrigger className="w-full sm:w-[220px]">
+                <SelectValue placeholder="All investments" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All investments</SelectItem>
+                {vehicles.map((v) => (
+                  <SelectItem key={v.id} value={v.id}>
+                    {v.investment_name || v.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {(search || vehicleFilter !== 'all') && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => { setSearch(''); setVehicleFilter('all') }}
+              className="shrink-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
 
         {/* Holdings List */}
         <div className="space-y-4">
@@ -350,7 +362,6 @@ export function CategorizedDocumentsClient({
             </div>
           )}
         </div>
-
       </div>
     )
   }
@@ -362,8 +373,19 @@ export function CategorizedDocumentsClient({
     return null
   }
 
+  // Filter documents within expanded categories by search
+  const filterDocs = (docs: Document[]) => {
+    if (!search) return docs
+    const term = search.toLowerCase()
+    return docs.filter(doc =>
+      doc.file_name?.toLowerCase().includes(term) ||
+      (doc as any).name?.toLowerCase().includes(term) ||
+      doc.type.toLowerCase().includes(term)
+    )
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header with breadcrumb */}
       <div className="relative border-b border-border pb-8 mb-2">
         <div className="absolute inset-0 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900/50 dark:via-blue-900/30 dark:to-indigo-900/30 opacity-60 rounded-t-2xl" />
@@ -373,7 +395,7 @@ export function CategorizedDocumentsClient({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setSelectedHolding(null)}
+              onClick={() => { setSelectedHolding(null); setSearch('') }}
               className="text-muted-foreground hover:text-foreground"
             >
               <Home className="h-4 w-4 mr-2" />
@@ -388,7 +410,7 @@ export function CategorizedDocumentsClient({
               <Button
                 variant="outline"
                 size="lg"
-                onClick={() => setSelectedHolding(null)}
+                onClick={() => { setSelectedHolding(null); setSearch('') }}
                 className="border-2"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -429,15 +451,28 @@ export function CategorizedDocumentsClient({
         </div>
       </div>
 
+      {/* Search — only show when there are enough documents */}
+      {selectedHoldingData.totalDocuments > 3 && (
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search documents..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      )}
+
       {/* Document Categories as Expandable Folders */}
       <div className="space-y-4">
         {Object.entries(DOCUMENT_CATEGORIES).map(([categoryId, category]) => {
-          const docs = selectedHoldingData.categories[categoryId as CategoryId]
-          if (docs.length === 0) return null
+          const allDocs = selectedHoldingData.categories[categoryId as CategoryId]
+          if (allDocs.length === 0) return null
 
+          const docs = filterDocs(allDocs)
           const Icon = category.icon
           const isExpanded = expandedCategories.has(categoryId)
-          const categoryKey = `${selectedHolding}-${categoryId}`
 
           return (
             <div key={categoryId} className="border-2 border-border rounded-xl bg-card overflow-hidden shadow-sm">
@@ -465,7 +500,7 @@ export function CategorizedDocumentsClient({
                   </div>
                 </div>
                 <Badge variant="outline" className="text-sm font-semibold border-2">
-                  {docs.length} document{docs.length !== 1 ? 's' : ''}
+                  {allDocs.length} document{allDocs.length !== 1 ? 's' : ''}
                 </Badge>
               </button>
 
@@ -473,13 +508,19 @@ export function CategorizedDocumentsClient({
               {isExpanded && (
                 <div className="border-t border-border bg-muted/30">
                   <div className="p-4 space-y-3">
-                    {docs.map((document) => (
-                      <DocumentCard
-                        key={document.id}
-                        document={document}
-                        onPreview={documentViewer.openPreview}
-                      />
-                    ))}
+                    {docs.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No documents match your search.
+                      </p>
+                    ) : (
+                      docs.map((document) => (
+                        <DocumentCard
+                          key={document.id}
+                          document={document}
+                          onPreview={documentViewer.openPreview}
+                        />
+                      ))
+                    )}
                   </div>
                 </div>
               )}
