@@ -30,6 +30,7 @@ import {
   CreditCard,
   Wallet,
   Upload,
+  Download,
   Eye,
   Building2,
   Handshake,
@@ -191,6 +192,7 @@ export default function MyCommissionsPage() {
   const [submitInvoiceOpen, setSubmitInvoiceOpen] = useState(false)
   const [viewInvoiceOpen, setViewInvoiceOpen] = useState(false)
   const [selectedCommission, setSelectedCommission] = useState<Commission | null>(null)
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
 
   // ============================================================================
   // Data Fetching
@@ -360,6 +362,24 @@ export default function MyCommissionsPage() {
 
   const handleInvoiceSuccess = () => {
     fetchCommissions()
+  }
+
+  const handleDownloadInvoice = async (commission: Commission) => {
+    if (!config) return
+    setDownloadingId(commission.id)
+    try {
+      const response = await fetch(`/api/commissions/${config.commissionType}/${commission.id}/invoice`)
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to fetch invoice')
+      }
+      const result = await response.json()
+      window.open(result.data.url, '_blank')
+    } catch (err) {
+      console.error('[MyCommissionsPage] Download error:', err)
+    } finally {
+      setDownloadingId(null)
+    }
   }
 
   // ============================================================================
@@ -703,7 +723,7 @@ export default function MyCommissionsPage() {
                                   Resubmit
                                 </Button>
                               )}
-                              {(commission.status === 'invoice_submitted' || commission.status === 'invoiced' || commission.status === 'paid') &&
+                              {(commission.status === 'invoice_submitted' || commission.status === 'invoiced') &&
                                 commission.invoice_id && (
                                 <Button
                                   size="sm"
@@ -713,6 +733,21 @@ export default function MyCommissionsPage() {
                                 >
                                   <Eye className="h-4 w-4 mr-1" />
                                   View Invoice
+                                </Button>
+                              )}
+                              {commission.status === 'paid' && commission.invoice_id && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDownloadInvoice(commission)}
+                                  disabled={downloadingId === commission.id}
+                                >
+                                  {downloadingId === commission.id ? (
+                                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                  ) : (
+                                    <Download className="h-4 w-4 mr-1" />
+                                  )}
+                                  Download Invoice
                                 </Button>
                               )}
                               {commission.status === 'paid' && commission.paid_at && (
