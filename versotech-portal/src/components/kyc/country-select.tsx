@@ -18,7 +18,8 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 
-export { COUNTRIES, getCountryName, getCountryCode } from '@/lib/countries'
+import { COUNTRIES, getCountryName, getCountryCode } from '@/lib/countries'
+export { COUNTRIES, getCountryName, getCountryCode }
 export type { CountryCode } from '@/lib/countries'
 
 interface CountrySelectProps {
