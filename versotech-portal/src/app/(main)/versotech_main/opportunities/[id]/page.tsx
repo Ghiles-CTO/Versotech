@@ -381,7 +381,11 @@ function findPreferredFundingInstructions(targetOpportunity: Opportunity): Fundi
     (entry) => entry.funding_instructions?.is_available
   )
 
-  if (!availableEntries.length) return null
+  if (!availableEntries.length) {
+    return targetOpportunity.subscription?.funding_instructions?.is_available
+      ? targetOpportunity.subscription.funding_instructions
+      : null
+  }
 
   const preferredEntry = availableEntries.find((entry) => entry.id === targetOpportunity.active_cycle_id)
     || availableEntries[0]
@@ -1145,14 +1149,17 @@ export default function OpportunityDetailPage() {
   }
 
   const handleDownloadFundingInstructions = async (fundingInstructions: FundingInstructionsSummary | null) => {
-    if (!fundingInstructions?.funding_document_id) {
+    if (!fundingInstructions?.subscription_id) {
       toast.error('Funding PDF is not available yet.')
       return
     }
 
     try {
       const fileName = fundingInstructions.funding_document_name || 'Funding Instructions.pdf'
-      await downloadFileFromUrl(`/api/documents/${fundingInstructions.funding_document_id}/download`, fileName)
+      await downloadFileFromUrl(
+        `/api/investors/me/subscriptions/${fundingInstructions.subscription_id}/funding-download`,
+        fileName
+      )
     } catch (error) {
       console.error('Failed to download funding instructions:', error)
       toast.error('Failed to download funding instructions.')
@@ -1208,25 +1215,35 @@ export default function OpportunityDetailPage() {
     if (!fundingInstructions?.is_available) return null
 
     return (
-      <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 px-4 py-3 dark:border-emerald-900/70 dark:bg-emerald-950/20">
+      <div className="relative overflow-hidden rounded-xl border border-emerald-200/80 bg-gradient-to-r from-emerald-50 to-emerald-50/40 px-4 py-3.5 dark:border-emerald-800/50 dark:from-emerald-950/30 dark:to-emerald-950/10">
+        <div className="absolute inset-y-0 left-0 w-1 bg-emerald-500 dark:bg-emerald-400" />
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">
-              Funding instructions ready
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40">
+              <Banknote className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <div className="text-sm text-emerald-800/80 dark:text-emerald-300/80">
-              {label}: {formatCurrency(fundingInstructions.amount_due, fundingInstructions.currency)} due
-              {fundingInstructions.due_at ? ` by ${formatDate(fundingInstructions.due_at)}` : ''}
+            <div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-emerald-900 dark:text-emerald-200">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                </span>
+                Funding instructions ready
+              </div>
+              <div className="mt-0.5 text-sm text-emerald-700/80 dark:text-emerald-300/70">
+                {label}: <span className="font-medium text-emerald-800 dark:text-emerald-200">{formatCurrency(fundingInstructions.amount_due, fundingInstructions.currency)}</span> due
+                {fundingInstructions.due_at ? ` by ${formatDate(fundingInstructions.due_at)}` : ''}
+              </div>
             </div>
           </div>
           <Button
             type="button"
-            variant="outline"
-            className="border-emerald-300 bg-white/80 text-emerald-900 hover:bg-white dark:border-emerald-800 dark:bg-transparent dark:text-emerald-200"
+            size="sm"
+            className="bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500"
             onClick={() => handleOpenFundingInstructions(fundingInstructions)}
           >
-            <Banknote className="mr-2 h-4 w-4" />
-            View Funding Instructions
+            <Eye className="mr-2 h-3.5 w-3.5" />
+            View Instructions
           </Button>
         </div>
       </div>
@@ -1493,16 +1510,13 @@ export default function OpportunityDetailPage() {
                 </CardContent>
               </Card>
             ) : opportunity.subscription && primarySubscriptionEntry ? (
-              <div className="space-y-3">
-                <SubscriptionStatusCard
-                  entry={primarySubscriptionEntry}
-                  heading="Your Subscription"
-                  dealCurrency={opportunity.currency}
-                  onViewNdas={opportunity.subscription.documents?.nda.available_in_documents && opportunity.vehicle?.id ? handleViewNdas : undefined}
-                  onViewSignedPack={handleViewSignedPack}
-                />
-                {renderFundingActionStrip(primarySubscriptionEntry.funding_instructions, 'Primary subscription')}
-              </div>
+              <SubscriptionStatusCard
+                entry={primarySubscriptionEntry}
+                heading="Your Subscription"
+                dealCurrency={opportunity.currency}
+                onViewNdas={opportunity.subscription.documents?.nda.available_in_documents && opportunity.vehicle?.id ? handleViewNdas : undefined}
+                onViewSignedPack={handleViewSignedPack}
+              />
             ) : opportunity.subscription ? (
               <SubscriptionStatusCard
                 subscription={opportunity.subscription}
@@ -1558,6 +1572,14 @@ export default function OpportunityDetailPage() {
               />
             </div>
           </div>
+
+          {/* Funding Instructions Strip — full width, outside grid */}
+          {!showMultipleSubscriptions && (() => {
+            const fi = primarySubscriptionEntry?.funding_instructions
+              ?? opportunity.subscription?.funding_instructions
+            if (!fi?.is_available) return null
+            return renderFundingActionStrip(fi, 'Primary subscription')
+          })()}
 
           {/* Company Info - Full Width */}
           {(opportunity.description || opportunity.investment_thesis || opportunity.company_website) && (
@@ -2359,38 +2381,43 @@ export default function OpportunityDetailPage() {
       <Dialog open={showFundingDialog} onOpenChange={setShowFundingDialog}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Funding Instructions</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/40">
+                <Banknote className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              Funding Instructions
+            </DialogTitle>
             <DialogDescription>
               Review the capital call summary and use the actions below to wire the signed amount.
             </DialogDescription>
           </DialogHeader>
 
           {activeFundingInstructions && (
-            <div className="space-y-5">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-xl border bg-muted/30 p-4">
+            <div className="space-y-4">
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-emerald-50/80 to-background p-4 dark:from-emerald-950/20">
                   <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     Amount Due
                   </div>
-                  <div className="mt-2 text-3xl font-semibold tracking-tight">
+                  <div className="mt-2 text-3xl font-semibold tracking-tight text-emerald-700 dark:text-emerald-400">
                     {formatCurrency(activeFundingInstructions.amount_due, activeFundingInstructions.currency)}
                   </div>
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    Original amount {formatCurrency(activeFundingInstructions.amount_original, activeFundingInstructions.currency)}
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Total amount to wire {formatCurrency(activeFundingInstructions.amount_original, activeFundingInstructions.currency)}
                     {activeFundingInstructions.amount_received > 0
                       ? ` · Received ${formatCurrency(activeFundingInstructions.amount_received, activeFundingInstructions.currency)}`
                       : ''}
                   </div>
                 </div>
 
-                <div className="rounded-xl border bg-muted/30 p-4">
+                <div className="relative overflow-hidden rounded-xl border bg-muted/20 p-4">
                   <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     Funding Deadline
                   </div>
                   <div className="mt-2 text-xl font-semibold">
                     {formatDate(activeFundingInstructions.due_at)}
                   </div>
-                  <div className="mt-2 text-sm text-muted-foreground">
+                  <div className="mt-2 text-xs text-muted-foreground">
                     {activeFundingInstructions.due_at && new Date(activeFundingInstructions.due_at) < new Date()
                       ? 'This deadline has passed. Please contact the team if the transfer is still pending.'
                       : 'Please use the exact reference below so the funds can be matched correctly.'}
@@ -2398,8 +2425,10 @@ export default function OpportunityDetailPage() {
                 </div>
               </div>
 
-              <div className="rounded-xl border">
-                <div className="border-b px-4 py-3 text-sm font-semibold">Bank Details</div>
+              <div className="overflow-hidden rounded-xl border">
+                <div className="border-b bg-muted/30 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Bank Details
+                </div>
                 <div className="divide-y">
                   {[
                     ['Bank', activeFundingInstructions.bank_details.bank_name],
@@ -2414,9 +2443,9 @@ export default function OpportunityDetailPage() {
                     ['Contact email', activeFundingInstructions.contact_email],
                   ]
                     .filter(([, value]) => value)
-                    .map(([label, value]) => (
-                      <div key={label} className="grid gap-2 px-4 py-3 md:grid-cols-[180px,1fr]">
-                        <div className="text-sm text-muted-foreground">{label}</div>
+                    .map(([label, value], idx) => (
+                      <div key={label} className={`grid gap-1 px-4 py-2.5 md:grid-cols-[160px,1fr] ${idx % 2 === 0 ? 'bg-muted/10' : ''}`}>
+                        <div className="text-xs font-medium text-muted-foreground">{label}</div>
                         <div className="text-sm font-medium break-words">{value}</div>
                       </div>
                     ))}
@@ -2425,41 +2454,44 @@ export default function OpportunityDetailPage() {
             </div>
           )}
 
-          <DialogFooter className="gap-2 sm:justify-between">
+          <DialogFooter className="flex-col gap-3 border-t pt-4 sm:flex-row sm:justify-between">
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => handleDownloadFundingInstructions(activeFundingInstructions)}
                 disabled={!activeFundingInstructions?.funding_document_id}
               >
-                <Download className="mr-2 h-4 w-4" />
+                <Download className="mr-2 h-3.5 w-3.5" />
                 Download PDF
               </Button>
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => {
                   setFundingShareEmail('')
                   setShowFundingShareDialog(true)
                 }}
                 disabled={!activeFundingInstructions?.subscription_id}
               >
-                <MessageSquare className="mr-2 h-4 w-4" />
+                <MessageSquare className="mr-2 h-3.5 w-3.5" />
                 Share by Email
               </Button>
               {activeFundingInstructions?.signed_pack_path ? (
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
                   onClick={() => handleViewSignedPack(activeFundingInstructions.signed_pack_path as string)}
                 >
-                  <Eye className="mr-2 h-4 w-4" />
+                  <Eye className="mr-2 h-3.5 w-3.5" />
                   View Signed Pack
                 </Button>
               ) : null}
             </div>
-            <Button type="button" variant="ghost" onClick={() => setShowFundingDialog(false)}>
+            <Button type="button" variant="ghost" size="sm" onClick={() => setShowFundingDialog(false)}>
               Close
             </Button>
           </DialogFooter>
