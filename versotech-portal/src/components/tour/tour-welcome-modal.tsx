@@ -14,16 +14,9 @@ import { motion } from 'framer-motion'
 import {
   Sparkles,
   ArrowRight,
-  Building2,
-  Briefcase,
-  Users,
-  Scale,
-  UserCircle,
-  Shield,
   Clock,
   Keyboard,
   ListChecks,
-  Check,
   RotateCcw
 } from 'lucide-react'
 import { useMemo } from 'react'
@@ -51,31 +44,6 @@ interface TourWelcomeModalProps {
   persona?: string
 }
 
-// Get the appropriate icon component for each persona type
-function getPersonaIcon(persona: string) {
-  switch (persona) {
-    case 'ceo':
-      return Shield
-    case 'staff':
-      return Users
-    case 'arranger':
-      return Briefcase
-    case 'investor':
-    case 'investor_entity':
-      return Building2
-    case 'investor_individual':
-      return UserCircle
-    case 'introducer':
-    case 'partner':
-    case 'commercial_partner':
-      return Users
-    case 'lawyer':
-      return Scale
-    default:
-      return Sparkles
-  }
-}
-
 // Unified gradient for tour icon (blue light, white dark)
 const tourGradient = { from: 'from-blue-500', to: 'to-blue-600', fromDark: 'dark:from-white', toDark: 'dark:to-gray-200' }
 
@@ -90,24 +58,58 @@ export function TourWelcomeModal({ open, onClose, onSkip, persona = 'investor' }
     () => getTourSteps(persona),
     [persona]
   )
-  const isInvestorWelcome = useMemo(
-    () => persona === 'investor' || persona === 'investor_entity' || persona === 'investor_individual',
-    [persona]
-  )
-  const PersonaIcon = useMemo(() => getPersonaIcon(persona), [persona])
   const highlights = useMemo(
-    () => isInvestorWelcome
-      ? [
-          'Access investment opportunities and start investing effortlessly',
-          'Stay in control by tracking your entities and investments in real time',
-          'Rely on expert support at every step',
-        ]
-      : [
-          'Interactive walkthrough of key features',
-          'Skip anytime or resume later',
-          'Restart from settings anytime',
-        ],
-    [isInvestorWelcome]
+    () => {
+      switch (persona) {
+        case 'investor':
+        case 'investor_entity':
+        case 'investor_individual':
+          return [
+            'Access investment opportunities and start investing effortlessly',
+            'Stay in control by tracking your entities and investments in real time',
+            'Rely on expert support at every step',
+          ]
+        case 'arranger':
+          return [
+            'Manage mandates, deals, and subscription packs from one workspace',
+            'Coordinate with introducers and track fee plans in real time',
+            'Rely on expert support at every step',
+          ]
+        case 'introducer':
+          return [
+            'Track your introductions, agreements, and commissions in one place',
+            'Monitor referral status and coordinate with arrangers seamlessly',
+            'Rely on expert support at every step',
+          ]
+        case 'partner':
+        case 'commercial_partner':
+          return [
+            'Manage your portfolio and track performance across vehicles',
+            'Stay on top of commissions and fee structures in real time',
+            'Rely on expert support at every step',
+          ]
+        case 'lawyer':
+          return [
+            'Review and manage signature tasks and legal documents',
+            'Track deal progress and coordinate with arrangers efficiently',
+            'Rely on expert support at every step',
+          ]
+        case 'ceo':
+        case 'staff':
+          return [
+            'Oversee approvals, deals, and investor activity from one dashboard',
+            'Access reconciliation, audit trails, and operational controls',
+            'Rely on expert support at every step',
+          ]
+        default:
+          return [
+            'Explore the platform features tailored to your role',
+            'Stay in control with real-time tracking and updates',
+            'Rely on expert support at every step',
+          ]
+      }
+    },
+    [persona]
   )
   const gradient = tourGradient
 
@@ -139,64 +141,35 @@ export function TourWelcomeModal({ open, onClose, onSkip, persona = 'investor' }
           />
 
           <DialogHeader className="text-center relative">
-            {isInvestorWelcome ? (
-              <motion.div
-                initial={{ opacity: 0, y: 16, scale: 0.96 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{
-                  type: 'spring',
-                  damping: 18,
-                  stiffness: 180,
-                  delay: 0.1
-                }}
-                className="mx-auto mb-5"
-              >
-                <div className="flex items-center justify-center gap-3.5">
-                  <div className="relative h-14 w-14 flex-shrink-0">
-                    <Image
-                      src="/versotech-icon.png"
-                      alt=""
-                      fill
-                      className="object-contain"
-                      priority
-                    />
-                  </div>
-                  <span
-                    style={{ fontFamily: 'var(--font-spartan), sans-serif', fontWeight: 700 }}
-                    className="text-4xl tracking-wide text-gray-900 dark:text-white"
-                  >
-                    VERSOTECH
-                  </span>
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{
+                type: 'spring',
+                damping: 18,
+                stiffness: 180,
+                delay: 0.1
+              }}
+              className="mx-auto mb-5"
+            >
+              <div className="flex items-center justify-center gap-3.5">
+                <div className="relative h-14 w-14 flex-shrink-0">
+                  <Image
+                    src="/versotech-icon.png"
+                    alt=""
+                    fill
+                    className="object-contain"
+                    priority
+                  />
                 </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{
-                  type: 'spring',
-                  damping: 15,
-                  stiffness: 200,
-                  delay: 0.1
-                }}
-                className="mx-auto mb-5"
-              >
-                <div className={`h-20 w-20 rounded-2xl bg-gradient-to-br ${gradient.from} ${gradient.to} ${gradient.fromDark} ${gradient.toDark} shadow-lg flex items-center justify-center`}>
-                  <motion.div
-                    animate={{
-                      rotateY: [0, 10, 0, -10, 0],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: 'easeInOut'
-                    }}
-                  >
-                    <PersonaIcon className="h-10 w-10 text-white dark:text-zinc-900" />
-                  </motion.div>
-                </div>
-              </motion.div>
-            )}
+                <span
+                  style={{ fontFamily: 'var(--font-spartan), sans-serif', fontWeight: 700 }}
+                  className="text-4xl tracking-wide text-gray-900 dark:text-white"
+                >
+                  VERSOTECH
+                </span>
+              </div>
+            </motion.div>
 
             <DialogTitle className="text-2xl font-bold text-foreground">
               {welcomeMessage.title}
@@ -233,26 +206,13 @@ export function TourWelcomeModal({ open, onClose, onSkip, persona = 'investor' }
 
           {/* Feature highlights */}
           <div className="mb-6">
-            {isInvestorWelcome ? (
-              <ul className="space-y-2.5 pl-5 text-left text-sm text-muted-foreground">
-                {highlights.map((highlight) => (
-                  <li key={highlight} className="list-disc marker:text-blue-600 dark:marker:text-white">
-                    {highlight}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="space-y-2.5">
-                {highlights.map((highlight) => (
-                  <div key={highlight} className="flex items-start gap-3 text-sm">
-                    <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-500/20">
-                      <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
-                    </div>
-                    <span className="text-muted-foreground">{highlight}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            <ul className="space-y-2.5 pl-5 text-left text-sm text-muted-foreground">
+              {highlights.map((highlight) => (
+                <li key={highlight} className="list-disc marker:text-blue-600 dark:marker:text-white">
+                  {highlight}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
