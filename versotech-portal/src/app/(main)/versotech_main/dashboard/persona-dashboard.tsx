@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ApprovedWelcomeBanner } from '@/components/onboarding/approved-welcome-banner'
 import { InvestorDashboard } from './investor-dashboard'
 import { IntroducerDashboard } from './introducer-dashboard'
 import { PartnerDashboard } from './partner-dashboard'
@@ -175,7 +174,6 @@ export function PersonaDashboard() {
   if (activePersona.persona_type === 'investor' && userId) {
     return (
       <>
-        <ApprovedWelcomeBanner />
         <InvestorDashboard
           investorId={activePersona.entity_id}
           userId={userId}
@@ -192,8 +190,7 @@ export function PersonaDashboard() {
     if (investmentInfo?.hasInvestments && investmentInfo.investorId) {
       return (
         <div className="space-y-5">
-          <ApprovedWelcomeBanner />
-          {/* Refined Context Switcher */}
+            {/* Refined Context Switcher */}
           <div className={`
             relative overflow-hidden rounded-xl
             ${isDark
@@ -306,7 +303,6 @@ export function PersonaDashboard() {
     // Regular introducer view (no investments)
     return (
       <>
-        <ApprovedWelcomeBanner />
         <IntroducerDashboard
           introducerId={activePersona.entity_id}
           userId={userId}
