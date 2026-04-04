@@ -1,31 +1,55 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+// Card components removed — using plain rounded-2xl divs matching investor dashboard pattern
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import {
   Briefcase,
   Users,
   UserPlus,
   Building2,
   Scale,
-  FileText,
-  Clock,
-  CheckCircle2,
   ArrowRight,
   ArrowUpRight,
   Loader2,
   AlertCircle,
-  TrendingUp,
   FileSignature,
+  Package,
+  Lock,
+  Calculator,
+  ClipboardList,
 } from 'lucide-react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+// Alert removed — using inline styled divs
 import { createClient } from '@/lib/supabase/client'
-import { formatCurrency, formatDate } from '@/lib/format'
+import { formatCurrency } from '@/lib/format'
+import { cn } from '@/lib/utils'
 import { useTheme } from '@/components/theme-provider'
 import { ArrangerOnboardingChecklist } from '@/components/arranger/arranger-onboarding-checklist'
+import {
+  type CurrencyTotals,
+  sumByCurrency,
+  mergeCurrencyTotals,
+  currencyTotalsEntries,
+  normalizeCurrencyCode,
+} from '@/lib/currency-totals'
+
+// ─── Types ───────────────────────────────────────────────
 
 type Persona = {
   persona_type: string
@@ -53,6 +77,19 @@ type ArrangerMetrics = {
   pendingAgreements: number
 }
 
+type EscrowMetrics = {
+  totalExpectedByCurrency: CurrencyTotals
+  totalFundedByCurrency: CurrencyTotals
+  totalOutstandingByCurrency: CurrencyTotals
+}
+
+type FeeMetrics = {
+  dueByCurrency: CurrencyTotals
+  invoicedByCurrency: CurrencyTotals
+  paidByCurrency: CurrencyTotals
+  pipelineByCurrency: CurrencyTotals
+}
+
 type RecentMandate = {
   id: string
   name: string
@@ -78,10 +115,33 @@ type SubscriptionPackMetrics = {
   totalPending: number
 }
 
+type DetailRow = {
+  dealName: string
+  count: number
+  amount: number
+  extra?: number
+  extra2?: number
+}
+
+// ─── Currency Styling ────────────────────────────────────
+
+const CURRENCY_COLORS: Record<string, { accent: string; bg: string; darkBg: string; bar: string }> = {
+  USD: { accent: 'text-emerald-500', bg: 'bg-emerald-50', darkBg: 'bg-emerald-500/10', bar: 'bg-emerald-500' },
+  EUR: { accent: 'text-blue-500', bg: 'bg-blue-50', darkBg: 'bg-blue-500/10', bar: 'bg-blue-500' },
+  GBP: { accent: 'text-violet-500', bg: 'bg-violet-50', darkBg: 'bg-violet-500/10', bar: 'bg-violet-500' },
+  CHF: { accent: 'text-rose-500', bg: 'bg-rose-50', darkBg: 'bg-rose-500/10', bar: 'bg-rose-500' },
+  ETH: { accent: 'text-cyan-500', bg: 'bg-cyan-50', darkBg: 'bg-cyan-500/10', bar: 'bg-cyan-500' },
+}
+const defaultCc = { accent: 'text-gray-500', bg: 'bg-gray-50', darkBg: 'bg-gray-500/10', bar: 'bg-gray-500' }
+const cc = (code: string) => CURRENCY_COLORS[code] || defaultCc
+
+// ─── Component ───────────────────────────────────────────
+
 export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashboardProps) {
   const { theme } = useTheme()
   const isDark = theme === 'staff-dark'
 
+  // Core state
   const [loading, setLoading] = useState(true)
   const [metrics, setMetrics] = useState<ArrangerMetrics | null>(null)
   const [arrangerInfo, setArrangerInfo] = useState<{
@@ -93,10 +153,29 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
   const [pendingAgreements, setPendingAgreements] = useState<PendingAgreement[]>([])
   const [subPackMetrics, setSubPackMetrics] = useState<SubscriptionPackMetrics | null>(null)
 
+  // New financial state
+  const [commitmentByCurrency, setCommitmentByCurrency] = useState<CurrencyTotals>({})
+  const [escrowMetrics, setEscrowMetrics] = useState<EscrowMetrics | null>(null)
+  const [feeMetrics, setFeeMetrics] = useState<FeeMetrics | null>(null)
+
+  // Refs for dialog queries
+  const dealIdsRef = useRef<string[]>([])
+
+  // Dialog state
+  const [detailDialog, setDetailDialog] = useState<{
+    open: boolean
+    title: string
+    data: DetailRow[]
+    loading: boolean
+    columns: string[]
+  }>({ open: false, title: '', data: [], loading: false, columns: [] })
+
   const formatAmountWithCurrency = (amount: number, currency?: string | null) => {
     if (currency) return formatCurrency(amount, currency)
     return amount.toLocaleString('en-US')
   }
+
+  // ─── Data Fetching ──────────────────────────────────────
 
   useEffect(() => {
     async function fetchData() {
@@ -118,7 +197,7 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
           })
         }
 
-        // VEHICLE-LEVEL ARCHITECTURE: Fetch vehicles assigned to this arranger first
+        // VEHICLE-LEVEL: Fetch vehicles assigned to this arranger
         const { data: arrangerVehicles } = await supabase
           .from('vehicles')
           .select('id, name, lawyer_id')
@@ -126,7 +205,7 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
 
         const vehicleIds = (arrangerVehicles || []).map((v: any) => v.id)
 
-        // Then fetch all deals under those vehicles (mandates)
+        // Fetch all deals under those vehicles (mandates)
         let deals: any[] = []
         if (vehicleIds.length > 0) {
           const { data: vehicleDeals } = await supabase
@@ -138,7 +217,6 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
         }
 
         const mandates = deals || []
-        // Deal statuses: draft, open, allocation_pending, closed, cancelled
         const activeMandates = mandates.filter((d: any) => d.status === 'open' || d.status === 'allocation_pending')
         const pendingMandates = mandates.filter((d: any) => d.status === 'draft')
 
@@ -152,13 +230,81 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
         })))
 
         const dealIds = mandates.map((d: any) => d.id)
+        dealIdsRef.current = dealIds
 
-        // Count related entities - SCOPED TO ARRANGER'S DEALS
+        // ── Commitment & Escrow by Currency ──
+        let totalCommitmentByCurrency: CurrencyTotals = {}
+        let escrow: EscrowMetrics = {
+          totalExpectedByCurrency: {},
+          totalFundedByCurrency: {},
+          totalOutstandingByCurrency: {},
+        }
+
+        if (dealIds.length > 0) {
+          const { data: subscriptions } = await supabase
+            .from('subscriptions')
+            .select('commitment, funded_amount, outstanding_amount, currency, status')
+            .in('deal_id', dealIds)
+            .in('status', ['committed', 'partially_funded', 'funded', 'active', 'signed'])
+
+          totalCommitmentByCurrency = sumByCurrency(
+            subscriptions || [],
+            (s: any) => s.commitment,
+            (s: any) => s.currency
+          )
+
+          escrow = {
+            totalExpectedByCurrency: sumByCurrency(
+              subscriptions || [],
+              (s: any) => s.commitment,
+              (s: any) => s.currency
+            ),
+            totalFundedByCurrency: sumByCurrency(
+              subscriptions || [],
+              (s: any) => s.funded_amount,
+              (s: any) => s.currency
+            ),
+            totalOutstandingByCurrency: sumByCurrency(
+              subscriptions || [],
+              (s: any) => s.outstanding_amount,
+              (s: any) => s.currency
+            ),
+          }
+        }
+
+        setCommitmentByCurrency(totalCommitmentByCurrency)
+        setEscrowMetrics(escrow)
+
+        // ── Fee Metrics (scoped to arranger's deals) ──
+        let validFees: any[] = []
+        if (dealIds.length > 0) {
+          const { data: feeData } = await supabase
+            .from('fee_events')
+            .select('computed_amount, status, currency')
+            .in('deal_id', dealIds)
+
+          validFees = (feeData || []).filter((f: any) => f.status !== 'voided' && f.status !== 'cancelled')
+        }
+        const accruedFees = validFees.filter((f: any) => f.status === 'accrued')
+        const invoicedFees = validFees.filter((f: any) => f.status === 'invoiced')
+        const paidFees = validFees.filter((f: any) => f.status === 'paid')
+
+        const dueByCurrency = sumByCurrency(accruedFees, (f: any) => f.computed_amount, (f: any) => f.currency)
+        const invoicedByCurrency = sumByCurrency(invoicedFees, (f: any) => f.computed_amount, (f: any) => f.currency)
+        const paidByCurrency = sumByCurrency(paidFees, (f: any) => f.computed_amount, (f: any) => f.currency)
+
+        setFeeMetrics({
+          dueByCurrency,
+          invoicedByCurrency,
+          paidByCurrency,
+          pipelineByCurrency: mergeCurrencyTotals(dueByCurrency, invoicedByCurrency),
+        })
+
+        // ── Entity Counts (scoped to arranger's deals) ──
         let partnersCount = 0
         let introducersCount = 0
         let cpCount = 0
 
-        // VEHICLE-LEVEL: Lawyers are assigned to vehicles, count them regardless of deals
         const uniqueLawyers = new Set(
           (arrangerVehicles || [])
             .filter((v: any) => v.lawyer_id)
@@ -167,13 +313,11 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
         const lawyersCount = uniqueLawyers.size
 
         if (dealIds.length > 0) {
-          // Get subscriptions on arranger's deals for relationship tracking
           const { data: dealSubscriptions } = await supabase
             .from('subscriptions')
             .select('id, investor_id, introducer_id, proxy_commercial_partner_id')
             .in('deal_id', dealIds)
 
-          // Count unique introducers who have introduced to arranger's deals
           const introducerIds = new Set(
             (dealSubscriptions || [])
               .filter((s: any) => s.introducer_id)
@@ -181,8 +325,6 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
           )
           introducersCount = introducerIds.size
 
-          // Count unique partners who have referred investors to arranger's deals
-          // Partners are tracked via deal_memberships.referred_by_entity_id (not subscriptions)
           const { data: partnerReferrals } = await supabase
             .from('deal_memberships')
             .select('referred_by_entity_id')
@@ -190,12 +332,10 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
             .eq('referred_by_entity_type', 'partner')
             .not('referred_by_entity_id', 'is', null)
 
-          const uniquePartnerIds = new Set(
+          partnersCount = new Set(
             (partnerReferrals || []).map((r: any) => r.referred_by_entity_id)
-          )
-          partnersCount = uniquePartnerIds.size
+          ).size
 
-          // Count unique commercial partners on arranger's deals (via subscriptions)
           const cpIds = new Set(
             (dealSubscriptions || [])
               .filter((s: any) => s.proxy_commercial_partner_id)
@@ -204,13 +344,11 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
           cpCount = cpIds.size
         }
 
-        // Fetch pending agreements (introducer and placement) - SCOPED TO THIS ARRANGER
+        // ── Pending Agreements ──
         const { data: introducerAgreements } = await supabase
           .from('introducer_agreements')
           .select(`
-            id,
-            status,
-            created_at,
+            id, status, created_at,
             introducers (id, display_name, legal_name)
           `)
           .eq('arranger_id', arrangerId)
@@ -221,9 +359,7 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
         const { data: placementAgreements } = await supabase
           .from('placement_agreements')
           .select(`
-            id,
-            status,
-            created_at,
+            id, status, created_at,
             commercial_partners (id, display_name, legal_name)
           `)
           .eq('arranger_id', arrangerId)
@@ -255,21 +391,17 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
           })
         })
 
-        // Sort by created_at and take top 5
         allPendingAgreements.sort((a, b) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         )
         setPendingAgreements(allPendingAgreements.slice(0, 5))
 
-        // SUBSCRIPTION PACK PIPELINE METRICS (User Story 2.6.1)
+        // ── Subscription Pack Pipeline ──
         if (dealIds.length > 0) {
           const { data: subDocs } = await supabase
             .from('documents')
             .select(`
-              id,
-              subscription_id,
-              status,
-              ready_for_signature,
+              id, subscription_id, status, ready_for_signature,
               signature_requests(id, signer_role, status)
             `)
             .not('subscription_id', 'is', null)
@@ -290,13 +422,9 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
           arrangerDocs.forEach((doc: any) => {
             if (doc.status !== 'pending_signature') return
             const requests = doc.signature_requests || []
-            const hasPendingInvestor = requests.some((r: any) => r.signer_role === 'investor' && r.status === 'pending')
-            const hasPendingArranger = requests.some((r: any) => r.signer_role === 'arranger' && r.status === 'pending')
-            const hasPendingCEO = requests.some((r: any) => r.signer_role === 'admin' && r.status === 'pending')
-
-            if (hasPendingInvestor) awaitingInvestor++
-            if (hasPendingArranger) awaitingArranger++
-            if (hasPendingCEO) awaitingCEO++
+            if (requests.some((r: any) => r.signer_role === 'investor' && r.status === 'pending')) awaitingInvestor++
+            if (requests.some((r: any) => r.signer_role === 'arranger' && r.status === 'pending')) awaitingArranger++
+            if (requests.some((r: any) => r.signer_role === 'admin' && r.status === 'pending')) awaitingCEO++
           })
 
           const startOfMonth = new Date()
@@ -347,16 +475,95 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
     fetchData()
   }, [arrangerId])
 
+  // ─── Dialog Detail Fetchers ─────────────────────────────
+
+  async function openOutstandingDetail(currency: string) {
+    setDetailDialog({ open: true, title: `Outstanding — ${currency}`, data: [], loading: true, columns: ['Deal', 'Subscriptions', 'Commitment', 'Funded', 'Outstanding'] })
+    try {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('subscriptions')
+        .select('commitment, funded_amount, outstanding_amount, currency, deal_id, deals(name)')
+        .in('deal_id', dealIdsRef.current)
+        .in('status', ['committed', 'partially_funded', 'funded', 'active', 'signed'])
+
+      const filtered = (data || []).filter((s: any) => normalizeCurrencyCode(s.currency) === currency && (s.outstanding_amount || 0) > 0)
+
+      // Group by deal
+      const byDeal = new Map<string, { name: string; count: number; commitment: number; funded: number; outstanding: number }>()
+      filtered.forEach((s: any) => {
+        const dealName = (s.deals as any)?.name || 'Unknown Deal'
+        const existing = byDeal.get(dealName) || { name: dealName, count: 0, commitment: 0, funded: 0, outstanding: 0 }
+        existing.count++
+        existing.commitment += s.commitment || 0
+        existing.funded += s.funded_amount || 0
+        existing.outstanding += s.outstanding_amount || 0
+        byDeal.set(dealName, existing)
+      })
+
+      const rows: DetailRow[] = Array.from(byDeal.values()).map(d => ({
+        dealName: d.name,
+        count: d.count,
+        amount: d.commitment,
+        extra: d.funded,
+        extra2: d.outstanding,
+      }))
+
+      setDetailDialog(prev => ({ ...prev, data: rows, loading: false }))
+    } catch {
+      setDetailDialog(prev => ({ ...prev, loading: false }))
+    }
+  }
+
+  async function openFeesDetail(currency: string, type: 'pipeline' | 'due' | 'invoiced' | 'paid') {
+    const labels: Record<string, string> = { pipeline: 'Fees Pipeline', due: 'Due Fees', invoiced: 'Invoiced Fees', paid: 'Paid Fees' }
+    setDetailDialog({ open: true, title: `${labels[type]} — ${currency}`, data: [], loading: true, columns: ['Deal', 'Events', 'Total Amount'] })
+    try {
+      const supabase = createClient()
+      const statusFilter = type === 'pipeline' ? ['accrued', 'invoiced'] : type === 'due' ? ['accrued'] : [type]
+
+      const { data } = await supabase
+        .from('fee_events')
+        .select('computed_amount, status, currency, deal_id, deals(name)')
+        .in('deal_id', dealIdsRef.current)
+        .in('status', statusFilter)
+
+      const filtered = (data || []).filter((f: any) => normalizeCurrencyCode(f.currency) === currency)
+
+      const byDeal = new Map<string, { name: string; count: number; amount: number }>()
+      filtered.forEach((f: any) => {
+        const dealName = (f.deals as any)?.name || 'Unknown Deal'
+        const existing = byDeal.get(dealName) || { name: dealName, count: 0, amount: 0 }
+        existing.count++
+        existing.amount += f.computed_amount || 0
+        byDeal.set(dealName, existing)
+      })
+
+      const rows: DetailRow[] = Array.from(byDeal.values()).map(d => ({
+        dealName: d.name,
+        count: d.count,
+        amount: d.amount,
+      }))
+
+      setDetailDialog(prev => ({ ...prev, data: rows, loading: false }))
+    } catch {
+      setDetailDialog(prev => ({ ...prev, loading: false }))
+    }
+  }
+
+  // ─── Loading ────────────────────────────────────────────
+
   if (loading) {
     return (
       <div className="p-8 text-center flex flex-col items-center gap-3">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        <p className="text-gray-500">Loading dashboard...</p>
+        <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
+        <p className="text-zinc-400">Loading dashboard...</p>
       </div>
     )
   }
 
-  // Deal status enum: draft, open, allocation_pending, closed, cancelled
+  // ─── Style Maps ─────────────────────────────────────────
+
   const dealStatusStyles: Record<string, string> = {
     draft: 'bg-gray-500/20 text-gray-400',
     open: 'bg-green-500/20 text-green-400',
@@ -383,399 +590,408 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
     pending_cp_signature: 'Awaiting Signature',
   }
 
+  // Fixed currencies per Linear issue — always show all 5
+  const CURRENCIES = ['USD', 'CHF', 'EUR', 'GBP', 'ETH'] as const
+
+  const commitmentEntries = currencyTotalsEntries(commitmentByCurrency)
+
+  // ─── Render ─────────────────────────────────────────────
+
+  // Unified design tokens — high contrast, readable, consistent
+  const S = {
+    card: cn("rounded-2xl border p-5", isDark ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-white"),
+    cardHover: cn("rounded-2xl border p-5 transition-all cursor-pointer", isDark ? "border-white/10 bg-white/[0.04] hover:border-white/25 hover:bg-white/[0.08]" : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-md"),
+    heading: cn("text-sm font-semibold tracking-tight", isDark ? "text-zinc-100" : "text-slate-900"),
+    label: cn("text-xs font-medium uppercase tracking-wider", isDark ? "text-zinc-300" : "text-slate-600"),
+    value: cn("text-2xl font-semibold tabular-nums tracking-tight", isDark ? "text-white" : "text-slate-900"),
+    valueSm: cn("text-base font-semibold tabular-nums", isDark ? "text-white" : "text-slate-900"),
+    helper: cn("text-xs font-medium", isDark ? "text-zinc-400" : "text-slate-500"),
+    cta: "mt-auto inline-flex items-center gap-1 pt-3 text-xs font-semibold text-primary",
+  }
+
+  // Clickable currency row — used for Outstanding + Fees Pipeline
+  const currencyRow = (code: string, amount: number, onClick: () => void) => {
+    const c = cc(code)
+    return (
+      <button key={code} onClick={onClick} className={cn("w-full flex items-center justify-between rounded-xl p-3 border transition-colors cursor-pointer", isDark ? `${c.darkBg} border-white/5 hover:border-white/20` : `${c.bg} border-black/5 hover:border-black/15`)}>
+        <span className={cn("text-xs font-semibold uppercase", c.accent)}>{code}</span>
+        <span className={S.valueSm}>{formatCurrency(amount, code)}</span>
+      </button>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            Arranger Dashboard
-          </h1>
-          <p className={`mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            {arrangerInfo?.legal_name || persona.entity_name}
-          </p>
-        </div>
-        {arrangerInfo?.kyc_status && (
-          <Badge
-            variant="outline"
-            className={
-              arrangerInfo.kyc_status === 'approved'
-                ? 'border-green-500/50 text-green-500'
-                : arrangerInfo.kyc_status === 'pending'
-                ? 'border-amber-500/50 text-amber-500'
-                : 'border-gray-500/50 text-gray-500'
-            }
-          >
-            KYC: {arrangerInfo.kyc_status}
-          </Badge>
-        )}
+      <div>
+        <h1 className={cn("text-2xl font-semibold tracking-tight", isDark ? "text-white" : "text-slate-900")}>
+          Arranger Dashboard
+        </h1>
+        <p className={cn("mt-1 text-sm", isDark ? "text-zinc-300" : "text-slate-600")}>
+          {arrangerInfo?.legal_name || persona.entity_name}
+        </p>
       </div>
 
       {/* Alert for inactive/pending arranger */}
       {arrangerInfo && arrangerInfo.status !== 'active' && (
-        <Card className={`border-amber-500/30 ${isDark ? 'bg-amber-500/10' : 'bg-amber-50'}`}>
-          <CardContent className="py-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-amber-500/20">
-                <AlertCircle className="h-5 w-5 text-amber-500" />
-              </div>
-              <div>
-                <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Account {arrangerInfo.status === 'pending' ? 'Pending Approval' : 'Inactive'}
-                </p>
-                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {arrangerInfo.status === 'pending'
-                    ? 'Your arranger account is pending approval. Contact the VERSO team for status updates.'
-                    : 'Your arranger account is currently inactive. Contact the VERSO team for assistance.'}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className={cn("rounded-2xl border p-4 flex items-center gap-3", isDark ? "border-amber-500/30 bg-amber-500/10" : "border-amber-300 bg-amber-50")}>
+          <AlertCircle className="h-5 w-5 text-amber-500 shrink-0" />
+          <div>
+            <p className={cn("font-medium text-sm", isDark ? "text-white" : "text-slate-900")}>
+              Account {arrangerInfo.status === 'pending' ? 'Pending Approval' : 'Inactive'}
+            </p>
+            <p className={S.helper}>
+              Contact the VERSO team for {arrangerInfo.status === 'pending' ? 'status updates' : 'assistance'}.
+            </p>
+          </div>
+        </div>
       )}
 
-      {/* Pending Agreements Alert */}
-      {metrics && metrics.pendingAgreements > 0 && (
-        <Card className={`border-blue-500/30 ${isDark ? 'bg-blue-500/10' : 'bg-blue-50'}`}>
-          <CardContent className="py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-blue-500/20">
-                  <FileSignature className="h-5 w-5 text-blue-500" />
-                </div>
-                <div>
-                  <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    {metrics.pendingAgreements} Pending Agreement{metrics.pendingAgreements !== 1 ? 's' : ''}
-                  </p>
-                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Agreements awaiting approval or signature
-                  </p>
-                </div>
-              </div>
-              <Button asChild>
-                <Link href="/versotech_main/versosign">
-                  View in VERSOSIGN
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Onboarding Checklist - Show when KYC not approved */}
+      {/* Onboarding Checklist */}
       {arrangerInfo?.kyc_status !== 'approved' && (
         <ArrangerOnboardingChecklist arrangerId={arrangerId} compact />
       )}
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Link href="/versotech_main/my-mandates" className="group">
-          <Card className={`h-full transition-colors ${isDark ? 'bg-white/5 border-white/10 hover:border-primary/40 hover:bg-white/10' : 'hover:border-primary/40 hover:bg-primary/5'}`}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                Total Mandates
-              </CardTitle>
-              <Briefcase className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                {metrics?.totalMandates || 0}
-              </div>
-              <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                {metrics?.activeMandates || 0} active, {metrics?.pendingMandates || 0} pending
-              </p>
-              <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary">
-                View mandates
-                <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-              </span>
-            </CardContent>
-          </Card>
+      {/* ── 1. Top Boxes: Total Mandates · Active Network · Assigned Lawyers ── */}
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
+        <Link href="/versotech_main/my-mandates" className={cn(S.cardHover, "group flex flex-col")}>
+          <p className={S.label}>Total Mandates</p>
+          <p className={cn(S.value, "mt-2")}>{metrics?.totalMandates || 0}</p>
+          <p className={cn(S.helper, "mt-1")}>{metrics?.activeMandates || 0} active · {metrics?.pendingMandates || 0} pending</p>
+          <span className={S.cta}>View mandates <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" /></span>
         </Link>
-
-        <Link href="/versotech_main/my-introducers" className="group">
-          <Card className={`h-full transition-colors ${isDark ? 'bg-white/5 border-white/10 hover:border-primary/40 hover:bg-white/10' : 'hover:border-primary/40 hover:bg-primary/5'}`}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                Active Network
-              </CardTitle>
-              <Users className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                {(metrics?.totalPartners || 0) + (metrics?.totalIntroducers || 0) + (metrics?.totalCommercialPartners || 0)}
-              </div>
-              <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                On your mandates
-              </p>
-              <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary">
-                View network
-                <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-              </span>
-            </CardContent>
-          </Card>
+        <Link href="/versotech_main/my-introducers" className={cn(S.cardHover, "group flex flex-col")}>
+          <p className={S.label}>Active Network</p>
+          <p className={cn(S.value, "mt-2")}>{(metrics?.totalPartners || 0) + (metrics?.totalIntroducers || 0) + (metrics?.totalCommercialPartners || 0)}</p>
+          <p className={cn(S.helper, "mt-1")}>Partners, introducers &amp; CPs</p>
+          <span className={S.cta}>View network <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" /></span>
         </Link>
-
-        <Link href="/versotech_main/my-lawyers" className="group">
-          <Card className={`h-full transition-colors ${isDark ? 'bg-white/5 border-white/10 hover:border-primary/40 hover:bg-white/10' : 'hover:border-primary/40 hover:bg-primary/5'}`}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                Assigned Lawyers
-              </CardTitle>
-              <Scale className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                {metrics?.totalLawyers || 0}
-              </div>
-              <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                On your mandates
-              </p>
-              <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary">
-                View lawyers
-                <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-              </span>
-            </CardContent>
-          </Card>
+        <Link href="/versotech_main/my-lawyers" className={cn(S.cardHover, "group flex flex-col")}>
+          <p className={S.label}>Assigned Lawyers</p>
+          <p className={cn(S.value, "mt-2")}>{metrics?.totalLawyers || 0}</p>
+          <p className={cn(S.helper, "mt-1")}>Across your vehicles</p>
+          <span className={S.cta}>View lawyers <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" /></span>
         </Link>
       </div>
 
-      {/* NEW: Subscription Pack Pipeline (User Story 2.6.1) */}
-      <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
-        <CardHeader>
-          <CardTitle className={isDark ? 'text-white' : ''}>Subscription Pack Pipeline</CardTitle>
-          <CardDescription>Document signing status across your mandates</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className={`text-center p-4 rounded-lg ${isDark ? 'bg-amber-500/10' : 'bg-amber-50'}`}>
-              <p className="text-2xl font-bold text-amber-500">{subPackMetrics?.awaitingInvestorSignature || 0}</p>
-              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Awaiting Investor</p>
-            </div>
-            <div className={`text-center p-4 rounded-lg ${isDark ? 'bg-purple-500/10' : 'bg-purple-50'}`}>
-              <p className="text-2xl font-bold text-purple-500">{subPackMetrics?.awaitingArrangerSignature || 0}</p>
-              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Awaiting Your Signature</p>
-            </div>
-            <div className={`text-center p-4 rounded-lg ${isDark ? 'bg-blue-500/10' : 'bg-blue-50'}`}>
-              <p className="text-2xl font-bold text-blue-500">{subPackMetrics?.awaitingCEOSignature || 0}</p>
-              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Awaiting CEO</p>
-            </div>
-            <div className={`text-center p-4 rounded-lg ${isDark ? 'bg-green-500/10' : 'bg-green-50'}`}>
-              <p className="text-2xl font-bold text-green-500">{subPackMetrics?.signedThisMonth || 0}</p>
-              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Signed This Month</p>
-            </div>
+      {/* ── 2. Total Commitment — one box per currency, always all 5 ── */}
+      <div className={S.card}>
+        <p className={S.heading}>Total Commitment</p>
+        <div className="mt-3 grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+          {CURRENCIES.map((code) => {
+            const c = cc(code)
+            return (
+              <div key={code} className={cn("rounded-xl border p-4 flex flex-col", isDark ? `${c.darkBg} border-white/5` : `${c.bg} border-black/5`)}>
+                <p className={cn("text-xs font-semibold uppercase tracking-wider", c.accent)}>{code}</p>
+                <p className={cn(S.valueSm, "mt-1.5")}>{formatCurrency(commitmentByCurrency[code] || 0, code)}</p>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* ── 5. Escrow Funding Status — always all 5 currencies ── */}
+      <div className={S.card}>
+        <p className={S.heading}>Escrow Funding Status</p>
+        <div className="mt-3 space-y-3">
+          {CURRENCIES.map((code) => {
+            const funded = escrowMetrics?.totalFundedByCurrency[code] || 0
+            const expected = escrowMetrics?.totalExpectedByCurrency[code] || 0
+            const pct = expected > 0 ? (funded / expected) * 100 : 0
+            const c = cc(code)
+            return (
+              <div key={code}>
+                <div className="flex items-baseline justify-between mb-1">
+                  <span className={cn("text-sm font-semibold tabular-nums", isDark ? "text-white" : "text-slate-900")}>
+                    <span className={cn("text-xs mr-1.5", c.accent)}>{code}</span>
+                    {formatCurrency(funded, code)}
+                  </span>
+                  <span className={cn(S.helper, "font-medium tabular-nums")}>{pct.toFixed(1)}% funded</span>
+                </div>
+                <div className={cn("h-2 w-full rounded-full overflow-hidden", isDark ? "bg-white/10" : "bg-slate-200")}>
+                  <div className={cn("h-full rounded-full transition-all duration-500", c.bar)} style={{ width: `${Math.min(pct, 100)}%` }} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* ── 6 & 7. Outstanding + Fees Pipeline — always all 5 currencies, clickable ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div className={S.card}>
+          <p className={S.heading}>Outstanding</p>
+          <p className={cn(S.helper, "mt-0.5 mb-3")}>Click for details</p>
+          <div className="space-y-2">
+            {CURRENCIES.map((code) => currencyRow(code, escrowMetrics?.totalOutstandingByCurrency[code] || 0, () => openOutstandingDetail(code)))}
           </div>
-          {/* Action alert if arranger has docs to sign */}
-          {(subPackMetrics?.awaitingArrangerSignature || 0) > 0 && (
-            <Alert className={`mt-4 border-purple-500/30 ${isDark ? 'bg-purple-500/10' : 'bg-purple-50'}`}>
+        </div>
+        <div className={S.card}>
+          <p className={S.heading}>Fees Pipeline</p>
+          <p className={cn(S.helper, "mt-0.5 mb-3")}>Click for details</p>
+          <div className="space-y-2">
+            {CURRENCIES.map((code) => currencyRow(code, feeMetrics?.pipelineByCurrency[code] || 0, () => openFeesDetail(code, 'pipeline')))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── 8. Fees Payment Status — always all 5 currencies ── */}
+      <div className={S.card}>
+        <p className={S.heading}>Fees Payment Status</p>
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className={cn("border-b", isDark ? "border-white/10" : "border-slate-200")}>
+                <th className={cn("text-left py-2 pr-4", S.label)}>Currency</th>
+                <th className={cn("text-right py-2 px-4", S.label)}>Due</th>
+                <th className={cn("text-right py-2 px-4", S.label)}>Invoiced</th>
+                <th className={cn("text-right py-2 pl-4", S.label)}>Paid</th>
+              </tr>
+            </thead>
+            <tbody>
+              {CURRENCIES.map((code) => {
+                const due = feeMetrics?.dueByCurrency[code] || 0
+                const inv = feeMetrics?.invoicedByCurrency[code] || 0
+                const paid = feeMetrics?.paidByCurrency[code] || 0
+                return (
+                  <tr key={code} className={cn("border-b last:border-0", isDark ? "border-white/5" : "border-slate-100")}>
+                    <td className="py-3 pr-4"><span className={cn(S.label, cc(code).accent)}>{code}</span></td>
+                    <td className="text-right py-3 px-4">
+                      {due > 0 ? <button onClick={() => openFeesDetail(code, 'due')} className={cn("tabular-nums font-semibold hover:underline cursor-pointer", isDark ? "text-amber-400" : "text-amber-600")}>{formatCurrency(due, code)}</button> : <span className={cn("tabular-nums", isDark ? "text-zinc-500" : "text-slate-400")}>—</span>}
+                    </td>
+                    <td className="text-right py-3 px-4">
+                      {inv > 0 ? <button onClick={() => openFeesDetail(code, 'invoiced')} className={cn("tabular-nums font-semibold hover:underline cursor-pointer", isDark ? "text-blue-400" : "text-blue-600")}>{formatCurrency(inv, code)}</button> : <span className={cn("tabular-nums", isDark ? "text-zinc-500" : "text-slate-400")}>—</span>}
+                    </td>
+                    <td className="text-right py-3 pl-4">
+                      {paid > 0 ? <button onClick={() => openFeesDetail(code, 'paid')} className={cn("tabular-nums font-semibold hover:underline cursor-pointer", isDark ? "text-green-400" : "text-green-600")}>{formatCurrency(paid, code)}</button> : <span className={cn("tabular-nums", isDark ? "text-zinc-500" : "text-slate-400")}>—</span>}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ── Subscription Pack Pipeline ── */}
+      <div className={S.card}>
+        <p className={S.heading}>Subscription Pack Pipeline</p>
+        <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Link href="/versotech_main/subscription-packs" className={cn("rounded-xl border p-4 text-center transition-all hover:scale-[1.02]", isDark ? "bg-amber-500/10 border-white/5 hover:border-amber-500/30" : "bg-amber-50 border-amber-100/50 hover:border-amber-300")}>
+            <p className={cn(S.value, "text-amber-500")}>{subPackMetrics?.awaitingInvestorSignature || 0}</p>
+            <p className={cn(S.helper, "mt-1")}>Awaiting Investor</p>
+          </Link>
+          <Link href="/versotech_main/subscription-packs" className={cn("rounded-xl border p-4 text-center transition-all hover:scale-[1.02]", isDark ? "bg-purple-500/10 border-white/5 hover:border-purple-500/30" : "bg-purple-50 border-purple-100/50 hover:border-purple-300")}>
+            <p className={cn(S.value, "text-purple-500")}>{subPackMetrics?.awaitingArrangerSignature || 0}</p>
+            <p className={cn(S.helper, "mt-1")}>Awaiting Your Signature</p>
+          </Link>
+          <Link href="/versotech_main/subscription-packs" className={cn("rounded-xl border p-4 text-center transition-all hover:scale-[1.02]", isDark ? "bg-blue-500/10 border-white/5 hover:border-blue-500/30" : "bg-blue-50 border-blue-100/50 hover:border-blue-300")}>
+            <p className={cn(S.value, "text-blue-500")}>{subPackMetrics?.awaitingCEOSignature || 0}</p>
+            <p className={cn(S.helper, "mt-1")}>Awaiting CEO</p>
+          </Link>
+          <Link href="/versotech_main/subscription-packs" className={cn("rounded-xl border p-4 text-center transition-all hover:scale-[1.02]", isDark ? "bg-green-500/10 border-white/5 hover:border-green-500/30" : "bg-green-50 border-green-100/50 hover:border-green-300")}>
+            <p className={cn(S.value, "text-green-500")}>{subPackMetrics?.signedThisMonth || 0}</p>
+            <p className={cn(S.helper, "mt-1")}>Signed This Month</p>
+          </Link>
+        </div>
+        {(subPackMetrics?.awaitingArrangerSignature || 0) > 0 && (
+          <div className={cn("mt-3 rounded-xl border p-3 flex items-center justify-between", isDark ? "border-purple-500/30 bg-purple-500/10" : "border-purple-200 bg-purple-50")}>
+            <div className="flex items-center gap-2">
               <FileSignature className="h-4 w-4 text-purple-500" />
-              <AlertDescription className={`flex items-center justify-between ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                <span>You have {subPackMetrics?.awaitingArrangerSignature} document(s) awaiting your signature.</span>
-                <Button variant="link" asChild className="p-0 h-auto text-purple-500">
-                  <Link href="/versotech_main/versosign">Sign Now →</Link>
-                </Button>
-              </AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Entity Breakdown */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-pink-500/20">
-                <Users className="h-6 w-6 text-pink-500" />
-              </div>
-              <div>
-                <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {metrics?.totalPartners || 0}
-                </p>
-                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Partners</p>
-              </div>
+              <span className={cn("text-sm", isDark ? "text-gray-300" : "text-slate-700")}>{subPackMetrics?.awaitingArrangerSignature} doc(s) awaiting your signature</span>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-orange-500/20">
-                <UserPlus className="h-6 w-6 text-orange-500" />
-              </div>
-              <div>
-                <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {metrics?.totalIntroducers || 0}
-                </p>
-                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Introducers</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-cyan-500/20">
-                <Building2 className="h-6 w-6 text-cyan-500" />
-              </div>
-              <div>
-                <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {metrics?.totalCommercialPartners || 0}
-                </p>
-                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Commercial Partners</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Mandates */}
-        <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className={isDark ? 'text-white' : ''}>Recent Mandates</CardTitle>
-              <CardDescription>Your managed deals</CardDescription>
-            </div>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/versotech_main/my-mandates">
-                View All
-                <ArrowRight className="h-4 w-4 ml-1" />
-              </Link>
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {recentMandates.length === 0 ? (
-              <div className="text-center py-8">
-                <Briefcase className={`h-10 w-10 mx-auto mb-3 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
-                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  No mandates assigned yet
-                </p>
-                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'} mt-1`}>
-                  Contact the VERSO team to be assigned mandates
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {recentMandates.map((mandate) => (
-                  <Link
-                    key={mandate.id}
-                    href={`/versotech_main/my-mandates`}
-                    className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
-                      isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-50 hover:bg-gray-100'
-                    }`}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        {mandate.name}
-                      </p>
-                        <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                          {mandate.target_amount
-                          ? `${formatAmountWithCurrency(mandate.target_amount, mandate.currency)} target`
-                          : 'No target set'}
-                        </p>
-                    </div>
-                    <Badge className={dealStatusStyles[mandate.status] || 'bg-gray-500/20 text-gray-400'}>
-                      {mandate.status}
-                    </Badge>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Pending Agreements */}
-        <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className={isDark ? 'text-white' : ''}>Pending Agreements</CardTitle>
-              <CardDescription>Agreements awaiting action</CardDescription>
-            </div>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/versotech_main/versosign">
-                View All
-                <ArrowRight className="h-4 w-4 ml-1" />
-              </Link>
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {pendingAgreements.length === 0 ? (
-              <div className="text-center py-8">
-                <FileSignature className={`h-10 w-10 mx-auto mb-3 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
-                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  No pending agreements
-                </p>
-                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'} mt-1`}>
-                  All agreements are up to date
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {pendingAgreements.map((agreement) => (
-                  <div
-                    key={agreement.id}
-                    className={`flex items-center justify-between p-3 rounded-lg ${
-                      isDark ? 'bg-white/5' : 'bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        {agreement.entity_name}
-                      </p>
-                      <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {agreement.entity_type === 'introducer' ? 'Introducer Agreement' : 'Placement Agreement'}
-                      </p>
-                    </div>
-                    <Badge className={agreementStatusStyles[agreement.status] || 'bg-gray-500/20 text-gray-400'}>
-                      {agreementStatusLabels[agreement.status] || agreement.status}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
-        <CardHeader>
-          <CardTitle className={isDark ? 'text-white' : ''}>Quick Actions</CardTitle>
-          <CardDescription>Common tasks and workflows</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button variant="outline" asChild className="h-auto py-4 flex-col gap-2">
-              <Link href="/versotech_main/my-mandates">
-                <Briefcase className="h-5 w-5" />
-                <span>View Mandates</span>
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="h-auto py-4 flex-col gap-2">
-              <Link href="/versotech_main/my-partners">
-                <Users className="h-5 w-5" />
-                <span>My Partners</span>
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="h-auto py-4 flex-col gap-2">
-              <Link href="/versotech_main/my-introducers">
-                <UserPlus className="h-5 w-5" />
-                <span>My Introducers</span>
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="h-auto py-4 flex-col gap-2">
-              <Link href="/versotech_main/versosign">
-                <FileSignature className="h-5 w-5" />
-                <span>VERSOSIGN</span>
-              </Link>
+            <Button variant="link" asChild className="p-0 h-auto text-purple-500 text-sm">
+              <Link href="/versotech_main/versosign">Sign Now →</Link>
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
+
+      {/* ── Network: Partners · Introducers · Commercial Partners ── */}
+      <div className={S.card}>
+        <p className={S.heading}>Network</p>
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Link href="/versotech_main/my-partners" className={cn("group flex items-center gap-4 rounded-xl border p-4 transition-colors", isDark ? "border-white/5 hover:border-pink-500/30 hover:bg-white/5" : "border-slate-200/80 hover:border-pink-300 hover:bg-pink-50/50")}>
+            <div className="p-2.5 rounded-xl bg-pink-500/20"><Users className="h-5 w-5 text-pink-500" /></div>
+            <div className="flex-1 min-w-0">
+              <p className={S.value}>{metrics?.totalPartners || 0}</p>
+              <p className={S.helper}>Partners</p>
+            </div>
+            <ArrowUpRight className={cn("h-4 w-4 shrink-0 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5", isDark ? "text-zinc-500" : "text-slate-400")} />
+          </Link>
+          <Link href="/versotech_main/my-introducers" className={cn("group flex items-center gap-4 rounded-xl border p-4 transition-colors", isDark ? "border-white/5 hover:border-orange-500/30 hover:bg-white/5" : "border-slate-200/80 hover:border-orange-300 hover:bg-orange-50/50")}>
+            <div className="p-2.5 rounded-xl bg-orange-500/20"><UserPlus className="h-5 w-5 text-orange-500" /></div>
+            <div className="flex-1 min-w-0">
+              <p className={S.value}>{metrics?.totalIntroducers || 0}</p>
+              <p className={S.helper}>Introducers</p>
+            </div>
+            <ArrowUpRight className={cn("h-4 w-4 shrink-0 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5", isDark ? "text-zinc-500" : "text-slate-400")} />
+          </Link>
+          <Link href="/versotech_main/my-commercial-partners" className={cn("group flex items-center gap-4 rounded-xl border p-4 transition-colors", isDark ? "border-white/5 hover:border-cyan-500/30 hover:bg-white/5" : "border-slate-200/80 hover:border-cyan-300 hover:bg-cyan-50/50")}>
+            <div className="p-2.5 rounded-xl bg-cyan-500/20"><Building2 className="h-5 w-5 text-cyan-500" /></div>
+            <div className="flex-1 min-w-0">
+              <p className={S.value}>{metrics?.totalCommercialPartners || 0}</p>
+              <p className={S.helper}>Commercial Partners</p>
+            </div>
+            <ArrowUpRight className={cn("h-4 w-4 shrink-0 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5", isDark ? "text-zinc-500" : "text-slate-400")} />
+          </Link>
+        </div>
+      </div>
+
+      {/* ═══════════ Recent Mandates + Pending Agreements ═══════════ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div className={S.card}>
+          <div className="flex items-center justify-between mb-4">
+            <p className={S.heading}>Recent Mandates</p>
+            <Button variant="ghost" size="sm" asChild className="text-xs">
+              <Link href="/versotech_main/my-mandates">View All <ArrowRight className="h-3.5 w-3.5 ml-1" /></Link>
+            </Button>
+          </div>
+          {recentMandates.length === 0 ? (
+            <div className="text-center py-8">
+              <Briefcase className={cn("h-8 w-8 mx-auto mb-2", isDark ? "text-zinc-500" : "text-slate-400")} />
+              <p className={cn("text-sm", isDark ? "text-zinc-300" : "text-slate-500")}>No mandates assigned yet</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {recentMandates.map((mandate) => (
+                <Link
+                  key={mandate.id}
+                  href="/versotech_main/my-mandates"
+                  className={cn("flex items-center justify-between p-3 rounded-xl transition-colors", isDark ? "hover:bg-white/5" : "hover:bg-slate-100")}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className={cn("font-medium text-sm truncate", isDark ? "text-white" : "text-slate-900")}>{mandate.name}</p>
+                    <p className={cn("text-xs", isDark ? "text-zinc-300" : "text-slate-500")}>
+                      {mandate.target_amount ? `${formatAmountWithCurrency(mandate.target_amount, mandate.currency)} target` : 'No target set'}
+                    </p>
+                  </div>
+                  <Badge className={dealStatusStyles[mandate.status] || 'bg-gray-500/20 text-gray-400'}>{mandate.status}</Badge>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className={S.card}>
+          <div className="flex items-center justify-between mb-4">
+            <p className={S.heading}>Pending Agreements</p>
+            <Button variant="ghost" size="sm" asChild className="text-xs">
+              <Link href="/versotech_main/versosign">View All <ArrowRight className="h-3.5 w-3.5 ml-1" /></Link>
+            </Button>
+          </div>
+          {pendingAgreements.length === 0 ? (
+            <div className="text-center py-8">
+              <FileSignature className={cn("h-8 w-8 mx-auto mb-2", isDark ? "text-zinc-500" : "text-slate-400")} />
+              <p className={cn("text-sm", isDark ? "text-zinc-300" : "text-slate-500")}>All agreements are up to date</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {pendingAgreements.map((agreement) => (
+                <div key={agreement.id} className={cn("flex items-center justify-between p-3 rounded-xl", isDark ? "bg-white/[0.03]" : "bg-slate-50")}>
+                  <div className="flex-1 min-w-0">
+                    <p className={cn("font-medium text-sm truncate", isDark ? "text-white" : "text-slate-900")}>{agreement.entity_name}</p>
+                    <p className={cn("text-xs", isDark ? "text-zinc-300" : "text-slate-500")}>
+                      {agreement.entity_type === 'introducer' ? 'Introducer Agreement' : 'Placement Agreement'}
+                    </p>
+                  </div>
+                  <Badge className={agreementStatusStyles[agreement.status] || 'bg-gray-500/20 text-gray-400'}>
+                    {agreementStatusLabels[agreement.status] || agreement.status}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ═══════════ Quick Actions ═══════════ */}
+      <div>
+        <p className={S.heading}>Quick Actions</p>
+        <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: 'View Mandates', href: '/versotech_main/my-mandates', icon: Briefcase },
+            { label: 'Subscription Packs', href: '/versotech_main/subscription-packs', icon: Package },
+            { label: 'Fee Plans', href: '/versotech_main/fee-plans', icon: Calculator },
+            { label: 'Escrow', href: '/versotech_main/escrow', icon: Lock },
+            { label: 'My Partners', href: '/versotech_main/my-partners', icon: Users },
+            { label: 'My Introducers', href: '/versotech_main/my-introducers', icon: UserPlus },
+            { label: 'Payment Requests', href: '/versotech_main/payment-requests', icon: ClipboardList },
+            { label: 'VERSOSIGN', href: '/versotech_main/versosign', icon: FileSignature },
+          ].map((action) => {
+            const Icon = action.icon
+            return (
+              <Link
+                key={action.label}
+                href={action.href}
+                className={cn(
+                  "flex flex-col items-center gap-2 rounded-2xl border p-4 transition-colors text-center",
+                  isDark
+                    ? "border-white/10 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/20"
+                    : "border-slate-200/80 hover:bg-slate-50 hover:border-slate-300"
+                )}
+              >
+                <Icon className={cn("h-5 w-5", isDark ? "text-zinc-300" : "text-slate-500")} />
+                <span className={cn("text-xs font-medium", isDark ? "text-gray-300" : "text-slate-700")}>{action.label}</span>
+              </Link>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* ═══════════ Detail Dialog ═══════════ */}
+      <Dialog open={detailDialog.open} onOpenChange={(open) => setDetailDialog(prev => ({ ...prev, open }))}>
+        <DialogContent className={cn("max-w-2xl", isDark ? "bg-zinc-900 border-white/10" : "")}>
+          <DialogHeader>
+            <DialogTitle className={isDark ? "text-white" : ""}>{detailDialog.title}</DialogTitle>
+          </DialogHeader>
+          {detailDialog.loading ? (
+            <div className="py-8 text-center">
+              <Loader2 className="h-6 w-6 animate-spin mx-auto text-zinc-400" />
+              <p className={cn("text-sm mt-2", isDark ? "text-zinc-300" : "text-slate-500")}>Loading details...</p>
+            </div>
+          ) : detailDialog.data.length === 0 ? (
+            <p className={cn("text-sm text-center py-8", isDark ? "text-zinc-300" : "text-slate-500")}>No data found</p>
+          ) : (
+            <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className={isDark ? "border-white/10" : ""}>
+                    {detailDialog.columns.map((col) => (
+                      <TableHead key={col} className={cn(col === 'Deal' ? "text-left" : "text-right", isDark ? "text-zinc-300" : "")}>
+                        {col}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {detailDialog.data.map((row, i) => {
+                    const currency = detailDialog.title.split('— ')[1] || 'USD'
+                    const isOutstanding = detailDialog.columns.length === 5
+                    return (
+                      <TableRow key={i} className={isDark ? "border-white/5" : ""}>
+                        <TableCell className={cn("font-medium", isDark ? "text-white" : "")}>{row.dealName}</TableCell>
+                        <TableCell className="text-right tabular-nums">{row.count}</TableCell>
+                        <TableCell className={cn("text-right tabular-nums font-medium", isDark ? "text-white" : "")}>
+                          {formatCurrency(row.amount, currency)}
+                        </TableCell>
+                        {isOutstanding && (
+                          <>
+                            <TableCell className="text-right tabular-nums">{formatCurrency(row.extra || 0, currency)}</TableCell>
+                            <TableCell className={cn("text-right tabular-nums font-semibold", isDark ? "text-amber-400" : "text-amber-600")}>
+                              {formatCurrency(row.extra2 || 0, currency)}
+                            </TableCell>
+                          </>
+                        )}
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
