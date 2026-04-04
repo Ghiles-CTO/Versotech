@@ -40,6 +40,7 @@ async function rowToCard(
     document_preview_url: null,
     document_preview_strategy: null,
     document_preview_type: null,
+    allow_download: row.allow_download ?? true,
     metadata_json: row.metadata_json ?? null,
     cta_enabled: Boolean(row.cta_enabled),
     cta_label: row.cta_label ?? null,

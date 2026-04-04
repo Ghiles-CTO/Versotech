@@ -44,6 +44,7 @@ export interface MarketingCard {
   document_preview_url?: string | null
   document_preview_strategy?: 'direct' | 'office_embed' | null
   document_preview_type?: string | null
+  allow_download: boolean
   metadata_json: Record<string, unknown> | null
   cta_enabled: boolean
   cta_label: string | null

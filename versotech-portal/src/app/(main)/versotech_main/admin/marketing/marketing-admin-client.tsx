@@ -112,6 +112,7 @@ type MarketingCardFormState = {
   document_preview_strategy: 'direct' | 'office_embed' | null
   document_preview_type: string | null
   metadata_json: Record<string, unknown> | null
+  allow_download: boolean
   cta_enabled: boolean
   cta_label: string
 }
@@ -139,6 +140,7 @@ function createEmptyFormState(): MarketingCardFormState {
     document_preview_strategy: null,
     document_preview_type: null,
     metadata_json: null,
+    allow_download: true,
     cta_enabled: true,
     cta_label: "I'm interested",
   }
@@ -164,6 +166,7 @@ function createNextFormState(
       ...next,
       card_type: 'document',
       media_type: 'document',
+      allow_download: true,
       cta_enabled: true,
       cta_label: 'Preview',
     }
@@ -202,6 +205,7 @@ function toFormState(card: MarketingCard): MarketingCardFormState {
     document_preview_strategy: card.document_preview_strategy ?? null,
     document_preview_type: card.document_preview_type ?? null,
     metadata_json: card.metadata_json ?? null,
+    allow_download: card.allow_download ?? true,
     cta_enabled: isDocumentCard ? true : isNewsCard ? card.cta_enabled : true,
     cta_label: isDocumentCard
       ? 'Preview'
@@ -235,6 +239,7 @@ function formToPayload(form: MarketingCardFormState, sortOrder: number) {
     document_mime_type: form.document_mime_type || null,
     document_preview_storage_path: form.document_preview_storage_path || null,
     metadata_json: form.metadata_json,
+    allow_download: isDocumentCard ? form.allow_download : true,
     cta_enabled: isDocumentCard ? true : isNewsCard ? form.cta_enabled : true,
     cta_label: isDocumentCard
       ? 'Preview'
@@ -275,6 +280,7 @@ function formToPreviewCard(form: MarketingCardFormState): MarketingCard {
     document_preview_strategy: form.document_preview_strategy,
     document_preview_type: form.document_preview_type,
     metadata_json: form.metadata_json,
+    allow_download: isDocumentCard ? form.allow_download : true,
     cta_enabled: isDocumentCard ? true : isNewsCard ? form.cta_enabled : true,
     cta_label: isDocumentCard
       ? 'Preview'
@@ -445,6 +451,7 @@ export function MarketingAdminClient() {
         cardType === 'document' ? current.document_preview_strategy : null,
       document_preview_type:
         cardType === 'document' ? current.document_preview_type : null,
+      allow_download: cardType === 'document' ? current.allow_download : true,
       cta_enabled:
         cardType === 'news'
           ? current.cta_enabled
@@ -1308,6 +1315,24 @@ export function MarketingAdminClient() {
                     No document uploaded yet.
                   </div>
                 )}
+              </div>
+            )}
+
+            {isDocumentCard && (
+              <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-700/80 dark:bg-slate-900/30">
+                <div className="space-y-1">
+                  <Label>Allow download</Label>
+                  <p className="text-xs text-muted-foreground">
+                    When disabled, investors can only preview the document in the
+                    browser — the download button will be hidden.
+                  </p>
+                </div>
+                <Switch
+                  checked={form.allow_download}
+                  onCheckedChange={(checked) =>
+                    updateForm({ allow_download: checked })
+                  }
+                />
               </div>
             )}
 

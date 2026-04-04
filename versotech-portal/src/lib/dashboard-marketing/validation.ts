@@ -58,6 +58,7 @@ export const marketingCardCreateSchema = z
       .nullable()
       .optional()
       .default(null),
+    allow_download: z.boolean().default(true),
     cta_enabled: z.boolean().optional(),
     cta_label: nullableTrimmedString(60),
     sort_order: z.coerce.number().int().min(0).max(9999).default(0),
@@ -174,6 +175,7 @@ export const marketingCardPatchSchema = z
     document_mime_type: z.union([z.string(), z.null()]).optional(),
     document_preview_storage_path: z.union([z.string(), z.null()]).optional(),
     metadata_json: z.record(z.string(), z.unknown()).nullable().optional(),
+    allow_download: z.boolean().optional(),
     cta_enabled: z.boolean().optional(),
     cta_label: z.union([z.string(), z.null()]).optional(),
     sort_order: z.coerce.number().int().min(0).max(9999).optional(),
@@ -236,6 +238,7 @@ export function normalizeMarketingCardInput(input: MarketingCardCreateInput) {
     link_domain: mediaType === 'link' ? input.link_domain : null,
     source_published_at:
       mediaType === 'link' ? input.source_published_at : null,
+    allow_download: input.card_type === 'document' ? (input.allow_download ?? true) : true,
     cta_enabled: ctaEnabled,
     cta_label: ctaEnabled ? ctaLabel : null,
     document_storage_path:

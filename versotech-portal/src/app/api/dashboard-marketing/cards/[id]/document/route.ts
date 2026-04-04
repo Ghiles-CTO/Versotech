@@ -48,7 +48,7 @@ export async function GET(
   const { data: card, error } = await supabase
     .from('dashboard_marketing_cards')
     .select(
-      'id, card_type, status, document_storage_path, document_file_name, document_mime_type'
+      'id, card_type, status, allow_download, document_storage_path, document_file_name, document_mime_type'
     )
     .eq('id', id)
     .maybeSingle()
@@ -66,6 +66,13 @@ export async function GET(
 
   if (!isAdmin && card.status !== 'published') {
     return NextResponse.json({ error: 'Card is not available' }, { status: 400 })
+  }
+
+  if (mode === 'download' && !card.allow_download && !isAdmin) {
+    return NextResponse.json(
+      { error: 'Download is not available for this document' },
+      { status: 403 }
+    )
   }
 
   try {

@@ -333,7 +333,7 @@ export function MarketingAnnouncementsCarousel({
     setViewerPreviewUrl(null)
     setViewerError(null)
     setViewerLoading(true)
-    setViewerHideDownload(previewMode)
+    setViewerHideDownload(previewMode || card.allow_download === false)
 
     if (card.document_preview_url) {
       setViewerPreviewUrl(card.document_preview_url)
