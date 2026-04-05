@@ -127,11 +127,13 @@ export async function PATCH(
 
     // Log activity
     await serviceClient.from('audit_logs').insert({
+      event_type: 'data_modification',
       action: 'bank_details_updated',
       entity_type: 'bank_details',
       entity_id: id,
       actor_id: user.id,
-      details: { updated_fields: Object.keys(updateData) },
+      action_details: { updated_fields: Object.keys(updateData) },
+      timestamp: new Date().toISOString(),
     })
 
     return NextResponse.json({ bankDetail })
@@ -186,15 +188,17 @@ export async function DELETE(
 
     // Log activity
     await serviceClient.from('audit_logs').insert({
+      event_type: 'data_modification',
       action: 'bank_details_deleted',
       entity_type: 'bank_details',
       entity_id: id,
       actor_id: user.id,
-      details: {
+      action_details: {
         entity_type: bankDetail.entity_type,
         entity_id: bankDetail.entity_id,
         bank_name: bankDetail.bank_name,
       },
+      timestamp: new Date().toISOString(),
     })
 
     return NextResponse.json({ success: true })

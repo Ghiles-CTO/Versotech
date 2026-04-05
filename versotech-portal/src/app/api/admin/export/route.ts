@@ -191,11 +191,13 @@ export async function GET(req: NextRequest) {
 
     // Log the export action
     await supabase.from('audit_logs').insert({
+      event_type: 'access_control',
       actor_id: user.id,
       action: 'data_export',
       entity_type: 'export',
       entity_id: type,
-      after_value: { format, from, to, record_count: data.length },
+      action_details: { format, from, to, record_count: data.length },
+      timestamp: new Date().toISOString(),
     })
 
     // Generate CSV

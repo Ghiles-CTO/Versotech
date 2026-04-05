@@ -147,11 +147,13 @@ export async function POST(request: NextRequest) {
 
     // Log activity
     await serviceClient.from('audit_logs').insert({
+      event_type: 'data_modification',
       action: 'bank_details_created',
       entity_type: 'bank_details',
       entity_id: bankDetail.id,
       actor_id: user.id,
-      details: { entity_type, entity_id, bank_name },
+      action_details: { entity_type, entity_id, bank_name },
+      timestamp: new Date().toISOString(),
     })
 
     return NextResponse.json({ bankDetail }, { status: 201 })
